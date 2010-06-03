@@ -66,11 +66,10 @@ def create_site(sitename):
         if not os.path.exists(targetdir):
             os.mkdir(targetdir)
         for fn in filenames:
-            create_template_instance(dirpath + "/" + fn, targetdir + "/" + dirpath + "/" + fn, replacements, sitename)
+            create_template_instance(dirpath + "/" + fn, targetdir + "/" + fn, replacements, sitename)
 
 def create_template_instance(src, dst, replacements, sitename):
     content = file(src).read()
-    print repr(content)
     for var, value in replacements.items():
         content = content.replace(var, value)
     file(dst, "w").write(content)

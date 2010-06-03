@@ -15,6 +15,8 @@ pack:
 	@set -e ; for p in packages/* ; do \
             $(MAKE) -C $$p DESTDIR=$(DESTDIR) install ; \
         done
+	# Repair packages that install with silly modes (such as Nagios)
+	chmod -R o+Xr $(DESTDIR)$(OMD_ROOT)
 	$(MAKE) install-global
 	# Install skeleton files (subdirs skel/ in packages' directories)
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/skel
