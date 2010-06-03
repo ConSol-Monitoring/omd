@@ -1,0 +1,5 @@
+# General settings included by alle packages
+
+OMD_VERSION = 0.42
+OMD_BASE = /omd
+OMD_ROOT = $(OMD_BASE)/versions/$(OMD_VERSION)

@@ -1,0 +1,57 @@
+Ueber das Hauptmakefile 'Makefile' wird die komplette Distribution
+gebaut und gepackt:
+
+Aufrufe:
+
+make       -> Kompiliert alle Pakete
+make pack  -> erzeugt omd-0.42.tar.gz
+make clean -> Löscht alle Kompilate (make arbeitet inkrementell)
+
+Das tar-Archiv, dass 'make pack' erzeugt, packt man auf dem
+Zielsystem unter / aus. Über den dort enthaltenen Befehl
+/usr/bin/omd werden die Instanzen verwaltet:
+
+Beispiele:
+
+# omd create muc 0.42
+=> Erzeugt eine neue Instanz 'muc' auf Basis von Version 0.42
+
+# omd start muc
+=> Startet Instanz muc
+
+# omd stop muc
+=> Stoppt Instanz muc
+
+# omd cp muc sepp
+=> Erzeugt eine Kopie von muc mit dem namen sepp
+
+# omd mv muc sepp
+=> Benennt Instanz muc in sepp um
+
+# omd rm muc
+=> Löscht Instanz muc
+
+# omd update muc 0.47
+=> Zieht Instanz muc auf Version 0.47 hoch.
+
+
+Da viele der Operationen Versions-spezifisch implementiert sein
+müssen, ist /usr/bin/omd nur ein sehr schlanker Wrapper. Dieser
+ermittelt die Version der Instanz, um die es geht, und ruft
+eine Versionsspezifische Variante des Befehls auf, der die eigentliche
+Arbeit macht (/omd/versions/$VERSION/bin/omd)
+
+* Bei 'create' wird die Version verwendet, zu der eine Instanz
+  erzeugt werden soll.
+
+* Bei 'update' wird die *neue* Version herangezogen, damit diese
+  eine Chance hat, evtl. Konfigurationsdateien zu migrieren
+
+* Bei allen anderen Befehle wird die Version der Instanz herangezogen,
+  mit der operiert wird.
+
+Der Wrapper /usr/bin/omd wird entweder mit jeder neuen Version überschrieben
+und auf einen neuen Stand gebracht, oder in einem separaten Paket ausgeliefert.
+Am einfachsten wäre es, ihn in den Tarball einfach miteinzubauen. Bei
+Distro-Paketen (Debian, RPM) kann man das als Subpaket abspalten, damit
+es nicht zu Dateikonflikten kommt.
