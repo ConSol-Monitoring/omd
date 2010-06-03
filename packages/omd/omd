@@ -6,6 +6,9 @@
 
 import sys, os, shutil
 
+# FIXME: Determine this somehow
+OMD_VERSION = 0.42
+
 def bail_out(message):
     sys.stderr.write(message)
     sys.exit(1)
@@ -19,8 +22,17 @@ def site_exists(sitename):
 def create_site(sitename):
     if site_exists(sitename):
         bail_out("Site '%s' already existing.\n" % sitename)
-    dir = site_dir(sitename)
-    os.mkdir(dir)
+    sitedir = site_dir(sitename)
+    os.makedirs(sitedir)
+
+    # Create symbolic link to version
+    os.symlink("../../versions/%s" % OMD_VERSION, sitedir + "/version")
+
+    # Build up directory structure with symbolic links relative to
+    # the version link we just create
+    for d in [ 'bin', 'include', 'lib', 'local', 'share' ]:
+        os.symlink("version/" + d, sitedir + "/" + d)
+
 
 def remove_site(sitename):
     if not site_exists(sitename):
