@@ -22,17 +22,8 @@ Beispiele:
 # omd stop muc
 => Stoppt Instanz muc
 
-# omd cp muc sepp
-=> Erzeugt eine Kopie von muc mit dem namen sepp
-
-# omd mv muc sepp
-=> Benennt Instanz muc in sepp um
-
 # omd rm muc
 => Löscht Instanz muc
-
-# omd update muc 0.47
-=> Zieht Instanz muc auf Version 0.47 hoch.
 
 
 Da viele der Operationen Versions-spezifisch implementiert sein

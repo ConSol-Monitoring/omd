@@ -19,16 +19,16 @@ def site_dir(sitename):
 def site_exists(sitename):
     return os.path.exists(site_dir(sitename))
 
-def useradd(name):
-    if 0 == os.system("groupadd " + name):
-        if 0 != os.system("useradd -d '%s' -c 'OMD instance %s' -g %s %s -s /bin/bash" % \
-                (site_dir(name), name, name, name)):
-            os.system("groupdel " + name)
-            return False
-        else:
-            return True
-    else:
-         return False
+def useradd(sitename):
+    # Create user for running site 'name'
+    os.system("groupadd " + sitename)
+    os.system("useradd -d '%s' -c 'OMD instance %s' -g %s %s -s /bin/bash" % \
+                (site_dir(sitename), sitename, sitename, sitename))
+
+    # Add Apache to new group. It needs to be able to write in to the 
+    # command pipe and possible other stuff
+    # FIXME: www-data is distro-specific
+    os.system("gpasswd -a www-data %s >/dev/null" % sitename)
 
 def userdel(name):
     os.system("userdel " + name)
@@ -41,8 +41,7 @@ def create_site(sitename):
         bail_out("Site '%s' already existing.\n" % sitename)
 
     # Create operating system user for site
-    if not useradd(sitename):
-        bail_out("Cannot create operating system user '%s'\n" % sitename)
+    useradd(sitename)
 
     sitedir = site_dir(sitename)
     os.makedirs(sitedir)
