@@ -1,0 +1,37 @@
+#!/usr/bin/python
+
+# This program is used to manage instances (create, rm, cp, mv, update)
+# There is almost no error handling implemented. Please remember: this
+# is a prototype, an experiment - nothing more.
+
+import sys, os, shutil
+
+def bail_out(message):
+    sys.stderr.write(message)
+    sys.exit(1)
+
+def site_dir(sitename):
+    return "/omd/sites/" + sitename
+
+def site_exists(sitename):
+    return os.path.exists(site_dir(sitename))
+
+def create_site(sitename):
+    if site_exists(sitename):
+        bail_out("Site '%s' already existing.\n" % sitename)
+    dir = site_dir(sitename)
+    os.mkdir(dir)
+
+def remove_site(sitename):
+    if not site_exists(sitename):
+        bail_out("No such site '%s'.\n" % sitename)
+    rmtree(site_dir(sitename))
+
+
+command = sys.argv[1]
+if command == "create":
+    create_site(sys.argv[2]) # should be name argument
+elif command == "rm":
+    remove_site(sys.argv[2])
+else:
+    bail_out("Sorry. Currently only 'create' and 'rm' are implemented.\n")

@@ -1,0 +1,76 @@
+#!/bin/bash
+set -e
+
+usage ()
+{
+    cat <<EOF
+Usage: omd COMMAND [PARAMETERS]
+
+  omd create SITE VERSION   Create new site based on version VERSION
+  omd rm SITE               Delete site and all its data!
+  omd cp SITE SITE2         Create new site as copy of existing one
+  omd mv SITE SITE2         Rename site
+  omd update SITE VERSION   Update existing site to new OMD version
+  omd sites                 List all existing sites
+  omd versions              List all installed versions
+
+where:
+ 
+ SITE ..... is the name of a site (a monitoring instance)
+ VERSION .. is the name of an installed OMD version
+
+EOF
+    exit 1
+}
+
+list_sites ()
+{
+    for site in /omd/sites/*
+    do
+        if [ -d "$site" ] ; then
+            local SITE=${site##*/}
+            echo "$SITE"
+        fi
+    done
+}
+
+list_versions ()
+{
+    for version in /omd/versions/*
+    do
+        if [ -d "$version" ] ; then
+            local VERSION=${version##*/}
+            echo "$VERSION"
+        fi
+    done
+}
+
+version_specific_omd ()
+{
+    local VERSION="$1"
+    shift
+    exec /omd/versions/$VERSION/bin/omd "$@"
+}
+
+
+COMMAND=$1
+case "$COMMAND" in 
+    rm|cp|mv)
+        SITE="$2"
+        exec /omd/sites/$SITE/bin/omd "$@"
+    ;;
+    create|update)
+        VERSION="$3"
+        exec /omd/versions/$VERSION/bin/omd "$@"
+    ;;
+    sites)
+        list_sites
+    ;;
+    versions)
+        list_versions
+    ;;
+    *)
+        usage
+    ;;
+esac
+

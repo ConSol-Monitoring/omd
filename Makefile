@@ -1,6 +1,7 @@
 include Makefile.omd
 
 DESTDIR=$$(pwd)/destdir
+.PHONY: install-global
 
 omd: build
 
@@ -14,17 +15,16 @@ pack:
 	@set -e ; for p in packages/* ; do \
             $(MAKE) -C $$p DESTDIR=$(DESTDIR) install ; \
         done
-	tar czf omd-$(OMD_VERSION).tar.gz -C $(DESTDIR) .
+	$(MAKE) install-global
+	tar czf --owner=root --group=root omd-$(OMD_VERSION).tar.gz -C $(DESTDIR) .
 
 clean:
 	rm -rf $(DESTDIR)
 	@for p in packages/* ; do \
             $(MAKE) -C $$p clean ; \
         done
-	
-	
-	
-	
-	
-	
-	
+
+install-global:
+	mkdir -p $(DESTDIR)/usr/bin
+	install -m 755 bin/omd $(DESTDIR)/usr/bin
+	mkdir -p $(DESTDIR)/omd/sites
