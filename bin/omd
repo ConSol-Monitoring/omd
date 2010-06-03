@@ -14,8 +14,16 @@ Usage: omd COMMAND [PARAMETERS]
   omd cp SITE SITE2         Create new site as copy of existing one
   omd mv SITE SITE2         Rename site
   omd update SITE VERSION   Update existing site to new OMD version
+
+  omd start SITE            Startup site
+  omd stop SITE             Stop site
+  omd restart SITE          Restart site
+  omd reload SITE           Reload site (make config change active)
+  omd status SITE           Check if site is running
+
   omd sites                 List all existing sites
   omd versions              List all installed versions
+
 
 where:
  
@@ -61,6 +69,15 @@ case "$COMMAND" in
     rm|cp|mv)
         SITE="$2"
         exec /omd/sites/$SITE/bin/omd "$@"
+    ;;
+    start|stop|restart|reload|status)
+        if [ "$2" ] ; then
+            exec /omd/sites/$2/bin/omd "$@"
+        else
+            for site in $(list_sites) ; do
+                exec /omd/sites/$site/bin/omd "$@"
+            done
+        fi
     ;;
     create|update)
         VERSION="${3:-$OMD_VERSION}"

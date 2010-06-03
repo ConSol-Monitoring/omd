@@ -7,7 +7,7 @@ SHELL = /bin/bash
 build:
 
 install:
-	mkdir -p $(DESTDIR)/bin
-	install -m 755 omd $(DESTDIR)/bin
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/bin
+	install -m 755 omd $(DESTDIR)$(OMD_ROOT)/bin
 
 clean:

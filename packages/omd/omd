@@ -21,7 +21,7 @@ def site_exists(sitename):
 
 def useradd(name):
     if 0 == os.system("groupadd " + name):
-        if 0 != os.system("useradd -d '%s' -c 'OMD instance %s' -g %s %s" % \
+        if 0 != os.system("useradd -d '%s' -c 'OMD instance %s' -g %s %s -s /bin/bash" % \
                 (site_dir(name), name, name, name)):
             os.system("groupdel " + name)
             return False
@@ -32,7 +32,9 @@ def useradd(name):
 
 def userdel(name):
     os.system("userdel " + name)
-    os.system("groupdel " + name)
+    # FIXME: On some OSes (Debian) the group is automatically removed if
+    # it bears the same name as the user
+    os.system("groupdel " + name + " 2>/dev/null")
 
 def create_site(sitename):
     if site_exists(sitename):
@@ -65,18 +67,32 @@ def create_site(sitename):
         targetdir = sitedir + "/" + dirpath
         if not os.path.exists(targetdir):
             os.mkdir(targetdir)
+        for d in dirnames:
+            td = targetdir + "/" + d
+            if not os.path.exists(td):
+                os.mkdir(td)
+                
         for fn in filenames:
-            create_template_instance(dirpath + "/" + fn, targetdir + "/" + fn, replacements, sitename)
+            src = dirpath + "/" + fn
+            dst = targetdir + "/" + fn
+            if os.path.islink(src):
+                os.symlink(os.readlink(src), dst)
+            else:
+                create_template_instance(src, dst, replacements, sitename)
+
+    # Change ownership of all files and dirs to site user
+    os.system("chown -R %s:%s '%s'" % (sitename, sitename, sitedir))
+
+    # Create include-hook for Apache
+    file("/omd/apache/%s.conf" % sitename, "w").write("Include %s/etc/apache/*.conf\n" % sitedir)
 
 def create_template_instance(src, dst, replacements, sitename):
     content = file(src).read()
     for var, value in replacements.items():
         content = content.replace(var, value)
     file(dst, "w").write(content)
-    os.system("chown %s:%s '%s'" % (sitename, sitename, dst))
     mode = os.stat(src).st_mode & 0xfff
     os.chmod(dst, mode)
-    print "TEMPL %s -> %s (%04o)" % (src, dst, mode)
 
 def remove_site(sitename):
     userdel(sitename)
@@ -84,11 +100,25 @@ def remove_site(sitename):
         bail_out("No such site '%s'.\n" % sitename)
     shutil.rmtree(site_dir(sitename))
 
+    # remove include-hook for Apache
+    os.remove("/omd/apache/%s.conf" % sitename)
+
+def call_init_scripts(command, sitename):
+    rc_dir = "/omd/sites/%s/etc/rc.d" % sitename
+    scripts = os.listdir(rc_dir)
+    scripts.sort()
+    # Call stop scripts in reverse order
+    if command == "stop":
+        scripts.reverse()
+    for script in scripts:
+        os.system("%s/%s %s" % (rc_dir, script, command))
 
 command = sys.argv[1]
 if command == "create":
     create_site(sys.argv[2]) # should be name argument
 elif command == "rm":
     remove_site(sys.argv[2])
+elif command in [ "start", "stop", "restart", "reload", "status" ]:
+    call_init_scripts(command, sys.argv[2])
 else:
     bail_out("Sorry. Currently only 'create' and 'rm' are implemented.\n")
