@@ -8,7 +8,7 @@ DIR = $(NAME)-$(VERSION)
 # as non-root, we use our own user and group for compiling.
 # All files will be packaged as user 'root' later anyway.
 CONFIGUREOPTS = \
-    --sbindir=$(OMD_ROOT)/lib/nagios/cgi \
+    --sbindir=$(OMD_ROOT)/lib/nagios/cgi-bin \
     --bindir=$(OMD_ROOT)/bin \
     --datarootdir=$(OMD_ROOT)/share/nagios/htdocs \
     --with-nagios-user=$$(id -un) \
