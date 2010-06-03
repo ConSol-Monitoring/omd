@@ -1,0 +1,12 @@
+--- utils.inc.php.orig	2010-06-03 20:48:50.000000000 +0200
++++ utils.inc.php	2010-06-03 20:48:27.000000000 +0200
+@@ -1,7 +1,8 @@
+ <?php
+ // HELPER UTILITIES
+ 
+-require_once(dirname(__FILE__).'/../config.inc.php');
++// OMD: read site specific configuration file
++require_once(dirname($_SERVER["SCRIPT_FILENAME"]).'/../../../etc/nagios/config.inc.php');
+ 
+ function get_update_information(){
+ 	global $cfg;

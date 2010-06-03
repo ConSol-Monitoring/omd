@@ -1,5 +1,6 @@
 <?php
-// Diese Datei muss pro Instanz existieren!
+// This file exists per site and configures site specific paths for
+// Nagios' web pages
 
 
 $cfg['cgi_config_file']='@ROOT@/etc/nagios/cgi.cfg';  // location of the CGI config file

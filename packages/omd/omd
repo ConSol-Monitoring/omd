@@ -119,6 +119,12 @@ if command == "create":
 elif command == "rm":
     remove_site(sys.argv[2])
 elif command in [ "start", "stop", "restart", "reload", "status" ]:
-    call_init_scripts(command, sys.argv[2])
+    # if site name if not given, the site is included in our
+    # executable path
+    if len(sys.argv) > 2:
+        sitename = sys.argv[2]
+    else:
+        sitename = os.path.abspath(sys.argv[0]).split('/')[3]
+    call_init_scripts(command, sitename)
 else:
     bail_out("Sorry. Currently only 'create' and 'rm' are implemented.\n")

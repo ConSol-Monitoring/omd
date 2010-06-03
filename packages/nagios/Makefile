@@ -16,11 +16,13 @@ CONFIGUREOPTS = \
 
 build:
 	tar xzf $(DIR).tar.gz
+	patch $(DIR)/html/includes/utils.inc.php utils.inc.php.dif
 	cd $(DIR) ; ./configure $(CONFIGUREOPTS)
 	$(MAKE) -C $(DIR) all
 
 install:
 	$(MAKE) DESTDIR=$(DESTDIR) -C $(DIR) install-base install-cgis install-html
+	rm -f $(DESTDIR)$(OMD_ROOT)/share/nagios/htdocs/config.php.inc
 
 clean:
 	rm -rf $(DIR)
