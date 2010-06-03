@@ -7,7 +7,7 @@ SHELL = /bin/bash
 build:
 
 install:
-	# Create directory for admins' local extensions
-	mkdir -p $(DESTDIR)$(OMD_ROOT)/local/{bin,share,lib,plugins}
+	mkdir -p $(DESTDIR)/bin
+	install -m 755 omd $(DESTDIR)/bin
 
 clean:

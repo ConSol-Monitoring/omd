@@ -16,7 +16,14 @@ pack:
             $(MAKE) -C $$p DESTDIR=$(DESTDIR) install ; \
         done
 	$(MAKE) install-global
-	tar czf --owner=root --group=root omd-$(OMD_VERSION).tar.gz -C $(DESTDIR) .
+	# Install skeleton files (subdirs skel/ in packages' directories)
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/skel
+	@set -e ; for p in packages/* ; do \
+            if [ -d "$$p/skel" ] ; then  \
+              tar cf - -C $$p/skel --exclude="*~" . | tar xvf - -C $(DESTDIR)$(OMD_ROOT)/skel ; \
+            fi ;\
+        done
+	tar czf omd-$(OMD_VERSION).tar.gz --owner=root --group=root -C $(DESTDIR) .
 
 clean:
 	rm -rf $(DESTDIR)
