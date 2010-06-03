@@ -19,9 +19,29 @@ def site_dir(sitename):
 def site_exists(sitename):
     return os.path.exists(site_dir(sitename))
 
+def useradd(name):
+    if 0 == os.system("groupadd " + name):
+        if 0 != os.system("useradd -d '%s' -c 'OMD instance %s' -g %s %s" % \
+                (site_dir(name), name, name, name)):
+            os.system("groupdel " + name)
+            return False
+        else:
+            return True
+    else:
+         return False
+
+def userdel(name):
+    os.system("userdel " + name)
+    os.system("groupdel " + name)
+
 def create_site(sitename):
     if site_exists(sitename):
         bail_out("Site '%s' already existing.\n" % sitename)
+
+    # Create operating system user for site
+    if not useradd(sitename):
+        bail_out("Cannot create operating system user '%s'\n" % sitename)
+
     sitedir = site_dir(sitename)
     os.makedirs(sitedir)
 
@@ -35,9 +55,10 @@ def create_site(sitename):
 
 
 def remove_site(sitename):
+    userdel(sitename)
     if not site_exists(sitename):
         bail_out("No such site '%s'.\n" % sitename)
-    rmtree(site_dir(sitename))
+    shutil.rmtree(site_dir(sitename))
 
 
 command = sys.argv[1]

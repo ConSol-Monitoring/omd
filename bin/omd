@@ -1,6 +1,9 @@
 #!/bin/bash
 set -e
 
+# FIXME: Do not hardcode this here
+OMD_VERSION=0.42
+
 usage ()
 {
     cat <<EOF
@@ -60,7 +63,7 @@ case "$COMMAND" in
         exec /omd/sites/$SITE/bin/omd "$@"
     ;;
     create|update)
-        VERSION="$3"
+        VERSION="${3:-$OMD_VERSION}"
         exec /omd/versions/$VERSION/bin/omd "$@"
     ;;
     sites)
