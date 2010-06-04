@@ -22,8 +22,9 @@ pack:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/skel
 	@set -e ; for p in packages/* ; do \
             if [ -d "$$p/skel" ] ; then  \
-              tar cf - -C $$p/skel --exclude="*~" . | tar xvf - -C $(DESTDIR)$(OMD_ROOT)/skel ; \
+              tar cf - -C $$p/skel --exclude="*~" --exclude=".gitignore" . | tar xvf - -C $(DESTDIR)$(OMD_ROOT)/skel ; \
             fi ;\
+            $(MAKE) SKEL=$(DESTDIR)$(OMD_ROOT)/skel -C $$p skel ;\
         done
 	tar czf omd-$(OMD_VERSION).tar.gz --owner=root --group=root -C $(DESTDIR) .
 

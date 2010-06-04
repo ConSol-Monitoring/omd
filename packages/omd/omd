@@ -68,8 +68,11 @@ def create_site(sitename):
             os.mkdir(targetdir)
         for d in dirnames:
             td = targetdir + "/" + d
+            # Create directories with same mode as in skel
             if not os.path.exists(td):
                 os.mkdir(td)
+                mode = os.stat(dirpath + "/" + d).st_mode & 0xfff
+                os.chmod(td, mode)
                 
         for fn in filenames:
             src = dirpath + "/" + fn
