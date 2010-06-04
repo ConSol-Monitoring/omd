@@ -4,6 +4,8 @@ NAME = check_mk
 VERSION = 1.1.6b3
 DIR = $(NAME)-$(VERSION)
 
+.PHONY: skel
+
 build:
 	tar xzf $(DIR).tar.gz
 
@@ -24,7 +26,7 @@ install:
 	export libdir='$(OMD_ROOT)/lib/check_mk' ; \
 	export confdir='$(OMD_ROOT)/skel/etc/check_mk' ; \
 	export pnpconfdir='$(OMD_ROOT)/skel/etc/pnp4nagios' ; \
-	export apache_config_dir='$(OMD_ROOT)/skel/etc/apache' ; \
+	export apache_config_dir='/REMOVE/skel/etc/apache' ; \
 	export agentsconfdir='/etc/check_mk' ; \
 	export vardir='/REMOVE/var/lib/check_mk' ; \
 	export nagios_config_file='/REMOVE/etc/nagios/nagios.cfg' ; \
@@ -44,10 +46,20 @@ install:
 	export nagiosuser='nagios' ; \
 	export wwwgroup='nagios' ; \
 	cd $(DIR) ; DESTDIR=$(DESTDIR) ./setup.sh --yes
+
+	# Delete files we do not want to package
 	rm -rf $(DESTDIR)/REMOVE
+
 	# Install special version of check_mk dealing with site specific defaults
 	install -m 755 check_mk $(DESTDIR)$(OMD_ROOT)/bin
 
+	# defaults.py for Multisite which redirects to site specific defaults
+	install -m 644 defaults.py $(DESTDIR)$(OMD_ROOT)/share/check_mk/web/htdocs
+
+skel:
+	# Give Apache write permissions on certain directories
+	chmod 770 $(SKEL)/var/check_mk/web
+	chmod 770 $(SKEL)/var/check_mk/logwatch
 
 clean:
 	rm -rf $(DIR)

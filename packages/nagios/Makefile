@@ -24,5 +24,7 @@ install:
 	$(MAKE) DESTDIR=$(DESTDIR) -C $(DIR) install-base install-cgis install-html
 	rm -f $(DESTDIR)$(OMD_ROOT)/share/nagios/htdocs/config.php.inc
 
+skel:
+
 clean:
 	rm -rf $(DIR)

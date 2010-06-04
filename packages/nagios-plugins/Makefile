@@ -19,5 +19,7 @@ install:
 	install -m 755 $(DIR)/plugins-root/check_icmp $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins
 	install -m 755 $(DIR)/plugins-root/check_dhcp $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins
 
+skel:
+
 clean:
 	rm -rf $(DIR)
