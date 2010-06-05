@@ -4,7 +4,7 @@
 # There is almost no error handling implemented. Please remember: this
 # is a prototype, an experiment - nothing more.
 
-import sys, os, shutil
+import sys, os, shutil, pwd
 
 # FIXME: Determine this somehow
 OMD_VERSION = 0.42
@@ -86,15 +86,24 @@ def create_site(sitename):
     os.system("chown -R %s:%s '%s'" % (sitename, sitename, sitedir))
 
     # Create include-hook for Apache
-    file("/omd/apache/%s.conf" % sitename, "w").write("Include %s/etc/apache/*.conf\n" % sitedir)
+    create_apache_hook(sitename)
+
+def create_apache_hook(sitename):
+    file("/omd/apache/%s.conf" % sitename, "w").write("Include %s/etc/apache/*.conf\n" % site_dir(sitename))
+
+def delete_apache_hook(sitename):
+    os.remove("/omd/apache/%s.conf" % sitename)
 
 def create_template_instance(src, dst, replacements, sitename):
-    content = file(src).read()
-    for var, value in replacements.items():
-        content = content.replace(var, value)
-    file(dst, "w").write(content)
+    file(dst, "w").write(replace_tags(file(src).read(), replacements))
     mode = os.stat(src).st_mode & 0xfff
     os.chmod(dst, mode)
+
+def replace_tags(content, replacements):
+    for var, value in replacements.items():
+        content = content.replace(var, value)
+    return content
+
 
 def remove_site(sitename):
     userdel(sitename)
@@ -104,6 +113,71 @@ def remove_site(sitename):
 
     # remove include-hook for Apache
     os.remove("/omd/apache/%s.conf" % sitename)
+
+def rename_site(old, new):
+    if site_exists(new):
+        bail_out("Site %s already existing.\n" % new)
+    if not site_exists(old):
+        bail_out("No such site '%s'.\n" % sitename)
+
+    # Rename base directory and apache config
+    os.rename("/omd/sites/" + old, "/omd/sites/" + new)
+    delete_apache_hook(old)
+    create_apache_hook(new)
+    os.chdir("/omd/sites/" + new)
+
+    # Create new user and own over all files to him. Then delete old user
+    useradd(new)
+    uid = pwd.getpwnam(new).pw_gid
+    gid = pwd.getpwnam(new).pw_gid
+    os.chown(".", uid, gid)
+    for dirpath, dirnames, filenames in os.walk("."): 
+        for entry in dirnames + filenames:
+            os.lchown(dirpath + "/" + entry, uid, gid)
+    userdel(old)
+
+    # Now reflect name change in configuration files which have been
+    # create from skeletons. We are only interested in plain files,
+    # directories and symlinks won't change.
+    skelroot = "/omd/versions/%s/skel" % OMD_VERSION
+    os.chdir(skelroot)  # make relative paths
+    for dirpath, dirnames, filenames in os.walk("."): 
+        targetdir = site_dir(new) + "/" + dirpath
+        for fn in filenames:
+            src = dirpath + "/" + fn
+            dst = targetdir + "/" + fn
+            if os.path.isfile(src) and not os.path.islink(src): # links are also files??.
+                patch_template_file(src, dst, old, new)
+                # patch changes ownership of files to root
+                os.chown(dst, uid, gid)
+
+def patch_template_file(src, dst, old, new):
+    # Create patch from old instanciated skeleton file to new one
+    sys.stdout.write("Patching %s..." % dst)
+    sys.stdout.flush()
+    content = file(src).read()
+    for site in [ old, new ]:
+        replacements = {
+            "@SITE@" : site,
+            "@ROOT@" : site_dir(site),
+        }
+        file("%s.skel.%s" % (dst, site), "w").write(replace_tags(content, replacements))
+
+    # Now create patch from old to new and immediately apply on 
+    # existing - possibly user modified - file.
+    if 0 == os.system("diff -u %s.skel.%s %s.skel.%s | patch --force --backup --forward --silent %s" % 
+            (dst, old, dst, new, dst)):
+        sys.stdout.write("OK\n")
+        # remove unnecessary files
+        try:
+            os.remove(dst + ".skel." + old)
+            os.remove(dst + ".skel." + new)
+            os.remove(dst + ".orig")
+        except:
+            pass
+    else:
+        sys.stdout.write("conflict with your changes. Please resolve manually.\n")
+
 
 def call_init_scripts(command, sitename):
     rc_dir = "/omd/sites/%s/etc/rc.d" % sitename
@@ -120,6 +194,8 @@ if command == "create":
     create_site(sys.argv[2]) # should be name argument
 elif command == "rm":
     remove_site(sys.argv[2])
+elif command == "mv":
+    rename_site(sys.argv[2], sys.argv[3])
 elif command in [ "start", "stop", "restart", "reload", "status" ]:
     # if site name if not given, the site is included in our
     # executable path
