@@ -63,10 +63,16 @@ version_specific_omd ()
     exec /omd/versions/$VERSION/bin/omd "$@"
 }
 
-check_site ()
-{
-    if [ ! -d "/omd/sites/$1" ]; then
+check_site () {
+    if [ -z $1 ] || [ ! -d "/omd/sites/$1" ]; then
         echo "Error: The specified site \"$1\" does not exist"
+        exit 1
+    fi
+}
+
+check_version () {
+    if [ -z $1 ] || [ ! -d "/omd/versions/$1" ]; then
+        echo "Error: The specified version \"$1\" does not exist"
         exit 1
     fi
 }
@@ -75,12 +81,12 @@ COMMAND=$1
 case "$COMMAND" in 
     rm|cp|mv)
         SITE="$2"
-				check_site "$SITE"
+        check_site "$SITE"
         exec /omd/sites/$SITE/bin/omd "$@"
     ;;
     start|stop|restart|reload|status)
         if [ "$2" ] ; then
-				    check_site "$2"
+            check_site "$2"
             echo "$2:"
             exec /omd/sites/$2/bin/omd "$@"
         else
@@ -92,6 +98,8 @@ case "$COMMAND" in
     ;;
     create|update)
         VERSION="${3:-$OMD_VERSION}"
+        [ "$COMMAND" = "update" ] && check_site "$2"
+        check_version "$VERSION"
         exec /omd/versions/$VERSION/bin/omd "$@"
     ;;
     sites)
