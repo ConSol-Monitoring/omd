@@ -85,14 +85,19 @@ def create_site(sitename):
     # Change ownership of all files and dirs to site user
     os.system("chown -R %s:%s '%s'" % (sitename, sitename, sitedir))
 
-    # Create include-hook for Apache
+    # Create include-hook for Apache and reload apache
     create_apache_hook(sitename)
+    reload_apache()
 
 def create_apache_hook(sitename):
     file("/omd/apache/%s.conf" % sitename, "w").write("Include %s/etc/apache/*.conf\n" % site_dir(sitename))
 
 def delete_apache_hook(sitename):
     os.remove("/omd/apache/%s.conf" % sitename)
+
+def reload_apache():
+    # FIXME: This is OS specific
+    os.system("apache2ctl restart")
 
 def create_template_instance(src, dst, replacements, sitename):
     file(dst, "w").write(replace_tags(file(src).read(), replacements))
@@ -111,8 +116,10 @@ def remove_site(sitename):
         bail_out("No such site '%s'.\n" % sitename)
     shutil.rmtree(site_dir(sitename))
 
-    # remove include-hook for Apache
-    os.remove("/omd/apache/%s.conf" % sitename)
+    # remove include-hook for Apache and tell apache
+    delete_apache_hook(sitename)
+    reload_apache()
+
 
 def rename_site(old, new):
     if site_exists(new):
@@ -121,24 +128,26 @@ def rename_site(old, new):
         bail_out("No such site '%s'.\n" % sitename)
 
     # Rename base directory and apache config
-    os.rename("/omd/sites/" + old, "/omd/sites/" + new)
+    os.rename(site_dir(old), site_dir(new))
     delete_apache_hook(old)
     create_apache_hook(new)
-    os.chdir("/omd/sites/" + new)
-
-    # Create new user and own over all files to him. Then delete old user
-    useradd(new)
-    uid = pwd.getpwnam(new).pw_gid
-    gid = pwd.getpwnam(new).pw_gid
-    os.chown(".", uid, gid)
-    for dirpath, dirnames, filenames in os.walk("."): 
-        for entry in dirnames + filenames:
-            os.lchown(dirpath + "/" + entry, uid, gid)
-    userdel(old)
 
     # Now reflect name change in configuration files which have been
     # create from skeletons. We are only interested in plain files,
     # directories and symlinks won't change.
+    patch_skeleton_files(old, new)
+
+    # Create new user and own over all files to him. Then delete old user
+    useradd(new)
+    chown_tree(site_dir(new), new)
+    userdel(old)
+
+    # Tell Apache about changes
+    reload_apache()
+
+# Change site specific information in files originally create from
+# skeleton files
+def patch_skeleton_files(old, new):
     skelroot = "/omd/versions/%s/skel" % OMD_VERSION
     os.chdir(skelroot)  # make relative paths
     for dirpath, dirnames, filenames in os.walk("."): 
@@ -148,13 +157,42 @@ def rename_site(old, new):
             dst = targetdir + "/" + fn
             if os.path.isfile(src) and not os.path.islink(src): # links are also files??.
                 patch_template_file(src, dst, old, new)
-                # patch changes ownership of files to root
-                os.chown(dst, uid, gid)
+
+def copy_site(old, new):
+    # Create an exact clone of a site.
+    if site_exists(new):
+        bail_out("Site %s already existing.\n" % new)
+    if not site_exists(old):
+        bail_out("No such site '%s'.\n" % sitename)
+    
+    # First make exact file-per-file copy with same
+    # user but already new name
+    os.mkdir(site_dir(new))
+    os.system("tar cf - -C '%s' . | tar xf - -C '%s'" % \
+            (site_dir(old), site_dir(new)))
+
+    # Change config files from old to new site (see rename_site())
+    patch_skeleton_files(old, new)
+
+    # Create new user and own over all files to him.
+    useradd(new)
+    chown_tree(site_dir(new), new)
+
+    # Apache hook, reload apache
+    create_apache_hook(new)
+    reload_apache()
+
+def chown_tree(dir, user):
+    uid = pwd.getpwnam(user).pw_gid
+    gid = pwd.getpwnam(user).pw_gid
+    os.chown(dir, uid, gid)
+    for dirpath, dirnames, filenames in os.walk(dir): 
+        for entry in dirnames + filenames:
+            os.lchown(dirpath + "/" + entry, uid, gid)
+
 
 def patch_template_file(src, dst, old, new):
     # Create patch from old instanciated skeleton file to new one
-    sys.stdout.write("Patching %s..." % dst)
-    sys.stdout.flush()
     content = file(src).read()
     for site in [ old, new ]:
         replacements = {
@@ -167,7 +205,6 @@ def patch_template_file(src, dst, old, new):
     # existing - possibly user modified - file.
     if 0 == os.system("diff -u %s.skel.%s %s.skel.%s | patch --force --backup --forward --silent %s" % 
             (dst, old, dst, new, dst)):
-        sys.stdout.write("OK\n")
         # remove unnecessary files
         try:
             os.remove(dst + ".skel." + old)
@@ -176,7 +213,7 @@ def patch_template_file(src, dst, old, new):
         except:
             pass
     else:
-        sys.stdout.write("conflict with your changes. Please resolve manually.\n")
+        sys.stdout.write("%s: Cannot update due to your changes. Please check.\n" % dst)
 
 
 def call_init_scripts(command, sitename):
@@ -196,6 +233,8 @@ elif command == "rm":
     remove_site(sys.argv[2])
 elif command == "mv":
     rename_site(sys.argv[2], sys.argv[3])
+elif command == "cp":
+    copy_site(sys.argv[2], sys.argv[3])
 elif command in [ "start", "stop", "restart", "reload", "status" ]:
     # if site name if not given, the site is included in our
     # executable path
