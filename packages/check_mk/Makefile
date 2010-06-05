@@ -41,7 +41,7 @@ install:
 	export nagiosurl='/nag01/nagios' ; \
 	export cgiurl='/nag01/nagios/cgi-bin' ; \
 	export pnp_url='/nag01/pnp4nagios/' ; \
-	export enable_livestatus='yes' ; \
+	export enable_livestatus='no' ; \
 	export nagios_auth_name='Nagios Access' ; \
 	export nagiosuser='nagios' ; \
 	export wwwgroup='nagios' ; \
