@@ -24,6 +24,7 @@ Usage: omd COMMAND [PARAMETERS]
   omd sites                 List all existing sites
   omd versions              List all installed versions
 
+  omd uninstall             Delete everything: software and sites!
 
 where:
  
@@ -63,6 +64,16 @@ version_specific_omd ()
     exec /omd/versions/$VERSION/bin/omd "$@"
 }
 
+uninstall ()
+{
+    for site in $($0 sites) ; do
+        omd rm $site
+    done
+    rm -rf /omd
+    rm -f /etc/apache2/conf.d/omd.conf
+    rm -f /etc/init.d/omd
+    rm -f /usr/bin/omd
+}
 
 COMMAND=$1
 case "$COMMAND" in 
@@ -90,6 +101,9 @@ case "$COMMAND" in
     ;;
     versions)
         list_versions
+    ;;
+    uninstall)
+        uninstall
     ;;
     *)
         usage
