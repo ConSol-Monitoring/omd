@@ -34,6 +34,12 @@ EOF
     exit 1
 }
 
+print_version()
+{
+    echo "OMD - Open Monitoring Distribution $OMD_VERSION"
+    exit 0
+}
+
 list_sites ()
 {
     for site in /omd/sites/*
@@ -107,6 +113,9 @@ case "$COMMAND" in
     ;;
     versions)
         list_versions
+    ;;
+    version)
+        print_version
     ;;
     *)
         usage
