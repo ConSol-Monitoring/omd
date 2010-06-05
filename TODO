@@ -6,3 +6,7 @@
   up.
 
 * Implement error handling in omd utility.
+
+* Implement 'omd setup': That should check if all packages from
+  that distro are installed OMD needs - and install them via
+  yum, zypper, aptitude.
