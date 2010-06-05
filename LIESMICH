@@ -8,8 +8,8 @@ make pack  -> erzeugt omd-0.42.tar.gz
 make clean -> Löscht alle Kompilate (make arbeitet inkrementell)
 
 Das tar-Archiv, dass 'make pack' erzeugt, packt man auf dem
-Zielsystem unter / aus. Über den dort enthaltenen Befehl
-/usr/bin/omd werden die Instanzen verwaltet:
+Zielsystem unter / aus (tar -C / -xvzf <Packet>). Über den dort enthaltenen
+Befehl /usr/bin/omd werden die Instanzen verwaltet:
 
 Beispiele:
 
@@ -30,6 +30,12 @@ Beispiele:
 
 # omd mv muc bgh
 => Umbenennt eine Instanz
+
+Note: Nachdem eine Instanz erzeugt wurde muss der Webserver (noch) manuell
+      durchgestartet werden, damit die neue Konfiguration geladen wird.
+
+Note: Aktuell wird für den Web-Zugriff per Default ein Nutzer "omdadmin"
+      mit dem Passwort "omd" angelegt.
 
 Da viele der Operationen Versions-spezifisch implementiert sein
 müssen, ist /usr/bin/omd nur ein sehr schlanker Wrapper. Dieser
