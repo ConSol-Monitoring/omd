@@ -25,6 +25,11 @@ Beispiele:
 # omd rm muc
 => Löscht Instanz muc
 
+# omd cp muc bgh
+=> Erzeugt Klon einer Instanz
+
+# omd mv muc bgh
+=> Umbenennt eine Instanz
 
 Da viele der Operationen Versions-spezifisch implementiert sein
 müssen, ist /usr/bin/omd nur ein sehr schlanker Wrapper. Dieser
@@ -46,3 +51,15 @@ und auf einen neuen Stand gebracht, oder in einem separaten Paket ausgeliefert.
 Am einfachsten wäre es, ihn in den Tarball einfach miteinzubauen. Bei
 Distro-Paketen (Debian, RPM) kann man das als Subpaket abspalten, damit
 es nicht zu Dateikonflikten kommt.
+
+
+Ideen für weitere Operatione von omd:
+
+omd archive -> stoppt falls nötig, packt zu tar zusammen (nur daten),
+    löscht danach
+
+omd backup -> stoppt und tart (wie archive, nur ohne löschen)
+
+omd restore -> packt backup wieder aus.
+
+

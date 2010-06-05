@@ -1,0 +1,8 @@
+* mount tmpfs on tmp/. Deal with tmpfs while starting (reinstantiate
+  skeleton files on each start). Automount tmpfs if not mounted during
+  'omd start'. Handle tmp on 'omd mv' and 'omd cp' and 'omd rm'.
+
+* Lock operations 'start', 'cp', 'mv', 'update', and 'rm' while site is
+  up.
+
+* Implement error handling in omd utility.
