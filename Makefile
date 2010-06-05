@@ -1,18 +1,21 @@
 include Makefile.omd
 
-DESTDIR=$$(pwd)/destdir
+DESTDIR=$(shell pwd)/destdir
 .PHONY: install-global
+# You can select a subset of the packages by overriding this
+# variale, e.g. make PACKAGES='nagios rrdtool' pack
+PACKAGES = *
 
 omd: build
 
 build:
-	@set -e ; for p in packages/* ; do \
+	@set -e ; cd packages ; for p in $(PACKAGES) ; do \
 	    $(MAKE) -C $$p build ; \
         done
 
 pack:
 	rm -rf $(DESTDIR)
-	@set -e ; for p in packages/* ; do \
+	@set -e ; cd packages ; for p in $(PACKAGES) ; do \
             $(MAKE) -C $$p DESTDIR=$(DESTDIR) install ; \
         done
 	# Repair packages that install with silly modes (such as Nagios)
@@ -20,7 +23,7 @@ pack:
 	$(MAKE) install-global
 	# Install skeleton files (subdirs skel/ in packages' directories)
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/skel
-	@set -e ; for p in packages/* ; do \
+	@set -e ; cd packages ; for p in $(PACKAGES) ; do \
             if [ -d "$$p/skel" ] ; then  \
               tar cf - -C $$p/skel --exclude="*~" --exclude=".gitignore" . | tar xvf - -C $(DESTDIR)$(OMD_ROOT)/skel ; \
             fi ;\
