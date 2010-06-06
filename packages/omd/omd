@@ -16,6 +16,9 @@ def bail_out(message):
 def site_dir(sitename):
     return "/omd/sites/" + sitename
 
+def tmp_dir(sitename):
+    return "/omd/sites/%s/tmp" % sitename
+
 def site_exists(sitename):
     return os.path.exists(site_dir(sitename))
 
@@ -40,6 +43,33 @@ def userdel(name):
     # it bears the same name as the user
     os.system("groupdel " + name + " 2>/dev/null")
 
+def tmpfs_mounted(sitename):
+    path = tmp_dir(sitename)
+    for line in file("/proc/mounts"):
+        device, mp, fstype, options, dump, fsck = line.split()
+        if mp == path and fstype == 'tmpfs':
+            return True
+    return False
+
+def create_tmpfs(sitename):
+    tmp = tmp_dir(sitename)
+    sys.stdout.write("Creating temporary filesystem...")
+    sys.stdout.flush()
+    if not os.path.exists(tmp):
+        os.mkdir(tmp)
+    if 0 != os.system("mount -t tmpfs -o mode=755 tmpfs '%s'" % tmp):
+        sys.stdout.write("ERROR\n")
+        return
+    create_skeleton_files(sitename, "tmp")
+    chown_tree(tmp, sitename)
+    sys.stdout.write("OK\n")
+
+def unmount_tmpfs(sitename):
+    sys.stdout.write("Unmounting temporary filesystem...")
+    if 0 == os.system("umount '%s'" % tmp_dir(sitename)):
+        sys.stdout.write("OK\n")
+
+
 def create_site(sitename):
     if site_exists(sitename):
         bail_out("Site '%s' already existing.\n" % sitename)
@@ -59,15 +89,32 @@ def create_site(sitename):
     for d in [ 'bin', 'include', 'lib', 'share' ]:
         os.symlink("version/" + d, sitedir + "/" + d)
 
-    # Instanciate template files
+    create_skeleton_files(sitename, '.')
+
+    # Change ownership of all files and dirs to site user
+    os.system("chown -R %s:%s '%s'" % (sitename, sitename, sitedir))
+
+    # Create include-hook for Apache and reload apache
+    create_apache_hook(sitename)
+    sys.stdout.write("Created new site %s with version %s.\n" % (sitename, OMD_VERSION))
+    reload_apache()
+
+def create_skeleton_files(sitename, dir):
+    # Hack: exclude tmp if dir is '.'
+    exclude_tmp = dir == '.'
+    sitedir = site_dir(sitename)
     replacements = {
         "@SITE@" : sitename,
         "@ROOT@" : sitedir,
     }
     skelroot = "/omd/versions/%s/skel" % OMD_VERSION
     os.chdir(skelroot)  # make relative paths
-    for dirpath, dirnames, filenames in os.walk("."): 
+    for dirpath, dirnames, filenames in os.walk(dir): 
+        if dirpath.startswith("./"):
+            dirpath = dirpath[2:]
         targetdir = sitedir + "/" + dirpath
+        if exclude_tmp and targetdir.startswith(tmp_dir(sitename)):
+            continue
         if not os.path.exists(targetdir):
             os.mkdir(targetdir)
         for d in dirnames:
@@ -85,14 +132,6 @@ def create_site(sitename):
                 os.symlink(os.readlink(src), dst)
             else:
                 create_template_instance(src, dst, replacements, sitename)
-
-    # Change ownership of all files and dirs to site user
-    os.system("chown -R %s:%s '%s'" % (sitename, sitename, sitedir))
-
-    # Create include-hook for Apache and reload apache
-    create_apache_hook(sitename)
-    sys.stdout.write("Created new site %s with version %s.\n" % (sitename, OMD_VERSION))
-    reload_apache()
 
 def create_apache_hook(sitename):
     file("/omd/apache/%s.conf" % sitename, "w").write("Include %s/etc/apache/*.conf\n" % site_dir(sitename))
@@ -119,6 +158,8 @@ def replace_tags(content, replacements):
 
 def remove_site(sitename):
     stop_if_not_stopped(sitename)
+    if tmpfs_mounted(sitename):
+        unmount_tmpfs(sitename)
     sys.stdout.write("Removing site %s..." % sitename)
     sys.stdout.flush()
     userdel(sitename)
@@ -304,6 +345,9 @@ elif command in [ "start", "stop", "restart", "reload", "status" ]:
         sitename = sys.argv[2]
     else:
         sitename = os.path.abspath(sys.argv[0]).split('/')[3]
+    if command == "start":
+        if not tmpfs_mounted(sitename):
+            create_tmpfs(sitename)
     if command == "status":
         sys.exit(check_status(sitename))
     else:

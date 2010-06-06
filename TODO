@@ -10,3 +10,7 @@
 * Implement 'omd setup': That should check if all packages from
   that distro are installed OMD needs - and install them via
   yum, zypper, aptitude.
+
+* Make a Webpage located on http://hostname/site/ with links
+  to Nagios, Check_MK, PNP4Nagios and Nagvis. The page can
+  also print the version of the site. 
