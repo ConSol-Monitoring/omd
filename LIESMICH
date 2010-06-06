@@ -59,6 +59,7 @@ Durch das Auspacken ist entstanden:
 /usr/bin/omd
 /etc/apache2/conf.d/omd.conf
 /etc/init.d/omd
+/etc/bash_completion.d/omd
 
 
 4) Sites erzeugen
