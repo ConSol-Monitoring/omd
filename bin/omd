@@ -79,6 +79,7 @@ uninstall ()
     rm -rf /omd
     rm -f /etc/apache2/conf.d/omd.conf
     rm -f /etc/init.d/omd
+    rm -f /etc/bash_completion.d/omd
     rm -f /usr/bin/omd
 }
 
