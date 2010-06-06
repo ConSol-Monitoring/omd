@@ -6,13 +6,25 @@
   to Nagios, Check_MK, PNP4Nagios and Nagvis. The page can
   also print the version of the site. 
 
-* Fix start skript of npcd, command 'status' => always says "running"
-
-* Add rrdcached
-
 * FIXME: "omd" python script is used when logged in as site user instead of
          the shell wrapper
-  Mathias: This is by design. The wrapper is not needed since the version
-  is clear within that instance. But we should make sure that only
-  'omd start', 'omd stop','omd restart' and so on should be used.
+  Mathias: Das ist Absicht, denn wenn man als Site-user omd aufruft,
+  ist ja klar, welche Site es ist und welches omd aufgerufen wird.
+  Die Operationen, die das globale omd mehr kann (omd uninstall, etc.)
+  kann man eh nur als root aufrufen.
+
+  Eigentlich sollte man im vesions-spezifischen 'omd' noch checken,
+  ob man root ist und - falls ja - nur die Optionen start, stop,
+  restart, status usw. zulassen.
+
+* Die Distro-Spefischen Dinge in den Griff bekommen:
+  - Benutzer in Gruppe aufnehmen (gpasswd)
+  - Verzeichnis von Apache
+
+  Irgendwie müssten wir beim 'make pack' oder schon bei 'make'
+  schauen, auf was für einer Distro wir laufen und das entsprechend
+  einkodieren. Man muss das Binärpaket eh immer genau auf der
+  Distro kompilieren, für die das gedacht ist.
+
+  
 

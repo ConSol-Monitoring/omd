@@ -37,10 +37,13 @@ printstatus_npcd()
 {
 	if status_npcd $1 $2; then
 		echo "$servicename (pid $NpcdPID) is running..."
+                exit 0
 	elif test $? == 2; then
 		echo "$servicename is not running but subsystem locked"
+                exit 2
 	else
 		echo "$servicename is not running"
+                exit 1
 	fi
 }
 
