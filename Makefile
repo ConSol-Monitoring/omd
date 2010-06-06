@@ -37,6 +37,10 @@ clean:
             $(MAKE) -C $$p clean ; \
         done
 
+mrproper:
+	git clean -xfd
+
+
 install-global:
 	mkdir -p $(DESTDIR)/usr/bin
 	install -m 755 bin/omd $(DESTDIR)/usr/bin
