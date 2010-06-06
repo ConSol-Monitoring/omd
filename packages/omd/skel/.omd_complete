@@ -1,0 +1,23 @@
+# Bash completion script for "omd"
+#
+
+_omd()
+{
+    local cur prev opts
+    COMPREPLY=()
+    cur="${COMP_WORDS[COMP_CWORD]}"
+    prev="${COMP_WORDS[COMP_CWORD-1]}"
+    opts="create rm cp mv update start stop restart reload status sites versions version"
+
+		# Fill in the sites for these commands
+    if [[ $prev =~ start|stop|restart|reload|status|rm|mv|cp|update ]]; then
+        opts=$(omd sites)
+    fi
+
+    if [[ $prev =~ omd|start|stop|restart|reload|status|rm|mv|cp|update ]] ; then
+        COMPREPLY=( $(compgen -W "${opts}" -- ${cur}) )
+        return 0
+    fi
+}
+
+complete -F _omd omd

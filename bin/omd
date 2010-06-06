@@ -24,6 +24,7 @@ Usage: omd COMMAND [PARAMETERS]
   omd sites                 List all existing sites
   omd versions              List all installed versions
 
+  omd version               Prints the version of this program
 
 where:
  
