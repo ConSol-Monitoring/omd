@@ -169,8 +169,7 @@ $views[4]["start"] = ( 60*60*24*365 );
 # EXPERIMENTAL rrdcached Support
 # Use only with rrdtool svn revision 1511+
 #
-# $conf['RRD_DAEMON_OPTS'] = 'unix:/tmp/rrdcached.sock';
-$conf['RRD_DAEMON_OPTS'] = '';
+$conf['RRD_DAEMON_OPTS'] = 'unix:@ROOT@/tmp/run/rrdcached.sock';
 
 $conf['template_dir'] = '@ROOT@/share/pnp4nagios/htdocs';
 ?>
