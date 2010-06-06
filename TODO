@@ -9,3 +9,14 @@
 * Fix start skript of npcd, command 'status' => always says "running"
 
 * Add rrdcached
+
+* FIXME: "omd" python script is used when logged in as site user instead of
+         the shell wrapper
+  Mathias: This is by design. The wrapper is not needed since the version
+  is clear within that instance. But we should make sure that only
+  'omd start', 'omd stop','omd restart' and so on should be used.
+
+  Frage mich ausserdem gerade, wie es mit dem tmpfs aussieht. Das
+  kann man nur als root mounten. Es sollte also beim create schon
+  gemountet werden, damit ein 'omd start' als Benutzer schon geht.
+

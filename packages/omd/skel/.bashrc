@@ -2,5 +2,6 @@ PS1='OMD[\u]:\w$ '
 alias ls='ls --color=auto -F'
 alias ll='ls -l'
 
-# Load the completion
-. .omd_complete
+if [ -f /etc/bash_completion ]; then
+    . /etc/bash_completion
+fi
