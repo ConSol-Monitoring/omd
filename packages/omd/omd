@@ -47,10 +47,13 @@ def userdel(name):
     os.system("groupdel " + name + " 2>/dev/null")
 
 def tmpfs_mounted(sitename):
-    path = tmp_dir(sitename)
+    # Problem here: if /omd is a symbolic link somewhere else,
+    # then in /proc/mounts the physical path will appear and be
+    # different from tmp_path. We just check the suffix therefore.
+    path_suffix = "sites/%s/tmp" % sitename
     for line in file("/proc/mounts"):
         device, mp, fstype, options, dump, fsck = line.split()
-        if mp == path and fstype == 'tmpfs':
+        if mp.endswith(path_suffix) and fstype == 'tmpfs':
             return True
     return False
 
