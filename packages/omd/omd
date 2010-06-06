@@ -19,6 +19,10 @@ def site_dir(sitename):
 def site_exists(sitename):
     return os.path.exists(site_dir(sitename))
 
+# Check if site is completely stopped
+def site_is_stopped(sitename):
+    return check_status(sitename, False) == 1
+
 def useradd(sitename):
     # Create user for running site 'name'
     os.system("groupadd " + sitename)
@@ -87,6 +91,7 @@ def create_site(sitename):
 
     # Create include-hook for Apache and reload apache
     create_apache_hook(sitename)
+    sys.stdout.write("Created new site %s with version %s.\n" % (sitename, OMD_VERSION))
     reload_apache()
 
 def create_apache_hook(sitename):
@@ -97,7 +102,10 @@ def delete_apache_hook(sitename):
 
 def reload_apache():
     # FIXME: This is OS specific
+    sys.stdout.write("Reloading Apache...")
+    sys.stdout.flush()
     os.system("apache2ctl restart")
+    sys.stdout.write("OK\n")
 
 def create_template_instance(src, dst, replacements, sitename):
     file(dst, "w").write(replace_tags(file(src).read(), replacements))
@@ -109,23 +117,35 @@ def replace_tags(content, replacements):
         content = content.replace(var, value)
     return content
 
-
 def remove_site(sitename):
+    stop_if_not_stopped(sitename)
+    sys.stdout.write("Removing site %s..." % sitename)
+    sys.stdout.flush()
     userdel(sitename)
     if not site_exists(sitename):
         bail_out("No such site '%s'.\n" % sitename)
     shutil.rmtree(site_dir(sitename))
+    sys.stdout.write("OK\n")
 
     # remove include-hook for Apache and tell apache
     delete_apache_hook(sitename)
     reload_apache()
 
+def stop_if_not_stopped(sitename):
+    if not site_is_stopped(sitename):
+        stop_site(sitename)
+
+def stop_site(sitename):
+    call_init_scripts(sitename, "stop")
 
 def rename_site(old, new):
     if site_exists(new):
         bail_out("Site %s already existing.\n" % new)
     if not site_exists(old):
         bail_out("No such site '%s'.\n" % sitename)
+
+    sys.stdout.write("Renaming site %s to %s..." % (old, new))
+    sys.stdout.flush()
 
     # Rename base directory and apache config
     os.rename(site_dir(old), site_dir(new))
@@ -141,6 +161,8 @@ def rename_site(old, new):
     useradd(new)
     chown_tree(site_dir(new), new)
     userdel(old)
+
+    sys.stdout.write("OK\n")
 
     # Tell Apache about changes
     reload_apache()
@@ -165,6 +187,8 @@ def copy_site(old, new):
     if not site_exists(old):
         bail_out("No such site '%s'.\n" % sitename)
     
+    sys.stdout.write("Creating new site %s as a copy of %s..." % (new, old))
+    sys.stdout.flush()
     # First make exact file-per-file copy with same
     # user but already new name
     os.mkdir(site_dir(new))
@@ -177,6 +201,7 @@ def copy_site(old, new):
     # Create new user and own over all files to him.
     useradd(new)
     chown_tree(site_dir(new), new)
+    sys.stdout.write("OK\n")
 
     # Apache hook, reload apache
     create_apache_hook(new)
@@ -215,16 +240,53 @@ def patch_template_file(src, dst, old, new):
     else:
         sys.stdout.write("%s: Cannot update due to your changes. Please check.\n" % dst)
 
-
-def call_init_scripts(command, sitename):
+def init_scripts(sitename):
     rc_dir = "/omd/sites/%s/etc/rc.d" % sitename
     scripts = os.listdir(rc_dir)
     scripts.sort()
+    return rc_dir, scripts
+
+def call_init_scripts(sitename, command):
     # Call stop scripts in reverse order
+    rc_dir, scripts = init_scripts(sitename)
     if command == "stop":
         scripts.reverse()
+    ok = True
     for script in scripts:
-        os.system("%s/%s %s" % (rc_dir, script, command))
+        if 0 != os.system("%s/%s %s" % (rc_dir, script, command)):
+            ok = False
+    if ok:
+         return 0
+    else:
+         return 2
+
+def check_status(sitename, display=True):
+    if display:
+        sys.stdout.write("%s: " % sitename)
+        sys.stdout.flush()
+    num_running = 0
+    rc_dir, scripts = init_scripts(sitename)
+    for script in scripts:
+        komponent = script.split("/")[-1].split('-')[-1]
+        if display:
+            sys.stdout.write(" %s:" % komponent)
+        state = os.system("%s/%s status >/dev/null 2>&1" % (rc_dir, script))
+        if state == 0:
+            if display:
+                sys.stdout.write("running")
+            num_running += 1
+        else:
+            if display:
+                sys.stdout.write("stopped")
+    if display:
+        sys.stdout.write("\n")
+
+    if num_running == len(scripts):
+        return 0 # all running
+    elif num_running == 0:
+        return 1 # completely stopped
+    else:
+        return 2 # partially running
 
 command = sys.argv[1]
 if command == "create":
@@ -242,6 +304,9 @@ elif command in [ "start", "stop", "restart", "reload", "status" ]:
         sitename = sys.argv[2]
     else:
         sitename = os.path.abspath(sys.argv[0]).split('/')[3]
-    call_init_scripts(command, sitename)
+    if command == "status":
+        sys.exit(check_status(sitename))
+    else:
+        sys.exit(call_init_scripts(sitename, command))
 else:
     bail_out("Sorry. Currently only 'create' and 'rm' are implemented.\n")
