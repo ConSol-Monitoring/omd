@@ -26,6 +26,9 @@ def site_exists(sitename):
 def site_is_stopped(sitename):
     return check_status(sitename, False) == 1
 
+def site_is_running(sitename):
+    return check_status(sitename, False) == 0
+
 def useradd(sitename):
     # Create user for running site 'name'
     os.system("groupadd " + sitename)
@@ -52,6 +55,8 @@ def tmpfs_mounted(sitename):
     return False
 
 def create_tmpfs(sitename):
+    if tmpfs_mounted(sitename):
+        return
     tmp = tmp_dir(sitename)
     sys.stdout.write("Creating temporary filesystem...")
     sys.stdout.flush()
@@ -65,10 +70,14 @@ def create_tmpfs(sitename):
     sys.stdout.write("OK\n")
 
 def unmount_tmpfs(sitename):
-    sys.stdout.write("Unmounting temporary filesystem...")
-    if 0 == os.system("umount '%s'" % tmp_dir(sitename)):
-        sys.stdout.write("OK\n")
+    if tmpfs_mounted(sitename):
+        sys.stdout.write("Unmounting temporary filesystem...")
+        if 0 == os.system("umount '%s'" % tmp_dir(sitename)):
+            sys.stdout.write("OK\n")
 
+def start_site(sitename):
+    create_tmpfs(sitename)
+    call_init_scripts(sitename, "start")
 
 def create_site(sitename):
     if site_exists(sitename):
@@ -158,8 +167,7 @@ def replace_tags(content, replacements):
 
 def remove_site(sitename):
     stop_if_not_stopped(sitename)
-    if tmpfs_mounted(sitename):
-        unmount_tmpfs(sitename)
+    unmount_tmpfs(sitename)
     sys.stdout.write("Removing site %s..." % sitename)
     sys.stdout.flush()
     userdel(sitename)
@@ -185,6 +193,9 @@ def rename_site(old, new):
     if not site_exists(old):
         bail_out("No such site '%s'.\n" % sitename)
 
+    running = site_is_running(old)
+    stop_if_not_stopped(old)
+    unmount_tmpfs(old)
     sys.stdout.write("Renaming site %s to %s..." % (old, new))
     sys.stdout.flush()
 
@@ -205,16 +216,24 @@ def rename_site(old, new):
 
     sys.stdout.write("OK\n")
 
+    # site was running before? Start it again
+    if running:
+        start_site(new)
+
     # Tell Apache about changes
     reload_apache()
 
 # Change site specific information in files originally create from
-# skeleton files
+# skeleton files. Skip files below tmp/
 def patch_skeleton_files(old, new):
     skelroot = "/omd/versions/%s/skel" % OMD_VERSION
     os.chdir(skelroot)  # make relative paths
     for dirpath, dirnames, filenames in os.walk("."): 
+        if dirpath.startswith("./"): 
+            dirpath = dirpath[2:]
         targetdir = site_dir(new) + "/" + dirpath
+        if targetdir.startswith(tmp_dir(new)):
+            continue # Skip files below tmp
         for fn in filenames:
             src = dirpath + "/" + fn
             dst = targetdir + "/" + fn
@@ -228,12 +247,14 @@ def copy_site(old, new):
     if not site_exists(old):
         bail_out("No such site '%s'.\n" % sitename)
     
+    running = site_is_running(old)
+    stop_if_not_stopped(old)
     sys.stdout.write("Creating new site %s as a copy of %s..." % (new, old))
     sys.stdout.flush()
     # First make exact file-per-file copy with same
     # user but already new name
     os.mkdir(site_dir(new))
-    os.system("tar cf - -C '%s' . | tar xf - -C '%s'" % \
+    os.system("tar cf - -C '%s' --exclude tmp . | tar xf - -C '%s'" % \
             (site_dir(old), site_dir(new)))
 
     # Change config files from old to new site (see rename_site())
@@ -243,6 +264,9 @@ def copy_site(old, new):
     useradd(new)
     chown_tree(site_dir(new), new)
     sys.stdout.write("OK\n")
+
+    if running:
+        start_site(old)
 
     # Apache hook, reload apache
     create_apache_hook(new)
@@ -346,8 +370,7 @@ elif command in [ "start", "stop", "restart", "reload", "status" ]:
     else:
         sitename = os.path.abspath(sys.argv[0]).split('/')[3]
     if command == "start":
-        if not tmpfs_mounted(sitename):
-            create_tmpfs(sitename)
+        create_tmpfs(sitename)
     if command == "status":
         sys.exit(check_status(sitename))
     else:
