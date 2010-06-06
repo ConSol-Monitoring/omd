@@ -16,7 +16,3 @@
   is clear within that instance. But we should make sure that only
   'omd start', 'omd stop','omd restart' and so on should be used.
 
-  Frage mich ausserdem gerade, wie es mit dem tmpfs aussieht. Das
-  kann man nur als root mounten. Es sollte also beim create schon
-  gemountet werden, damit ein 'omd start' als Benutzer schon geht.
-

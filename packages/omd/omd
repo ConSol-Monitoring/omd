@@ -103,6 +103,11 @@ def create_site(sitename):
     # Change ownership of all files and dirs to site user
     os.system("chown -R %s:%s '%s'" % (sitename, sitename, sitedir))
 
+    # Mount and create contents of tmpfs. This needs root permissions
+    # and should better not be done at start time, because then an
+    # 'omd start' as site user would not work.
+    create_tmpfs(sitename)    
+
     # Create include-hook for Apache and reload apache
     create_apache_hook(sitename)
     sys.stdout.write("Created new site %s with version %s.\n" % (sitename, OMD_VERSION))
