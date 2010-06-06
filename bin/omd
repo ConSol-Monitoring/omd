@@ -107,10 +107,10 @@ case "$COMMAND" in
     start|stop|restart|reload|status)
         if [ "$2" ] ; then
             check_site "$2"
-            exec /omd/sites/$2/bin/omd "$@"
+            exec su - "$2" -c "/omd/sites/$2/bin/omd $@"
         else
             for site in $(list_sites) ; do
-                /omd/sites/$site/bin/omd "$@"
+                exec su - "$site" -c "/omd/sites/$site/bin/omd $@"
             done
         fi
     ;;
