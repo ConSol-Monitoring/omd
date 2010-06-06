@@ -83,11 +83,9 @@ case "$COMMAND" in
     ;;
     start|stop|restart|reload|status)
         if [ "$2" ] ; then
-            echo "$2:"
             exec /omd/sites/$2/bin/omd "$@"
         else
             for site in $(list_sites) ; do
-                echo "$site:"
                 /omd/sites/$site/bin/omd "$@"
             done
         fi
