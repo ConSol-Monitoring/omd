@@ -25,6 +25,7 @@ Usage: omd COMMAND [PARAMETERS]
   omd versions              List all installed versions
 
   omd uninstall             Delete everything: software and sites!
+  omd version               Prints the version of this program
 
 where:
  
@@ -33,6 +34,12 @@ where:
 
 EOF
     exit 1
+}
+
+print_version()
+{
+    echo "OMD - Open Monitoring Distribution $OMD_VERSION"
+    exit 0
 }
 
 list_sites ()
@@ -75,14 +82,30 @@ uninstall ()
     rm -f /usr/bin/omd
 }
 
+check_site () {
+    if [ -z $1 ] || [ ! -d "/omd/sites/$1" ]; then
+        echo "Error: The specified site \"$1\" does not exist"
+        exit 1
+    fi
+}
+
+check_version () {
+    if [ -z $1 ] || [ ! -d "/omd/versions/$1" ]; then
+        echo "Error: The specified version \"$1\" does not exist"
+        exit 1
+    fi
+}
+
 COMMAND=$1
 case "$COMMAND" in 
     rm|cp|mv)
         SITE="$2"
+        check_site "$SITE"
         exec /omd/sites/$SITE/bin/omd "$@"
     ;;
     start|stop|restart|reload|status)
         if [ "$2" ] ; then
+            check_site "$2"
             exec /omd/sites/$2/bin/omd "$@"
         else
             for site in $(list_sites) ; do
@@ -92,6 +115,8 @@ case "$COMMAND" in
     ;;
     create|update)
         VERSION="${3:-$OMD_VERSION}"
+        [ "$COMMAND" = "update" ] && check_site "$2"
+        check_version "$VERSION"
         exec /omd/versions/$VERSION/bin/omd "$@"
     ;;
     sites)
@@ -102,6 +127,9 @@ case "$COMMAND" in
     ;;
     uninstall)
         uninstall
+    ;;
+    version)
+        print_version
     ;;
     *)
         usage

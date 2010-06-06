@@ -43,8 +43,12 @@ in einen Tarball ein.
 3) Installation
 
 Die Installation auf dem Zielsystem ist einfach: man packt
-den Tarball einfach unterhalb der Wurzel aus. Aktuell braucht
-man noch folgende manuelle Nacharbeiten:
+den Tarball einfach unterhalb der Wurzel aus, z.B. mit dem
+folgenden Befehl:
+
+# tar xzf omd-0.42.tar.gz -C /
+
+Aktuell braucht man noch folgende manuelle Nacharbeiten:
 
  * Startskript /etc/init.d/omd aktivieren
  * magic Quotes in PHP ausschalten (für Kohana)
@@ -142,6 +146,12 @@ omd restore -> packt backup wieder aus.
 
 
 6) Der Befehl /usr/bin/omd
+
+Note: Nachdem eine Instanz erzeugt wurde muss der Webserver (noch) manuell
+      durchgestartet werden, damit die neue Konfiguration geladen wird.
+
+Note: Aktuell wird für den Web-Zugriff per Default ein Nutzer "omdadmin"
+      mit dem Passwort "omd" angelegt.
 
 Da viele der Operationen Versions-spezifisch implementiert sein
 müssen, ist /usr/bin/omd nur ein sehr schlanker Wrapper. Dieser
