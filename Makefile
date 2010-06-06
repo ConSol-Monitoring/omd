@@ -47,3 +47,5 @@ install-global:
 	install -m 644 apache.conf $(DESTDIR)/etc/apache2/conf.d/omd.conf
 	mkdir -p $(DESTDIR)/etc/init.d
 	install -m 755 omd.init $(DESTDIR)/etc/init.d/omd
+	mkdir -p $(DESTDIR)/etc/bash_completion.d
+	install -m 644 .omd_bash_completion $(DESTDIR)/etc/bash_completion.d/omd

@@ -10,3 +10,6 @@
 * Implement 'omd setup': That should check if all packages from
   that distro are installed OMD needs - and install them via
   yum, zypper, aptitude.
+
+* FIXME: "omd" python script is used when logged in as site user instead of
+         the shell wrapper
