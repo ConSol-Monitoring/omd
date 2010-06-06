@@ -30,6 +30,9 @@
   aber evtl. auch ein blödes Beispiel, weil die OMD sich hier raushalten
   kann und man das einfach dem Admin überlässt.
 
+* Do restart of apache instead of reload after useradd(). This is 
+  neccessary since apache gets a new group.
+
 * Implement 'omd setup': That should check if all packages from
   that distro are installed OMD needs - and install them via
   yum, zypper, aptitude.
