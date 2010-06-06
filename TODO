@@ -1,5 +1,3 @@
-* Implement error handling in omd utility.
-
 * Implement 'omd setup': That should check if all packages from
   that distro are installed OMD needs - and install them via
   yum, zypper, aptitude.
@@ -7,3 +5,7 @@
 * Make a Webpage located on http://hostname/site/ with links
   to Nagios, Check_MK, PNP4Nagios and Nagvis. The page can
   also print the version of the site. 
+
+* Fix start skript of npcd, command 'status' => always says "running"
+
+* Add rrdcached
