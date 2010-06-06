@@ -15,7 +15,7 @@ CONFIGUREOPTS = \
     --datarootdir=$(OMD_ROOT)/share/pnp4nagios/htdocs \
     --with-nagios-user=$$(id -un) \
     --with-nagios-group=$$(id -gn) \
-#    --with-rrdtool=$(OMD_ROOT)/bin/rrdtool
+    --with-rrdtool=/bin/true 
 
 build:
 	tar xzf $(DIR).tar.gz
