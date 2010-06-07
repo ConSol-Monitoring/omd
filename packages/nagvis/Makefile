@@ -15,9 +15,9 @@ install:
 	 -u $$(id -un) \
 	 -g $$(id -gn) \
 	 -w $(DESTDIR)$(OMD_ROOT)/etc/apache \
-	 -W /lars/nagvis \
+	 -W /WILL_BE_REPLACED/nagvis \
 	 -B $(DESTDIR)$(OMD_ROOT)/bin/nagios \
-   -b $(DESTDIR)/usr/bin \
+	 -b $(DESTDIR)/usr/bin \
 	 -p $(DESTDIR)$(OMD_ROOT)/share/nagvis
 
 	# Move directories
