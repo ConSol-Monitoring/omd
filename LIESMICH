@@ -141,7 +141,7 @@ Ideen für weitere Operatione von omd:
 omd archive -> stoppt falls nötig, packt zu tar zusammen (nur daten),
     löscht danach
 
-omd backup -> stoppt und tart (wie archive, nur ohne löschen)
+omd backup -> stoppt und start (wie archive, nur ohne löschen)
 
 omd restore -> packt backup wieder aus.
 
@@ -180,3 +180,13 @@ von /omd/versions/ liegen) ist die Hoffnung, dass man diese (fast) nie
 wieder ändern muss.
 
 
+Weitere Ideen für OMD:
+======================
+omd snapshot --> Erzeugt eine Sicherung von /omd/sites/$SITE/{var,etc}. tmp
+wird nicht gesichert.
+
+omd restoreas NAME --> Sichert einen Snapshot unter einem anderen Namen
+zurück.
+
+Apache-Logfiles: Kann man eigene Logfiles für die Instanzen erzeugen? Ist
+es möglich, die Apache-Logs wegzusplitten?
