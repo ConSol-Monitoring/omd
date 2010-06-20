@@ -1,50 +1,13 @@
 #!/bin/bash
-set -e
 
 # FIXME: Do not hardcode this here
-OMD_VERSION=0.42
 OMD_PHYSICAL_BASE=/opt/omd
-
-list_sites ()
-{
-    for site in /omd/sites/*
-    do
-        if [ -d "$site" ] ; then
-            local SITE=${site##*/}
-            echo "$SITE"
-        fi
-    done
-}
-
-list_versions ()
-{
-    for version in /omd/versions/*
-    do
-        if [ -d "$version" ] ; then
-            local VERSION=${version##*/}
-            echo "$VERSION"
-        fi
-    done
-}
 
 version_specific_omd ()
 {
     local VERSION="$1"
     shift
     exec /omd/versions/$VERSION/bin/omd "$@"
-}
-
-uninstall ()
-{
-    for site in $($0 sites) ; do
-        omd rm $site
-    done
-    rm -rf $OMD_PHYSICAL_BASE
-    rm -f /omd
-    rm -f /etc/apache2/conf.d/omd.conf
-    rm -f /etc/init.d/omd
-    rm -f /etc/bash_completion.d/omd
-    rm -f /usr/bin/omd
 }
 
 check_site () {
@@ -61,6 +24,10 @@ check_version () {
     fi
 }
 
+list_sites () {
+    ( cd /omd/sites ; ls)
+}
+
 COMMAND=$1
 case "$COMMAND" in 
     rm|cp|mv)
@@ -74,24 +41,22 @@ case "$COMMAND" in
             exec su - "$2" -c "/omd/sites/$2/bin/omd $@"
         else
             for site in $(list_sites) ; do
-                exec su - "$site" -c "/omd/sites/$site/bin/omd $@"
+                su - "$site" -c "/omd/sites/$site/bin/omd $@"
             done
         fi
     ;;
     create|update)
-        VERSION="${3:-$OMD_VERSION}"
+        VERSION="${3:-default}"
         [ "$COMMAND" = "update" ] && check_site "$2"
         check_version "$VERSION"
         exec /omd/versions/$VERSION/bin/omd "$@"
     ;;
-    sites)
-        list_sites
-    ;;
-    versions)
-        list_versions
-    ;;
     uninstall)
-        uninstall
+	$0 stop
+        for site in $(list_sites) ; do
+            omd rm $site
+        done
+	exec /omd/versions/default/bin/omd uninstall
     ;;
     *)
         exec /omd/versions/default/bin/omd "$@"

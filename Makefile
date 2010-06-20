@@ -55,9 +55,9 @@ install-global:
 	install -m 644 apache.conf $(DESTDIR)$(APACHE_CONF_DIR)/omd.conf
 	mkdir -p $(DESTDIR)/etc/init.d
 	install -m 755 omd.init $(DESTDIR)/etc/init.d/omd
-	mkdir -p $(DESTDIR)/etc/bash_completion.d
-	install -m 644 .omd_bash_completion $(DESTDIR)/etc/bash_completion.d/omd
+#mkdir -p $(DESTDIR)/etc/bash_completion.d
+#install -m 644 .omd_bash_completion $(DESTDIR)/etc/bash_completion.d/omd
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/omd
 	install -m 644 distros/Makefile.$(DISTRO_NAME)_$(DISTRO_VERSION) $(DESTDIR)$(OMD_ROOT)/share/omd/distro.info
-	echo -e "OMD_VERSION = $(OMD_VERSION)" > $(DESTDIR)$(OMD_ROOT)/share/omd/omd.info
+	echo -e "OMD_VERSION = $(OMD_VERSION)\nOMD_PHYSICAL_BASE = $(OMD_PHYSICAL_BASE)" > $(DESTDIR)$(OMD_ROOT)/share/omd/omd.info
 

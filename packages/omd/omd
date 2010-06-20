@@ -408,6 +408,23 @@ where:
 def print_version():
     sys.stdout.write("OMD - OpenSource Monitoring Distribution Version %s\n" % g_info["OMD_VERSION"])
 
+def list_sites():
+    for site in os.listdir("/omd/sites"):
+	sys.stdout.write("%s\n" % site)
+
+def list_versions():
+    for version in os.listdir("/omd/versions"):
+	if version != "default":
+	    sys.stdout.write("%s\n" % version)
+
+def uninstall_omd():
+    for path in [ g_info["OMD_PHYSICAL_BASE"], 
+		  "/omd", 
+		  g_info["APACHE_CONF_DIR"] + "/omd.conf",
+		  "/etc/init.d/omd",
+		  "/usr/bin/omd" ]:
+	os.system("rm -rf '%s'" % path)
+
 # MAIN
 
 read_info()
@@ -415,9 +432,19 @@ if len(sys.argv) < 2 or sys.argv[1] == "help":
     usage()
     sys.exit(0)
 
+# FIXME: Require root permissions for several actions
 command = sys.argv[1]
 if command == "version":
     print_version()
+
+elif command == "sites":
+    list_sites()
+
+elif command == "versions":
+    list_versions()
+
+elif command == "uninstall":
+    uninstall_omd()
 
 elif command == "create":
     create_site(sys.argv[2]) # should be name argument
