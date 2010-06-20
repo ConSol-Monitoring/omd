@@ -1,5 +1,6 @@
-# General settings included by alle packages
+# General settings included by all packages
 
-OMD_VERSION = 0.42
-OMD_BASE = /omd
-OMD_ROOT = $(OMD_BASE)/versions/$(OMD_VERSION)
+OMD_VERSION        = 0.42
+OMD_BASE           = /omd
+OMD_PHYSICAL_BASE  = /opt/omd
+OMD_ROOT           = $(OMD_BASE)/versions/$(OMD_VERSION)

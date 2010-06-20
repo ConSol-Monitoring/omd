@@ -1,3 +1,4 @@
+SHELL = /bin/bash
 include Makefile.omd
 
 DESTDIR=$(shell pwd)/destdir
@@ -15,6 +16,8 @@ build:
 
 pack:
 	rm -rf $(DESTDIR)
+	mkdir -p $(DESTDIR)$(OMD_PHYSICAL_BASE)
+	A="$(OMD_PHYSICAL_BASE)" ; ln -s $${A:1} $(DESTDIR)/omd
 	@set -e ; cd packages ; for p in $(PACKAGES) ; do \
             $(MAKE) -C $$p DESTDIR=$(DESTDIR) install ; \
         done
@@ -44,8 +47,8 @@ mrproper:
 install-global:
 	mkdir -p $(DESTDIR)/usr/bin
 	install -m 755 bin/omd $(DESTDIR)/usr/bin
-	mkdir -p $(DESTDIR)/omd/sites
-	mkdir -p $(DESTDIR)/omd/apache
+	mkdir -p $(DESTDIR)$(OMD_BASE)/sites
+	mkdir -p $(DESTDIR)$(OMD_BASE)/apache
 	# FIXME: Make this work on RedHat as well
 	mkdir -p $(DESTDIR)/etc/apache2/conf.d
 	install -m 644 apache.conf $(DESTDIR)/etc/apache2/conf.d/omd.conf
