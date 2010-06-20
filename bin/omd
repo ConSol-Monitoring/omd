@@ -5,44 +5,6 @@ set -e
 OMD_VERSION=0.42
 OMD_PHYSICAL_BASE=/opt/omd
 
-usage ()
-{
-    cat <<EOF
-Usage: omd COMMAND [PARAMETERS]
-
-  omd create SITE VERSION   Create new site based on version VERSION
-  omd rm SITE               Delete site and all its data!
-  omd cp SITE SITE2         Create new site as copy of existing one
-  omd mv SITE SITE2         Rename site
-  omd update SITE VERSION   Update existing site to new OMD version
-
-  omd start SITE            Startup site
-  omd stop SITE             Stop site
-  omd restart SITE          Restart site
-  omd reload SITE           Reload site (make config change active)
-  omd status SITE           Check if site is running
-
-  omd sites                 List all existing sites
-  omd versions              List all installed versions
-
-  omd uninstall             Delete everything: software and sites!
-  omd version               Prints the version of this program
-
-where:
- 
- SITE ..... is the name of a site (a monitoring instance)
- VERSION .. is the name of an installed OMD version
-
-EOF
-    exit 1
-}
-
-print_version()
-{
-    echo "OMD - Open Monitoring Distribution $OMD_VERSION"
-    exit 0
-}
-
 list_sites ()
 {
     for site in /omd/sites/*
@@ -131,11 +93,8 @@ case "$COMMAND" in
     uninstall)
         uninstall
     ;;
-    version)
-        print_version
-    ;;
     *)
-        usage
+        exec /omd/versions/default/bin/omd "$@"
     ;;
 esac
 

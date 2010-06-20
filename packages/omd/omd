@@ -7,11 +7,25 @@
 import sys, os, shutil, pwd
 
 # FIXME: Determine this somehow
-OMD_VERSION = 0.42
+OMD_VERSION = "0.42"
 
 def bail_out(message):
     sys.stderr.write(message)
     sys.exit(1)
+
+def omd_root():
+    return "/omd/versions/" + OMD_VERSION
+
+# Read distro- and version specific values
+def read_info():
+    global g_info
+    g_info = {}
+    info_dir = omd_root() + "/share/omd"
+    for f in os.listdir(info_dir):
+	if f.endswith(".info"):
+	    for line in file(info_dir + "/" + f):
+	       var, value = line.split('=')
+	       g_info[var.strip()] = value.strip()
 
 def site_dir(sitename):
     return "/omd/sites/" + sitename
@@ -361,15 +375,62 @@ def check_status(sitename, display=True):
     else:
         return 2 # partially running
 
+def usage():
+    sys.stdout.write("""
+Usage: omd COMMAND [PARAMETERS]
+
+  omd setup                 Install missing package of Linux distribution
+  omd uninstall             Delete everything: software and sites!
+  omd version               Prints the version of this program
+
+  omd create SITE VERSION   Create new site based on version VERSION
+  omd rm SITE               Delete site and all its data!
+  omd cp SITE SITE2         Create new site as copy of existing one
+  omd mv SITE SITE2         Rename site
+  omd update SITE VERSION   Update existing site to new OMD version
+
+  omd start SITE            Startup site
+  omd stop SITE             Stop site
+  omd restart SITE          Restart site
+  omd reload SITE           Reload site (make config change active)
+  omd status SITE           Check if site is running
+
+  omd sites                 List all existing sites
+  omd versions              List all installed versions
+
+where:
+ 
+ SITE ..... is the name of a site (a monitoring instance)
+ VERSION .. is the name of an installed OMD version
+
+""")
+
+def print_version():
+    sys.stdout.write("OMD - OpenSource Monitoring Distribution Version %s\n" % g_info["OMD_VERSION"])
+
+# MAIN
+
+read_info()
+if len(sys.argv) < 2 or sys.argv[1] == "help":
+    usage()
+    sys.exit(0)
+
 command = sys.argv[1]
-if command == "create":
+if command == "version":
+    print_version()
+
+elif command == "create":
     create_site(sys.argv[2]) # should be name argument
+
 elif command == "rm":
     remove_site(sys.argv[2])
+
 elif command == "mv":
     rename_site(sys.argv[2], sys.argv[3])
+
 elif command == "cp":
     copy_site(sys.argv[2], sys.argv[3])
+
 elif command in [ "start", "stop", "restart", "reload", "status" ]:
     # if site name if not given, the site is included in our
     # executable path
