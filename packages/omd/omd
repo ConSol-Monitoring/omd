@@ -65,7 +65,7 @@ def create_tmpfs(sitename):
     sys.stdout.flush()
     if not os.path.exists(tmp):
         os.mkdir(tmp)
-    if 0 != os.system("mount -t tmpfs -o mode=755 tmpfs '%s'" % tmp):
+    if 0 != os.system("mount -t tmpfs -o mode=755,uid=%s,gid=%s tmpfs '%s'" % (sitename, sitename, tmp)):
         sys.stdout.write("ERROR\n")
         return
     create_skeleton_files(sitename, "tmp")
@@ -281,7 +281,7 @@ def copy_site(old, new):
     reload_apache()
 
 def chown_tree(dir, user):
-    uid = pwd.getpwnam(user).pw_gid
+    uid = pwd.getpwnam(user).pw_uid
     gid = pwd.getpwnam(user).pw_gid
     os.chown(dir, uid, gid)
     for dirpath, dirnames, filenames in os.walk(dir): 
