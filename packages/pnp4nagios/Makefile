@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 NAME = pnp4nagios
-VERSION = 0.6.3
+VERSION = 0.6.4
 DIR = $(NAME)-$(VERSION)
 
 # Configure options for Nagios. Since we want to compile
