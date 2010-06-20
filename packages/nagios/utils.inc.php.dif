@@ -26,10 +26,3 @@
  
  function get_update_information(){
  	global $cfg;
-@@ -471,4 +476,4 @@
- 	return $contents;
- 	}
- 
--?>
-\ Kein Zeilenumbruch am Dateiende.
-+?>
