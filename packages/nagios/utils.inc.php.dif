@@ -10,3 +10,26 @@
  
  function get_update_information(){
  	global $cfg;
+--- utils.inc.php.orig	2010-06-20 12:49:03.000000000 +0200
++++ utils.inc.php	2010-06-20 12:49:19.000000000 +0200
+@@ -2,7 +2,12 @@
+ // HELPER UTILITIES
+ 
+ // OMD: read site specific configuration file
+-require_once(dirname($_SERVER["SCRIPT_FILENAME"]).'/../../../etc/nagios/config.inc.php');
++// OMD: extract sitename from script filename and find path to
++//      site specific configuration file
++$omd_parts = explode("/", $_SERVER["SCRIPT_FILENAME"]);
++$omd_sitename = $omd_parts[3];
++$omd_site_config_path = "/omd/sites/$omd_sitename/etc/nagios/config.inc.php";
++require_once($omd_site_config_path);
+ 
+ function get_update_information(){
+ 	global $cfg;
+@@ -471,4 +476,4 @@
+ 	return $contents;
+ 	}
+ 
+-?>
+\ Kein Zeilenumbruch am Dateiende.
++?>
