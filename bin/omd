@@ -93,7 +93,7 @@ check_site () {
 }
 
 check_version () {
-    if [ -z $1 ] || [ ! -d "/omd/versions/$1" ]; then
+    if [ -z "$1" ] || [ ! -d "/omd/versions/$1" ]; then
         echo "Error: The specified version \"$1\" does not exist"
         exit 1
     fi
