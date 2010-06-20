@@ -69,3 +69,12 @@
   Datei mit einer Liste von Pfade und zugehörigen Permissions, die
   mit installiert wird und bei 'omd setup' angewendet. Schön ist das
   nicht. Vielleicht braucht man sowas wie 'fakeroot'
+
+* Makefiles: Evtl. sollte man die Targets des Hauptmakefiles etwas
+  an die Standards angleichen:
+  make -> baut alles
+  make install -> installiert direkt unter Bausystem /omd/$VERSION
+  make DESTDIR=... install -> installiert unter Hilfswurzel 
+  make dist -> packt Quellcodes ein, ohne GIT, ohne Kompilate
+  make pack -> wie bisher
+  make rpm -> Erzeugt RPM-Paket?
