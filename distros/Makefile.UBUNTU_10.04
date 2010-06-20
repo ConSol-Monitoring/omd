@@ -1,0 +1,3 @@
+OS_PACKAGES     = libapache2-mod-python
+APACHE_CONF_DIR = /etc/apache2/conf.d
+APACHE_INIT     = /etc/init.d/apache2

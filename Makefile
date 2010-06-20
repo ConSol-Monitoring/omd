@@ -50,8 +50,8 @@ install-global:
 	mkdir -p $(DESTDIR)$(OMD_BASE)/sites
 	mkdir -p $(DESTDIR)$(OMD_BASE)/apache
 	# FIXME: Make this work on RedHat as well
-	mkdir -p $(DESTDIR)/etc/apache2/conf.d
-	install -m 644 apache.conf $(DESTDIR)/etc/apache2/conf.d/omd.conf
+	mkdir -p $(DESTDIR)$(APACHE_CONF_DIR)
+	install -m 644 apache.conf $(DESTDIR)$(APACHE_CONF_DIR)/omd.conf
 	mkdir -p $(DESTDIR)/etc/init.d
 	install -m 755 omd.init $(DESTDIR)/etc/init.d/omd
 	mkdir -p $(DESTDIR)/etc/bash_completion.d

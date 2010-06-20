@@ -4,3 +4,24 @@ OMD_VERSION        = 0.42
 OMD_BASE           = /omd
 OMD_PHYSICAL_BASE  = /opt/omd
 OMD_ROOT           = $(OMD_BASE)/versions/$(OMD_VERSION)
+
+# Determine the distro we are running on and its version. Nasty here:
+# We do not known wether we are called from the main Makefile or
+# from a package Makefile. There we do not know the path to the
+# 'distro' script. We simply try out both paths...
+
+DISTRO_INFO        = $(shell ./distro 2>/dev/null || ../../distro)
+DISTRO_NAME        = $(word 1, $(DISTRO_INFO))
+DISTRO_VERSION     = $(word 2, $(DISTRO_INFO))
+
+# Depending on the distro we include a Makefile with distro-
+# specific variables. Here the same problem appears again.
+# Maybe anyone has a simpler solution?
+
+-include distros/Makefile.$(DISTRO_NAME)_$(DISTRO_VERSION)
+ifeq ($(OS_PACKAGES),)
+  include ../../distros/Makefile.$(DISTRO_NAME)_$(DISTRO_VERSION)
+endif
+
+# Net result -> all Makefiles have now access to the linux distribution
+# specific settings

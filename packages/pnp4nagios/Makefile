@@ -23,7 +23,7 @@ build:
 	$(MAKE) -C $(DIR) all
 
 install:
-	mkdir -p $(DESTDIR)/etc/apache2/conf.d
+	mkdir -p $(DESTDIR)$(APACHE_CONF_DIR)
 	$(MAKE) DESTDIR=$(DESTDIR) -C $(DIR) install install-html
 	# Replace hard coded config with redirection to site specific version
 	rm $(DESTDIR)$(OMD_ROOT)/share/pnp4nagios/htdocs/install.php

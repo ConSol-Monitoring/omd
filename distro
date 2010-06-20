@@ -1,0 +1,28 @@
+#!/bin/bash
+#
+# This script determines the Linux distribution we are running
+# on. It output two words: (1) The distro name and (2) the version
+# Example output "UBUNTU 10.04"
+
+# Ubuntu is detected with /etc/lsb-release
+if [ -e /etc/lsb-release ] 
+then
+    . /etc/lsb-release
+    if [ -n "$DISTRIB_ID" -a -n "$DISTRIB_RELEASE" ] ; then
+        echo "${DISTRIB_ID^^*} $DISTRIB_RELEASE"
+        exit 0
+    fi
+fi
+
+# Debian: We drop the last version: 5.0.4 -> 5.0
+if [ -e /etc/debian_version ]
+then
+    VERSION=$(cat /etc/debian_version)
+    if [ "${VERSION:3:1}" = . ] ; then
+        VERSION=${VERSION:0:3}
+    fi
+    echo "DEBIAN $VERSION"
+    exit 0
+fi
+
+
