@@ -45,6 +45,8 @@ mrproper:
 
 
 install-global:
+	# Create link to default version
+	ln -s $(OMD_VERSION) $(DESTDIR)$(OMD_BASE)/versions/default
 	mkdir -p $(DESTDIR)/usr/bin
 	install -m 755 bin/omd $(DESTDIR)/usr/bin
 	mkdir -p $(DESTDIR)$(OMD_BASE)/sites
