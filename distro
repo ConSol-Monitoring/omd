@@ -5,11 +5,12 @@
 # Example output "UBUNTU 10.04"
 
 # Ubuntu is detected with /etc/lsb-release
+SEP=${1:- }
 if [ -e /etc/lsb-release ] 
 then
     . /etc/lsb-release
     if [ -n "$DISTRIB_ID" -a -n "$DISTRIB_RELEASE" ] ; then
-        echo "${DISTRIB_ID^^*} $DISTRIB_RELEASE"
+        echo "${DISTRIB_ID^^*}$SEP$DISTRIB_RELEASE"
         exit 0
     fi
 fi
@@ -21,7 +22,7 @@ then
     if [ "${VERSION:3:1}" = . ] ; then
         VERSION=${VERSION:0:3}
     fi
-    echo "DEBIAN $VERSION"
+    echo "DEBIAN$SEP$VERSION"
     exit 0
 fi
 
