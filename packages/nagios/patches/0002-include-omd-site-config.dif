@@ -1,5 +1,6 @@
---- utils.inc.php.orig	2009-03-10 21:05:43.000000000 +0100
-+++ utils.inc.php	2010-06-20 16:16:10.000000000 +0200
+diff -ur nagios-3.2.1/html/includes/utils.inc.php nagios-3.2.1.new/html/includes/utils.inc.php
+--- nagios-3.2.1/html/includes/utils.inc.php	2009-03-10 21:05:43.000000000 +0100
++++ nagios-3.2.1.new/html/includes/utils.inc.php	2010-07-03 20:14:37.000000000 +0200
 @@ -1,7 +1,13 @@
  <?php
  // HELPER UTILITIES

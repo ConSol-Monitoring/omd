@@ -1,0 +1,16 @@
+Index of patches
+
+0001:
+    Extend the configuration file nagios.cfg with files in nagios.d: After
+    reading the main configuration file, Nagios removes ".cfg" from the name
+    of the file (if the file ends in .cfg) and adds ".d". Then it reads in
+    all files in that directory ending with ".cfg" (non-recursive). The order
+    is not specified.
+
+0002:
+    The file include/utils.inc.php includes config.inc.php by going up 
+    one directory in the physical directory tree. This patch changes that
+    behaviour in a way needed for OMD: It is including the site specific
+    config file /omd/sites/@SITE@/etc/ngaios/config.inc.php. The site name
+    is extracted from the script file name (supplied by Apache).
+

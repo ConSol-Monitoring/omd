@@ -14,11 +14,16 @@ CONFIGUREOPTS = \
     --with-nagios-user=$$(id -un) \
     --with-nagios-group=$$(id -gn) \
 
-build:
-	tar xzf $(DIR).tar.gz
-	patch $(DIR)/html/includes/utils.inc.php utils.inc.php.dif
+build: prepare
+	for p in patches/*.dif ; do \
+	    echo "applying $$p..." ; \
+	    ( cd $(DIR) ; patch -p1 -b ) < $$p ; \
+	done
 	cd $(DIR) ; ./configure $(CONFIGUREOPTS)
 	$(MAKE) -C $(DIR) all
+
+prepare:
+	tar xzf $(DIR).tar.gz
 
 install:
 	$(MAKE) DESTDIR=$(DESTDIR) -C $(DIR) install-base install-cgis install-html

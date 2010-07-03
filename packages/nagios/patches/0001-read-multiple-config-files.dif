@@ -1,0 +1,67 @@
+diff -ur nagios-3.2.1.orig/base/config.c nagios-3.2.1/base/config.c
+--- nagios-3.2.1.orig/base/config.c	2009-05-17 14:54:28.000000000 +0200
++++ nagios-3.2.1/base/config.c	2010-07-03 20:07:04.000000000 +0200
+@@ -31,6 +31,8 @@
+ #include "../include/nebmods.h"
+ #include "../include/nebmodules.h"
+ 
++#include <sys/types.h>
++#include <dirent.h>
+ 
+ extern char	*log_file;
+ extern char     *command_file;
+@@ -245,8 +247,7 @@
+         }
+ 
+ 
+-/* process the main configuration file */
+-int read_main_config_file(char *main_config_file){
++int read_nagios_config_file(char *main_config_file){
+ 	char *input=NULL;
+ 	char *variable=NULL;
+ 	char *value=NULL;
+@@ -1386,6 +1387,43 @@
+ 	return OK;
+ 	}
+ 
++int read_nagios_d(char *main_config_file)
++{
++    char dirpath[4096];
++    char filepath[4096];
++    strncpy(dirpath, main_config_file, sizeof(dirpath) - 2);
++    if (!strcmp(dirpath + strlen(dirpath) - 4, ".cfg")) { /* strip off .cfg if present */
++        dirpath[strlen(dirpath) - 4] = 0;
++    }
++    strcat(dirpath, ".d");
++    DIR *dir = opendir(dirpath);
++    if (dir) {
++        struct dirent *de;
++        while (de = readdir(dir)) {
++            if (!strcmp(de->d_name + strlen(de->d_name) - 4, ".cfg")) {
++                snprintf(filepath, sizeof(filepath), "%s/%s", dirpath, de->d_name);
++                int result;
++                if (0 != (result = read_nagios_config_file(filepath))) {
++                    closedir(dir);
++                    return result;
++                }
++            }
++        }
++        closedir(dir);
++    }
++    return 0;
++}
++
++
++/* process the main configuration file */
++int read_main_config_file(char *main_config_file){
++    int result;
++    result = read_nagios_config_file(main_config_file);
++    /* OMD patch: read all config files in nagios.d */
++    if (result == 0)
++        result = read_nagios_d(main_config_file);
++    return result;
++}
+ 
+ 
+ /* processes macros in resource file */
+
