@@ -78,3 +78,9 @@
   make dist -> packt Quellcodes ein, ohne GIT, ohne Kompilate
   make pack -> wie bisher
   make rpm -> Erzeugt RPM-Paket?
+* omd config: make sure that site is down while changing
+  configuration parameters. Why? pnp4nagios=off will disable
+  the startscript of npcd. If that is done while the thing
+  is running, it will never be stopped again. You anyway
+  need a restart of all components after changing this parameter.
+
