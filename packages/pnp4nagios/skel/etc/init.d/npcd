@@ -10,6 +10,11 @@
 # Description: 	     Nagios Performance Data C Daemon
 ### END INIT INFO
 
+. @ROOT@/etc/omd/site.conf
+if [ "$pnp4nagios" != on ] ; then
+    exit 0
+fi
+
 # chkconfig: 345 99 01
 #
 # File : npcd
