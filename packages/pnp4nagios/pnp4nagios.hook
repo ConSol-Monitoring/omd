@@ -12,6 +12,9 @@ of performance data by pnp. It implies the starting of the daemon
 Nagios.
 EOF
         ;;
+        default)
+                echo "on"
+        ;;
         choices)
                 echo "on: enable"
                 echo "off: disable"

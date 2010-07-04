@@ -425,6 +425,126 @@ def uninstall_omd():
 		  "/usr/bin/omd" ]:
 	os.system("rm -rf '%s'" % path)
 
+def do_config(args):
+    config_load()
+    config_load_hooks()
+    if len(args) == 0:
+	args = [ "show" ]
+    command = args[0]
+    args = args[1:]
+    if command == "show":
+	config_show(args)
+    elif command == "set":
+	config_set(args)
+    else:
+	config_usage()
+
+def config_load():
+    global g_config
+    g_config = {}
+    for line in file(g_sitedir + "/etc/omd/site.conf"):
+	line = line.strip()
+	if line == "" or line[0] == "#": 
+	    continue
+	var, value = line.split("=", 1)
+	value = value.strip('"').strip("'")
+	var = var.strip()
+	g_config[var] = value
+
+def config_save():
+    f = file(g_sitedir + "/etc/omd/site.conf", "w")
+    v = g_config.keys()
+    v.sort()
+    for var in v:
+	f.write("%s='%s'\n" % (var, g_config[var]))
+
+# Get information about all hooks
+def config_load_hooks():
+    global g_hooks
+    g_hooks = {}
+    hook_dir = g_sitedir + "/lib/omd/hooks"
+    for hookname in os.listdir(hook_dir):
+	if hookname[0] != '.':
+	     g_hooks[hookname] = config_load_hook(hookname)
+
+def call_hook(hookname, args):
+    hook_file = g_sitedir + "/lib/omd/hooks/" + hookname
+    argsstring = " ".join([ "'%s'" % arg for arg in args ])
+    os.putenv("OMD_ROOT", g_sitedir)
+    os.putenv("OMD_SITE", g_sitename)
+    return os.popen(hook_file + " " + argsstring).read().strip()
+
+def config_load_hook(hookname): 
+
+    def get_hook_info(info):
+	return call_hook(hookname, [info])
+
+    hook = {}
+    hook["alias"] = get_hook_info("alias")
+    hook["description"] = get_hook_info("alias")
+    choices = []
+    choicestxt = get_hook_info("choices").split("\n")
+    try:
+	for line in choicestxt:
+	    val, descr = line.split(":", 1)
+	    val = val.strip()
+	    descr = descr.strip()
+	    choices.append( (val, descr) )
+    except:
+	sys.stderr.write("Invalid output of hook: %s\n" % choicestxt)
+	sys.exit(1)
+	
+    hook["value"] = g_config[hookname]
+    hook["choices"] = choices
+    return hook
+
+
+def config_set(args):
+    if len(args) != 2:
+	sys.stderr.write("Please specify variable name and value\n")
+	config_usage()
+	return
+
+    hookname = args[0]
+    value = args[1]
+    hook = g_hooks.get(hookname)
+    if not hook:
+	sys.stderr.write("No such variable '%s'\n" % hookname)
+	return
+
+    choices = [ var for (var, descr) in hook["choices"] ]
+    if value not in choices:
+	sys.stderr.write("Invalid value for '%s'. Allowed are: %s\n" % \
+		(value, ", ".join(choices)))
+	return
+
+    config_set_value(hookname, value)
+
+def config_set_value(hookname, value):
+    g_config[hookname] = value
+    config_save()
+    os.system("%s/lib/omd/hooks/%s set '%s'" % (g_sitedir, hookname, value))
+
+def config_usage():
+    sys.stdout.write("""Usage of config command:
+
+omd config show          - show current settings of all configuration variables
+omd config show VAR      - show current setting of variable VAR
+omd config set VAR VALUE - set VAR to VALUE
+omd config choices VAR   - show allowed values for VAR
+""")
+
+def config_show(args):
+    if len(args) == 0:
+	v = g_config.keys()
+	v.sort()
+	for var in v:
+	    sys.stdout.write("%s: %s\n" % (var, g_config[var]))
+    else:
+	sys.stdout.write(" ".join([ g_config[var] for var in args]))
+	sys.stdout.write("\n")
+
+
 # MAIN
 
 read_info()
@@ -457,6 +577,11 @@ elif command == "mv":
 
 elif command == "cp":
     copy_site(sys.argv[2], sys.argv[3])
+
+elif command == "config":
+    g_sitename = os.path.abspath(sys.argv[0]).split('/')[3]
+    g_sitedir = site_dir(g_sitename)
+    do_config(sys.argv[2:])
 
 elif command in [ "start", "stop", "restart", "reload", "status" ]:
     # if site name if not given, the site is included in our

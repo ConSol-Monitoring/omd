@@ -35,7 +35,7 @@ case "$COMMAND" in
         check_site "$SITE"
         exec /omd/sites/$SITE/bin/omd "$@"
     ;;
-    start|stop|restart|reload|status)
+    start|stop|restart|reload|status|config)
         if [ "$2" ] ; then
             check_site "$2"
             exec su - "$2" -c "/omd/sites/$2/bin/omd $@"
