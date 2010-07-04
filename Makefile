@@ -20,6 +20,10 @@ pack:
 	A="$(OMD_PHYSICAL_BASE)" ; ln -s $${A:1} $(DESTDIR)/omd
 	@set -e ; cd packages ; for p in $(PACKAGES) ; do \
             $(MAKE) -C $$p DESTDIR=$(DESTDIR) install ; \
+            for hook in $$(cd $$p ; ls *.hook) ; do \
+                mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/omd/hooks ; \
+                install -m 755 $$p/$$hook $(DESTDIR)$(OMD_ROOT)/lib/omd/hooks/$${hook%.hook} ; \
+            done ; \
         done
 	# Repair packages that install with silly modes (such as Nagios)
 	chmod -R o+Xr $(DESTDIR)$(OMD_ROOT)
