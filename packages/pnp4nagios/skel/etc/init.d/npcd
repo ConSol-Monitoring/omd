@@ -11,8 +11,8 @@
 ### END INIT INFO
 
 . @ROOT@/etc/omd/site.conf
-if [ "$pnp4nagios" != on ] ; then
-    exit 0
+if [ "$CONFIG_PNP4NAGIOS" != on ] ; then
+    exit 5
 fi
 
 # chkconfig: 345 99 01

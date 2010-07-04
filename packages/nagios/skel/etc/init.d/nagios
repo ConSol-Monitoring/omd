@@ -30,6 +30,9 @@
 #              used to provide network services status.
 #
   
+. @ROOT@/etc/omd/site.conf
+[ "$CONFIG_CORE" = "nagios" ] || exit 5
+
 status_nagios ()
 {
 

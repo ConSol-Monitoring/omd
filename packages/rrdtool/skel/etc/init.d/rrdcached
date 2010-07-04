@@ -12,6 +12,12 @@
 # Description:    Start RRD cache daemon
 ### END INIT INFO
 
+# Start only if PNP is enabled
+. @ROOT@/etc/omd/site.conf
+if [ "$CONFIG_PNP4NAGIOS" != on ] ; then
+    exit 5
+fi
+
 # Timing options can be set here
 TIMING="-w 3600 -z 1800 -f 7200"
 

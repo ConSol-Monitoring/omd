@@ -1,34 +1,6 @@
-* Der admin muss einzelne Komponenten deaktivieren können. Gut wäre
-  natürlich, wenn das nicht nur beim 'omd create', sondern jederzeit
-  später auch möglich wäre. Das Ganze hat dann Einfluss auf
-
-  - Startskripte
-  - Nagios-Optionen
-  - Konfiguration von Apache
-  - evtl. weiteres
-
-  Beispiel: PNP4Nagios. Wenn man es nicht will, dann muss
-  - in nagios.cfg das entsprechend raus
-  - der npcd gestoppt werden
-  - der rrdcached ebenfalls
-  - evtl. in Check_MK die Links auf die Perfdaten raus.
-  Blöd ist hier z.B., dass nagios.cfg nicht modular ist. Vielleicht
-  macht man einen Patch für ein nagios.d Verzeichnis.
-
-  Die API dazu könnte sein:
-
-  (aufgerufen als site-user):
-  $ omd disable pnp4nagios
-  $ omd enable nagvis
-  $ omd addons ==> zeigt den Stand der Schalter (disabled/enabled)
-
-  Gespeichert werden könnte das in @ROOT@/etc/omd/addons oder
-  etc/omd.conf (ini-Datei)
-
-  Dabei gibt es keine 1:1-Beziehung zwischen addons und Schaltern.
-  Z.B. braucht man einen Schalter für Livestatus-TCP. Letzteres ist
-  aber evtl. auch ein blödes Beispiel, weil die OMD sich hier raushalten
-  kann und man das einfach dem Admin überlässt.
+* Bei omd config set ... muss an manchen Stellen Apache durchgeladen
+  werden. Dazu hat aber der Site-Benutzer keine Berechtigung.
+  Soll man ihm die mit sudo verpassen, oder was könnte man hier tun?
 
 * Do restart of apache instead of reload after useradd(). This is 
   neccessary since apache gets a new group.

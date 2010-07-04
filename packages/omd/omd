@@ -97,6 +97,11 @@ def start_site(sitename):
     call_init_scripts(sitename, "start")
 
 def create_site(sitename):
+    global g_sitename
+    g_sitename = sitename
+    global g_sitedir
+    g_sitedir = site_dir(g_sitename)
+
     if site_exists(sitename):
         bail_out("Site '%s' already existing.\n" % sitename)
 
@@ -116,6 +121,11 @@ def create_site(sitename):
         os.symlink("version/" + d, sitedir + "/" + d)
 
     create_skeleton_files(sitename, '.')
+
+    # Create site.conf with default values
+    config_load_hooks()
+    config_set_all() # execute 'set' functions with default values
+    config_save()
 
     # Change ownership of all files and dirs to site user
     os.system("chown -R %s:%s '%s'" % (sitename, sitename, sitedir))
@@ -352,26 +362,31 @@ def check_status(sitename, display=True):
         sys.stdout.write("%s: " % sitename)
         sys.stdout.flush()
     num_running = 0
+    num_unused = 0
     rc_dir, scripts = init_scripts(sitename)
     for script in scripts:
         komponent = script.split("/")[-1].split('-')[-1]
         if display:
             sys.stdout.write(" %s:" % komponent)
-        state = os.system("%s/%s status >/dev/null 2>&1" % (rc_dir, script))
+        state = os.system("%s/%s status >/dev/null 2>&1" % (rc_dir, script)) >> 8
         if state == 0:
             if display:
                 sys.stdout.write("running")
             num_running += 1
+        elif state == 5:
+            if display:
+                sys.stdout.write("unused")
+            num_unused += 1
         else:
             if display:
                 sys.stdout.write("stopped")
     if display:
         sys.stdout.write("\n")
 
-    if num_running == len(scripts):
-        return 0 # all running
-    elif num_running == 0:
+    if num_running == 0:
         return 1 # completely stopped
+    elif num_running + num_unused == len(scripts):
+        return 0 # all running
     else:
         return 2 # partially running
 
@@ -426,7 +441,6 @@ def uninstall_omd():
 	os.system("rm -rf '%s'" % path)
 
 def do_config(args):
-    config_load()
     config_load_hooks()
     if len(args) == 0:
 	args = [ "show" ]
@@ -440,23 +454,36 @@ def do_config(args):
 	config_usage()
 
 def config_load():
-    global g_config
-    g_config = {}
-    for line in file(g_sitedir + "/etc/omd/site.conf"):
+    confpath = g_sitedir + "/etc/omd/site.conf"
+    if not os.path.exists(confpath):
+        return
+
+    for line in file(confpath):
 	line = line.strip()
 	if line == "" or line[0] == "#": 
 	    continue
 	var, value = line.split("=", 1)
 	value = value.strip('"').strip("'")
 	var = var.strip()
-	g_config[var] = value
+        if not var.startswith("CONFIG_"):
+            sys.stderr.write("Ignoring invalid variable %s.\n" % var)
+        else:
+            var = var[7:]
+            if not var in g_hooks:
+                sys.stderr.write("Ignoring undefined variable %s.\n" % var)
+            else:
+                g_hooks[var]["value"] = value
 
 def config_save():
+    confdir = g_sitedir + "/etc/omd"
+    if not os.path.exists(confdir):
+        os.mkdir(confdir)
     f = file(g_sitedir + "/etc/omd/site.conf", "w")
-    v = g_config.keys()
-    v.sort()
-    for var in v:
-	f.write("%s='%s'\n" % (var, g_config[var]))
+    hooknames = g_hooks.keys()
+    hooknames.sort()
+    for hookname in hooknames:
+        hook = g_hooks[hookname]
+	f.write("CONFIG_%s='%s'\n" % (hookname, hook["value"]))
 
 # Get information about all hooks
 def config_load_hooks():
@@ -466,6 +493,8 @@ def config_load_hooks():
     for hookname in os.listdir(hook_dir):
 	if hookname[0] != '.':
 	     g_hooks[hookname] = config_load_hook(hookname)
+    # now load actual values from site.conf, if available
+    config_load()
 
 def call_hook(hookname, args):
     hook_file = g_sitedir + "/lib/omd/hooks/" + hookname
@@ -482,6 +511,8 @@ def config_load_hook(hookname):
     hook = {}
     hook["alias"] = get_hook_info("alias")
     hook["description"] = get_hook_info("alias")
+    hook["default"] = get_hook_info("default")
+    hook["value"] = hook["default"]
     choices = []
     choicestxt = get_hook_info("choices").split("\n")
     try:
@@ -494,7 +525,6 @@ def config_load_hook(hookname):
 	sys.stderr.write("Invalid output of hook: %s\n" % choicestxt)
 	sys.exit(1)
 	
-    hook["value"] = g_config[hookname]
     hook["choices"] = choices
     return hook
 
@@ -504,6 +534,10 @@ def config_set(args):
 	sys.stderr.write("Please specify variable name and value\n")
 	config_usage()
 	return
+
+    if not site_is_stopped(g_sitename):
+        sys.stderr.write("Cannot change config variables while site is running.\n")
+        return
 
     hookname = args[0]
     value = args[1]
@@ -520,8 +554,13 @@ def config_set(args):
 
     config_set_value(hookname, value)
 
+def config_set_all():
+    for hookname, hook in g_hooks.items():
+        config_set_value(hookname, hook["value"])
+
 def config_set_value(hookname, value):
-    g_config[hookname] = value
+    hook = g_hooks.get(hookname)
+    hook["value"] = value
     config_save()
     os.system("%s/lib/omd/hooks/%s set '%s'" % (g_sitedir, hookname, value))
 
@@ -536,12 +575,19 @@ omd config choices VAR   - show allowed values for VAR
 
 def config_show(args):
     if len(args) == 0:
-	v = g_config.keys()
-	v.sort()
-	for var in v:
-	    sys.stdout.write("%s: %s\n" % (var, g_config[var]))
+	hooknames = g_hooks.keys()
+	hooknames.sort()
+	for hookname in hooknames:
+	    sys.stdout.write("%s: %s\n" % (hookname, g_hooks[hookname]["value"]))
     else:
-	sys.stdout.write(" ".join([ g_config[var] for var in args]))
+        output = []
+        for hookname in args:
+            hook = g_hooks.get(hookname)
+            if not hook:
+                sys.stderr.write("No such variable %s\n" % hookname)
+            else:
+                output.append(hook["value"])
+	sys.stdout.write(" ".join(output))
 	sys.stdout.write("\n")
 
 

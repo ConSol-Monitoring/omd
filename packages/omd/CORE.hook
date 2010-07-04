@@ -1,0 +1,31 @@
+#!/bin/bash
+case "$1" in
+    alias)
+            echo "Monitoring core"
+    ;;
+    description)
+            cat << EOF
+Here you can choose your monitoring core to run. Currently available
+is only Nagios. You also can decide to run no monitoring core in 
+this instance. This can be usefull for instances running a GUI such
+as Check_MK Multisite or Thruk which can connect to other monitoring
+sites via Livestatus.
+EOF
+    ;;
+    default)
+            echo "nagios"
+    ;;
+    choices)
+            echo "nagios: Nagios"
+            echo "none: No monitoring core"
+    ;;
+    set)
+        if [ "$2" == "nagios" ]
+        then
+            ln -sfn ../nagios/apache.conf $OMD_ROOT/etc/apache/nagios.conf 
+        else
+            rm -f $OMD_ROOT/etc/apache/nagios.conf
+        fi
+    ;;
+esac
+
