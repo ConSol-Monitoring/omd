@@ -22,6 +22,7 @@ EOF
    set)
        if [ "$2" == "on" ]
        then
+	   mkdir -p $OMD_ROOT/etc/nagios/nagios.d
            ln -sfn ../../pnp4nagios/nagios.cfg $OMD_ROOT/etc/nagios/nagios.d/pnp4nagios.cfg
            ln -sfn ../pnp4nagios/apache.conf $OMD_ROOT/etc/apache/pnp4nagios.conf 
        else
