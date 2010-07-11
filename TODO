@@ -13,17 +13,6 @@
   to Nagios, Check_MK, PNP4Nagios and Nagvis. The page can
   also print the version of the site. 
 
-* FIXME: "omd" python script is used when logged in as site user instead of
-         the shell wrapper
-  Mathias: Das ist Absicht, denn wenn man als Site-user omd aufruft,
-  ist ja klar, welche Site es ist und welches omd aufgerufen wird.
-  Die Operationen, die das globale omd mehr kann (omd uninstall, etc.)
-  kann man eh nur als root aufrufen.
-
-  Eigentlich sollte man im vesions-spezifischen 'omd' noch checken,
-  ob man root ist und - falls ja - nur die Optionen start, stop,
-  restart, status usw. zulassen.
-
 * Die Distro-Spefischen Dinge in den Griff bekommen:
   - Benutzer in Gruppe aufnehmen (gpasswd)
   - Verzeichnis von Apache
@@ -50,9 +39,3 @@
   make dist -> packt Quellcodes ein, ohne GIT, ohne Kompilate
   make pack -> wie bisher
   make rpm -> Erzeugt RPM-Paket?
-* omd config: make sure that site is down while changing
-  configuration parameters. Why? pnp4nagios=off will disable
-  the startscript of npcd. If that is done while the thing
-  is running, it will never be stopped again. You anyway
-  need a restart of all components after changing this parameter.
-
