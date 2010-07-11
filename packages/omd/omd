@@ -448,12 +448,19 @@ def main_setup(args):
     bail_out("Sorry. Not yet implemented.\n")
 
 def main_uninstall(args):
+    global g_sitename
+    for sitename in all_sites():
+	g_sitename = sitename
+	main_rm([])
+
     for path in [ g_info["OMD_PHYSICAL_BASE"], 
 		  "/omd", 
 		  g_info["APACHE_CONF_DIR"] + "/omd.conf",
 		  "/etc/init.d/omd",
 		  "/usr/bin/omd" ]:
 	os.system("rm -rf '%s'" % path)
+
+    sys.stdout.write("Good bye.\n")
 
 
 def main_version(args):
