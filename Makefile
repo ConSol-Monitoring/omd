@@ -52,7 +52,7 @@ install-global:
 	# Create link to default version
 	ln -s $(OMD_VERSION) $(DESTDIR)$(OMD_BASE)/versions/default
 	mkdir -p $(DESTDIR)/usr/bin
-	install -m 755 bin/omd $(DESTDIR)/usr/bin
+	ln -sfn ../../omd/versions/default/bin/omd $(DESTDIR)/usr/bin/omd
 	mkdir -p $(DESTDIR)$(OMD_BASE)/sites
 	mkdir -p $(DESTDIR)$(OMD_BASE)/apache
 	mkdir -p $(DESTDIR)$(APACHE_CONF_DIR)
