@@ -1,3 +1,9 @@
+* Nagios-CGIs abschaltbar machen (evtl. dann status_update_interval auf
+  999999 oder sowas setzen)
+
+* Livestatus-Netzwerksocket einschaltbar machen. Dabei die Portnummer
+  irgendwie konfigurierbar machen.
+
 * Bei omd config set ... muss an manchen Stellen Apache durchgeladen
   werden. Dazu hat aber der Site-Benutzer keine Berechtigung.
   Soll man ihm die mit sudo verpassen, oder was könnte man hier tun?
