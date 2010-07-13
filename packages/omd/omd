@@ -49,13 +49,13 @@ def site_is_running(sitename):
 def useradd(sitename):
     # Create user for running site 'name'
     os.system("groupadd " + sitename)
-    os.system("useradd -d '%s' -c 'OMD instance %s' -g %s %s -s /bin/bash" % \
+    os.system("useradd -M -d '%s' -c 'OMD instance %s' -g %s %s -s /bin/bash" % \
                 (site_dir(sitename), sitename, sitename, sitename))
 
     # Add Apache to new group. It needs to be able to write in to the 
     # command pipe and possible other stuff
     # FIXME: www-data is distro-specific
-    os.system("gpasswd -a www-data %s >/dev/null" % sitename)
+    os.system("gpasswd -a %s %s >/dev/null" % (g_info["APACHE_USER"], sitename))
 
 def userdel(name):
     os.system("userdel " + name)
@@ -145,7 +145,7 @@ def reload_apache():
     # FIXME: This is OS specific
     sys.stdout.write("Reloading Apache...")
     sys.stdout.flush()
-    os.system("apache2ctl restart")
+    os.system("%s restart" % g_info["APACHE_CTL"])
     sys.stdout.write("OK\n")
 
 def create_template_instance(src, dst, replacements, sitename):
