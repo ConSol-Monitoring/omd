@@ -26,4 +26,18 @@ then
     exit 0
 fi
 
+# RedHat / CentOS
+if [ -e /etc/redhat-release ]
+then
+    # CentOS release 5.4 (Final)
+    VERSION=$(cat /etc/redhat-release)
+    if [ "${VERSION:0:6}" = CentOS ]
+    then
+        REL=${VERSION#* }
+        REL=${REL#* }
+        REL=${REL%% *}
+        echo "CENTOS$SEP$REL"
+        exit 0
+    fi
+fi
 
