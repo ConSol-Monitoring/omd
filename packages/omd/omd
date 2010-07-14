@@ -58,7 +58,7 @@ def useradd(sitename):
     os.system("gpasswd -a %s %s >/dev/null" % (g_info["APACHE_USER"], sitename))
 
 def userdel(name):
-    os.system("userdel " + name)
+    os.system("userdel -r " + name)
     # FIXME: On some OSes (Debian) the group is automatically removed if
     # it bears the same name as the user
     os.system("groupdel " + name + " 2>/dev/null")
@@ -94,8 +94,13 @@ def create_tmpfs(sitename):
 def unmount_tmpfs(sitename):
     if tmpfs_mounted(sitename):
         sys.stdout.write("Unmounting temporary filesystem...")
-        if 0 == os.system("umount '%s'" % tmp_dir(sitename)):
-            sys.stdout.write("OK\n")
+	for t in range(0, 10):
+	    if 0 == os.system("umount '%s'" % tmp_dir(sitename)):
+	        sys.stdout.write("OK\n")
+		return
+	    time.sleep(1)
+    bail_out("Cannot unmount tmp filesystem.")
+	
 
 def start_site(sitename):
     create_tmpfs(sitename)
@@ -535,9 +540,8 @@ def main_rm(args):
     sys.stdout.write("Removing site %s..." % g_sitename)
     sys.stdout.flush()
     userdel(g_sitename)
-    if not site_exists(g_sitename):
-        bail_out("No such site '%s'.\n" % g_sitename)
-    shutil.rmtree(site_dir(g_sitename))
+    if os.path.exists(g_sitedir): # should be done by userdel
+        shutil.rmtree(site_dir(g_sitename))
     sys.stdout.write("OK\n")
 
     # remove include-hook for Apache and tell apache
