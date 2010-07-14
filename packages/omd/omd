@@ -63,6 +63,14 @@ def userdel(name):
     # it bears the same name as the user
     os.system("groupdel " + name + " 2>/dev/null")
 
+def switch_to_site_user():
+    p = pwd.getpwnam(g_sitename)
+    uid = p.pw_uid
+    gid = p.pw_gid
+    os.chdir(p.pw_dir)
+    os.setgid(gid)
+    os.setuid(uid)
+
 def tmpfs_mounted(sitename):
     # Problem here: if /omd is a symbolic link somewhere else,
     # then in /proc/mounts the physical path will appear and be
@@ -755,9 +763,20 @@ if needs_site > 0:
 if g_sitename and site_must_exist and not site_exists(g_sitename):
     bail_out("omd: no such site: %s\n" % g_sitename)
 
+# TODO: As soon es we know the site, we must make sure that we
+# are running the bin/omd of the correct version. If that is
+# not the case - then exec to the correct version
+
 if g_sitename:
     g_sitedir = site_dir(g_sitename)
 
 read_info()
+
+# Commands which affect a site and can be called as root *or* as 
+# site user should always run with site user priviledges. That way 
+# we are sure that new files and processes are created under the 
+# site user and never as root.
+if g_sitename and os.getuid() == 0 and not only_root:
+    switch_to_site_user()
 
 command_function(args)
