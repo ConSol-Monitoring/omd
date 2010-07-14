@@ -338,7 +338,7 @@ def config_load_hook(hookname):
     # possible values.
     choicestxt = get_hook_info("choices").split("\n")
     if len(choicestxt) == 1:
-        choices = re.compile(choicestxt + "$")
+        choices = re.compile(choicestxt[0] + "$")
     else:
         choices = []
         try:

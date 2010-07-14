@@ -23,9 +23,9 @@ EOF
         if [ "$2" == "on" ]
         then
  	    mkdir -p $OMD_ROOT/etc/xinetd.d
-            ln -sfn ../mk-livestatus/xinetd.conf $OMD_ROOT/etc/xinetd.d/mk-livestatus.conf
+            ln -sfn ../mk-livestatus/xinetd.conf $OMD_ROOT/etc/xinetd.d/mk-livestatus
         else
-            rm -f $OMD_ROOT/etc/xinetd.d/mk-livestatus.conf
+            rm -f $OMD_ROOT/etc/xinetd.d/mk-livestatus
         fi
     ;;
 esac
