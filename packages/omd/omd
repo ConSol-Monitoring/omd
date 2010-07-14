@@ -4,7 +4,7 @@
 # There is almost no error handling implemented. Please remember: this
 # is a prototype, an experiment - nothing more.
 
-import sys, os, shutil, pwd, re
+import sys, os, shutil, pwd, re, time
 
 # FIXME: Determine this somehow
 OMD_VERSION = "0.42"
