@@ -1,0 +1,22 @@
+#!/bin/bash
+
+case "$1" in
+    alias)
+        echo "TCP port number for MK Livestatus"
+    ;;
+    description)
+        cat << EOF
+If Livestatus is configured to listen on a TCP port, you
+can configure that port here.
+EOF
+    ;;
+    default)
+        echo "6557"
+    ;;
+    choices)
+        echo "[0-9]{1,5}"
+    ;;
+    set)
+        sed -ri 's/^([[:space:]]*port[[:space:]]*=[[:space:]]*)([0-9]+)/\1'$2'/' $OMD_ROOT/etc/mk-livestatus/xinetd.conf
+    ;;
+esac

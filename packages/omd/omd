@@ -4,7 +4,7 @@
 # There is almost no error handling implemented. Please remember: this
 # is a prototype, an experiment - nothing more.
 
-import sys, os, shutil, pwd
+import sys, os, shutil, pwd, re
 
 # FIXME: Determine this somehow
 OMD_VERSION = "0.42"
@@ -331,18 +331,26 @@ def config_load_hook(hookname):
     hook["description"] = get_hook_info("alias")
     hook["default"] = get_hook_info("default")
     hook["value"] = hook["default"]
-    choices = []
+    # The choices can either be a list of possible keys. Then
+    # the hook outputs one live for each choice where the key and a
+    # description are separated by a colon. Or it outputs one line
+    # where that line is an extended regular expression matching the
+    # possible values.
     choicestxt = get_hook_info("choices").split("\n")
-    try:
-	for line in choicestxt:
-	    val, descr = line.split(":", 1)
-	    val = val.strip()
-	    descr = descr.strip()
-	    choices.append( (val, descr) )
-    except:
-	sys.stderr.write("Invalid output of hook: %s\n" % choicestxt)
-	sys.exit(1)
-	
+    if len(choicestxt) == 1:
+        choices = re.compile(choicestxt + "$")
+    else:
+        choices = []
+        try:
+            for line in choicestxt:
+                val, descr = line.split(":", 1)
+                val = val.strip()
+                descr = descr.strip()
+                choices.append( (val, descr) )
+        except:
+            sys.stderr.write("Invalid output of hook: %s\n" % choicestxt)
+            sys.exit(1)
+            
     hook["choices"] = choices
     return hook
 
@@ -364,11 +372,18 @@ def config_set(args):
 	sys.stderr.write("No such variable '%s'\n" % hookname)
 	return
 
-    choices = [ var for (var, descr) in hook["choices"] ]
-    if value not in choices:
-	sys.stderr.write("Invalid value for '%s'. Allowed are: %s\n" % \
-		(value, ", ".join(choices)))
-	return
+    # Check if value is valid. Choices are either a list of allowed
+    # keys or a regular expression
+    if type(hook["choices"]) == list:
+        choices = [ var for (var, descr) in hook["choices"] ]
+        if value not in choices:
+            sys.stderr.write("Invalid value for '%s'. Allowed are: %s\n" % \
+                    (value, ", ".join(choices)))
+            return
+    else:
+        if not hook["choices"].match(value):
+            sys.stderr.write("Invalid value for '%s'. Does not match allowed pattern.\n" % value)
+            return
 
     config_set_value(hookname, value)
 
