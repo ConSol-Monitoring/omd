@@ -66,3 +66,5 @@
 
 * Beim OMD löschen/aufräumen eine Sicherheitsabfrage einbauen
 
+* OMD_SITE und OMD_ROOT als Environment Variablen anbieten, wenn man als
+  omd-Benutzer arbeitet

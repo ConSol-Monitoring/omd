@@ -67,3 +67,8 @@ install-global:
 
 dist:
 	git archive HEAD | gzip > omd-source-$(OMD_VERSION).tar.gz
+
+# Only to be used for developement testing setup
+setup: pack
+	tar xzf omd-$(OMD_VERSION).tar.gz -C /
+	$$(grep APACHE_CTL distros/Makefile.CENTOS_5.4 | cut -d'=' -f2 | tr -d ' ') -k graceful
