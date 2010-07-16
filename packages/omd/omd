@@ -122,8 +122,8 @@ def create_skeleton_files(sitename, dir):
     exclude_tmp = dir == '.'
     sitedir = site_dir(sitename)
     replacements = {
-        "@SITE@" : sitename,
-        "@ROOT@" : sitedir,
+        "###SITE###" : sitename,
+        "###ROOT###" : sitedir,
     }
     skelroot = "/omd/versions/%s/skel" % OMD_VERSION
     os.chdir(skelroot)  # make relative paths
@@ -215,7 +215,7 @@ def patch_template_file(src, dst, old, new):
     for site in [ old, new ]:
         replacements = {
             "@SITE@" : site,
-            "@ROOT@" : site_dir(site),
+            "###ROOT###" : site_dir(site),
         }
         file("%s.skel.%s" % (dst, site), "w").write(replace_tags(content, replacements))
 

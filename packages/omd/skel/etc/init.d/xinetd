@@ -3,11 +3,11 @@
 # Start only if at least on xinetd based service
 # is activated
 
-test -e @ROOT@/etc/xinetd.d/* || exit 5
+test -e ###ROOT###/etc/xinetd.d/* || exit 5
 
-PIDFILE=@ROOT@/tmp/run/xinetd.pid
+PIDFILE=###ROOT###/tmp/run/xinetd.pid
 DAEMON=/usr/sbin/xinetd
-OPTS="-pidfile @ROOT@/tmp/run/xinetd.pid -filelog @ROOT@/var/log/xinetd.log -f @ROOT@/etc/xinetd.conf"
+OPTS="-pidfile ###ROOT###/tmp/run/xinetd.pid -filelog ###ROOT###/var/log/xinetd.log -f ###ROOT###/etc/xinetd.conf"
 
 case "$1" in
     start)

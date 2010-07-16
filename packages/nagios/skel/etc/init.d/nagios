@@ -30,7 +30,7 @@
 #              used to provide network services status.
 #
   
-. @ROOT@/etc/omd/site.conf
+. ###ROOT###/etc/omd/site.conf
 [ "$CONFIG_CORE" = "nagios" ] || exit 5
 
 status_nagios ()
@@ -93,18 +93,18 @@ elif [ -f /etc/init.d/functions ]; then
 	. /etc/init.d/functions
 fi
 
-prefix=@ROOT@
+prefix=###ROOT###
 exec_prefix=${prefix}
-NagiosBin=@ROOT@/bin/nagios
-NagiosCfgFile=@ROOT@/etc/nagios/nagios.cfg
-NagiosStatusFile=@ROOT@/tmp/nagios/status.dat
-NagiosRetentionFile=@ROOT@/var/nagios/retention.dat
-NagiosCommandFile=@ROOT@/tmp/run/nagios.cmd
-NagiosVarDir=@ROOT@/var/log
-NagiosRunFile=@ROOT@/tmp/lock/nagios.lock
-NagiosLockDir=@ROOT@/no/lock/needed
+NagiosBin=###ROOT###/bin/nagios
+NagiosCfgFile=###ROOT###/etc/nagios/nagios.cfg
+NagiosStatusFile=###ROOT###/tmp/nagios/status.dat
+NagiosRetentionFile=###ROOT###/var/nagios/retention.dat
+NagiosCommandFile=###ROOT###/tmp/run/nagios.cmd
+NagiosVarDir=###ROOT###/var/log
+NagiosRunFile=###ROOT###/tmp/lock/nagios.lock
+NagiosLockDir=###ROOT###/no/lock/needed
 NagiosLockFile=nagios.lock
-NagiosCGIDir=@ROOT@/lib/nagios/cgi
+NagiosCGIDir=###ROOT###/lib/nagios/cgi
 NagiosUser=@SITE@
 NagiosGroup=@SITE@
           

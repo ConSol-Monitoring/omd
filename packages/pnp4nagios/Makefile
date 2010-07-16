@@ -15,7 +15,8 @@ CONFIGUREOPTS = \
     --datarootdir=$(OMD_ROOT)/share/pnp4nagios/htdocs \
     --with-nagios-user=$$(id -un) \
     --with-nagios-group=$$(id -gn) \
-    --with-rrdtool=/bin/true 
+    --with-rrdtool=/bin/true \
+    --with-base-url=/%SITE%/pnp4nagios
 
 build:
 	tar xzf $(DIR).tar.gz
@@ -25,6 +26,11 @@ build:
 install:
 	mkdir -p $(DESTDIR)$(APACHE_CONF_DIR)
 	$(MAKE) DESTDIR=$(DESTDIR) -C $(DIR) install install-html
+
+	# Move default config files to skel
+	mkdir -p skel/etc/pnp4nagios
+	mv $(DESTDIR)$(OMD_ROOT)/etc/pnp4nagios/* skel/etc/pnp4nagios
+
 	# Replace hard coded config with redirection to site specific version
 	rm $(DESTDIR)$(OMD_ROOT)/share/pnp4nagios/htdocs/install.php
 	install -m 644 config.php $(DESTDIR)$(OMD_ROOT)/share/pnp4nagios/htdocs/application/config/config.php
