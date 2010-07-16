@@ -178,26 +178,3 @@ es nicht zu Dateikonflikten kommt. Da /usr/bin/omd aber sehr einfach
 gehalten ist (wie auch die anderen Dateien, die nicht unterhalb
 von /omd/versions/ liegen) ist die Hoffnung, dass man diese (fast) nie
 wieder ändern muss.
-
-
-Weitere Ideen für OMD:
-======================
-omd snapshot --> Erzeugt eine Sicherung von /omd/sites/$SITE/{var,etc}. tmp
-wird nicht gesichert.
-
-omd restoreas NAME --> Sichert einen Snapshot unter einem anderen Namen
-zurück.
-
-Apache-Logfiles: Kann man eigene Logfiles für die Instanzen erzeugen? Ist
-es möglich, die Apache-Logs wegzusplitten?
-
-Sites anlegen/löschen ohne Root-Rechte. Problem: Apache muss die Konfiguration
-neu laden.
-
-htpasswd: Standard-Benutzer sollte individuell sein.
-
-Webserver: "/<instanz>/nagios" funktioniert nicht. Apache umbauen
-
-Nagios Config Patch: Konfigurationsdateien sortieren
-
-Beim OMD löschen/aufräumen eine Sicherheitsabfrage einbauen
