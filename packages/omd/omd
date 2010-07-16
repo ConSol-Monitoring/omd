@@ -688,56 +688,56 @@ def main_config(args):
 # name
 
 commands = [
-#  command   only_root  needs_site must_exist args, function, description
-  ( "help",      False, 0, 0, "",        main_help,
+#  command   only_root  needs_site must_exist confirm args, function, description
+  ( "help",      False, 0, 0, False, "",        main_help,
     "Show general help"),
 
-  ( "setup",     True,  0, 0, "",        main_setup,
+  ( "setup",     True,  0, 0, False, "",        main_setup,
     "Prepare operating system for OMD (installs packages)"),
 
-  ( "uninstall", True,  0, 0, "",        main_uninstall,
+  ( "uninstall", True,  0, 0, True, "",        main_uninstall,
     "Remove OMD and all sites!"),
 
-  ( "version",   False, 0, 0, "",        main_version,
+  ( "version",   False, 0, 0, False, "",        main_version,
     "Show version of OMD"),
 
-  ( "versions",  False, 0, 0, "",        main_versions,
+  ( "versions",  False, 0, 0, False, "",        main_versions,
     "List installed OMD versions")       ,
 
-  ( "sites",     False, 0, 0, "", main_sites,
+  ( "sites",     False, 0, 0, False, "", main_sites,
     "Show list of sites"),
 
-  ( "create",    True,  1, 0, "",        main_create,
+  ( "create",    True,  1, 0, False, "",        main_create,
     "Create a new site"),
 
-  ( "rm",        True,  1, 1, "",        main_rm,
+  ( "rm",        True,  1, 1, True, "",        main_rm,
     "Remove a site (and its data)"),
 
-  ( "mv",        True,  1, 1, "NEWNAME", main_mv,
+  ( "mv",        True,  1, 1, False, "NEWNAME", main_mv,
     "Rename a site"),
 
-  ( "cp",        True,  1, 1, "NEWNAME", main_cp,
+  ( "cp",        True,  1, 1, False, "NEWNAME", main_cp,
     "Make a copy of a site"),
 
-  ( "update",    False, 1, 1, "[VERSION]", main_update,
+  ( "update",    False, 1, 1, False, "[VERSION]", main_update,
     "Update site to other version"),
 
-  ( "start",     False, 2, 1, "", lambda args: main_init_action("start", args),
+  ( "start",     False, 2, 1, False, "", lambda args: main_init_action("start", args),
     "Start services of one or all sites"),
 
-  ( "stop",      False, 2, 1, "", lambda args: main_init_action("stop", args),
+  ( "stop",      False, 2, 1, False, "", lambda args: main_init_action("stop", args),
     "Stop services of site(s)"),
 
-  ( "restart",   False, 2, 1, "", lambda args: main_init_action("restart", args),
+  ( "restart",   False, 2, 1, False, "", lambda args: main_init_action("restart", args),
     "Restart services of site(s)"),
 
-  ( "reload",    False, 2, 1, "", lambda args: main_init_action("reload", args),
+  ( "reload",    False, 2, 1, False, "", lambda args: main_init_action("reload", args),
     "Reload services of site(s)"),
 
-  ( "status",    False, 2, 1, "", lambda args: main_init_action("status", args),
+  ( "status",    False, 2, 1, False, "", lambda args: main_init_action("status", args),
     "Show status of services of site(s)"),
 
-  ( "config",    False, 1, 1, "...", main_config,
+  ( "config",    False, 1, 1, False, "...", main_config,
     "Show and set site configuration parameters"),
 
 ]
@@ -749,7 +749,7 @@ if len(sys.argv) < 2:
 command = sys.argv[1]
 args = sys.argv[2:]
 found = False
-for c, only_root, needs_site, site_must_exist, argumentlist, command_function, description in commands:
+for c, only_root, needs_site, site_must_exist, confirm, argumentlist, command_function, description in commands:
     if c == command:
         found = True
 	break
@@ -791,5 +791,12 @@ read_info()
 # site user and never as root.
 if g_sitename and os.getuid() == 0 and not only_root:
     switch_to_site_user()
+
+if confirm:
+    sys.stdout.write("%s (yes/NO): " % description)
+    sys.stdout.flush()
+    a = sys.stdin.readline().strip()
+    if a.lower() != "yes":
+	sys.exit(0)
 
 command_function(args)
