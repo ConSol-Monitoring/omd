@@ -37,7 +37,7 @@ pack:
             $(MAKE) SKEL=$(DESTDIR)$(OMD_ROOT)/skel -C $$p skel ;\
         done
 	# Fix packages which did not add ###ROOT###
-	find $(DESTDIR)$(OMD_ROOT)/skel -type f | xargs -1 sed -i -e 's+$(OMD_ROOT)+###ROOT###+g'
+	find $(DESTDIR)$(OMD_ROOT)/skel -type f | xargs -n1 sed -i -e 's+$(OMD_ROOT)+###ROOT###+g'
 	# Remove site-specific directories then went under /omd/version
 	rm -rf $(DESTDIR)/{etc,var,tmp}
 	tar czf omd-$(OMD_VERSION).tar.gz --owner=root --group=root -C $(DESTDIR) .
