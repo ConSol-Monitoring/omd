@@ -13,6 +13,8 @@ CONFIGUREOPTS = \
     --libexecdir=$(OMD_ROOT)/lib/pnp4nagios \
     --docdir=$(OMD_ROOT)/share/doc/pnp4nagios \
     --datarootdir=$(OMD_ROOT)/share/pnp4nagios/htdocs \
+	--with-perfdata-dir=$(OMD_ROOT)/var/pnp4nagios/perfdata \
+	--with-perfdata-spool-dir=$(OMD_ROOT)/tmp/pnp4nagios/spool \
     --with-nagios-user=$$(id -un) \
     --with-nagios-group=$$(id -gn) \
     --with-rrdtool=/bin/true \
@@ -25,17 +27,22 @@ build:
 
 install:
 	mkdir -p $(DESTDIR)$(APACHE_CONF_DIR)
-	$(MAKE) DESTDIR=$(DESTDIR) -C $(DIR) install install-html
+	$(MAKE) DESTDIR=$(DESTDIR) -C $(DIR) install
+	# Remove installer 
+	rm $(DESTDIR)$(OMD_ROOT)/share/pnp4nagios/htdocs/install.php
 
 	# Move default config files to skel
+	sed -i -e 's+/bin/true+###ROOT###/bin/rrdtool+' $(DESTDIR)$(OMD_ROOT)/etc/pnp4nagios/config.php
+	
 	mkdir -p skel/etc/pnp4nagios
-	mv $(DESTDIR)$(OMD_ROOT)/etc/pnp4nagios/* skel/etc/pnp4nagios
+	mkdir -p skel/var/pnp4nagios/stats
+	mkdir -p skel/var/pnp4nagios/perfdata
+	mkdir -p skel/tmp/pnp4nagios/spool
 
-	# Replace hard coded config with redirection to site specific version
-	rm $(DESTDIR)$(OMD_ROOT)/share/pnp4nagios/htdocs/install.php
-	install -m 644 config.php $(DESTDIR)$(OMD_ROOT)/share/pnp4nagios/htdocs/application/config/config.php
-	# Remove log dir in read-only area. We log below @SITE@/var/log
-	rm -rf $(DESTDIR)$(OMD_ROOT)/share/pnp4nagios/htdocs/application/logs
+	mv $(DESTDIR)$(OMD_ROOT)/etc/pnp4nagios/* skel/etc/pnp4nagios
+	
+	mkdir -p skel/etc/init.d
+	install -m 755 $(DIR)/scripts/rc.npcd skel/etc/init.d/npcd
 
 skel:
 
