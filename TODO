@@ -78,3 +78,5 @@
   um am Anfang nur eine einzelne Abfrage zu haben.
 
 * Mysql Init-Script Exit Codes fixen
+
+* Jedes Paket soll eine README/Lizenz/Maintainer/Author Datei enthalten
