@@ -1,0 +1,30 @@
+Entwicklerdoku (Arbeit am OMD) - 
+README fuer Quellcode          - 
+Doku fuer OMD user             -
+Laufzeitsystem (bin/omd)       - Mathias Kettner
+
+Homepage & Bugtracking         - Wolfgang Barth
+Hosting                        - MK 
+Defaultkonfiguration Nagios    - 
+Presse & Sonstiges             -
+RPM/DEB-Pakete                 
+  Debian
+  Ubuntu (LTS)
+  RedHat / CentOS
+  SLES
+GIT, Mailingliste              - MK
+
+Pakete:
+  Check_MK + Multisite         - Mathias Kettner
+  Livestatus                   - Mathias Kettner
+  NagVis                       - Lars Michelsen
+  PNP4Nagios                   - Joerg Linge
+  DokuWiki                     - Stefan Hoesl
+  Merlin                       - Wolfgang Barth (geplant)
+  mysql                        - Lars Michelsen
+  Perl                         - Sven Nierlein
+  Thruk                        - Sven Nierlein
+  check_oracle/mysql/logfiles  - Gerhard Lausser
+  Nagios (plus Patches)        - 
+  Nagios Plugins               - 
+
