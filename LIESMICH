@@ -193,3 +193,11 @@ es möglich, die Apache-Logs wegzusplitten?
 
 Sites anlegen/löschen ohne Root-Rechte. Problem: Apache muss die Konfiguration
 neu laden.
+
+htpasswd: Standard-Benutzer sollte individuell sein.
+
+Webserver: "/<instanz>/nagios" funktioniert nicht. Apache umbauen
+
+Nagios Config Patch: Konfigurationsdateien sortieren
+
+Beim OMD löschen/aufräumen eine Sicherheitsabfrage einbauen
