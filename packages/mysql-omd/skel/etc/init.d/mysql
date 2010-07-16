@@ -1,0 +1,30 @@
+#!/bin/bash
+
+. ###ROOT###/etc/omd/site.conf
+if [ "$CONFIG_MYSQL" != on ] ; then
+    exit 5
+fi
+
+case $1 in 
+    start)
+	echo "Starting MySQL Daemon"
+	mysqld_safe >/dev/null 2>&1 &
+    ;;
+    stop)
+	echo "Stopping MySQL Daemon"
+	mysqladmin shutdown
+    ;;
+    restart)
+	$0 stop
+	$0 start
+    ;;
+    reload)
+	mysqladmin reload
+    ;;
+    status)
+	if mysqladmin version ; then exit 0 ; else exit 1 ; fi
+    ;;
+    *)
+	echo "Usage: $0 {start|stop|restart|reload|status}"
+    ;;
+esac

@@ -1,0 +1,28 @@
+#!/bin/bash
+
+case "$1" in
+    alias)
+        echo "Start MySQL Daemon"
+    ;;
+    description)
+        cat << EOF
+If you want to use addons based on MySQL, please activate
+this option and a site specific MySQL daemon will be started.
+EOF
+    ;;
+    default)
+        echo "off"
+    ;;
+    choices)
+        echo "on: enable"
+        echo "off: disable"
+    ;;
+    set)
+        if [ "$2" == "on" ]
+        then
+	    if [ ! -e ~/var/mysql/mysql ] ; then
+ 	        mysql_install_db 
+            fi
+        fi
+    ;;
+esac
