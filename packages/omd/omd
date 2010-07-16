@@ -107,8 +107,10 @@ def unmount_tmpfs(sitename):
 	    if 0 == os.system("umount '%s'" % tmp_dir(sitename)):
 	        sys.stdout.write("OK\n")
 		return
+	    sys.stdout.write(".")
+	    sys.stdout.flush()
 	    time.sleep(1)
-    bail_out("Cannot unmount tmp filesystem.")
+        bail_out("Cannot unmount tmp filesystem.\n")
 	
 
 def start_site(sitename):
@@ -478,8 +480,10 @@ def main_setup(args):
 
 def main_uninstall(args):
     global g_sitename
+    global g_sitedir
     for sitename in all_sites():
 	g_sitename = sitename
+        g_sitedir = site_dir(g_sitename)
 	main_rm([])
 
     for path in [ g_info["OMD_PHYSICAL_BASE"], 
@@ -757,11 +761,11 @@ if needs_site > 0:
 	    g_sitename = args[0]
 	    args = args[1:]
         elif needs_site == 1:
-	    bail_out("omd: please specify site\n")
+	    bail_out("omd: please specify site.\n")
     else:
         g_sitename = pwd.getpwuid(os.getuid()).pw_name
 
-if g_sitename and site_must_exist and not site_exists(g_sitename):
+if g_sitename != None and site_must_exist and not site_exists(g_sitename):
     bail_out("omd: no such site: %s\n" % g_sitename)
 
 # TODO: As soon es we know the site, we must make sure that we
@@ -770,6 +774,8 @@ if g_sitename and site_must_exist and not site_exists(g_sitename):
 
 if g_sitename:
     g_sitedir = site_dir(g_sitename)
+else:
+    g_sitedir = None
 
 read_info()
 
