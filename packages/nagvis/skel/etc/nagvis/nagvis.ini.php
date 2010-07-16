@@ -90,7 +90,7 @@
 ;sesscookiedomain="auto-detect"
 ; Absolute web path to set the cookie for. This defaults to configured 
 ; paths/htmlbase option
-sesscookiepath="/@SITE@/nagvis"
+sesscookiepath="/###SITE###/nagvis"
 ; Lifetime of the NagVis session cookie in seconds. The default value is set to
 ; 24 hours. The NagVis session cookie contents will be renewed on every page 
 ; visit. If a session is idle for more time than configured here it will become
@@ -115,8 +115,8 @@ gadget="###ROOT###/var/nagvis/userfiles/gadget/"
 icon="###ROOT###/var/nagvis/userfiles/images/iconsets/"
 shape="###ROOT###/var/nagvis/userfiles/images/shapes/"
 map="###ROOT###/var/nagvis/userfiles/images/maps/"
-htmlbase="/@SITE@/nagvis"
-htmlcgi="/@SITE@/nagios/cgi-bin"
+htmlbase="/###SITE###/nagvis"
+htmlcgi="/###SITE###/nagios/cgi-bin"
 
 ; Default values which get inherited to the maps and its objects
 [defaults]
