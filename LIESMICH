@@ -190,3 +190,6 @@ zurück.
 
 Apache-Logfiles: Kann man eigene Logfiles für die Instanzen erzeugen? Ist
 es möglich, die Apache-Logs wegzusplitten?
+
+Sites anlegen/löschen ohne Root-Rechte. Problem: Apache muss die Konfiguration
+neu laden.
