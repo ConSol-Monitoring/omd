@@ -68,3 +68,11 @@
 
 * OMD_SITE und OMD_ROOT als Environment Variablen anbieten, wenn man als
   omd-Benutzer arbeitet
+
+* Die omd Befehle sollten transparent sein hinsichtlich der Aktionen, die ausgeführt
+  werden. z.B. Benutzer die angelegt werden, Apache Konfigurationsdateien, die erzeugt werden.
+  -> Eventuell wäre es ein guter Ansatz bei jedem aufruf von omd Sub-Befehlen eine Ausgabe zu
+     setzen und diese dann durch die Eingabe von "y" oder "Enter" durchführen zu lassen.
+     Mit dem Parameter --yes oder so kann man diese Bestätigung dann überspringen.
+  So könnte man ohne Probleme die Sicherheitsabfragen in den "aptitude" Aufrufen unterdrücken
+  um am Anfang nur eine einzelne Abfrage zu haben.
