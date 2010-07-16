@@ -20,7 +20,7 @@ pack:
 	A="$(OMD_PHYSICAL_BASE)" ; ln -s $${A:1} $(DESTDIR)/omd
 	@set -e ; cd packages ; for p in $(PACKAGES) ; do \
             $(MAKE) -C $$p DESTDIR=$(DESTDIR) install ; \
-            for hook in $$(cd $$p ; ls *.hook) ; do \
+            for hook in $$(cd $$p ; ls *.hook 2>/dev/null) ; do \
                 mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/omd/hooks ; \
                 install -m 755 $$p/$$hook $(DESTDIR)$(OMD_ROOT)/lib/omd/hooks/$${hook%.hook} ; \
             done ; \
@@ -67,4 +67,3 @@ install-global:
 
 dist:
 	git archive HEAD | gzip > omd-source-$(OMD_VERSION).tar.gz
-
