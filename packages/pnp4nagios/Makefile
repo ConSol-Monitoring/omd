@@ -16,7 +16,7 @@ CONFIGUREOPTS = \
     --with-nagios-user=$$(id -un) \
     --with-nagios-group=$$(id -gn) \
     --with-rrdtool=/bin/true \
-    --with-base-url=/%SITE%/pnp4nagios
+    --with-base-url='/\#\#\#SITE\#\#\#/pnp4nagios'
 
 build:
 	tar xzf $(DIR).tar.gz

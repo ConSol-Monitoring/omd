@@ -18,12 +18,13 @@ fi
 
 BUILD_PACS=$(sed -n '/^BUILD_PACKAGES *= *\(.*\)/s//\1/p' < $M)
 PACKAGER=$(sed -n '/^PACKAGE_INSTALL *= *\(.*\)/s//\1/p' < $M)
+BECOME_ROOT=$(sed -n '/^BECOME_ROOT *= *\(.*\)/s//\1/p' < $M)
 echo "Packages needed for compilation:"
 echo "$BUILD_PACS"
 CMD="$PACKAGER $BUILD_PACS"
 if [ $UID != 0 ]
 then
-    CMD="su - -c '$CMD'"
+    CMD="$BECOME_ROOT '$CMD'"
 fi
 echo "Going to run >>>$CMD<<<..."
 
