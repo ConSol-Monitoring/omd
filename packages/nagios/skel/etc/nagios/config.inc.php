@@ -5,7 +5,7 @@
 
 $cfg['cgi_config_file']='###ROOT###/etc/nagios/cgi.cfg';  // location of the CGI config file
 
-$cfg['cgi_base_url']='/@SITE@/nagios/cgi-bin';
+$cfg['cgi_base_url']='/###SITE###/nagios/cgi-bin';
 
 
 // FILE LOCATION DEFAULTS

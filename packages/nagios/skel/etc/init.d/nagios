@@ -105,8 +105,8 @@ NagiosRunFile=###ROOT###/tmp/lock/nagios.lock
 NagiosLockDir=###ROOT###/no/lock/needed
 NagiosLockFile=nagios.lock
 NagiosCGIDir=###ROOT###/lib/nagios/cgi
-NagiosUser=@SITE@
-NagiosGroup=@SITE@
+NagiosUser=###SITE###
+NagiosGroup=###SITE###
           
 
 # Check that nagios exists.

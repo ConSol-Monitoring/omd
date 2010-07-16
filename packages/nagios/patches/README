@@ -11,6 +11,6 @@ Index of patches
     The file include/utils.inc.php includes config.inc.php by going up 
     one directory in the physical directory tree. This patch changes that
     behaviour in a way needed for OMD: It is including the site specific
-    config file /omd/sites/@SITE@/etc/ngaios/config.inc.php. The site name
+    config file /omd/sites/###SITE###/etc/ngaios/config.inc.php. The site name
     is extracted from the script file name (supplied by Apache).
 
