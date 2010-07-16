@@ -476,7 +476,13 @@ def main_help(args=[]):
     sys.stdout.write("\n")
 
 def main_setup(args):
-    bail_out("Sorry. Not yet implemented.\n")
+    packages = g_info["OS_PACKAGES"].split()
+    install_cmd = g_info["PACKAGE_INSTALL"]
+    command = "%s %s" % (install_cmd, " ".join(packages))
+    sys.stdout.write("Going to execute '%s'\n" % command)
+    if 0 == os.system(command):
+       sys.stdout.write("OK.\n")
+
 
 def main_uninstall(args):
     global g_sitename
@@ -687,7 +693,7 @@ commands = [
     "Show general help"),
 
   ( "setup",     True,  0, 0, "",        main_setup,
-    "Prepare operating system for OMD"),
+    "Prepare operating system for OMD (installs packages)"),
 
   ( "uninstall", True,  0, 0, "",        main_uninstall,
     "Remove OMD and all sites!"),
