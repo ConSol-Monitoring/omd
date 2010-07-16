@@ -1,7 +1,7 @@
 BUILD_PACKAGES  = libxml2-devel cairo-devel pango-devel patch
 OS_PACKAGES     = httpd mod_python
 USERADD_OPTIONS = -M
-PACKAGE_INSTALL = yum install
+PACKAGE_INSTALL = yum -y install
 APACHE_CONF_DIR = /etc/httpd/conf.d
 APACHE_INIT     = /etc/init.d/httpd
 APACHE_USER     = apache

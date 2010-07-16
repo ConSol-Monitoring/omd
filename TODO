@@ -58,7 +58,7 @@
 * Sites anlegen/löschen ohne Root-Rechte. Problem: Apache muss die Konfiguration
   neu laden.
 
-* htpasswd: Standard-Benutzer sollte individuell sein.
+* htpasswd: Standard-Benutzer sollte individuell sein. z.B. <site>admin
 
 * Webserver: "/<instanz>/nagios" funktioniert nicht. Apache umbauen
 
@@ -76,3 +76,5 @@
      Mit dem Parameter --yes oder so kann man diese Bestätigung dann überspringen.
   So könnte man ohne Probleme die Sicherheitsabfragen in den "aptitude" Aufrufen unterdrücken
   um am Anfang nur eine einzelne Abfrage zu haben.
+
+* Mysql Init-Script Exit Codes fixen
