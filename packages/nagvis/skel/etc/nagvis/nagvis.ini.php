@@ -90,7 +90,7 @@
 ;sesscookiedomain="auto-detect"
 ; Absolute web path to set the cookie for. This defaults to configured 
 ; paths/htmlbase option
-sesscookiepath="/@SITE@/nagvis"
+sesscookiepath="/###SITE###/nagvis"
 ; Lifetime of the NagVis session cookie in seconds. The default value is set to
 ; 24 hours. The NagVis session cookie contents will be renewed on every page 
 ; visit. If a session is idle for more time than configured here it will become
@@ -104,19 +104,19 @@ sesscookiepath="/@SITE@/nagvis"
 
 ; Path definitions
 [paths]
-base="@ROOT@/share/nagvis/"
-cfg="@ROOT@/etc/nagvis/"
-mapcfg="@ROOT@/etc/nagvis/maps/"
-var="@ROOT@/tmp/nagvis/"
-sharedvar="@ROOT@/tmp/nagvis/share/"
-automapcfg="@ROOT@/etc/nagvis/automaps/"
-templates="@ROOT@/var/nagvis/userfiles/templates/"
-gadget="@ROOT@/var/nagvis/userfiles/gadget/"
-icon="@ROOT@/var/nagvis/userfiles/images/iconsets/"
-shape="@ROOT@/var/nagvis/userfiles/images/shapes/"
-map="@ROOT@/var/nagvis/userfiles/images/maps/"
-htmlbase="/@SITE@/nagvis"
-htmlcgi="/@SITE@/nagios/cgi-bin"
+base="###ROOT###/share/nagvis/"
+cfg="###ROOT###/etc/nagvis/"
+mapcfg="###ROOT###/etc/nagvis/maps/"
+var="###ROOT###/tmp/nagvis/"
+sharedvar="###ROOT###/tmp/nagvis/share/"
+automapcfg="###ROOT###/etc/nagvis/automaps/"
+templates="###ROOT###/var/nagvis/userfiles/templates/"
+gadget="###ROOT###/var/nagvis/userfiles/gadget/"
+icon="###ROOT###/var/nagvis/userfiles/images/iconsets/"
+shape="###ROOT###/var/nagvis/userfiles/images/shapes/"
+map="###ROOT###/var/nagvis/userfiles/images/maps/"
+htmlbase="/###SITE###/nagvis"
+htmlcgi="/###SITE###/nagios/cgi-bin"
 
 ; Default values which get inherited to the maps and its objects
 [defaults]
@@ -268,7 +268,7 @@ backend="live_1"
 ; The path /usr/local/nagios/var/rw has to exist
 [backend_live_1]
 backendtype="mklivestatus"
-socket="unix:@ROOT@/tmp/run/live"
+socket="unix:###ROOT###/tmp/run/live"
 
 ; ----------------------------
 ; Rotation pool definitions
