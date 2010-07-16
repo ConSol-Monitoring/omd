@@ -462,18 +462,18 @@ def main_help(args=[]):
         sys.stdout.write("Usage (called as root):\n\n")
     else:
         sys.stdout.write("Usage (called as site user):\n\n")
-	
-    for command, only_root, needs_site, site_must_exist, synopsis, command_function, descr in commands:
-	if only_root and not am_root:
-	   continue
-	if am_root:
-	    if needs_site == 2:
-		synopsis = "[SITE] " + synopsis
-	    elif needs_site == 1:
-		synopsis = "SITE " + synopsis
-	sys.stdout.write(" omd %-10s %-16s %s\n" % 
-		(command, synopsis, descr))
-    sys.stdout.write("\n")
+
+    for command, only_root, needs_site, site_must_exist, confirm, synopsis, command_function, descr, confirm_text in commands:
+        if only_root and not am_root:
+            continue
+        if am_root:
+            if needs_site == 2:
+                synopsis = "[SITE] " + synopsis
+            elif needs_site == 1:
+                synopsis = "SITE " + synopsis
+
+        sys.stdout.write(" omd %-10s %-16s %s\n" % (command, synopsis, descr))
+        sys.stdout.write("\n")
 
 def main_setup(args):
     packages = g_info["OS_PACKAGES"].split()
@@ -688,57 +688,85 @@ def main_config(args):
 # name
 
 commands = [
-#  command   only_root  needs_site must_exist confirm args, function, description
+#  command   only_root  needs_site must_exist confirm args, function, description, confirm_text
   ( "help",      False, 0, 0, False, "",        main_help,
-    "Show general help"),
+    "Show general help",
+    ""),
 
-  ( "setup",     True,  0, 0, False, "",        main_setup,
-    "Prepare operating system for OMD (installs packages)"),
+  ( "setup",     True,  0, 0, True, "",        main_setup,
+    "Prepare operating system for OMD (installs packages)",
+    
+    "This operating system installs the following packages:\n"
+    " -> FIXME"),
 
   ( "uninstall", True,  0, 0, True, "",        main_uninstall,
-    "Remove OMD and all sites!"),
+    "Remove OMD and all sites!",
+
+    "BE WARNED: You are about to remove everything your system\n"
+    "           have ever known about omd."),
 
   ( "version",   False, 0, 0, False, "",        main_version,
-    "Show version of OMD"),
+    "Show version of OMD",
+    ""),
 
   ( "versions",  False, 0, 0, False, "",        main_versions,
-    "List installed OMD versions")       ,
+    "List installed OMD versions",
+    ""),
 
   ( "sites",     False, 0, 0, False, "", main_sites,
-    "Show list of sites"),
+    "Show list of sites",
+    ""),
 
   ( "create",    True,  1, 0, False, "",        main_create,
-    "Create a new site"),
+    "Create a new site",
+
+    "This action performs the following actions on your system:\n"
+    "- The user XY is being created\n"
+    "- FIXME..."),
 
   ( "rm",        True,  1, 1, True, "",        main_rm,
-    "Remove a site (and its data)"),
+    "Remove a site (and its data)",
+
+    "PLEASE NOTE: This action removes all configuration files\n"
+    "             and variable data of site XY\n"),
 
   ( "mv",        True,  1, 1, False, "NEWNAME", main_mv,
-    "Rename a site"),
+    "Rename a site",
+
+    "The site XY will be renamed to Z."),
 
   ( "cp",        True,  1, 1, False, "NEWNAME", main_cp,
-    "Make a copy of a site"),
+    "Make a copy of a site",
+
+    "The whole site Xy will be copied to Z. A new system user Z will be created.\n"),
 
   ( "update",    False, 1, 1, False, "[VERSION]", main_update,
-    "Update site to other version"),
+    "Update site to other version",
+    ""),
 
   ( "start",     False, 2, 1, False, "", lambda args: main_init_action("start", args),
-    "Start services of one or all sites"),
+    "Start services of one or all sites",
+    ""),
 
   ( "stop",      False, 2, 1, False, "", lambda args: main_init_action("stop", args),
-    "Stop services of site(s)"),
+    "Stop services of site(s)",
+    ""),
 
   ( "restart",   False, 2, 1, False, "", lambda args: main_init_action("restart", args),
-    "Restart services of site(s)"),
+    "Restart services of site(s)",
+    ""),
 
   ( "reload",    False, 2, 1, False, "", lambda args: main_init_action("reload", args),
-    "Reload services of site(s)"),
+    "Reload services of site(s)",
+    ""),
 
   ( "status",    False, 2, 1, False, "", lambda args: main_init_action("status", args),
-    "Show status of services of site(s)"),
+    "Show status of services of site(s)",
+    ""),
 
   ( "config",    False, 1, 1, False, "...", main_config,
-    "Show and set site configuration parameters"),
+    "Show and set site configuration parameters",
+    ""),
 
 ]
 
@@ -749,7 +777,7 @@ if len(sys.argv) < 2:
 command = sys.argv[1]
 args = sys.argv[2:]
 found = False
-for c, only_root, needs_site, site_must_exist, confirm, argumentlist, command_function, description in commands:
+for c, only_root, needs_site, site_must_exist, confirm, argumentlist, command_function, description, confirm_text in commands:
     if c == command:
         found = True
 	break
@@ -793,7 +821,7 @@ if g_sitename and os.getuid() == 0 and not only_root:
     switch_to_site_user()
 
 if confirm:
-    sys.stdout.write("%s (yes/NO): " % description)
+    sys.stdout.write("%s (yes/NO): " % confirm_text)
     sys.stdout.flush()
     a = sys.stdin.readline().strip()
     if a.lower() != "yes":
