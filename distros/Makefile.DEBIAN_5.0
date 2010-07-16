@@ -1,4 +1,4 @@
-BUILD_PACKAGES  = build-essential libcairo2-dev libpango1.0-dev libxml2-dev
+BUILD_PACKAGES  = build-essential libcairo2-dev libpango1.0-dev libxml2-dev patch
 OS_PACKAGES     = libapache2-mod-python
 PACKAGE_INSTALL = aptitude update ; aptitude install
 APACHE_CONF_DIR = /etc/apache2/conf.d
