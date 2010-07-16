@@ -463,7 +463,7 @@ def main_help(args=[]):
     else:
         sys.stdout.write("Usage (called as site user):\n\n")
 	
-    for command, only_root, needs_site, site_must_exist, synopsis, command_function, descr in commands:
+    for command, only_root, needs_site, site_must_exist, confirm, synopsis, command_function, descr in commands:
 	if only_root and not am_root:
 	   continue
 	if am_root:
