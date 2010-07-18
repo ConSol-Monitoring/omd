@@ -15,11 +15,20 @@
 # File : npcd
 #
   
-status_npcd ()
-{
+servicename=npcd
+prefix=###ROOT###
+exec_prefix=###ROOT###
+NpcdBin=###ROOT###/bin/npcd
+NpcdCfgFile=###ROOT###/etc/pnp4nagios/npcd.cfg
+NpcdVarDir=###ROOT###/var/pnp4nagios
+NpcdRunFile=###ROOT###/tmp/pnp4nagios/run/npcd.pid
+NpcdLockDir=###ROOT###/tmp/pnp4nagios/lock
+NpcdLockFile=npcd
+NpcdUser=###SITE###
+NpcdGroup=###SITE###
 
+status_npcd (){
     pid_npcd
-
     if ps -p $NpcdPID > /dev/null 2>&1; then
         return 0
     else
@@ -29,12 +38,10 @@ status_npcd ()
             return 1
         fi
     fi
-
     return 1
 }
 
-printstatus_npcd()
-{
+printstatus_npcd(){
     if status_npcd $1 $2; then
         echo "$servicename (pid $NpcdPID) is running..."
         exit 0
@@ -48,21 +55,15 @@ printstatus_npcd()
 }
 
 
-killproc_npcd ()
-{
-
+killproc_npcd (){
     kill $2 $NpcdPID
-
 }
 
 
-pid_npcd ()
-{
-
+pid_npcd (){
     if test ! -f $NpcdRunFile; then
         return 1
     fi
-
     NpcdPID=`head -n 1 $NpcdRunFile`
     return 0
 }
@@ -75,18 +76,12 @@ if [ -f /etc/rc.d/init.d/functions ]; then
 elif [ -f /etc/init.d/functions ]; then
     . /etc/init.d/functions
 fi
-
-servicename=npcd
-prefix=###ROOT###
-exec_prefix=###ROOT###
-NpcdBin=###ROOT###/bin/npcd
-NpcdCfgFile=###ROOT###/etc/pnp4nagios/npcd.cfg
-NpcdVarDir=###ROOT###/var/pnp4nagios
-NpcdRunFile=###ROOT###/tmp/pnp4nagios/run/npcd.pid
-NpcdLockDir=###ROOT###/tmp/pnp4nagios/lock
-NpcdLockFile=npcd
-NpcdUser=###SITE###
-NpcdGroup=###SITE###
+#### OMD ### 
+# Start only if PNP is enabled
+. ###ROOT###/etc/omd/site.conf
+if [ "$CONFIG_PNP4NAGIOS" != on ] ; then
+    exit 5
+fi
 
 # Check that npcd exists.
 if [ ! -f $NpcdBin ]; then

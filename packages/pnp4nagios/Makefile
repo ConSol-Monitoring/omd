@@ -4,7 +4,7 @@ NAME = pnp4nagios
 VERSION = 0.6.6
 DIR = $(NAME)-$(VERSION)
 
-# Configure options for Nagios. Since we want to compile
+# Configure options for PNP4Nagios. Since we want to compile
 # as non-root, we use our own user and group for compiling.
 # All files will be packaged as user 'root' later anyway.
 CONFIGUREOPTS = \
@@ -14,14 +14,14 @@ CONFIGUREOPTS = \
     --docdir=$(OMD_ROOT)/share/doc/pnp4nagios \
     --datarootdir=$(OMD_ROOT)/share/pnp4nagios/htdocs \
     --localstatedir=$(OMD_ROOT)/var/pnp4nagios \
-	--with-perfdata-dir=$(OMD_ROOT)/var/pnp4nagios/perfdata \
-	--with-perfdata-spool-dir=$(OMD_ROOT)/tmp/pnp4nagios/spool \
-	--with-perfdata-logfile=$(OMD_ROOT)/var/pnp4nagios/log/perfdata.log \
-	--with-nagios-user=$$(id -un) \
+    --with-perfdata-dir=$(OMD_ROOT)/var/pnp4nagios/perfdata \
+    --with-perfdata-spool-dir=$(OMD_ROOT)/tmp/pnp4nagios/spool \
+    --with-perfdata-logfile=$(OMD_ROOT)/var/pnp4nagios/log/perfdata.log \
+    --with-nagios-user=$$(id -un) \
     --with-nagios-group=$$(id -gn) \
     --with-rrdtool=/bin/true \
-	--with-perl_lib_path=$(OMD_ROOT)/lib/perl \
-	--with-base-url='/\#\#\#SITE\#\#\#/pnp4nagios'
+    --with-perl_lib_path=$(OMD_ROOT)/lib/perl \
+    --with-base-url='/\#\#\#SITE\#\#\#/pnp4nagios'
 
 build:
 	tar xzf $(DIR).tar.gz
@@ -33,22 +33,13 @@ install:
 	$(MAKE) DESTDIR=$(DESTDIR) -C $(DIR) install
 	# Remove installer 
 	rm $(DESTDIR)$(OMD_ROOT)/share/pnp4nagios/htdocs/install.php
-
-	#
-	# Fix RRDtool path
-	#
-	sed -i -e 's+/bin/true+###ROOT###/bin/rrdtool+' $(DESTDIR)$(OMD_ROOT)/etc/pnp4nagios/config.php
 	
 	# Move default config files to skel
-	
 	mkdir -p skel/etc/pnp4nagios
 	mkdir -p skel/var/pnp4nagios/stats
 	mkdir -p skel/var/pnp4nagios/perfdata
 	mkdir -p skel/var/pnp4nagios/spool
 	mkdir -p skel/tmp/pnp4nagios/run
-
-	mv $(DESTDIR)$(OMD_ROOT)/etc/pnp4nagios/config.php skel/etc/pnp4nagios/
-	mv $(DESTDIR)$(OMD_ROOT)/etc/pnp4nagios/background.pdf skel/etc/pnp4nagios/
 
 	# TODO: Add config file option
 	rm $(DESTDIR)$(OMD_ROOT)/lib/pnp4nagios/verify_pnp_config.pl
