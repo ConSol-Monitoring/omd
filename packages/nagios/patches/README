@@ -14,3 +14,8 @@ Index of patches
     config file /omd/sites/###SITE###/etc/ngaios/config.inc.php. The site name
     is extracted from the script file name (supplied by Apache).
 
+0003:
+    The web frontend checks the original home page for updates. The check
+    may be makes sense for folks who installed nagios by themselfs, but
+    not within a distribution. This patch removes the update check from
+    main.php

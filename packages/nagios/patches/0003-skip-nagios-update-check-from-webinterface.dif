@@ -1,0 +1,41 @@
+diff -ur nagios-3.2.1.orig/html/main.php nagios-3.2.1/html/main.php
+--- nagios-3.2.1.orig/html/main.php	2010-03-09 19:39:59.000000000 +0100
++++ nagios-3.2.1/html/main.php	2010-07-18 15:52:06.000000000 +0200
+@@ -27,37 +27,9 @@
+ <div class="product">Nagios<sup><span style="font-size: small;">&reg;</span></sup> Core<sup><span style="font-size: small;">&trade;</span></sup></div>
+ <div class="version">Version 3.2.1</div>
+ <div class="releasedate">March 09, 2010</div>
+-<div class="checkforupdates"><a href="http://www.nagios.org/checkforupdates/?version=3.2.1&product=nagioscore" target="_blank">Check for updates</a></div>
+ <div class="whatsnew"><a href="docs/whatsnew.html">Read what's new in Nagios Core 3</a></div>
+ </div>
+ 
+-
+-<div id="updateversioninfo">
+-<?php
+-	$updateinfo=get_update_information();
+-	//print_r($updateinfo);
+-	//$updateinfo['update_checks_enabled']=false;
+-	//$updateinfo['update_available']=true;
+-	if($updateinfo['update_checks_enabled']==false){
+-?>
+-		<div class="updatechecksdisabled">
+-		<div class="warningmessage">Warning: Automatic Update Checks are Disabled!</div>
+-		<div class="submessage">Disabling update checks presents a possible security risk.  Visit <a href="http://www.nagios.org/" target="_blank">nagios.org</a> to check for updates manually or enable update checks in your Nagios config file.</a></div>
+-		</div>
+-<?php
+-		}
+-	else if($updateinfo['update_available']==true){
+-?>
+-		<div class="updateavailable">
+-		<div class="updatemessage">A new version of Nagios is available!</div>
+-		<div class="submessage">Visit <a href="http://www.nagios.org/" target="_blank">nagios.org</a> to download Nagios <?php echo $updateinfo['update_version'];?>.</div>
+-		</div>
+-<?php
+-		}
+-?>
+-</div>
+-
+-
+ <div id="mainfooter">
+ <div id="maincopy">Copyright &copy; 2009 Nagios Core Development Team and Community Contributors.<br>Copyright &copy; 1999-2009 Ethan Galstad.<br>See the THANKS file for more information on contributors.</div>
+ <div CLASS="disclaimer">
