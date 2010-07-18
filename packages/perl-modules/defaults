@@ -1,0 +1,29 @@
+#!/usr/bin/perl
+
+use warnings;
+use strict;
+use Expect;
+
+my $timeout = 30;
+my $exp = Expect->spawn(@ARGV) or die "Cannot spawn @ARGV: $!\n";
+
+$exp->expect($timeout,
+             [ qr/Do you want to create a user configuration now/ , \&send_string ],
+             [ qr/Would you like me to configure as much as possible automatically/ , \&send_string ],
+             [ qr/Is it OK to try to connect to the Internet/ , \&send_string, "no\n" ],
+             [ qr/Auto-install the \d+ mandatory module/ , \&send_string, "n\n" ],
+             [ qr/The module\(s\) are mandatory\! Really skip/ , \&send_string, "y\n" ],
+             [ qr/Do you want to build the XS Stash module/ , \&send_string ],
+             [ qr/Do you want to use the XS Stash by default/ , \&send_string ],
+             [ qr/cpan.*?>\s+/ , \&send_string, "o conf prerequisites_policy no\no conf commit\nexit\n" ],
+            );
+
+$exp->soft_close();
+
+
+sub send_string {
+    my $fh     = shift;
+    my $string = shift || "\n";
+    $fh->send($string);
+    return exp_continue;
+}
