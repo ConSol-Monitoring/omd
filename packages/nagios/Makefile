@@ -28,6 +28,12 @@ prepare:
 install:
 	$(MAKE) DESTDIR=$(DESTDIR) -C $(DIR) install-base install-cgis install-html
 	rm -f $(DESTDIR)$(OMD_ROOT)/share/nagios/htdocs/config.php.inc
+	install -m 755 ssi-wrapper.pl $(DESTDIR)$(OMD_ROOT)/share/nagios/htdocs/ssi
+
+	for f in common avail cmd config extinfo histogram history notifications outages showlog status statusmap statuswml statuswrl summary tac trends ; do \
+		ln -sfn ssi-wrapper.pl $(DESTDIR)$(OMD_ROOT)/share/nagios/htdocs/ssi/$$f-header.ssi ; \
+		ln -sfn ssi-wrapper.pl $(DESTDIR)$(OMD_ROOT)/share/nagios/htdocs/ssi/$$f-footer.ssi ; \
+	done
 
 skel:
 

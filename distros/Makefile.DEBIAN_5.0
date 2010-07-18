@@ -1,5 +1,5 @@
 BUILD_PACKAGES  = build-essential libcairo2-dev libpango1.0-dev libxml2-dev patch libexpect-perl
-OS_PACKAGES     = libapache2-mod-python xinetd php5-gd php5-sqlite php5-mcrypt
+OS_PACKAGES     = libapache2-mod-python xinetd php5-gd php5-sqlite php5-mcrypt graphviz
 USERADD_OPTIONS = 
 PACKAGE_INSTALL = aptitude -y update ; aptitude -y install
 APACHE_CONF_DIR = /etc/apache2/conf.d
