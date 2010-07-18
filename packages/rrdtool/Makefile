@@ -5,7 +5,9 @@ VERSION = 1.4.4
 DIR = $(NAME)-$(VERSION)
 
 CONFIGUREOPTS = \
-    --prefix=$(OMD_ROOT)
+    --prefix=$(OMD_ROOT) \
+	--disable-ruby \
+	--disable-python
 
 build:
 	tar xzf $(DIR).tar.gz
