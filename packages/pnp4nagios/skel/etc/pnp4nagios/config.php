@@ -174,7 +174,7 @@ $views[] = array('title' => 'One Year',  'start' => (60*60*24*380) );
 # Use only with rrdtool svn revision 1511+
 #
 # $conf['RRD_DAEMON_OPTS'] = 'unix:/tmp/rrdcached.sock';
-$conf['RRD_DAEMON_OPTS'] = '';
+$conf['RRD_DAEMON_OPTS'] = 'unix:###ROOT###/tmp/run/rrdcached.sock';
 
 # A list of directories to search for templates
 # /omd/versions/0.42/share/pnp4nagios/htdocs/templates.dist is always the last directory to be searched for templates
