@@ -4,3 +4,5 @@ packages/nagvis/nagvis-1.5rc3
 rpm.topdir
 omd.spec
 .*.swp
+rpm.buildroot
+omd-*-*.rpm

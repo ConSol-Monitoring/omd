@@ -109,6 +109,9 @@ rpm: omd.spec
 	cp $(SOURCE_TGZ) $(RPM_TOPDIR)/SOURCES
 	rpmbuild -ba --define "_topdir $(RPM_TOPDIR)" \
              --buildroot=$$(pwd)/rpm.buildroot omd.spec
+	mv -vi $(RPM_TOPDIR)/RPMS/*/*.rpm .
+	mv -vi $(RPM_TOPDIR)/SRPMS/*.src.rpm .
+	rm -rf $(RPM_TOPDIR) rpm.buildroot
 
 # Only to be used for developement testing setup 
 setup: pack
