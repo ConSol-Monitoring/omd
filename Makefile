@@ -94,15 +94,14 @@ $(SOURCE_TGZ) dist:
 	tar czf $(SOURCE_TGZ) omd-$(OMD_VERSION)
 	rm -rf omd-$(OMD_VERSION)
 
-omd.spec: omd.spec.in
-	sed -e 's/^Requires:.*/Requires:	$(OS_PACKAGES)/' \
-            -e 's/^Version:.*/Version:	$(OMD_VERSION)/' \
-	    -e 's/@APACHE_CONFDIR@/$(APACHE_CONF_DIR)/g' \
-	    $< > $@
 
 # Build RPM from source code. This currently needs 'make dist' and thus only
 # works within a GIT repository.
-rpm: omd.spec
+rpm:
+	sed -e 's/^Requires:.*/Requires:	$(OS_PACKAGES)/' \
+            -e 's/^Version:.*/Version:	$(OMD_VERSION)/' \
+	    -e 's#@APACHE_CONFDIR@#$(APACHE_CONF_DIR)#g' \
+	    omd.spec.in > omd.spec
 	rm -f $(SOURCE_TGZ)
 	$(MAKE) $(SOURCE_TGZ)
 	mkdir -p $(RPM_TOPDIR)/{SOURCES,BUILD,RPMS,SRPMS,SPECS}
