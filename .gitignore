@@ -1,3 +1,6 @@
 omd-*.tar.gz
 destdir
 packages/nagvis/nagvis-1.5rc3
+rpm.topdir
+omd.spec
+.*.swp

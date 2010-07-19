@@ -2,6 +2,10 @@ SHELL = /bin/bash
 include Makefile.omd
 
 DESTDIR=$(shell pwd)/destdir
+RPM_TOPDIR=$$(pwd)/rpm.topdir
+SOURCE_TGZ=omd-$(OMD_VERSION).tar.gz
+BIN_TGZ=omd-bin-$(OMD_VERSION).tar.gz
+
 .PHONY: install-global
 # You can select a subset of the packages by overriding this
 # variale, e.g. make PACKAGES='nagios rrdtool' pack
@@ -38,9 +42,12 @@ pack:
         done
 	# Fix packages which did not add ###ROOT###
 	find $(DESTDIR)$(OMD_ROOT)/skel -type f | xargs -n1 sed -i -e 's+$(OMD_ROOT)+###ROOT###+g'
-	# Remove site-specific directories then went under /omd/version
+
+	# Remove site-specific directories that went under /omd/version
 	rm -rf $(DESTDIR)/{var,tmp}
-	tar czf omd-$(OMD_VERSION).tar.gz --owner=root --group=root -C $(DESTDIR) .
+
+        # Pack the whole stuff into a tarball
+	tar czf $(BIN_TGZ) --owner=root --group=root -C $(DESTDIR) .
 
 clean:
 	rm -rf $(DESTDIR)
@@ -52,29 +59,59 @@ mrproper:
 	git clean -xfd
 
 
+# Create installations files that do not lie beyond /omd/versions/$(OMD_VERSION)
+# and files not owned by a specific package
 install-global:
 	# Create link to default version
 	ln -s $(OMD_VERSION) $(DESTDIR)$(OMD_BASE)/versions/default
 	mkdir -p $(DESTDIR)/usr/bin
 	ln -sfn ../../omd/versions/default/bin/omd $(DESTDIR)/usr/bin/omd
+
+	# Base directories below /omd
 	mkdir -p $(DESTDIR)$(OMD_BASE)/sites
 	mkdir -p $(DESTDIR)$(OMD_BASE)/apache
 	mkdir -p $(DESTDIR)$(APACHE_CONF_DIR)
+
+	# Apache configuration hook
 	install -m 644 apache.conf $(DESTDIR)$(APACHE_CONF_DIR)/zzz_omd.conf
+
+	# Startscript for OMD
 	mkdir -p $(DESTDIR)/etc/init.d
 	install -m 755 omd.init $(DESTDIR)/etc/init.d/omd
-#mkdir -p $(DESTDIR)/etc/bash_completion.d
-#install -m 644 .omd_bash_completion $(DESTDIR)/etc/bash_completion.d/omd
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/omd
+
+	# Information about distribution and OMD
 	install -m 644 distros/Makefile.$(DISTRO_NAME)_$(DISTRO_VERSION) $(DESTDIR)$(OMD_ROOT)/share/omd/distro.info
 	echo -e "OMD_VERSION = $(OMD_VERSION)\nOMD_PHYSICAL_BASE = $(OMD_PHYSICAL_BASE)" > $(DESTDIR)$(OMD_ROOT)/share/omd/omd.info
 
-dist:
-	git archive HEAD | gzip > omd-source-$(OMD_VERSION).tar.gz
 
-# Only to be used for developement testing setup
+# Create source tarball. This currently only works in a checked out GIT 
+# repository.
+$(SOURCE_TGZ) dist:
+	rm -rf omd-$(OMD_VERSION)
+	mkdir -p omd-$(OMD_VERSION)
+	git archive HEAD | tar xf - -C omd-$(OMD_VERSION)
+	tar czf $(SOURCE_TGZ) omd-$(OMD_VERSION)
+	rm -rf omd-$(OMD_VERSION)
+
+omd.spec: omd.spec.in
+	sed -e 's/^Requires:.*/Requires:	$(OS_PACKAGES)/' \
+            -e 's/^Version:.*/Version:	$(OMD_VERSION)/' \
+	    -e 's/@APACHE_CONFDIR@/$(APACHE_CONFDIR)/g' \
+	    $< > $@
+
+# Build RPM from source code. This currently needs 'make dist' and thus only
+# works within a GIT repository.
+rpm: omd.spec
+	rm -f $(SOURCE_TGZ)
+	$(MAKE) $(SOURCE_TGZ)
+	mkdir -p $(RPM_TOPDIR)/{SOURCES,BUILD,RPMS,SRPMS,SPECS}
+	cp $(SOURCE_TGZ) $(RPM_TOPDIR)/SOURCES
+	rpmbuild -ba --define "_topdir $(RPM_TOPDIR)" \
+             --buildroot=$$(pwd)/rpm.buildroot omd.spec
+
+# Only to be used for developement testing setup 
 setup: pack
-	tar xzf omd-$(OMD_VERSION).tar.gz -C /
-	# HACK: Add missing suid bits if compiled as non-root
-	chmod 4755 $(OMD_ROOT)/lib/nagios/plugins/check_{icmp,dhcp}
+	tar xzf $(BIN_TGZ) -C / # HACK: Add missing suid bits if compiled as
+	non-root chmod 4755 $(OMD_ROOT)/lib/nagios/plugins/check_{icmp,dhcp}
 	$(APACHE_CTL) -k graceful
