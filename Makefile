@@ -97,7 +97,7 @@ $(SOURCE_TGZ) dist:
 omd.spec: omd.spec.in
 	sed -e 's/^Requires:.*/Requires:	$(OS_PACKAGES)/' \
             -e 's/^Version:.*/Version:	$(OMD_VERSION)/' \
-	    -e 's/@APACHE_CONFDIR@/$(APACHE_CONFDIR)/g' \
+	    -e 's/@APACHE_CONFDIR@/$(APACHE_CONF_DIR)/g' \
 	    $< > $@
 
 # Build RPM from source code. This currently needs 'make dist' and thus only
