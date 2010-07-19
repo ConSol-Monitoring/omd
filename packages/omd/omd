@@ -116,7 +116,7 @@ def add_to_fstab(sitename):
     # tmpfs                   /opt/omd/sites/b01/tmp  tmpfs   user,uid=b01,gid=b01 0 0
     mountpoint = tmp_dir(sitename)
     sys.stdout.write("Adding %s to /etc/fstab.\n" % mountpoint)
-    file("/etc/fstab", "a+").write("tmpfs  %s tmpfs user,mode=755,uid=%s,gid=%s 0 0\n" % \
+    file("/etc/fstab", "a+").write("tmpfs  %s tmpfs noauto,user,mode=755,uid=%s,gid=%s 0 0\n" % \
         (mountpoint, sitename, sitename))
 
 def remove_from_fstab(sitename):
