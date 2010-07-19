@@ -1,31 +1,31 @@
 include ../../Makefile.omd
 
-NAME = perl-modules
-VERSION = 0.42
-DESTDIR = $(OMD_ROOT)
+NAME    = perl-modules
+VERSION = $(OMD_VERSION)
+DESTDIR = $(shell pwd)/../../destdir
 
-build: local-lib
+build:
 
-install: build
+install: local-lib
 
 skel:
 
 clean:
-	if [ -d $(DESTDIR)/lib/perl5 ]; then rm -r $(DESTDIR)/lib/perl5; fi
+	if [ -d $(DESTDIR)/$(OMD_ROOT)/lib/perl5 ]; then rm -r $(DESTDIR)/$(OMD_ROOT)/lib/perl5; fi
 	if [ -d src/local-lib-1.006005 ]; then rm -r src/local-lib-1.006005; fi
 
 local-lib: init-cpan
 	module="src/local-lib-1.006005.tar.gz"; \
-	if [ ! -d $(DESTDIR)/lib/perl5 ]; then \
+	if [ ! -d $(DESTDIR)/$(OMD_ROOT)/lib/perl5 ]; then \
 	    cd src; \
 	    echo `basename $$module`; \
 	    tarfile=`basename $$module`; \
 	    tar zxf "$$tarfile"; \
 	    dir=`echo $$tarfile | sed s/\.tar\.gz//`; \
 	    cd $$dir; \
-	    ../../defaults /usr/bin/perl Makefile.PL --bootstrap=$(DESTDIR)/lib/perl5 || exit 1; \
+	    ../../defaults /usr/bin/perl Makefile.PL --bootstrap=$(DESTDIR)/$(OMD_ROOT)/lib/perl5 || exit 1; \
 	    make; \
-	    make install;  \
+	    make install; \
 	    cd ../..; \
 	fi
 
