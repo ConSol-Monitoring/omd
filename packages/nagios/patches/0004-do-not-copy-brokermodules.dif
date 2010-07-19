@@ -1,0 +1,56 @@
+--- nagios-3.2.1.orig/base/nebmods.c	2008-11-30 18:22:58.000000000 +0100
++++ nagios-3.2.1/base/nebmods.c	2010-07-19 11:50:12.000000000 +0200
+@@ -198,29 +198,16 @@
+ 	   So... the trick is to (1) copy the module to a temp file, (2) dlopen() the temp file, and (3) immediately delete the temp file. 
+ 	************/
+ 
+-	/* open a temp file for copying the module */
+-	asprintf(&output_file,"%s/nebmodXXXXXX",temp_path);
+-	if((dest_fd=mkstemp(output_file))==-1){
+-		logit(NSLOG_RUNTIME_ERROR,FALSE,"Error: Could not safely copy module '%s'.  The module will not be loaded: %s\n",mod->filename,strerror(errno));
+-		return ERROR;
+-		}
+-	/* open module file for reading and copy it */
+-	if((source_fd=open(mod->filename,O_RDONLY,0644))>0){
+-		while((bytes_read=read(source_fd,buffer,sizeof(buffer)))>0)
+-			write(dest_fd,buffer,bytes_read);
+-		close(source_fd);
+-		close(dest_fd);
+-		}
+-	else{
+-		logit(NSLOG_RUNTIME_ERROR,FALSE,"Error: Could not safely copy module '%s'.  The module will not be loaded: %s\n",mod->filename,strerror(errno));
+-		return ERROR;
+-		}
++        /* OMD: Do not make a copy of the module, but directly load it. This prevents problems with a tmpfs which
++           is mounted as user. OMD users surely have no problems with modules overwritten by 'cp in runtime. Anyway,
++           the usual way to install files is 'install', which removes and recreates the file (just as tar, rpm and
++           many other installation-tools do). */
+ 
+ 	/* load the module (use the temp copy we just made) */
+ #ifdef USE_LTDL
+-	mod->module_handle=lt_dlopen(output_file);
++	mod->module_handle=lt_dlopen(mod->filename);
+ #else
+-	mod->module_handle=(void *)dlopen(output_file,RTLD_NOW|RTLD_GLOBAL);
++	mod->module_handle=(void *)dlopen(mod->filename,RTLD_NOW|RTLD_GLOBAL);
+ #endif
+ 	if(mod->module_handle==NULL){
+ 
+@@ -236,17 +223,6 @@
+ 	/* mark the module as being loaded */
+ 	mod->is_currently_loaded=TRUE;
+ 
+-	/* delete the temp copy of the module we just created and loaded */
+-	/* this will prevent other processes from overwriting the file (using the same inode), which would cause Nagios to crash */
+-	/* the kernel will keep the deleted file in memory until we unload it */
+-	/* NOTE: This *should* be portable to most Unices, but I've only tested it on Linux */
+-	if(unlink(output_file)==-1){
+-		logit(NSLOG_RUNTIME_ERROR,FALSE,"Error: Could not delete temporary file '%s' used for module '%s'.  The module will be unloaded: %s\n",output_file,mod->filename,strerror(errno));
+-		neb_unload_module(mod,NEBMODULE_FORCE_UNLOAD,NEBMODULE_ERROR_API_VERSION);
+-
+-		return ERROR;
+-		}
+-
+ 	/* find module API version */
+ #ifdef USE_LTDL
+ 	module_version_ptr=(int *)lt_dlsym(mod->module_handle,"__neb_api_version");
