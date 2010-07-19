@@ -124,8 +124,6 @@ def remove_from_fstab(sitename):
     sys.stdout.write("Removing %s from /etc/fstab.\n" % mountpoint)
     newtab = file("/etc/fstab.new", "w")
     for line in file("/etc/fstab"):
-        print line
-        print mountpoint
         if "uid=%s," % sitename in line and mountpoint in line:
             continue
         newtab.write(line)
