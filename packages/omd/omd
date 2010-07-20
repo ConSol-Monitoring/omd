@@ -55,7 +55,6 @@ def useradd(sitename):
 
     # Add Apache to new group. It needs to be able to write in to the 
     # command pipe and possible other stuff
-    # FIXME: www-data is distro-specific
     os.system("gpasswd -a %s %s >/dev/null" % (g_info["APACHE_USER"], sitename))
 
 def userdel(name):
@@ -86,14 +85,15 @@ def tmpfs_mounted(sitename):
 def create_tmpfs(sitename):
     if tmpfs_mounted(sitename):
         return
-    if os.getuid() != 0:
-	bail_out("Sorry. Need root permissions for mounting tmps.\n")
+    if os.getuid() == 0:
+        switch_to_site_user()
+
     tmp = tmp_dir(sitename)
     sys.stdout.write("Creating temporary filesystem...")
     sys.stdout.flush()
     if not os.path.exists(tmp):
         os.mkdir(tmp)
-    if 0 != os.system("mount -t tmpfs -o mode=755,uid=%s,gid=%s tmpfs '%s'" % (sitename, sitename, tmp)):
+    if 0 != os.system("mount '%s'" % tmp):
         sys.stdout.write("ERROR\n")
         return
     create_skeleton_files(sitename, "tmp")
@@ -111,7 +111,23 @@ def unmount_tmpfs(sitename):
 	    sys.stdout.flush()
 	    time.sleep(1)
         bail_out("Cannot unmount tmp filesystem.\n")
-	
+
+def add_to_fstab(sitename):
+    # tmpfs                   /opt/omd/sites/b01/tmp  tmpfs   user,uid=b01,gid=b01 0 0
+    mountpoint = tmp_dir(sitename)
+    sys.stdout.write("Adding %s to /etc/fstab.\n" % mountpoint)
+    file("/etc/fstab", "a+").write("tmpfs  %s tmpfs noauto,user,mode=755,uid=%s,gid=%s 0 0\n" % \
+        (mountpoint, sitename, sitename))
+
+def remove_from_fstab(sitename):
+    mountpoint = tmp_dir(sitename)
+    sys.stdout.write("Removing %s from /etc/fstab.\n" % mountpoint)
+    newtab = file("/etc/fstab.new", "w")
+    for line in file("/etc/fstab"):
+        if "uid=%s," % sitename in line and mountpoint in line:
+            continue
+        newtab.write(line)
+    os.rename("/etc/fstab.new", "/etc/fstab")
 
 def start_site(sitename):
     create_tmpfs(sitename)
@@ -473,7 +489,6 @@ def main_help(args=[]):
                 synopsis = "SITE " + synopsis
 
         sys.stdout.write(" omd %-10s %-16s %s\n" % (command, synopsis, descr))
-        sys.stdout.write("\n")
 
 def main_setup(args):
     packages = g_info["OS_PACKAGES"].split()
@@ -524,6 +539,7 @@ def main_create(args):
     sitedir = site_dir(g_sitename)
     os.makedirs(sitedir)
     os.system("chown %s:%s '%s'" % (g_sitename, g_sitename, sitedir))
+    add_to_fstab(g_sitename)
 
     # Create symbolic link to version
     os.symlink("../../versions/%s" % OMD_VERSION, sitedir + "/version")
@@ -543,19 +559,22 @@ def main_create(args):
     # Change ownership of all files and dirs to site user
     os.system("chown -R %s:%s '%s'" % (g_sitename, g_sitename, sitedir))
 
-    # Mount and create contents of tmpfs. This needs root permissions
-    # and should better not be done at start time, because then an
-    # 'omd start' as site user would not work.
-    create_tmpfs(g_sitename)    
-
     # Create include-hook for Apache and reload apache
     create_apache_hook(g_sitename)
     sys.stdout.write("Created new site %s with version %s.\n" % (g_sitename, OMD_VERSION))
     reload_apache()
 
+    # Mount and create contents of tmpfs. This must be done as normal
+    # user. We also could do this at 'omd start', but this might confuse
+    # users. They could create files below tmp which would be shadowed
+    # by the mount.
+    create_tmpfs(g_sitename)    
+
+
 def main_rm(args):
     stop_if_not_stopped(g_sitename)
     unmount_tmpfs(g_sitename)
+    remove_from_fstab(g_sitename)
     sys.stdout.write("Removing site %s..." % g_sitename)
     sys.stdout.flush()
     userdel(g_sitename)
@@ -654,8 +673,11 @@ def main_init_action(command, args):
     if not g_sitename:
         exit_status = 0
 	for site in all_sites():
-	    g_sitename = site
-	    exit_status = max(exit_status, init_action(command))
+            # We need to do an os.system(), because each
+            # site must be started with the account of the
+            # site user. And after setuid() we cannot return.
+            sys.stdout.write("Doing '%s' on site %s:\n" % (command, site))
+            exit_status = max(exit_status, os.system("%s %s %s %s" % (sys.argv[0], command, site, " ".join(args))))
     else:
 	exit_status = init_action(command)
     sys.exit(exit_status)

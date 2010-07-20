@@ -30,21 +30,21 @@ install:
 
 skel:
 	# Give Apache write permissions on certain directories
-	chmod 770 $(SKEL)/etc/nagvis
-	chmod 770 $(SKEL)/etc/nagvis/maps
-	chmod 660 $(SKEL)/etc/nagvis/maps/*
-	chmod 770 $(SKEL)/etc/nagvis/automaps
-	chmod 660 $(SKEL)/etc/nagvis/automaps/*
-	chmod 660 $(SKEL)/etc/nagvis/nagvis.ini.php
-	chmod 660 $(SKEL)/etc/nagvis/auth.db
-	chmod 770 $(SKEL)/var/nagvis/userfiles/images/maps
-	chmod 660 $(SKEL)/var/nagvis/userfiles/images/maps/*
-	chmod 770 $(SKEL)/var/nagvis/userfiles/images/shapes
-	chmod 660 $(SKEL)/var/nagvis/userfiles/images/shapes/*
-	chmod 770 $(SKEL)/tmp/nagvis
-	chmod 770 $(SKEL)/tmp/nagvis/share
-	chmod 770 $(SKEL)/tmp/nagvis/tmpl/compile
-	chmod 770 $(SKEL)/tmp/nagvis/tmpl/cache
+	chmod 775 $(SKEL)/etc/nagvis
+	chmod 775 $(SKEL)/etc/nagvis/maps
+	chmod 664 $(SKEL)/etc/nagvis/maps/*
+	chmod 775 $(SKEL)/etc/nagvis/automaps
+	chmod 664 $(SKEL)/etc/nagvis/automaps/*
+	chmod 664 $(SKEL)/etc/nagvis/nagvis.ini.php
+	chmod 664 $(SKEL)/etc/nagvis/auth.db
+	chmod 775 $(SKEL)/var/nagvis/userfiles/images/maps
+	chmod 664 $(SKEL)/var/nagvis/userfiles/images/maps/*
+	chmod 775 $(SKEL)/var/nagvis/userfiles/images/shapes
+	chmod 664 $(SKEL)/var/nagvis/userfiles/images/shapes/*
+	chmod 775 $(SKEL)/tmp/nagvis
+	chmod 775 $(SKEL)/tmp/nagvis/share
+	chmod 775 $(SKEL)/tmp/nagvis/tmpl/compile
+	chmod 775 $(SKEL)/tmp/nagvis/tmpl/cache
 
 clean:
 	rm -rf $(DIR)

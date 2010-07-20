@@ -19,3 +19,11 @@ Index of patches
     may be makes sense for folks who installed nagios by themselfs, but
     not within a distribution. This patch removes the update check from
     main.php
+
+0004:
+    When loading a broker module, Nagios makes a temporary copy of the
+    module file, loads that with dl_open, and deletes it afterwards.
+    This shall save agains modifications caused by a user overwriting
+    the module with 'cp'. This patch removes that behaviour and loads
+    the module in the traditional way. This prevents problems with tmpfs
+    mounted as non-root (where Nagios places the module copy).
