@@ -2,31 +2,23 @@ include ../../Makefile.omd
 
 NAME    = perl-modules
 VERSION = $(OMD_VERSION)
-DESTDIR = $(shell pwd)/../../destdir
+SRC     = $(shell basename src/local-lib-*.gz | sed s/\.tar\.gz// )
 
-build:
+build: init-cpan
+	cd src; tar zxf $(SRC).tar.gz
+	cd src/$(SRC); ../../defaults /usr/bin/perl Makefile.PL --bootstrap=build
+	cd src/$(SRC); $(MAKE)
+	cd src/$(SRC); $(MAKE) DESTDIR="" install
 
-install: local-lib
+install: build
+	if [ -z $(DESTDIR) ]; then echo "cannot install without DESTDIR set!"; exit 1; fi
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib
+	mv src/$(SRC)/build $(DESTDIR)$(OMD_ROOT)/lib/perl5
 
 skel:
 
 clean:
-	if [ -d $(DESTDIR)/$(OMD_ROOT)/lib/perl5 ]; then rm -r $(DESTDIR)/$(OMD_ROOT)/lib/perl5; fi
-	if [ -d src/local-lib-1.006005 ]; then rm -r src/local-lib-1.006005; fi
-
-local-lib: init-cpan
-	module="src/local-lib-1.006005.tar.gz"; \
-	if [ ! -d $(DESTDIR)/$(OMD_ROOT)/lib/perl5 ]; then \
-	    cd src; \
-	    echo `basename $$module`; \
-	    tarfile=`basename $$module`; \
-	    tar zxf "$$tarfile"; \
-	    dir=`echo $$tarfile | sed s/\.tar\.gz//`; \
-	    cd $$dir; \
-	    ../../defaults /usr/bin/perl Makefile.PL --bootstrap=$(DESTDIR)/$(OMD_ROOT)/lib/perl5 || exit 1; \
-	    make; \
-	    make install; \
-	    cd ../..; \
-	fi
+	if [ -d src/$(SRC) ]; then rm -r src/$(SRC); fi
 
 init-cpan:
+	./defaults cpan
