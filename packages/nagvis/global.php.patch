@@ -1,14 +1,11 @@
---- global.php.orig	2010-06-05 20:27:23.000000000 +0200
-+++ global.php	2010-06-05 20:22:26.000000000 +0200
-@@ -55,14 +55,14 @@
+--- global.php.orig	2010-07-21 23:23:56.000000000 +0200
++++ global.php	2010-07-22 09:06:46.000000000 +0200
+@@ -58,11 +58,11 @@
  define('DEBUGLEVEL', 6);
  
  // Path to the debug file
 -define('DEBUGFILE', '../../../var/nagvis-debug.log');
 +define('DEBUGFILE', join(array_slice(split('/' ,dirname($_SERVER["SCRIPT_FILENAME"])), 0, -5), '/').'/var/log/nagvis-debug.log');
- 
- // NagVis Version
- define('CONST_VERSION', '1.5.1');
  
  // Path to the main configuration file
 -define('CONST_MAINCFG', '../../../etc/nagvis.ini.php');
