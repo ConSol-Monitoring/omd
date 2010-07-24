@@ -4,6 +4,8 @@ NAME = dokuwiki
 VERSION = 2009-12-25c
 DIR = $(NAME)-2009-12-25
 
+.PHONY: skel
+
 build:
 	tar xzf  $(NAME)-$(VERSION).tgz
 
@@ -15,6 +17,18 @@ install:
 
 skel:
 	# Optional target called to create additional files below skel
+	chmod 777 $(SKEL)/var/dokuwiki/data
+	chmod 777 $(SKEL)/var/dokuwiki/data/attic
+	chmod 777 $(SKEL)/var/dokuwiki/data/cache
+	chmod 777 $(SKEL)/var/dokuwiki/data/index
+	chmod 777 $(SKEL)/var/dokuwiki/data/locks
+	chmod 777 $(SKEL)/var/dokuwiki/data/media
+	chmod 777 $(SKEL)/var/dokuwiki/data/meta
+	chmod 777 $(SKEL)/var/dokuwiki/data/pages
+	chmod 777 $(SKEL)/var/dokuwiki/data/tmp
+	chmod 666 $(SKEL)/etc/dokuwiki/local.php
+	chmod 666 $(SKEL)/etc/dokuwiki/acl.auth.php
+	chmod 666 $(SKEL)/etc/dokuwiki/users.auth.php
 
 clean:
 	# Remove files created by build/install
