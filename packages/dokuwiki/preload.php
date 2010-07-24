@@ -17,44 +17,44 @@ $parts[1],$parts[2],$parts[3],$parts[4]));
 
 $config_cascade = array(
     'main' => array(
-        'default'   => array(DOKU_INC.'conf/dokuwiki.php'),
+        'default'   => array(DOKU_CONF.'dokuwiki.php'),
         'local'     => array(DOKU_CONF.'local.php'),
         'protected' => array(DOKU_CONF.'local.protected.php'),
     ),
     'acronyms'  => array(
-        'default'   => array(DOKU_INC.'conf/acronyms.conf'),
+        'default'   => array(DOKU_CONF.'acronyms.conf'),
         'local'     => array(DOKU_CONF.'acronyms.local.conf'),
     ),
     'entities'  => array(
-        'default'   => array(DOKU_INC.'conf/entities.conf'),
+        'default'   => array(DOKU_CONF.'entities.conf'),
         'local'     => array(DOKU_CONF.'entities.local.conf'),
     ),
     'interwiki' => array(
-        'default'   => array(DOKU_INC.'conf/interwiki.conf'),
+        'default'   => array(DOKU_CONF.'interwiki.conf'),
         'local'     => array(DOKU_CONF.'interwiki.local.conf'),
     ),
     'license' => array(
-        'default'   => array(DOKU_INC.'conf/license.php'),
+        'default'   => array(DOKU_CONF.'license.php'),
         'local'     => array(DOKU_CONF.'license.local.php'),
     ),
     'mediameta' => array(
-        'default'   => array(DOKU_INC.'conf/mediameta.php'),
+        'default'   => array(DOKU_CONF.'mediameta.php'),
         'local'     => array(DOKU_CONF.'mediameta.local.php'),
     ),
     'mime'      => array(
-        'default'   => array(DOKU_INC.'conf/mime.conf'),
+        'default'   => array(DOKU_CONF.'mime.conf'),
         'local'     => array(DOKU_CONF.'mime.local.conf'),
     ),
     'scheme'    => array(
-        'default'   => array(DOKU_INC.'conf/scheme.conf'),
+        'default'   => array(DOKU_CONF.'scheme.conf'),
         'local'     => array(DOKU_CONF.'scheme.local.conf'),
     ),
     'smileys'   => array(
-        'default'   => array(DOKU_INC.'conf/smileys.conf'),
+        'default'   => array(DOKU_CONF.'smileys.conf'),
         'local'     => array(DOKU_CONF.'smileys.local.conf'),
     ),
     'wordblock' => array(
-        'default'   => array(DOKU_INC.'conf/wordblock.conf'),
+        'default'   => array(DOKU_CONF.'wordblock.conf'),
         'local'     => array(DOKU_CONF.'wordblock.local.conf'),
     ),
 );
