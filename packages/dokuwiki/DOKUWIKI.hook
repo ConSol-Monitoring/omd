@@ -1,0 +1,38 @@
+#!/bin/bash
+case "$1" in
+        alias)
+                echo "Use Dokuwiki for user management"
+        ;;
+        description)
+                cat << EOF
+With Dokuwiki it is very easy to maintain the access to Nagios.
+
+With Dokuwiki you have a GUI to edit the htpasswd-file for
+the Nagios Logon.
+EOF
+   ;;
+   default)
+       echo "off"
+   ;;
+   choices)
+       echo "on: enable"
+       echo "off: disable"
+   ;;
+   set)
+       if [ "$2" == "on" ]
+       then
+         if [ ! -h ${OMD_ROOT}/etc/htpasswd ]
+         then
+           mv ${OMD_ROOT}/etc/htpasswd ${OMD_ROOT}/etc/htpasswd.omd
+           ln -s dokuwiki/users.auth.php ${OMD_ROOT}/etc/htpasswd
+         else
+           ln -sf dokuwiki/users.auth.php ${OMD_ROOT}/etc/htpasswd
+         fi
+       else
+         if [ -h ${OMD_ROOT}/etc/htpasswd ]
+         then
+           ln -sf htpasswd.omd ${OMD_ROOT}/etc/htpasswd
+         fi
+       fi
+   ;;
+esac
