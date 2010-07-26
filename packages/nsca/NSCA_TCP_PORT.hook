@@ -1,0 +1,21 @@
+#!/bin/bash
+
+case "$1" in
+    alias)
+        echo "TCP port number for NSCA"
+    ;;
+    description)
+        cat << EOF
+Configure the TCP port used for NSCA
+EOF
+    ;;
+    default)
+        echo "5667"
+    ;;
+    choices)
+        echo "[0-9]{1,5}"
+    ;;
+    set)
+        sed -ri 's/^([[:space:]]*server_port[[:space:]]*=[[:space:]]*)([0-9]+)/\1'$2'/' $OMD_ROOT/etc/nsca/nsca.conf
+    ;;
+esac

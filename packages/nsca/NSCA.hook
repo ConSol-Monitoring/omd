@@ -1,0 +1,22 @@
+#!/bin/bash
+
+case "$1" in
+    alias)
+        echo "Make nsca accessable via TCP"
+    ;;
+    description)
+        cat << EOF
+This option is used to make NSCA reachable via TCP on a port configurable with
+NSCA_TCP_PORT.
+EOF
+    ;;
+    default)
+        echo "off"
+    ;;
+    choices)
+        echo "on: enable"
+        echo "off: disable"
+    ;;
+    set)
+    ;;
+esac
