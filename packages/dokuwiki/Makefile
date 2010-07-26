@@ -8,6 +8,7 @@ DIR = $(NAME)-2009-12-25
 
 build:
 	tar xzf  $(NAME)-$(VERSION).tgz
+	tar xzf  template-arctic.tgz -C $(DIR)/lib/tpl/
 
 install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/dokuwiki
