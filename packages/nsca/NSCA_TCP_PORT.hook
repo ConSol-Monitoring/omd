@@ -16,6 +16,6 @@ EOF
         echo "[0-9]{1,5}"
     ;;
     set)
-        sed -ri 's/^([[:space:]]*server_port[[:space:]]*=[[:space:]]*)([0-9]+)/\1'$2'/' $OMD_ROOT/etc/nsca/nsca.conf
+        sed -ri 's/^([[:space:]]*server_port[[:space:]]*=[[:space:]]*)([0-9]+)/\1'$2'/' $OMD_ROOT/etc/nsca/nsca.cfg
     ;;
 esac
