@@ -1,5 +1,7 @@
 include ../../Makefile.omd
 
+.PHONY: skel
+
 NAME = pnp4nagios
 VERSION = 0.6.6
 DIR = $(NAME)-$(VERSION)
@@ -33,6 +35,8 @@ install:
 	$(MAKE) DESTDIR=$(DESTDIR) -C $(DIR) install
 	# Remove installer 
 	rm $(DESTDIR)$(OMD_ROOT)/share/pnp4nagios/htdocs/install.php
+	rm -rf $(DESTDIR)$(OMD_ROOT)/etc/pnp4nagios
+	rm -rf $(DESTDIR)$(OMD_ROOT)/var/pnp4nagios
 	
 	# Move default config files to skel
 	mkdir -p skel/etc/pnp4nagios
