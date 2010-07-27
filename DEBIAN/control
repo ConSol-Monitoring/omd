@@ -1,0 +1,13 @@
+Package: omd
+Version:
+Maintainer: <debian@omdistro.org>
+Section: admin
+Priority: optional
+Architecture:
+Depends:
+Installed-Size:
+Description: Open Source Monitoring Distribution, containing Nagios,
+the Nagios plugins, Check_MK, Livestatus, Multisite,
+PNP4Nagios, NagVis, and other addons. Please visit
+http://omdistro.org/.
+

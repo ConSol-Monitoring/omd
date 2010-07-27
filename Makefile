@@ -3,6 +3,7 @@ include Makefile.omd
 
 DESTDIR=$(shell pwd)/destdir
 RPM_TOPDIR=$$(pwd)/rpm.topdir
+DPKG_TOPDIR=$$(pwd)/dpkg.topdir
 SOURCE_TGZ=omd-$(OMD_VERSION).tar.gz
 BIN_TGZ=omd-bin-$(OMD_VERSION).tar.gz
 
@@ -111,6 +112,17 @@ rpm:
 	mv -v $(RPM_TOPDIR)/RPMS/*/*.rpm .
 	mv -v $(RPM_TOPDIR)/SRPMS/*.src.rpm .
 	rm -rf $(RPM_TOPDIR) rpm.buildroot
+
+# Build DEB from prebuild binary. This currently needs 'make dist' and thus only
+# works within a GIT repository.
+deb: pack
+	mkdir -p $(DPKG_TOPDIR)
+	tar xzf $(BIN_TGZ) -C $(DPKG_TOPDIR) 
+	cp -a DEBIAN $(DPKG_TOPDIR)
+	sed -i -e 's/^Version:.*/Version: $(OMD_VERSION)/' $(DPKG_TOPDIR)/DEBIAN/control
+	sed -i -e 's/^Architecture:.*/Architecture: $(ARCH)/' $(DPKG_TOPDIR)/DEBIAN/control
+	dpkg -b $(DPKG_TOPDIR) omd-$(OMD_VERSION).$(ARCH).deb
+	rm -rf $(DPKG_TOPDIR)
 
 # Only to be used for developement testing setup 
 setup: pack

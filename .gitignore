@@ -1,7 +1,9 @@
 omd-*.tar.gz
+omd-*.deb
 destdir
 packages/nagvis/nagvis-1.5rc3
 rpm.topdir
+dpkg.topdir
 omd.spec
 .*.swp
 rpm.buildroot
