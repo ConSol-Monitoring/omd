@@ -117,3 +117,11 @@ setup: pack
 	tar xzf $(BIN_TGZ) -C / # HACK: Add missing suid bits if compiled as non-root
 	chmod 4755 $(OMD_ROOT)/lib/nagios/plugins/check_{icmp,dhcp}
 	$(APACHE_CTL) -k graceful
+
+
+version:
+	@newversion=$$(dialog --stdout --inputbox "New Version:" 0 0 "$(OMD_VERSION)") ; \
+	if [ -n "$$newversion" ] ; then \
+	    sed -ri 's/^(OMD_VERSION[[:space:]]*= *).*/\1'"$$newversion/" Makefile.omd ; \
+	    sed -ri 's/^(OMD_VERSION[[:space:]]*= *).*/\1"'"$$newversion"'"/' packages/omd/omd ; \
+	fi ; \
