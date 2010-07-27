@@ -230,7 +230,7 @@ def patch_template_file(src, dst, old, new):
     content = file(src).read()
     for site in [ old, new ]:
         replacements = {
-            "@SITE@" : site,
+            "###SITE###" : site,
             "###ROOT###" : site_dir(site),
         }
         file("%s.skel.%s" % (dst, site), "w").write(replace_tags(content, replacements))
