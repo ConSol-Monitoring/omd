@@ -7,7 +7,7 @@
 import sys, os, shutil, pwd, re, time
 
 # FIXME: Determine this somehow
-OMD_VERSION = "0.42"
+OMD_VERSION = "0.42.1"
 
 def bail_out(message):
     sys.stderr.write(message)
