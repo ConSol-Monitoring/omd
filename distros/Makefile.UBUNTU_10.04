@@ -1,4 +1,4 @@
-BUILD_PACKAGES  = build-essential libcairo2-dev libpango1.0-dev libxml2-dev libexpect-perl
+BUILD_PACKAGES  = build-essential libcairo2-dev libpango1.0-dev libxml2-dev libexpect-perl libssl-dev
 OS_PACKAGES     = libapache2-mod-python
 USERADD_OPTIONS = 
 PACKAGE_INSTALL = aptitude -y update ; aptitude -y install
