@@ -58,7 +58,7 @@ def useradd(sitename):
     os.system("gpasswd -a %s %s >/dev/null" % (g_info["APACHE_USER"], sitename))
 
 def userdel(name):
-    os.system("userdel -r " + name)
+    os.system("userdel -r " + name + " 2>/dev/null")
     # FIXME: On some OSes (Debian) the group is automatically removed if
     # it bears the same name as the user
     os.system("groupdel " + name + " 2>/dev/null")
@@ -593,13 +593,13 @@ def main_mv(args):
     
     if site_exists(new):
         bail_out("Site %s already existing.\n" % new)
-    old = g_sitename
-    if not site_exists(old):
-        bail_out("No such site '%s'.\n" % sitename)
 
-    running = site_is_running(old)
-    stop_if_not_stopped(old)
+    old = g_sitename
+    if site_is_running(old):
+	bail_out("Cannot rename site '%s' while it is running.\n" % old)
+
     unmount_tmpfs(old)
+    remove_from_fstab(old)
     sys.stdout.write("Renaming site %s to %s..." % (old, new))
     sys.stdout.flush()
 
@@ -619,10 +619,7 @@ def main_mv(args):
     userdel(old)
 
     sys.stdout.write("OK\n")
-
-    # site was running before? Start it again
-    if running:
-        start_site(new)
+    add_to_fstab(new)
 
     # Tell Apache about changes
     reload_apache()
@@ -632,15 +629,13 @@ def main_cp(args):
 	bail_out("omd: Usage: omd cp oldname newname\n")
     new = args[0]
     
-    # Create an exact clone of a site.
     if site_exists(new):
         bail_out("Site %s already existing.\n" % new)
+
     old = g_sitename
-    if not site_exists(old):
-        bail_out("No such site '%s'.\n" % g_sitename)
-    
-    running = site_is_running(g_sitename)
-    stop_if_not_stopped(g_sitename)
+    if site_is_running(old):
+	bail_out("Cannot copy while site '%s' is still running.\n" % old)
+
     sys.stdout.write("Creating new site %s as a copy of %s..." % (new, g_sitename))
     sys.stdout.flush()
     # First make exact file-per-file copy with same
@@ -659,9 +654,6 @@ def main_cp(args):
 
     # Entry for tmps in /etc/fstab
     add_to_fstab(new)
-
-    if running:
-        start_site(g_sitename)
 
     # Apache hook, reload apache
     create_apache_hook(new)
