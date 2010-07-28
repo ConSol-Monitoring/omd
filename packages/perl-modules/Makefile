@@ -18,7 +18,7 @@ install: build
 skel:
 
 clean:
-	if [ -d src/$(SRC) ]; then rm -r src/$(SRC); fi
+	if [ -d src/$(SRC) ]; then rm -rf src/$(SRC); fi
 
 init-cpan:
 	./defaults cpan
