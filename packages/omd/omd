@@ -6,8 +6,7 @@
 
 import sys, os, shutil, pwd, re, time
 
-# FIXME: Determine this somehow
-OMD_VERSION = "0.42.2"
+OMD_VERSION = "0.42.1"
 
 def bail_out(message):
     sys.stderr.write(message)
@@ -39,6 +38,13 @@ def site_version(sitename):
     version_link = site_dir(sitename) + "/version"
     version = os.readlink(version_link).split("/")[-1]
     return version
+
+def create_version_symlink(sitename, version):
+    linkname = site_dir(sitename) + "/version"
+    if os.path.exists(linkname):
+	os.remove(linkname)
+    os.symlink("../../versions/%s" % OMD_VERSION, linkname)
+
 
 def site_exists(sitename):
     return os.path.exists(site_dir(sitename))
@@ -549,7 +555,7 @@ def main_create(args):
     add_to_fstab(g_sitename)
 
     # Create symbolic link to version
-    os.symlink("../../versions/%s" % OMD_VERSION, sitedir + "/version")
+    create_version_symlink(g_sitename, OMD_VERSION)
 
     # Build up directory structure with symbolic links relative to
     # the version link we just create
@@ -667,7 +673,100 @@ def main_cp(args):
     reload_apache()
 
 def main_update(args):
-    bail_out("Sorry. Not yet implemented.\n")
+    if site_is_running(g_sitename):
+	bail_out("Cannot update site '%s' while it is running.\n" % g_sitename)
+    
+    # Unmount tmp. We need to recreate the files and directories
+    # from the new version after updating.
+    unmount_tmpfs(g_sitename)
+
+    # Target version: ourselves
+    from_version = site_version(g_sitename)
+    to_version = OMD_VERSION
+    if from_version == to_version:
+	bail_out("Site '%s' uses already version %s\n" % (g_sitename, to_version))	
+    sys.stdout.write("Updating site '%s' from version %s to %s...\n" % 
+	    (g_sitename, from_version, to_version))
+
+    # Change symbolic link pointing to new version
+# create_version_symlink(g_sitename, to_version)
+
+    # Now apply changes of skeleton files. This can be done
+    # in two ways: 
+    # 1. creating a patch from the old default files to the new
+    #    default files and applying that to the current files
+    # 2. creating a patch from the old default files to the current
+    #    files and applying that to the new default files
+    # We implement the first method.
+
+    from_skelroot = "/omd/versions/%s/skel" % from_version
+    to_skelroot = "/omd/versions/%s/skel" % to_version
+    tmp = tmp_dir(g_sitename)
+
+    # First walk through new skeleton files
+    os.chdir(to_skelroot)  # make relative paths
+    for dirpath, dirnames, filenames in os.walk("."): 
+        if dirpath.startswith("./"): 
+            dirpath = dirpath[2:]
+        targetdir = g_sitedir + "/" + dirpath
+        if targetdir.startswith(tmp):
+            continue # Skip files below tmp
+        for fn in filenames:
+            to_file    = dirpath + "/" + fn
+	    from_file  = from_skelroot + "/" + to_file
+            user_file  = targetdir + "/" + fn
+	    print "%s | %s | %s" % (from_file, to_file, user_file)
+	    # Handle the following cases:
+            # 1. File not present in from_version:
+            #    a) File not present now -> simply create from template
+            #    b) File present now by user -> Conflict. Ask.
+            # 2. File unchanged by user -> simply delete and recreate from template
+            # 3. File unchanged by version -> do nothing
+            # 4. File changed by both user and version -> patch
+            # 5. File type of old/new/user not identical
+            #    old      new      user
+            #    ----------------------------
+            # Filetype changed by user:
+            #     f        f        l        # ask: delete link or let
+            #     f        f        d        # ask: delete directory or let
+            #     l        l        f        # ask: delete file or let
+            #     l        l        d        # ask: delete directory or let
+            #     d        d        f        # ask: delete file or let
+            #     d        d        l        # ask: delete link or let
+            
+            # Filetype changed by version, user has changed file:
+            #     l        f        f
+            #     l        f        l
+            #     l        f        d
+            #     f        l        f
+            #     f        l        l
+            #     f        l        d
+            #     f        d        f
+            #     f        d        l 
+            #     f        d        d 
+            #     d        l        f
+            #     d        l        l
+            #     d        l        d
+            #     d        f        f
+            #     d        f        l
+            #     d        f        d
+            #     l        d        f
+            #     l        d        l
+            #     l        d        f
+            #     l        f        f
+            #     l        f        l
+            #     l        f        f
+            
+            
+            # 4. File changed by user, file type changed by user (file/link/dir)
+            #    a) new type is symlink -> Ask. (let, delete) 
+            #    b) new type is dir
+            # if os.path.isfile(src) and not os.path.islink(src): # links are also files??.
+            #                 patch_template_file(src, dst, old, new)
+            
+            
+                # Remote files in tmp
+
 
 def main_init_action(command, args):
     global g_sitename
@@ -764,8 +863,8 @@ commands = [
 
     "The whole site Xy will be copied to Z. A new system user Z will be created.\n"),
 
-  ( "update",    False, 1, 1, False, "[VERSION]", main_update,
-    "Update site to other version",
+  ( "update",    False, 1, 1, False, "", main_update,
+    "Update site to version " + OMD_VERSION,
     ""),
 
   ( "start",     False, 2, 1, False, "", lambda args: main_init_action("start", args),
@@ -830,8 +929,9 @@ if g_sitename != None and site_must_exist and not site_exists(g_sitename):
     bail_out("omd: no such site: %s\n" % g_sitename)
 
 # Commands operating on an existing site *must* run omd in
-# the same version as the site has!
-if g_sitename and site_must_exist:
+# the same version as the site has! Sole exception: update.
+# That command must be run in the target version
+if g_sitename and site_must_exist and command != "update":
     v = site_version(g_sitename)
     if OMD_VERSION != v:
         # Rerun with omd of correct version
