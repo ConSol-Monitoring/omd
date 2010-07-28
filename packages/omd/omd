@@ -7,7 +7,7 @@
 import sys, os, shutil, pwd, re, time
 
 # FIXME: Determine this somehow
-OMD_VERSION = "0.42.1"
+OMD_VERSION = "0.42.2"
 
 def bail_out(message):
     sys.stderr.write(message)
@@ -32,6 +32,13 @@ def site_dir(sitename):
 
 def tmp_dir(sitename):
     return "/omd/sites/%s/tmp" % sitename
+
+# The version of a site is solely determined by the
+# link ~SITE/version
+def site_version(sitename):
+    version_link = site_dir(sitename) + "/version"
+    version = os.readlink(version_link).split("/")[-1]
+    return version
 
 def site_exists(sitename):
     return os.path.exists(site_dir(sitename))
@@ -805,6 +812,9 @@ if not found:
 if os.getuid() != 0 and only_root:
     bail_out("omd: root permissions are needed for this command.\n")
 
+# Some commands need a site to be specified. If we are
+# called as root, this must be done explicitely. If we
+# are site user, the site name is our user name
 g_sitename = None
 if needs_site > 0:
     if os.getuid() == 0:
@@ -819,9 +829,14 @@ if needs_site > 0:
 if g_sitename != None and site_must_exist and not site_exists(g_sitename):
     bail_out("omd: no such site: %s\n" % g_sitename)
 
-# TODO: As soon es we know the site, we must make sure that we
-# are running the bin/omd of the correct version. If that is
-# not the case - then exec to the correct version
+# Commands operating on an existing site *must* run omd in
+# the same version as the site has!
+if g_sitename and site_must_exist:
+    v = site_version(g_sitename)
+    if OMD_VERSION != v:
+        # Rerun with omd of correct version
+	os.execv("/omd/versions/%s/bin/omd" % v, sys.argv)
+	bail_out("Cannot run bin/omd of version %s.\n" % v)
 
 if g_sitename:
     g_sitedir = site_dir(g_sitename)
