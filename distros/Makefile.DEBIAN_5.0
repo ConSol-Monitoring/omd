@@ -8,3 +8,4 @@ APACHE_USER     = www-data
 APACHE_GROUP    = www-data
 APACHE_CTL      = /usr/sbin/apache2ctl
 BECOME_ROOT     = su -c
+ARCH			= $(shell dpkg --print-architecture)
