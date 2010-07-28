@@ -657,6 +657,9 @@ def main_cp(args):
     chown_tree(site_dir(new), new)
     sys.stdout.write("OK\n")
 
+    # Entry for tmps in /etc/fstab
+    add_to_fstab(new)
+
     if running:
         start_site(g_sitename)
 
