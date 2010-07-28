@@ -21,7 +21,7 @@ install:
 	export agentslibdir='$(OMD_ROOT)/lib/check_mk_agent' ; \
 	export nagios_binary='$(OMD_ROOT)/bin/nagios' ; \
 	export check_icmp_path='$(OMD_ROOT)/lib/nagios/plugins/check_icmp' ; \
-	export pnptemplates='$(OMD_ROOT)/share/pnp4nagios/htdocs/templates' ; \
+	export pnptemplates='$(OMD_ROOT)/share/check_mk/pnp-templates' ; \
 	export livebackendsdir='$(OMD_ROOT)/share/check_mk/livestatus' ; \
 	export libdir='$(OMD_ROOT)/lib/check_mk' ; \
 	export confdir='$(OMD_ROOT)/skel/etc/check_mk' ; \
