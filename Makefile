@@ -125,10 +125,14 @@ deb: pack
 	rm -rf $(DPKG_TOPDIR)
 
 # Only to be used for developement testing setup 
-setup: pack
+setup: pack xzf
+
+# Only for development: install tarball below /
+xzf:
 	tar xzf $(BIN_TGZ) -C / # HACK: Add missing suid bits if compiled as non-root
 	chmod 4755 $(OMD_ROOT)/lib/nagios/plugins/check_{icmp,dhcp}
 	$(APACHE_CTL) -k graceful
+	
 
 
 version:
