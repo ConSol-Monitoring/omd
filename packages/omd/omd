@@ -6,7 +6,7 @@
 
 import sys, os, shutil, pwd, re, time
 
-OMD_VERSION = "0.42.1"
+OMD_VERSION = "0.42.3"
 
 def bail_out(message):
     sys.stderr.write(message)
@@ -237,6 +237,14 @@ def chown_tree(dir, user):
         for entry in dirnames + filenames:
             os.lchown(dirpath + "/" + entry, uid, gid)
 
+def instantiate_skel(path):
+    t = file(path).read()
+    replacements = {
+        "###SITE###" : g_sitename,
+        "###ROOT###" : g_sitedir,
+    }
+    return replace_tags(t, replacements)
+
 
 def patch_template_file(src, dst, old, new):
     # Create patch from old instanciated skeleton file to new one
@@ -283,14 +291,33 @@ def update_file(old_skel, new_skel, userdir, relpath):
     user_type = filetype(user_path)
 
     if old_type == "file":
-	old_content = file(old_path).read()
+	old_content = instantiate_skel(old_path)
+
     if user_type == "file":
-	user_content = file(new_path).read()
+	user_content = file(user_path).read()
+
+    if new_type == "file":
+	new_content = instantiate_skel(new_path)
 
     user_changed_type = old_type != user_type
-    user_changed_content = old_type == "file" \
+    user_changed_content = (old_type == "file" \
 			   and user_type == "file" \
-			   and old_content != user_content
+			   and old_content != user_content) or \
+		           (old_type == "link" \
+			    and user_type == "link" \
+			    and os.readlink(old_path) != os.readlink(user_path))
+    user_changed = user_changed_type or user_changed_content
+
+    we_changed_type = old_type != new_type
+    we_changed_content =   (old_type == "file" \
+			   and new_type == "file" \
+			   and old_content != new_content) or \
+		           (old_type == "link" \
+			    and new_type == "link" \
+			    and os.readlink(old_path) != os.readlink(new_path))
+    we_changed = we_changed_type or we_changed_content
+
+    # A --> MISSING FILES
 
     # Handle cases with missing files first. At least old or new are present,
     # or this function would never have been invoked.
@@ -311,7 +338,7 @@ def update_file(old_skel, new_skel, userdir, relpath):
     # 3) old version had file, but new not (got obsolete). If the user
     #    has deleted it himself, we are just happy
     elif not new_type and not user_type:
-	return
+	pass
 
     # 3b) same, but user has not deleted and changed type
     elif not new_type and user_changed_type:
@@ -334,9 +361,94 @@ def update_file(old_skel, new_skel, userdir, relpath):
     # 3d) same, but user hasn't changed anything -> silently delete
     elif not new_type:
 	delete_user_file(user_path)
+
+    # 4) old and new exit, but user file not. User has deleted that
+    #    file. We simply do nothing in that case. The user surely has
+    #    a good reason why he deleted the file.
+    elif not user_type:
+	pass
 	
-    
-	
+    # B ---> UNCHANGED, EASY CASES
+
+    # 5) New version didn't change anything -> no need to update
+    elif not we_changed:
+	pass
+
+    # 6) User didn't change anything -> take over new version
+    elif not user_changed:
+	create_skeleton_file(new_skel, userdir, replath)
+
+    # 7) User changed, but accidentally exactly as we did -> no action neccessary
+    elif (new_type == "file" and user_type == "file" and 
+	    new_content == user_content) or \
+	(new_type == "link" and user_type == "link" and
+	    os.readlink(new_path) == os.readlink(user_path)):
+	pass
+
+    # C ---> PATCH DAY, HANDLE FILES
+    # 7) old, new and user are files. And all are different
+    elif old_type == "file" and new_type == "file" and user_type == "file":
+	merge_update_file(user_path, old_content, new_content)
+
+    # D ---> SYMLINKS
+    # 8) all are symlinks, all changed
+    elif old_type == "link" and new_type == "link" and user_type == "link":
+	if ask_user("'%s' is a symlink that pointed to \n"
+		"%s in the old version and to\n"
+		"%s in the new version. But meanwhile you\n"
+		"changed to link target to %s.\n"
+		"Shall I keep your link or replace it with\n" 
+		"the new default target?\n" % 
+		(relpath, os.readlink(old_path), os.readlink(new_path), os.readlink(user_path)),
+		"keep", "replace"):
+	    os.remove(user_path)
+	    os.symlink(os.readlink(new_path), user_path)
+
+    # E ---> FILE TYPE HAS CHANGED (NASTY)
+    # Now we have to handle cases, where the file types of the three
+    # versions are not identical and at the same type the user or
+    # have changed the third file to. We cannot merge here, the user
+    # has to decide wether to keep his version of use ours.
+
+    # 9) We have changed to file type
+    elif old_type != new_type:
+	if ask_user("The %s %s has changed into a %s in\n"
+		"the new version. Meanwhile you have changed\n"
+		"the %s of your copy of that %s.\n"
+		"Do you want to keep your version or use\n"
+		"the new default?\n" % 
+		(old_type, relpath, new_type, user_changed_type and "type" or "content",
+		 old_type),
+		"keep", "use new"):
+	    create_skeleton_file(new_skel, userdir, replath)
+
+    # 10) The user has changed the file type, we just the content
+    elif old_type != user_type:
+	if ask_user("Usually %s is a %s in both the\n"
+		"old and new version. But you have changed it\n"
+		"into a %s. Do you want to keep that of may\n"
+		"I replace your %s with the new default\n"
+		"%s, please?\n" % 
+		(relpath, old_type, user_type, new_type),
+		"keep", "replace"):
+	    create_skeleton_file(new_skel, userdir, replath)
+
+    # 11) This case should never happen, if I've not lost something
+    else:
+	if ask_user("You somehow fiddled along with\n"
+	       "%s, and I do not have the\n"
+	       "slightest what's going on here. May\n"
+	       "I please install the new default %s\n"
+	       "here, or do you want to keep your %s?\n" % 
+	       (relpath, new_type, user_type),
+	       "keep", "install new"):
+	    create_skeleton_file(new_skel, userdir, replath)
+
+def create_skeleton_file(skeldir, userdir, relpath):
+    target_path = userdir + "/" + relpath
+    if os.path.exists(targetpath):
+        # delete this (might be a directory)
+	pass
 
 
 def init_scripts(sitename):
