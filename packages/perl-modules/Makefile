@@ -4,13 +4,17 @@ NAME    = perl-modules
 VERSION = $(OMD_VERSION)
 SRC     = $(shell basename src/local-lib-*.gz | sed s/\.tar\.gz// )
 
-build: init-cpan
+build:
+
+build-disabled: init-cpan
 	cd src; tar zxf $(SRC).tar.gz
 	cd src/$(SRC); ../../defaults /usr/bin/perl Makefile.PL --bootstrap=build
 	cd src/$(SRC); $(MAKE)
 	cd src/$(SRC); $(MAKE) DESTDIR="" install
 
 install:
+
+install-disabled:
 	if [ -z $(DESTDIR) ]; then echo "cannot install without DESTDIR set!"; exit 1; fi
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib
 	mv src/$(SRC)/build $(DESTDIR)$(OMD_ROOT)/lib/perl5
