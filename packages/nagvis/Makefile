@@ -8,7 +8,7 @@ DIR = $(NAME)-$(VERSION)
 
 build:
 	tar xzf $(DIR).tar.gz
-	# patch $(DIR)/share/server/core/defines/global.php global.php.patch
+	patch $(DIR)/share/server/core/defines/global.php global.php.patch
 
 install:
 	cd $(DIR) ; ./install.sh -q -F -c y -a n \
