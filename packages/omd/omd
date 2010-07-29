@@ -6,7 +6,7 @@
 
 import sys, os, shutil, pwd, re, time
 
-OMD_VERSION = "0.42.1"
+OMD_VERSION = "0.42.3"
 
 def bail_out(message):
     sys.stderr.write(message)
@@ -261,6 +261,83 @@ def patch_template_file(src, dst, old, new):
             pass
     else:
         sys.stdout.write("%s: Cannot update due to your changes. Please check.\n" % dst)
+
+
+def filetype(p):
+    if not os.path.exists(p):
+	return None
+    elif os.path.islink(p):
+	return "link"
+    elif os.path.isdir(p):
+	return "dir"
+    else:
+	return "file"
+
+def update_file(old_skel, new_skel, userdir, relpath):
+    old_path = old_skel + "/" + relpath
+    new_path = new_skel + "/" + relpath
+    user_path = userdir + "/" + relpath
+
+    old_type  = filetype(old_path)
+    new_type  = filetype(new_path)
+    user_type = filetype(user_path)
+
+    if old_type == "file":
+	old_content = file(old_path).read()
+    if user_type == "file":
+	user_content = file(new_path).read()
+
+    user_changed_type = old_type != user_type
+    user_changed_content = old_type == "file" \
+			   and user_type == "file" \
+			   and old_content != user_content
+
+    # Handle cases with missing files first. At least old or new are present,
+    # or this function would never have been invoked.
+
+    # 1) New version ships new skeleton file -> simply install
+    if not old_type and not user_type:
+	create_skeleton_file(new_skel, userdir, relpath)
+
+    # 2) new version ships new skeleton file, but user's own file/dir/link
+    #    is in the way.
+    elif not old_type:
+	if ask_user("The new version ships the %s %s, \n"
+		    "but you have created a %s in that \n"
+		    "yourself. Shall we keep your file or replace\n"
+	            "is with mine?" % (new_type, relpath), "keep", "replace"
+	    create_skeleton_file(new_skel, userdir, replath)
+
+    # 3) old version had file, but new not (got obsolete). If the user
+    #    has deleted it himself, we are just happy
+    elif not new_type and not user_type:
+	return
+
+    # 3b) same, but user has not deleted and changed type
+    elif not new_type and user_changed_type:
+	if ask_user("The %s %s has become obsolete in\n"
+		    "this version, but you changed it into a\n"
+		    "%s. Do you want to keep your %s or\n"
+		    "may I delete it for you, please?" % (old_type, relpath, new_type, new_type),
+		    "keep", "delete"):
+	    delete_user_file(user_path)
+
+    # 3c) same, but user has changed it contents
+    elif not new_type and user_changed_content:
+	if ask_user("The file %s has become obsolete in\n"
+		    "this version, but you changed its contents.\n"
+		    "%s. Do you want to keep your file or\n"
+		    "may I delete it for you, please?" % relpath, 
+		    "keep", "delete"):
+	    delete_user_file(user_path)
+
+    # 3d) same, but user hasn't changed anything -> silently delete
+    elif not new_type:
+	delete_user_file(user_path)
+	
+    
+	
+
 
 def init_scripts(sitename):
     rc_dir = "/omd/sites/%s/etc/rc.d" % sitename
@@ -708,64 +785,30 @@ def main_update(args):
     for dirpath, dirnames, filenames in os.walk("."): 
         if dirpath.startswith("./"): 
             dirpath = dirpath[2:]
-        targetdir = g_sitedir + "/" + dirpath
-        if targetdir.startswith(tmp):
-            continue # Skip files below tmp
-        for fn in filenames:
-            to_file    = dirpath + "/" + fn
-	    from_file  = from_skelroot + "/" + to_file
-            user_file  = targetdir + "/" + fn
-	    print "%s | %s | %s" % (from_file, to_file, user_file)
-	    # Handle the following cases:
-            # 1. File not present in from_version:
-            #    a) File not present now -> simply create from template
-            #    b) File present now by user -> Conflict. Ask.
-            # 2. File unchanged by user -> simply delete and recreate from template
-            # 3. File unchanged by version -> do nothing
-            # 4. File changed by both user and version -> patch
-            # 5. File type of old/new/user not identical
-            #    old      new      user
-            #    ----------------------------
-            # Filetype changed by user:
-            #     f        f        l        # ask: delete link or let
-            #     f        f        d        # ask: delete directory or let
-            #     l        l        f        # ask: delete file or let
-            #     l        l        d        # ask: delete directory or let
-            #     d        d        f        # ask: delete file or let
-            #     d        d        l        # ask: delete link or let
-            
-            # Filetype changed by version, user has changed file:
-            #     l        f        f
-            #     l        f        l
-            #     l        f        d
-            #     f        l        f
-            #     f        l        l
-            #     f        l        d
-            #     f        d        f
-            #     f        d        l 
-            #     f        d        d 
-            #     d        l        f
-            #     d        l        l
-            #     d        l        d
-            #     d        f        f
-            #     d        f        l
-            #     d        f        d
-            #     l        d        f
-            #     l        d        l
-            #     l        d        f
-            #     l        f        f
-            #     l        f        l
-            #     l        f        f
-            
-            
-            # 4. File changed by user, file type changed by user (file/link/dir)
-            #    a) new type is symlink -> Ask. (let, delete) 
-            #    b) new type is dir
-            # if os.path.isfile(src) and not os.path.islink(src): # links are also files??.
-            #                 patch_template_file(src, dst, old, new)
-            
-            
-                # Remote files in tmp
+	if dirpath.startswith("tmp"):
+	    continue
+
+	for entry in dirnames + filenames:
+	    try:
+		update_file(from_skelroot, to_skelroot, g_sitedir, entry)
+	    except Exception, e:
+		sys.stderr.write("Error updating %s/%s: %s\n" % (g_sitedir, entry, e))	
+
+    # Now handle files present in old but not in new skel files
+    os.chdir(from_skelroot)
+    for dirpath, dirnames, filenames in os.walk("."): 
+        if dirpath.startswith("./"): 
+            dirpath = dirpath[2:]
+	if dirpath.startswith("tmp"):
+	    continue
+
+	for entry in dirnames + filenames:
+	    # handle only files not already handled while scanning to_skelroot
+	    if not os.path.exists(to_skelroot + "/" + entry):
+		try:
+		    update_file(from_skelroot, to_skelroot, g_sitedir, entry)
+		except Exception, e:
+		    sys.stderr.write("Error updating %s/%s: %s\n" % (g_sitedir, entry, e))	
 
 
 def main_init_action(command, args):
