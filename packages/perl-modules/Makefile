@@ -10,7 +10,7 @@ build: init-cpan
 	cd src/$(SRC); $(MAKE)
 	cd src/$(SRC); $(MAKE) DESTDIR="" install
 
-install: build
+install:
 	if [ -z $(DESTDIR) ]; then echo "cannot install without DESTDIR set!"; exit 1; fi
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib
 	mv src/$(SRC)/build $(DESTDIR)$(OMD_ROOT)/lib/perl5
