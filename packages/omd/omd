@@ -6,7 +6,7 @@
 
 import sys, os, shutil, pwd, re, time
 
-OMD_VERSION = "0.42.3"
+OMD_VERSION = "0.42.1"
 
 def bail_out(message):
     sys.stderr.write(message)
@@ -305,7 +305,7 @@ def update_file(old_skel, new_skel, userdir, relpath):
 	if ask_user("The new version ships the %s %s, \n"
 		    "but you have created a %s in that \n"
 		    "yourself. Shall we keep your file or replace\n"
-	            "is with mine?" % (new_type, relpath), "keep", "replace"
+	            "is with mine?" % (new_type, relpath), "keep", "replace"):
 	    create_skeleton_file(new_skel, userdir, replath)
 
     # 3) old version had file, but new not (got obsolete). If the user
