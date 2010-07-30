@@ -71,9 +71,9 @@ custom_links['guest'] = [
   ( "Addons", True, [
         ( "PNP4Nagios", "/###SITE###/pnp4nagios/",       "link_reporting.gif" ),
         ( "NagVis", False, [
-            ( "Automap",    "/@SITE/nagvis/index.php?map=__automap", "link_map.gif"),
-            ( "Demo map",   "/@SITE/nagvis/index.php?map=demo-map",  "link_map.gif"),
-            ( "Demo Map 2", "/@SITE/nagvis/index.php?map=demo2",     "link_map.gif"),
+            ( "Automap",    "/###SITE###/nagvis/index.php?map=__automap", "link_map.gif"),
+            ( "Demo map",   "/###SITE###/nagvis/index.php?map=demo-map",  "link_map.gif"),
+            ( "Demo Map 2", "/###SITE###/nagvis/index.php?map=demo2",     "link_map.gif"),
         ]),
   ]),
 ]
