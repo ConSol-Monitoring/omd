@@ -6,7 +6,7 @@
 
 import sys, os, shutil, pwd, re, time
 
-OMD_VERSION = "0.42.1"
+OMD_VERSION = "0.42.2"
 
 def bail_out(message):
     sys.stderr.write(message)
