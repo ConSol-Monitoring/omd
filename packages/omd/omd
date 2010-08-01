@@ -8,6 +8,61 @@ import sys, os, shutil, pwd, re, time
 
 OMD_VERSION = "0.42.2"
 
+# colored output, if stdout is a tty
+on_tty = sys.stdout.isatty()
+
+if on_tty:
+    tty_red       = '\033[31m'
+    tty_green     = '\033[32m'
+    tty_yellow    = '\033[33m'
+    tty_blue      = '\033[34m'
+    tty_magenta   = '\033[35m'
+    tty_cyan      = '\033[36m'
+    tty_white     = '\033[37m'
+    tty_bgblue    = '\033[44m'
+    tty_bgmagenta = '\033[45m'
+    tty_bgwhite   = '\033[47m'
+    tty_bold      = '\033[1m'
+    tty_underline = '\033[4m'
+    tty_normal    = '\033[0m'
+    tty_ok        = tty_green + tty_bold + 'OK' + tty_normal
+else:
+    tty_red       = ''
+    tty_green     = ''
+    tty_yellow    = ''
+    tty_blue      = ''
+    tty_magenta   = ''
+    tty_cyan      = ''
+    tty_white     = ''
+    tty_bgblue    = ''
+    tty_bgmagenta = ''
+    tty_bold      = ''
+    tty_underline = ''
+    tty_normal    = ''
+    tty_ok        = 'OK'
+
+def ask_user(message, yes_text, no_text):
+    if os.system("which dialog &>/dev/null") == 0:
+	return 0 == os.system("dialog --shadow --yes-label '%s' --no-label '%s' --yesno '%s' 0 0" %
+		(yes_text, no_text, message))
+    else:
+	sys.stdout.write(message + "\n")
+	yes_answer = yes_text[0].lowercase()
+	for no_answer in no_text.lowercase():
+	    if yes_answer != no_answer:
+	        break
+
+	while True:
+	    sys.stdout.write("   %s / %s  [%s/%s] ==> " %
+	           	(yes_text, no_text, yes_answer.uppercase(), no_answer))
+	    sys.stdout.flush()
+	    a = sys.stdin.readline().strip().lowercase()
+	    if not a or a == yes_answer:
+		return True
+	    elif a == no_answer:
+		return False
+
+
 def bail_out(message):
     sys.stderr.write(message)
     sys.exit(1)
@@ -147,38 +202,49 @@ def start_site(sitename):
     call_init_scripts(sitename, "start")
 
 def create_skeleton_files(sitename, dir):
-    # Hack: exclude tmp if dir is '.'
-    exclude_tmp = dir == '.'
     sitedir = site_dir(sitename)
     replacements = {
-        "###SITE###" : sitename,
-        "###ROOT###" : sitedir,
+	"###SITE###" : sitename,
+	"###ROOT###" : sitedir,
     }
+    # Hack: exclude tmp if dir is '.'
+    exclude_tmp = dir == '.'
     skelroot = "/omd/versions/%s/skel" % OMD_VERSION
     os.chdir(skelroot)  # make relative paths
     for dirpath, dirnames, filenames in os.walk(dir): 
         if dirpath.startswith("./"):
             dirpath = dirpath[2:]
-        targetdir = sitedir + "/" + dirpath
-        if exclude_tmp and targetdir.startswith(tmp_dir(sitename)):
-            continue
-        if not os.path.exists(targetdir):
-            os.mkdir(targetdir)
-        for d in dirnames:
-            td = targetdir + "/" + d
-            # Create directories with same mode as in skel
-            if not os.path.exists(td):
-                os.mkdir(td)
-                mode = os.stat(dirpath + "/" + d).st_mode & 0xfff
-                os.chmod(td, mode)
-                
-        for fn in filenames:
-            src = dirpath + "/" + fn
-            dst = targetdir + "/" + fn
-            if os.path.islink(src):
-                os.symlink(os.readlink(src), dst)
-            else:
-                create_template_instance(src, dst, replacements, sitename)
+	if dirpath == "tmp" and exclude_tmp:
+	    continue # do not handle files in tmpfs
+	for entry in dirnames + filenames:
+	    create_skeleton_file(skelroot, sitedir, dirpath + "/" + entry, replacements)
+
+def delete_user_file(user_path):
+    if os.path.isdir(user_path):
+	shutil.rmtree(user_path)
+    else:
+	os.remove(user_path)
+
+
+def create_skeleton_file(skelbase, userbase, relpath, replacements):
+    skel_path = skelbase + "/" + relpath
+    user_path = userbase + "/" + relpath
+
+    # Remove old version, if existing (needed during update)
+    if os.path.exists(user_path):
+	delete_user_file(user_path)
+    
+    # Create directories, symlinks and files
+    if os.path.isdir(skel_path):
+	os.makedirs(user_path)
+    elif os.path.islink(skel_path):
+        os.symlink(os.readlink(skel_path), user_path)
+    else:
+	file(user_path, "w").write(replace_tags(file(skel_path).read(), replacements))
+
+    mode = os.stat(skel_path).st_mode & 0xfff
+    os.chmod(user_path, mode)
+
 
 def create_apache_hook(sitename):
     file("/omd/apache/%s.conf" % sitename, "w").write("Include %s/etc/apache/*.conf\n" % site_dir(sitename))
@@ -193,10 +259,6 @@ def reload_apache():
     os.system("%s restart" % g_info["APACHE_CTL"])
     sys.stdout.write("OK\n")
 
-def create_template_instance(src, dst, replacements, sitename):
-    file(dst, "w").write(replace_tags(file(src).read(), replacements))
-    mode = os.stat(src).st_mode & 0xfff
-    os.chmod(dst, mode)
 
 def replace_tags(content, replacements):
     for var, value in replacements.items():
@@ -282,6 +344,14 @@ def filetype(p):
 	return "file"
 
 def update_file(old_skel, new_skel, userdir, relpath):
+#     sys.stdout.write("Updating %s | %s | %s | %s\n" % 
+# 		(old_skel, new_skel, userdir, relpath))
+# 
+    replacements = {
+	"###SITE###" : g_sitename,
+	"###ROOT###" : g_sitedir,
+    }
+
     old_path = old_skel + "/" + relpath
     new_path = new_skel + "/" + relpath
     user_path = userdir + "/" + relpath
@@ -299,6 +369,17 @@ def update_file(old_skel, new_skel, userdir, relpath):
     if new_type == "file":
 	new_content = instantiate_skel(new_path)
 
+    # compare our new version with the user's version
+    type_differs = user_type != new_type
+    content_differs =   (user_type == "file" \
+			   and new_type == "file" \
+			   and user_content != new_content) or \
+		           (user_type == "link" \
+			    and new_type == "link" \
+			    and os.readlink(user_path) != os.readlink(new_path))
+    differs = type_differs or content_differs
+
+    # compare our old version with the user's version
     user_changed_type = old_type != user_type
     user_changed_content = (old_type == "file" \
 			   and user_type == "file" \
@@ -308,6 +389,7 @@ def update_file(old_skel, new_skel, userdir, relpath):
 			    and os.readlink(old_path) != os.readlink(user_path))
     user_changed = user_changed_type or user_changed_content
 
+    # compare our old with our new version
     we_changed_type = old_type != new_type
     we_changed_content =   (old_type == "file" \
 			   and new_type == "file" \
@@ -317,56 +399,70 @@ def update_file(old_skel, new_skel, userdir, relpath):
 			    and os.readlink(old_path) != os.readlink(new_path))
     we_changed = we_changed_type or we_changed_content
 
+
     # A --> MISSING FILES
 
     # Handle cases with missing files first. At least old or new are present,
     # or this function would never have been invoked.
+    fn = tty_bold + relpath + tty_normal
 
     # 1) New version ships new skeleton file -> simply install
     if not old_type and not user_type:
-	create_skeleton_file(new_skel, userdir, relpath)
+	create_skeleton_file(new_skel, userdir, relpath, replacements)
+	sys.stdout.write("Installed new file %s.\n" % fn)
 
     # 2) new version ships new skeleton file, but user's own file/dir/link
     #    is in the way.
-    elif not old_type:
-	if ask_user("The new version ships the %s %s, \n"
-		    "but you have created a %s in that \n"
-		    "yourself. Shall we keep your file or replace\n"
-	            "is with mine?" % (new_type, relpath), "keep", "replace"):
-	    create_skeleton_file(new_skel, userdir, replath)
+    # 2a) the users file is identical with our new version
+    elif not old_type and not differs:
+    	sys.stdout.write("Both you and new version created a new %s %s with the same content. Good.\n" % 
+		(new_type, fn))
 
-    # 3) old version had file, but new not (got obsolete). If the user
+    # 2b) user's file has a different content or type
+    elif not old_type:
+	if ask_user("The new version ships the %s %s, "
+		    "but you have created a %s in that place "
+		    "yourself. Shall we keep your %s or replace "
+	            "is with mine?" % (new_type, relpath, user_type, user_type), "keep", "replace"):
+	    create_skeleton_file(new_skel, userdir, relpath, replacements)
+
+    # 3) old version had a file which has vanished in new (got obsolete). If the user
     #    has deleted it himself, we are just happy
     elif not new_type and not user_type:
-	pass
+	sys.stdout.write("File %s has vanished in new version. You've deleted it also. Good.\n" % fn)
 
     # 3b) same, but user has not deleted and changed type
     elif not new_type and user_changed_type:
-	if ask_user("The %s %s has become obsolete in\n"
-		    "this version, but you changed it into a\n"
-		    "%s. Do you want to keep your %s or\n"
-		    "may I delete it for you, please?" % (old_type, relpath, new_type, new_type),
+	if ask_user("The %s %s has become obsolete in "
+		    "this version, but you have changed it into a "
+		    "%s. Do you want to keep your %s or "
+		    "may I delete it for you, please?" % (old_type, relpath, user_type, user_type),
 		    "keep", "delete"):
 	    delete_user_file(user_path)
 
     # 3c) same, but user has changed it contents
     elif not new_type and user_changed_content:
-	if ask_user("The file %s has become obsolete in\n"
-		    "this version, but you changed its contents.\n"
-		    "%s. Do you want to keep your file or\n"
-		    "may I delete it for you, please?" % relpath, 
+	if ask_user("The %s %s has become obsolete in "
+		    "this version, but you have changed its contents. "
+		    "Do you want to keep your file or "
+		    "may I delete it for you, please?" % (old_type, relpath),
 		    "keep", "delete"):
 	    delete_user_file(user_path)
 
     # 3d) same, but user hasn't changed anything -> silently delete
     elif not new_type:
 	delete_user_file(user_path)
+	sys.stdout.write("File %s has vanished in new version, unchanged by you. Deleting.\n" % fn)
 
-    # 4) old and new exit, but user file not. User has deleted that
+    # 4) old and new exist, but user file not. User has deleted that
     #    file. We simply do nothing in that case. The user surely has
     #    a good reason why he deleted the file.
+    elif not user_type and not we_changed:
+        sys.stdout.write("You've deleted %s, which has not changed in new version. Ignoring it.\n" % fn)
+
+    # 4b) File changed in new version. Simply warn.
     elif not user_type:
-	pass
+	sys.stdout.write("File %s has changed in new version, you've deleted it anyway. Ignoring.\n" % fn)
 	
     # B ---> UNCHANGED, EASY CASES
 
@@ -376,14 +472,14 @@ def update_file(old_skel, new_skel, userdir, relpath):
 
     # 6) User didn't change anything -> take over new version
     elif not user_changed:
-	create_skeleton_file(new_skel, userdir, replath)
+	create_skeleton_file(new_skel, userdir, relpath, replacements)
+	sys.stdout.write("Installed new version of %s.\n" % fn)
 
     # 7) User changed, but accidentally exactly as we did -> no action neccessary
-    elif (new_type == "file" and user_type == "file" and 
-	    new_content == user_content) or \
-	(new_type == "link" and user_type == "link" and
-	    os.readlink(new_path) == os.readlink(user_path)):
-	pass
+    elif not differs: 
+	sys.stdout.write("You've changed %s exactly as in the new version. Keeping.\n" % fn)
+    
+    # TEST UNTIL HERE
 
     # C ---> PATCH DAY, HANDLE FILES
     # 7) old, new and user are files. And all are different
@@ -393,12 +489,12 @@ def update_file(old_skel, new_skel, userdir, relpath):
     # D ---> SYMLINKS
     # 8) all are symlinks, all changed
     elif old_type == "link" and new_type == "link" and user_type == "link":
-	if ask_user("'%s' is a symlink that pointed to \n"
-		"%s in the old version and to\n"
-		"%s in the new version. But meanwhile you\n"
-		"changed to link target to %s.\n"
-		"Shall I keep your link or replace it with\n" 
-		"the new default target?\n" % 
+	if ask_user("'%s' is a symlink that pointed to "
+		"%s in the old version and to "
+		"%s in the new version. But meanwhile you "
+		"changed to link target to %s. "
+		"Shall I keep your link or replace it with " 
+		"the new default target?" % 
 		(relpath, os.readlink(old_path), os.readlink(new_path), os.readlink(user_path)),
 		"keep", "replace"):
 	    os.remove(user_path)
@@ -412,44 +508,37 @@ def update_file(old_skel, new_skel, userdir, relpath):
 
     # 9) We have changed to file type
     elif old_type != new_type:
-	if ask_user("The %s %s has changed into a %s in\n"
-		"the new version. Meanwhile you have changed\n"
-		"the %s of your copy of that %s.\n"
-		"Do you want to keep your version or use\n"
-		"the new default?\n" % 
+	if ask_user("The %s %s has changed into a %s in "
+		"the new version. Meanwhile you have changed "
+		"the %s of your copy of that %s. "
+		"Do you want to keep your version or use "
+		"the new default? " % 
 		(old_type, relpath, new_type, user_changed_type and "type" or "content",
 		 old_type),
 		"keep", "use new"):
-	    create_skeleton_file(new_skel, userdir, replath)
+	    create_skeleton_file(new_skel, userdir, relpath, replacements)
 
     # 10) The user has changed the file type, we just the content
     elif old_type != user_type:
-	if ask_user("Usually %s is a %s in both the\n"
-		"old and new version. But you have changed it\n"
-		"into a %s. Do you want to keep that of may\n"
-		"I replace your %s with the new default\n"
-		"%s, please?\n" % 
+	if ask_user("Usually %s is a %s in both the "
+		"old and new version. But you have changed it "
+		"into a %s. Do you want to keep that of may "
+		"I replace your %s with the new default "
+		"%s, please?" % 
 		(relpath, old_type, user_type, new_type),
 		"keep", "replace"):
-	    create_skeleton_file(new_skel, userdir, replath)
+	    create_skeleton_file(new_skel, userdir, relpath, replacements)
 
     # 11) This case should never happen, if I've not lost something
     else:
-	if ask_user("You somehow fiddled along with\n"
-	       "%s, and I do not have the\n"
-	       "slightest what's going on here. May\n"
-	       "I please install the new default %s\n"
-	       "here, or do you want to keep your %s?\n" % 
+	if ask_user("You somehow fiddled along with "
+	       "%s, and I do not have the "
+	       "slightest what's going on here. May "
+	       "I please install the new default %s "
+	       "here, or do you want to keep your %s?" % 
 	       (relpath, new_type, user_type),
 	       "keep", "install new"):
-	    create_skeleton_file(new_skel, userdir, replath)
-
-def create_skeleton_file(skeldir, userdir, relpath):
-    target_path = userdir + "/" + relpath
-    if os.path.exists(targetpath):
-        # delete this (might be a directory)
-	pass
-
+	    create_skeleton_file(new_skel, userdir, relpath, replacements)
 
 def init_scripts(sitename):
     rc_dir = "/omd/sites/%s/etc/rc.d" % sitename
@@ -728,8 +817,10 @@ def main_versions(args):
 	    sys.stdout.write("%s\n" % version)
 
 def main_sites(args):
+    if on_tty:
+	sys.stdout.write("SITE             VERSION\n")
     for site in os.listdir("/omd/sites"):
-	sys.stdout.write("%s\n" % site)
+	sys.stdout.write("%-16s %s\n" % (site, site_version(site)))
 
 def main_create(args):
     if site_exists(g_sitename):
@@ -873,12 +964,12 @@ def main_update(args):
     from_version = site_version(g_sitename)
     to_version = OMD_VERSION
     if from_version == to_version:
-	bail_out("Site '%s' uses already version %s\n" % (g_sitename, to_version))	
+	bail_out("Site '%s' already has version %s.\n" % (g_sitename, to_version))	
     sys.stdout.write("Updating site '%s' from version %s to %s...\n" % 
 	    (g_sitename, from_version, to_version))
 
     # Change symbolic link pointing to new version
-# create_version_symlink(g_sitename, to_version)
+    create_version_symlink(g_sitename, to_version)
 
     # Now apply changes of skeleton files. This can be done
     # in two ways: 
@@ -892,7 +983,8 @@ def main_update(args):
     to_skelroot = "/omd/versions/%s/skel" % to_version
     tmp = tmp_dir(g_sitename)
 
-    # First walk through new skeleton files
+    handled_paths = set([])
+    # First walk through skeleton files of new version
     os.chdir(to_skelroot)  # make relative paths
     for dirpath, dirnames, filenames in os.walk("."): 
         if dirpath.startswith("./"): 
@@ -901,10 +993,13 @@ def main_update(args):
 	    continue
 
 	for entry in dirnames + filenames:
+	    path = dirpath + "/" + entry
+	    handled_paths.add(path)
 	    try:
-		update_file(from_skelroot, to_skelroot, g_sitedir, entry)
+		update_file(from_skelroot, to_skelroot, g_sitedir, path)
 	    except Exception, e:
 		sys.stderr.write("Error updating %s/%s: %s\n" % (g_sitedir, entry, e))	
+		raise
 
     # Now handle files present in old but not in new skel files
     os.chdir(from_skelroot)
@@ -915,12 +1010,17 @@ def main_update(args):
 	    continue
 
 	for entry in dirnames + filenames:
+	    path = dirpath + "/" + entry
+	    if path in handled_paths:
+		continue
+	    handled_paths.add(path)
 	    # handle only files not already handled while scanning to_skelroot
 	    if not os.path.exists(to_skelroot + "/" + entry):
 		try:
-		    update_file(from_skelroot, to_skelroot, g_sitedir, entry)
+		    update_file(from_skelroot, to_skelroot, g_sitedir, path)
 		except Exception, e:
 		    sys.stderr.write("Error updating %s/%s: %s\n" % (g_sitedir, entry, e))	
+		    raise
 
 
 def main_init_action(command, args):
