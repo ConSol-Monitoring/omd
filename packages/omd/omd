@@ -289,15 +289,19 @@ def create_skeleton_file(skelbase, userbase, relpath, replacements):
     else:
 	file(user_path, "w").write(replace_tags(file(skel_path).read(), replacements))
 
-    mode = os.stat(skel_path).st_mode & 0xfff
-    os.chmod(user_path, mode)
+    if not os.path.islink(skel_path):
+	mode = os.stat(skel_path).st_mode & 0xfff
+	os.chmod(user_path, mode)
 
 
 def create_apache_hook(sitename):
     file("/omd/apache/%s.conf" % sitename, "w").write("Include %s/etc/apache/*.conf\n" % site_dir(sitename))
 
 def delete_apache_hook(sitename):
-    os.remove("/omd/apache/%s.conf" % sitename)
+    try:
+	os.remove("/omd/apache/%s.conf" % sitename)
+    except Exception, e:
+	sys.stderr.write("Cannot remove apache hook: %s\n" % e)
 
 def reload_apache():
     # FIXME: This is OS specific
