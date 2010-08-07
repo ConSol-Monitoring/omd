@@ -1,0 +1,16 @@
+Source: omd
+Section: admin
+Priority: optional
+Maintainer: <debian@omdistro.org>
+Build-Depends: dpatch, debhelper (>= 7), autotools-dev,  build-essential, libcairo2-dev, libpango1.0-dev, libxml2-dev, libexpect-perl, libssl-dev, snmp
+Standards-Version: 3.8.3
+Homepage: http://www.omdistro.org
+
+Package: omd
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, libapache2-mod-python
+Description:  Open Source Monitoring Distribution, containing Nagios,
+ the Nagios plugins, Check_MK, Livestatus, Multisite,
+ PNP4Nagios, NagVis, and other addons. Please visit
+ http://omdistro.org/.
+
