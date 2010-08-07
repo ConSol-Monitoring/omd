@@ -7,8 +7,9 @@ DIR = $(NAME)-2009-12-25
 .PHONY: skel
 
 build:
-	tar xzf  $(NAME)-$(VERSION).tgz
-	tar xzf  template-arctic.tgz -C $(DIR)/lib/tpl/
+	tar xzf $(NAME)-$(VERSION).tgz
+	tar xzf template-arctic.tgz -C $(DIR)/lib/tpl/
+	tar xzf plugin-include.tgz -C $(DIR)/lib/plugins/
 
 install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/dokuwiki
@@ -28,10 +29,12 @@ skel:
 	chmod 770 $(SKEL)/var/dokuwiki/data/media
 	chmod 770 $(SKEL)/var/dokuwiki/data/meta
 	chmod 770 $(SKEL)/var/dokuwiki/data/pages
-	chmod 770 $(SKEL)/var/dokuwiki/data/tmp
+	chmod 775 $(SKEL)/var/dokuwiki/data/tmp
+	chmod 770 $(SKEL)/etc/dokuwiki
 	chmod 660 $(SKEL)/etc/dokuwiki/local.php
 	chmod 660 $(SKEL)/etc/dokuwiki/acl.auth.php
 	chmod 660 $(SKEL)/etc/dokuwiki/users.auth.php
 
 clean:
 	# Remove files created by build/install
+	rm -r $(DIR)
