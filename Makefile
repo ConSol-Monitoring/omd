@@ -1,7 +1,7 @@
 SHELL = /bin/bash
 include Makefile.omd
 
-DESTDIR=$(shell pwd)/destdir
+DESTDIR ?=$(shell pwd)/destdir
 RPM_TOPDIR=$$(pwd)/rpm.topdir
 DPKG_TOPDIR=$$(pwd)/dpkg.topdir
 SOURCE_TGZ=omd-$(OMD_VERSION).tar.gz
