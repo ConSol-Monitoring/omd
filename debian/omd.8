@@ -1,0 +1,108 @@
+.\"                                      Hey, EMACS: -*- nroff -*-
+.\" First parameter, NAME, should be all caps
+.\" Second parameter, SECTION, should be 1-8, maybe w/ subsection
+.\" other parameters are allowed: see man(7), man(1)
+.TH OMD SECTION "August  7, 2010"
+.\" Please adjust this date whenever revising the manpage.
+.\"
+.\" Some roff macros, for reference:
+.\" .nh        disable hyphenation
+.\" .hy        enable hyphenation
+.\" .ad l      left justify
+.\" .ad b      justify to both left and right margins
+.\" .nf        disable filling
+.\" .fi        enable filling
+.\" .br        insert line break
+.\" .sp <n>    insert n+1 empty lines
+.\" for manpage-specific macros, see man(7)
+.SH NAME
+omd \- admin interface for OMD, the Open Monitoring Distribution
+.SH SYNOPSIS
+.B omd
+.RI [ command 
+.RI [ site... ] 
+.RI ]
+.SH DESCRIPTION
+.B OMD - the Open Monitoring Distribution
+is nothing really new. OMD bundles existing open source software to 
+ease the installation procedure of nagios3 and some common addons 
+like nagvis, pnp4nagios, rrdtool, nagios-plugins, Check_MK, 
+MK Livestatus, dokuwiki, nsca, check_nrpe and so on. And yes, there 
+are plans to integrate icinga-core, merlin, thrunk and others
+at a later time to give you a choice.
+.PP
+.\" TeX users may be more comfortable with the \fB<whatever>\fP and
+.\" \fI<whatever>\fP escape sequences to invode bold face and italics,
+.\" respectively.
+\fBomd\fP is the administration interface for creating and maintaining 
+sites within OMD - the open monitoring distribution
+.SH COMMANDS
+Type 
+.B omd
+or
+.B omd help
+to get an overview over all available commands.
+.TP
+.B omd help
+Show summary of options.
+.TP
+.B omd version
+Show version of OMD
+.TP
+.B omd versions                    
+List installed OMD versions
+.TP
+.B omd setup                       
+Prepare operating system for OMD (installs packages)
+.TP
+.B omd uninstall                   
+Remove OMD and all sites! If you installed omd as debian package, you should 
+use the package management for removing omd: 
+.B apt-get remove omd
+or 
+.B aptitude remove omd
+.TP
+.B omd sites                       
+Show list of sites
+.TP
+.B omd create     SITE             
+Create a new site
+.TP
+.B omd rm         SITE             
+Remove a site (and its data)
+.TP
+.B omd mv         SITE NEWNAME     
+Rename a site
+.TP
+.B omd cp         SITE NEWNAME     
+Make a copy of a site
+.TP
+.B omd update     SITE             
+Update site to version 0.42.2
+.TP
+.B omd start      [SITE]           
+Start services of one or all sites
+.TP
+.B omd stop       [SITE]           
+Stop services of site(s)
+.TP
+.B omd restart    [SITE]           
+Restart services of site(s)
+.TP
+.B omd reload     [SITE]           
+Reload services of site(s)
+.TP
+.B omd status     [SITE]           
+Show status of services of site(s)
+.TP
+.B omd config     SITE ...         
+Show and set site configuration parameters
+.SH SEE ALSO
+.BR http://www.omdistro.org
+.br
+.SH AUTHOR
+omd was written by Mathias Kettner <mk@mathias-kettner.de>.
+See /usr/share/doc/omd/TEAM for contributors to omd.
+.PP
+This manual page was written by Wolfgang Barth <wob@swobspace.net>,
+for the use with omd in any distribution.

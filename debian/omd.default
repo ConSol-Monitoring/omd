@@ -1,0 +1,12 @@
+# Defaults for omd initscript
+# sourced by /etc/init.d/omd
+# installed at /etc/default/omd by the maintainer scripts
+
+#
+# This is a POSIX shell fragment
+#
+
+# AUTOSTART
+# =1 : start on boot 
+# =0 : don't start at boot time
+AUTOSTART=1
