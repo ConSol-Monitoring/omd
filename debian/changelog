@@ -1,6 +1,6 @@
-omd (0.42.2~1.gbpd65de1) UNRELEASED; urgency=low
+omd (0.10.0~2.gbp5a0b94) UNRELEASED; urgency=low
 
-  ** SNAPSHOT build @d65de18c68d929af3f9675ec2c58d24417c89bbf **
+  ** SNAPSHOT build @5a0b949ad504f1294537800e68d7c32c5f2d0043 **
 
   [ root ]
   * [0abf061005] Start implementing omd command
@@ -424,10 +424,16 @@ omd (0.42.2~1.gbpd65de1) UNRELEASED; urgency=low
   [ Wolfgang Barth ]
   * [3db2de341c] DESTDIR can now be set as environment variable
   * [d65de18c68] adding build-stamp to .gitignore
+  * building a debian package the debian way
+  * debian packaging more complete: suid for plugins, manpage, init
+    script
+  * debianizing: *-buildpackages don't like Version: in file
+    debian/control
+  * debian package: now works, including make deb from Makefile
 
- -- Wolfgang Barth <wob@lts10.swobspace.de>  Sat, 07 Aug 2010 16:28:41 +0200
+ -- Wolfgang Barth <wob@lts10.swobspace.de>  Sun, 08 Aug 2010 17:44:54 +0200
 
-omd (0.42.2) unstable; urgency=low
+omd (0.10.0) unstable; urgency=low
 
   * Initial Release.
 

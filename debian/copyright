@@ -4,17 +4,16 @@ This work was packaged for Debian by:
 
 It was downloaded from:
 
-    <url://example.com>
+    http://www.omdistro.org
 
 Upstream Author(s):
 
-    <put author's name and email here>
-    <likewise for another author>
+    Mathias Kettner <mk@mathias-kettner.de>
+    For other contributors see /usr/share/doc/omd/TEAM
 
 Copyright:
 
-    <Copyright (C) YYYY Firstname Lastname>
-    <likewise for another author>
+    <Copyright (C) 2010 Mathias Kettner>
 
 License:
 
@@ -34,17 +33,11 @@ License:
 On Debian systems, the complete text of the GNU General
 Public License version 3 can be found in `/usr/share/common-licenses/GPL-3'.
 
+OMD contains a lot of open source software. The licensing and copyright 
+of each package you found in 
+/opt/omd/versions/default/usr/share/doc/<package-name>
+
 The Debian packaging is:
 
     Copyright (C) 2010 Wolfgang Barth <wob@swobspace.net>
 
-# Please chose a license for your packaging work. If the program you package
-# uses a mainstream license, using the same license is the safest choice.
-# Please avoid to pick license terms that are more restrictive than the
-# packaged work, as it may make Debian's contributions unacceptable upstream.
-# If you just want it to be GPL version 3, leave the following line in.
-
-and is licensed under the GPL version 3, see above.
-
-# Please also look if there are files or directories which have a
-# different copyright/license attached and list them here.
