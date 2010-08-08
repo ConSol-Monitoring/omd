@@ -115,14 +115,12 @@ rpm:
 
 # Build DEB from prebuild binary. This currently needs 'make dist' and thus only
 # works within a GIT repository.
-deb: pack
-	mkdir -p $(DPKG_TOPDIR)
-	tar xzf $(BIN_TGZ) -C $(DPKG_TOPDIR) 
-	cp -a DEBIAN $(DPKG_TOPDIR)
-	sed -i -e 's/^Version:.*/Version: $(OMD_VERSION)/' $(DPKG_TOPDIR)/DEBIAN/control
-	sed -i -e 's/^Architecture:.*/Architecture: $(ARCH)/' $(DPKG_TOPDIR)/DEBIAN/control
-	dpkg -b $(DPKG_TOPDIR) omd-$(OMD_VERSION).$(ARCH).deb
-	rm -rf $(DPKG_TOPDIR)
+deb: 
+	fakeroot debian/rules clean
+	git-buildpackage -uc -us -rfakeroot --git-ignore-new \
+	--git-builder="debuild --no-lintian -i\.git -I\.git \
+			-iomd-bin-0.42.2.tar.gz -Iomd-bin-0.42.2.tar.gz \
+			-i.gitignore -I.gitignore"
 
 # Only to be used for developement testing setup 
 setup: pack xzf

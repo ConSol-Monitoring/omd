@@ -9,3 +9,4 @@ omd.spec
 rpm.buildroot
 omd-*-*.rpm
 build-stamp
+patch-stamp

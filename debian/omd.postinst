@@ -38,19 +38,14 @@ setperm() {
 
 case "$1" in
   configure)
+
     # -- looking for group nagios, create it, if not exist
     if ! getent group nagios > /dev/null ; then
       echo 'Adding system-user for nagios' 1>&2
       addgroup --system --force-badname nagios > /dev/null
     fi
 
-    db_fget omd/nagios-plugins-suid seen
-    if [ "$RET" = "false" ]; then
-      db_set omd/nagios-plugins-suid true
-    fi
-    db_input medium omd/nagios-plugins-suid || true
-    db_go || true
-    db_get omd/nagios-plugins-suid
+    db_get omd/nagios-plugins-suid || true
     if [ "$RET" = "true" ]; then
       PLUGPERM="4750"
     else
@@ -59,15 +54,17 @@ case "$1" in
     for PLUGIN in $SUID_PLUGINS; do
       setperm root nagios $PLUGPERM $NAGIOS_PLUGIN_PATH/$PLUGIN
     done
-  ;;
+    db_stop
+    ;;
 
   abort-upgrade|abort-remove|abort-deconfigure)
-  ;;
+    exit 0
+    ;;
 
   *)
-      echo "postinst called with unknown argument \`$1'" >&2
-      exit 1
-  ;;
+    echo "postinst called with unknown argument \`$1'" >&2
+    exit 1
+    ;;
 esac
 
 # dh_installdeb will replace this with shell code automatically
