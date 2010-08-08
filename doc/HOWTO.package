@@ -1,0 +1,12 @@
+Rules for package building:
+
+The package Makefiles will be called with $(OMD_ROOT) set to the
+base directory of the version, e.g. /omd/version/0.42. Each package
+has a unique name, called $(NAME) in this document.
+
+RULES
+
+[1] Each package shall install information about its author and 
+licensing in $(OMD_ROOT)/share/doc/$(NAME)
+
+
