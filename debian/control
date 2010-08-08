@@ -7,7 +7,6 @@ Standards-Version: 3.8.3
 Homepage: http://www.omdistro.org
 
 Package: omd
-Version: 0.42.2
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}, libapache2-mod-python
 Description:  Open Source Monitoring Distribution, containing Nagios,
