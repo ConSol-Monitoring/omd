@@ -7,7 +7,7 @@
 import sys, os, shutil, pwd, re, time
 from subprocess import *
 
-OMD_VERSION = "0.42.2"
+OMD_VERSION = "0.10"
 
 # colored output, if stdout is a tty
 on_tty = sys.stdout.isatty()
