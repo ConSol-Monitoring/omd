@@ -17,7 +17,6 @@ APACHE_RUN_GROUP="###SITE###"
 
 # FIXME: Hardcoded binary
 APACHE_BIN="httpd"
-DOCUMENT_ROOT=###ROOT###/var/www
 PID_FILE=###ROOT###/tmp/apache/run/apache.pid
 CONFIG_FILE=###ROOT###/etc/apache/apache.conf
 
@@ -25,7 +24,7 @@ pidof_apache() {
   # if there is actually an apache2 process whose pid is in PIDFILE,
   # print it and return 0.
   if [ -e "$PID_FILE" ]; then
-    if ps U ham | grep 'httpd -f' | cut -d' ' -f 2 | grep $(cat $PID_FILE); then
+    if ps U ham | grep 'httpd -f' | cut -d' ' -f 1 | grep $(cat $PID_FILE); then
       return 0
     fi
   fi
@@ -63,7 +62,7 @@ apache_wait_stop() {
 case $1 in 
   start)
     echo "Starting Apache Daemon"
-		$APACHE_BIN -d "$DOCUMENT_ROOT" -f "$CONFIG_FILE"
+		$APACHE_BIN -f "$CONFIG_FILE"
   ;;
   stop)
     echo -n "Stopping Apache Daemon..."
@@ -81,7 +80,7 @@ case $1 in
   ;;
   reload)
     echo "Reloading Apache Daemon"
-    $APACHE_BIN -d "$DOCUMENT_ROOT" -f "$CONFIG_FILE" -k graceful
+    $APACHE_BIN -f "$CONFIG_FILE" -k graceful
   ;;
   status)
     PID=$(pidof_apache) || true

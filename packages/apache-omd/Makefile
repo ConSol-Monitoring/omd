@@ -2,7 +2,7 @@ include ../../Makefile.omd
 
 build:
 	# Unpack source code, apply patches, call configure, call make
-	sed -i 's|###APACHE_MODULE_DIR###|$(APACHE_MODULE_DIR)|g' skel/etc/apache/apache.conf.in > skel/etc/apache/apache.conf
+	sed 's|###APACHE_MODULE_DIR###|$(APACHE_MODULE_DIR)|g' skel/etc/apache/apache.conf.in > skel/etc/apache/apache.conf
 	rm skel/etc/apache/apache.conf.in
 	mkdir -p skel/var/log/apache
 	mkdir -p skel/tmp/apache/run
