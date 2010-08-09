@@ -5,13 +5,13 @@
  
  // Path to the debug file
 -define('DEBUGFILE', '../../../var/nagvis-debug.log');
-+define('DEBUGFILE', join(array_slice(split('/' ,dirname($_SERVER["SCRIPT_FILENAME"])), 0, -5), '/').'/var/log/nagvis-debug.log');
++define('DEBUGFILE', join(array_slice(str_split('/' ,dirname($_SERVER["SCRIPT_FILENAME"])), 0, -5), '/').'/var/log/nagvis-debug.log');
  
  // Path to the main configuration file
 -define('CONST_MAINCFG', '../../../etc/nagvis.ini.php');
 -define('CONST_MAINCFG_CACHE', '../../../var/nagvis.ini.php');
-+define('CONST_MAINCFG', join(array_slice(split('/' ,dirname($_SERVER["SCRIPT_FILENAME"])), 0, -5), '/').'/etc/nagvis/nagvis.ini.php');
-+define('CONST_MAINCFG_CACHE', join(array_slice(split('/' ,dirname($_SERVER["SCRIPT_FILENAME"])), 0, -5), '/').'/tmp/nagvis/nagvis.ini.php');
++define('CONST_MAINCFG', join(array_slice(str_split('/' ,dirname($_SERVER["SCRIPT_FILENAME"])), 0, -5), '/').'/etc/nagvis/nagvis.ini.php');
++define('CONST_MAINCFG_CACHE', join(array_slice(str_split('/' ,dirname($_SERVER["SCRIPT_FILENAME"])), 0, -5), '/').'/tmp/nagvis/nagvis.ini.php');
  
  // Needed minimal PHP version
  define('CONST_NEEDED_PHP_VERSION', '5.0');
