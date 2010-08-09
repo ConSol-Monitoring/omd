@@ -295,6 +295,7 @@ def create_skeleton_file(skelbase, userbase, relpath, replacements):
 
 
 def create_apache_hook(sitename):
+		# FIXME: Fix the hardcoded port number '5000'. Load from site config.
     file("/omd/apache/%s.conf" % sitename, "w").write("""
 <Location /%s>
   RewriteEngine On
