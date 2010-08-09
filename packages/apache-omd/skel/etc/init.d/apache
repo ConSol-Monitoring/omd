@@ -1,0 +1,47 @@
+#!/bin/bash
+
+. ###ROOT###/etc/omd/site.conf
+if [ "$CONFIG_APACHE" != on ] ; then
+  exit 5
+fi
+
+# Start httpd in the C locale by default.
+HTTPD_LANG="C"
+
+# This will prevent initlog from swallowing up a pass-phrase prompt if
+# mod_ssl needs a pass-phrase from the user.
+INITLOG_ARGS=""
+
+# FIXME: Set to site user/group
+APACHE_RUN_USER="lm"
+APACHE_RUN_GROUP="lm"
+
+# FIXME: Hardcoded binary
+APACHE_BIN="apache2"
+
+# FIXME: Set to omd site document root
+DOCUMENT_ROOT=/tmp
+
+# FIXME: Set to omd site configuration file
+CONFIG_FILE=/etc/apache2/apache2.conf
+
+case $1 in 
+  start)
+    echo "Starting Apache Daemon"
+		$APACHE_BIN -d "$DOCUMENT_ROOT" -f "$CONFIG_FILE"
+  ;;
+  stop)
+    echo "Stopping Apache Daemon"
+  ;;
+  restart)
+    $0 stop
+    $0 start
+  ;;
+  reload)
+  ;;
+  status)
+  ;;
+  *)
+    echo "Usage: $0 {start|stop|restart|reload|status}"
+  ;;
+esac
