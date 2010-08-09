@@ -28,9 +28,6 @@
   einkodieren. Man muss das Binärpaket eh immer genau auf der
   Distro kompilieren, für die das gedacht ist.
 
-* Livestatus soll auf TCP hören, zumindest wenn das aktiviert ist.
-  Oder man überlässt das dem Admin.
-
 * Bei check_icmp fehlt das SUID-Bit. Selbst wenn man als root compiliert.
   Da brauchts noch eine gute generelle Lösung. Schlimmsten Falls eine
   Datei mit einer Liste von Pfade und zugehörigen Permissions, die
