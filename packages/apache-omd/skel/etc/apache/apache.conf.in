@@ -10,8 +10,10 @@ KeepAlive On
 MaxKeepAliveRequests 100
 KeepAliveTimeout 15
 
-# FIXME: Dynamic port (Site specific one)
-Listen 1337
+# At the moment only listen on localhost. The external access
+# is done by the systems apache process.
+# Maybe it is useful to listen on other addresses someday.
+Listen 127.0.0.1:1337
 
 ##
 ## Server-Pool Size Regulation (MPM specific)

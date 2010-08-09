@@ -17,6 +17,6 @@ EOF
         echo "[0-9]{1,5}"
     ;;
     set)
-        sed -ri 's/^(Listen[[:space:]])([0-9]+)/\1'$2'/' $OMD_ROOT/etc/apache/apache.conf
+        sed -ri 's/^(Listen[[:space:]].*:)([0-9]+)/\1'$2'/' $OMD_ROOT/etc/apache/apache.conf
     ;;
 esac
