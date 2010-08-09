@@ -22,9 +22,9 @@ EOF
     set)
         if [ "$2" == "nagios" ]
         then
-            ln -sfn ../nagios/apache.conf $OMD_ROOT/etc/apache/nagios.conf 
+            ln -sfn ../../nagios/apache.conf $OMD_ROOT/etc/apache/conf.d/nagios.conf 
         else
-            rm -f $OMD_ROOT/etc/apache/nagios.conf
+            rm -f $OMD_ROOT/etc/apache/conf.d/nagios.conf
         fi
     ;;
 esac

@@ -24,10 +24,10 @@ EOF
        then
 	   mkdir -p $OMD_ROOT/etc/nagios/nagios.d
            ln -sfn ../../pnp4nagios/nagios.cfg $OMD_ROOT/etc/nagios/nagios.d/pnp4nagios.cfg
-           ln -sfn ../pnp4nagios/apache.conf $OMD_ROOT/etc/apache/pnp4nagios.conf 
+           ln -sfn ../../pnp4nagios/apache.conf $OMD_ROOT/etc/apache/conf.d/pnp4nagios.conf 
        else
            rm -f $OMD_ROOT/etc/nagios/nagios.d/pnp4nagios.cfg
-           rm -f $OMD_ROOT/etc/apache/pnp4nagios.conf 
+           rm -f $OMD_ROOT/etc/apache/conf.d/pnp4nagios.conf 
        fi
    ;;
 esac
