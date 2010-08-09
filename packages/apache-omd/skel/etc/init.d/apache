@@ -12,18 +12,53 @@ HTTPD_LANG="C"
 # mod_ssl needs a pass-phrase from the user.
 INITLOG_ARGS=""
 
-# FIXME: Set to site user/group
-APACHE_RUN_USER="lm"
-APACHE_RUN_GROUP="lm"
+APACHE_RUN_USER="###SITE###"
+APACHE_RUN_GROUP="###SITE###"
 
 # FIXME: Hardcoded binary
-APACHE_BIN="apache2"
+APACHE_BIN="httpd"
+DOCUMENT_ROOT=###ROOT###/var/www
+PID_FILE=###ROOT###/tmp/apache/run/apache.pid
+CONFIG_FILE=###ROOT###/etc/apache/apache.conf
 
-# FIXME: Set to omd site document root
-DOCUMENT_ROOT=/tmp
+pidof_apache() {
+  # if there is actually an apache2 process whose pid is in PIDFILE,
+  # print it and return 0.
+  if [ -e "$PID_FILE" ]; then
+    if ps U ham | grep 'httpd -f' | cut -d' ' -f 2 | grep $(cat $PID_FILE); then
+      return 0
+    fi
+  fi
+  return 1
+}
 
-# FIXME: Set to omd site configuration file
-CONFIG_FILE=/etc/apache2/apache2.conf
+apache_wait_stop() {
+  # running ?
+  pidtmp=$(pidof_apache) || true
+  if kill -0 "${pidtmp:-}" 2> /dev/null; then
+    pid=$pidtmp
+    kill $pid
+  fi
+
+  # wait until really stopped
+  if [ -n "${pid:-}" ]; then
+    i=0
+    while kill -0 "${pid:-}" 2> /dev/null;  do
+      if [ $i = '60' ]; then
+        break;
+      else
+        if [ $i = '0' ]; then
+          echo -n " ... waiting "
+        else
+          echo -n "."
+        fi
+        i=$(($i+1))
+        sleep 1
+      fi
+     done
+  fi
+}
+
 
 case $1 in 
   start)
@@ -31,7 +66,14 @@ case $1 in
 		$APACHE_BIN -d "$DOCUMENT_ROOT" -f "$CONFIG_FILE"
   ;;
   stop)
-    echo "Stopping Apache Daemon"
+    echo -n "Stopping Apache Daemon..."
+    if apache_wait_stop; then
+      echo 'OK.'
+      exit 0
+    else
+      echo 'ERROR.'
+      exit 1
+    fi
   ;;
   restart)
     $0 stop
@@ -40,6 +82,14 @@ case $1 in
   reload)
   ;;
   status)
+    PID=$(pidof_apache) || true
+    if [ -n "$PID" ]; then
+      echo "Apache is running (pid $PID)."
+      exit 0
+    else
+      echo "Apache is NOT running."
+      exit 1
+    fi
   ;;
   *)
     echo "Usage: $0 {start|stop|restart|reload|status}"

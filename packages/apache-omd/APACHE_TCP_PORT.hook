@@ -1,0 +1,22 @@
+#!/bin/bash
+
+case "$1" in
+    alias)
+        echo "TCP port number for Apache"
+    ;;
+    description)
+        cat << EOF
+Configure the TCP port used for the Apache webserver
+process of this site.
+EOF
+    ;;
+    default)
+        echo "5000"
+    ;;
+    choices)
+        echo "[0-9]{1,5}"
+    ;;
+    set)
+        sed -ri 's/^(Listen[[:space:]])([0-9]+)/\1'$2'/' $OMD_ROOT/etc/apache/apache.conf
+    ;;
+esac
