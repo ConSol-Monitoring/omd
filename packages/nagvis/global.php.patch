@@ -1,14 +1,11 @@
---- nagvis-1.5-nightly/share/server/core/defines/global.php.orig	2010-08-09 08:49:29.000000000 +0200
-+++ nagvis-1.5-nightly/share/server/core/defines/global.php	2010-08-09 08:50:07.000000000 +0200
-@@ -55,14 +55,14 @@
+--- nagvis-1.5-nightly/share/server/core/defines/global.php.orig	2010-08-09 09:11:56.000000000 +0200
++++ nagvis-1.5-nightly/share/server/core/defines/global.php	2010-08-09 09:12:40.000000000 +0200
+@@ -58,11 +58,11 @@
  define('DEBUGLEVEL', 6);
  
  // Path to the debug file
 -define('DEBUGFILE', '../../../var/nagvis-debug.log');
 +define('DEBUGFILE', join(array_slice(split('/' ,dirname($_SERVER["SCRIPT_FILENAME"])), 0, -5), '/').'/var/log/nagvis-debug.log');
- 
- // NagVis Version
- define('CONST_VERSION', '1.5.1');
  
  // Path to the main configuration file
 -define('CONST_MAINCFG', '../../../etc/nagvis.ini.php');
