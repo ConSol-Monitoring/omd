@@ -1,0 +1,440 @@
+omd (0.10.0~2.gbp5a0b94) UNRELEASED; urgency=low
+
+  ** SNAPSHOT build @5a0b949ad504f1294537800e68d7c32c5f2d0043 **
+
+  [ root ]
+  * [0abf061005] Start implementing omd command
+  * [4760d6abd7] Creating of site: symlinks work
+  * [0c98f88dd4] Create operating system user
+  * [a50896d0ea] Creating of template files
+  * [a5125f3b4b] First minimal Nagios running
+  * [2041c2ce9f] Ignores
+  * [20c7224fe9] Start writing init script
+  * [6ca12ceea7] Make Nagios PHP work
+  * [1037f8e3ea] Wow: Nagios+CGIs are running :-)
+  * [0747d9d19a] Command mode working
+  * [0a21673e40] Check_MK packaged (w/o Livestatus, Multisite)
+  * [b4a3721aa5] Fixed path to precompiled checks
+  * [fb6cea8a05] Correct path for init script
+  * [9d1bfa2532] New directory profile
+  * [ab2e1adc7b] Make Multisite work
+
+  [ Lars Michelsen ]
+  * [dabc9a79f8] First files for NagVis package
+  * [ba73587f32] Further steps to NagVis package
+
+  [ root ]
+  * [e80a9055ac] Support for renaming sites works
+
+  [ Mathias Kettner ]
+  * [42b400366f] Pack rrdtool, make mk-livestatus into own package
+
+  [ root ]
+  * [1ac8a1f164] omd cp also working :-)
+  * [0559f6ec5d] Updated doku
+
+  [ Mathias Kettner ]
+  * [1721967a3a] Add docu about paths
+  * [cfbc357391] Packaged PNP4Nagios (web not tested yet)
+  * [e55d0ed56c] renamen apache file for check_mk
+  * [e734f08a49] PNP4Nagios works :-)
+  * [d5d8497dbd] Create Nagios log archive dir
+  * [687761f9ce] wrote german docu
+  * [73ca32483e] new operation omd uninstall
+
+  [ Lars Michelsen ]
+  * [c67b5c84f7] NagVis package is functional now
+  * [e7b2536116] Added small check if instance exists to omd commands
+    which affect a specific site
+  * [118427512a] Added version/site existing checks
+  * [45c7458adf] Fixed NagVis webserver aliases
+  * [07449a2b13] Fixed auth realm name
+  * [2aed114781] Added version function to omd shell script
+  * [8dfe75ab20] Added redirection to nagios
+  * [6eb441b56f] Added first steps of small bash completion script for
+    omd
+
+  [ Mathias Kettner ]
+  * [b91459191e] Improved output of omd
+
+  [ Lars Michelsen ]
+  * [aa7efba623] Storing bash_completion script globally and using it
+    from the site users now
+  * [c59d0303bd] Added note about bash completion file
+
+  [ Mathias Kettner ]
+  * [1e089a29a7] Add missing directory for NagVis
+  * [15c3483b80] Handle mounting of tmpfs
+  * [378143bb99] Fixed problems with cp and mv due to tmpfs
+  * [3374ed9707] Updated doku
+  * [bfb197a05b] Delete completion file on omd uninstall
+  * [33d3ab5491] Create and mount tmpfs already at omd create
+  * [b8362d93c9] Call start scripts as site user, not as root
+  * [8ace00e05c] Start rrdcached (not yet used by PNP)
+  * [7866876de9] rrdcached works
+  * [af8bf58338] Fixed exit code of /etc/init.d/npcd status
+  * [4c6d898622] Updated dok
+
+  [ root ]
+  * [8d21b111d6] new Make target mrproper
+  * [61b9046898] Fix detection of tmpfs mount
+  * [ca056fd355] Fix compilation of PNP of no rrdtool is installed in os
+  * [93436160e4] Fix rrdcached start in case /omd is a symlink
+  * [197493b498] Updated doku
+  * [d52b373a22] Remove -b/-B from rrdcached, does not work with symlink
+
+  [ Mathias Kettner ]
+  * [de40dabcef] Updated doku
+  * [d05feaa89c] Fix path of Check_MKs PNP templates
+  * [99d2eac025] Fixed TAB-errors in Makefile
+  * [c0ddb4052c] Added some ideas to doku
+  * [e4af85a429] Updated TODO
+  * [d47dfcffde] Fix bug: tmpfs files had wrong user id
+  * [97d6100cbe] Fix nagios configuration not finding bug
+  * [b99817018e] Physical path /opt/omd, Link /omd
+  * [03614fd427] Fix utils.inc.php.dif patch
+
+  [ Joerg Linge ]
+  * [eda1525d15] PNP4Nagios integration based on npcdmod
+  * [681f17f7dd] pushed pnp4nagios to version 0.6.4
+
+  [ Mathias Kettner ]
+  * [af9338744b] Repair broken patch utils.inc.php.dif
+  * [a7fad19fcb] Introduce mechanism for distro specific things
+  * [207df936e4] Add missing quotes
+  * [6a9f61d971] Install distro.info unter $(OMD_ROOT)/share/omd
+  * [f62a826abb] Create link "default" to default version
+  * [bb5860a32d] Shift parts from /usr/bin/omd to version-specific
+    binary
+  * [9d4d85b580] Moved some functionality from /usr/bin/omd to version
+    specific binary
+  * [1e6fac2617] Allow to choose separator via first argument
+  * [88f6475120] Updated Check_MK to new version, added configure-Script
+
+  [ Joerg Linge ]
+  * [d8fd733e23] pnp4nagios: npcdmod patch adjustment
+  * [d7bac310ed] .gitignore update
+
+  [ Mathias Kettner ]
+  * [90d18727b3] Patch Nagios: look for main config files also in
+    nagios.d/*.cfg
+  * [91fd8eb357] Move PNP settings from nagios to pnp4nagios
+  * [adc168fbb0] Test pnp hook
+  * [c60c951ca6] First example implementation of hooks and config
+  * [1b1e044085] Start NPCD only if PNP is enabled
+  * [e2efc1f730] Updated doku
+  * [d6739f6904] Finished implementation of sample hooks
+
+  [ root ]
+  * [eff479b493] Fix: add missing directory nagios.d
+
+  [ Mathias Kettner ]
+  * [3ba917ee2f] Cleanup and restructure bin/omd
+  * [5aa0a226c3] replace /usr/bin/omd with version-specific bin/omd
+  * [22036c70c0] omd uninstall: remove all sites first
+  * [71023ed1f4] Updated TODO
+  * [2f8087472b] Added CentOS 5.4 to distro list
+  * [5ee814882f] Check_MK version 1.1.7i2
+  * [4545747e72] new make target make dist
+  * [60d5c0c4ea] Add information about apache2ctl
+  * [dd426a9871] rename omd.conf to zzz_omd.conf (RedHat problem)
+  * [94a6c6d4f5] check_mk: fix version number in defaults
+  * [fbf19033ac] Fixed apache2ctl rules
+  * [591ba04927] Make some things non-distro-specific
+  * [4beca89734] Remove duplicate example files of check_mk
+  * [69965052c7] Updated TODO
+  * [40da97048f] Fix problem with mod_python caching
+  * [cf8e7a2aa1] Nagios config: disable envmacros, enable tweaks
+  * [6e73ce904c] New config hooks for livestatus via TCP
+  * [a51129b9c1] Run per-site xinetd
+  * [03c6fba19d] omd rm: fix race condition, use userdel -r
+  * [a35a9a926d] Perform start and other commands as site user
+  * [7f9187a49e] Fix bug in bin/omd: import time
+  * [d2287f76a7] New snapshot of Check_MK
+
+  [ Lars Michelsen ]
+  * [c474d40edd] Updated to new NagVis version
+
+  [ Mathias Kettner ]
+  * [0fcb3f7093] Add patch to build packages of debian
+  * [9f64ec6470] Make useradd use distro-specific options
+
+  [ root ]
+  * [63cb2fe732] Fix omd uninstall
+
+  [ Mathias Kettner ]
+  * [36850131cf] Add missing distro packages
+
+  [ root ]
+  * [aea9e28878] Implement omd setup
+
+  [ Lars Michelsen ]
+  * [c3709c2d97] Fixed patch for Nagvis pathes (Will move the version
+    define away in future versions)
+  * [8a28936b74] Added packages for centos 5.4 and centos 5.5
+  * [36ffc5b7f8] Added new required packages
+  * [b6f3de456a] Added new ideas
+  * [420b92793c] Cleaned up
+
+  [ root ]
+  * [4a0765a98f] Added OMD_SITE and OMD_ROOT to .profile
+
+  [ Lars Michelsen ]
+  * [17adbc20df] Removed error message when no hook file exists
+  * [3e258a2791] Added setup target for developement test setups
+
+  [ root ]
+  * [3b5e039162] ### instead of @
+
+  [ Lars Michelsen ]
+  * [4624655b8e] Replaced macros to new format
+  * [815ce9713b] Added distrofile for centos 5.5
+
+  [ root ]
+  * [b2cfd65611] Replace @..@ with ###..### in check_mk
+
+  [ Lars Michelsen ]
+  * [fa4dd86dac] Fixed removed nagvis configuration files
+
+  [ root ]
+  * [271f3cd0af] Replace @..@ with ###..### in nagios
+
+  [ Lars Michelsen ]
+  * [c451d028ab] Fixed broken files - gnaaah
+
+  [ root ]
+  * [48854a3092] Replace @..@ with ###..### in rrdtool
+
+  [ Lars Michelsen ]
+  * [26cfcaf9fd] Fixed sed call
+
+  [ root ]
+  * [69f85b6761] Fix configure on UBUNTU
+  * [f8f3c5c39d] Fix PNP4Nagios Makefile
+
+  [ Lars Michelsen ]
+  * [3a7e75e779] Neue Idee
+
+  [ root ]
+  * [7007e367a0] omd: configuration on rm and uninstall
+  * [4c44fccd5e] Empty example package
+  * [4245a62906] fix omd help
+
+  [ Lars Michelsen ]
+  * [8818f649f7] Package installations are now silent. The confirmation
+    dialog asks everything when the user fires of the action
+  * [cec3fd1255] Replaced old SITE macro
+
+  [ Joerg Linge ]
+  * [4c77744f05] pnp4nagios broken package
+
+  [ Lars Michelsen ]
+  * [05c3bb73b5] Added some notices
+
+  [ root ]
+  * [ddca40b2eb] Add mysql configuration
+  * [ed18847f98] Added TEAM
+
+  [ Lars Michelsen ]
+  * [dc2d4ff47f] Added new note
+
+  [ Joerg Linge ]
+  * [273301a124] 'etc' darf nicht geloescht werden, sonst fehlt die
+    apache config
+  * [1992c481cb] performancedaten fuer das dummy command
+  * [c778923442] offentlich eine lauffaehige version
+
+  [ root ]
+  * [d444d71f36] new pnp package
+
+  [ Joerg Linge ]
+  * [34bd28f657] pnp template config
+  * [be66286834] JLI: TODO Liste
+  * [9c05f4e641] JLI: site specific pnp templates
+  * [a596945392] JLI: neue pnp version
+  * [7f2d39fcf7] kleine anpassung der nagios config
+  * [feb08fb0d0] pnp jetzt mit rrdcached
+  * [96378d1f7f] rrdtool update auf 1.4.4
+  * [5c70b3fca9] neues pnp paket
+
+  [ Wolfgang Barth ]
+  * [5e8a42c3a3] remove nagios update check (aka phoning home) from
+    main.php
+
+  [ Joerg Linge ]
+  * [75913677bc] rrtool ohne python und ruby bindings
+  * [28c494dd46] Site speicific SSI wrapper
+  * [5f653668bd] OS_PACKAGES fuer Debian um graphviz erweitert
+  * [a33cb53703] pnp4nagios mit popups und ssi
+
+  [ Sven Nierlein ]
+  * [73d3afba56] added perl-modules package including local::lib
+  * [c0683181a0] added missing packages for centos
+
+  [ Mathias Kettner ]
+  * [3c54040928] Rename omd-0.42.tar.gz to omd-bin-0.42.tar.gz
+  * [2662672649] rpm packaging works
+
+  [ root ]
+  * [49eb755924] Fix RPM package: remove duplicate files
+
+  [ Mathias Kettner ]
+  * [1c29778b4f] Centos 5.x: add build dependencies
+  * [46a39ee9f2] New GIT snapshot of Check_MK
+  * [88069cb4f4] Remove additional linefeed from help output
+  * [984ec98223] remove -i of -vi when building rpms
+  * [6964c65e63] make tmpfs mountable for site user
+  * [0cf47a5eac] /usr/bin/omd: removed debug output
+  * [2ff0d21a8a] New nagios patch: do not use tempfiles when module
+    loading
+  * [031e6afcf3] Fix duplicate files in RPM again (first fix was broken)
+  * [3ffaf35760] Add description of patch 0004
+  * [226390bca1] Fix rpm building in Makefile
+  * [34c320d735] Fix permissions of NagVis skel files
+  * [6906f5aa08] bin/omd: add noauto to fstab for tmpfs
+
+  [ Sven Nierlein ]
+  * [296cb154dc] fixed paths for perl-modules
+  * [16d05bca55] added perl env to .profile
+  * [5bb27d7dc2] fixed perl-modules installation
+  * [c1d2fcaf72] added unzip to build requirements
+
+  [ Lars Michelsen ]
+  * [c60ded891b] Fixed linebreak
+  * [18254a1b56] Test
+  * [b833919ebd] Test #2
+
+  [ Mathias Kettner ]
+  * [0d5287dc12] Updated Check_MK
+  * [f00e7a0d44] Update Livestatus to new versoin
+  * [199630bdfa] Newest version of MK Livestatus (with timeouts)
+  * [ad68815ee7] New version of Check_MK
+
+  [ Lars Michelsen ]
+  * [7116941552] Updated nagvis
+  * [719fde541d] Updated global.php patch
+
+  [ little ]
+  * [56bbe0fdc4] Added Dokuwiki
+  * [2ef4332d69] Change Permissions in skel
+  * [eb465aaf23] removed conf and data dir from DESTDIR
+  * [8cb0193545] Added hook for nagios-authentication with Dokuwiki
+
+  [ Joerg Linge ]
+  * [6b4f461667] Some package dependencies for Debian Lenny
+  * [38c8a3efb2] make popus work without apache mod_rewrite
+  * [749dfa4980] initial nsca version
+  * [cda2bcc549] wrong path to nsca.cfg
+  * [bb1d467dc8] remove etc/pnp4nagios and var/pnp4nagios out of
+    $destdir
+  * [8b4f2e71fa] nrpe package
+  * [5d8bb19273] libmcrypt-dev is needed to build nsca
+  * [ef3b22f009] libssl-dev is needed to build nrpe
+
+  [ little ]
+  * [1cf264d574] Added Arctic-Template to dokuwiki, changed admin to
+    omdadmin, renamed hook
+
+  [ Mathias Kettner ]
+  * [edc848a8c7] Updated Check_MK to 1.1.7i3
+  * [03ac4107ab] Added libssl-dev to build packages of ubuntu 10.04
+  * [eb490b8d79] New make target "make version" for changing OMD version
+  * [566ab97ec6] .profile: read in .bashrc as last
+  * [2953666b8b] dokuwiki move var/../tmp into ###ROOT###/tmp/dokuwiki
+  * [4dba630694] omd: fix omd cp problem [1]
+
+  [ Joerg Linge ]
+  * [f407d4600f] new make target 'deb'
+
+  [ Mathias Kettner ]
+  * [ecfcf9a439] Move PNP templates of Check_MK to
+    OMD_ROOT/share/check_mk/pnp-templates
+  * [8a6623618c] omd cp: create fstab entry. cp now working again.
+
+  [ Joerg Linge ]
+  * [553360c41e] seperate pnp templates provided by check_mk
+  * [16fe7ca1fb] nagios-plugins pushed to 1.4.15
+
+  [ Mathias Kettner ]
+  * [40ebf06d03] dokuwiki: Added .gitignore, so that tmp/dokuwiki is
+    there
+  * [75d37dfe42] Fix several problems in omd mv
+  * [96fc2a40c1] New make target xzf, unpacking the packed omd below /
+  * [d7626f44c0] Run omd with correct version
+  * [2d24fd6ecf] replace rm -r with rm -rf in perl Makefile
+  * [df0c567873] Began to implement omd update
+
+  [ Joerg Linge ]
+  * [4258b7937c] centos build dependency gd-devel
+
+  [ Mathias Kettner ]
+  * [1b8bc53309] New version of Check_MK
+  * [cf9c6d1e15] omd update: checked in intermediate version
+
+  [ CSS Integration ]
+  * [ef04ddce38] perl-modules Makefile: install should not call build
+
+  [ Mathias Kettner ]
+  * [eb9da58b03] perl-modules: disabled package
+  * [8b5432732c] Change version in bin/omd back to 0.42.1
+  * [1d9f578524] Currently disabled Perl in .profile
+  * [a6b68f1e4a] Go back to previous version of NagVis until Lars can
+    fix the current one.
+  * [2b0ede86ea] Fix syntax error in bin/omd
+  * [90a293a96b] nagvis: remove patch, does not work on old version
+
+  [ Joerg Linge ]
+  * [5dac3309a1] CentOS OS_PACKAGES + php
+
+  [ Mathias Kettner ]
+  * [1ed65e3a16] New version of check_mk
+  * [8131e1e47e] Put back version of Lars. Sorry for the mess ;-)
+  * [cf2a93bec2] Revert "nagvis: remove patch, does not work on old
+    version"
+  * [0ca29a5629] Intermediate incomplete implementation of omd update
+  * [617329cfd4] Fix packaging von .deb on Debian 5.0
+  * [a7b91e963b] Check_MK: Add snmpwalks_dir to defaults
+  * [6f7e480f6b] New version of Check_MK
+  * [8a300c2a98] Small file with ideas (to be deleted later)
+
+  [ root ]
+  * [952fe0b2e2] Switch version of omd back to 42.1
+  * [0632311801] multisite.mk: @SITE replaced by ###SITE###
+  * [dd2a0e1b85] Multisite: fixed version number
+
+  [ Mathias Kettner ]
+  * [c941d01edf] New version of Check_MK
+  * [6fa67496a1] check_mk: make pnp links work without rewrite
+  * [b335c636d8] Added package snmp with snmp command for Debian/Ubuntu
+  * [c98c5051a2] Added deb architecture on Ubuntu 10.04
+  * [371d006c23] Changed version to 0.42.2
+  * [d3ea77d0b4] omd update already partially working
+  * [bdc134e193] omd update: first working version
+  * [aa8edb910f] bin/omd: do not chmod on symlink (fixes broken omd
+    create)
+
+  [ little ]
+  * [9879a50808] Added some Debian packages. Added include-plugin for
+    dokuwiki. clean target added in Makefile
+  * [fc5b18866e] link for wiki-tmp-dir replaced with directory
+
+  [ Joerg Linge ]
+  * [2a1f94afd2] update auf pnp4nagios-0.6.6
+
+  [ Wolfgang Barth ]
+  * [3db2de341c] DESTDIR can now be set as environment variable
+  * [d65de18c68] adding build-stamp to .gitignore
+  * building a debian package the debian way
+  * debian packaging more complete: suid for plugins, manpage, init
+    script
+  * debianizing: *-buildpackages don't like Version: in file
+    debian/control
+  * debian package: now works, including make deb from Makefile
+
+ -- Wolfgang Barth <wob@lts10.swobspace.de>  Sun, 08 Aug 2010 17:44:54 +0200
+
+omd (0.10.0) unstable; urgency=low
+
+  * Initial Release.
+
+ -- Wolfgang Barth <wob@swobspace.net>  Sat, 07 Aug 2010 14:13:23 +0200

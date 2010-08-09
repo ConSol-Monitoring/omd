@@ -1,4 +1,4 @@
-BUILD_PACKAGES  = build-essential libcairo2-dev libpango1.0-dev libxml2-dev libexpect-perl libssl-dev
+BUILD_PACKAGES  = build-essential libcairo2-dev libpango1.0-dev libxml2-dev libexpect-perl libssl-dev snmp dpatch git-buildpackage
 OS_PACKAGES     = libapache2-mod-python
 USERADD_OPTIONS = 
 PACKAGE_INSTALL = aptitude -y update ; aptitude -y install
@@ -8,3 +8,4 @@ APACHE_USER     = www-data
 APACHE_GROUP    = www-data
 APACHE_CTL      = /usr/sbin/apache2ctl
 BECOME_ROOT     = sudo su -c
+ARCH		= $(shell dpkg --print-architecture)

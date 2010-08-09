@@ -1,0 +1,9 @@
+omd.debhelper.log
+omd.substvars
+ex/
+omd/
+files
+omd.postinst.debhelper
+omd.postrm.debhelper
+omd.prerm.debhelper
+

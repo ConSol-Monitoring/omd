@@ -7,7 +7,7 @@
 # and enter new values when asked, or edit ~/.check_mk_setup.conf and
 # run ./setup.sh --yes.
 
-check_mk_version            = '1.1.7i2'
+check_mk_version            = '1.1.7i4'
 default_config_dir          = '###ROOT###/etc/check_mk'
 check_mk_configdir          = '###ROOT###/etc/check_mk/conf.d'
 checks_dir                  = '###ROOT###/share/check_mk/checks'
@@ -18,6 +18,7 @@ var_dir                     = '###ROOT###/var/check_mk'
 lib_dir                     = '###ROOT###/lib/check_mk'
 autochecksdir               = '###ROOT###/var/check_mk/autochecks'
 precompiled_hostchecks_dir  = '###ROOT###/var/check_mk/precompiled'
+snmpwalks_dir               = '###ROOT###/var/check_mk/snmpwalks'
 counters_directory          = '###ROOT###/tmp/check_mk/counters'
 tcp_cache_dir		    = '###ROOT###/tmp/check_mk/cache'
 logwatch_dir                = '###ROOT###/var/check_mk/logwatch'

@@ -1,0 +1,18 @@
+OMD for Debian
+==============
+
+Nagios-Plugins
+---------------
+
+OMD contains the package nagios-plugins. Some of those (check_icmp, check_dhcp) 
+needs root privileges (aka suid bit) to run. The omd debian package as you 
+for setting root privileges. You can change this at any time, just do
+
+  dpkg-reconfigure omd
+
+If you like to provide your own settings and override the package defaults, 
+use dpkg-statoverride. Example:
+
+  dpkg-statoverride --update --add root nagios 4750 $PLUGIN_NAME
+
+ -- Wolfgang Barth <wob@swobspace.net>  Sat, 07 Aug 2010 14:13:23 +0200

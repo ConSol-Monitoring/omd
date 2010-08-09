@@ -1,0 +1,40 @@
+OpenSource Monitoring Distribution - OMD
+----------------------------------------
+
+OMD is nothing really new. It bundles existing and well known open source 
+software related to nagios to ease the installation process.
+
+Installing omd consists of three steps:
+
+1a) Build omd for a specific plattform, i.e. debian/lenny i386 from the 
+sources. You get a simple tarball:
+
+  ./configure && make && make pack
+
+2a) Extract the tarball which installs the omd package to /opt/omd
+
+  tar xvzf omd-<your-version>.tar.gz -C /
+
+3) Create a site with omd and start the daemons:
+
+  omd create mysite
+  omd start mysite
+
+To be more comfort with your favorite distribution, omd support building 
+native distribution packages - this is only available for some dists. 
+Replace the steps 1) and 2):
+
+1b) Create a debian package
+
+  make dep
+
+2b) Install the package
+
+  dpkg -i omd_<current-version>_i386.deb
+
+For further help there is a short manpage available: 'man 8 omd', or type
+'omd' without any argument.
+
+More information is available at http://www.omdistro.org.
+
+ -- Wolfgang Barth <wob@swobspace.net>  Sat, 07 Aug 2010 14:13:23 +0200

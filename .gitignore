@@ -8,3 +8,5 @@ omd.spec
 .*.swp
 rpm.buildroot
 omd-*-*.rpm
+build-stamp
+patch-stamp

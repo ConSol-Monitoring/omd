@@ -1,0 +1,43 @@
+This work was packaged for Debian by:
+
+    Wolfgang Barth <wob@swobspace.net> on Sat, 07 Aug 2010 14:13:23 +0200
+
+It was downloaded from:
+
+    http://www.omdistro.org
+
+Upstream Author(s):
+
+    Mathias Kettner <mk@mathias-kettner.de>
+    For other contributors see /usr/share/doc/omd/TEAM
+
+Copyright:
+
+    <Copyright (C) 2010 Mathias Kettner>
+
+License:
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This package is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+On Debian systems, the complete text of the GNU General
+Public License version 3 can be found in `/usr/share/common-licenses/GPL-3'.
+
+OMD contains a lot of open source software. The licensing and copyright 
+of each package you found in 
+/opt/omd/versions/default/usr/share/doc/<package-name>
+
+The Debian packaging is:
+
+    Copyright (C) 2010 Wolfgang Barth <wob@swobspace.net>
+
