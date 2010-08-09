@@ -36,6 +36,15 @@ tar xzf omd-bin-%{version}.tar.gz -C $RPM_BUILD_ROOT
 /etc/init.d/omd
 %dir %attr(770,root,root) /opt/omd/versions/%{version}/skel/var/check_mk/logwatch
 %dir %attr(770,root,root) /opt/omd/versions/%{version}/skel/var/check_mk/web
+%dir %attr(770,root,root) /opt/omd/versions/%{version}/skel/etc/nagvis
+%dir %attr(770,root,root) /opt/omd/versions/%{version}/skel/etc/nagvis/maps
+%dir %attr(770,root,root) /opt/omd/versions/%{version}/skel/etc/nagvis/automaps
+%dir %attr(770,root,root) /opt/omd/versions/%{version}/skel/var/nagvis/userfiles/images/maps
+%dir %attr(770,root,root) /opt/omd/versions/%{version}/skel/var/nagvis/userfiles/images/shapes
+%dir %attr(770,root,root) /opt/omd/versions/%{version}/skel/tmp/nagvis
+%dir %attr(770,root,root) /opt/omd/versions/%{version}/skel/tmp/nagvis/share
+%dir %attr(770,root,root) /opt/omd/versions/%{version}/skel/tmp/nagvis/tmpl/cache
+%dir %attr(770,root,root) /opt/omd/versions/%{version}/skel/tmp/nagvis/tmpl/compile
 %attr(4755,root,root) /opt/omd/versions/%{version}/lib/nagios/plugins/check_icmp
 
 %post

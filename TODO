@@ -46,6 +46,12 @@
   make pack -> wie bisher
   make rpm -> Erzeugt RPM-Paket?
 
+* RPM Specfile:
+  Aktuell werden teilweise spezielle Berechtigungen in der skel-Struktur im Makefile
+  mit dem skel Target gesetzt. Wenn das RPM gebaut wird, müssen diese auch im Spec-File
+  angegeben werden. Können wir das irgendwie so bauen, dass man die Berechtigungen nur
+  an einem Platz pflegen muss?
+
 * omd snapshot --> Erzeugt eine Sicherung von /omd/sites/$SITE/{var,etc}. tmp
   wird nicht gesichert.
 
