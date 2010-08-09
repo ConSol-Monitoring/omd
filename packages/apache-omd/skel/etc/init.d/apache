@@ -80,6 +80,8 @@ case $1 in
     $0 start
   ;;
   reload)
+    echo "Reloading Apache Daemon"
+    $APACHE_BIN -d "$DOCUMENT_ROOT" -f "$CONFIG_FILE" -k graceful
   ;;
   status)
     PID=$(pidof_apache) || true
