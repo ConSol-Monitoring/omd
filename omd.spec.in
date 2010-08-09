@@ -38,9 +38,15 @@ tar xzf omd-bin-%{version}.tar.gz -C $RPM_BUILD_ROOT
 %dir %attr(770,root,root) /opt/omd/versions/%{version}/skel/var/check_mk/web
 %dir %attr(775,root,root) /opt/omd/versions/%{version}/skel/etc/nagvis
 %dir %attr(775,root,root) /opt/omd/versions/%{version}/skel/etc/nagvis/maps
+%attr(664,root,root)      /opt/omd/versions/%{version}/skel/etc/nagvis/maps/*
 %dir %attr(775,root,root) /opt/omd/versions/%{version}/skel/etc/nagvis/automaps
+%attr(664,root,root)      /opt/omd/versions/%{version}/skel/etc/nagvis/automaps/*
+%attr(664,root,root)      /opt/omd/versions/%{version}/skel/etc/nagvis/nagvis.ini.php
+%attr(664,root,root)      /opt/omd/versions/%{version}/skel/etc/nagvis/auth.db
 %dir %attr(775,root,root) /opt/omd/versions/%{version}/skel/var/nagvis/userfiles/images/maps
+%attr(664,root,root)      /opt/omd/versions/%{version}/skel/var/nagvis/userfiles/images/maps/*
 %dir %attr(775,root,root) /opt/omd/versions/%{version}/skel/var/nagvis/userfiles/images/shapes
+%attr(664,root,root)      /opt/omd/versions/%{version}/skel/var/nagvis/userfiles/images/shapes/*
 %dir %attr(775,root,root) /opt/omd/versions/%{version}/skel/tmp/nagvis
 %dir %attr(775,root,root) /opt/omd/versions/%{version}/skel/tmp/nagvis/share
 %dir %attr(775,root,root) /opt/omd/versions/%{version}/skel/tmp/nagvis/tmpl/cache
