@@ -1,0 +1,2 @@
+#!/bin/bash
+wget -O nagvis-1.5-nightly.tar.gz http://nagvis.org/share/nagvis-1.5-nightly.tar.gz
