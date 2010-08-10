@@ -59,7 +59,10 @@
   es möglich, die Apache-Logs wegzusplitten?
 
 * Sites anlegen/löschen ohne Root-Rechte. Problem: Apache muss die Konfiguration
-  neu laden.
+  neu laden. Eventuelle Lösung: Ein Apache Prozess pro Site
+  * Automatisch den site apache port in Konfigurationsdateien von site apache
+    und globalem apache eintragen
+  * omd script: site apache port automatisch ermitteln
 
 * htpasswd: Standard-Benutzer sollte individuell sein. z.B. <site>admin
 
