@@ -208,10 +208,8 @@ AddHandler type-map var
 AddHandler php5-script .php
 AddType text/html .php
 
-# Keep temporary files of PHP in the site
-php_admin_value upload_tmp_dir "###ROOT###/tmp"
-# FIXME: Set to dedicated directory
-php_admin_value session.save_path "###ROOT###/tmp"
+# Keep session files of PHP in the site
+php_value session.save_path "###ROOT###/tmp/php/session"
 
 #
 # The following directives modify normal HTTP response behavior to

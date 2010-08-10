@@ -6,6 +6,7 @@ build:
 	#rm skel/etc/apache/apache.conf.in
 	mkdir -p skel/var/log/apache
 	mkdir -p skel/tmp/apache/run
+	mkdir -p skel/tmp/php/session
 
 install:
 	# Install software below $(DESTDIR)$(OMD_ROOT)/{bin,lib,share}

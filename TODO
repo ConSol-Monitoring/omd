@@ -61,7 +61,8 @@
 * Sites anlegen/löschen ohne Root-Rechte. Problem: Apache muss die Konfiguration
   neu laden. Eventuelle Lösung: Ein Apache Prozess pro Site
   * Automatisch den site apache port in Konfigurationsdateien von site apache
-    und globalem apache eintragen
+    und globalem apache eintragen (/omd/apache/<site>.conf). Kann nicht ueber normalen
+    Hook gemacht werden, da diese scheinbar als Site nutzer laufen.
   * omd script: site apache port automatisch ermitteln
 
 * htpasswd: Standard-Benutzer sollte individuell sein. z.B. <site>admin
@@ -81,3 +82,5 @@
 * Mysql Init-Script Exit Codes fixen
 
 * Jedes Paket soll eine README/Lizenz/Maintainer/Author Datei enthalten
+
+* Man könnte das Bauen/Einpacken der einzelnen Pakete parallelisieren
