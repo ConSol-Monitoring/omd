@@ -30,7 +30,7 @@ Listen 127.0.0.1:1337
 StartServers         1
 MinSpareServers      1
 MaxSpareServers      5
-ServerLimit          20
+ServerLimit          128
 MaxClients           128
 MaxRequestsPerChild  4000
 </IfModule>
