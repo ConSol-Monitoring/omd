@@ -297,10 +297,12 @@ def create_skeleton_file(skelbase, userbase, relpath, replacements):
 def create_apache_hook(sitename):
 		# FIXME: Fix the hardcoded port number '5000'. Load from site config.
     file("/omd/apache/%s.conf" % sitename, "w").write("""
+ProxyRequests off
+
 <Location /%s>
-  RewriteEngine On
-  RewriteRule ^/.+/%s/(.*) http://127.0.0.1:%s/%s/$1 [P]
-</Location>""" % (sitename, sitename, 5000, sitename))
+  ProxyPass http://127.0.0.1:%s/%s
+  ProxyPassReverse http://127.0.0.1:%s/%s
+</Location>""" % (sitename, 5000, sitename, 5000, sitename))
 
 def delete_apache_hook(sitename):
     try:
