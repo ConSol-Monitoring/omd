@@ -201,8 +201,17 @@ AddType application/x-gzip .gz .tgz
 
 AddHandler type-map var
 
+#
+# PHP specific configuration
+#
+
 AddHandler php5-script .php
 AddType text/html .php
+
+# Keep temporary files of PHP in the site
+php_admin_value upload_tmp_dir "/omd/sites/ham/tmp"
+# FIXME: Set to dedicated directory
+php_admin_value session.save_path "/omd/sites/ham/tmp"
 
 #
 # The following directives modify normal HTTP response behavior to
