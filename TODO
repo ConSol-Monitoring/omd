@@ -55,9 +55,6 @@
 * omd restoreas NAME --> Sichert einen Snapshot unter einem anderen Namen
   zurück.
 
-* Apache-Logfiles: Kann man eigene Logfiles für die Instanzen erzeugen? Ist
-  es möglich, die Apache-Logs wegzusplitten?
-
 * Sites anlegen/löschen ohne Root-Rechte. Problem: Apache muss die Konfiguration
   neu laden. Eventuelle Lösung: Ein Apache Prozess pro Site
   * Automatisch den site apache port in Konfigurationsdateien von site apache
@@ -68,8 +65,6 @@
 * htpasswd: Standard-Benutzer sollte individuell sein. z.B. <site>admin
 
 * Nagios Config Patch: Konfigurationsdateien sortieren
-
-* Beim OMD löschen/aufräumen eine Sicherheitsabfrage einbauen
 
 * Die omd Befehle sollten transparent sein hinsichtlich der Aktionen, die ausgeführt
   werden. z.B. Benutzer die angelegt werden, Apache Konfigurationsdateien, die erzeugt werden.
