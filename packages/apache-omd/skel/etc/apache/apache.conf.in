@@ -15,7 +15,8 @@ INITLOG_ARGS=""
 APACHE_RUN_USER="###SITE###"
 APACHE_RUN_GROUP="###SITE###"
 
-APACHE_BIN="###APACHE_BIN###"
+# FIXME: Hardcoded binary
+APACHE_BIN="httpd"
 PID_FILE=###ROOT###/tmp/apache/run/apache.pid
 CONFIG_FILE=###ROOT###/etc/apache/apache.conf
 
