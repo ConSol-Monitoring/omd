@@ -23,7 +23,9 @@ pidof_apache() {
   # if there is actually an apache2 process whose pid is in PIDFILE,
   # print it and return 0.
   if [ -e "$PID_FILE" ]; then
-    if ps U ham | grep 'httpd -f' | cut -d' ' -f 1 | grep $(cat $PID_FILE); then
+    PID=$(cat "$PID_FILE")
+    if ps $PID >/dev/null 2>&1; then
+      echo $PID
       return 0
     fi
   fi
@@ -35,7 +37,10 @@ apache_wait_stop() {
   pidtmp=$(pidof_apache) || true
   if kill -0 "${pidtmp:-}" 2> /dev/null; then
     pid=$pidtmp
-    kill $pid
+    $APACHE_BIN -f "$CONFIG_FILE" -k stop
+  else
+    echo -n 'Not running. '
+    return 0
   fi
 
   # wait until really stopped
@@ -43,28 +48,54 @@ apache_wait_stop() {
     i=0
     while kill -0 "${pid:-}" 2> /dev/null;  do
       if [ $i = '60' ]; then
-        break;
+        return 1
       else
-        if [ $i = '0' ]; then
-          echo -n " ... waiting "
-        else
-          echo -n "."
-        fi
+        echo -n "."
         i=$(($i+1))
         sleep 1
       fi
      done
   fi
+  
+  [ -f "$PID_FILE" ] && rm -f "$PID_FILE"
+  return 0
 }
 
+apache_wait_start() {
+  if pidof_apache >/dev/null 2>&1; then
+    echo -n 'Already running. '
+    return 1
+  fi
+
+  $APACHE_BIN -f "$CONFIG_FILE"
+  
+  i=0
+  while pidof_apache >/dev/null 2>&1;  do
+    if [ $i = '10' ]; then
+      return 1
+    else
+      echo -n "."
+      i=$(($i+1))
+      sleep 1
+    fi
+  done
+
+  return 0
+}
 
 case $1 in 
   start)
-    echo "Starting Apache Daemon"
-		$APACHE_BIN -f "$CONFIG_FILE"
+    echo -n "Starting Apache Daemon... "
+    if apache_wait_start; then
+      echo 'OK.'
+      exit 0
+    else
+      echo 'ERROR.'
+      exit 1
+    fi
   ;;
   stop)
-    echo -n "Stopping Apache Daemon..."
+    echo -n "Stopping Apache Daemon... "
     if apache_wait_stop; then
       echo 'OK.'
       exit 0

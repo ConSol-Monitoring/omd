@@ -299,10 +299,16 @@ def create_apache_hook(sitename):
 ProxyRequests Off
 ProxyPreserveHost On
 
+<Proxy http://127.0.0.1:%s/ham>
+  Order allow,deny
+  allow from all
+</Proxy>
+
 <Location /%s>
   ProxyPass http://127.0.0.1:%s/%s
   ProxyPassReverse http://127.0.0.1:%s/%s
-</Location>""" % (sitename, g_hooks['APACHE_TCP_PORT']['value'],
+</Location>""" % (g_hooks['APACHE_TCP_PORT']['value'],
+                  sitename, g_hooks['APACHE_TCP_PORT']['value'],
                   sitename, g_hooks['APACHE_TCP_PORT']['value'], sitename))
 
 def delete_apache_hook(sitename):

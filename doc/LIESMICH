@@ -42,6 +42,9 @@ in einen Tarball ein.
 
 3) Installation
 
+Auf dem Zielsystem muss sichergestellt sein, dass im Apache
+die Module mod_proxy und mod_proxy_http geladen sind.
+
 Die Installation auf dem Zielsystem ist einfach: man packt
 den Tarball einfach unterhalb der Wurzel aus, z.B. mit dem
 folgenden Befehl:
