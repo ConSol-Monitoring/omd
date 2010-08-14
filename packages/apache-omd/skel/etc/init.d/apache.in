@@ -1,0 +1,97 @@
+#!/bin/bash
+
+. ###ROOT###/etc/omd/site.conf
+if [ "$CONFIG_APACHE" != on ] ; then
+  exit 5
+fi
+
+# Start httpd in the C locale by default.
+HTTPD_LANG="C"
+
+# This will prevent initlog from swallowing up a pass-phrase prompt if
+# mod_ssl needs a pass-phrase from the user.
+INITLOG_ARGS=""
+
+APACHE_RUN_USER="###SITE###"
+APACHE_RUN_GROUP="###SITE###"
+
+APACHE_BIN="###APACHE_BIN###"
+PID_FILE=###ROOT###/tmp/apache/run/apache.pid
+CONFIG_FILE=###ROOT###/etc/apache/apache.conf
+
+pidof_apache() {
+  # if there is actually an apache2 process whose pid is in PIDFILE,
+  # print it and return 0.
+  if [ -e "$PID_FILE" ]; then
+    if ps U ham | grep 'httpd -f' | cut -d' ' -f 1 | grep $(cat $PID_FILE); then
+      return 0
+    fi
+  fi
+  return 1
+}
+
+apache_wait_stop() {
+  # running ?
+  pidtmp=$(pidof_apache) || true
+  if kill -0 "${pidtmp:-}" 2> /dev/null; then
+    pid=$pidtmp
+    kill $pid
+  fi
+
+  # wait until really stopped
+  if [ -n "${pid:-}" ]; then
+    i=0
+    while kill -0 "${pid:-}" 2> /dev/null;  do
+      if [ $i = '60' ]; then
+        break;
+      else
+        if [ $i = '0' ]; then
+          echo -n " ... waiting "
+        else
+          echo -n "."
+        fi
+        i=$(($i+1))
+        sleep 1
+      fi
+     done
+  fi
+}
+
+
+case $1 in 
+  start)
+    echo "Starting Apache Daemon"
+		$APACHE_BIN -f "$CONFIG_FILE"
+  ;;
+  stop)
+    echo -n "Stopping Apache Daemon..."
+    if apache_wait_stop; then
+      echo 'OK.'
+      exit 0
+    else
+      echo 'ERROR.'
+      exit 1
+    fi
+  ;;
+  restart)
+    $0 stop
+    $0 start
+  ;;
+  reload)
+    echo "Reloading Apache Daemon"
+    $APACHE_BIN -f "$CONFIG_FILE" -k graceful
+  ;;
+  status)
+    PID=$(pidof_apache) || true
+    if [ -n "$PID" ]; then
+      echo "Apache is running (pid $PID)."
+      exit 0
+    else
+      echo "Apache is NOT running."
+      exit 1
+    fi
+  ;;
+  *)
+    echo "Usage: $0 {start|stop|restart|reload|status}"
+  ;;
+esac
