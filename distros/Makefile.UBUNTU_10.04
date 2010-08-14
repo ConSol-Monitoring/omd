@@ -6,6 +6,7 @@ APACHE_CONF_DIR   = /etc/apache2/conf.d
 APACHE_INIT       = /etc/init.d/apache2
 APACHE_USER       = www-data
 APACHE_GROUP      = www-data
+APACHE_BIN        = /usr/sbin/apache2
 APACHE_CTL        = /usr/sbin/apache2ctl
 APACHE_MODULE_DIR = /usr/lib/apache2/modules
 BECOME_ROOT       = sudo su -c
