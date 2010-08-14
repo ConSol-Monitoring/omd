@@ -280,7 +280,7 @@ def create_skeleton_file(skelbase, userbase, relpath, replacements):
     # Remove old version, if existing (needed during update)
     if os.path.exists(user_path):
 	delete_user_file(user_path)
-    
+
     # Create directories, symlinks and files
     if os.path.isdir(skel_path):
 	os.makedirs(user_path)
@@ -296,20 +296,29 @@ def create_skeleton_file(skelbase, userbase, relpath, replacements):
 
 def create_apache_hook(sitename):
     file("/omd/apache/%s.conf" % sitename, "w").write("""
-ProxyRequests Off
-ProxyPreserveHost On
+<IfModule mod_proxy_http.c>
+  ProxyRequests Off
+  ProxyPreserveHost On
 
-<Proxy http://127.0.0.1:%s/ham>
-  Order allow,deny
-  allow from all
-</Proxy>
+  <Proxy http://127.0.0.1:%(port)s/ham>
+    Order allow,deny
+    allow from all
+  </Proxy>
 
-<Location /%s>
-  ProxyPass http://127.0.0.1:%s/%s
-  ProxyPassReverse http://127.0.0.1:%s/%s
-</Location>""" % (g_hooks['APACHE_TCP_PORT']['value'],
-                  sitename, g_hooks['APACHE_TCP_PORT']['value'],
-                  sitename, g_hooks['APACHE_TCP_PORT']['value'], sitename))
+  <Location /%(site)s>
+    ProxyPass http://127.0.0.1:%(port)s/%(site)s
+    ProxyPassReverse http://127.0.0.1:%(port)s/%(site)s
+  </Location>
+</IfModule>
+
+<IfModule !mod_proxy_http.c>
+  Alias /%(site)s /omd/sites/%(site)s
+  <Directory /omd/sites/%(site)s>
+    Deny from all
+    ErrorDocument 403 "<h1>OMD: Incomplete Apache2 Installation</h1>You need mod_proxy and mod_proxy_http in order to run the web interface of OMD."
+  </Directory>
+</IfModule>
+""" % {'port': g_hooks['APACHE_TCP_PORT']['value'], 'site': sitename})
 
 def delete_apache_hook(sitename):
     try:

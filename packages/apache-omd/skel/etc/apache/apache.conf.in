@@ -10,6 +10,22 @@ KeepAlive On
 MaxKeepAliveRequests 100
 KeepAliveTimeout 15
 
+# User/Group to run the webserver with
+User ###SITE###
+Group ###SITE###
+
+ServerAdmin ###SITE###@localhost
+#ServerName www.example.com:80
+UseCanonicalName Off
+
+DocumentRoot "###ROOT###/var/www"
+
+DirectoryIndex index.html index.php index.html.var
+AccessFileName .htaccess
+ServerTokens OS
+HostnameLookups Off
+ServerSignature Off
+
 # At the moment only listen on localhost. The external access
 # is done by the systems apache process.
 # Maybe it is useful to listen on other addresses someday.
@@ -53,78 +69,42 @@ MaxRequestsPerChild  0
 
 # Load Modules
 LoadModule auth_basic_module ###APACHE_MODULE_DIR###/mod_auth_basic.so
-LoadModule auth_digest_module ###APACHE_MODULE_DIR###/mod_auth_digest.so
 LoadModule authn_file_module ###APACHE_MODULE_DIR###/mod_authn_file.so
-LoadModule authn_alias_module ###APACHE_MODULE_DIR###/mod_authn_alias.so
-LoadModule authn_anon_module ###APACHE_MODULE_DIR###/mod_authn_anon.so
-LoadModule authn_dbm_module ###APACHE_MODULE_DIR###/mod_authn_dbm.so
 LoadModule authn_default_module ###APACHE_MODULE_DIR###/mod_authn_default.so
 LoadModule authz_host_module ###APACHE_MODULE_DIR###/mod_authz_host.so
-LoadModule authz_user_module ###APACHE_MODULE_DIR###/mod_authz_user.so
-LoadModule authz_owner_module ###APACHE_MODULE_DIR###/mod_authz_owner.so
-LoadModule authz_groupfile_module ###APACHE_MODULE_DIR###/mod_authz_groupfile.so
-LoadModule authz_dbm_module ###APACHE_MODULE_DIR###/mod_authz_dbm.so
 LoadModule authz_default_module ###APACHE_MODULE_DIR###/mod_authz_default.so
-LoadModule ldap_module ###APACHE_MODULE_DIR###/mod_ldap.so
-LoadModule authnz_ldap_module ###APACHE_MODULE_DIR###/mod_authnz_ldap.so
-LoadModule include_module ###APACHE_MODULE_DIR###/mod_include.so
+#LoadModule ldap_module ###APACHE_MODULE_DIR###/mod_ldap.so
+#LoadModule authnz_ldap_module ###APACHE_MODULE_DIR###/mod_authnz_ldap.so
+#LoadModule include_module ###APACHE_MODULE_DIR###/mod_include.so
 LoadModule env_module ###APACHE_MODULE_DIR###/mod_env.so
-LoadModule ext_filter_module ###APACHE_MODULE_DIR###/mod_ext_filter.so
-LoadModule mime_magic_module ###APACHE_MODULE_DIR###/mod_mime_magic.so
 LoadModule expires_module ###APACHE_MODULE_DIR###/mod_expires.so
 LoadModule deflate_module ###APACHE_MODULE_DIR###/mod_deflate.so
 LoadModule headers_module ###APACHE_MODULE_DIR###/mod_headers.so
-LoadModule usertrack_module ###APACHE_MODULE_DIR###/mod_usertrack.so
 LoadModule setenvif_module ###APACHE_MODULE_DIR###/mod_setenvif.so
+LoadModule mime_magic_module ###APACHE_MODULE_DIR###/mod_mime_magic.so
 LoadModule mime_module ###APACHE_MODULE_DIR###/mod_mime.so
-LoadModule status_module ###APACHE_MODULE_DIR###/mod_status.so
-LoadModule autoindex_module ###APACHE_MODULE_DIR###/mod_autoindex.so
-LoadModule info_module ###APACHE_MODULE_DIR###/mod_info.so
-LoadModule vhost_alias_module ###APACHE_MODULE_DIR###/mod_vhost_alias.so
 LoadModule negotiation_module ###APACHE_MODULE_DIR###/mod_negotiation.so
 LoadModule dir_module ###APACHE_MODULE_DIR###/mod_dir.so
 LoadModule actions_module ###APACHE_MODULE_DIR###/mod_actions.so
 LoadModule speling_module ###APACHE_MODULE_DIR###/mod_speling.so
 LoadModule alias_module ###APACHE_MODULE_DIR###/mod_alias.so
 LoadModule rewrite_module ###APACHE_MODULE_DIR###/mod_rewrite.so
-LoadModule proxy_module ###APACHE_MODULE_DIR###/mod_proxy.so
-LoadModule proxy_balancer_module ###APACHE_MODULE_DIR###/mod_proxy_balancer.so
-LoadModule proxy_ftp_module ###APACHE_MODULE_DIR###/mod_proxy_ftp.so
-LoadModule proxy_http_module ###APACHE_MODULE_DIR###/mod_proxy_http.so
-LoadModule proxy_connect_module ###APACHE_MODULE_DIR###/mod_proxy_connect.so
 LoadModule cache_module ###APACHE_MODULE_DIR###/mod_cache.so
 LoadModule suexec_module ###APACHE_MODULE_DIR###/mod_suexec.so
 LoadModule disk_cache_module ###APACHE_MODULE_DIR###/mod_disk_cache.so
 LoadModule file_cache_module ###APACHE_MODULE_DIR###/mod_file_cache.so
 LoadModule mem_cache_module ###APACHE_MODULE_DIR###/mod_mem_cache.so
 LoadModule cgi_module ###APACHE_MODULE_DIR###/mod_cgi.so
-LoadModule version_module ###APACHE_MODULE_DIR###/mod_version.so
 LoadModule php5_module ###APACHE_MODULE_DIR###/libphp5.so
 LoadModule python_module ###APACHE_MODULE_DIR###/mod_python.so
 
 # Load config files from the include dir
 Include ###ROOT###/etc/apache/conf.d/*.conf
 
-# User/Group to run the webserver with
-User ###SITE###
-Group ###SITE###
-
-ServerAdmin ###SITE###@localhost
-#ServerName www.example.com:80
-UseCanonicalName Off
-
-DocumentRoot "###ROOT###/var/www"
-
 <Directory />
     Options FollowSymLinks
     AllowOverride None
 </Directory>
-
-DirectoryIndex index.html index.php index.html.var
-AccessFileName .htaccess
-ServerTokens OS
-HostnameLookups Off
-ServerSignature Off
 
 #
 # The following lines prevent .htaccess and .htpasswd files from being 
@@ -147,16 +127,6 @@ LogLevel warn
 
 LogFormat "%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\"" combined
 CustomLog ###ROOT###/var/log/apache/access_log combined
-
-#
-# Generated Directory Index config
-#
-
-IndexOptions FancyIndexing VersionSort NameWidth=* HTMLTable
-
-ReadmeName README.html
-HeaderName HEADER.html
-IndexIgnore .??* *~ *# HEADER* README* RCS CVS *,v *,t
 
 #
 # Language configuration
