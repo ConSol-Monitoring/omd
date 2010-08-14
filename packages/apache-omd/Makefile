@@ -9,6 +9,7 @@ build:
 	#rm skel/etc/apache/apache.conf.in
 	#rm skel/etc/init.d/apache.in
 	mkdir -p skel/var/log/apache
+	mkdir -p skel/var/www
 	mkdir -p skel/tmp/apache/run
 	mkdir -p skel/tmp/php/session
 
