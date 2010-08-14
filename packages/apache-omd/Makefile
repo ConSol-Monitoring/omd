@@ -18,8 +18,6 @@ install:
 
 skel:
 	# Optional target called to create additional files below skel
-	rm $(DESTDIR)$(OMD_ROOT)/etc/init.d/apache.in
-	rm $(DESTDIR)$(OMD_ROOT)/etc/apache/apache.conf.in
 
 clean:
 	# Remove files created by build/install
