@@ -5,3 +5,5 @@ omd/
 files
 *.debhelper
 postinst
+control
+links

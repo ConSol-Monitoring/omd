@@ -39,7 +39,9 @@ setperm() {
 case "$1" in
   configure)
     update-alternatives --install /opt/omd/versions/default \
-       omd-default-dir /opt/omd/versions/###OMD_VERSION### 10 \
+       omd /opt/omd/versions/###OMD_VERSION### 10 \
+       --slave /etc/init.d/omd omd.init /etc/init.d/omd-###OMD_VERSION### \
+       --slave /etc/default/omd omd.default /etc/default/omd-###OMD_VERSION### 
     ln -sfn /opt/omd/versions/default/bin/omd /usr/bin/omd
 
     # -- looking for group nagios, create it, if not exist
