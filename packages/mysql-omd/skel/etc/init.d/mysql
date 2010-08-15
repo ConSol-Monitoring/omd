@@ -6,16 +6,9 @@ if [ "$CONFIG_MYSQL" != on ] ; then
     exit 5
 fi
 
-## Fetch a particular option from mysql's invocation.
-#
-# Usage: void mysqld_get_param option
-mysqld_get_param() {
-  /usr/sbin/mysqld --print-defaults \
-    | tr " " "\n" \
-    | grep -- "--$1" \
-    | tail -n 1 \
-    | cut -d= -f2
-}
+MYSQLD_USER=###SITE###
+MYSQLD_PID=###ROOT###/tmp/run/mysqld/mysqld.pid
+MYSQL_CNF=###ROOT###/.my.cnf
 
 ## Checks if there is a server running and if so if it is accessible.
 #
@@ -24,18 +17,17 @@ mysqld_get_param() {
 #
 # Usage: boolean mysqld_status [check_alive|check_dead] [warn|nowarn]
 mysqld_status () {
-    ping_output=`mysqladmin ping 2>&1`; ping_alive=$(( ! $? ))
+    ping_output=`mysqladmin --defaults-file=$MYSQL_CNF ping 2>&1`; ping_alive=$(( ! $? ))
 
     ps_alive=0
-    pidfile=`mysqld_get_param pid-file`
-    if [ -f "$pidfile" ] && ps `cat $pidfile` >/dev/null 2>&1; then ps_alive=1; fi
+    if [ -f "$MYSQLD_PID" ] && ps `cat $MYSQLD_PID` >/dev/null 2>&1; then ps_alive=1; fi
 
     if [ "$1" = "check_alive"  -a  $ping_alive = 1 ] ||
        [ "$1" = "check_dead"   -a  $ping_alive = 0  -a  $ps_alive = 0 ]; then
         return 0
     else
         if [ "$2" = "warn" ]; then
-            echo -e "$ps_alive processes alive and 'mysqladmin ping' resulted in\n$ping_output\n"
+            echo -e "$ps_alive processes alive and 'mysqladmin --defaults-file=$MYSQL_CNF ping' resulted in\n$ping_output\n"
         fi
         return 1
     fi
@@ -46,10 +38,10 @@ mysql_wait_start() {
         echo -n "already running. "
         return 1
     else
-        mysqld_safe >/dev/null 2>&1 &
-        while pidof_apache >/dev/null 2>&1;  do
+        mysqld_safe --defaults-file=$MYSQL_CNF --user=$MYSQLD_USER >/dev/null 2>&1 &
+        while mysqld_status check_dead nowarn;  do
             if [ $i = '10' ]; then
-                return 1
+										return 1
             else
                 echo -n "."
                 i=$(($i+1))
@@ -66,7 +58,7 @@ mysql_wait_stop() {
        return 0
     fi
   
-    mysqladmin shutdown
+    mysqladmin --defaults-file=$MYSQL_CNF shutdown
 
     # wait until really stopped
     i=0
@@ -94,8 +86,8 @@ case $1 in
             exit 1
         fi
     ;;
-    stop)
-        echo -n "Stopping MySQL Daemon... "
+		stop)
+        echo -n "Stopping MySQL... "
         if mysql_wait_stop; then
             echo 'OK.'
             exit 0
