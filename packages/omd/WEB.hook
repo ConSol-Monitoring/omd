@@ -1,0 +1,25 @@
+#!/bin/bash
+case "$1" in
+    alias)
+            echo "Default webinterface"
+    ;;
+    description)
+            cat << EOF
+Here you can choose your default webinterface to use. You can run several Nagios GUIs at
+the same time but only one GUI can be your default. The default GUI is opened when
+someone opens your site in a browser without a specific URL. 
+EOF
+    ;;
+    default)
+            echo "nagios"
+    ;;
+    choices)
+            echo "nagios: Classic Nagios webinterface"
+            echo "check_mk: The Check_MK's Multisite GUI"
+            echo "thruk: Thruk Monitoring Webinterface"
+            echo "none: No default webinterface"
+    ;;
+    set)
+    ;;
+esac
+

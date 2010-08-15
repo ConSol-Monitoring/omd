@@ -22,6 +22,7 @@ Pakete:
   DokuWiki                     - Stefan Hoesl
   Merlin                       - Wolfgang Barth (geplant)
   mysql                        - Lars Michelsen
+  apache                       - Lars Michelsen
   Perl                         - Sven Nierlein
   Thruk                        - Sven Nierlein
   check_oracle/mysql/logfiles  - Gerhard Lausser

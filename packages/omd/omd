@@ -300,7 +300,7 @@ def create_apache_hook(sitename):
   ProxyRequests Off
   ProxyPreserveHost On
 
-  <Proxy http://127.0.0.1:%(port)s/ham>
+  <Proxy http://127.0.0.1:%(port)s/%(site)s>
     Order allow,deny
     allow from all
   </Proxy>

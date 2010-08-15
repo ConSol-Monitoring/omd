@@ -18,6 +18,8 @@ install:
 
 skel:
 	# Optional target called to create additional files below skel
+	# Create link to default webinterface redirect handler
+	ln -s ../../share/omd/htdocs skel/var/www/$(OMD_SITE)
 
 clean:
 	# Remove files created by build/install

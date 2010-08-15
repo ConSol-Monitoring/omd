@@ -74,8 +74,6 @@
   So könnte man ohne Probleme die Sicherheitsabfragen in den "aptitude" Aufrufen unterdrücken
   um am Anfang nur eine einzelne Abfrage zu haben.
 
-* Mysql Init-Script Exit Codes fixen
-
 * Jedes Paket soll eine README/Lizenz/Maintainer/Author Datei enthalten
 
 * Man könnte das Bauen/Einpacken der einzelnen Pakete parallelisieren
