@@ -1,4 +1,4 @@
-Source: omd
+Source: omd-0.10
 Section: admin
 Priority: optional
 Maintainer: <debian@omdistro.org>
@@ -6,9 +6,10 @@ Build-Depends: dpatch, debhelper (>= 7), autotools-dev,  build-essential, libcai
 Standards-Version: 3.8.3
 Homepage: http://www.omdistro.org
 
-Package: omd
+Package: omd-0.10
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, libapache2-mod-python, libapache2-mod-php5
+Depends: ${shlibs:Depends}, ${misc:Depends}, libapache2-mod-python, libapache2-mod-php5, php5-sqlite, php5-mcrypt, libgd2-xpm, libdbi0, libapache2-mod-proxy-html
+Recommends: xinetd, mysql-server, graphviz, dnsutils, snmp, fping, smblclient, unzip, libnet-snmp-perl, libxml-simple-perl
 Description:  Open Source Monitoring Distribution, containing Nagios,
  the Nagios plugins, Check_MK, Livestatus, Multisite,
  PNP4Nagios, NagVis, and other addons. Please visit

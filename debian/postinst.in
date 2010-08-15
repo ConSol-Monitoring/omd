@@ -38,6 +38,9 @@ setperm() {
 
 case "$1" in
   configure)
+    update-alternatives --install /opt/omd/versions/default \
+       omd-default-dir /opt/omd/versions/###OMD_VERSION### 10 \
+    ln -sfn /opt/omd/versions/default/bin/omd /usr/bin/omd
 
     # -- looking for group nagios, create it, if not exist
     if ! getent group nagios > /dev/null ; then
@@ -47,7 +50,7 @@ case "$1" in
 
     db_get omd/nagios-plugins-suid || true
     if [ "$RET" = "true" ]; then
-      PLUGPERM="4750"
+      PLUGPERM="4755"
     else
       PLUGPERM="0755"
     fi

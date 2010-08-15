@@ -1,6 +1,6 @@
-omd (0.10.0~2.gbp5a0b94) UNRELEASED; urgency=low
+omd-0.10 (0.10.0~5.gbp3546c6) UNRELEASED; urgency=low
 
-  ** SNAPSHOT build @5a0b949ad504f1294537800e68d7c32c5f2d0043 **
+  ** SNAPSHOT build @3546c66633f747d569d44b88232c98b40159caba **
 
   [ root ]
   * [0abf061005] Start implementing omd command
@@ -430,8 +430,86 @@ omd (0.10.0~2.gbp5a0b94) UNRELEASED; urgency=low
   * debianizing: *-buildpackages don't like Version: in file
     debian/control
   * debian package: now works, including make deb from Makefile
+  * debian: README, copyright, manpage; renumbering versions starting
+    with 0.10.0
+  * debian: removing obsolete DEBIAN directory
 
- -- Wolfgang Barth <wob@lts10.swobspace.de>  Sun, 08 Aug 2010 17:44:54 +0200
+  [ Mathias Kettner ]
+  * Set version to 0.10
+  * Moved documentation to doc/
+  * Added build packages for debuntu
+
+  [ Wolfgang Barth ]
+  * debian: nimmt jetzt die Dateien aus doc/ mit
+
+  [ Lars Michelsen ]
+  * Fixed patching of NagVis global.php file
+
+  [ root ]
+  * Fixed nagvis package with current nighlty build
+
+  [ Lars Michelsen ]
+  * Fixed NagVis permissions in RPM specfile
+  * Fixed NagVis permissions in RPM specfile
+
+  [ Mathias Kettner ]
+  * Added file permissions from NagVis package to RPM specfile
+
+  [ Lars Michelsen ]
+  * Fixed apache configs of Nagios/NagVis to support /<instanz>/nagios
+    calls
+  * Removed duplicate entry
+  * Moved apache configs to conf.d directory (Prep for own apache for
+    each site)
+  * First tries to make site specific apache process
+  * Modified default apache config a bit
+  * Site specific apache init script works now; Added hook to configure
+    the apache port
+  * Fixed module paths and added python module
+  * Moving apache config arround during module path replace to prevent
+    bad checkins without macros (happened twice now over here - gnaaah)
+  * Kleinere Fehler mit eigenem Apache behoben
+  * The default system webserver redirects requests to /<site> to site
+    specific apache
+  * Added comment
+  * Not using deprecated join() function in NagVis anymore
+  * Re-addedd missing apache configuration file
+  * Only listening on localhost at the moment
+  * Fixed apache config option
+  * Should have tested my nagvis fix... here the fix for the fix
+  * Setting site specific php paths
+  * Recoded the system apache proxy configuration
+  * Added dynamic parts to php paths in apache config
+  * Removed rm call for debuggin
+  * Added notes
+
+  [ Wolfgang Barth ]
+
+  [ Lars Michelsen ]
+  * Updated nagvis version
+  * Site specific apache works now except: re-set the port in
+    /omd/apache/<site>.conf and restart the global webserver afterwards
+
+  [ Wolfgang Barth ]
+
+  [ Lars Michelsen ]
+  * Made path to apache bin dynamically be replaced
+  * Added missing file
+  * Added missing file
+  * Removed old file
+  * Not installing the .in files anymore; Made init script executable
+  * Fixed broken config
+  * Added notes about mod_proxy requirement; Fixed apache init script
+    and global apache config
+  * Removed rm to non existent files
+  * Removed a lot of unused apache modules; Added error message when
+    global apache does not have mod_proxy_http loaded
+  * Reworked init script of mysql daemon
+  * Removed some other unused parts of apache configuration
+
+  [ Wolfgang Barth ]
+
+ -- Wolfgang Barth <wob@swobspace.swobspace.de>  Sun, 15 Aug 2010 09:18:19 +0200
 
 omd (0.10.0) unstable; urgency=low
 
