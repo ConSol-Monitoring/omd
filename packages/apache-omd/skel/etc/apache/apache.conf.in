@@ -72,7 +72,6 @@ LoadModule auth_basic_module ###APACHE_MODULE_DIR###/mod_auth_basic.so
 LoadModule authn_file_module ###APACHE_MODULE_DIR###/mod_authn_file.so
 LoadModule authn_default_module ###APACHE_MODULE_DIR###/mod_authn_default.so
 LoadModule authz_host_module ###APACHE_MODULE_DIR###/mod_authz_host.so
-LoadModule authz_user_module ###APACHE_MODULE_DIR###/mod_authz_user.so
 LoadModule authz_default_module ###APACHE_MODULE_DIR###/mod_authz_default.so
 LoadModule authz_user_module ###APACHE_MODULE_DIR###/mod_authz_user.so
 LoadModule env_module ###APACHE_MODULE_DIR###/mod_env.so
