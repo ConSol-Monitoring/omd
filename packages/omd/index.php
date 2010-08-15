@@ -21,22 +21,23 @@ function loadOptions($CFG) {
 
 /*** MAIN ********************************************************************/
 
-$SITE = $_ENV['OMD_SITE'];
-$HOME = $_ENV['HOME'];
+$tmp  = explode('/', $_SERVER['SCRIPT_FILENAME']);
+$HOME = join(array_slice($tmp, 0, -4), '/');
+$SITE = join(array_slice($tmp, -5, -4), '/');
 $CFG  = $HOME.'/etc/omd/site.conf';
 
 $config = loadOptions($CFG);
 
-if(!isset($config['WEB']))
-	$config['WEB'] = 'nagios';
+if(!isset($config['CONFIG_WEB']))
+	$config['CONFIG_WEB'] = 'nagios';
 
 // Build the URL to redirect to
 $url = '';
-switch($config['WEB']) {
+switch($config['CONFIG_WEB']) {
 	case 'nagios':
 	case 'check_mk':
 	case 'thruk':
-		$url = '/'.$SITE.'/'.$config['WEB'].'/';
+		$url = '/'.$SITE.'/'.$config['CONFIG_WEB'].'/';
 	break;
 	default:
 		echo 'ERROR: Invalid webinterface definied in WEB option.';
