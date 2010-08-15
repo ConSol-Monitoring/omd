@@ -1,6 +1,4 @@
-omd-0.10 (0.10.0~5.gbp3546c6) UNRELEASED; urgency=low
-
-  ** SNAPSHOT build @3546c66633f747d569d44b88232c98b40159caba **
+omd-0.10 (0.10.1) unstable; urgency=low
 
   [ root ]
   * [0abf061005] Start implementing omd command
@@ -508,8 +506,29 @@ omd-0.10 (0.10.0~5.gbp3546c6) UNRELEASED; urgency=low
   * Removed some other unused parts of apache configuration
 
   [ Wolfgang Barth ]
+  * debianizing: preparations to install multiple omd packages
 
- -- Wolfgang Barth <wob@swobspace.swobspace.de>  Sun, 15 Aug 2010 09:18:19 +0200
+  [ Joerg Linge ]
+  * added mod_authz_user.so to apache.conf.in
+  * log X-Forwarded-For header
+
+  [ Lars Michelsen ]
+  * Added first version of webinterface redirect script; re-added
+    authz_user module
+  * Removed duplicate module
+
+  [ Wolfgang Barth ]
+  * debianizing: bugfix /etc/default/omd, symlink check_hosts, misc
+    changes
+
+  [ Lars Michelsen ]
+  * HOME/OMD_SITE env can not be used for the script at the moment.
+    Using NagVis workaround to get the site and paths; Redirect to
+    configured webinterface works now
+
+  [ Wolfgang Barth ]
+
+ -- Wolfgang Barth <wob@swobspace.swobspace.de>  Sun, 15 Aug 2010 16:51:07 +0200
 
 omd (0.10.0) unstable; urgency=low
 
