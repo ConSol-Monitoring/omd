@@ -27,6 +27,7 @@ clean: clean-patched unpatch
 	# Add here commands to clean up after the build process.
 	$(MAKE) clean
 	#$(MAKE) distclean
+	rm -f `pwd`/debian/postinst
 
 	dh_clean
 
@@ -53,8 +54,18 @@ install: build
 	# Add here commands to install the package into debian/<packagename>
 	#$(MAKE) prefix=`pwd`/debian/`dh_listpackages`/usr install
 	$(MAKE) DESTDIR=`pwd`/debian/`dh_listpackages` pack
+	# -- remove version independent dirs, will be created later by postinst
+	rm -f `pwd`/debian/`dh_listpackages`/usr/bin/omd
+	rmdir `pwd`/debian/`dh_listpackages`/usr/bin
+	rm -f `pwd`/debian/`dh_listpackages`/omd
+	rmdir `pwd`/debian/`dh_listpackages`/opt/omd/apache
+	rmdir `pwd`/debian/`dh_listpackages`/opt/omd/sites
+	rm -f `pwd`/debian/`dh_listpackages`/opt/omd/versions/default
+	rm -rf `pwd`/debian/`dh_listpackages`/etc/apache2
+	rm -f `pwd`/debian/`dh_listpackages`/etc/init.d/omd
 
-	sed -i -e 's/^Version:.*/Version: $(OMD_VERSION)/' `pwd`/debian/control
+	sed -e 's/###OMD_VERSION###/$(OMD_VERSION)/' \
+	   `pwd`/debian/postinst.in > `pwd`/debian/postinst
 
 # Build architecture-independent files here.
 binary-indep: build install

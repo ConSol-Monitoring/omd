@@ -119,7 +119,7 @@ deb:
 	fakeroot debian/rules clean
 	git-buildpackage -uc -us -rfakeroot --git-ignore-new \
 	--git-builder="debuild --no-lintian -i\.git -I\.git \
-			-iomd-bin-0.42.2.tar.gz -Iomd-bin-0.42.2.tar.gz \
+			-iomd-bin-$(OMD_VERSION).tar.gz -Iomd-bin-$(OMD_VERSION).tar.gz \
 			-i.gitignore -I.gitignore"
 
 # Only to be used for developement testing setup 
