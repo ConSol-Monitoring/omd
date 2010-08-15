@@ -64,8 +64,10 @@ install: build
 	rm -rf `pwd`/debian/`dh_listpackages`/etc/apache2
 	rm -f `pwd`/debian/`dh_listpackages`/etc/init.d/omd
 
-	sed -e 's/###OMD_VERSION###/$(OMD_VERSION)/' \
+	sed -e 's/###OMD_VERSION###/$(OMD_VERSION)/g' \
 	   `pwd`/debian/postinst.in > `pwd`/debian/postinst
+	sed -e 's/###OMD_VERSION###/$(OMD_VERSION)/g' \
+	   `pwd`/debian/links.in > `pwd`/debian/links
 
 # Build architecture-independent files here.
 binary-indep: build install

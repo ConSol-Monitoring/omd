@@ -116,6 +116,8 @@ rpm:
 # Build DEB from prebuild binary. This currently needs 'make dist' and thus only
 # works within a GIT repository.
 deb: 
+	sed -e 's/###OMD_VERSION###/$(OMD_VERSION)/' \
+	   `pwd`/debian/control.in > `pwd`/debian/control
 	fakeroot debian/rules clean
 	git-buildpackage -uc -us -rfakeroot --git-ignore-new \
 	--git-builder="debuild --no-lintian -i\.git -I\.git \
