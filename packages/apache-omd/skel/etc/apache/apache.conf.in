@@ -116,7 +116,7 @@ DefaultType text/plain
 ErrorLog ###ROOT###/var/log/apache/error_log
 LogLevel warn
 
-LogFormat "%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\"" combined
+LogFormat "%{X-Forwarded-For}i %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\"" combined
 CustomLog ###ROOT###/var/log/apache/access_log combined
 
 #
