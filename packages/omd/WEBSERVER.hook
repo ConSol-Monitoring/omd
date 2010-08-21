@@ -1,0 +1,31 @@
+#!/bin/bash
+case "$1" in
+    alias)
+            echo "Webserver mode to use"
+    ;;
+    description)
+            cat << EOF
+Here you can choose the mode to run your webserver with. This can be "own"
+to use an own webserver for this instance and "shared" to use the systems
+webserver process directly. Both of these modes has their advantages and
+disadvantages. Take a look at the documentation for details.
+EOF
+    ;;
+    default)
+            echo "own"
+    ;;
+    choices)
+            echo "own: Run an own webserver process for this instance"
+            echo "shared: Use the systems webserver process directly"
+    ;;
+    set)
+        if [ "$2" == "own" ]; then
+            rm -f $OMD_ROOT/etc/apache/mode.conf
+            ln -sfn apache-own.conf $OMD_ROOT/etc/apache/mode.conf 
+        elif [ "$2" == "shared" ]; then
+            rm -f $OMD_ROOT/etc/apache/mode.conf
+            ln -sfn apache-shared.conf $OMD_ROOT/etc/apache/mode.conf 
+        fi
+    ;;
+esac
+

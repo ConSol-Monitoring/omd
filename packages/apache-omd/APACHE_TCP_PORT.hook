@@ -18,5 +18,6 @@ EOF
     ;;
     set)
         sed -ri 's/^(Listen[[:space:]].*:)([0-9]+)/\1'$2'/' $OMD_ROOT/etc/apache/apache.conf
+        sed -ri 's/###PORT###/'$2'/' $OMD_ROOT/etc/apache/apache-own.conf
     ;;
 esac
