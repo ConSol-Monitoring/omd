@@ -77,3 +77,7 @@
 * Jedes Paket soll eine README/Lizenz/Maintainer/Author Datei enthalten
 
 * Man könnte das Bauen/Einpacken der einzelnen Pakete parallelisieren
+
+* Man kann eine Site zu einem bestehenden Nutzer anlegen. Beim Löschen der Site wird dann
+  auch der Nutzer gelöscht. Dies könnte im Ernstfall dazu führen, dass Nutzer, die nicht nur
+  für eine OMD Site gedacht sind, irrtümlich gelöscht werden.
