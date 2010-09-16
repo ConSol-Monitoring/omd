@@ -195,7 +195,8 @@ def clear_environment():
 def set_environment():
     os.putenv("OMD_SITE", g_sitename)
     os.putenv("OMD_ROOT", g_sitedir)
-    os.putenv("PATH", "%s/local/bin:%s/bin:/usr/local/bin:/bin:/usr/bin" % (g_sitedir, g_sitedir))
+    os.putenv("PATH", "%s/local/bin:%s/bin:/usr/local/bin:/bin:/usr/bin:/sbin:/usr/sbin" %
+                                                                     (g_sitedir, g_sitedir))
     os.putenv("USER", g_sitename)
     os.putenv("LD_LIBRARY_PATH", "%s/local/lib:%s/lib" % (g_sitedir, g_sitedir))
     os.putenv("HOME", g_sitedir)
