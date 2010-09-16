@@ -5,7 +5,7 @@
  
  // Path to the debug file
 -define('DEBUGFILE', '../../../var/nagvis-debug.log');
-+define('DEBUGFILE', join(array_slice(explode('/' ,dirname($_SERVER["SCRIPT_FILENAME"])), 0, -5), '/').'/var/log/nagvis-debug.log');
++define('DEBUGFILE', join(array_slice(explode('/' ,dirname($_SERVER["SCRIPT_FILENAME"])), 0, -5), '/').'/tmp/nagvis/nagvis-debug.log');
  
  // Path to the main configuration file
 -define('CONST_MAINCFG', '../../../etc/nagvis.ini.php');
