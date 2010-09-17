@@ -1,5 +1,6 @@
-omd.debhelper.log
-omd.substvars
+omd*substvars
+omd*debhelper.log
+omd-*.*/
 ex/
 omd/
 files
@@ -7,3 +8,4 @@ files
 postinst
 control
 links
+
