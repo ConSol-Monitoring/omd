@@ -67,6 +67,8 @@ install-global:
 	ln -s $(OMD_VERSION) $(DESTDIR)$(OMD_BASE)/versions/default
 	mkdir -p $(DESTDIR)/usr/bin
 	ln -sfn ../../omd/versions/default/bin/omd $(DESTDIR)/usr/bin/omd
+	mkdir -p $(DESTDIR)/usr/share/man/man8
+	ln -sfn ../../../../omd/versions/default/share/man/man8/omd.8.gz $(DESTDIR)/usr/share/man/man8/omd.8.gz
 
 	# Base directories below /omd
 	mkdir -p $(DESTDIR)$(OMD_BASE)/sites
