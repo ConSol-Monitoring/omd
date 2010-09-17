@@ -192,6 +192,10 @@ def group_exists(name):
     except:
 	return False
 
+def user_logged_in(name):
+    # Check, if processes of named user are existing
+    return os.system("ps --no-headers --user '%s' > /dev/null" % name) == 0
+
 def switch_to_site_user():
     p = pwd.getpwnam(g_sitename)
     uid = p.pw_uid
@@ -1084,9 +1088,12 @@ def main_create(args):
 
 def main_rm(args):
     stop_if_not_stopped(g_sitename)
+    if user_logged_in(g_sitename):
+        bail_out("User '%s' still logged in or running processes.\n" % g_sitename)
     unmount_tmpfs(g_sitename)
-    remove_from_fstab(g_sitename)
+
     sys.stdout.write("Removing site %s..." % g_sitename)
+    remove_from_fstab(g_sitename)
     sys.stdout.flush()
     userdel(g_sitename)
     if os.path.exists(g_sitedir): # should be done by userdel
