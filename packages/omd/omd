@@ -4,7 +4,7 @@
 # There is almost no error handling implemented. Please remember: this
 # is a prototype, an experiment - nothing more.
 
-import sys, os, shutil, pwd, re, time
+import sys, os, shutil, pwd, grp, re, time
 from subprocess import *
 
 OMD_VERSION = "0.10"
@@ -177,6 +177,20 @@ def userdel(name):
     # FIXME: On some OSes (Debian) the group is automatically removed if
     # it bears the same name as the user
     os.system("groupdel " + name + " 2>/dev/null")
+
+def user_exists(name):
+    try:
+	pwd.getpwnam(name)
+	return True
+    except:
+	return False
+
+def group_exists(name):
+    try:
+	grp.getgrnam(name)
+	return True
+    except:
+	return False
 
 def switch_to_site_user():
     p = pwd.getpwnam(g_sitename)
@@ -1021,6 +1035,10 @@ def main_sites(args):
 def main_create(args):
     if site_exists(g_sitename):
         bail_out("Site '%s' already existing.\n" % g_sitename)
+    if group_exists(g_sitename):
+        bail_out("Group '%s' already existing.\n" % g_sitename)
+    if user_exists(g_sitename):
+        bail_out("User '%s' already existing.\n" % g_sitename)
 
     # Create operating system user for site
     useradd(g_sitename)
