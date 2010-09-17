@@ -1,38 +1,39 @@
-* Nagios-CGIs abschaltbar machen (evtl. dann status_update_interval auf
-  999999 oder sowas setzen)
-
-* Livestatus-Netzwerksocket einschaltbar machen. Dabei die Portnummer
-  irgendwie konfigurierbar machen.
-
-* Bei omd config set ... muss an manchen Stellen Apache durchgeladen
-  werden. Dazu hat aber der Site-Benutzer keine Berechtigung.
-  Soll man ihm die mit sudo verpassen, oder was könnte man hier tun?
+NOCH ZU ERSTEM RELEASE
+---------------------------------------------------------------------------
 
 * Do restart of apache instead of reload after useradd(). This is 
   neccessary since apache gets a new group.
-
-* Implement 'omd setup': That should check if all packages from
-  that distro are installed OMD needs - and install them via
-  yum, zypper, aptitude.
 
 * Make a Webpage located on http://hostname/site/ with links
   to Nagios, Check_MK, PNP4Nagios and Nagvis. The page can
   also print the version of the site. 
 
-* Die Distro-Spefischen Dinge in den Griff bekommen:
-  - Benutzer in Gruppe aufnehmen (gpasswd)
-  - Verzeichnis von Apache
+---------------------------------------------------------------------------------------
+SPAETER oder NIE
+---------------------------------------------------------------------------------------
+* Jedes Paket soll eine README/Lizenz/Maintainer/Author Datei enthalten
 
-  Irgendwie müssten wir beim 'make pack' oder schon bei 'make'
-  schauen, auf was für einer Distro wir laufen und das entsprechend
-  einkodieren. Man muss das Binärpaket eh immer genau auf der
-  Distro kompilieren, für die das gedacht ist.
+* Man könnte das Bauen/Einpacken der einzelnen Pakete parallelisieren
 
-* Bei check_icmp fehlt das SUID-Bit. Selbst wenn man als root compiliert.
-  Da brauchts noch eine gute generelle Lösung. Schlimmsten Falls eine
-  Datei mit einer Liste von Pfade und zugehörigen Permissions, die
-  mit installiert wird und bei 'omd setup' angewendet. Schön ist das
-  nicht. Vielleicht braucht man sowas wie 'fakeroot'
+* Man kann eine Site zu einem bestehenden Nutzer anlegen. Beim Löschen der Site wird dann
+  auch der Nutzer gelöscht. Dies könnte im Ernstfall dazu führen, dass Nutzer, die nicht nur
+  für eine OMD Site gedacht sind, irrtümlich gelöscht werden.
+
+* htpasswd: Standard-Benutzer sollte individuell sein. z.B. <site>admin
+
+* omd snapshot --> Erzeugt eine Sicherung von /omd/sites/$SITE/{var,etc}. tmp
+  wird nicht gesichert.
+
+* omd restoreas NAME --> Sichert einen Snapshot unter einem anderen Namen
+  zurück.
+
+* Nagios-CGIs abschaltbar machen (evtl. dann status_update_interval auf
+  999999 oder sowas setzen)
+
+* Bei omd config set ... muss an manchen Stellen Apache durchgeladen
+  werden. Dazu hat aber der Site-Benutzer keine Berechtigung.
+  Soll man ihm die mit sudo verpassen, oder was könnte man hier tun?
+  -> Modus auf 'own' setzen.
 
 * Makefiles: Evtl. sollte man die Targets des Hauptmakefiles etwas
   an die Standards angleichen:
@@ -49,22 +50,12 @@
   angegeben werden. Können wir das irgendwie so bauen, dass man die Berechtigungen nur
   an einem Platz pflegen muss?
 
-* omd snapshot --> Erzeugt eine Sicherung von /omd/sites/$SITE/{var,etc}. tmp
-  wird nicht gesichert.
-
-* omd restoreas NAME --> Sichert einen Snapshot unter einem anderen Namen
-  zurück.
-
 * Sites anlegen/löschen ohne Root-Rechte. Problem: Apache muss die Konfiguration
   neu laden. Eventuelle Lösung: Ein Apache Prozess pro Site
   * Automatisch den site apache port in Konfigurationsdateien von site apache
     und globalem apache eintragen (/omd/apache/<site>.conf). Kann nicht ueber normalen
     Hook gemacht werden, da diese scheinbar als Site nutzer laufen.
   * omd script: site apache port automatisch ermitteln
-
-* htpasswd: Standard-Benutzer sollte individuell sein. z.B. <site>admin
-
-* Nagios Config Patch: Konfigurationsdateien sortieren
 
 * Die omd Befehle sollten transparent sein hinsichtlich der Aktionen, die ausgeführt
   werden. z.B. Benutzer die angelegt werden, Apache Konfigurationsdateien, die erzeugt werden.
@@ -73,11 +64,9 @@
      Mit dem Parameter --yes oder so kann man diese Bestätigung dann überspringen.
   So könnte man ohne Probleme die Sicherheitsabfragen in den "aptitude" Aufrufen unterdrücken
   um am Anfang nur eine einzelne Abfrage zu haben.
+  MK: Mir würde besser gefallen, wenn wir umgekehrt eine -i option einbauen, bei
+  der man dann immer gefragt wird. Das ist irgendwie Unixartiger und angelehnt an
+  cp, rm, mv, etc. Eine Option -v kann dafür sorgen, dass man genau sieht, was geschieht.
 
-* Jedes Paket soll eine README/Lizenz/Maintainer/Author Datei enthalten
+* Nagios Config Patch: Konfigurationsdateien sortieren
 
-* Man könnte das Bauen/Einpacken der einzelnen Pakete parallelisieren
-
-* Man kann eine Site zu einem bestehenden Nutzer anlegen. Beim Löschen der Site wird dann
-  auch der Nutzer gelöscht. Dies könnte im Ernstfall dazu führen, dass Nutzer, die nicht nur
-  für eine OMD Site gedacht sind, irrtümlich gelöscht werden.
