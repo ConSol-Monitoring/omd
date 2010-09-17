@@ -1,3 +1,9 @@
+omd-0.10.1 (0.10.1) unstable; urgency=low
+
+  * version numbering test
+
+ -- Mathias Kettner <mk@mathias-kettner.de> Fri, 17 Sep 2010 21:29:00 +0200
+
 omd-0.10 (0.10.1build1) unstable; urgency=low
 
   * cleanup debian changelog
