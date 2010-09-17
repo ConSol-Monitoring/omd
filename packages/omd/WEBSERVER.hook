@@ -12,7 +12,7 @@ disadvantages. Take a look at the documentation for details.
 EOF
     ;;
     default)
-            echo "own"
+            echo "shared"
     ;;
     choices)
             echo "own: Run an own webserver process for this instance"
