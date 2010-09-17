@@ -1405,8 +1405,8 @@ if g_sitename and os.getuid() == 0 and not only_root:
     switch_to_site_user()
 
 # Make sure environment is in a defined state
-clear_environment()
 if g_sitename:
+    clear_environment()
     set_environment()
     print "SETZE UMGEBUNG!"
 
