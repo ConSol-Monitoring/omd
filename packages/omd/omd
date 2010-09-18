@@ -138,8 +138,11 @@ def tmp_dir(sitename):
 # link ~SITE/version
 def site_version(sitename):
     version_link = site_dir(sitename) + "/version"
-    version = os.readlink(version_link).split("/")[-1]
-    return version
+    try:
+        version = os.readlink(version_link).split("/")[-1]
+        return version
+    except:
+        return None
 
 def create_version_symlink(sitename, version):
     linkname = site_dir(sitename) + "/version"
@@ -194,7 +197,7 @@ def group_exists(name):
 
 def user_logged_in(name):
     # Check, if processes of named user are existing
-    return os.system("ps --no-headers --user '%s' > /dev/null" % name) == 0
+    return os.system("ps --no-headers --user '%s' >/dev/null 2>&1" % name) == 0
 
 def switch_to_site_user():
     p = pwd.getpwnam(g_sitename)
@@ -351,10 +354,13 @@ def create_apache_hook(sitename):
     file("/omd/apache/%s.conf" % sitename, "w").write("Include %s/etc/apache/mode.conf\n" % site_dir(sitename))
 
 def delete_apache_hook(sitename):
+    hook_path = "/omd/apache/%s.conf" % sitename
+    if not os.path.exists(hook_path):
+        return
     try:
-	os.remove("/omd/apache/%s.conf" % sitename)
+	os.remove(hook_path)
     except Exception, e:
-	sys.stderr.write("Cannot remove apache hook: %s\n" % e)
+	sys.stderr.write("Cannot remove apache hook %s: %s\n" % (hook_path, e))
 
 def reload_apache():
     # FIXME: This is OS specific
@@ -392,7 +398,12 @@ def patch_skeleton_files(old, new):
             src = dirpath + "/" + fn
             dst = targetdir + "/" + fn
             if os.path.isfile(src) and not os.path.islink(src): # links are also files??.
-                patch_template_file(src, dst, old, new)
+		try:
+		    patch_template_file(src, dst, old, new)
+                except Exception, e:
+                    sys.stderr.write("Error patching template file '%s': %s\n" %
+                            (dst, e))
+
 
 
 def chown_tree(dir, user):
@@ -756,9 +767,12 @@ def update_file(old_version, new_version, userdir, relpath):
 
 def init_scripts(sitename):
     rc_dir = "/omd/sites/%s/etc/rc.d" % sitename
-    scripts = os.listdir(rc_dir)
-    scripts.sort()
-    return rc_dir, scripts
+    try:
+        scripts = os.listdir(rc_dir)
+        scripts.sort()
+        return rc_dir, scripts
+    except:
+        return rc_dir, []
 
 def call_init_scripts(sitename, command):
     # Call stop scripts in reverse order
@@ -1159,8 +1173,9 @@ def main_cp(args):
     # First make exact file-per-file copy with same
     # user but already new name
     os.mkdir(site_dir(new))
-    os.system("tar cf - -C '%s' --exclude tmp . | tar xf - -C '%s'" % \
-            (site_dir(g_sitename), site_dir(new)))
+    os.system("rsync -arx '%s/' '%s/'" % (site_dir(g_sitename), site_dir(new)))
+    # os.system("tar cf - -C '%s' --exclude tmp . | tar xf - -C '%s'" % \
+    #         (site_dir(g_sitename), site_dir(new)))
 
     # Change config files from old to new site (see rename_site())
     patch_skeleton_files(g_sitename, new)
@@ -1416,8 +1431,11 @@ if g_sitename and site_must_exist and command != "update":
     v = site_version(g_sitename)
     if OMD_VERSION != v:
         # Rerun with omd of correct version
-	os.execv("/omd/versions/%s/bin/omd" % v, sys.argv)
-	bail_out("Cannot run bin/omd of version %s.\n" % v)
+        omd_path = "/omd/versions/%s/bin/omd" % v
+        if os.path.exists(omd_path):
+            os.execv("/omd/versions/%s/bin/omd" % v, sys.argv)
+	    bail_out("Cannot run bin/omd of version %s.\n" % v)
+
 
 if g_sitename:
     g_sitedir = site_dir(g_sitename)
