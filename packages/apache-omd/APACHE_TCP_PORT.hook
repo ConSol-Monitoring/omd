@@ -17,7 +17,12 @@ EOF
     default)
         # Scan for a free port number by looking at the
         # configuration of the other sites...
-        echo "5000"
+	PORT=5000
+	while grep -qx "CONFIG_APACHE_TCP_PORT='$PORT'" /omd/sites/*/etc/omd/site.conf > /dev/null 2>&1
+	do
+	    PORT=$((PORT + 1))
+        done
+        echo "$PORT"
     ;;
     choices)
         echo "[1-9][0-9]{0,4}"
