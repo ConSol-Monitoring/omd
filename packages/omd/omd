@@ -155,7 +155,7 @@ def site_exists(sitename):
     return os.path.exists(site_dir(sitename))
 
 def all_sites():
-    return os.listdir("/omd/sites")
+    return [ s for s in os.listdir("/omd/sites") if s[0] != '.' ]
 
 # Check if site is completely stopped
 def site_is_stopped(sitename):
@@ -1047,7 +1047,7 @@ def main_versions(args):
 def main_sites(args):
     if on_tty:
 	sys.stdout.write("SITE             VERSION\n")
-    for site in os.listdir("/omd/sites"):
+    for site in all_sites():
 	sys.stdout.write("%-16s %s\n" % (site, site_version(site)))
 
 def main_create(args):
