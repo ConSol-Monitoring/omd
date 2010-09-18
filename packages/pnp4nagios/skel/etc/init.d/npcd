@@ -151,13 +151,13 @@ case "$1" in
             printstatus_npcd
         ;;
 
-    restart)
+    restart|reload)
         $0 stop
         $0 start
         ;;
 
     *)
-        echo "Usage: $servicename {start|stop|restart|status}"
+        echo "Usage: $servicename {start|stop|restart|reload|status}"
         exit 1
         ;;
 

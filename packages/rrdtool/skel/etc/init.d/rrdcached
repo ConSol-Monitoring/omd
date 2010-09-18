@@ -62,7 +62,7 @@ case "$1" in
 	    echo "Failed"
         fi
     ;;
-    restart)
+    restart|reload)
 	$0 stop
 	$0 start
     ;;
@@ -79,6 +79,6 @@ case "$1" in
 	exit 1
     ;;
     *)
-	echo "Usage: $0 {start|stop|restart|status}"
+	echo "Usage: $0 {start|stop|restart|reload|status}"
     ;;
 esac
