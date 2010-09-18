@@ -7,17 +7,41 @@ case "$1" in
     description)
         cat << EOF
 Configure the TCP port used for the Apache webserver
-process of this site.
+process of this site. This option is only useful if 
+APACHE is set to "on" and WEBSERVER is set to "own".
+
+After changing this variable, the man Apache webserver
+must be restarted.
 EOF
     ;;
     default)
+        # Scan for a free port number by looking at the
+        # configuration of the other sites...
         echo "5000"
     ;;
     choices)
-        echo "[0-9]{1,5}"
+        echo "[1-9][0-9]{0,4}"
     ;;
     set)
-        sed -ri 's/^(Listen[[:space:]].*:)([0-9]+)/\1'$2'/' $OMD_ROOT/etc/apache/apache.conf
-        sed -ri 's/###PORT###/'$2'/' $OMD_ROOT/etc/apache/apache-own.conf
+        cat <<EOF > $OMD_ROOT/etc/apache/listen-port.conf
+# This file is created by 'omd config set APACHE_TCP_PORT'. 
+# Better do not edit manually
+Listen 127.0.0.1:$2
+EOF
+        cat <<EOF > $OMD_ROOT/etc/apache/proxy-port.conf
+# This file is created by 'omd config set APACHE_TCP_PORT'. 
+# Better do not edit manually
+<IfModule mod_proxy_http.c>
+  <Proxy http://127.0.0.1:$2/$OMD_SITE>
+    Order allow,deny
+    allow from all
+  </Proxy>
+
+  <Location /$OMD_SITE>
+    ProxyPass http://127.0.0.1:$2/$OMD_SITE
+    ProxyPassReverse http://127.0.0.1:$2/$OMD_SITE
+  </Location>
+</IfModule>
+EOF
     ;;
 esac

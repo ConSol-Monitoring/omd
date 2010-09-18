@@ -1,7 +1,7 @@
 #!/bin/bash
 
 . ###ROOT###/etc/omd/site.conf
-if [ "$CONFIG_APACHE" != on ] ; then
+if [ "$CONFIG_WEBSERVER" != own ] ; then
   exit 5
 fi
 
@@ -85,7 +85,7 @@ apache_wait_start() {
 
 case $1 in 
   start)
-    echo -n "Starting Apache... "
+    echo -n "Starting dedicated Apache for site ###SITE###... "
     if apache_wait_start; then
       echo 'OK.'
       exit 0
@@ -95,7 +95,7 @@ case $1 in
     fi
   ;;
   stop)
-    echo -n "Stopping Apache... "
+    echo -n "Stopping dedicated Apache for site ###SITE###... "
     if apache_wait_stop; then
       echo 'OK.'
       exit 0
@@ -109,7 +109,7 @@ case $1 in
     $0 start
   ;;
   reload)
-    echo "Reloading Apache"
+    echo "Reloading dedicated Apache for site ###SITE###"
     $APACHE_BIN -f "$CONFIG_FILE" -k graceful
   ;;
   status)
