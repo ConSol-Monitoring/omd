@@ -27,3 +27,6 @@ Index of patches
     the module with 'cp'. This patch removes that behaviour and loads
     the module in the traditional way. This prevents problems with tmpfs
     mounted as non-root (where Nagios places the module copy).
+
+0005:
+    Reverts patch which breaks deactivation of active checks. 
