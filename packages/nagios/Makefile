@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 NAME = nagios
-VERSION = 3.2.1
+VERSION = 3.2.2
 DIR = $(NAME)-$(VERSION)
 
 # Configure options for Nagios. Since we want to compile
