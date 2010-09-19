@@ -775,6 +775,14 @@ def init_scripts(sitename):
         return rc_dir, []
 
 def call_init_scripts(sitename, command):
+    # Restart: Do not restart each service after another, 
+    # but first do stop all, then start all again! This
+    # preserves the order.
+    if command == "restart":
+        call_init_scripts(sitename, "stop")
+        call_init_scripts(sitename, "start")
+        return
+
     # Call stop scripts in reverse order
     rc_dir, scripts = init_scripts(sitename)
     if command == "stop":
