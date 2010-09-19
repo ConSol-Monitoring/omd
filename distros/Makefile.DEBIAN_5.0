@@ -9,5 +9,6 @@ APACHE_GROUP      = www-data
 APACHE_BIN        = /usr/sbin/apache2
 APACHE_CTL        = /usr/sbin/apache2ctl
 APACHE_MODULE_DIR = /usr/lib/apache2/modules
+APACHE_ENMOD      = a2enmod %s
 BECOME_ROOT       = su -c
 ARCH              = $(shell dpkg --print-architecture)

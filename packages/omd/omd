@@ -1023,8 +1023,13 @@ def main_setup(args):
     command = "%s %s" % (install_cmd, " ".join(packages))
     sys.stdout.write("Going to execute '%s'\n" % command)
     if 0 == os.system(command):
-       sys.stdout.write("OK.\n")
+        sys.stdout.write("OK.\n")
 
+    # Enable Apache modules
+    for mod in [ "proxy", "proxy_http" ]:
+        command = g_info["APACHE_ENMOD"] % mod
+        if 0 != os.system(command):
+            sys.stdout.write("ERROR: Could not enable Apache module mod_%s\n" % mod)
 
 def main_uninstall(args):
     global g_sitename
@@ -1322,9 +1327,7 @@ commands = [
 
   ( "setup",     True,  0, 0, True, "",        main_setup,
     "Prepare operating system for OMD (installs packages)",
-    
-    "This operating system installs the following packages:\n"
-    " -> FIXME"),
+    "We will install missing packages from your operating system and setup Apache"),
 
   ( "uninstall", True,  0, 0, True, "",        main_uninstall,
     "Remove OMD and all sites!",
