@@ -19,7 +19,5 @@ EOF
 #            echo "thruk: Thruk Monitoring Webinterface"
             echo "none: No default webinterface"
     ;;
-    set)
-    ;;
 esac
 
