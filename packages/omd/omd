@@ -4,7 +4,7 @@
 # There is almost no error handling implemented. Please remember: this
 # is a prototype, an experiment - nothing more.
 
-import sys, os, shutil, pwd, grp, re, time
+import sys, os, shutil, pwd, grp, re, time, pprint
 from subprocess import *
 
 OMD_VERSION = "0.10.1"
@@ -1031,6 +1031,12 @@ def main_setup(args):
         if 0 != os.system(command):
             sys.stdout.write("ERROR: Could not enable Apache module mod_%s\n" % mod)
 
+    # Activate init script of OMD
+    sys.stdout.write("Installing and activating /etc/init.d/omd\n")
+    command = g_info["ACTIVATE_INITSCRIPT"].replace("%s", "omd")
+    if 0 != os.system(command):
+        sys.stdout.write("ERROR\n")
+
 def main_uninstall(args):
     global g_sitename
     global g_sitedir
@@ -1279,6 +1285,7 @@ def main_update(args):
 
 def main_init_action(command, args):
     global g_sitename
+    global g_sitedir
     # if no site is selected, all sites are affected
     if not g_sitename:
         exit_status = 0
@@ -1286,7 +1293,16 @@ def main_init_action(command, args):
             # We need to do an os.system(), because each
             # site must be started with the account of the
             # site user. And after setuid() we cannot return.
-            sys.stdout.write("Doing '%s' on site %s:\n" % (command, site))
+            if command in [ "start", "restart", "reload" ]:
+                g_sitename = site
+                g_sitedir = site_dir(g_sitename)
+                config_load_hooks()
+                if g_hooks["AUTOSTART"]["value"] != "on":
+                    sys.stdout.write("%sIgnoring site '%s': AUTOSTART != on%s\n" 
+                            % (tty_bold + tty_yellow, site, tty_normal))
+                    continue
+            
+            sys.stdout.write("%sDoing '%s' on site %s:%s\n" % (tty_bold, command, site, tty_normal))
             exit_status = max(exit_status, os.system("%s %s %s %s" % (sys.argv[0], command, site, " ".join(args))))
     else:
 	exit_status = init_action(command)
