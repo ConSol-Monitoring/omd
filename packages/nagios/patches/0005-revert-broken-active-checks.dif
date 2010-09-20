@@ -1,0 +1,16 @@
+--- nagios-3.2.2/base/events.c-2010-09-19	2010-09-19 18:16:53.000000000 +0200
++++ nagios-3.2.2/base/events.c	2010-09-19 18:17:47.000000000 +0200
+@@ -1083,9 +1083,11 @@
+ 				        }
+ 
+ 			        }
+-
++			/* Removed. Reports that if you disable all service checks, service checks continue to be run. Also
++				t-tap/test_events will fail if this flag is set - TV
++			*/ 
+ 			/* reset flag */
+-			run_event=TRUE;
++			/* run_event=TRUE; */
+ 
+ 			/* run a few checks before executing a host check... */
+ 			if(event_list_low->event_type==EVENT_HOST_CHECK){

@@ -171,6 +171,10 @@ def useradd(sitename):
     os.system("useradd %s -d '%s' -c 'OMD instance %s' -g %s %s -s /bin/bash" % \
                 (useradd_options, site_dir(sitename), sitename, sitename, sitename))
 
+    # Add the site user to the nagios group to be able to execute the SUID plugins
+    if group_exists('nagios'):
+        os.system("gpasswd -a %s nagios >/dev/null" % (sitename))
+
     # Add Apache to new group. It needs to be able to write in to the 
     # command pipe and possible other stuff
     os.system("gpasswd -a %s %s >/dev/null" % (g_info["APACHE_USER"], sitename))

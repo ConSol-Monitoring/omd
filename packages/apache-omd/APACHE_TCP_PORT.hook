@@ -43,7 +43,9 @@ EOF
   </Proxy>
 
   <Location /$OMD_SITE>
-    ProxyPass http://127.0.0.1:$2/$OMD_SITE
+    # Setting "retry=0" to prevent 60 second caching of problem states e.g. when
+    # the site apache is down and someone tries to access the page.
+    ProxyPass http://127.0.0.1:$2/$OMD_SITE retry=0
     ProxyPassReverse http://127.0.0.1:$2/$OMD_SITE
   </Location>
 </IfModule>
