@@ -1,0 +1,21 @@
+#!/bin/bash
+case "$1" in
+    alias)
+        echo "Start/stop this site via /etc/init.d/omd"
+    ;;
+    description)
+        cat <<EOF
+This setting decides, wether this site will be automatically
+started at boot time (i.e. affected by /etc/init.d/omd start).
+Please note, that /etc/init.d/omd stop) will effect all sites,
+even those with AUTOSTART=off.
+EOF
+        ;;
+    default)
+        echo "on"
+    ;;
+    choices)
+        echo "on: Start this site at boot time"
+        echo "off: Do not start this site at boot time"
+    ;;
+esac
