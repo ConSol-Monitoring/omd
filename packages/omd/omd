@@ -812,17 +812,22 @@ def check_status(sitename, display=True):
         if display:
             sys.stdout.write(" %s:" % komponent)
         state = os.system("%s/%s status >/dev/null 2>&1" % (rc_dir, script)) >> 8
+        if display: 
+            sys.stdout.write(tty_bold)
         if state == 0:
             if display:
-                sys.stdout.write("running")
+                sys.stdout.write(tty_green + "running")
             num_running += 1
         elif state == 5:
             if display:
-                sys.stdout.write("unused")
+                sys.stdout.write(tty_blue + "unused")
             num_unused += 1
         else:
             if display:
-                sys.stdout.write("stopped")
+                sys.stdout.write(tty_red + "stopped")
+        if display:
+            
+            sys.stdout.write(tty_normal)
     if display:
         sys.stdout.write("\n")
 
