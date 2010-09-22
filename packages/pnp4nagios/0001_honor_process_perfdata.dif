@@ -1,0 +1,28 @@
+--- npcdmod.c.orig	2010-09-22 21:04:14.457949718 +0200
++++ npcdmod.c	2010-09-22 21:06:12.286705561 +0200
+@@ -73,11 +73,14 @@
+ 	/* log module info to the Nagios log file */
+ 	write_to_all_logs("npcdmod: Copyright (c) 2008-2009 Hendrik Baecker (andurin@process-zero.de) - http://www.pnp4nagios.org", NSLOG_INFO_MESSAGE);
+ 
+-	if (process_performance_data == FALSE) {
++/* Do not check this at module loading time. User might enable
++   that setting later dynamically. */
++/*	if (process_performance_data == FALSE) {
+ 		write_to_all_logs("npcdmod: I can not work with disabled performance data in nagios.cfg.", NSLOG_INFO_MESSAGE);
+ 		write_to_all_logs("npcdmod: Please enable it with 'process_performance_data=1' in nagios.cfg", NSLOG_INFO_MESSAGE);
+ 		return -1;
+ 	}
++*/
+ 
+ 	/* process arguments */
+ 	if (npcdmod_process_module_args(args) == ERROR) {
+@@ -180,6 +183,9 @@
+ 
+ /* handle data from Nagios daemon */
+ int npcdmod_handle_data(int event_type, void *data) {
++	if (!process_performance_data) 
++            return; /* processing of perfdata currently switched off */
++
+ 	nebstruct_host_check_data *hostchkdata = NULL;
+ 	nebstruct_service_check_data *srvchkdata = NULL;
+ 
