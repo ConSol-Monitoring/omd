@@ -164,16 +164,18 @@ def site_is_stopped(sitename):
 def site_is_running(sitename):
     return check_status(sitename, False) == 0
 
+def groupdel(groupname):
+    os.system("groupdel " + groupname)
+
+def groupadd(groupname):
+    os.system("groupadd " + groupname)
+
 def useradd(sitename):
     # Create user for running site 'name'
-    os.system("groupadd " + sitename)
+    groupadd(sitename)
     useradd_options = g_info["USERADD_OPTIONS"]
-    os.system("useradd %s -d '%s' -c 'OMD instance %s' -g %s %s -s /bin/bash" % \
+    os.system("useradd %s -d '%s' -c 'OMD instance %s' -g %s -G omd %s -s /bin/bash" % \
                 (useradd_options, site_dir(sitename), sitename, sitename, sitename))
-
-    # Add the site user to the nagios group to be able to execute the SUID plugins
-    if group_exists('nagios'):
-        os.system("gpasswd -a %s nagios >/dev/null" % (sitename))
 
     # Add Apache to new group. It needs to be able to write in to the 
     # command pipe and possible other stuff
@@ -1045,6 +1047,20 @@ def main_setup(args):
     command = g_info["ACTIVATE_INITSCRIPT"].replace("%s", "omd")
     if 0 != os.system(command):
         sys.stdout.write("ERROR\n")
+        
+    # Create group 'omd'
+    if not group_exists('omd'):
+        sys.stdout.write("Creating new group 'omd'\n")
+        groupadd('omd')
+
+    # set SUID bit for certain plugins (neccessary for 
+    # non RPM/DEB installations (FIXME: find a more elegant
+    # solution later)
+    for plugin in [ 'check_icmp', 'check_dhcp' ]:
+        path = "/omd/versions/%s/lib/nagios/plugins/%s" % (OMD_VERSION, plugin)
+        os.system("chgrp omd '%s'" % path)
+        os.system("chmod 4750 '%s'" % path)
+
 
 def main_uninstall(args):
     global g_sitename
@@ -1060,6 +1076,8 @@ def main_uninstall(args):
 		  "/etc/init.d/omd",
 		  "/usr/bin/omd" ]:
 	os.system("rm -rf '%s'" % path)
+        
+    groupdel('omd')
 
     sys.stdout.write("Good bye.\n")
 
