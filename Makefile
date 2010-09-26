@@ -117,6 +117,22 @@ rpm:
 
 # Build DEB from prebuild binary. This currently needs 'make dist' and thus only
 # works within a GIT repository.
+deb-environment:
+	@if test -z "$(DEBFULLNAME)" || test -z "$(DEBEMAIL)"; then \
+	  echo "please read 'man dch' and set DEBFULLNAME and DEBEMAIL" ;\
+	  exit 1; \
+	fi
+
+# newversion means new OMD version
+deb-newversion: deb-environment
+	dch --package omd-$(OMD_VERSION) \
+	    --newversion $(OMD_VERSION)build1 \
+	    --distributor 'unstable'
+
+# incrementing debian packaging version (same OMD version)
+deb-incversion: deb-environment
+	dch -i --distributor 'unstable'
+
 deb: 
 	sed -e 's/###OMD_VERSION###/$(OMD_VERSION)/' \
 	   `pwd`/debian/control.in > `pwd`/debian/control
