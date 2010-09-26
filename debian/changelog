@@ -1,3 +1,9 @@
+omd-0.11 (0.11build3) unstable; urgency=low
+
+  * adding system group omd for suid nagios plugins and other stuff
+
+ -- Wolfgang Barth <wob@swobspace.net>  Sun, 26 Sep 2010 17:08:28 +0200
+
 omd-0.11 (0.11build2) unstable; urgency=low
 
   * bugfix postinst 

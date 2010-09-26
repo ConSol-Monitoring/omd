@@ -44,13 +44,13 @@ case "$1" in
        --slave /etc/init.d/omd omd.init /etc/init.d/omd-###OMD_VERSION### \
        --slave /etc/default/omd omd.default /etc/default/omd-###OMD_VERSION### \
        --slave /usr/share/man/man8/omd.8.gz omd.man8 \
-               /opt/omd/versions/-###OMD_VERSION###/share/man/man8/omd.8.gz
+               /opt/omd/versions/###OMD_VERSION###/share/man/man8/omd.8.gz
     ln -sfn /opt/omd/versions/default/bin/omd /usr/bin/omd
 
     # -- looking for group nagios, create it, if not exist
-    if ! getent group nagios > /dev/null ; then
-      echo 'Adding system-user for nagios' 1>&2
-      addgroup --system --force-badname nagios > /dev/null
+    if ! getent group omd > /dev/null ; then
+      echo 'Adding system group omd' 1>&2
+      addgroup --system --force-badname omd > /dev/null
     fi
 
     db_get omd/nagios-plugins-suid || true
@@ -60,7 +60,7 @@ case "$1" in
       PLUGPERM="0755"
     fi
     for PLUGIN in $SUID_PLUGINS; do
-      setperm root nagios $PLUGPERM $NAGIOS_PLUGIN_PATH/$PLUGIN
+      setperm root omd $PLUGPERM $NAGIOS_PLUGIN_PATH/$PLUGIN
     done
     db_stop
     # -- create apache conf.d if not exist
