@@ -42,7 +42,9 @@ case "$1" in
     update-alternatives --install /opt/omd/versions/default \
        omd /opt/omd/versions/###OMD_VERSION### 10 \
        --slave /etc/init.d/omd omd.init /etc/init.d/omd-###OMD_VERSION### \
-       --slave /etc/default/omd omd.default /etc/default/omd-###OMD_VERSION### 
+       --slave /etc/default/omd omd.default /etc/default/omd-###OMD_VERSION### \
+       --slave /usr/share/man/man8/omd.8.gz omd.man8 \
+               /opt/omd/versions/-###OMD_VERSION###/share/man/man8/omd.8.gz
     ln -sfn /opt/omd/versions/default/bin/omd /usr/bin/omd
 
     # -- looking for group nagios, create it, if not exist
@@ -67,6 +69,7 @@ case "$1" in
       # avoid apache error message including /opt/omd/apache if no site exist
       touch "/opt/omd/apache/empty.conf"
     fi
+    ;;
 
   abort-upgrade|abort-remove|abort-deconfigure)
     exit 0
