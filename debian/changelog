@@ -1,8 +1,23 @@
+omd-0.11 (0.11build2) unstable; urgency=low
+
+  * bugfix postinst 
+  * manpage omd.8 now controlled by update-alternatives 
+
+ -- Wolfgang Barth <wob@swobspace.net>  Sun, 26 Sep 2010 12:19:45 +0200
+
+omd-0.11 (0.11build1) unstable; urgency=low
+
+  * omd-0.11 containing nagios 3.2.2
+  * auto create /etc/apache2/conf.d/zzz_omd.conf if not exist
+
+ -- Wolfgang Barth <wob@swobspace.net>  Sun, 26 Sep 2010 12:18:47 +0200
+
 omd-0.10.1 (0.10.1) unstable; urgency=low
 
+  [ Mathias Kettner ]
   * version numbering test
 
- -- Mathias Kettner <mk@mathias-kettner.de> Fri, 17 Sep 2010 21:29:00 +0200
+ -- Wolfgang Barth <wob@swobspace.net>  Sun, 26 Sep 2010 10:49:43 +0200
 
 omd-0.10 (0.10.1build1) unstable; urgency=low
 
