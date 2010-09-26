@@ -14,5 +14,5 @@ APACHE_MODULE_DIR = /usr/lib/apache2-prefork
 APACHE_MODULE_DIR_64 = /usr/lib64/apache2-prefork
 APACHE_PHP_MODULE = ../apache2/mod_php5.so
 APACHE_PYTHON_MODULE = ../apache2/mod_python.so
-APACHE_ENMOD      = true %s
+APACHE_ENMOD      = a2enmod %s
 BECOME_ROOT       = su -c
