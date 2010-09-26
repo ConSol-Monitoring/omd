@@ -65,5 +65,13 @@ skel:
 clean:
 	rm -rf $(DIR)
 
-
-
+# Adapt configuration files for skeleton from upstream version
+upstream:
+	tar xzf check_mk-$(VERSION).tar.gz --to-stdout check_mk-$(VERSION)/doc.tar.gz | \
+          tar xzf - --to-stdout check_mk_templates.cfg | \
+          sed -e 's-@CHECK_ICMP@-###ROOT###/lib/nagios/plugins/check_icmp-g' \
+              -e 's-@BINDIR@-###ROOT###/bin-g' \
+              -e 's-@VARDIR@-###ROOT###/var/check_mk-g' \
+              -e 's-@PNPURL@-/###SITE###/pnp4nagios/-g' \
+              -e 's-@CGIURL@-/###SITE###/nagios/cgi\-bin-g' > \
+          skel/etc/nagios/conf.d/check_mk_templates.cfg
