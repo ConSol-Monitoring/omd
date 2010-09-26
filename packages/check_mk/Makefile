@@ -67,6 +67,7 @@ clean:
 
 # Adapt configuration files for skeleton from upstream version
 upstream:
+	# check_mk_templates.cfg -> enter correct URLs and paths
 	tar xzf check_mk-$(VERSION).tar.gz --to-stdout check_mk-$(VERSION)/doc.tar.gz | \
           tar xzf - --to-stdout check_mk_templates.cfg | \
           sed -e 's-@CHECK_ICMP@-###ROOT###/lib/nagios/plugins/check_icmp-g' \
@@ -75,3 +76,9 @@ upstream:
               -e 's-@PNPURL@-/###SITE###/pnp4nagios/-g' \
               -e 's-@CGIURL@-/###SITE###/nagios/cgi\-bin-g' > \
           skel/etc/nagios/conf.d/check_mk_templates.cfg
+
+	# multisite.mk - replace nagiosadmin with omadmin
+	tar xzf check_mk-$(VERSION).tar.gz --to-stdout check_mk-$(VERSION)/conf.tar.gz | \
+          tar xzf - --to-stdout multisite.mk-$(VERSION) | \
+          sed 's/nagiosadmin/omdadmin/g' > \
+          skel/etc/check_mk/multisite.mk

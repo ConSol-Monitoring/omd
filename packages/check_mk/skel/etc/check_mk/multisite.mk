@@ -7,7 +7,7 @@ admin_users = [ "omdadmin" ]
 # guest_users = [ "guest" ]
 
 # A lists of all normal operational users allowed to use
-# Multisite. If this variable is no set, then everybody with a correct
+# Multisite. If this variable is not set, then everybody with a correct
 # HTTP login may use Multisite and gets the role "user"
 # users       = [ "meier", "huber", "mueller" ]
 
@@ -60,6 +60,9 @@ admin_users = [ "omdadmin" ]
 # or
 # sound_url = "/nagios/alarms/"
 
+# Tabs for choosing number of columns refresh
+# view_option_refreshes = [ 30, 60, 90, 0 ]
+# view_option_columns   = [ 1, 2, 3, 4, 5, 6, 8 ]
 
 # Custom links for "Custom Links" Snapin. Feel free to add your
 # own links here. The boolean values True and False determine
@@ -101,3 +104,23 @@ custom_links['admin'] = custom_links['user'] + [
       ( "Nagios Portal (German)",       "http://nagios-portal.org"),
   ])
 ]
+
+# Show error messages from unreachable sites in views. Set this
+# to False in order to hide those messages.
+show_livestatus_errors = True
+
+# Hide certain views from the sidebar
+# hidden_views = [ "hosttiles", "allhosts_mini" ]
+# Vice versa: hide all views except these (be carefull, this
+
+# will also exclude custom views)
+# visible_views = [ "allhosts", "searchsvc" ]
+
+# Load custom style sheet which can override styles defined in check_mk.css
+# Put your style sheet into web/htdocs/
+# custom_style_sheet = "my_styles.css"
+
+# URL to show as welcome page (in the 'main' frame).
+# You can use relative URL or absolute URLs like 'http://server/url'
+# Default is 'main.py'
+# start_url = 'view.py?view_name=hostgroups'
