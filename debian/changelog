@@ -2,8 +2,9 @@ omd-0.11 (0.11build1) unstable; urgency=low
 
   * omd-0.11 containing nagios 3.2.2
   * auto create /etc/apache2/conf.d/zzz_omd.conf if not exist
+  * manpage omd.8 now controlled by update-alternatives 
 
- -- Wolfgang Barth <wob@swobspace.net>  Sun, 26 Sep 2010 11:16:20 +0200
+ -- Wolfgang Barth <wob@swobspace.net>  Sun, 26 Sep 2010 12:18:47 +0200
 
 omd-0.10.1 (0.10.1) unstable; urgency=low
 
