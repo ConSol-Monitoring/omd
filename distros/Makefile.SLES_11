@@ -1,5 +1,5 @@
 BUILD_PACKAGES    = gcc make gcc-c++ patch cairo-devel pango-devel libxml2-devel perl-Expect libmcrypt-devel libmysqlclient-devel libopenssl-devel gd-devel glib-devel libgnutls-devel openldap2-devel python
-OS_PACKAGES       = apache2 xinetd apache2-mod_php5 apache2-mod_python php5-gd php5-sqlite php5-mcrypt samba-client graphviz net-snmp bind-utils fping mysql php5-pear unzip perl-Config-IniFiles perl-Net-SNMP perl-SNMP rsync
+OS_PACKAGES       = apache2 xinetd apache2-mod_php5 apache2-mod_python php5-gd php5-sqlite php5-mcrypt samba-client graphviz net-snmp bind-utils fping mysql php5-pear unzip perl-Config-IniFiles perl-Net-SNMP perl-SNMP rsync xorg-x11-fonts
 USERADD_OPTIONS   = -M
 ADD_USER_TO_GROUP = groupmod -A %(user)s %(group)s
 PACKAGE_INSTALL   = zypper -n install
