@@ -7,6 +7,7 @@ set -e
 
 NAGIOS_PLUGIN_PATH="/omd/versions/default/lib/nagios/plugins"
 SUID_PLUGINS="check_icmp check_dhcp"
+APACHE_OMD_CONF="/etc/apache2/conf.d/zzz_omd.conf"
 
 # Source debconf library.
 . /usr/share/debconf/confmodule
@@ -60,7 +61,12 @@ case "$1" in
       setperm root nagios $PLUGPERM $NAGIOS_PLUGIN_PATH/$PLUGIN
     done
     db_stop
-    ;;
+    # -- create apache conf.d if not exist
+    if ! test -e $APACHE_OMD_CONF; then
+      echo "Include /opt/omd/apache/*.conf" > $APACHE_OMD_CONF
+      # avoid apache error message including /opt/omd/apache if no site exist
+      touch "/opt/omd/apache/empty.conf"
+    fi
 
   abort-upgrade|abort-remove|abort-deconfigure)
     exit 0
