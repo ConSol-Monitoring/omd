@@ -1,4 +1,4 @@
-BUILD_PACKAGES    = gcc make gcc-c++ patch cairo pango
+BUILD_PACKAGES    = gcc make gcc-c++ patch cairo-devel pango-devel libxml2-devel perl-Expect libmcrypt-devel libmysqlclient-devel libopenssl-devel gd-devel glib-devel libgnutls-devel openldap2-devel python
 OS_PACKAGES       = apache2
 USERADD_OPTIONS   = -M
 PACKAGE_INSTALL   = zypper -n install
