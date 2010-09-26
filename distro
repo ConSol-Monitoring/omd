@@ -41,3 +41,17 @@ then
     fi
 fi
 
+# SLES
+if [ -e /etc/SuSE-release ]
+then
+    # SLES 11
+    VERSION=$(sed -rn 's/^VERSION = (.*)/\1/p' < /etc/SuSE-release)
+    SP=$(sed -rn 's/^PATCHLEVEL = (.*)/\1/p' < /etc/SuSE-release)
+    if [ "$VERSION" = 11 ] 
+    then
+        echo "SLES$SEP$VERSION"
+        exit 0
+    fi
+fi
+
+exit 1
