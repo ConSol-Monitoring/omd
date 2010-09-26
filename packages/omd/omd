@@ -179,7 +179,11 @@ def useradd(sitename):
 
     # Add Apache to new group. It needs to be able to write in to the 
     # command pipe and possible other stuff
-    os.system("gpasswd -a %s %s >/dev/null" % (g_info["APACHE_USER"], sitename))
+    add_user_to_group(g_info["APACHE_USER"], sitename)
+
+def add_user_to_group(user, group):
+    cmd = g_info["ADD_USER_TO_GROUP"] % {"user": user, "group" : group}
+    return os.system(cmd + " >/dev/null") == 0
 
 def userdel(name):
     os.system("userdel -r " + name + " 2>/dev/null")
@@ -1072,7 +1076,7 @@ def main_uninstall(args):
 
     for path in [ g_info["OMD_PHYSICAL_BASE"], 
 		  "/omd", 
-		  g_info["APACHE_CONF_DIR"] + "/omd.conf",
+		  g_info["APACHE_CONF_DIR"] + "/zzz_omd.conf",
 		  "/etc/init.d/omd",
 		  "/usr/bin/omd" ]:
 	os.system("rm -rf '%s'" % path)

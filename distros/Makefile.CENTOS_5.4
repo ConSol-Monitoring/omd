@@ -1,6 +1,7 @@
 BUILD_PACKAGES    = libxml2-devel cairo-devel pango-devel patch perl-Expect gcc gcc-c++ openssl-devel gd-devel
 OS_PACKAGES       = httpd mod_python php rsync
 USERADD_OPTIONS   = -M
+ADD_USER_TO_GROUP = gpasswd -a %(user)s %(group)s
 PACKAGE_INSTALL   = yum -y install
 ACTIVATE_INITSCRIPT = chkconfig add %s && chkconfig %s on
 APACHE_CONF_DIR   = /etc/httpd/conf.d
