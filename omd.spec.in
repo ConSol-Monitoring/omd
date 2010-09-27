@@ -39,27 +39,24 @@ rm -f $RPM_BUILD_ROOT/etc/init.d/omd
 
 %files
 /opt/omd
-#/usr/share/man/man8/*
-#@APACHE_CONFDIR@/*
-#/etc/init.d/*
-# %dir %attr(770,root,root) /opt/omd/versions/%{version}/skel/var/check_mk/logwatch
-# %dir %attr(770,root,root) /opt/omd/versions/%{version}/skel/var/check_mk/web
-# %dir %attr(775,root,root) /opt/omd/versions/%{version}/skel/etc/nagvis
-# %dir %attr(775,root,root) /opt/omd/versions/%{version}/skel/etc/nagvis/maps
-# %attr(664,root,root)      /opt/omd/versions/%{version}/skel/etc/nagvis/maps/*
-# %dir %attr(775,root,root) /opt/omd/versions/%{version}/skel/etc/nagvis/automaps
-# %attr(664,root,root)      /opt/omd/versions/%{version}/skel/etc/nagvis/automaps/*
-# %attr(664,root,root)      /opt/omd/versions/%{version}/skel/etc/nagvis/nagvis.ini.php
-# %attr(664,root,root)      /opt/omd/versions/%{version}/skel/etc/nagvis/auth.db
-# %dir %attr(775,root,root) /opt/omd/versions/%{version}/skel/var/nagvis/userfiles/images/maps
-# %attr(664,root,root)      /opt/omd/versions/%{version}/skel/var/nagvis/userfiles/images/maps/*
-# %dir %attr(775,root,root) /opt/omd/versions/%{version}/skel/var/nagvis/userfiles/images/shapes
-# %attr(664,root,root)      /opt/omd/versions/%{version}/skel/var/nagvis/userfiles/images/shapes/*
-# %dir %attr(775,root,root) /opt/omd/versions/%{version}/skel/tmp/nagvis
-# %dir %attr(775,root,root) /opt/omd/versions/%{version}/skel/tmp/nagvis/share
-# %dir %attr(775,root,root) /opt/omd/versions/%{version}/skel/tmp/nagvis/tmpl/cache
-# %dir %attr(775,root,root) /opt/omd/versions/%{version}/skel/tmp/nagvis/tmpl/compile
-# %attr(4755,root,root) /opt/omd/versions/%{version}/lib/nagios/plugins/check_icmp
+%dir %attr(770,root,root) /opt/omd/versions/%{version}/skel/var/check_mk/logwatch
+%dir %attr(770,root,root) /opt/omd/versions/%{version}/skel/var/check_mk/web
+%dir %attr(775,root,root) /opt/omd/versions/%{version}/skel/etc/nagvis
+%dir %attr(775,root,root) /opt/omd/versions/%{version}/skel/etc/nagvis/maps
+%attr(664,root,root)      /opt/omd/versions/%{version}/skel/etc/nagvis/maps/*
+%dir %attr(775,root,root) /opt/omd/versions/%{version}/skel/etc/nagvis/automaps
+%attr(664,root,root)      /opt/omd/versions/%{version}/skel/etc/nagvis/automaps/*
+%attr(664,root,root)      /opt/omd/versions/%{version}/skel/etc/nagvis/nagvis.ini.php
+%attr(664,root,root)      /opt/omd/versions/%{version}/skel/etc/nagvis/auth.db
+%dir %attr(775,root,root) /opt/omd/versions/%{version}/skel/var/nagvis/userfiles/images/maps
+%attr(664,root,root)      /opt/omd/versions/%{version}/skel/var/nagvis/userfiles/images/maps/*
+%dir %attr(775,root,root) /opt/omd/versions/%{version}/skel/var/nagvis/userfiles/images/shapes
+%attr(664,root,root)      /opt/omd/versions/%{version}/skel/var/nagvis/userfiles/images/shapes/*
+%dir %attr(775,root,root) /opt/omd/versions/%{version}/skel/tmp/nagvis
+%dir %attr(775,root,root) /opt/omd/versions/%{version}/skel/tmp/nagvis/share
+%dir %attr(775,root,root) /opt/omd/versions/%{version}/skel/tmp/nagvis/tmpl/cache
+%dir %attr(775,root,root) /opt/omd/versions/%{version}/skel/tmp/nagvis/tmpl/compile
+%attr(4755,root,root) /opt/omd/versions/%{version}/lib/nagios/plugins/check_icmp
 
 %pre
 groupadd -r omd 2>/dev/null || true
@@ -75,6 +72,20 @@ ln -sfn /omd/versions/default/etc/apache2/conf.d/zzz_omd.conf /etc/apache2/conf.
 chkconfig omd on
 
 %preun
+# Make sure no sites use that version
+for link in /omd/sites/*/version
+do
+    target=$(readlink $link 2>/dev/null) || continue
+    version=${target##*/}
+    if [ "$version" = %{version} ]
+    then
+        site=${link#/omd/sites}
+        site=${site%/version}
+        echo "Site $site is still using this version!" >&2
+        exit 1
+    fi
+done
+     
 
 %postun
 rm -f /omd/versions/default
