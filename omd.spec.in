@@ -27,8 +27,10 @@ make PACKAGES=omd pack
 %install
 mkdir -p $RPM_BUILD_ROOT
 tar xzf omd-bin-%{version}.tar.gz -C $RPM_BUILD_ROOT
-# Remove symbolic links from package. The are shared
-# among all versions. Handle them in %post und %postun
+# Remove all global symbolic links from package. They are shared
+# among all versions and must be handled in %post und %postun
+# in order to avoid RPM conflicts
+rm -f $RPM_BUILD_ROOT/opt/omd/versions/default
 rm -f $RPM_BUILD_ROOT/omd
 rm -f $RPM_BUILD_ROOT/usr/bin/omd
 rm -f $RPM_BUILD_ROOT/usr/share/man/man8/omd.8.gz
