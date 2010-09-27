@@ -60,23 +60,23 @@ rm -f $RPM_BUILD_ROOT/etc/init.d/omd
 # %attr(4755,root,root) /opt/omd/versions/%{version}/lib/nagios/plugins/check_icmp
 
 %pre
-groupadd -f -r omd
+groupadd -r omd 2>/dev/null || true
 ln -sfn /opt/omd /omd
 
 %post
-chkconfig omd on
-echo "New default version is %{version}"
+echo "New default version is %{version}."
 ln -sfn "%{version}" /omd/versions/default
 ln -sfn /omd/versions/default/bin/omd /usr/bin/omd
 ln -sfn /omd/versions/default/share/man/man8/omd.8.gz /usr/share/man/man8/omd.8.gz
 ln -sfn /omd/versions/default/etc/init.d/omd /etc/init.d/omd
 ln -sfn /omd/versions/default/etc/apache2/conf.d/zzz_omd.conf /etc/apache2/conf.d/zzz_omd.conf
+chkconfig omd on
 
 %preun
 
 %postun
 rm -f /omd/versions/default
-v=$(ls -A /omd/versions | sort -n | tail -n 1)
+v=$(ls -A /omd/versions 2>/dev/null| sort -n | tail -n 1)
 if [ -n "$v" ]
 then
     echo "New default version is $v"
