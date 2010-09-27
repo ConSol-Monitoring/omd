@@ -6,6 +6,8 @@ License:        GPL
 Group:          Atlas
 Source:         %{name}.tar.gz
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root
+AutoReq:        off
+AutoProv:       off
 Requires:	
 
 #%define _missing_doc_files_terminate_build 0
@@ -21,8 +23,8 @@ http://omdistro.org/.
 %setup -q -n omd-%{version}
 
 %build
-make PACKAGES=omd -j 4
-make PACKAGES=omd pack
+make -j 4
+make pack
 
 %install
 mkdir -p $RPM_BUILD_ROOT
@@ -56,7 +58,8 @@ rm -f $RPM_BUILD_ROOT/etc/init.d/omd
 %dir %attr(775,root,root) /opt/omd/versions/%{version}/skel/tmp/nagvis/share
 %dir %attr(775,root,root) /opt/omd/versions/%{version}/skel/tmp/nagvis/tmpl/cache
 %dir %attr(775,root,root) /opt/omd/versions/%{version}/skel/tmp/nagvis/tmpl/compile
-%attr(4755,root,root) /opt/omd/versions/%{version}/lib/nagios/plugins/check_icmp
+%attr(4750,root,omd)      /opt/omd/versions/%{version}/lib/nagios/plugins/check_icmp
+%attr(4750,root,omd)      /opt/omd/versions/%{version}/lib/nagios/plugins/check_dhcp
 
 %pre
 groupadd -r omd 2>/dev/null || true
@@ -67,8 +70,8 @@ echo "New default version is %{version}."
 ln -sfn "%{version}" /omd/versions/default
 ln -sfn /omd/versions/default/bin/omd /usr/bin/omd
 ln -sfn /omd/versions/default/share/man/man8/omd.8.gz /usr/share/man/man8/omd.8.gz
-ln -sfn /omd/versions/default/etc/init.d/omd /etc/init.d/omd
-ln -sfn /omd/versions/default/etc/apache2/conf.d/zzz_omd.conf /etc/apache2/conf.d/zzz_omd.conf
+ln -sfn /omd/versions/default/share/omd/omd.init /etc/init.d/omd
+ln -sfn /omd/versions/default/share/omd/apache.conf @APACHE_CONFDIR@/zzz_omd.conf
 chkconfig omd on
 
 %preun
@@ -79,7 +82,7 @@ do
     version=${target##*/}
     if [ "$version" = %{version} ]
     then
-        site=${link#/omd/sites}
+        site=${link#/omd/sites/}
         site=${site%/version}
         echo "Site $site is still using this version!" >&2
         exit 1
@@ -97,6 +100,10 @@ then
 else
     echo "Removing system group 'omd'"
     groupdel omd
-    echo "Removing symbolic links"
+    echo "Removing global symbolic links"
     rm -f /usr/bin/omd
+    rm -f /usr/share/man/man8/omd.8.gz
+    rm -f /etc/init.d/omd
+    rm -f @APACHE_CONFDIR@/zzz_omd.conf
+    rm -f /omd
 fi

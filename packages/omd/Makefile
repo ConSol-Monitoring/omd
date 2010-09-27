@@ -14,8 +14,8 @@ install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/man/man8
 	install -m 644 omd.8 $(DESTDIR)$(OMD_ROOT)/share/man/man8
 	gzip $(DESTDIR)$(OMD_ROOT)/share/man/man8/omd.8
-	mkdir -p $(DESTDIR)$(OMD_ROOT)/etc/init.d
-	install -m 755 omd.init $(DESTDIR)$(OMD_ROOT)/etc/init.d/omd
+	install -m 755 omd.init $(DESTDIR)$(OMD_ROOT)/share/omd/omd.init
+	install -m 644 apache.conf $(DESTDIR)$(OMD_ROOT)/share/omd/apache.conf
 
 skel:
 
