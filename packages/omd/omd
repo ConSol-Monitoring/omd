@@ -205,6 +205,13 @@ def group_exists(name):
     except:
 	return False
 
+def group_id(name):
+    try:
+	g = grp.getgrnam(name)
+	return g.gr_gid
+    except:
+	return None
+
 def user_logged_in(name):
     # Check, if processes of named user are existing
     return os.system("ps --no-headers --user '%s' >/dev/null 2>&1" % name) == 0
@@ -215,6 +222,7 @@ def switch_to_site_user():
     gid = p.pw_gid
     os.chdir(p.pw_dir)
     os.setgid(gid)
+    os.setgroups([group_id('omd')])
     os.setuid(uid)
 
 
