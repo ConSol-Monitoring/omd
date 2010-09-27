@@ -174,7 +174,7 @@ def useradd(sitename):
     # Create user for running site 'name'
     groupadd(sitename)
     useradd_options = g_info["USERADD_OPTIONS"]
-    os.system("useradd %s -d '%s' -c 'OMD instance %s' -g %s -G omd %s -s /bin/bash" % \
+    os.system("useradd %s -d '%s' -c 'OMD site %s' -g %s -G omd %s -s /bin/bash" % \
                 (useradd_options, site_dir(sitename), sitename, sitename, sitename))
 
     # Add Apache to new group. It needs to be able to write in to the 
