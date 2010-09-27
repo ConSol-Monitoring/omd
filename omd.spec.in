@@ -27,6 +27,13 @@ make PACKAGES=omd pack
 %install
 mkdir -p $RPM_BUILD_ROOT
 tar xzf omd-bin-%{version}.tar.gz -C $RPM_BUILD_ROOT
+# Remove symbolic links from package. The are shared
+# among all versions. Handle them in %post und %postun
+rm -f $RPM_BUILD_ROOT/omd
+rm -f $RPM_BUILD_ROOT/usr/bin/omd
+rm -f $RPM_BUILD_ROOT/usr/share/man/man8/omd.8.gz
+rm -f $RPM_BUILD_ROOT/@APACHE_CONFDIR@/*
+rm -f $RPM_BUILD_ROOT/etc/init.d/omd
 
 %files
 /opt/omd
@@ -61,6 +68,9 @@ chkconfig omd on
 echo "New default version is %{version}"
 ln -sfn "%{version}" /omd/versions/default
 ln -sfn /omd/versions/default/bin/omd /usr/bin/omd
+ln -sfn /omd/versions/default/share/man/man8/omd.8.gz /usr/share/man/man8/omd.8.gz
+ln -sfn /omd/versions/default/etc/init.d/omd /etc/init.d/omd
+ln -sfn /omd/versions/default/etc/apache2/conf.d/zzz_omd.conf /etc/apache2/conf.d/zzz_omd.conf
 
 %preun
 

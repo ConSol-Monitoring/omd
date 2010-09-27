@@ -61,29 +61,29 @@ mrproper:
 
 
 # Create installations files that do not lie beyond /omd/versions/$(OMD_VERSION)
-# and files not owned by a specific package
+# and files not owned by a specific package.
 install-global:
 	# Create link to default version
 	ln -s $(OMD_VERSION) $(DESTDIR)$(OMD_BASE)/versions/default
+
+	# Create global symbolic links. Those links are share between
+	# all installed versions and refer to the default version.
 	mkdir -p $(DESTDIR)/usr/bin
-	ln -sfn ../../omd/versions/default/bin/omd $(DESTDIR)/usr/bin/omd
+	ln -sfn /omd/versions/default/bin/omd $(DESTDIR)/usr/bin/omd
 	mkdir -p $(DESTDIR)/usr/share/man/man8
-	ln -sfn ../../../../omd/versions/default/share/man/man8/omd.8.gz $(DESTDIR)/usr/share/man/man8/omd.8.gz
+	ln -sfn /omd/versions/default/share/man/man8/omd.8.gz $(DESTDIR)/usr/share/man/man8/omd.8.gz
+	mkdir -p $(DESTDIR)/etc/init.d
+	ln -sfn /omd/versions/default/etc/init.d/omd $(DESTDIR)/etc/init.d/omd
+	mkdir -p $(DESTDIR)$(APACHE_CONF_DIR)
+	ln -sfn /omd/versions/default/etc/apache/conf.d/zzz_omd.conf $(DESTDIR)$(APACHE_CONF_DIR)/zzz_omd.conf
 
 	# Base directories below /omd
 	mkdir -p $(DESTDIR)$(OMD_BASE)/sites
 	mkdir -p $(DESTDIR)$(OMD_BASE)/apache
-	mkdir -p $(DESTDIR)$(APACHE_CONF_DIR)
 
-	# Apache configuration hook
-	install -m 644 apache.conf $(DESTDIR)$(APACHE_CONF_DIR)/zzz_omd.conf
-
-	# Startscript for OMD
-	mkdir -p $(DESTDIR)/etc/init.d
-	install -m 755 omd.init $(DESTDIR)/etc/init.d/omd
-	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/omd
 
 	# Information about distribution and OMD
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/omd
 	install -m 644 distros/Makefile.$(DISTRO_NAME)_$(DISTRO_VERSION) $(DESTDIR)$(OMD_ROOT)/share/omd/distro.info
 	echo -e "OMD_VERSION = $(OMD_VERSION)\nOMD_PHYSICAL_BASE = $(OMD_PHYSICAL_BASE)" > $(DESTDIR)$(OMD_ROOT)/share/omd/omd.info
 
