@@ -1,4 +1,4 @@
-omd-0.11 (0.11build3) unstable; urgency=low
+omd-0.12 (0.11build3) unstable; urgency=low
 
   * adding system group omd for suid nagios plugins and other stuff
 
