@@ -20,6 +20,11 @@ install:
 	install -m 755 $(DIR)/src/nsca $(DESTDIR)$(OMD_ROOT)/bin
 	install -m 755 $(DIR)/src/send_nsca $(DESTDIR)$(OMD_ROOT)/bin
 
+	mkdir $(DESTDIR)$(OMD_ROOT)/share/doc/nsca
+	install -m 644 $(DIR)/README $(DESTDIR)$(OMD_ROOT)/share/doc/nsca
+	install -m 644 $(DIR)/LEGAL $(DESTDIR)$(OMD_ROOT)/share/doc/nsca
+	install -m 644 $(DIR)/SECURITY $(DESTDIR)$(OMD_ROOT)/share/doc/nsca
+
 skel:
 
 clean:
