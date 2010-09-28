@@ -6,6 +6,7 @@ RPM_TOPDIR=$$(pwd)/rpm.topdir
 DPKG_TOPDIR=$$(pwd)/dpkg.topdir
 SOURCE_TGZ=omd-$(OMD_VERSION).tar.gz
 BIN_TGZ=omd-bin-$(OMD_VERSION).tar.gz
+NEWSERIAL=$$(($(OMD_SERIAL) + 1))
 
 .PHONY: install-global
 # You can select a subset of the packages by overriding this
@@ -156,7 +157,8 @@ xzf:
 
 version:
 	@newversion=$$(dialog --stdout --inputbox "New Version:" 0 0 "$(OMD_VERSION)") ; \
-	if [ -n "$$newversion" ] ; then \
+	if [ -n "$$newversion" ] && [ "$$newversion" != "$(OMD_VERSION)" ]; then \
 	    sed -ri 's/^(OMD_VERSION[[:space:]]*= *).*/\1'"$$newversion/" Makefile.omd ; \
+	    sed -ri 's/^(OMD_SERIAL[[:space:]]*= *).*/\1'"$(NEWSERIAL)/" Makefile.omd ; \
 	    sed -ri 's/^(OMD_VERSION[[:space:]]*= *).*/\1"'"$$newversion"'"/' packages/omd/omd ; \
 	fi ; \
