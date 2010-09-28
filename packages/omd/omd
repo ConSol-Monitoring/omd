@@ -1501,6 +1501,10 @@ if g_sitename and site_must_exist and command != "update":
         if os.path.exists(omd_path):
             os.execv("/omd/versions/%s/bin/omd" % v, sys.argv)
 	    bail_out("Cannot run bin/omd of version %s.\n" % v)
+        else:
+            bail_out("Site %s uses version %s which is not installed.\n" 
+                    "Please reinstall that version and retry this command.\n" % 
+                    (g_sitename, v))
 
 
 if g_sitename:
