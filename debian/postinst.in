@@ -5,7 +5,7 @@
 
 set -e
 
-NAGIOS_PLUGIN_PATH="/omd/versions/default/lib/nagios/plugins"
+NAGIOS_PLUGIN_PATH="/omd/versions/###OMD_VERSION###/lib/nagios/plugins"
 SUID_PLUGINS="check_icmp check_dhcp"
 APACHE_OMD_CONF="/etc/apache2/conf.d/zzz_omd.conf"
 
@@ -39,13 +39,14 @@ setperm() {
 
 case "$1" in
   configure)
-    update-alternatives --install /opt/omd/versions/default \
-       omd /opt/omd/versions/###OMD_VERSION### 10 \
+    ln -sfn /opt/omd /omd
+    update-alternatives --install /omd/versions/default \
+       omd /omd/versions/###OMD_VERSION### ###OMD_SERIAL### \
+       --slave /usr/bin/omd omd.bin /omd/versions/###OMD_VERSION###/bin/omd \
        --slave /etc/init.d/omd omd.init /etc/init.d/omd-###OMD_VERSION### \
        --slave /etc/default/omd omd.default /etc/default/omd-###OMD_VERSION### \
        --slave /usr/share/man/man8/omd.8.gz omd.man8 \
-               /opt/omd/versions/###OMD_VERSION###/share/man/man8/omd.8.gz
-    ln -sfn /opt/omd/versions/default/bin/omd /usr/bin/omd
+               /omd/versions/###OMD_VERSION###/share/man/man8/omd.8.gz
 
     # -- looking for group nagios, create it, if not exist
     if ! getent group omd > /dev/null ; then
@@ -65,9 +66,9 @@ case "$1" in
     db_stop
     # -- create apache conf.d if not exist
     if ! test -e $APACHE_OMD_CONF; then
-      echo "Include /opt/omd/apache/*.conf" > $APACHE_OMD_CONF
-      # avoid apache error message including /opt/omd/apache if no site exist
-      touch "/opt/omd/apache/empty.conf"
+      echo "Include /omd/apache/*.conf" > $APACHE_OMD_CONF
+      # avoid apache error message including /omd/apache if no site exist
+      touch "/omd/apache/empty.conf"
     fi
     ;;
 

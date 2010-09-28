@@ -1,3 +1,10 @@
+omd-0.17 (0.17build1) unstable; urgency=low
+
+  * new upstream version
+  * postinst, postrm now better works with multiple omd versions
+
+ -- Wolfgang Barth <wob@swobspace.net>  Tue, 28 Sep 2010 09:05:08 +0200
+
 omd-0.12 (0.11build3) unstable; urgency=low
 
   * adding system group omd for suid nagios plugins and other stuff

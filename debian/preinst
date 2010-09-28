@@ -13,6 +13,13 @@ set -e
 # for details, see http://www.debian.org/doc/debian-policy/ or
 # the debian-policy package
 
+if [ -x "/etc/init.d/omd" ]; then
+  if [ -x /usr/sbin/invoke-rc.d ]; then
+    invoke-rc.d omd stop || true
+  else
+    /etc/init.d/omd stop || true
+  fi
+fi
 
 case "$1" in
     install|upgrade)
