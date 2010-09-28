@@ -18,6 +18,11 @@ build:
 
 install:
 	install -m 755 $(DIR)/src/check_nrpe $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins
+	
+	mkdir $(DESTDIR)$(OMD_ROOT)/share/doc/nrpe
+	install -m 644 $(DIR)/README $(DESTDIR)$(OMD_ROOT)/share/doc/nrpe
+	install -m 644 $(DIR)/LEGAL $(DESTDIR)$(OMD_ROOT)/share/doc/nrpe
+	install -m 644 $(DIR)/SECURITY $(DESTDIR)$(OMD_ROOT)/share/doc/nrpe
 
 skel:
 
