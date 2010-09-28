@@ -128,7 +128,7 @@ deb-environment:
 deb-newversion: deb-environment
 	dch --package omd-$(OMD_VERSION) \
 	    --newversion $(OMD_VERSION)build1 \
-	    --distributor 'unstable'
+	    --distributor 'unstable' "new upstream version"
 
 # incrementing debian packaging version (same OMD version)
 deb-incversion: deb-environment
@@ -161,4 +161,5 @@ version:
 	    sed -ri 's/^(OMD_VERSION[[:space:]]*= *).*/\1'"$$newversion/" Makefile.omd ; \
 	    sed -ri 's/^(OMD_SERIAL[[:space:]]*= *).*/\1'"$(NEWSERIAL)/" Makefile.omd ; \
 	    sed -ri 's/^(OMD_VERSION[[:space:]]*= *).*/\1"'"$$newversion"'"/' packages/omd/omd ; \
-	fi ; \
+	    make deb-newversion ; \
+	fi ;
