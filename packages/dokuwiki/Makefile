@@ -18,6 +18,11 @@ install:
 	touch $(DIR)/conf $(DIR)/data
 	rm -r $(DIR)/conf $(DIR)/data
 	cp -r $(DIR) $(DESTDIR)$(OMD_ROOT)/share/dokuwiki/htdocs
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/doc/dokuwiki
+	install -m 644 $(DIR)/README $(DESTDIR)$(OMD_ROOT)/share/doc/dokuwiki
+	install -m 644 $(DIR)/COPYING $(DESTDIR)$(OMD_ROOT)/share/doc/dokuwiki
+	install -m 644 $(DIR)/VERSION $(DESTDIR)$(OMD_ROOT)/share/doc/dokuwiki
+
 
 skel:
 	# Optional target called to create additional files below skel
