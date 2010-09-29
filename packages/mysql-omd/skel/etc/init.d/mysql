@@ -39,9 +39,10 @@ mysql_wait_start() {
         return 1
     else
         mysqld_safe --defaults-file=$MYSQL_CNF --user=$MYSQLD_USER >/dev/null 2>&1 &
+        i=0
         while mysqld_status check_dead nowarn;  do
             if [ $i = '10' ]; then
-										return 1
+		return 1
             else
                 echo -n "."
                 i=$(($i+1))
