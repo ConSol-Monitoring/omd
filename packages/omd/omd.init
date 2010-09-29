@@ -3,8 +3,8 @@
 
 ### BEGIN INIT INFO
 # Provides:          omd
-# Required-Start:    $remote_fs $syslog $time
-# Required-Stop:     $remote_fs $syslog $time
+# Required-Start:    $syslog
+# Required-Stop:     $syslog
 # Default-Start:     2 3 4 5
 # Default-Stop:      1
 # Short-Description: OMD sites
