@@ -897,6 +897,11 @@ def config_load_hooks():
     # now load actual values from site.conf, if available
     config_load()
 
+def refresh_hooks():
+    config_load_hooks()
+    config_set_all() # execute 'set' functions with current values
+    config_save()
+
 def call_hook(hookname, args):
     hook_file = g_sitedir + "/lib/omd/hooks/" + hookname
     argsstring = " ".join([ "'%s'" % arg for arg in args ])
@@ -976,9 +981,15 @@ def config_set_all():
 
 def config_set_value(hookname, value):
     hook = g_hooks.get(hookname)
+
+    # Call hook with 'set'. If it outputs something, that will
+    # be our new value (i.e. hook disagrees with the new setting!)
+    answer = os.popen("%s/lib/omd/hooks/%s set '%s'" % (g_sitedir, hookname, value)).read()
+    if len(answer) > 0:
+        value = answer.strip()
+
     hook["value"] = value
     config_save()
-    os.system("%s/lib/omd/hooks/%s set '%s'" % (g_sitedir, hookname, value))
 
 def config_usage():
     sys.stdout.write("""Usage of config command:
@@ -1178,6 +1189,7 @@ def main_rm(args):
     reload_apache()
 
 def main_mv(args):
+    global g_sitename
     if len(args) != 1:
 	bail_out("omd: Usage: omd mv oldname newname\n")
     new = args[0]
@@ -1210,12 +1222,18 @@ def main_mv(args):
     userdel(old)
 
     sys.stdout.write("OK\n")
+
+    g_sitename = new
+    refresh_hooks()
+
     add_to_fstab(new)
 
     # Tell Apache about changes
     reload_apache()
 
 def main_cp(args):
+    global g_sitename
+
     if len(args) != 1:
 	bail_out("omd: Usage: omd cp oldname newname\n")
     new = args[0]
@@ -1243,6 +1261,9 @@ def main_cp(args):
     useradd(new)
     chown_tree(site_dir(new), new)
     sys.stdout.write("OK\n")
+
+    g_sitename = new
+    refresh_hooks()
 
     # Entry for tmps in /etc/fstab
     add_to_fstab(new)
@@ -1318,8 +1339,11 @@ def main_update(args):
 		    sys.stderr.write("Error updating %s/%s: %s\n" % (g_sitedir, entry, e))	
 		    raise
 
-    # Finally change symbolic link pointing to new version
+    # Change symbolic link pointing to new version
     create_version_symlink(g_sitename, to_version)
+
+    # Let hooks do their work and update configuration
+    refresh_hooks()
 
 
 

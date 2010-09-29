@@ -1,5 +1,30 @@
 #!/bin/bash
 
+port_is_used ()
+{
+    local PORT=$1
+    for conf in /omd/sites/*/etc/omd/site.conf 
+    do
+        [ $conf != /omd/sites/$OMD_SITE/etc/omd/site.conf ] || continue
+        if grep -qx "CONFIG_APACHE_TCP_PORT='$PORT'" < $conf > /dev/null 2>&1 ; then
+            return 0
+        fi
+    done
+    return 1
+}
+
+
+next_free_hook ()
+{
+    local PORT=$1
+    while port_is_used $PORT
+    do
+        PORT=$((PORT + 1))
+    done
+    echo "$PORT"
+}
+
+
 case "$1" in
     alias)
         echo "TCP port number for Apache"
@@ -17,27 +42,24 @@ EOF
     default)
         # Scan for a free port number by looking at the
         # configuration of the other sites...
-	PORT=5000
-	while grep -qx "CONFIG_APACHE_TCP_PORT='$PORT'" /omd/sites/*/etc/omd/site.conf > /dev/null 2>&1
-	do
-	    PORT=$((PORT + 1))
-        done
+	PORT=$(next_free_hook 5000)
         echo "$PORT"
     ;;
     choices)
         echo "[1-9][0-9]{0,4}"
     ;;
     set)
+        PORT=$(next_free_hook $2)
         cat <<EOF > $OMD_ROOT/etc/apache/listen-port.conf
 # This file is created by 'omd config set APACHE_TCP_PORT'. 
 # Better do not edit manually
-Listen 127.0.0.1:$2
+Listen 127.0.0.1:$PORT
 EOF
         cat <<EOF > $OMD_ROOT/etc/apache/proxy-port.conf
 # This file is created by 'omd config set APACHE_TCP_PORT'. 
 # Better do not edit manually
 <IfModule mod_proxy_http.c>
-  <Proxy http://127.0.0.1:$2/$OMD_SITE>
+  <Proxy http://127.0.0.1:$PORT/$OMD_SITE>
     Order allow,deny
     allow from all
   </Proxy>
@@ -45,10 +67,14 @@ EOF
   <Location /$OMD_SITE>
     # Setting "retry=0" to prevent 60 second caching of problem states e.g. when
     # the site apache is down and someone tries to access the page.
-    ProxyPass http://127.0.0.1:$2/$OMD_SITE retry=0
-    ProxyPassReverse http://127.0.0.1:$2/$OMD_SITE
+    ProxyPass http://127.0.0.1:$PORT/$OMD_SITE retry=0
+    ProxyPassReverse http://127.0.0.1:$PORT/$OMD_SITE
   </Location>
 </IfModule>
 EOF
+        if [ "$PORT" != "$2" ] ; then
+            echo "Apache port $2 is in use. I've choosen $PORT instead." >&2
+            echo "$PORT"
+        fi
     ;;
 esac
