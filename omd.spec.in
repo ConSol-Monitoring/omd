@@ -74,6 +74,21 @@ ln -sfn /omd/versions/default/share/omd/omd.init /etc/init.d/omd
 ln -sfn /omd/versions/default/share/omd/apache.conf @APACHE_CONFDIR@/zzz_omd.conf
 chkconfig omd on
 
+# SLES: make sure apache modules are activated
+if which a2enmod >/dev/null 2>&1
+then
+    echo "Makeing sure that Apache modules proxy and http_proxy are activated."
+    a2enmod proxy 2>/dev/null || true
+    a2enmod proxy_http 2>/dev/null || true
+fi
+
+# SLES: make sure that the following file exists:
+if [ -d /etc/apache2/sysconfig.d ]
+then
+    touch /etc/apache2/sysconfig.d/include.conf
+fi
+
+
 %preun
 # Make sure no sites use that version
 for link in /omd/sites/*/version
