@@ -103,7 +103,8 @@ $(SOURCE_TGZ) dist:
 # works within a GIT repository.
 rpm:
 	sed -e 's/^Requires:.*/Requires:	$(OS_PACKAGES)/' \
-            -e 's/%{version}/$(OMD_VERSION)/' \
+            -e 's/%{version}/$(OMD_VERSION)/g' \
+            -e 's/^Release:.*/Release: $(OMD_SERIAL)/' \
 	    -e 's#@APACHE_CONFDIR@#$(APACHE_CONF_DIR)#g' \
 	    omd.spec.in > omd.spec
 	rm -f $(SOURCE_TGZ)
