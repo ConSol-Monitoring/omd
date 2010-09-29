@@ -415,7 +415,8 @@ def patch_skeleton_files(old, new):
         for fn in filenames:
             src = dirpath + "/" + fn
             dst = targetdir + "/" + fn
-            if os.path.isfile(src) and not os.path.islink(src): # links are also files??.
+            if os.path.isfile(src) and not os.path.islink(src) \
+                and os.path.exists(dst): # not deleted by user
 		try:
 		    patch_template_file(src, dst, old, new)
                 except Exception, e:
