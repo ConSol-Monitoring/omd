@@ -9,6 +9,7 @@ DIR = $(NAME)-$(VERSION)
 build:
 	tar xzf $(DIR).tar.gz
 	patch $(DIR)/share/server/core/defines/global.php global.php.patch
+	patch $(DIR)/share/server/core/classes/GlobalMainCfg.php disable-maincfg-cache.patch
 
 install:
 	cd $(DIR) ; ./install.sh -q -F -c y -a n \
@@ -36,6 +37,7 @@ skel:
 	chmod 775 $(SKEL)/etc/nagvis/automaps
 	chmod 664 $(SKEL)/etc/nagvis/automaps/*
 	chmod 664 $(SKEL)/etc/nagvis/nagvis.ini.php
+	chmod 664 $(SKEL)/etc/nagvis/nagvis-omd.ini.php
 	chmod 664 $(SKEL)/etc/nagvis/auth.db
 	chmod 775 $(SKEL)/var/nagvis/userfiles/images/maps
 	chmod 664 $(SKEL)/var/nagvis/userfiles/images/maps/*
