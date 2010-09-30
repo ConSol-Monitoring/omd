@@ -21,11 +21,15 @@ install:
 	 -b $(DESTDIR)/usr/bin \
 	 -p $(DESTDIR)$(OMD_ROOT)/share/nagvis
 
-	# Move directories
+	# Move userfiles to skel to allow site specific modifications
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/skel/var/nagvis
 	mv $(DESTDIR)$(OMD_ROOT)/share/nagvis/share/userfiles $(DESTDIR)$(OMD_ROOT)/skel/var/nagvis/userfiles
 
-	# Delete files we do not want to package
+	# Move package documentations
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/doc/nagvis
+	mv $(DESTDIR)$(OMD_ROOT)/share/nagvis/{LICENCE,README} $(DESTDIR)$(OMD_ROOT)/share/doc/nagvis
+
+	# Delete files/directories we do not want to pack
 	rm -rf $(DESTDIR)$(OMD_ROOT)/share/nagvis/var
 	rm -rf $(DESTDIR)$(OMD_ROOT)/share/nagvis/etc
 
