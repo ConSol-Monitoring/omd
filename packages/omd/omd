@@ -88,7 +88,7 @@ def ask_user_choices(title, message, choices):
 	for c, t in choices:
 	   argv += [ c, t ]
 	choice = Popen(argv, stderr=PIPE).stderr.read()
-        return choice.strip()	
+        return choice.strip()
     else:
 	sys.stdout.write(tty_bgcyan + tty_white + tty_bold + title + tty_normal + "\n")
 	sys.stdout.write(message + "\n\n")
@@ -104,7 +104,7 @@ def ask_user_choices(title, message, choices):
 	while True:
 	    sys.stdout.write("[%s] ==> " %
 		    "/".join([char for (char, (c,t)) in zip(chars, choices)]))
-	    sys.stdout.flush()	
+	    sys.stdout.flush()
 	    a = sys.stdin.readline().strip().lower()
 	    for char, (choice, title) in zip(chars, choices):
 		if a == char:
@@ -177,7 +177,7 @@ def useradd(sitename):
     os.system("useradd %s -d '%s' -c 'OMD site %s' -g %s -G omd %s -s /bin/bash" % \
                 (useradd_options, site_dir(sitename), sitename, sitename, sitename))
 
-    # Add Apache to new group. It needs to be able to write in to the 
+    # Add Apache to new group. It needs to be able to write in to the
     # command pipe and possible other stuff
     add_user_to_group(g_info["APACHE_USER"], sitename)
 
@@ -187,9 +187,10 @@ def add_user_to_group(user, group):
 
 def userdel(name):
     os.system("userdel -r " + name + " 2>/dev/null")
-    # FIXME: On some OSes (Debian) the group is automatically removed if
-    # it bears the same name as the user
-    os.system("groupdel " + name + " 2>/dev/null")
+    # On some OSes (e.g. debian) the group is automatically removed if
+    # it bears the same name as the user. So first check for the group.
+    if group_exists(name):
+        groupdel(name)
 
 def user_exists(name):
     try:
@@ -332,7 +333,7 @@ def create_skeleton_files(sitename, dir):
     exclude_tmp = dir == '.'
     skelroot = "/omd/versions/%s/skel" % OMD_VERSION
     os.chdir(skelroot)  # make relative paths
-    for dirpath, dirnames, filenames in os.walk(dir): 
+    for dirpath, dirnames, filenames in os.walk(dir):
         if dirpath.startswith("./"):
             dirpath = dirpath[2:]
 	if dirpath == "tmp" and exclude_tmp:
@@ -381,7 +382,6 @@ def delete_apache_hook(sitename):
 	sys.stderr.write("Cannot remove apache hook %s: %s\n" % (hook_path, e))
 
 def reload_apache():
-    # FIXME: This is OS specific
     sys.stdout.write("Reloading Apache...")
     sys.stdout.flush()
     os.system("%s restart" % g_info["APACHE_CTL"])
@@ -406,8 +406,8 @@ def stop_site(sitename):
 def patch_skeleton_files(old, new):
     skelroot = "/omd/versions/%s/skel" % OMD_VERSION
     os.chdir(skelroot)  # make relative paths
-    for dirpath, dirnames, filenames in os.walk("."): 
-        if dirpath.startswith("./"): 
+    for dirpath, dirnames, filenames in os.walk("."):
+        if dirpath.startswith("./"):
             dirpath = dirpath[2:]
         targetdir = site_dir(new) + "/" + dirpath
         if targetdir.startswith(tmp_dir(new)):
@@ -429,7 +429,7 @@ def chown_tree(dir, user):
     uid = pwd.getpwnam(user).pw_uid
     gid = pwd.getpwnam(user).pw_gid
     os.chown(dir, uid, gid)
-    for dirpath, dirnames, filenames in os.walk(dir): 
+    for dirpath, dirnames, filenames in os.walk(dir):
         for entry in dirnames + filenames:
             os.lchown(dirpath + "/" + entry, uid, gid)
 
@@ -452,9 +452,9 @@ def patch_template_file(src, dst, old, new):
         }
         file("%s.skel.%s" % (dst, site), "w").write(replace_tags(content, replacements))
 
-    # Now create patch from old to new and immediately apply on 
+    # Now create patch from old to new and immediately apply on
     # existing - possibly user modified - file.
-    if 0 == os.system("diff -u %s.skel.%s %s.skel.%s | patch --force --backup --forward --silent %s" % 
+    if 0 == os.system("diff -u %s.skel.%s %s.skel.%s | patch --force --backup --forward --silent %s" %
             (dst, old, dst, new, dst)):
         # remove unnecessary files
         try:
@@ -471,9 +471,9 @@ def patch_template_file(src, dst, old, new):
 # old->user version
 def merge_update_file(relpath, old_version, new_version):
     fn = tty_bold + tty_bgblue + tty_white + relpath + tty_normal
-    sys.stdout.write(warn + " Merging changes from %s to %s with your changes of %s...\n" % 
+    sys.stdout.write(warn + " Merging changes from %s to %s with your changes of %s...\n" %
 	    (old_version, new_version, fn))
-	   
+
     replacements = {
         "###SITE###" : g_sitename,
         "###ROOT###" : g_sitedir,
@@ -494,7 +494,7 @@ def merge_update_file(relpath, old_version, new_version):
     else:
 	exitcode = 0
     if exitcode == 0:
-	sys.stdout.write("Successfully merged changes from %s -> %s into %s\n" % 
+	sys.stdout.write("Successfully merged changes from %s -> %s into %s\n" %
 		(old_version, new_version, fn))
 	return
 
@@ -508,7 +508,7 @@ def merge_update_file(relpath, old_version, new_version):
 		( old_version, new_version, relpath ),
 		[ ( "diff",    "Show differences between your and the new default version" ),
 		  ( "new",     "Show what has changed from %s to %s" % (old_version, new_version) ),
-		  ( "edit",    "Edit file %s (watch out for >>>>> and <<<<<)" % editor ), 
+		  ( "edit",    "Edit file %s (watch out for >>>>> and <<<<<)" % editor ),
 		  ( "keep",    "Keep half-merged version of the file" ),
 		  ( "restore", "Restore your original version of the file" ),
 		  ( "install", "Install the new default version" ),
@@ -563,9 +563,9 @@ def filetype(p):
 	return "file"
 
 def update_file(old_version, new_version, userdir, relpath):
-#     sys.stdout.write("Updating %s | %s | %s | %s\n" % 
+#     sys.stdout.write("Updating %s | %s | %s | %s\n" %
 # 		(old_skel, new_skel, userdir, relpath))
-# 
+#
     old_skel = "/omd/versions/%s/skel" % old_version
     new_skel = "/omd/versions/%s/skel" % new_version
 
@@ -637,7 +637,7 @@ def update_file(old_version, new_version, userdir, relpath):
     #    is in the way.
     # 2a) the users file is identical with our new version
     elif not old_type and not differs:
-    	sys.stdout.write(good + " Both you and new version created a new %s %s with the same content. Good.\n" % 
+    	sys.stdout.write(good + " Both you and new version created a new %s %s with the same content. Good.\n" %
 		(new_type, fn))
 
     # 2b) user's file has a different content or type
@@ -694,7 +694,7 @@ def update_file(old_version, new_version, userdir, relpath):
     # 4b) File changed in new version. Simply warn.
     elif not user_type:
 	sys.stdout.write(warn + " File %s has changed in new version, you've deleted it anyway. Ignoring.\n" % fn)
-	
+
     # B ---> UNCHANGED, EASY CASES
 
     # 5) New version didn't change anything -> no need to update
@@ -707,9 +707,9 @@ def update_file(old_version, new_version, userdir, relpath):
 	sys.stdout.write(good + " Installed new version of %s.\n" % fn)
 
     # 7) User changed, but accidentally exactly as we did -> no action neccessary
-    elif not differs: 
+    elif not differs:
 	sys.stdout.write(good + " You've changed %s exactly as in the new version. Keeping.\n" % fn)
-    
+
     # TEST UNTIL HERE
 
     # C ---> PATCH DAY, HANDLE FILES
@@ -724,8 +724,8 @@ def update_file(old_version, new_version, userdir, relpath):
 		"%s in the old version and to "
 		"%s in the new version. But meanwhile you "
 		"changed to link target to %s. "
-		"Shall I keep your link or replace it with " 
-		"the new default target?" % 
+		"Shall I keep your link or replace it with "
+		"the new default target?" %
 		(relpath, os.readlink(old_path), os.readlink(new_path), os.readlink(user_path)),
 		"keep", "replace"):
 	    sys.stdout.write(warn + " Keeping your link %s\n" % fn)
@@ -746,7 +746,7 @@ def update_file(old_version, new_version, userdir, relpath):
 		"the new version. Meanwhile you have changed "
 		"the %s of your copy of that %s. "
 		"Do you want to keep your version or use "
-		"the new default? " % 
+		"the new default? " %
 		(old_type, relpath, new_type, user_changed_type and "type" or "content",
 		 old_type),
 		"keep", "use new"):
@@ -754,7 +754,6 @@ def update_file(old_version, new_version, userdir, relpath):
 	else:
 	    create_skeleton_file(new_skel, userdir, relpath, replacements)
 	    sys.stdout.write(warn + " Replaced your %s %s by new default %s.\n" % (user_type, relpath, new_type))
-	    
 
     # 10) The user has changed the file type, we just the content
     elif old_type != user_type:
@@ -776,7 +775,7 @@ def update_file(old_version, new_version, userdir, relpath):
 	       "%s, and I do not have the "
 	       "slightest what's going on here. May "
 	       "I please install the new default %s "
-	       "here, or do you want to keep your %s?" % 
+	       "here, or do you want to keep your %s?" %
 	       (relpath, new_type, user_type),
 	       "keep", "install new"):
 	    sys.stdout.write(warn + " Keeping your %s %s.\n" % (user_type, fn))
@@ -794,7 +793,7 @@ def init_scripts(sitename):
         return rc_dir, []
 
 def call_init_scripts(sitename, command):
-    # Restart: Do not restart each service after another, 
+    # Restart: Do not restart each service after another,
     # but first do stop all, then start all again! This
     # preserves the order.
     if command == "restart":
@@ -827,7 +826,7 @@ def check_status(sitename, display=True):
         if display:
             sys.stdout.write(" %s:" % komponent)
         state = os.system("%s/%s status >/dev/null 2>&1" % (rc_dir, script)) >> 8
-        if display: 
+        if display:
             sys.stdout.write(tty_bold)
         if state == 0:
             if display:
@@ -841,7 +840,6 @@ def check_status(sitename, display=True):
             if display:
                 sys.stdout.write(tty_red + "stopped")
         if display:
-            
             sys.stdout.write(tty_normal)
     if display:
         sys.stdout.write("\n")
@@ -861,7 +859,7 @@ def config_load():
 
     for line in file(confpath):
 	line = line.strip()
-	if line == "" or line[0] == "#": 
+	if line == "" or line[0] == "#":
 	    continue
 	var, value = line.split("=", 1)
 	value = value.strip('"').strip("'")
@@ -909,7 +907,7 @@ def call_hook(hookname, args):
     os.putenv("OMD_SITE", g_sitename)
     return os.popen(hook_file + " " + argsstring).read().strip()
 
-def config_load_hook(hookname): 
+def config_load_hook(hookname):
 
     def get_hook_info(info):
 	return call_hook(hookname, [info])
@@ -938,7 +936,7 @@ def config_load_hook(hookname):
         except:
             sys.stderr.write("Invalid output of hook: %s\n" % choicestxt)
             sys.exit(1)
-            
+
     hook["choices"] = choices
     return hook
 
@@ -1027,12 +1025,12 @@ def init_action(command):
         return call_init_scripts(g_sitename, command)
 
 # ----------------------------------------------------------
-#                                                  _     
-#     ___ ___  _ __ ___  _ __ ___   __ _ _ __   __| |___ 
+#                                                  _
+#     ___ ___  _ __ ___  _ __ ___   __ _ _ __   __| |___
 #    / __/ _ \| '_ ` _ \| '_ ` _ \ / _` | '_ \ / _` / __|
 #   | (_| (_) | | | | | | | | | | | (_| | | | | (_| \__ \
 #    \___\___/|_| |_| |_|_| |_| |_|\__,_|_| |_|\__,_|___/
-#                                                        
+#
 # ----------------------------------------------------------
 def main_help(args=[]):
     am_root = os.getuid() == 0
@@ -1071,13 +1069,13 @@ def main_setup(args):
     command = g_info["ACTIVATE_INITSCRIPT"].replace("%s", "omd")
     if 0 != os.system(command):
         sys.stdout.write("ERROR\n")
-        
+
     # Create group 'omd'
     if not group_exists('omd'):
         sys.stdout.write("Creating new group 'omd'\n")
         groupadd('omd')
 
-    # set SUID bit for certain plugins (neccessary for 
+    # set SUID bit for certain plugins (neccessary for
     # non RPM/DEB installations (FIXME: find a more elegant
     # solution later)
     for plugin in [ 'check_icmp', 'check_dhcp' ]:
@@ -1094,13 +1092,13 @@ def main_uninstall(args):
         g_sitedir = site_dir(g_sitename)
 	main_rm([])
 
-    for path in [ g_info["OMD_PHYSICAL_BASE"], 
-		  "/omd", 
+    for path in [ g_info["OMD_PHYSICAL_BASE"],
+		  "/omd",
 		  g_info["APACHE_CONF_DIR"] + "/zzz_omd.conf",
 		  "/etc/init.d/omd",
 		  "/usr/bin/omd" ]:
 	os.system("rm -rf '%s'" % path)
-        
+
     groupdel('omd')
 
     sys.stdout.write("Good bye.\n")
@@ -1167,7 +1165,7 @@ def main_create(args):
     # user. We also could do this at 'omd start', but this might confuse
     # users. They could create files below tmp which would be shadowed
     # by the mount.
-    create_tmpfs(g_sitename)    
+    create_tmpfs(g_sitename)
 
 
 def main_rm(args):
@@ -1392,7 +1390,7 @@ def main_config(args):
 #               | '_ ` _ \ / _` | | '_ \ 
 #               | | | | | | (_| | | | | |
 #               |_| |_| |_|\__,_|_|_| |_|
-#                                        
+#
 # ----------------------------------------------------------
 
 # If command that refer to a site are called as root
@@ -1407,7 +1405,8 @@ commands = [
 
   ( "setup",     True,  0, 0, True, "",        main_setup,
     "Prepare operating system for OMD (installs packages)",
-    "We will install missing packages from your operating system and setup Apache"),
+    "We will install missing packages from your operating system and setup the"
+    "system apache daemon (add configuration files and modules needed by omd)"),
 
   ( "uninstall", True,  0, 0, True, "",        main_uninstall,
     "Remove OMD and all sites!",
@@ -1430,25 +1429,35 @@ commands = [
   ( "create",    True,  1, 0, False, "",        main_create,
     "Create a new site",
 
-    "This action performs the following actions on your system:\n"
-    "- The user XY is being created\n"
-    "- FIXME..."),
+    "This command performs the following actions on your system:\n"
+    "- Create the system user <SITENAME>\n"
+    "- Create the system group <SITENAME>\n"
+    "- Create and populate the site home directory\n"
+    "- Restart the system wide apache daemon\n"
+    "- Add tmpfs for the site to fstab and mount it"),
 
   ( "rm",        True,  1, 1, True, "",        main_rm,
     "Remove a site (and its data)",
 
     "PLEASE NOTE: This action removes all configuration files\n"
-    "             and variable data of site XY\n"),
+    "             and variable data of the site.\n"
+    "\n"
+    "In detail the following steps will be done:\n"
+    "- Stop all processes of the site\n"
+    "- Unmount tmpfs of the site\n"
+    "- Remove tmpfs of the site from fstab\n"
+    "- Remove the system user <SITENAME>\n"
+    "- Remove the system group <SITENAME>\n"
+    "- Remove the site home directory\n"
+    "- Restart the system wide apache daemon\n"),
 
   ( "mv",        True,  1, 1, False, "NEWNAME", main_mv,
     "Rename a site",
-
-    "The site XY will be renamed to Z."),
+    ""),
 
   ( "cp",        True,  1, 1, False, "NEWNAME", main_cp,
     "Make a copy of a site",
-
-    "The whole site Xy will be copied to Z. A new system user Z will be created.\n"),
+    ""),
 
   ( "update",    False, 1, 1, False, "", main_update,
     "Update site to version " + OMD_VERSION,
@@ -1539,9 +1548,9 @@ else:
 
 read_info()
 
-# Commands which affect a site and can be called as root *or* as 
-# site user should always run with site user priviledges. That way 
-# we are sure that new files and processes are created under the 
+# Commands which affect a site and can be called as root *or* as
+# site user should always run with site user priviledges. That way
+# we are sure that new files and processes are created under the
 # site user and never as root.
 if g_sitename and os.getuid() == 0 and not only_root:
     switch_to_site_user()

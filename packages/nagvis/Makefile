@@ -9,6 +9,7 @@ DIR = $(NAME)-$(VERSION)
 build:
 	tar xzf $(DIR).tar.gz
 	patch $(DIR)/share/server/core/defines/global.php global.php.patch
+	patch $(DIR)/share/server/core/classes/GlobalMainCfg.php disable-maincfg-cache.patch
 
 install:
 	cd $(DIR) ; ./install.sh -q -F -c y -a n \
@@ -20,11 +21,15 @@ install:
 	 -b $(DESTDIR)/usr/bin \
 	 -p $(DESTDIR)$(OMD_ROOT)/share/nagvis
 
-	# Move directories
+	# Move userfiles to skel to allow site specific modifications
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/skel/var/nagvis
 	mv $(DESTDIR)$(OMD_ROOT)/share/nagvis/share/userfiles $(DESTDIR)$(OMD_ROOT)/skel/var/nagvis/userfiles
 
-	# Delete files we do not want to package
+	# Move package documentations to have these files in the binary packages
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/doc/$(NAME)
+	mv $(DESTDIR)$(OMD_ROOT)/share/nagvis/{LICENCE,README} $(DESTDIR)$(OMD_ROOT)/share/doc/$(NAME)
+
+	# Delete files/directories we do not want to pack
 	rm -rf $(DESTDIR)$(OMD_ROOT)/share/nagvis/var
 	rm -rf $(DESTDIR)$(OMD_ROOT)/share/nagvis/etc
 
@@ -36,6 +41,7 @@ skel:
 	chmod 775 $(SKEL)/etc/nagvis/automaps
 	chmod 664 $(SKEL)/etc/nagvis/automaps/*
 	chmod 664 $(SKEL)/etc/nagvis/nagvis.ini.php
+	chmod 664 $(SKEL)/etc/nagvis/nagvis-omd.ini.php
 	chmod 664 $(SKEL)/etc/nagvis/auth.db
 	chmod 775 $(SKEL)/var/nagvis/userfiles/images/maps
 	chmod 664 $(SKEL)/var/nagvis/userfiles/images/maps/*
