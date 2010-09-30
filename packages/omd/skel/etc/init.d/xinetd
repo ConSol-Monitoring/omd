@@ -22,8 +22,13 @@ case "$1" in
 	    rm -f $PIDFILE
 	fi
 
-	$DAEMON $OPTS
-	echo OK
+        # Do not use usual system daemon path. Some start script
+        # (e.g. SLES) will think that the system xinetd is already
+        # running and do not start it if the OMD xinetd is running.
+        mkdir -p $OMD_ROOT/var/tmp
+        cp $DAEMON $OMD_ROOT/var/tmp/xinetd
+        $OMD_ROOT/var/tmp/xinetd $OPTS
+        echo OK
     ;;
     stop)
 	echo -n 'Stopping xinetd...'
@@ -35,6 +40,7 @@ case "$1" in
         else
 	    echo "Failed"
         fi
+        rm -f $OMD_ROOT/var/tmp/xinetd
     ;;
     restart)
 	$0 stop
