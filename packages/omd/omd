@@ -1434,23 +1434,30 @@ commands = [
     "- Create the system group <SITENAME>\n"
     "- Create and populate the site home directory\n"
     "- Restart the system wide apache daemon\n"
-    "- Create and mount tmpfs for the site"),
+    "- Add tmpfs for the site to fstab and mount it"),
 
   ( "rm",        True,  1, 1, True, "",        main_rm,
     "Remove a site (and its data)",
 
     "PLEASE NOTE: This action removes all configuration files\n"
-    "             and variable data of site XY\n"),
+    "             and variable data of the site.\n"
+    "\n"
+    "In detail the following steps will be done:\n"
+    "- Stop all processes of the site\n"
+    "- Unmount tmpfs of the site\n"
+    "- Remove tmpfs of the site from fstab\n"
+    "- Remove the system user <SITENAME>\n"
+    "- Remove the system group <SITENAME>\n"
+    "- Remove the site home directory\n"
+    "- Restart the system wide apache daemon\n"),
 
   ( "mv",        True,  1, 1, False, "NEWNAME", main_mv,
     "Rename a site",
-
-    "The site XY will be renamed to Z."),
+    ""),
 
   ( "cp",        True,  1, 1, False, "NEWNAME", main_cp,
     "Make a copy of a site",
-
-    "The whole site Xy will be copied to Z. A new system user Z will be created.\n"),
+    ""),
 
   ( "update",    False, 1, 1, False, "", main_update,
     "Update site to version " + OMD_VERSION,
