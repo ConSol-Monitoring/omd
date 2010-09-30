@@ -35,6 +35,10 @@ install:
 		ln -sfn ssi-wrapper.pl $(DESTDIR)$(OMD_ROOT)/share/nagios/htdocs/ssi/$$f-footer.ssi ; \
 	done
 
+	# Copy package documentations to have these information in the binary packages
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/doc/$(NAME)
+	mv $(DIR)/{README,THANKS,LEGAL,LICENSE} $(DESTDIR)$(OMD_ROOT)/share/doc/$(NAME)
+  
 skel:
 
 clean:

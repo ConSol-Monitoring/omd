@@ -25,9 +25,9 @@ install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/skel/var/nagvis
 	mv $(DESTDIR)$(OMD_ROOT)/share/nagvis/share/userfiles $(DESTDIR)$(OMD_ROOT)/skel/var/nagvis/userfiles
 
-	# Move package documentations
-	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/doc/nagvis
-	mv $(DESTDIR)$(OMD_ROOT)/share/nagvis/{LICENCE,README} $(DESTDIR)$(OMD_ROOT)/share/doc/nagvis
+	# Move package documentations to have these files in the binary packages
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/doc/$(NAME)
+	mv $(DESTDIR)$(OMD_ROOT)/share/nagvis/{LICENCE,README} $(DESTDIR)$(OMD_ROOT)/share/doc/$(NAME)
 
 	# Delete files/directories we do not want to pack
 	rm -rf $(DESTDIR)$(OMD_ROOT)/share/nagvis/var
