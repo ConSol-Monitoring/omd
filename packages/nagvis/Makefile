@@ -29,7 +29,7 @@ install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/doc/$(NAME)
 	for file in LICENCE README ; do \
 	   mv $(DESTDIR)$(OMD_ROOT)/share/nagvis/$$file $(DESTDIR)$(OMD_ROOT)/share/doc/$(NAME); \
-   	done
+	done
 
 	# Delete files/directories we do not want to pack
 	rm -rf $(DESTDIR)$(OMD_ROOT)/share/nagvis/var
