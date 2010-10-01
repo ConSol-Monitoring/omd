@@ -28,6 +28,8 @@ prepare:
 install:
 	$(MAKE) DESTDIR=$(DESTDIR) -C $(DIR) install-base install-cgis install-html
 	rm -f $(DESTDIR)$(OMD_ROOT)/share/nagios/htdocs/config.php.inc
+
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/nagios/htdocs/ssi
 	install -m 755 ssi-wrapper.pl $(DESTDIR)$(OMD_ROOT)/share/nagios/htdocs/ssi
 
 	for f in common avail cmd config extinfo histogram history notifications outages showlog status statusmap statuswml statuswrl summary tac trends ; do \
@@ -38,7 +40,7 @@ install:
 	# Copy package documentations to have these information in the binary packages
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/doc/$(NAME)
 	for file in README THANKS LEGAL LICENSE ; do \
-	   mv $(DIR)/$$file $(DESTDIR)$(OMD_ROOT)/share/doc/$(NAME); \
+	   install -m 640 $(DIR)/$$file $(DESTDIR)$(OMD_ROOT)/share/doc/$(NAME); \
 	done
   
 skel:
