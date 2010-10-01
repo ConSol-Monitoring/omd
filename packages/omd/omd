@@ -889,9 +889,7 @@ def config_load():
             sys.stderr.write("Ignoring invalid variable %s.\n" % var)
         else:
             var = var[7:]
-            if not var in g_hooks:
-                sys.stderr.write("Ignoring undefined variable %s.\n" % var)
-            else:
+            if var in g_hooks:
                 g_hooks[var]["value"] = value
 
 def config_save():
@@ -912,7 +910,10 @@ def config_load_hooks():
     hook_dir = g_sitedir + "/lib/omd/hooks"
     for hookname in os.listdir(hook_dir):
 	if hookname[0] != '.':
-	     g_hooks[hookname] = config_load_hook(hookname)
+            hook = config_load_hook(hookname)
+            # only load configuration hooks
+            if hook.get("choices", None) != None:
+                g_hooks[hookname] = hook
     # now load actual values from site.conf, if available
     config_load()
 
@@ -945,7 +946,11 @@ def config_load_hook(hookname):
     # possible values.
     choicestxt = get_hook_info("choices").split("\n")
     if len(choicestxt) == 1:
-        choices = re.compile(choicestxt[0] + "$")
+        regextext = choicestxt[0].strip()
+        if regextext != "":
+            choices = re.compile(regextext + "$")
+        else:
+            choices = None
     else:
         choices = []
         try:
