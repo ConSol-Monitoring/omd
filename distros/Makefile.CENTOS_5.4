@@ -1,5 +1,5 @@
 BUILD_PACKAGES    = libxml2-devel cairo-devel pango-devel patch perl-Expect gcc gcc-c++ openssl-devel gd-devel
-OS_PACKAGES       = httpd mod_python php rsync
+OS_PACKAGES       = httpd mod_python php php-pdo rsync
 USERADD_OPTIONS   = -M
 ADD_USER_TO_GROUP = gpasswd -a %(user)s %(group)s
 PACKAGE_INSTALL   = yum -y makecache ; yum -y install
