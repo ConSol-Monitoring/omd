@@ -25,17 +25,15 @@ omd \- admin interface for OMD, the Open Monitoring Distribution
 .SH DESCRIPTION
 .B OMD - the Open Monitoring Distribution
 is nothing really new. OMD bundles existing open source software to 
-ease the installation procedure of nagios3 and some common addons 
-like nagvis, pnp4nagios, rrdtool, nagios-plugins, Check_MK, 
-MK Livestatus, dokuwiki, nsca, check_nrpe and so on. And yes, there 
-are plans to integrate icinga-core, merlin, thrunk and others
-at a later time to give you a choice.
+ease the installation procedure of Nagios and many important addons 
+like NagVis, PNP4Nagios, rrdtool, nagios-plugins, Check_MK, 
+MK Livestatus, Dokuwiki, NSCA, check_nrpe and others.
 .PP
 .\" TeX users may be more comfortable with the \fB<whatever>\fP and
 .\" \fI<whatever>\fP escape sequences to invode bold face and italics,
 .\" respectively.
 \fBomd\fP is the administration interface for creating and maintaining 
-sites within OMD - the open monitoring distribution
+sites within OMD - the open monitoring distribution.
 .SH COMMANDS
 Type 
 .B omd
@@ -44,35 +42,63 @@ or
 to get an overview over all available commands.
 .TP
 .B omd help
-Show summary of options.
+Show short summary of available commands.
 .TP
 .B omd version
-Show version of OMD
+Show the default version of you OMD installation. OMD supports
+multiple versions to be installed in parallel.
 .TP
 .B omd versions                    
-List installed OMD versions
+Show a list of all installed versions of OMD.
 .TP
 .B omd setup                       
-Prepare operating system for OMD (installs packages)
+Prepare operating system for OMD. This includes installing all software
+packages from your linux distribution that the components of OMD need
+to run properly. You need to make sure that a package installation via
+aptitude/zypper/yum is possible.
+
+After installing missing packages a group \fBomd\fP will be created,
+some Apache modules will be activated, the init script \fB/etc/init.d/omd\fP
+will be activated and the SUID bits for some Nagios plugins will be
+correctly configured (for the group omd).
+
+\fBNote:\fP If you have installed OMD via RPM or DEB and have installed
+all packages the omd package depends on, no \fBomd setup\fP is neccessary.
 .TP
 .B omd uninstall                   
-Remove OMD and all sites! If you installed omd as debian package, you should 
-use the package management for removing omd: 
-.B apt-get remove omd
-or 
-.B aptitude remove omd
+This deletes all software and data of OMD. That command is mainly used
+for trying out OMD or testing the installation of OMD. Be aware that
+all your monitoring configuration and data will be lost!
+
+If you've installed omd via RPM or DEB, you still need to remove
+the RPM/DEB packages after that.
 .TP
 .B omd sites                       
-Show list of sites
+Show a list of all sites and the version of OMD each site uses.
 .TP
 .B omd create     SITE             
-Create a new site
+Create a new site. The name of the site must be at most 16 characters
+long and consist only of letters, digits and underscores. It must not
+begin with a digit. 
+
+OMD creates an operating system user and group with the name of the
+site. Therefore no user or group with that name must exist. The a 
+directory \fB/omd/sites/\fPSITE will be created and used as the new
+users home directory.
+
+You need root permissions for creating a new site.
+
+After creating a new site you can do a \fBsu - \fPSITE and start
+the site with \fBomd start\fP.
 .TP
 .B omd rm         SITE             
-Remove a site (and its data)
+Remove a site and all of its data. This includes deleting the
+directory \fB/omd/sites/\fPSITE and removing the system user
+and group of that site. This - of course - needs root permissions.
 .TP
 .B omd mv         SITE NEWNAME     
-Rename a site
+Rename a site. The site must be stopped. the NEWNAME must be a valid
+site name as described in "omd create".
 .TP
 .B omd cp         SITE NEWNAME     
 Make a copy of a site

@@ -340,15 +340,18 @@ def create_skeleton_files(sitename, dir):
 	"###ROOT###" : sitedir,
     }
     # Hack: exclude tmp if dir is '.'
-    exclude_tmp = dir == '.'
+    exclude_tmp = dir == "."
     skelroot = "/omd/versions/%s/skel" % OMD_VERSION
     os.chdir(skelroot)  # make relative paths
     for dirpath, dirnames, filenames in os.walk(dir):
         if dirpath.startswith("./"):
             dirpath = dirpath[2:]
-	if dirpath == "tmp" and exclude_tmp:
-	    continue # do not handle files in tmpfs
 	for entry in dirnames + filenames:
+            if exclude_tmp:
+                if dirpath == "." and entry == "tmp":
+                    continue
+                if dirpath == "tmp" or dirpath.startswith("tmp/"): 
+                    continue
 	    create_skeleton_file(skelroot, sitedir, dirpath + "/" + entry, replacements)
 
 def delete_user_file(user_path):
@@ -1176,6 +1179,7 @@ def main_create(args):
     for d in [ 'bin', 'include', 'lib', 'share' ]:
         os.symlink("version/" + d, sitedir + "/" + d)
 
+    # Create skeleton files of non-tmp directories
     create_skeleton_files(g_sitename, '.')
 
     # Create site.conf with default values
@@ -1196,6 +1200,7 @@ def main_create(args):
     # users. They could create files below tmp which would be shadowed
     # by the mount.
     create_tmpfs(g_sitename)
+
 
 
 def main_rm(args):
