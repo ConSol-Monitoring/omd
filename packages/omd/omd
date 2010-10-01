@@ -1099,6 +1099,7 @@ def main_setup(args):
     # Activate init script of OMD
     sys.stdout.write("Installing and activating /etc/init.d/omd\n")
     command = g_info["ACTIVATE_INITSCRIPT"].replace("%s", "omd")
+    sys.stdout.write("Going to execute '%s'\n" % command)
     if 0 != os.system(command):
         sys.stdout.write("ERROR\n")
 
