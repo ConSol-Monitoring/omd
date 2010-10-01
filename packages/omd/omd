@@ -56,6 +56,16 @@ good = tty_bggreen + tty_white + tty_bold + "*" + tty_normal
 warn = tty_bgyellow + tty_black + "?" + tty_normal
 error = tty_bgred + tty_white + tty_bold + "!" + tty_normal
 
+patch_supports_merge = None
+def patch_has_merge():
+    # check wether our version of patch supports the option '--merge'
+    global patch_supports_merge
+    if patch_supports_merge == None:
+	patch_supports_merge = (0 == os.system("true | patch --merge >/dev/null 2>&1"))
+        if not patch_supports_merge:
+	    sys.stdout.write("Your version of patch does not support --merge.\n")
+    return patch_supports_merge
+
 
 def have_dialog():
     return False # os.system("which dialog >/dev/null 2>&1") == 0
@@ -486,7 +496,8 @@ def merge_update_file(relpath, old_version, new_version):
     version_patch = os.popen("diff -u %s-%s %s-%s" % (user_path, old_version, user_path, new_version)).read()
 
     # First try to merge the changes in the version into the users' file
-    f = os.popen("patch --force --backup --forward --silent --merge %s" % user_path, "w")
+    merge = patch_has_merge() and "--merge" or ""
+    f = os.popen("patch --force --backup --forward --silent %s %s" % (merge, user_path), "w")
     f.write(version_patch)
     status = f.close()
     if status:
@@ -501,6 +512,7 @@ def merge_update_file(relpath, old_version, new_version):
     # No success. Should we try merging the users' changes onto the new file?
     # user_patch = os.popen(
     while True:
+        merge_message = patch_has_merge() and '(watch out for >>>>> and <<<<<)' or ''
         editor = os.getenv("EDITOR", "/bin/vi")
 	choice = ask_user_choices("Conflicts in " + relpath + "!", "I've tried to merge the changes from version %s to %s into %s.\n"
 	   "Unfortunately there are conflicts with your changes. \n"
@@ -508,17 +520,20 @@ def merge_update_file(relpath, old_version, new_version):
 		( old_version, new_version, relpath ),
 		[ ( "diff",    "Show differences between your and the new default version" ),
 		  ( "new",     "Show what has changed from %s to %s" % (old_version, new_version) ),
-		  ( "edit",    "Edit file %s (watch out for >>>>> and <<<<<)" % editor ),
+		  ( "edit",    "Edit file with %s%s" % (editor, merge_message) ),
 		  ( "keep",    "Keep half-merged version of the file" ),
 		  ( "restore", "Restore your original version of the file" ),
 		  ( "install", "Install the new default version" ),
 		  ( "shell",   "Open a shell for looking around" ),
+	          ( "abort",   "Stop here and abort update!" ),
 		])
+        if choice == "abort":
+	    sys.stdout.write("Good bye.\n")
+	    sys.exit(1)
 	if choice == "keep":
 	    break
 	elif choice == "edit":
-	    if 0 == os.system("%s '%s'" % (editor, user_path)):
-		break
+	    os.system("%s '%s'" % (editor, user_path))
 	elif choice == "diff":
 	    sys.stdout.write(tty_bgmagenta + tty_white)
 	    sys.stdout.flush()
