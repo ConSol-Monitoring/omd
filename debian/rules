@@ -30,6 +30,11 @@ clean: clean-patched unpatch
 	$(MAKE) clean
 	#$(MAKE) distclean
 	rm -f $(_PWD)/debian/postinst
+	rm -f $(_PWD)/debian/postrm
+	rm -f $(_PWD)/debian/links
+	rm -f $(_PWD)/debian/*.debhelper
+	rm -rf  $(_PWD)/debian/omd-[0-9].[0-9]*
+	rm -rf  $(_PWD)/debian/omd-[1-9][0-9].[0-9]*
 
 	dh_clean
 
