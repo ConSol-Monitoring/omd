@@ -48,7 +48,7 @@ stop)
 ;;
 reload|force-reload)
 	echo -n "Reloading $DESC: "
-	kill --signal HUP $(cat $PIDFILE) || die "ERROR: could not reload $NAME."
+	kill -HUP $(cat $PIDFILE) || die "ERROR: could not reload $NAME."
 	echo "$NAME."
     exit 0
 ;;
