@@ -27,7 +27,9 @@ install:
 
 	# Move package documentations to have these files in the binary packages
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/doc/$(NAME)
-	mv $(DESTDIR)$(OMD_ROOT)/share/nagvis/{LICENCE,README} $(DESTDIR)$(OMD_ROOT)/share/doc/$(NAME)
+	for file in LICENCE README ; do \
+	   mv $(DESTDIR)$(OMD_ROOT)/share/nagvis/$$file $(DESTDIR)$(OMD_ROOT)/share/doc/$(NAME); \
+   	done
 
 	# Delete files/directories we do not want to pack
 	rm -rf $(DESTDIR)$(OMD_ROOT)/share/nagvis/var
