@@ -56,7 +56,7 @@ case "$1" in
 
     db_get omd/nagios-plugins-suid || true
     if [ "$RET" = "true" ]; then
-      PLUGPERM="4750"
+      PLUGPERM="4711"
     else
       PLUGPERM="0755"
     fi

@@ -37,7 +37,9 @@ install:
 
 	# Copy package documentations to have these information in the binary packages
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/doc/$(NAME)
-	mv $(DIR)/{README,THANKS,LEGAL,LICENSE} $(DESTDIR)$(OMD_ROOT)/share/doc/$(NAME)
+	for file in README THANKS LEGAL LICENSE ; do \
+	   mv $(DIR)/$$file $(DESTDIR)$(OMD_ROOT)/share/doc/$(NAME); \
+	done
   
 skel:
 
