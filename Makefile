@@ -129,6 +129,7 @@ deb-environment:
 deb-newversion: deb-environment
 	dch --package omd-$(OMD_VERSION) \
 	    --newversion $(OMD_VERSION)build1 \
+            -b \
 	    --distributor 'unstable' "new upstream version"
 
 # incrementing debian packaging version (same OMD version)
