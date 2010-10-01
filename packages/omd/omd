@@ -7,7 +7,7 @@
 import sys, os, shutil, pwd, grp, re, time, pprint
 from subprocess import *
 
-OMD_VERSION = "0.18"
+OMD_VERSION = "0.18.1"
 
 # colored output, if stdout is a tty
 on_tty = sys.stdout.isatty()
@@ -519,6 +519,7 @@ def merge_update_file(relpath, old_version, new_version):
 	   "You have the following options: " %
 		( old_version, new_version, relpath ),
 		[ ( "diff",    "Show differences between your and the new default version" ),
+		  ( "you",     "Show your changes compared with the old default version" ),
 		  ( "new",     "Show what has changed from %s to %s" % (old_version, new_version) ),
 		  ( "edit",    "Edit file with %s%s" % (editor, merge_message) ),
 		  ( "keep",    "Keep half-merged version of the file" ),
@@ -537,7 +538,12 @@ def merge_update_file(relpath, old_version, new_version):
 	elif choice == "diff":
 	    sys.stdout.write(tty_bgmagenta + tty_white)
 	    sys.stdout.flush()
-	    os.system("diff -u %s.orig %s-%s" % (user_path, user_path, old_version))
+	    os.system("diff -u %s.orig %s-%s" % (user_path, user_path, new_version))
+	    sys.stdout.write(tty_normal)
+	elif choice == "you":
+	    sys.stdout.write(tty_bgmagenta + tty_white)
+	    sys.stdout.flush()
+	    os.system("diff -u %s-%s %s.orig" % (user_path, old_version, user_path))
 	    sys.stdout.write(tty_normal)
 	elif choice == "new":
 	    sys.stdout.write(tty_bgmagenta + tty_white)
