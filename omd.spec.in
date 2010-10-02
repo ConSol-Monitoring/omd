@@ -1,9 +1,9 @@
 Summary:        OMD - OpenSource Monitoring Distribution
-Name:	        omd-%{version}
+Name:           omd-%{version}
 Version:        %{version}
 Release:        SET BY MAKEFILE 
 License:        GPL
-Group:          Atlas
+URL:            http://omdistro.org/
 Source:         %{name}.tar.gz
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root
 AutoReq:        off
