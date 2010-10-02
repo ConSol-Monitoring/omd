@@ -63,7 +63,7 @@ skel:
 	chmod 770 $(SKEL)/var/check_mk/logwatch
 
 clean:
-	rm -rf $(DIR)
+	rm -rf check_mk-*.*.*[0-9]
 
 # Adapt configuration files for skeleton from upstream version
 upstream:
