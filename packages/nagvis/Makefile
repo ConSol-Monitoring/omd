@@ -55,7 +55,4 @@ skel:
 	chmod 775 $(SKEL)/tmp/nagvis/tmpl/cache
 
 clean:
-	rm -rf $(DIR)
-
-
-
+	rm -rf $(NAME)-*.*.[0-9]
