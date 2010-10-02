@@ -4,6 +4,7 @@ Version:        %{version}
 Release:        SET BY MAKEFILE 
 License:        GPL
 URL:            http://omdistro.org/
+Group:          Application/System
 Source:         %{name}.tar.gz
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root
 AutoReq:        off
