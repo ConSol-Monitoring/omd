@@ -104,7 +104,7 @@ $(SOURCE_TGZ) dist:
 rpm:
 	sed -e 's/^Requires:.*/Requires:	$(OS_PACKAGES)/' \
             -e 's/%{version}/$(OMD_VERSION)/g' \
-            -e 's/^Release:.*/Release: $(OMD_SERIAL)/' \
+            -e 's/^Release:.*/Release: $(DISTRO_CODE).$(OMD_SERIAL)/' \
 	    -e 's#@APACHE_CONFDIR@#$(APACHE_CONF_DIR)#g' \
 	    omd.spec.in > omd.spec
 	rm -f $(SOURCE_TGZ)
@@ -139,6 +139,7 @@ deb-incversion: deb-environment
 deb: 
 	sed -e 's/###OMD_VERSION###/$(OMD_VERSION)/' \
 	   `pwd`/debian/control.in > `pwd`/debian/control
+	sed -i '1s/.*/omd-$(OMD_VERSION) ($(OMD_VERSION)$(DISTRO_CODE)) unstable; urgency=low/' debian/changelog
 	fakeroot debian/rules clean
 	debuild --no-lintian -i\.git -I\.git \
 			-iomd-bin-$(OMD_VERSION).tar.gz \
