@@ -52,6 +52,7 @@ then
         echo "SLES$SEP${VERSION}SP1"
         exit 0
     elif [ "$VERSION" = 11 ]
+    then
         echo "SLES$SEP${VERSION}"
         exit 0
     fi
