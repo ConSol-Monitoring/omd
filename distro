@@ -47,9 +47,12 @@ then
     # SLES 11
     VERSION=$(sed -rn 's/^VERSION = (.*)/\1/p' < /etc/SuSE-release)
     SP=$(sed -rn 's/^PATCHLEVEL = (.*)/\1/p' < /etc/SuSE-release)
-    if [ "$VERSION" = 11 ] 
+    if [ "$VERSION" = 11 -a "$SP" = 1 ] 
     then
-        echo "SLES$SEP$VERSION"
+        echo "SLES$SEP${VERSION}SP1"
+        exit 0
+    elif [ "$VERSION" = 11 ]
+        echo "SLES$SEP${VERSION}"
         exit 0
     fi
 fi

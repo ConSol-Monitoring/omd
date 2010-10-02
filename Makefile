@@ -139,6 +139,7 @@ deb-incversion: deb-environment
 deb: 
 	sed -e 's/###OMD_VERSION###/$(OMD_VERSION)/' \
 	   `pwd`/debian/control.in > `pwd`/debian/control
+	sed -i '1s/.*/omd-$(OMD_VERSION) ($(OMD_VERSION)$(DISTRO_CODE)) unstable; urgency=low/' debian/changelog
 	fakeroot debian/rules clean
 	debuild --no-lintian -i\.git -I\.git \
 			-iomd-bin-$(OMD_VERSION).tar.gz \
