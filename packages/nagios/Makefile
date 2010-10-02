@@ -13,6 +13,8 @@ CONFIGUREOPTS = \
     --datarootdir=$(OMD_ROOT)/share/nagios/htdocs \
     --with-nagios-user=$$(id -un) \
     --with-nagios-group=$$(id -gn) \
+		--with-perlcache \
+		--enable-embedded-perl \
 
 build: prepare
 	for p in patches/*.dif ; do \
