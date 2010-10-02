@@ -397,7 +397,13 @@ def delete_apache_hook(sitename):
 def reload_apache():
     sys.stdout.write("Reloading Apache...")
     sys.stdout.flush()
-    os.system("%s restart" % g_info["APACHE_CTL"])
+    os.system("%s reload" % g_info["APACHE_CTL"])
+    sys.stdout.write("OK\n")
+
+def restart_apache():
+    sys.stdout.write("Restarting Apache...")
+    sys.stdout.flush()
+    os.system("%s restart" % g_info["APACHE_INIT"])
     sys.stdout.write("OK\n")
 
 
@@ -1194,7 +1200,7 @@ def main_create(args):
     # Create include-hook for Apache and reload apache
     create_apache_hook(g_sitename)
     sys.stdout.write("Created new site %s with version %s.\n" % (g_sitename, OMD_VERSION))
-    reload_apache()
+    restart_apache()
 
     # Mount and create contents of tmpfs. This must be done as normal
     # user. We also could do this at 'omd start', but this might confuse
@@ -1220,7 +1226,7 @@ def main_rm(args):
 
     # remove include-hook for Apache and tell apache
     delete_apache_hook(g_sitename)
-    reload_apache()
+    restart_apache()
 
 def main_mv(args):
     global g_sitename
@@ -1262,8 +1268,8 @@ def main_mv(args):
 
     add_to_fstab(new)
 
-    # Tell Apache about changes
-    reload_apache()
+    # Tell Apache about changes (need real restart, group changed)
+    restart_apache()
 
 def main_cp(args):
     global g_sitename
@@ -1302,9 +1308,9 @@ def main_cp(args):
     # Entry for tmps in /etc/fstab
     add_to_fstab(new)
 
-    # Apache hook, reload apache
+    # Apache hook, restart apache (group changed)
     create_apache_hook(new)
-    reload_apache()
+    restart_apache()
 
 def main_update(args):
     if site_is_running(g_sitename):
