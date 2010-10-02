@@ -18,4 +18,4 @@ install:
 skel:
 
 clean:
-	rm -rf $(DIR)
+	rm -rf mk-livestatus-*.*.*[0-9]
