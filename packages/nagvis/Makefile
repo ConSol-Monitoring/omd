@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 NAME = nagvis
-VERSION = 1.5.2
+VERSION = 1.5.3
 DIR = $(NAME)-$(VERSION)
 
 .PHONY: skel
@@ -9,7 +9,6 @@ DIR = $(NAME)-$(VERSION)
 build:
 	tar xzf $(DIR).tar.gz
 	patch $(DIR)/share/server/core/defines/global.php global.php.patch
-	patch $(DIR)/share/server/core/classes/GlobalMainCfg.php disable-maincfg-cache.patch
 
 install:
 	cd $(DIR) ; ./install.sh -q -F -c y -a n \
@@ -35,6 +34,10 @@ install:
 	rm -rf $(DESTDIR)$(OMD_ROOT)/share/nagvis/var
 	rm -rf $(DESTDIR)$(OMD_ROOT)/share/nagvis/etc
 
+	# And last but not least relocate the NagVis shared directory to have the same path
+	# as all the other packages
+	mv $(DESTDIR)$(OMD_ROOT)/share/nagvis/share $(DESTDIR)$(OMD_ROOT)/share/nagvis/htdocs
+
 skel:
 	# Give Apache write permissions on certain directories
 	chmod 775 $(SKEL)/etc/nagvis
@@ -55,4 +58,4 @@ skel:
 	chmod 775 $(SKEL)/tmp/nagvis/tmpl/cache
 
 clean:
-	rm -rf $(NAME)-*.*.[0-9]
+	rm -rf $(NAME)-*.*.[0-9] $(NAME)-*.*-nightly

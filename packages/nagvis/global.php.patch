@@ -1,6 +1,6 @@
---- nagvis-1.5.2/share/server/core/defines/global.php.orig	2010-09-29 23:42:27.000000000 +0200
-+++ nagvis-1.5.2/share/server/core/defines/global.php	2010-09-29 23:43:12.000000000 +0200
-@@ -58,7 +58,7 @@
+--- nagvis-1.5.3/share/server/core/defines/global.php.orig	2010-10-02 19:43:58.000000000 +0200
++++ nagvis-1.5.3/share/server/core/defines/global.php	2010-10-02 19:47:00.000000000 +0200
+@@ -64,7 +64,7 @@
  define('DEBUGLEVEL', 6);
  
  // Path to the debug file
@@ -9,7 +9,7 @@
  
  // It is possible to define a second main configuration file
  // to pre-define some options in a file the user may not be
-@@ -72,11 +72,11 @@
+@@ -78,14 +78,14 @@
  // The last value wins.
  //
  // Path to the main configuration file
@@ -21,6 +21,10 @@
  // Path to "site" main configuration file
 -//define('CONST_MAINCFG_SITE', '../../../etc/nagvis-site.ini.php');
 +define('CONST_MAINCFG_SITE', join(array_slice(explode('/' ,dirname($_SERVER["SCRIPT_FILENAME"])), 0, -5), '/').'/etc/nagvis/nagvis-omd.ini.php');
+ 
+ // The directory below the NagVis root which is shared by the webserver
+-define('HTDOCS_DIR', 'share');
++define('HTDOCS_DIR', 'htdocs');
  
  // Needed minimal PHP version
  define('CONST_NEEDED_PHP_VERSION', '5.0');
