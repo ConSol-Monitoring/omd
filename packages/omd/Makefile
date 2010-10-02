@@ -16,6 +16,8 @@ install:
 	gzip $(DESTDIR)$(OMD_ROOT)/share/man/man8/omd.8
 	install -m 755 omd.init $(DESTDIR)$(OMD_ROOT)/share/omd/omd.init
 	install -m 644 apache.conf $(DESTDIR)$(OMD_ROOT)/share/omd/apache.conf
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/doc/$(NAME)
+	install -m 644 COPYING AUTHORS $(DESTDIR)$(OMD_ROOT)/share/doc/$(NAME)
 
 skel:
 
