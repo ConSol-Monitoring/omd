@@ -1447,8 +1447,8 @@ commands = [
 
   ( "setup",     True,  0, 0, True, "",        main_setup,
     "Prepare operating system for OMD (installs packages)",
-    "We will install missing packages from your operating system and setup the"
-    "system apache daemon (add configuration files and modules needed by omd)"),
+    "We will install missing packages from your operating system and setup the\n"
+    "system apache daemon (add configuration files and modules needed by omd)\n"),
 
   ( "uninstall", True,  0, 0, True, "",        main_uninstall,
     "Remove OMD and all sites!",
