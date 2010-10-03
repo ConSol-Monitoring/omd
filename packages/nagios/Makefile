@@ -46,6 +46,9 @@ install:
 	for file in README THANKS LEGAL LICENSE ; do \
 	   install -m 644 $(DIR)/$$file $(DESTDIR)$(OMD_ROOT)/share/doc/$(NAME); \
 	done
+
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/skel/etc/init.d
+	install -m 755 $(DIR)/daemon-init $(DESTDIR)$(OMD_ROOT)/skel/etc/init.d/nagios
   
 skel:
 
