@@ -5,18 +5,19 @@ case "$1" in
         ;;
         description)
                 cat << EOF
-With Dokuwiki it is very easy to maintain the access to Nagios.
-
-With Dokuwiki you have a GUI to edit the htpasswd-file for
-the Nagios Logon.
+Dokuwiki - on OMD available on the URL /$OMD_SITE/wiki - is not only 
+a useful Wiki, but also implements a user management.
+If you enable this option, you will have Nagios, NagVis, Multisite and
+other web applications access the user database of Dokuwiki for authentication.
+Otherwise users are managed via the file ~/etc/passwd.
 EOF
    ;;
    default)
        echo "off"
    ;;
    choices)
-       echo "on: enable"
-       echo "off: disable"
+       echo "on: enable - use Dokuwiki for user management"
+       echo "off: disable - edit etc/htpasswd manually"
    ;;
    set)
        if [ "$2" == "on" ]
