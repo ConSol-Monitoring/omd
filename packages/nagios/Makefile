@@ -16,18 +16,15 @@ CONFIGUREOPTS = \
     --with-perlcache \
     --enable-embedded-perl \
 
-build: unpack patch
-	cd $(DIR) ; ./configure $(CONFIGUREOPTS)
-	$(MAKE) -C $(DIR) all
-
-unpack:
+build:
 	tar xzf $(DIR).tar.gz
-
-patch:
 	for p in patches/*.dif ; do \
 	    echo "applying $$p..." ; \
 	    ( cd $(DIR) ; patch -p1 -b ) < $$p ; \
 	done
+	cd $(DIR) ; ./configure $(CONFIGUREOPTS)
+	$(MAKE) -C $(DIR) all
+
 
 install:
 	$(MAKE) DESTDIR=$(DESTDIR) -C $(DIR) install-base install-cgis install-html
