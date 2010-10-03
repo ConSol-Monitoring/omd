@@ -70,6 +70,45 @@ def patch_has_merge():
 def have_dialog():
     return False # os.system("which dialog >/dev/null 2>&1") == 0
 
+def run_dialog(args):
+    env = {
+        "TERM":os.getenv("TERM", "linux"), 
+        "LANG": "de_DE.UTF-8"
+    }
+    p = Popen(["dialog", "--shadow"] + args, env = env, stderr = PIPE)
+    response = p.stderr.read()
+    return 0 == os.waitpid(p.pid, 0)[1], response
+    
+def dialog_menu(title, text, choices, defvalue, oktext, canceltext):
+    args = [ "--ok-label", oktext, "--cancel-label", canceltext ]
+    if defvalue != None:
+        args += [ "--default-item", defvalue ]
+    args += [ "--title", title, "--menu", text, "0", "0", "0" ] # "20", "60", "17" ]
+    for text, value in choices:
+        args += [ text, value ]
+    return run_dialog(args)
+
+def dialog_regex(title, text, regex, value, oktext, canceltext):
+    while True:
+        args = [ "--ok-label", oktext, "--cancel-label", canceltext,
+                 "--title", title, "--inputbox", text, "0", "0", value ]
+        change, new_value = run_dialog(args)
+        if not change:
+            return False, value
+        elif not regex.match(new_value):
+            dialog_message("Invalid value. Please try again.")
+            value = new_value
+        else:
+            return True, new_value
+
+
+def dialog_yesno(text, yeslabel = "yes", nolabel = "no"):
+    state, response = run_dialog(["--yes-label", yeslabel, "--no-label", nolabel, "--yesno", text, "0", "0"])
+    return state
+
+def dialog_message(text, buttonlabel="OK"):
+    run_dialog(["--ok-label", buttonlabel, "--msgbox", text, "0", "0"])
+
 def ask_user(title, message, yes_text, no_text):
     if have_dialog():
         p = Popen(["dialog", "--title", title, "--shadow", "--yes-label", yes_text, "--no-label", no_text, "--yesno", message, "0", "0"])
@@ -239,8 +278,10 @@ def switch_to_site_user():
 
 def clear_environment():
     # first remove *all* current environment variables
+    keep = [ "TERM" ]
     for key in os.environ:
-        os.unsetenv(key)
+        if key not in keep: 
+            os.unsetenv(key)
 
 def set_environment():
     os.putenv("OMD_SITE", g_sitename)
@@ -946,9 +987,9 @@ def config_load_hook(hookname):
     def get_hook_info(info):
 	return call_hook(hookname, [info])
 
-    hook = {}
+    hook = { "name" : hookname }
     hook["alias"] = get_hook_info("alias")
-    hook["description"] = get_hook_info("alias")
+    hook["description"] = get_hook_info("description")
     hook["default"] = get_hook_info("default")
     hook["value"] = hook["default"]
     # The choices can either be a list of possible keys. Then
@@ -1053,6 +1094,49 @@ def config_show(args):
 	sys.stdout.write(" ".join(output))
 	sys.stdout.write("\n")
 
+def config_configure():
+    hooknames = g_hooks.keys()
+    hooknames.sort()
+    current_hookname = ""
+    while True:
+        choices = []
+        for hookname in hooknames:
+            hook = g_hooks[hookname]
+            choices.append((hookname, hook["value"]))
+        change, current_hookname = \
+            dialog_menu("Configuration of site %s" % g_sitename,
+                "Interactive setting of site configuration variables. You "
+                "can change values only while the site is stopped.",
+                choices,
+                current_hookname,
+                "Change",
+                "Exit")
+        if not change:
+            return
+
+        config_configure_hook(current_hookname)
+
+def config_configure_hook(hookname):
+    if not site_is_stopped(g_sitename):
+        if not dialog_yesno("You cannot change configuration value while the "
+                "site is running. Do you want me to stop the site now?"):
+            return
+        stop_site(g_sitename)
+        dialog_message("The site has been stopped.")
+
+    hook = g_hooks[hookname] 
+    title = hook["alias"]
+    descr = hook["description"].replace("\n", " ")
+    value = hook["value"]
+    choices = hook["choices"]
+    if type(choices) == list:
+        dialog_function = dialog_menu
+    else:
+        dialog_function = dialog_regex
+    change, new_value = \
+        dialog_function(title, descr, choices, value, "Change", "Cancel")
+    if change:
+        config_set_value(hook["name"], new_value)
 
 def init_action(command):
     if command == "start":
@@ -1415,15 +1499,16 @@ def main_init_action(command, args):
 def main_config(args):
     config_load_hooks()
     if len(args) == 0:
-	args = [ "show" ]
-    command = args[0]
-    args = args[1:]
-    if command == "show":
-	config_show(args)
-    elif command == "set":
-	config_set(args)
+        config_configure()
     else:
-	config_usage()
+        command = args[0]
+        args = args[1:]
+        if command == "show":
+            config_show(args)
+        elif command == "set":
+            config_set(args)
+        else:
+            config_usage()
 
 
 # ----------------------------------------------------------
