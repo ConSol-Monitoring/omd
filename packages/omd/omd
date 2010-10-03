@@ -1071,10 +1071,10 @@ def config_set_value(hookname, value):
 def config_usage():
     sys.stdout.write("""Usage of config command:
 
+omd config               - interactive configuration menu
 omd config show          - show current settings of all configuration variables
 omd config show VAR      - show current setting of variable VAR
 omd config set VAR VALUE - set VAR to VALUE
-omd config choices VAR   - show allowed values for VAR
 """)
 
 def config_show(args):
@@ -1532,8 +1532,8 @@ commands = [
 
   ( "setup",     True,  0, 0, True, "",        main_setup,
     "Prepare operating system for OMD (installs packages)",
-    "We will install missing packages from your operating system and setup the\n"
-    "system apache daemon (add configuration files and modules needed by omd)\n"),
+    "We will install missing packages from your operating system and setup the"
+    "system apache daemon (add configuration files and modules needed by omd)"),
 
   ( "uninstall", True,  0, 0, True, "",        main_uninstall,
     "Remove OMD and all sites!",
