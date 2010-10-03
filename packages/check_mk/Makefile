@@ -61,6 +61,8 @@ skel:
 	# Give Apache write permissions on certain directories
 	chmod 770 $(SKEL)/var/check_mk/web
 	chmod 770 $(SKEL)/var/check_mk/logwatch
+	rm -f $(SKEL)/etc/check_mk/main.mk-*
+	rm -f $(SKEL)/etc/check_mk/multisite.mk-*
 
 clean:
 	rm -rf check_mk-*.*.*[0-9]

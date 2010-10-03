@@ -13,19 +13,21 @@ CONFIGUREOPTS = \
     --datarootdir=$(OMD_ROOT)/share/nagios/htdocs \
     --with-nagios-user=$$(id -un) \
     --with-nagios-group=$$(id -gn) \
-		--with-perlcache \
-		--enable-embedded-perl \
+    --with-perlcache \
+    --enable-embedded-perl \
 
-build: prepare
+build: unpack patch
+	cd $(DIR) ; ./configure $(CONFIGUREOPTS)
+	$(MAKE) -C $(DIR) all
+
+unpack:
+	tar xzf $(DIR).tar.gz
+
+patch:
 	for p in patches/*.dif ; do \
 	    echo "applying $$p..." ; \
 	    ( cd $(DIR) ; patch -p1 -b ) < $$p ; \
 	done
-	cd $(DIR) ; ./configure $(CONFIGUREOPTS)
-	$(MAKE) -C $(DIR) all
-
-prepare:
-	tar xzf $(DIR).tar.gz
 
 install:
 	$(MAKE) DESTDIR=$(DESTDIR) -C $(DIR) install-base install-cgis install-html

@@ -1,6 +1,6 @@
-diff -ur nagios-3.2.1.orig/base/config.c nagios-3.2.1/base/config.c
---- nagios-3.2.1.orig/base/config.c	2009-05-17 14:54:28.000000000 +0200
-+++ nagios-3.2.1/base/config.c	2010-07-03 20:07:04.000000000 +0200
+diff -ur nagios-3.2.2.orig/base/config.c nagios-3.2.2/base/config.c
+--- nagios-3.2.2.orig/base/config.c	2009-05-17 14:54:28.000000000 +0200
++++ nagios-3.2.2/base/config.c	2010-10-03 22:26:40.206628209 +0200
 @@ -31,6 +31,8 @@
  #include "../include/nebmods.h"
  #include "../include/nebmodules.h"
@@ -20,7 +20,7 @@ diff -ur nagios-3.2.1.orig/base/config.c nagios-3.2.1/base/config.c
  	char *input=NULL;
  	char *variable=NULL;
  	char *value=NULL;
-@@ -1386,6 +1387,43 @@
+@@ -1386,6 +1387,42 @@
  	return OK;
  	}
  
@@ -34,34 +34,32 @@ diff -ur nagios-3.2.1.orig/base/config.c nagios-3.2.1/base/config.c
 +    }
 +    strcat(dirpath, ".d");
 +    DIR *dir = opendir(dirpath);
++    int result = 0;
 +    if (dir) {
 +        struct dirent *de;
 +        while (de = readdir(dir)) {
 +            if (!strcmp(de->d_name + strlen(de->d_name) - 4, ".cfg")) {
 +                snprintf(filepath, sizeof(filepath), "%s/%s", dirpath, de->d_name);
-+                int result;
-+                if (0 != (result = read_nagios_config_file(filepath))) {
-+                    closedir(dir);
-+                    return result;
-+                }
++                int new_result = read_nagios_config_file(filepath);
++                if (new_result != 0)
++                    result = new_result;
 +            }
 +        }
 +        closedir(dir);
 +    }
-+    return 0;
++    return result;
 +}
 +
 +
 +/* process the main configuration file */
 +int read_main_config_file(char *main_config_file){
 +    int result;
-+    result = read_nagios_config_file(main_config_file);
-+    /* OMD patch: read all config files in nagios.d */
++    /* OMD patch: read all config files in nagios.d first */
++    result = read_nagios_d(main_config_file);
 +    if (result == 0)
-+        result = read_nagios_d(main_config_file);
++        result = read_nagios_config_file(main_config_file);
 +    return result;
 +}
  
  
  /* processes macros in resource file */
-
