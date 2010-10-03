@@ -48,7 +48,7 @@ pack:
 	# Remove site-specific directories that went under /omd/version
 	rm -rf $(DESTDIR)/{var,tmp}
 
-        # Pack the whole stuff into a tarball
+	# Pack the whole stuff into a tarball
 	tar czf $(BIN_TGZ) --owner=root --group=root -C $(DESTDIR) .
 
 clean:

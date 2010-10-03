@@ -30,3 +30,16 @@ Index of patches
 
 0005:
     Reverts patch which breaks deactivation of active checks. 
+
+0006:
+    Adds OMD related config options and macros to the init script.
+
+0007:
+    The init script is showing full '-v' output on config error.
+
+0008:
+    When the Nagios process terminates for some reason and the lock-file
+    which contains the pid is not cleaned up the init script throws an
+    error message when executing 'etc/init.d/nagios stop'.
+    With this path the init script checks if the process is stil alive
+    before trying to kill it. 
