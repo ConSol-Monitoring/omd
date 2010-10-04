@@ -9,6 +9,7 @@ DIR = $(NAME)-$(VERSION)
 build:
 	tar xzf $(DIR).tar.gz
 	patch $(DIR)/share/server/core/defines/global.php global.php.patch
+	patch $(DIR)/share/frontend/nagvis-js/classes/FrontendTemplateSystem.php fix-missing-share-path.patch
 
 install:
 	cd $(DIR) ; ./install.sh -q -F -c y -a n \
