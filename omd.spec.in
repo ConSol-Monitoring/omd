@@ -122,7 +122,7 @@ else
     rm -f /usr/bin/omd
     rm -f /usr/share/man/man8/omd.8.gz
     rm -f /etc/init.d/omd
-    rm -f /opt/omd
+    rm -rf /opt/omd
     rm -f @APACHE_CONFDIR@/zzz_omd.conf
     rm -f /omd
 fi
