@@ -42,4 +42,4 @@ skel:
 
 clean:
 	# Remove files created by build/install
-	rm -r $(DIR)
+	rm -rf $(DIR)

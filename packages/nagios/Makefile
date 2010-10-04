@@ -13,10 +13,11 @@ CONFIGUREOPTS = \
     --datarootdir=$(OMD_ROOT)/share/nagios/htdocs \
     --with-nagios-user=$$(id -un) \
     --with-nagios-group=$$(id -gn) \
-		--with-perlcache \
-		--enable-embedded-perl \
+    --with-perlcache \
+    --enable-embedded-perl \
 
-build: prepare
+build:
+	tar xzf $(DIR).tar.gz
 	for p in patches/*.dif ; do \
 	    echo "applying $$p..." ; \
 	    ( cd $(DIR) ; patch -p1 -b ) < $$p ; \
@@ -24,8 +25,6 @@ build: prepare
 	cd $(DIR) ; ./configure $(CONFIGUREOPTS)
 	$(MAKE) -C $(DIR) all
 
-prepare:
-	tar xzf $(DIR).tar.gz
 
 install:
 	$(MAKE) DESTDIR=$(DESTDIR) -C $(DIR) install-base install-cgis install-html
@@ -46,6 +45,9 @@ install:
 	for file in README THANKS LEGAL LICENSE ; do \
 	   install -m 644 $(DIR)/$$file $(DESTDIR)$(OMD_ROOT)/share/doc/$(NAME); \
 	done
+
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/skel/etc/init.d
+	install -m 755 $(DIR)/daemon-init $(DESTDIR)$(OMD_ROOT)/skel/etc/init.d/nagios
   
 skel:
 

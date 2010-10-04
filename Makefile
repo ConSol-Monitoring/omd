@@ -7,6 +7,7 @@ DPKG_TOPDIR=$$(pwd)/dpkg.topdir
 SOURCE_TGZ=omd-$(OMD_VERSION).tar.gz
 BIN_TGZ=omd-bin-$(OMD_VERSION).tar.gz
 NEWSERIAL=$$(($(OMD_SERIAL) + 1))
+APACHE_NAME=$(notdir $(APACHE_INIT))
 
 .PHONY: install-global
 # You can select a subset of the packages by overriding this
@@ -48,7 +49,7 @@ pack:
 	# Remove site-specific directories that went under /omd/version
 	rm -rf $(DESTDIR)/{var,tmp}
 
-        # Pack the whole stuff into a tarball
+	# Pack the whole stuff into a tarball
 	tar czf $(BIN_TGZ) --owner=root --group=root -C $(DESTDIR) .
 
 clean:
@@ -106,6 +107,7 @@ rpm:
             -e 's/%{version}/$(OMD_VERSION)/g' \
             -e 's/^Release:.*/Release: $(DISTRO_CODE).$(OMD_SERIAL)/' \
 	    -e 's#@APACHE_CONFDIR@#$(APACHE_CONF_DIR)#g' \
+	    -e 's#@APACHE_NAME@#$(APACHE_NAME)#g' \
 	    omd.spec.in > omd.spec
 	rm -f $(SOURCE_TGZ)
 	$(MAKE) $(SOURCE_TGZ)
@@ -139,13 +141,12 @@ deb-incversion: deb-environment
 deb: 
 	sed -e 's/###OMD_VERSION###/$(OMD_VERSION)/' \
 	   `pwd`/debian/control.in > `pwd`/debian/control
-	sed -i '1s/.*/omd-$(OMD_VERSION) ($(OMD_VERSION)$(DISTRO_CODE)) unstable; urgency=low/' debian/changelog
 	fakeroot debian/rules clean
 	debuild --no-lintian -i\.git -I\.git \
 			-iomd-bin-$(OMD_VERSION).tar.gz \
 			-Iomd-bin-$(OMD_VERSION).tar.gz \
 			-i.gitignore -I.gitignore \
-			-uc -us -rfakeroot 
+			-uc -us -rfakeroot
 
 # Only to be used for developement testing setup 
 setup: pack xzf

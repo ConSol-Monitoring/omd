@@ -2,7 +2,7 @@
 .\" First parameter, NAME, should be all caps
 .\" Second parameter, SECTION, should be 1-8, maybe w/ subsection
 .\" other parameters are allowed: see man(7), man(1)
-.TH OMD SECTION "August  7, 2010"
+.TH OMD 8 "August  7, 2010"
 .\" Please adjust this date whenever revising the manpage.
 .\"
 .\" Some roff macros, for reference:
@@ -24,10 +24,18 @@ omd \- admin interface for OMD, the Open Monitoring Distribution
 .RI ]
 .SH DESCRIPTION
 .B OMD - the Open Monitoring Distribution
-is nothing really new. OMD bundles existing open source software to 
+is something really new. OMD bundles existing open source software to 
 ease the installation procedure of Nagios and many important addons 
 like NagVis, PNP4Nagios, rrdtool, nagios-plugins, Check_MK, 
 MK Livestatus, Dokuwiki, NSCA, check_nrpe and others.
+
+.B OMD
+supports:
+
+- multiple versions of OMD installed in parallel
+.br
+- multiple instances of Nagios running in parallel (so called "sites")
+
 .PP
 .\" TeX users may be more comfortable with the \fB<whatever>\fP and
 .\" \fI<whatever>\fP escape sequences to invode bold face and italics,
@@ -35,11 +43,6 @@ MK Livestatus, Dokuwiki, NSCA, check_nrpe and others.
 \fBomd\fP is the administration interface for creating and maintaining 
 sites within OMD - the open monitoring distribution.
 .SH COMMANDS
-Type 
-.B omd
-or
-.B omd help
-to get an overview over all available commands.
 .TP
 .B omd help
 Show short summary of available commands.
@@ -66,12 +69,13 @@ correctly configured (for the group omd).
 all packages the omd package depends on, no \fBomd setup\fP is neccessary.
 .TP
 .B omd uninstall                   
-This deletes all software and data of OMD. That command is mainly used
+This deletes all software and data of OMD and its sites. That command is mainly used
 for trying out OMD or testing the installation of OMD. Be aware that
 all your monitoring configuration and data will be lost!
 
-If you've installed omd via RPM or DEB, you still need to remove
-the RPM/DEB packages after that.
+Note: Do not use \fBomd uninstall\fP if you've installed omd via RPM or DEB.
+Better remove all sites via by using \fBomd rm\fP and remove the RPM/DEB
+package afterwards.
 .TP
 .B omd sites                       
 Show a list of all sites and the version of OMD each site uses.
@@ -82,9 +86,9 @@ long and consist only of letters, digits and underscores. It must not
 begin with a digit. 
 
 OMD creates an operating system user and group with the name of the
-site. Therefore no user or group with that name must exist. The a 
+site. No user or group with that name must exist prior to the site creation. Then a 
 directory \fB/omd/sites/\fPSITE will be created and used as the new
-users home directory.
+user's home directory.
 
 You need root permissions for creating a new site.
 
@@ -98,37 +102,65 @@ and group of that site. This - of course - needs root permissions.
 .TP
 .B omd mv         SITE NEWNAME     
 Rename a site. The site must be stopped. the NEWNAME must be a valid
-site name as described in "omd create".
+site name as described in "omd create". Root permissions are needed.
 .TP
 .B omd cp         SITE NEWNAME     
-Make a copy of a site
+Make a copy of a site. A new site with the name NEWSITE will be created
+as an exact copy of SITE. All occurrances of SITE will be replaced by 
+NEWSITE in the sites configuration files.
 .TP
 .B omd update     SITE             
-Update site to version 0.42.2
+Update SITE to the current default version of OMD. The default version
+is usually the version that was installed most lately. The sites configuration
+files will be updated as well. OMD tries hard to merge your changes with
+changes due to the new version but might need your help in doing so.
 .TP
 .B omd start      [SITE]           
-Start services of one or all sites
+Start a site, i.e. start all activated daemons and services of a site. 
+If you call this as root, you need to specify the site to
+be started. If you do not specify a site, then all sites with AUTOSTART=on
+will be started. If you call this as site user, no site must be specified.
+The current site will be started.
 .TP
 .B omd stop       [SITE]           
-Stop services of site(s)
+Stop a site. See \fBomd start\fP for details. This stops also sites where
+AUTOSTART=off.
 .TP
 .B omd restart    [SITE]           
-Restart services of site(s)
+Restart site. See \fBomd start\fP for details.
 .TP
 .B omd reload     [SITE]           
-Reload services of site(s)
+Reload services of site(s). That is the same as calling all of the sites
+init scripts with the option \fBreload\fP. Refer to \fBomd start\fP for
+how to specify sites.
 .TP
 .B omd status     [SITE]           
-Show status of services of site(s)
+Show status of site(s). Refer to \fBomd start\fP for
+how to specify sites.
 .TP
-.B omd config     SITE ...         
-Show and set site configuration parameters
+.B omd config     [SITE] [set|show] [VARIABLE] [VALUE]
+This command is used to view and change the configuration of a site. Each
+site has a list of configuration variables. Those variables configure
+how the addons of the site should work together. Optional addons can be
+switched on and off. TCP portnumbers for externel access can be configured.
+
+\fBomd config\fP [SITE] \fBshow\fP outputs the current settings of
+all variables of a SITE. If you call this as root, you have to specify
+which SITE to inspect. If you call \fBomd\fP as site user, you have to
+leave out SITE.
+
+\fBomd config\fP [SITE] brings you into the interactive configuration
+mode where variables can be viewed, are explained and can be changed.
+The site must be stopped for configuration changes.
+
+Setting and querying variables in batch mode can be done with
+
+\fBomd config [SITE] set VARIABLE VALUE\fP
+.br
+\fBomd config [SITE] get VARIABLE\fP
 .SH SEE ALSO
 .BR http://www.omdistro.org
 .br
 .SH AUTHOR
 omd was written by Mathias Kettner <mk@mathias-kettner.de>.
 See /usr/share/doc/omd/TEAM for contributors to omd.
-.PP
-This manual page was written by Wolfgang Barth <wob@swobspace.net>,
-for the use with omd in any distribution.

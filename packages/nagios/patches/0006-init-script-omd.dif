@@ -1,0 +1,61 @@
+--- nagios-3.2.2/daemon-init.in.orig	2008-11-30 18:22:58.000000000 +0100
++++ nagios-3.2.2/daemon-init.in	2010-10-03 12:26:51.000000000 +0200
+@@ -1,4 +1,5 @@
+ #!/bin/sh
++
+ # 
+ # chkconfig: 345 99 01
+ # description: Nagios network monitor
+@@ -29,6 +30,9 @@
+ #              used to provide network services status.
+ #
+   
++. ###ROOT###/etc/omd/site.conf
++[ "$CONFIG_CORE" = "nagios" ] || exit 5
++
+ status_nagios ()
+ {
+ 
+@@ -89,20 +93,20 @@
+ 	. /etc/init.d/functions
+ fi
+ 
+-prefix=@prefix@
+-exec_prefix=@exec_prefix@
+-NagiosBin=@bindir@/nagios
+-NagiosCfgFile=@sysconfdir@/nagios.cfg
+-NagiosStatusFile=@localstatedir@/status.dat
+-NagiosRetentionFile=@localstatedir@/retention.dat
+-NagiosCommandFile=@localstatedir@/rw/nagios.cmd
+-NagiosVarDir=@localstatedir@
+-NagiosRunFile=@lockfile@
+-NagiosLockDir=/var/lock/subsys
+-NagiosLockFile=nagios
+-NagiosCGIDir=@sbindir@
+-NagiosUser=@nagios_user@
+-NagiosGroup=@nagios_grp@
++prefix=###ROOT###
++exec_prefix=${prefix}
++NagiosBin=###ROOT###/bin/nagios
++NagiosCfgFile=###ROOT###/etc/nagios/nagios.cfg
++NagiosStatusFile=###ROOT###/tmp/nagios/status.dat
++NagiosRetentionFile=###ROOT###/var/nagios/retention.dat
++NagiosCommandFile=###ROOT###/tmp/run/nagios.cmd
++NagiosVarDir=###ROOT###/var/log
++NagiosRunFile=###ROOT###/tmp/lock/nagios.lock
++NagiosLockDir=###ROOT###/no/lock/needed
++NagiosLockFile=nagios.lock
++NagiosCGIDir=###ROOT###/lib/nagios/cgi
++NagiosUser=###SITE###
++NagiosGroup=###SITE###
+           
+ 
+ # Check that nagios exists.
+@@ -124,7 +128,6 @@
+ 		echo -n "Starting nagios:"
+ 		$NagiosBin -v $NagiosCfgFile > /dev/null 2>&1;
+ 		if [ $? -eq 0 ]; then
+-			su - $NagiosUser -c "touch $NagiosVarDir/nagios.log $NagiosRetentionFile"
+ 			rm -f $NagiosCommandFile
+ 			touch $NagiosRunFile
+ 			chown $NagiosUser:$NagiosGroup $NagiosRunFile
