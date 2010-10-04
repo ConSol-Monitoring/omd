@@ -146,7 +146,7 @@ deb:
 			-iomd-bin-$(OMD_VERSION).tar.gz \
 			-Iomd-bin-$(OMD_VERSION).tar.gz \
 			-i.gitignore -I.gitignore \
-			-uc -us -rfakeroot -t$(DISTRO_CODE)
+			-uc -us -rfakeroot
 
 # Only to be used for developement testing setup 
 setup: pack xzf
