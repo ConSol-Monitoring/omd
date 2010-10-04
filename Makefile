@@ -7,6 +7,7 @@ DPKG_TOPDIR=$$(pwd)/dpkg.topdir
 SOURCE_TGZ=omd-$(OMD_VERSION).tar.gz
 BIN_TGZ=omd-bin-$(OMD_VERSION).tar.gz
 NEWSERIAL=$$(($(OMD_SERIAL) + 1))
+APACHE_NAME=$(notdir $(APACHE_INIT))
 
 .PHONY: install-global
 # You can select a subset of the packages by overriding this
@@ -106,6 +107,7 @@ rpm:
             -e 's/%{version}/$(OMD_VERSION)/g' \
             -e 's/^Release:.*/Release: $(DISTRO_CODE).$(OMD_SERIAL)/' \
 	    -e 's#@APACHE_CONFDIR@#$(APACHE_CONF_DIR)#g' \
+	    -e 's#@APACHE_NAME@#$(APACHE_NAME)#g' \
 	    omd.spec.in > omd.spec
 	rm -f $(SOURCE_TGZ)
 	$(MAKE) $(SOURCE_TGZ)

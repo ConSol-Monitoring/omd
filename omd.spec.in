@@ -89,6 +89,8 @@ then
     touch /etc/apache2/sysconfig.d/include.conf
 fi
 
+# Make sure, global apache startscript is activated
+chkconfig @APACHE_NAME@ on
 
 %preun
 # Make sure no sites use that version
