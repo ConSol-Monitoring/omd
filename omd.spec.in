@@ -122,7 +122,10 @@ else
     rm -f /usr/bin/omd
     rm -f /usr/share/man/man8/omd.8.gz
     rm -f /etc/init.d/omd
-    rm -rf /opt/omd
+    rmdir /opt/omd/versions
     rm -f @APACHE_CONFDIR@/zzz_omd.conf
     rm -f /omd
+    # Try to remove empty directories
+    rmdir /opt/omd/sites 2>/dev/null || true
+    rmdir /opt/omd 2>/dev/null || true
 fi
