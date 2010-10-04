@@ -32,6 +32,7 @@ if on_tty:
     tty_underline = '\033[4m'
     tty_normal    = '\033[0m'
     tty_ok        = tty_green + tty_bold + 'OK' + tty_normal
+    tty_error     = tty_red + tty_bold + 'ERROR' + tty_normal
 else:
     tty_black     = ''
     tty_red       = ''
@@ -51,10 +52,18 @@ else:
     tty_underline = ''
     tty_normal    = ''
     tty_ok        = 'OK'
+    tty_error     = 'ERROR'
 
 good = tty_bggreen + tty_white + tty_bold + "*" + tty_normal
 warn = tty_bgyellow + tty_black + "?" + tty_normal
 error = tty_bgred + tty_white + tty_bold + "!" + tty_normal
+
+def show_success(exit_code):
+    if exit_code == True or exit_code == 0:
+        sys.stdout.write(tty_ok + "\n")
+    else:
+        sys.stdout.write(tty_error + "\n")
+    return exit_code
 
 patch_supports_merge = None
 def patch_has_merge():
@@ -335,23 +344,23 @@ def create_tmpfs(sitename):
     if not os.path.exists(tmp):
         os.mkdir(tmp)
     if 0 != os.system("mount '%s'" % tmp):
-        sys.stdout.write("ERROR\n")
+        sys.stdout.write(tty_error + "\n")
         return
     create_skeleton_files(sitename, "tmp")
     chown_tree(tmp, sitename)
-    sys.stdout.write("OK\n")
+    sys.stdout.write(tty_ok + "\n")
 
 def unmount_tmpfs(sitename):
     if tmpfs_mounted(sitename):
         sys.stdout.write("Unmounting temporary filesystem...")
 	for t in range(0, 10):
 	    if 0 == os.system("umount '%s'" % tmp_dir(sitename)):
-	        sys.stdout.write("OK\n")
+	        sys.stdout.write(tty_ok + "\n")
 		return
 	    sys.stdout.write(".")
 	    sys.stdout.flush()
 	    time.sleep(1)
-        bail_out("Cannot unmount tmp filesystem.\n")
+        bail_out(tty_error + ": Cannot unmount tmp filesystem.\n")
 
 def add_to_fstab(sitename):
     # tmpfs                   /opt/omd/sites/b01/tmp  tmpfs   user,uid=b01,gid=b01 0 0
@@ -362,13 +371,14 @@ def add_to_fstab(sitename):
 
 def remove_from_fstab(sitename):
     mountpoint = tmp_dir(sitename)
-    sys.stdout.write("Removing %s from /etc/fstab.\n" % mountpoint)
+    sys.stdout.write("Removing %s from /etc/fstab..." % mountpoint)
     newtab = file("/etc/fstab.new", "w")
     for line in file("/etc/fstab"):
         if "uid=%s," % sitename in line and mountpoint in line:
             continue
         newtab.write(line)
     os.rename("/etc/fstab.new", "/etc/fstab")
+    sys.stdout.write(tty_ok + "\n")
 
 def start_site(sitename):
     create_tmpfs(sitename)
@@ -438,15 +448,12 @@ def delete_apache_hook(sitename):
 def reload_apache():
     sys.stdout.write("Reloading Apache...")
     sys.stdout.flush()
-    os.system("%s reload" % g_info["APACHE_CTL"])
-    sys.stdout.write("OK\n")
+    show_success(os.system("%s reload" % g_info["APACHE_CTL"]))
 
 def restart_apache():
     sys.stdout.write("Restarting Apache...")
     sys.stdout.flush()
-    os.system("%s restart" % g_info["APACHE_INIT"])
-    sys.stdout.write("OK\n")
-
+    show_success(os.system("%s restart >/dev/null" % g_info["APACHE_INIT"]))
 
 def replace_tags(content, replacements):
     for var, value in replacements.items():
@@ -1178,7 +1185,7 @@ def main_setup(args):
     command = "%s %s" % (install_cmd, " ".join(packages))
     sys.stdout.write("Going to execute '%s'\n" % command)
     if 0 == os.system(command):
-        sys.stdout.write("OK.\n")
+        sys.stdout.write(tty_ok + "\n")
 
     # Enable Apache modules
     for mod in [ "proxy", "proxy_http" ]:
@@ -1300,13 +1307,15 @@ def main_rm(args):
         bail_out("User '%s' still logged in or running processes.\n" % g_sitename)
     unmount_tmpfs(g_sitename)
 
-    sys.stdout.write("Removing site %s..." % g_sitename)
     remove_from_fstab(g_sitename)
-    sys.stdout.flush()
+    sys.stdout.write("Deleting user and group %s..." % g_sitename)
     userdel(g_sitename)
+    sys.stdout.write(tty_ok + "\n")
+
     if os.path.exists(g_sitedir): # should be done by userdel
+        sys.stdout.write("Deleting all data (%s)..." % g_sitedir)
         shutil.rmtree(site_dir(g_sitename))
-    sys.stdout.write("OK\n")
+        sys.stdout.write(tty_ok + "\n")
 
     # remove include-hook for Apache and tell apache
     delete_apache_hook(g_sitename)
@@ -1314,6 +1323,7 @@ def main_rm(args):
 
 def main_mv(args):
     global g_sitename
+    global g_sitedir
     if len(args) != 1:
 	bail_out("omd: Usage: omd mv oldname newname\n")
     new = args[0]
@@ -1345,9 +1355,10 @@ def main_mv(args):
     chown_tree(site_dir(new), new)
     userdel(old)
 
-    sys.stdout.write("OK\n")
+    sys.stdout.write(tty_ok + "\n")
 
     g_sitename = new
+    g_sitedir = site_dir(new)
     refresh_hooks()
 
     add_to_fstab(new)
@@ -1357,6 +1368,7 @@ def main_mv(args):
 
 def main_cp(args):
     global g_sitename
+    global g_sitedir
 
     if len(args) != 1:
 	bail_out("omd: Usage: omd cp oldname newname\n")
@@ -1387,6 +1399,7 @@ def main_cp(args):
     sys.stdout.write("OK\n")
 
     g_sitename = new
+    g_sitedir = site_dir(new)
     refresh_hooks()
 
     # Entry for tmps in /etc/fstab
@@ -1486,8 +1499,7 @@ def main_init_action(command, args):
                 g_sitedir = site_dir(g_sitename)
                 config_load_hooks()
                 if g_hooks["AUTOSTART"]["value"] != "on":
-                    sys.stdout.write("%sIgnoring site '%s': AUTOSTART != on%s\n" 
-                            % (tty_bold + tty_yellow, site, tty_normal))
+                    sys.stdout.write("Ignoring site '%s': AUTOSTART != on\n" % site)
                     continue
             
             sys.stdout.write("%sDoing '%s' on site %s:%s\n" % (tty_bold, command, site, tty_normal))
