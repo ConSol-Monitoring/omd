@@ -47,6 +47,7 @@ install:
 	mkdir -p skel/etc/pnp4nagios
 	mkdir -p skel/var/pnp4nagios/stats
 	mkdir -p skel/var/pnp4nagios/perfdata
+	mkdir -p skel/var/pnp4nagios/log
 	mkdir -p skel/var/pnp4nagios/spool
 	mkdir -p skel/tmp/pnp4nagios/run
 
