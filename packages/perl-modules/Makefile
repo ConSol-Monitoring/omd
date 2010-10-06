@@ -2,27 +2,37 @@ include ../../Makefile.omd
 
 NAME    = perl-modules
 VERSION = $(OMD_VERSION)
-SRC     = $(shell basename src/local-lib-*.gz | sed s/\.tar\.gz// )
+PERL    = /usr/bin/perl
+LLSRC   = $(shell basename src/local-lib-*.gz | sed s/\.tar\.gz// )
 
-build:
+MODULES = YAML-0.72.tar.gz \
+          Scalar-List-Utils-1.23.tar.gz \
+          common-sense-3.0.tar.gz \
+          JSON-XS-2.3.tar.gz \
+          Monitoring-Livestatus-0.60.tar.gz
 
-build-disabled: init-cpan
-	cd src; tar zxf $(SRC).tar.gz
-	cd src/$(SRC); ../../defaults /usr/bin/perl Makefile.PL --bootstrap=build
-	cd src/$(SRC); $(MAKE)
-	cd src/$(SRC); $(MAKE) DESTDIR="" install
+
+build: clean locallib
+	# now install all other modules
+	cd src \
+	eval $$($(PERL) -Idist/lib/perl5 -Mlocal::lib=dist); \
+	for tarball in $(MODULES); do \
+	    ../build_module.sh $(PERL) $$tarball; \
+	done
 
 install:
-
-install-disabled:
 	if [ -z $(DESTDIR) ]; then echo "cannot install without DESTDIR set!"; exit 1; fi
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib
-	mv src/$(SRC)/build $(DESTDIR)$(OMD_ROOT)/lib/perl5
+	mv dist $(DESTDIR)$(OMD_ROOT)/lib/perl5
 
 skel:
 
 clean:
-	if [ -d src/$(SRC) ]; then rm -rf src/$(SRC); fi
+	rm -rf src/$(LLSRC)
+	rm -rf dist
 
-init-cpan:
-	./defaults cpan
+locallib:
+	mkdir dist
+	cd src; tar zxf $(LLSRC).tar.gz
+	cd src/$(LLSRC); $(PERL) Makefile.PL --bootstrap=../../dist
+	cd src/$(LLSRC); $(MAKE) install
