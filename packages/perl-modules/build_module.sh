@@ -4,6 +4,10 @@ PERL=$1
 MODULE=$2
 echo $MODULE
 
+cd ..
+eval $($PERL -Idist/lib/perl5 -Mlocal::lib=dist)
+cd src
+
 tar zxf $MODULE
 dir=$(basename $MODULE | sed s/\.tar\.gz// )
 cd $dir

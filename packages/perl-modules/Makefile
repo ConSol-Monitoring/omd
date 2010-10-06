@@ -14,8 +14,7 @@ MODULES = YAML-0.72.tar.gz \
 
 build: clean locallib
 	# now install all other modules
-	cd src \
-	eval $$($(PERL) -Idist/lib/perl5 -Mlocal::lib=dist); \
+	cd src; \
 	for tarball in $(MODULES); do \
 	    ../build_module.sh $(PERL) $$tarball; \
 	done
@@ -34,5 +33,5 @@ clean:
 locallib:
 	mkdir dist
 	cd src; tar zxf $(LLSRC).tar.gz
-	cd src/$(LLSRC); $(PERL) Makefile.PL --bootstrap=../../dist
+	cd src/$(LLSRC); echo "" | $(PERL) Makefile.PL --bootstrap=../../dist
 	cd src/$(LLSRC); $(MAKE) install
