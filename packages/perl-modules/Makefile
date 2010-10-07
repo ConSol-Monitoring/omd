@@ -164,8 +164,7 @@ install:
 skel:
 
 clean:
-	rm -rf src/$(LLSRC)
-	rm -rf dist
+	rm -rf src/$(LLSRC) src/inc dist
 
 locallib:
 	test -d dist || mkdir dist
