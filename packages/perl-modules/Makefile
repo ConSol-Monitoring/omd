@@ -76,6 +76,7 @@ MODULES = File-Remove-1.42.tar.gz \
           Algorithm-C3-0.08.tar.gz \
           Time-HiRes-1.9721.tar.gz \
           Date-Calc-6.3.tar.gz \
+          Class-Accessor-Chained-0.01.tar.gz \
           Data-Page-2.02.tar.gz \
           File-Slurp-9999.13.tar.gz \
           Date-Manip-6.12.tar.gz \
@@ -111,6 +112,10 @@ MODULES = File-Remove-1.42.tar.gz \
           Set-Object-1.28.tar.gz \
           UNIVERSAL-isa-1.03.tar.gz \
           Log-Log4perl-1.30.tar.gz \
+          MooseX-SemiAffordanceAccessor-0.08.tar.gz \
+          MooseX-Params-Validate-0.14.tar.gz \
+          Devel-Caller-2.05.tar.gz \
+          PadWalker-1.92.tar.gz \
           File-ChangeNotify-0.17.tar.gz \
           File-ShareDir-1.02.tar.gz \
           Test-Simple-0.96.tar.gz \
@@ -144,15 +149,17 @@ MODULES = File-Remove-1.42.tar.gz \
 
 build: locallib
 	# now install all other modules
+	test -d dist && eval $$($(PERL) -Idist/lib/perl5 -Mlocal::lib=dist); \
 	cd src; \
 	for tarball in $(MODULES); do \
 	    ../build_module.sh $$tarball $(PERL); \
+	    echo "   ok"; \
 	done
 
 install:
 	if [ -z $(DESTDIR) ]; then echo "cannot install without DESTDIR set!"; exit 1; fi
-	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib
-	mv dist $(DESTDIR)$(OMD_ROOT)/lib/perl5
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/perl5
+	cp -rp dist/lib $(DESTDIR)$(OMD_ROOT)/lib/perl5/lib
 
 skel:
 
@@ -166,5 +173,15 @@ locallib:
 	cd src/$(LLSRC); echo "" | $(PERL) Makefile.PL --bootstrap=../../dist
 	cd src/$(LLSRC); $(MAKE) install
 
-test: build
-	eval $($PERL -Idist/lib/perl5 -Mlocal::lib=dist); $(PERL) Makefile.PL
+test:
+	eval $$($(PERL) -Idist/lib/perl5 -Mlocal::lib=dist); \
+	cd src; \
+	for tarball in $(MODULES); do \
+	    ../build_module.sh $$tarball $(PERL) testonly; \
+	    if [ $$? == 0 ]; then \
+	        echo "   ok"; \
+	    else \
+	        echo "   not ok"; \
+	        exit 1; \
+	    fi; \
+	done
