@@ -5,7 +5,7 @@ PERL=$2
 FORCE=$3
 
 LOG="install.log"
-echo -n "*** $MODULE" >&2
+printf "%-55s" "*** $MODULE"
 
 if [ -z $FORCE ]; then
     FORCE="no"
