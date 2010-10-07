@@ -2,7 +2,6 @@ include ../../Makefile.omd
 
 NAME    = perl-modules
 VERSION = $(OMD_VERSION)
-PERL    = /usr/bin/perl
 LLSRC   = $(shell basename src/local-lib-*.gz | sed s/\.tar\.gz// )
 
 MODULES = File-Remove-1.42.tar.gz \
