@@ -154,6 +154,7 @@ build: locallib
 	    ../build_module.sh $$tarball $(PERL); \
 	    echo "   ok"; \
 	done
+	rm -rf src/inc
 
 install:
 	if [ -z $(DESTDIR) ]; then echo "cannot install without DESTDIR set!"; exit 1; fi
