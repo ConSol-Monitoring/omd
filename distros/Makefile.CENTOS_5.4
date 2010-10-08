@@ -1,6 +1,6 @@
 DISTRO_CODE       = rh54
 BUILD_PACKAGES    = libxml2-devel cairo-devel pango-devel patch gcc gcc-c++ openssl-devel gd-devel rpm-build which
-OS_PACKAGES       = httpd mod_python php php-pdo php-mbstring graphviz graphviz-gd rsync dialog
+OS_PACKAGES       = httpd mod_python php php-pdo php-mbstring graphviz rsync dialog pango
 USERADD_OPTIONS   = -M
 ADD_USER_TO_GROUP = gpasswd -a %(user)s %(group)s
 PACKAGE_INSTALL   = yum -y makecache ; yum -y install
@@ -12,7 +12,7 @@ APACHE_GROUP      = apache
 APACHE_BIN        = /usr/sbin/httpd
 APACHE_CTL        = /usr/sbin/apachectl
 APACHE_MODULE_DIR = /usr/lib/httpd/modules
-APACHE_MODULE_DIR_64 = /usr/lib/httpd/modules
+APACHE_MODULE_DIR_64 = /usr/lib64/httpd/modules
 APACHE_PHP_MODULE = libphp5.so
 APACHE_PYTHON_MODULE = mod_python.so
 APACHE_ENMOD      = true %s
