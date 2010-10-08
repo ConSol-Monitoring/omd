@@ -23,10 +23,6 @@ skel:
 	       -e 's|###APACHE_PHP_MODULE###|$(APACHE_PHP_MODULE)|g' \
 	       -e 's|###APACHE_PYTHON_MODULE###|$(APACHE_PYTHON_MODULE)|g' \
 	       $(SKEL)/etc/apache/apache.conf
-	# UGLY: SLES needs mod_log_config.so to be loaded
-	if [ $(DISTRO_NAME) = SLES ] || [ $(DISTRO_NAME) = CENTOS ] ; then \
-	    sed -i '/LoadModule python_module/iLoadModule log_config_module $(MODULE_DIR)/mod_log_config.so' $(SKEL)/etc/apache/apache.conf ; \
-	fi
 	sed -i 's|###APACHE_BIN###|$(APACHE_BIN)|g' $(SKEL)/etc/init.d/apache
 	# Fix permissions
 	chmod +x $(SKEL)/etc/init.d/apache
