@@ -44,7 +44,6 @@ case "$1" in
        omd /omd/versions/###OMD_VERSION### ###OMD_SERIAL### \
        --slave /usr/bin/omd omd.bin /omd/versions/###OMD_VERSION###/bin/omd \
        --slave /etc/init.d/omd omd.init /etc/init.d/omd-###OMD_VERSION### \
-       --slave /etc/default/omd omd.default /etc/default/omd-###OMD_VERSION### \
        --slave /usr/share/man/man8/omd.8.gz omd.man8 \
                /omd/versions/###OMD_VERSION###/share/man/man8/omd.8.gz
 
@@ -69,6 +68,16 @@ case "$1" in
       echo "Include /omd/apache/*.conf" > $APACHE_OMD_CONF
       # avoid apache error message including /omd/apache if no site exist
       touch "/omd/apache/empty.conf"
+    fi
+    # -- enable apache modules
+    if ! test -e /etc/apache2/mods-enabled/proxy_http.load; then
+       a2enmod proxy_http	# also enables dependend modules
+    fi
+
+    # -- default for init
+    DEFAULT=/etc/default/omd
+    if ! test -e $DEFAULT ; then
+      echo "AUTOSTART=1" > $DEFAULT
     fi
     ;;
 
