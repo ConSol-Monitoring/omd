@@ -1,0 +1,12 @@
+diff --git a/lib/Thruk.pm b/lib/Thruk.pm
+index d40df04..d621bc2 100644
+--- a/lib/Thruk.pm
++++ b/lib/Thruk.pm
+@@ -47,6 +47,7 @@ our $VERSION = '0.72';
+ # details given here can function as a default configuration,
+ # with a external configuration file acting as an override for
+ # local deployment.
++$ENV{CATALYST_CONFIG} = '/omd/sites/'.getpwuid($<).'/etc/thruk';
+ my $project_root = __PACKAGE__->config->{home};
+ my %config = ('name'                   => 'Thruk',
+               'version'                => $VERSION,

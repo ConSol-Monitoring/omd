@@ -1,6 +1,6 @@
 DISTRO_CODE       = rh55
 BUILD_PACKAGES    = libxml2-devel cairo-devel pango-devel patch gcc gcc-c++ openssl-devel gd-devel rpm-build which
-OS_PACKAGES       = httpd mod_python php php-pdo php-mbstring graphviz rsync dialog pango
+OS_PACKAGES       = httpd mod_python mod_fcgid php php-pdo php-mbstring graphviz rsync dialog pango
 USERADD_OPTIONS   = -M
 ADD_USER_TO_GROUP = gpasswd -a %(user)s %(group)s
 PACKAGE_INSTALL   = yum -y makecache ; yum -y install

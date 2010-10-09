@@ -160,6 +160,7 @@ install:
 	if [ -z $(DESTDIR) ]; then echo "cannot install without DESTDIR set!"; exit 1; fi
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/perl5
 	cp -rp dist/lib $(DESTDIR)$(OMD_ROOT)/lib/perl5/lib
+	cp -rp dist/.modulebuildrc $(DESTDIR)$(OMD_ROOT)/lib/perl5/
 
 skel:
 
