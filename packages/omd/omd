@@ -186,6 +186,9 @@ def read_info():
 	       var, value = line.split('=')
 	       g_info[var.strip()] = value.strip()
 
+def site_name():
+        return pwd.getpwuid(os.getuid()).pw_name
+
 def site_dir(sitename):
     return "/omd/sites/" + sitename
 
@@ -641,13 +644,15 @@ def merge_update_file(relpath, old_version, new_version):
 
 def filetype(p):
     if not os.path.exists(p):
-	return None
+	tp = None
     elif os.path.islink(p):
-	return "link"
+	tp = "link"
     elif os.path.isdir(p):
-	return "dir"
+	tp = "dir"
     else:
-	return "file"
+	tp = "file"
+    return tp
+
 
 def update_file(old_version, new_version, userdir, relpath):
 #     sys.stdout.write("Updating %s | %s | %s | %s\n" %
@@ -718,7 +723,7 @@ def update_file(old_version, new_version, userdir, relpath):
     # 1) New version ships new skeleton file -> simply install
     if not old_type and not user_type:
 	create_skeleton_file(new_skel, userdir, relpath, replacements)
-	sys.stdout.write(good + " Installed new file %s.\n" % fn)
+	sys.stdout.write(good + " Installed new %s %s.\n" % (new_type, fn))
 
     # 2) new version ships new skeleton file, but user's own file/dir/link
     #    is in the way.
@@ -860,7 +865,7 @@ def update_file(old_version, new_version, userdir, relpath):
     else:
 	if ask_user(relpath, "You somehow fiddled along with "
 	       "%s, and I do not have the "
-	       "slightest what's going on here. May "
+	       "slightest idea what's going on here. May "
 	       "I please install the new default %s "
 	       "here, or do you want to keep your %s?" %
 	       (relpath, new_type, user_type),
@@ -1674,7 +1679,7 @@ if needs_site > 0:
         elif needs_site == 1:
 	    bail_out("omd: please specify site.\n")
     else:
-        g_sitename = pwd.getpwuid(os.getuid()).pw_name
+        g_sitename = site_name()
 
 if g_sitename != None and site_must_exist and not site_exists(g_sitename):
     bail_out("omd: no such site: %s\n" % g_sitename)

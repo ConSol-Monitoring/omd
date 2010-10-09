@@ -30,7 +30,10 @@ clean: clean-patched unpatch
 	$(MAKE) clean
 	#$(MAKE) distclean
 	rm -f $(_PWD)/debian/postinst
+	rm -f $(_PWD)/debian/preinst
+	rm -f $(_PWD)/debian/prerm
 	rm -f $(_PWD)/debian/postrm
+	rm -f $(_PWD)/debian/init
 	rm -f $(_PWD)/debian/links
 	rm -f $(_PWD)/debian/*.debhelper
 	rm -rf  $(_PWD)/debian/omd-[0-9].[0-9]*
@@ -77,7 +80,13 @@ install: build
 	    -e 's/###OMD_SERIAL###/$(OMD_SERIAL)/g' \
 	   $(_PWD)/debian/postinst.in > $(_PWD)/debian/postinst
 	sed -e 's/###OMD_VERSION###/$(OMD_VERSION)/g' \
+	   $(_PWD)/debian/preinst.in > $(_PWD)/debian/preinst
+	sed -e 's/###OMD_VERSION###/$(OMD_VERSION)/g' \
+	   $(_PWD)/debian/prerm.in > $(_PWD)/debian/prerm
+	sed -e 's/###OMD_VERSION###/$(OMD_VERSION)/g' \
 	   $(_PWD)/debian/postrm.in > $(_PWD)/debian/postrm
+	sed -e 's/###OMD_VERSION###/$(OMD_VERSION)/g' \
+	   $(_PWD)/debian/init.in > $(_PWD)/debian/init
 	sed -e 's/###OMD_VERSION###/$(OMD_VERSION)/g' \
 	   $(_PWD)/debian/links.in > $(_PWD)/debian/links
 
@@ -94,13 +103,13 @@ binary-arch: build install
 	dh_installexamples
 #	dh_install
 #	dh_installmenu
-	dh_installdebconf	
+	dh_installdebconf -n
 #	dh_installlogrotate
 #	dh_installemacsen
 #	dh_installcatalogs
 #	dh_installpam
 #	dh_installmime
-	dh_installinit
+	dh_installinit -n
 #	dh_installcron
 #	dh_installinfo
 #	dh_installwm

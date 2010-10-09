@@ -13,22 +13,24 @@ set -e
 # for details, see http://www.debian.org/doc/debian-policy/ or
 # the debian-policy package
 
-if [ -x "/etc/init.d/omd" ]; then
-  if [ -x /usr/sbin/invoke-rc.d ]; then
-    invoke-rc.d omd stop || true
-  else
-    /etc/init.d/omd stop || true
-  fi
-fi
-
 case "$1" in
-    install|upgrade)
+    install)
     	# create base dirs and symlinks manually, so we can install
 	# different omd versions in parallel
     	mkdir -p /opt/omd/apache
     	mkdir -p /opt/omd/versions
     	mkdir -p /opt/omd/sites
 	ln -sfn /opt/omd /omd
+    ;;
+    upgrade)
+        OMD="omd-###OMD_VERSION###"
+	if [ -x "/etc/init.d/$OMD" ]; then
+  	  if [ -x /usr/sbin/invoke-rc.d ]; then
+    	    invoke-rc.d $OMD stop || true
+  	  else
+    	    /etc/init.d/$OMD stop || true
+  	  fi
+	fi
     ;;
 
     abort-upgrade)

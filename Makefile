@@ -136,7 +136,7 @@ deb-newversion: deb-environment
 
 # incrementing debian packaging version (same OMD version)
 deb-incversion: deb-environment
-	dch -i --distributor 'unstable'
+	dch -i --no-auto-nmu --distributor 'unstable'
 
 deb: 
 	sed -e 's/###OMD_VERSION###/$(OMD_VERSION)/' \
@@ -147,6 +147,13 @@ deb:
 			-Iomd-bin-$(OMD_VERSION).tar.gz \
 			-i.gitignore -I.gitignore \
 			-uc -us -rfakeroot
+	# -- renaming deb package to DISTRO_CODE dependend name
+	arch=`dpkg-architecture -qDEB_HOST_ARCH` ; \
+	build=`sed -e '1s/.*(\(.*\)).*/\1/;q' debian/changelog` ; \
+	distro=`echo $$build | sed -e 's/build/$(DISTRO_CODE)/' ` ; \
+	echo "$$arch $$build $$distro"; \
+	mv "../omd-$(OMD_VERSION)_$${build}_$${arch}.deb" \
+	   "../omd-$(OMD_VERSION)_$${distro}_$${arch}.deb" ;
 
 # Only to be used for developement testing setup 
 setup: pack xzf
