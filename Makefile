@@ -136,7 +136,7 @@ deb-newversion: deb-environment
 
 # incrementing debian packaging version (same OMD version)
 deb-incversion: deb-environment
-	dch -i --distributor 'unstable'
+	dch -i --no-auto-nmu --distributor 'unstable'
 
 deb: 
 	sed -e 's/###OMD_VERSION###/$(OMD_VERSION)/' \
