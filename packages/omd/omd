@@ -186,6 +186,9 @@ def read_info():
 	       var, value = line.split('=')
 	       g_info[var.strip()] = value.strip()
 
+def site_name():
+        return pwd.getpwuid(os.getuid()).pw_name
+
 def site_dir(sitename):
     return "/omd/sites/" + sitename
 
@@ -1676,7 +1679,7 @@ if needs_site > 0:
         elif needs_site == 1:
 	    bail_out("omd: please specify site.\n")
     else:
-        g_sitename = pwd.getpwuid(os.getuid()).pw_name
+        g_sitename = site_name()
 
 if g_sitename != None and site_must_exist and not site_exists(g_sitename):
     bail_out("omd: no such site: %s\n" % g_sitename)
