@@ -14,7 +14,7 @@
 
 # -- don't start omd, if not configured in /etc/default/omd
 AUTOSTART=0
-OMD=/opt/omd/versions/0.43/bin/omd
+OMD=/opt/omd/versions/###OMD_VERSION###/bin/omd
 
 [ -r /etc/default/omd ] && . /etc/default/omd
 
