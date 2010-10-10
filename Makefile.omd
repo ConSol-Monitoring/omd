@@ -6,6 +6,8 @@ OMD_BASE           = /omd
 OMD_PHYSICAL_BASE  = /opt/omd
 OMD_ROOT           = $(OMD_BASE)/versions/$(OMD_VERSION)
 
+PERL               = /usr/bin/perl
+
 # Determine the distro we are running on and its version. Nasty here:
 # We do not known wether we are called from the main Makefile or
 # from a package Makefile. There we do not know the path to the

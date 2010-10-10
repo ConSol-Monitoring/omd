@@ -16,7 +16,7 @@ EOF
     choices)
             echo "nagios: Classic Nagios webinterface"
             echo "check_mk: The Check_MK's Multisite GUI"
-#            echo "thruk: Thruk Monitoring Webinterface"
+            echo "thruk: Thruk Monitoring Webinterface"
             echo "none: No default webinterface"
     ;;
 esac
