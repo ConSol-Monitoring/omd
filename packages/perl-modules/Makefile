@@ -60,9 +60,8 @@ MODULES = File-Remove-1.42.tar.gz \
           MooseX-MethodAttributes-0.24.tar.gz \
           MooseX-Role-WithOverloading-0.08.tar.gz \
           Module-Find-0.10.tar.gz \
-          Monitoring-Livestatus-0.60.tar.gz \
-          Monitoring-Livestatus-Class-0.03.tar.gz \
-          Monitoring-Availability-0.14.tar.gz \
+          Thread-Queue-2.11.tar.gz \
+          Test-Simple-0.96.tar.gz \
           MIME-Types-1.31.tar.gz \
           HTML-Parser-3.68.tar.gz \
           libwww-perl-5.837.tar.gz \
@@ -117,11 +116,11 @@ MODULES = File-Remove-1.42.tar.gz \
           PadWalker-1.92.tar.gz \
           File-ChangeNotify-0.17.tar.gz \
           File-ShareDir-1.02.tar.gz \
-          Test-Simple-0.96.tar.gz \
           Spreadsheet-ParseExcel-0.58.tar.gz \
           IO-String-1.08.tar.gz \
           MooseX-Param-0.02.tar.gz \
           Excel-Template-Plus-0.05.tar.gz \
+          Module-Pluggable-3.9.tar.gz \
           Catalyst-Runtime-5.80029.tar.gz \
           Catalyst-Action-RenderView-0.14.tar.gz \
           Catalyst-Plugin-Session-0.30.tar.gz \
@@ -143,7 +142,10 @@ MODULES = File-Remove-1.42.tar.gz \
           FCGI-0.71.tar.gz \
           FCGI-ProcManager-0.19.tar.gz \
           FCGI-ProcManager-MaxRequests-0.02.tar.gz \
-          Catalyst-Plugin-Redirect-0.02.tar.gz
+          Catalyst-Plugin-Redirect-0.02.tar.gz \
+          Monitoring-Livestatus-0.60.tar.gz \
+          Monitoring-Livestatus-Class-0.03.tar.gz \
+          Monitoring-Availability-0.14.tar.gz
 
 
 build: locallib
