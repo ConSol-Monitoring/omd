@@ -25,6 +25,9 @@ install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share
 	rm -rf $(DESTDIR)$(OMD_ROOT)/share/thruk
 	cp -rp $(DIR) $(DESTDIR)$(OMD_ROOT)/share/thruk
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/skel/etc/thruk
+	cp $(DIR)/thruk.conf $(DESTDIR)$(OMD_ROOT)/skel/etc/thruk/thruk.conf
+	cp $(DIR)/menu.conf $(DESTDIR)$(OMD_ROOT)/skel/etc/thruk/menu.conf
 
 skel:
 
