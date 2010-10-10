@@ -14,37 +14,54 @@
 
 # -- don't start omd, if not configured in /etc/default/omd
 AUTOSTART=0
-OMD=/opt/omd/versions/###OMD_VERSION###/bin/omd
+
+PROGNAME=$0
+PROGNAME=${PROGNAME##*/}
+VERSION=${PROGNAME#omd-}
+
+if [ "$VERSION" = "###OMD_VERSION###" ]; then
+  VER="-V $VERSION"
+  MSG=" using omd version $VERSION"
+else 
+  VER=""
+  MSG=""
+fi
+
+OMD="/opt/omd/versions/###OMD_VERSION###/bin/omd $VER"
 
 [ -r /etc/default/omd ] && . /etc/default/omd
 
 case "$1" in
     start)
 	if [ "$AUTOSTART" = "1" ]; then
-          echo "Starting all OMD monitoring sites:"
+          echo "Starting all OMD monitoring sites $MSG:"
           $OMD "$1"
 	else
 	  echo "OMD autostart disabled, skipping ..."
 	fi
     ;;
     stop)
-        echo "Stopping all OMD monitoring sites:"
+        echo "Stopping all OMD monitoring sites $MSG:"
         $OMD "$1"
     ;;
     restart)
-        echo "Restarting all OMD monitoring sites:"
+        echo "Restarting all OMD monitoring sites $MSG:"
         $OMD "$1"
     ;;
     reload)
-        echo "Reloading all OMD monitoring sites:"
+        echo "Reloading all OMD monitoring sites $MSG:"
         $OMD "$1"
     ;;
     status)
-        echo "Checking state of all OMD monitoring sites:"
+        echo "Checking state of all OMD monitoring sites $MSG:"
         $OMD "$1"
     ;;
+    '')
+	echo "usage: $PROGNAME start|stop|restart|reload|status"
+	exit 1
+    ;;
     *)
-        echo "Doing $1 on all OMD monitoring sites:"
+        echo "Doing $1 on all OMD monitoring sites $MSG:"
         $OMD "$1"
     ;;
 esac

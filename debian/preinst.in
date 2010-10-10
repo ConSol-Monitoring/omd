@@ -23,14 +23,6 @@ case "$1" in
 	ln -sfn /opt/omd /omd
     ;;
     upgrade)
-        OMD="omd-###OMD_VERSION###"
-	if [ -x "/etc/init.d/$OMD" ]; then
-  	  if [ -x /usr/sbin/invoke-rc.d ]; then
-    	    invoke-rc.d $OMD stop || true
-  	  else
-    	    /etc/init.d/$OMD stop || true
-  	  fi
-	fi
     ;;
 
     abort-upgrade)
