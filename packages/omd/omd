@@ -465,8 +465,6 @@ def create_skeleton_file(skelbase, userbase, relpath, replacements):
                 mode = 0755
             else:
                 mode = 0644
-        else:
-             print "HIRN: Modus von %s ist %o" % (relpath, mode)
 	os.chmod(user_path, mode)
 
 
