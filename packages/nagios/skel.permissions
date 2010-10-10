@@ -1,1 +1,1 @@
-etc/nagios/resource.cfg 0600
+etc/init.d/nagios 755
