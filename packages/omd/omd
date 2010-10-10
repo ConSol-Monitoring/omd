@@ -58,6 +58,11 @@ good = tty_bggreen + tty_white + tty_bold + "*" + tty_normal
 warn = tty_bgyellow + tty_black + "?" + tty_normal
 error = tty_bgred + tty_white + tty_bold + "!" + tty_normal
 
+# Options to set via command line
+opt_verbose = False
+opt_interactive = False
+opt_force = False
+
 def show_success(exit_code):
     if exit_code == True or exit_code == 0:
         sys.stdout.write(tty_ok + "\n")
@@ -643,10 +648,13 @@ def merge_update_file(relpath, old_version, new_version):
 
 
 def filetype(p):
-    if not os.path.exists(p):
-	tp = None
-    elif os.path.islink(p):
+    # check for symlinks first. Might be dangling. In that
+    # case os.path.exists checks the links target for existance
+    # and reports it is non-existing.
+    if os.path.islink(p):
 	tp = "link"
+    elif not os.path.exists(p):
+	tp = None
     elif os.path.isdir(p):
 	tp = "dir"
     else:
@@ -713,6 +721,11 @@ def update_file(old_version, new_version, userdir, relpath):
 			    and os.readlink(old_path) != os.readlink(new_path))
     we_changed = we_changed_type or we_changed_content
 
+#     if opt_verbose:
+#         sys.stdout.write("%s%s%s:\n" % (tty_bold, relpath, tty_normal))
+#         sys.stdout.write("  you       : %s\n" % user_type)
+#         sys.stdout.write("  %-10s: %s\n" % (old_version, old_type))
+#         sys.stdout.write("  %-10s: %s\n" % (new_version, new_type))
 
     # A --> MISSING FILES
 
@@ -1469,11 +1482,13 @@ def main_update(args):
 
 	for entry in dirnames + filenames:
 	    path = dirpath + "/" + entry
+            if path.startswith("./"):
+                path = path[2:]
 	    handled_paths.add(path)
 	    try:
 		update_file(from_version, to_version, g_sitedir, path)
 	    except Exception, e:
-		sys.stderr.write("Error updating %s/%s: %s\n" % (g_sitedir, entry, e))	
+		sys.stderr.write("Error updating %s/%s: %s\n" % (g_sitedir, path, e))	
 		raise
 
     # Now handle files present in old but not in new skel files
@@ -1486,15 +1501,17 @@ def main_update(args):
 
 	for entry in dirnames + filenames:
 	    path = dirpath + "/" + entry
+            if path.startswith("./"):
+                path = path[2:]
 	    if path in handled_paths:
 		continue
-	    handled_paths.add(path)
+
 	    # handle only files not already handled while scanning to_skelroot
 	    if not os.path.exists(to_skelroot + "/" + entry):
 		try:
 		    update_file(from_version, to_version, g_sitedir, path)
 		except Exception, e:
-		    sys.stderr.write("Error updating %s/%s: %s\n" % (g_sitedir, entry, e))	
+		    sys.stderr.write("Error updating %s/%s: %s\n" % (g_sitedir, path, e))	
 		    raise
 
     # Change symbolic link pointing to new version
@@ -1543,19 +1560,6 @@ def main_config(args):
         else:
             config_usage()
 
-
-# ----------------------------------------------------------
-#                                _       
-#                _ __ ___   __ _(_)_ __  
-#               | '_ ` _ \ / _` | | '_ \ 
-#               | | | | | | (_| | | | | |
-#               |_| |_| |_|\__,_|_|_| |_|
-#
-# ----------------------------------------------------------
-
-# If command that refer to a site are called as root
-# the site is always the parameter right after the command
-# name
 
 commands = [
 #  command   only_root  needs_site must_exist confirm args, function, description, confirm_text
@@ -1646,15 +1650,71 @@ commands = [
   ( "config",    False, 1, 1, False, "...", main_config,
     "Show and set site configuration parameters",
     ""),
-
 ]
 
-if len(sys.argv) < 2:
+def handle_global_option(opt, orig):
+    def opt_arg():
+        global main_args
+        if len(main_args) < 1:
+            bail_out("Option %s needs an argument.\n" % opt)
+        arg = main_args[0]
+        main_args = main_args[1:]
+        return arg
+
+    if opt in [ 'V', 'version' ]:
+        # Switch to other version of bin/omd
+        version = opt_arg()
+        if version != OMD_VERSION:
+            omd_path = "/omd/versions/%s/bin/omd" % version
+            if not os.path.exists(omd_path):
+                bail_out("OMD version '%s' is not installed.\n" % version)
+            os.execv(omd_path, sys.argv)
+            bail_out("Cannot execute %s.\n" % omd_path)
+    elif opt in [ 'f', 'force' ]:
+        opt_force = True
+        opt_interactive = False
+    elif opt in [ 'i', 'interactive' ]:
+        opt_force = False
+        opt_interactive = True
+    elif opt in [ 'v', 'verbose' ]:
+        global opt_verbose
+        opt_verbose = True
+    else:
+        sys.stdout.write("Invalid global option %s.\n" % orig)
+        sys.stdout.write("Call omd help for available options.\n")
+        sys.exit(1)
+
+# ----------------------------------------------------------
+#                                _       
+#                _ __ ___   __ _(_)_ __  
+#               | '_ ` _ \ / _` | | '_ \ 
+#               | | | | | | (_| | | | | |
+#               |_| |_| |_|\__,_|_|_| |_|
+#
+# ----------------------------------------------------------
+
+# Handle global options. We might convert this to getopt
+# later. But a problem here is that we have options appearing
+# *before* the command and command specific ones. We handle
+# the options before the command here only
+
+main_args = sys.argv[1:]
+
+while len(main_args) >= 1 and main_args[0].startswith("-"):
+    opt = main_args[0]
+    main_args = main_args[1:]
+    if opt.startswith("--"):
+        handle_global_option(opt[2:], opt)
+    else:
+        for c in opt[1:]:
+            handle_global_option(c, opt)
+
+if len(main_args) < 1:
     main_help()
     sys.exit(1)
 
-command = sys.argv[1]
-args = sys.argv[2:]
+command = main_args[0]
+args = main_args[1:]
 found = False
 for c, only_root, needs_site, site_must_exist, confirm, argumentlist, command_function, description, confirm_text in commands:
     if c == command:
@@ -1693,7 +1753,7 @@ if g_sitename and site_must_exist and command != "update":
         # Rerun with omd of correct version
         omd_path = "/omd/versions/%s/bin/omd" % v
         if os.path.exists(omd_path):
-            os.execv("/omd/versions/%s/bin/omd" % v, sys.argv)
+            os.execv(omd_path, sys.argv)
 	    bail_out("Cannot run bin/omd of version %s.\n" % v)
         else:
             bail_out("Site %s uses version %s which is not installed.\n" 
