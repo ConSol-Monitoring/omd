@@ -1185,7 +1185,7 @@ def init_action(command):
 #    \___\___/|_| |_| |_|_| |_| |_|\__,_|_| |_|\__,_|___/
 #
 # ----------------------------------------------------------
-def main_help(args=[]):
+def main_help(args=[], options={}):
     am_root = os.getuid() == 0
     if am_root:
         sys.stdout.write("Usage (called as root):\n\n")
@@ -1203,7 +1203,7 @@ def main_help(args=[]):
 
         sys.stdout.write(" omd %-10s %-16s %s\n" % (command, synopsis, descr))
 
-def main_setup(args):
+def main_setup(args, options={}):
     packages = g_info["OS_PACKAGES"].split()
     install_cmd = g_info["PACKAGE_INSTALL"]
     command = "%s %s" % (install_cmd, " ".join(packages))
@@ -1239,7 +1239,7 @@ def main_setup(args):
         os.system("chmod 4750 '%s'" % path)
 
 
-def main_uninstall(args):
+def main_uninstall(args, options={}):
     global g_sitename
     global g_sitedir
     for sitename in all_sites():
@@ -1259,21 +1259,21 @@ def main_uninstall(args):
     sys.stdout.write("Good bye.\n")
 
 
-def main_version(args):
+def main_version(args, options={}):
     sys.stdout.write("OMD - OpenSource Monitoring Distribution Version %s\n" % g_info["OMD_VERSION"])
 
-def main_versions(args):
+def main_versions(args, options={}):
     for version in os.listdir("/omd/versions"):
 	if version != "default":
 	    sys.stdout.write("%s\n" % version)
 
-def main_sites(args):
+def main_sites(args, options={}):
     if on_tty:
 	sys.stdout.write("SITE             VERSION\n")
     for site in all_sites():
 	sys.stdout.write("%-16s %s\n" % (site, site_version(site)))
 
-def main_create(args):
+def main_create(args, options={}):
     # Make sanity checks before starting any action
     if site_exists(g_sitename):
         bail_out("Site '%s' already existing.\n" % g_sitename)
@@ -1335,7 +1335,7 @@ def main_create(args):
 
 
 
-def main_rm(args):
+def main_rm(args, options={}):
     stop_if_not_stopped(g_sitename)
     if user_logged_in(g_sitename):
         bail_out("User '%s' still logged in or running processes.\n" % g_sitename)
@@ -1355,7 +1355,7 @@ def main_rm(args):
     delete_apache_hook(g_sitename)
     restart_apache()
 
-def main_mv(args):
+def main_mv(args, options={}):
     global g_sitename
     global g_sitedir
     if len(args) != 1:
@@ -1400,7 +1400,7 @@ def main_mv(args):
     # Tell Apache about changes (need real restart, group changed)
     restart_apache()
 
-def main_cp(args):
+def main_cp(args, options={}):
     global g_sitename
     global g_sitedir
 
@@ -1443,7 +1443,7 @@ def main_cp(args):
     create_apache_hook(new)
     restart_apache()
 
-def main_update(args):
+def main_update(args, options={}):
     if site_is_running(g_sitename):
 	bail_out("Cannot update site '%s' while it is running.\n" % g_sitename)
     
@@ -1522,13 +1522,17 @@ def main_update(args):
 
 
 
-def main_init_action(command, args):
+def main_init_action(command, args, options={}):
     global g_sitename
     global g_sitedir
+    only_version = options.get("version")
+
     # if no site is selected, all sites are affected
     if not g_sitename:
         exit_status = 0
 	for site in all_sites():
+            if only_version and site_version(site) != only_version:
+                continue
             # We need to do an os.system(), because each
             # site must be started with the account of the
             # site user. And after setuid() we cannot return.
@@ -1546,7 +1550,7 @@ def main_init_action(command, args):
 	exit_status = init_action(command)
     sys.exit(exit_status)
 
-def main_config(args):
+def main_config(args, options={}):
     config_load_hooks()
     if len(args) == 0:
         config_configure()
@@ -1562,35 +1566,45 @@ def main_config(args):
 
 
 commands = [
-#  command   only_root  needs_site must_exist confirm args, function, description, confirm_text
+#  command   only_root  needs_site must_exist confirm args, function, 
+#  options_spec
+#  description, 
+#  confirm_text
   ( "help",      False, 0, 0, False, "",        main_help,
+    [],
     "Show general help",
     ""),
 
   ( "setup",     True,  0, 0, True, "",        main_setup,
+    [],
     "Prepare operating system for OMD (installs packages)",
     "We will install missing packages from your operating system and setup the\n"
     "system apache daemon (add configuration files and modules needed by omd)\n"),
 
   ( "uninstall", True,  0, 0, True, "",        main_uninstall,
+    [],
     "Remove OMD and all sites!",
 
     "BE WARNED: You are about to remove everything your system\n"
     "           have ever known about omd."),
 
   ( "version",   False, 0, 0, False, "",        main_version,
+    [],
     "Show version of OMD",
     ""),
 
   ( "versions",  False, 0, 0, False, "",        main_versions,
+    [],
     "List installed OMD versions",
     ""),
 
   ( "sites",     False, 0, 0, False, "", main_sites,
+    [],
     "Show list of sites",
     ""),
 
   ( "create",    True,  1, 0, False, "",        main_create,
+    [],
     "Create a new site",
 
     "This command performs the following actions on your system:\n"
@@ -1601,6 +1615,7 @@ commands = [
     "- Add tmpfs for the site to fstab and mount it"),
 
   ( "rm",        True,  1, 1, True, "",        main_rm,
+    [],
     "Remove a site (and its data)",
 
     "PLEASE NOTE: This action removes all configuration files\n"
@@ -1616,34 +1631,42 @@ commands = [
     "- Restart the system wide apache daemon\n"),
 
   ( "mv",        True,  1, 1, False, "NEWNAME", main_mv,
+    [],
     "Rename a site",
     ""),
 
   ( "cp",        True,  1, 1, False, "NEWNAME", main_cp,
+    [],
     "Make a copy of a site",
     ""),
 
   ( "update",    False, 1, 1, False, "", main_update,
+    [],
     "Update site to version " + OMD_VERSION,
     ""),
 
-  ( "start",     False, 2, 1, False, "", lambda args: main_init_action("start", args),
+  ( "start",     False, 2, 1, False, "", lambda args, opts: main_init_action("start", args, opts),
+    [ ( "version", "V", True ) ],
     "Start services of one or all sites",
     ""),
 
-  ( "stop",      False, 2, 1, False, "", lambda args: main_init_action("stop", args),
+  ( "stop",      False, 2, 1, False, "", lambda args, opts: main_init_action("stop", args, opts),
+    [ ( "version", "V", True ) ],
     "Stop services of site(s)",
     ""),
 
-  ( "restart",   False, 2, 1, False, "", lambda args: main_init_action("restart", args),
+  ( "restart",   False, 2, 1, False, "", lambda args, opts: main_init_action("restart", args, opts),
+    [ ( "version", "V", True ) ],
     "Restart services of site(s)",
     ""),
 
-  ( "reload",    False, 2, 1, False, "", lambda args: main_init_action("reload", args),
+  ( "reload",    False, 2, 1, False, "", lambda args, opts: main_init_action("reload", args, opts),
+    [ ( "version", "V", True ) ],
     "Reload services of site(s)",
     ""),
 
-  ( "status",    False, 2, 1, False, "", lambda args: main_init_action("status", args),
+  ( "status",    False, 2, 1, False, "", lambda args, opts: main_init_action("status", args, opts),
+    [ ( "version", "V", True ) ],
     "Show status of services of site(s)",
     ""),
 
@@ -1684,6 +1707,37 @@ def handle_global_option(opt, orig):
         sys.stdout.write("Call omd help for available options.\n")
         sys.exit(1)
 
+def parse_command_options(args, options_spec):
+    options = {}
+    while len(args) >= 1 and args[0][0] == '-':
+        opt = args[0]
+        args = args[1:]
+        entries = []
+        if opt.startswith("--"):
+            for e in options_spec:
+                if e[0] == opt[2:]:
+                    entries = [e]
+        else:
+            for char in opt:
+                for e in options_spec:
+                    if e[1] == char:
+                        entries.append(e)
+
+        if len(entries) == 0:
+            bail_out("Invalid option '%s'\n" % opt)
+
+        for llong, sshort, needs_arg in entries:
+            arg = None
+            if needs_arg:
+                if len(args) == 0:
+                    bail_out("Option '%s' needs an argument.\n" % opt)
+                arg = args[0]
+                args = args[1:]
+            options[llong] = arg
+    return (args, options)
+
+
+
 # ----------------------------------------------------------
 #                                _       
 #                _ __ ___   __ _(_)_ __  
@@ -1716,7 +1770,7 @@ if len(main_args) < 1:
 command = main_args[0]
 args = main_args[1:]
 found = False
-for c, only_root, needs_site, site_must_exist, confirm, argumentlist, command_function, description, confirm_text in commands:
+for c, only_root, needs_site, site_must_exist, confirm, argumentlist, command_function, option_spec, description, confirm_text in commands:
     if c == command:
         found = True
 	break
@@ -1726,6 +1780,10 @@ if not found:
 
 if os.getuid() != 0 and only_root:
     bail_out("omd: root permissions are needed for this command.\n")
+
+# Parse command options. We need to do this now in order to know,
+# if a site name has been specified or not
+args, command_options = parse_command_options(args, option_spec) 
 
 # Some commands need a site to be specified. If we are
 # called as root, this must be done explicitely. If we
@@ -1787,4 +1845,4 @@ if confirm:
     if a.lower() != "yes":
 	sys.exit(0)
 
-command_function(args)
+command_function(args, command_options)
