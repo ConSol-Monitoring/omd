@@ -59,14 +59,16 @@ pack:
 	failed=$$(find $(DESTDIR)$(OMD_ROOT)/skel -type d -not -perm 0755) ; \
 	if [ -n "$$failed" ] ; then \
 	    echo "Invalid permissions for skeleton dirs. Must be 0755:" ; \
+            echo "I'll fix this for you this time..." ; \
+            chmod -c 755 $$failed ; \
             echo "$$failed" ; \
-            exit 1 ; \
         fi
 	failed=$$(find $(DESTDIR)$(OMD_ROOT)/skel -type f -not -perm 0644) ; \
 	if [ -n "$$failed" ] ; then \
 	    echo "Invalid permissions for skeleton files. Must be 0644:" ; \
             echo "$$failed" ; \
-            exit 1 ; \
+            echo "I'll fix this for you this time..." ; \
+            chmod -c 644 $$failed ; \
         fi
 
 	# Fix packages which did not add ###ROOT###
