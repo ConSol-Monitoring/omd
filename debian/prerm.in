@@ -16,25 +16,10 @@ set -e
 # for details, see http://www.debian.org/doc/debian-policy/ or
 # the debian-policy package
 
+OMD="omd-###OMD_VERSION###"
 
 case "$1" in
-    upgrade)
-    ;;
-    remove|deconfigure)
-      # -- first check if any site is using this version
-      for link in /omd/sites/*/version
-      do
-	  target=$(readlink $link 2>/dev/null) || continue
-	  version=${target##*/}
-	  if [ "$version" = "###OMD_VERSION###" ]
-	  then
-	      site=${link#/omd/sites/}
-	      site=${site%/version}
-	      echo "Site $site is still using this version, stopping it" >&2
-	      /usr/bin/omd stop ${site} || true
-	      umount /opt/omd/sites/$site/tmp || true
-	  fi
-      done
+    upgrade|remove|deconfigure)
     ;;
 
     failed-upgrade)

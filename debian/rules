@@ -109,7 +109,7 @@ binary-arch: build install
 #	dh_installcatalogs
 #	dh_installpam
 #	dh_installmime
-	dh_installinit -n
+	dh_installinit
 #	dh_installcron
 #	dh_installinfo
 #	dh_installwm

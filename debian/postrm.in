@@ -24,13 +24,6 @@ OMD="omd-###OMD_VERSION###"
 
 case "$1" in
     upgrade)
-	if [ -x "/etc/init.d/$OMD" ]; then
-  	  if [ -x /usr/sbin/invoke-rc.d ]; then
-    	    invoke-rc.d $OMD start || true
-  	  else
-    	    /etc/init.d/$OMD start || true
-  	  fi
-	fi
     ;;
 
     remove|failed-upgrade|abort-install|abort-upgrade|disappear)
@@ -56,6 +49,9 @@ case "$1" in
 	  fi
 	  if test -d /opt/omd/sites; then
 	    rmdir --ignore-fail-on-non-empty /opt/omd/sites
+	  fi
+	  if test -d /opt/omd/apache; then
+	    rmdir --ignore-fail-on-non-empty /opt/omd/apache
 	  fi
 	  if test -d /opt/omd; then
 	    rmdir --ignore-fail-on-non-empty /opt/omd
