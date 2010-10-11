@@ -1,1 +1,2 @@
 var/log/thruk.log 0664
+etc/thruk/thruk_env.pl 0755
