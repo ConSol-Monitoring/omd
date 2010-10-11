@@ -27,7 +27,7 @@ else
   MSG=""
 fi
 
-OMD="/opt/omd/versions/###OMD_VERSION###/bin/omd $VER"
+OMD="/opt/omd/versions/###OMD_VERSION###/bin/omd"
 
 [ -r /etc/default/omd ] && . /etc/default/omd
 
@@ -35,26 +35,26 @@ case "$1" in
     start)
 	if [ "$AUTOSTART" = "1" ]; then
           echo "Starting all OMD monitoring sites $MSG:"
-          $OMD "$1"
+          $OMD "$1" $VER
 	else
 	  echo "OMD autostart disabled, skipping ..."
 	fi
     ;;
     stop)
         echo "Stopping all OMD monitoring sites $MSG:"
-        $OMD "$1"
+        $OMD "$1" $VER
     ;;
     restart)
         echo "Restarting all OMD monitoring sites $MSG:"
-        $OMD "$1"
+        $OMD "$1" $VER
     ;;
     reload)
         echo "Reloading all OMD monitoring sites $MSG:"
-        $OMD "$1"
+        $OMD "$1" $VER
     ;;
     status)
         echo "Checking state of all OMD monitoring sites $MSG:"
-        $OMD "$1"
+        $OMD "$1" $VER
     ;;
     '')
 	echo "usage: $PROGNAME start|stop|restart|reload|status"
@@ -62,7 +62,7 @@ case "$1" in
     ;;
     *)
         echo "Doing $1 on all OMD monitoring sites $MSG:"
-        $OMD "$1"
+        $OMD "$1" $VER
     ;;
 esac
 
