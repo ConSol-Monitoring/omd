@@ -47,9 +47,7 @@ install:
 	done
 
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/skel/etc/init.d
-	install -m 755 $(DIR)/daemon-init $(DESTDIR)$(OMD_ROOT)/skel/etc/init.d/nagios
+	install -m 644 $(DIR)/daemon-init $(DESTDIR)$(OMD_ROOT)/skel/etc/init.d/nagios
   
-skel:
-
 clean:
 	rm -rf $(DIR)

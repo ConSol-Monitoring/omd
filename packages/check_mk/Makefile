@@ -58,9 +58,6 @@ install:
 	install -m 644 defaults.py $(DESTDIR)$(OMD_ROOT)/share/check_mk/web/htdocs
 
 skel:
-	# Give Apache write permissions on certain directories
-	chmod 770 $(SKEL)/var/check_mk/web
-	chmod 770 $(SKEL)/var/check_mk/logwatch
 	rm -f $(SKEL)/etc/check_mk/main.mk-*
 	rm -f $(SKEL)/etc/check_mk/multisite.mk-*
 
