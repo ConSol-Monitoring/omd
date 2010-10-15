@@ -1,5 +1,5 @@
 DISTRO_CODE     = sles11
-BUILD_PACKAGES    = gcc make gcc-c++ patch cairo-devel pango-devel libxml2-devel libmcrypt-devel libmysqlclient-devel libopenssl-devel gd-devel glib-devel libgnutls-devel openldap2-devel python
+BUILD_PACKAGES    = gcc make gcc-c++ patch cairo-devel pango-devel libxml2-devel libmcrypt-devel libmysqlclient-devel libopenssl-devel gd-devel glib-devel libgnutls-devel openldap2-devel python libjpeg-devel libpng-devel freetype2-devel libexpat-devel
 OS_PACKAGES       = apache2 xinetd apache2-mod_php5 apache2-mod_python php5-gd php5-sqlite php5-mcrypt php5-mbstring php5-sockets samba-client graphviz net-snmp bind-utils fping mysql php5-pear unzip perl-Config-IniFiles perl-Net-SNMP perl-SNMP rsync xorg-x11-fonts dialog pango libpng12-0 curl
 USERADD_OPTIONS   = -M
 ADD_USER_TO_GROUP = groupmod -A %(user)s %(group)s
