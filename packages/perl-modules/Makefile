@@ -1,10 +1,18 @@
 include ../../Makefile.omd
 
-NAME    = perl-modules
-VERSION = $(OMD_VERSION)
-LLSRC   = $(shell basename src/local-lib-*.gz | sed s/\.tar\.gz// )
+NAME     = perl-modules
+VERSION  = $(OMD_VERSION)
+LLSRC    = $(shell basename src/local-lib-*.gz | sed s/\.tar\.gz// )
+PERLARCH = $(shell $(PERL) -e 'use Config; print $$Config{archname}')
 
-MODULES = File-Remove-1.42.tar.gz \
+
+MODULES = ExtUtils-MakeMaker-6.56.tar.gz \
+          ExtUtils-CBuilder-0.2703.tar.gz \
+          ExtUtils-ParseXS-2.2206.tar.gz \
+          Module-Build-0.3607.tar.gz \
+          ExtUtils-Install-1.54.tar.gz \
+          CPAN-1.9402.tar.gz \
+          File-Remove-1.42.tar.gz \
           Module-ScanDeps-0.98.tar.gz \
           PAR-Dist-0.47.tar.gz \
           YAML-0.72.tar.gz \
@@ -13,9 +21,6 @@ MODULES = File-Remove-1.42.tar.gz \
           common-sense-3.0.tar.gz \
           JSON-2.26.tar.gz \
           JSON-XS-2.3.tar.gz \
-          ExtUtils-CBuilder-0.2703.tar.gz \
-          ExtUtils-ParseXS-2.2206.tar.gz \
-          Module-Build-0.3607.tar.gz \
           Params-Util-1.01.tar.gz \
           Sub-Install-0.925.tar.gz \
           Data-OptList-0.106.tar.gz \
@@ -60,6 +65,7 @@ MODULES = File-Remove-1.42.tar.gz \
           MooseX-MethodAttributes-0.24.tar.gz \
           MooseX-Role-WithOverloading-0.08.tar.gz \
           Module-Find-0.10.tar.gz \
+          threads-shared-1.34.tar.gz \
           Thread-Queue-2.11.tar.gz \
           Test-Simple-0.96.tar.gz \
           MIME-Types-1.31.tar.gz \
@@ -93,6 +99,7 @@ MODULES = File-Remove-1.42.tar.gz \
           Data-Dump-1.17.tar.gz \
           HTTP-Request-AsCGI-1.2.tar.gz \
           MooseX-Emulate-Class-Accessor-Fast-0.00903.tar.gz \
+          Getopt-Long-2.38.tar.gz \
           Getopt-Long-Descriptive-0.086.tar.gz \
           MooseX-Getopt-0.33.tar.gz \
           MooseX-Types-Common-0.001002.tar.gz \
@@ -119,8 +126,10 @@ MODULES = File-Remove-1.42.tar.gz \
           Spreadsheet-ParseExcel-0.58.tar.gz \
           IO-String-1.08.tar.gz \
           MooseX-Param-0.02.tar.gz \
+          List-MoreUtils-0.22.tar.gz \
           Excel-Template-Plus-0.05.tar.gz \
           Module-Pluggable-3.9.tar.gz \
+          IO-Compress-2.030.tar.gz \
           Catalyst-Runtime-5.80029.tar.gz \
           Catalyst-Action-RenderView-0.14.tar.gz \
           Catalyst-Plugin-Session-0.30.tar.gz \
@@ -148,13 +157,18 @@ MODULES = File-Remove-1.42.tar.gz \
           Monitoring-Availability-0.14.tar.gz
 
 
-build: locallib
-	# now install all other modules
-	test -d dist && eval $$($(PERL) -Idist/lib/perl5 -Mlocal::lib=dist); \
+build:
+	test -d dist || mkdir dist
+	echo "install  --install_base  $$(pwd)/dist" > dist/.modulebuildrc
 	cd src; \
 	for tarball in $(MODULES); do \
-	    ../build_module.sh $$tarball $(PERL); \
-	    echo "   ok"; \
+	    PERL_MM_OPT=INSTALL_BASE=$$(pwd)/../dist MODULEBUILDRC=$$(pwd)/../dist/.modulebuildrc PERL5LIB=$$(pwd)/../dist/lib/perl5:$$(pwd)/../dist/lib/perl5/$(PERLARCH) ../build_module.sh $$tarball $(PERL); \
+	    if [ $$? == 0 ]; then \
+	        echo "   ok"; \
+	    else \
+	        echo "   not ok"; \
+	        exit 1; \
+	    fi; \
 	done
 	rm -rf src/inc
 
@@ -169,17 +183,10 @@ skel:
 clean:
 	rm -rf src/$(LLSRC) src/inc dist
 
-locallib:
-	test -d dist || mkdir dist
-	cd src; tar zxf $(LLSRC).tar.gz
-	cd src/$(LLSRC); echo "" | $(PERL) Makefile.PL --bootstrap=../../dist
-	cd src/$(LLSRC); $(MAKE) install
-
 test:
-	eval $$($(PERL) -Idist/lib/perl5 -Mlocal::lib=dist); \
 	cd src; \
 	for tarball in $(MODULES); do \
-	    ../build_module.sh $$tarball $(PERL) testonly; \
+	    PERL_MM_OPT=INSTALL_BASE=$$(pwd)/../dist MODULEBUILDRC=$$(pwd)/../dist/.modulebuildrc PERL5LIB=$$(pwd)/../dist/lib/perl5:$$(pwd)/../dist/lib/perl5/$(PERLARCH) ../build_module.sh $$tarball $(PERL) testony; \
 	    if [ $$? == 0 ]; then \
 	        echo "   ok"; \
 	    else \

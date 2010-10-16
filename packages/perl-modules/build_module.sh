@@ -61,7 +61,7 @@ fi
 
 if [ ! -e $MODULE ]; then
     echo "file: $MODULE does not exist"
-    exit 1
+    exit 1;
 fi
 
 tar zxf $MODULE
@@ -79,7 +79,7 @@ elif [ -f Makefile.PL ]; then
     #echo "" | $PERL Makefile.PL 2>&1 | tee -a $LOG | grep 'not found'
     echo "" | $PERL Makefile.PL >> $LOG 2>&1
     if [ $? != 0 ]; then echo $?; cat $LOG; exit 1; fi
-    make >> $LOG 2>&1
+    make -j 4 >> $LOG 2>&1
     if [ $? != 0 ]; then echo $?; cat $LOG; exit 1; fi
     make install >> $LOG 2>&1
     if [ $? != 0 ]; then echo $?; cat $LOG; exit 1; fi
