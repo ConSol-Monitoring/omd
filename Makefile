@@ -25,6 +25,14 @@ build:
 	    $(MAKE) -C $$p build ; \
         done
 
+speed:
+	@set -e ; cd packages ; for p in $(PACKAGES) ; do \
+            ( NOW=$$(date +%s) ; \
+              $(MAKE) -C $$p build > ../$$p.log 2>&1 \
+              && echo "$$p(ok - $$(( $$(date +%s) - NOW ))s)" \
+              || "$$p(ERROR)" ) & \
+	done ; wait ; echo "FINISHED."
+
 pack:
 	rm -rf $(DESTDIR)
 	mkdir -p $(DESTDIR)$(OMD_PHYSICAL_BASE)

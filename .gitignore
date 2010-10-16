@@ -10,3 +10,4 @@ omd-*-*.rpm
 build-stamp
 patch-stamp
 .config
+*.log
