@@ -2,6 +2,18 @@ omd-0.43 (0.43build1) unstable; urgency=low
 
   * new upstream version
 
+ -- Mathias Kettner <mk@mathias-kettner.de>  Sun, 10 Oct 2010 22:49:21 +0200
+
+omd-0.43.skel (0.43.skelbuild1) unstable; urgency=low
+
+  * new upstream version
+
+ -- Mathias Kettner <mk@mathias-kettner.de>  Sun, 10 Oct 2010 21:30:47 +0200
+
+omd-0.43 (0.43build1) unstable; urgency=low
+
+  * new upstream version
+
  -- Mathias Kettner <mk@mathias-kettner.de>  Thu, 07 Oct 2010 09:24:03 +0200
 
 omd-0.42 (0.42build1) unstable; urgency=low

@@ -1,5 +1,12 @@
 SHELL = /bin/bash
 include Makefile.omd
+# You can select a subset of the packages by overriding this
+# variale, e.g. make PACKAGES='nagios rrdtool' pack
+PACKAGES = *
+
+# This file is kept by 'make config' and also may override
+# the list of packages
+-include .config
 
 DESTDIR ?=$(shell pwd)/destdir
 RPM_TOPDIR=$$(pwd)/rpm.topdir
@@ -10,9 +17,6 @@ NEWSERIAL=$$(($(OMD_SERIAL) + 1))
 APACHE_NAME=$(notdir $(APACHE_INIT))
 
 .PHONY: install-global
-# You can select a subset of the packages by overriding this
-# variale, e.g. make PACKAGES='nagios rrdtool' pack
-PACKAGES = *
 
 omd: build
 
@@ -32,9 +36,11 @@ pack:
                 install -m 755 $$p/$$hook $(DESTDIR)$(OMD_ROOT)/lib/omd/hooks/$${hook%.hook} ; \
             done ; \
         done
+
 	# Repair packages that install with silly modes (such as Nagios)
 	chmod -R o+Xr $(DESTDIR)$(OMD_ROOT)
 	$(MAKE) install-global
+
 	# Install skeleton files (subdirs skel/ in packages' directories)
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/skel
 	@set -e ; cd packages ; for p in $(PACKAGES) ; do \
@@ -43,6 +49,32 @@ pack:
             fi ;\
             $(MAKE) SKEL=$(DESTDIR)$(OMD_ROOT)/skel -C $$p skel ;\
         done
+
+        # Create permissions file for skel
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/omd
+	@set -e ; cd packages ; for p in $(PACKAGES) ; do \
+	    if [ -e $$p/skel.permissions ] ; then \
+	        echo "# $$p" ; \
+	        cat $$p/skel.permissions ; \
+	    fi ; \
+	done > $(DESTDIR)$(OMD_ROOT)/share/omd/skel.permissions
+
+        # Make sure, all permissions in skel are set to 0755, 0644
+	failed=$$(find $(DESTDIR)$(OMD_ROOT)/skel -type d -not -perm 0755) ; \
+	if [ -n "$$failed" ] ; then \
+	    echo "Invalid permissions for skeleton dirs. Must be 0755:" ; \
+            echo "I'll fix this for you this time..." ; \
+            chmod -c 755 $$failed ; \
+            echo "$$failed" ; \
+        fi
+	failed=$$(find $(DESTDIR)$(OMD_ROOT)/skel -type f -not -perm 0644) ; \
+	if [ -n "$$failed" ] ; then \
+	    echo "Invalid permissions for skeleton files. Must be 0644:" ; \
+            echo "$$failed" ; \
+            echo "I'll fix this for you this time..." ; \
+            chmod -c 644 $$failed ; \
+        fi
+
 	# Fix packages which did not add ###ROOT###
 	find $(DESTDIR)$(OMD_ROOT)/skel -type f | xargs -n1 sed -i -e 's+$(OMD_ROOT)+###ROOT###+g'
 
@@ -60,6 +92,26 @@ clean:
 
 mrproper:
 	git clean -xfd
+
+config:
+	@inarray () { \
+            elem="$$1" ; \
+            shift ; \
+            for x in "$$@" ; do if [ $$elem = $$x ] ; then return 0 ; fi ; done ; \
+            return 1  ; \
+        } ; \
+        if [ "$(PACKAGES)" = '*' ] ; \
+        then \
+            enabled='*' ; \
+        else \
+            enabled=( $(PACKAGES) ) ; \
+        fi ; \
+        echo "$$enabled" ; \
+        avail=$$(for p in $$(cd packages ; ls) ; do if [ "$$enabled" = '*' ] || inarray $$p $${enabled[@]} ; then en=on ; else en="-" ; fi ; echo -n "$$p - $$en " ; done) ; \
+        if packages=$$(dialog --stdout --checklist "Package configuration" 1 0 0 $$avail ) ; \
+        then \
+            echo "PACKAGES = $$packages" | sed 's/"//g' > .config ; \
+        fi
 
 
 # Create installations files that do not lie beyond /omd/versions/$(OMD_VERSION)
@@ -138,6 +190,14 @@ deb-newversion: deb-environment
 deb-incversion: deb-environment
 	dch -i --no-auto-nmu --distributor 'unstable'
 
+# only for developing: creating a snapshot release
+# how it works:
+# the version 0.43build1~1 means the version before
+# 0.43build1, so after releasing the final version, a proper update is
+# possible
+deb-snapshot: deb-environment
+	git-dch --snapshot --auto
+
 deb: 
 	sed -e 's/###OMD_VERSION###/$(OMD_VERSION)/' \
 	   `pwd`/debian/control.in > `pwd`/debian/control
@@ -163,8 +223,6 @@ xzf:
 	tar xzf $(BIN_TGZ) -C / # HACK: Add missing suid bits if compiled as non-root
 	chmod 4755 $(OMD_ROOT)/lib/nagios/plugins/check_{icmp,dhcp}
 	$(APACHE_CTL) -k graceful
-	
-
 
 version:
 	@newversion=$$(dialog --stdout --inputbox "New Version:" 0 0 "$(OMD_VERSION)") ; \

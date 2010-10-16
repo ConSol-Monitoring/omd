@@ -37,7 +37,7 @@ install:
 	rm $(DESTDIR)$(OMD_ROOT)/share/pnp4nagios/htdocs/install.php
 	rm -rf $(DESTDIR)$(OMD_ROOT)/etc/pnp4nagios
 	rm -rf $(DESTDIR)$(OMD_ROOT)/var/pnp4nagios
-	mkdir $(DESTDIR)$(OMD_ROOT)/share/doc/pnp4nagios
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/doc/pnp4nagios
 	install -m 644 $(DIR)/README $(DESTDIR)$(OMD_ROOT)/share/doc/pnp4nagios
 	install -m 644 $(DIR)/COPYING $(DESTDIR)$(OMD_ROOT)/share/doc/pnp4nagios
 	install -m 644 $(DIR)/AUTHORS $(DESTDIR)$(OMD_ROOT)/share/doc/pnp4nagios
@@ -57,7 +57,6 @@ install:
 	rm $(DESTDIR)$(OMD_ROOT)/lib/pnp4nagios/check_pnp_rrds.pl
 
 
-skel:
 
 clean:
 	rm -rf $(DIR)

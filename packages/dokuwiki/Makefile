@@ -23,23 +23,6 @@ install:
 	install -m 644 $(DIR)/COPYING $(DESTDIR)$(OMD_ROOT)/share/doc/dokuwiki
 	install -m 644 $(DIR)/VERSION $(DESTDIR)$(OMD_ROOT)/share/doc/dokuwiki
 
-
-skel:
-	# Optional target called to create additional files below skel
-	chmod 770 $(SKEL)/var/dokuwiki/data
-	chmod 770 $(SKEL)/var/dokuwiki/data/attic
-	chmod 770 $(SKEL)/var/dokuwiki/data/cache
-	chmod 770 $(SKEL)/var/dokuwiki/data/index
-	chmod 770 $(SKEL)/var/dokuwiki/data/locks
-	chmod 770 $(SKEL)/var/dokuwiki/data/media
-	chmod 770 $(SKEL)/var/dokuwiki/data/meta
-	chmod 770 $(SKEL)/var/dokuwiki/data/pages
-	chmod 775 $(SKEL)/var/dokuwiki/data/tmp
-	chmod 770 $(SKEL)/etc/dokuwiki
-	chmod 660 $(SKEL)/etc/dokuwiki/local.php
-	chmod 660 $(SKEL)/etc/dokuwiki/acl.auth.php
-	chmod 660 $(SKEL)/etc/dokuwiki/users.auth.php
-
 clean:
 	# Remove files created by build/install
 	rm -rf $(DIR)

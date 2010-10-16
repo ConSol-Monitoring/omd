@@ -8,8 +8,8 @@ Homepage: http://www.omdistro.org
 
 Package: omd-###OMD_VERSION###
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, libapache2-mod-python, libapache2-mod-php5, php5-sqlite, php5-mcrypt, libgd2-xpm, libdbi0, libapache2-mod-proxy-html, rsync, dialog, php5-gd
-Recommends: xinetd, mysql-server, graphviz, dnsutils, snmp, fping, smbclient, unzip, libnet-snmp-perl, libxml-simple-perl
+Depends: ${shlibs:Depends}, ${misc:Depends}, libapache2-mod-python, libapache2-mod-php5, php5-sqlite, php5-mcrypt, libgd2-xpm, libdbi0, libapache2-mod-proxy-html, rsync, dialog, php5-gd, libapache2-mod-fcgid
+Recommends: xinetd, mysql-server, graphviz, dnsutils, snmp, fping, smbclient, unzip, libnet-snmp-perl, libxml-simple-perl, curl
 Description:  Open Source Monitoring Distribution, containing Nagios,
  the Nagios plugins, Check_MK, Livestatus, Multisite,
  PNP4Nagios, NagVis, and other addons. Please visit

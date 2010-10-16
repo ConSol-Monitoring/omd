@@ -1,0 +1,2 @@
+var/check_mk/web 0775
+var/check_mk/logwatch 0775

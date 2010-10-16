@@ -40,24 +40,6 @@ install:
 	rm -rf $(DESTDIR)$(OMD_ROOT)/share/nagvis/var
 	rm -rf $(DESTDIR)$(OMD_ROOT)/share/nagvis/etc
 
-skel:
-	# Give Apache write permissions on certain directories
-	chmod 775 $(SKEL)/etc/nagvis
-	chmod 775 $(SKEL)/etc/nagvis/maps
-	chmod 664 $(SKEL)/etc/nagvis/maps/*
-	chmod 775 $(SKEL)/etc/nagvis/automaps
-	chmod 664 $(SKEL)/etc/nagvis/automaps/*
-	chmod 664 $(SKEL)/etc/nagvis/nagvis.ini.php
-	chmod 664 $(SKEL)/etc/nagvis/nagvis-omd.ini.php
-	chmod 664 $(SKEL)/etc/nagvis/auth.db
-	chmod 775 $(SKEL)/var/nagvis/userfiles/images/maps
-	chmod 664 $(SKEL)/var/nagvis/userfiles/images/maps/*
-	chmod 775 $(SKEL)/var/nagvis/userfiles/images/shapes
-	chmod 664 $(SKEL)/var/nagvis/userfiles/images/shapes/*
-	chmod 775 $(SKEL)/tmp/nagvis
-	chmod 775 $(SKEL)/tmp/nagvis/share
-	chmod 775 $(SKEL)/tmp/nagvis/tmpl/compile
-	chmod 775 $(SKEL)/tmp/nagvis/tmpl/cache
 
 clean:
 	rm -rf $(NAME)-*.*.[0-9] $(NAME)-*.*-nightly
