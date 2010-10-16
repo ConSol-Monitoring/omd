@@ -1488,6 +1488,7 @@ def main_update(args, options={}):
     #    files and applying that to the new default files
     # We implement the first method.
 
+    read_skel_permissions()
     from_skelroot = "/omd/versions/%s/skel" % from_version
     to_skelroot = "/omd/versions/%s/skel" % to_version
     tmp = tmp_dir(g_sitename)
