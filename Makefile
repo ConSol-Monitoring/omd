@@ -1,5 +1,12 @@
 SHELL = /bin/bash
 include Makefile.omd
+# You can select a subset of the packages by overriding this
+# variale, e.g. make PACKAGES='nagios rrdtool' pack
+PACKAGES = *
+
+# This file is kept by 'make config' and also may override
+# the list of packages
+-include .config
 
 DESTDIR ?=$(shell pwd)/destdir
 RPM_TOPDIR=$$(pwd)/rpm.topdir
@@ -10,9 +17,6 @@ NEWSERIAL=$$(($(OMD_SERIAL) + 1))
 APACHE_NAME=$(notdir $(APACHE_INIT))
 
 .PHONY: install-global
-# You can select a subset of the packages by overriding this
-# variale, e.g. make PACKAGES='nagios rrdtool' pack
-PACKAGES = *
 
 omd: build
 
@@ -88,6 +92,26 @@ clean:
 
 mrproper:
 	git clean -xfd
+
+config:
+	@inarray () { \
+            elem="$$1" ; \
+            shift ; \
+            for x in "$$@" ; do if [ $$elem = $$x ] ; then return 0 ; fi ; done ; \
+            return 1  ; \
+        } ; \
+        if [ "$(PACKAGES)" = '*' ] ; \
+        then \
+            enabled='*' ; \
+        else \
+            enabled=( $(PACKAGES) ) ; \
+        fi ; \
+        echo "$$enabled" ; \
+        avail=$$(for p in $$(cd packages ; ls) ; do if [ "$$enabled" = '*' ] || inarray $$p $${enabled[@]} ; then en=on ; else en="-" ; fi ; echo -n "$$p - $$en " ; done) ; \
+        if packages=$$(dialog --stdout --checklist "Package configuration" 1 0 0 $$avail ) ; \
+        then \
+            echo "PACKAGES = $$packages" | sed 's/"//g' > .config ; \
+        fi
 
 
 # Create installations files that do not lie beyond /omd/versions/$(OMD_VERSION)
@@ -199,8 +223,6 @@ xzf:
 	tar xzf $(BIN_TGZ) -C / # HACK: Add missing suid bits if compiled as non-root
 	chmod 4755 $(OMD_ROOT)/lib/nagios/plugins/check_{icmp,dhcp}
 	$(APACHE_CTL) -k graceful
-	
-
 
 version:
 	@newversion=$$(dialog --stdout --inputbox "New Version:" 0 0 "$(OMD_VERSION)") ; \
