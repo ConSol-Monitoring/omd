@@ -26,6 +26,7 @@ install:
 	export libdir='$(OMD_ROOT)/lib/check_mk' ; \
 	export confdir='$(OMD_ROOT)/skel/etc/check_mk' ; \
 	export pnpconfdir='$(OMD_ROOT)/skel/etc/pnp4nagios' ; \
+	export pnprraconf='$(OMD_ROOT)/share/check_mk/pnp-rraconf' ; \
 	export apache_config_dir='/REMOVE/skel/etc/apache' ; \
 	export agentsconfdir='/etc/check_mk' ; \
 	export vardir='/REMOVE/var/lib/check_mk' ; \
