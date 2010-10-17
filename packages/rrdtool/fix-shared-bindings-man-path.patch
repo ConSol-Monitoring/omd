@@ -1,8 +1,0 @@
-45c45,49
-<     ($^O eq 'darwin') ? ( 'LDDLFLAGS'    => "-L../../src/.libs/ $Config{lddlflags}" ) : ()
----
->     ($^O eq 'darwin') ? ( 'LDDLFLAGS'    => "-L../../src/.libs/ $Config{lddlflags}" ) : (),
-> 
->     'INSTALLSITEMAN1DIR' => '$(SITEPREFIX)/share/man/man1',
->     'INSTALLSITEMAN3DIR' => '$(SITEPREFIX)/share/man/man3'
-> 
