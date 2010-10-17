@@ -204,10 +204,14 @@ deb-incversion: deb-environment
 # 0.43build1, so after releasing the final version, a proper update is
 # possible
 deb-snapshot: deb-environment
-	git-dch --snapshot --auto
+	git-dch --snapshot --auto --snapshot-number=`date +"%Y%m%d"`
 
 deb: 
 	sed -e 's/###OMD_VERSION###/$(OMD_VERSION)/' \
+	    -e 's/###BUILD_PACKAGES###/$(BUILD_PACKAGES)/' \
+	    -e 's/###OS_PACKAGES###/$(OS_PACKAGES)/' \
+	    -e '/Depends:/s/\> /, /g' \
+	    -e '/Depends:/s/@/ /g' \
 	   `pwd`/debian/control.in > `pwd`/debian/control
 	fakeroot debian/rules clean
 	debuild --no-lintian -i\.git -I\.git \
