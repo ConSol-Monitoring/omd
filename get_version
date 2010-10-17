@@ -1,0 +1,20 @@
+#!/bin/bash
+
+if [ ! -d .git ]; then
+  echo "not in an development environment, no .git directory found" >&2
+  exit 1
+fi 
+
+version=`git describe --tag --exact-match 2>/dev/null`
+if [ $? = 0 ]; then
+  echo $version | tr "_-" "."
+  exit 0
+fi
+
+version=`git describe --tag --always 2>/dev/null`
+if [ $? = 0 ]; then
+  echo $version | tr "_-" "."
+  exit 1
+fi
+
+echo "unknown"
