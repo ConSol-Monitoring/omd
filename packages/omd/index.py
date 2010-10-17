@@ -7,11 +7,11 @@ import os, pwd
 # FIXME: Copied from 'omd'. Should be placed in a library!
 ###
 
-def site_name():
-    return pwd.getpwuid(os.getuid()).pw_name
+def site_name(req):
+    return os.path.normpath(req.uri).split("/")[1]
 
-def config_load():
-    confpath = "/omd/sites/%s/etc/omd/site.conf" % g_sitename
+def config_load(sitename):
+    confpath = "/omd/sites/%s/etc/omd/site.conf" % sitename
     if not os.path.exists(confpath):
         return {}
 
@@ -24,12 +24,11 @@ def config_load():
         conf[var.strip()[7:]] = value.strip('"').strip("'")
     return conf
 
-g_sitename = site_name()
-g_config = config_load()
-
 def handler(req):
-    gui = '/%s/nagios/' % g_sitename
-    if 'WEB' in g_config:
-        gui = '/%s/%s/' % (g_sitename, g_config['WEB'])
+    sitename = site_name(req)
+    config   = config_load(sitename)
+    gui      = '/%s/nagios/' % sitename
+    if 'WEB' in config:
+        gui = '/%s/%s/' % (sitename, config['WEB'])
     util.redirect(req, gui)
     return apache.OK
