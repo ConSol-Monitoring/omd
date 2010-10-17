@@ -163,7 +163,7 @@ build:
 	cd src; \
 	for tarball in $(MODULES); do \
 	    PERL_MM_OPT=INSTALL_BASE=$$(pwd)/../dist MODULEBUILDRC=$$(pwd)/../dist/.modulebuildrc PERL5LIB=$$(pwd)/../dist/lib/perl5:$$(pwd)/../dist/lib/perl5/$(PERLARCH) ../build_module.sh $$tarball $(PERL); \
-	    if [ $$? == 0 ]; then \
+	    if [ $$? -eq 0 ]; then \
 	        echo "   ok"; \
 	    else \
 	        echo "   not ok"; \
@@ -187,7 +187,7 @@ test:
 	cd src; \
 	for tarball in $(MODULES); do \
 	    PERL_MM_OPT=INSTALL_BASE=$$(pwd)/../dist MODULEBUILDRC=$$(pwd)/../dist/.modulebuildrc PERL5LIB=$$(pwd)/../dist/lib/perl5:$$(pwd)/../dist/lib/perl5/$(PERLARCH) ../build_module.sh $$tarball $(PERL) testony; \
-	    if [ $$? == 0 ]; then \
+	    if [ $$? -eq 0 ]; then \
 	        echo "   ok"; \
 	    else \
 	        echo "   not ok"; \
