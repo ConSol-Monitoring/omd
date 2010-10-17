@@ -1,0 +1,10 @@
+--- Thruk-0.72/Makefile.PL-2010-10-17	2010-10-17 14:12:25.000000000 +0200
++++ Thruk-0.72/Makefile.PL	2010-10-17 14:12:28.000000000 +0200
+@@ -111,7 +111,6 @@
+ 
+ tests_recursive;
+ install_script glob('script/*.pl');
+-auto_install;
+ WriteAll;
+ 
+ ##################################

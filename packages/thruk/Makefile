@@ -4,6 +4,13 @@ NAME     = Thruk
 VERSION  = 0.72
 DIR      = $(NAME)-$(VERSION)
 PERLARCH = $(shell $(PERL) -e 'use Config; print $$Config{archname}')
+ifeq ($(shell uname -m),x86_64)
+  MODULE_DIR=$(APACHE_MODULE_DIR_64)
+else
+  MODULE_DIR=$(APACHE_MODULE_DIR)
+endif
+
+.PHONY: skel
 
 build:
 	tar xzf $(DIR).tar.gz
@@ -16,10 +23,6 @@ build:
 	mkdir -p $(DIR)/root/thruk/plugins
 	rm -f $(DIR)/root/thruk/plugins/statusmap
 	cd $(DIR)/root/thruk/plugins && ln -s ../../../plugins/plugins-enabled/statusmap/root statusmap
-	# logfile has to be group writeable for shared apache
-	mkdir -p skel/var/log
-	touch skel/var/log/thruk.log
-	chmod 664 skel/var/log/thruk.log
 
 
 install:
@@ -31,6 +34,12 @@ install:
 	cp $(DIR)/menu.conf $(DESTDIR)$(OMD_ROOT)/skel/etc/thruk/menu.conf
 
 skel:
+	# logfile has to be group writeable for shared apache
+	mkdir -p $(SKEL)/var/log
+	touch $(SKEL)/var/log/thruk.log
+	# set right path for apache module
+	sed -i -e 's|###APACHE_MODULE_DIR###|$(MODULE_DIR)|g' \
+	       $(SKEL)/etc/apache/conf.d/thruk.conf
 
 clean:
 	rm -rf $(DIR)
