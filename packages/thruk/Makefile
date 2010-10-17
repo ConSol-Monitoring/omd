@@ -1,8 +1,9 @@
 include ../../Makefile.omd
 
-NAME = Thruk
-VERSION = 0.72
-DIR = $(NAME)-$(VERSION)
+NAME     = Thruk
+VERSION  = 0.72
+DIR      = $(NAME)-$(VERSION)
+PERLARCH = $(shell $(PERL) -e 'use Config; print $$Config{archname}')
 
 build:
 	tar xzf $(DIR).tar.gz
@@ -10,7 +11,7 @@ build:
 	    echo "applying $$p..." ; \
 	    ( cd $(DIR) ; patch -p1 -b ) < $$p ; \
 	done
-	eval $$($(PERL) -I../perl-modules/dist/lib/perl5 -Mlocal::lib=../perl-modules/dist); cd $(DIR) ; echo "" | $(PERL) Makefile.PL
+	export PERL5LIB=$$(pwd)/../perl-modules/dist/lib/perl5:$$(pwd)/../perl-modules/dist/lib/perl5/$(PERLARCH); cd $(DIR) ; echo "" | $(PERL) Makefile.PL
 	cd $(DIR) && make clean
 	mkdir -p $(DIR)/root/thruk/plugins
 	rm -f $(DIR)/root/thruk/plugins/statusmap

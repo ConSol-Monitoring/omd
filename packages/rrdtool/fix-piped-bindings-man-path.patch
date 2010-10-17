@@ -1,4 +1,0 @@
-9a10,12
-> 
->     'INSTALLSITEMAN1DIR' => '$(SITEPREFIX)/share/man/man1',
->     'INSTALLSITEMAN3DIR' => '$(SITEPREFIX)/share/man/man3'
