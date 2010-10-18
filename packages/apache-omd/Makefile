@@ -31,6 +31,8 @@ skel:
 	mkdir -p $(SKEL)/var/www
 	mkdir -p $(SKEL)/tmp/apache/run
 	mkdir -p $(SKEL)/tmp/php/session
+	mkdir -p $(SKEL)/tmp/php/upload
+	mkdir -p $(SKEL)/tmp/php/wsdl-cache
 
 clean:
 	# Remove files created by build/install
