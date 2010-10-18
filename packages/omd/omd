@@ -1213,7 +1213,7 @@ def main_help(args=[], options={}):
     else:
         sys.stdout.write("Usage (called as site user):\n\n")
 
-    for command, only_root, needs_site, site_must_exist, confirm, synopsis, command_function, descr, confirm_text in commands:
+    for command, only_root, needs_site, site_must_exist, confirm, synopsis, command_function, options, descr, confirm_text in commands:
         if only_root and not am_root:
             continue
         if am_root:
