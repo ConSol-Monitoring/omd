@@ -39,6 +39,7 @@ skel:
 	touch $(SKEL)/var/log/thruk.log
 	# set right path for apache module
 	sed -i -e 's|###APACHE_MODULE_DIR###|$(MODULE_DIR)|g' \
+	       -e 's|###APACHE_FCGID_MODULE###|$(APACHE_FCGID_MODULE)|g' \
 	       $(SKEL)/etc/apache/conf.d/thruk.conf
 
 clean:
