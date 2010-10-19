@@ -191,20 +191,12 @@ deb-environment:
 deb-newversion: deb-environment
 	dch --package omd-$(OMD_VERSION) \
 	    --newversion $(OMD_VERSION)build1 \
-            -b \
-	    --distributor 'unstable' "new upstream version"
+            -b  --force-distribution \
+	    --distribution 'unstable' "new upstream version"
 
 # incrementing debian packaging version (same OMD version)
 deb-incversion: deb-environment
-	dch -i --no-auto-nmu --distributor 'unstable'
-
-# only for developing: creating a snapshot release
-# how it works:
-# the version 0.43build1~1 means the version before
-# 0.43build1, so after releasing the final version, a proper update is
-# possible
-deb-snapshot: deb-environment
-	git-dch --snapshot --auto --snapshot-number=`date +"%Y%m%d"`
+	dch -i --no-auto-nmu --force-distribution --distribution 'unstable'
 
 deb: 
 	sed -e 's/###OMD_VERSION###/$(OMD_VERSION)/' \
