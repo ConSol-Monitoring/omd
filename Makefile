@@ -194,6 +194,14 @@ deb-newversion: deb-environment
             -b  --force-distribution \
 	    --distribution 'unstable' "new upstream version"
 
+deb-newlenny: deb-environment
+	# this is a hack!
+	rm -f debian/changelog
+	dch --create --package omd-$(OMD_VERSION) \
+	    --newversion $(OMD_VERSION)build1 \
+            --force-distribution \
+	    --distribution 'unstable' "new upstream version"
+
 # incrementing debian packaging version (same OMD version)
 deb-incversion: deb-environment
 	dch -i --no-auto-nmu --force-distribution --distribution 'unstable'
@@ -238,5 +246,9 @@ version:
 	    sed -ri 's/^(OMD_VERSION[[:space:]]*= *).*/\1'"$$newversion/" Makefile.omd ; \
 	    sed -ri 's/^(OMD_SERIAL[[:space:]]*= *).*/\1'"$(NEWSERIAL)/" Makefile.omd ; \
 	    sed -ri 's/^(OMD_VERSION[[:space:]]*= *).*/\1"'"$$newversion"'"/' packages/omd/omd ; \
-	    make deb-newversion ; \
+	    if [ "$(DISTRO_CODE)" == "lenny" ]; then \
+	      make deb-newlenny ; \
+	    else \
+	      make deb-newversion ; \
+	    fi; \
 	fi ;
