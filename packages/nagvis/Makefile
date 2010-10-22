@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 NAME = nagvis
-VERSION = 1.5.3
+VERSION = 1.5-nightly
 DIR = $(NAME)-$(VERSION)
 
 .PHONY: skel
@@ -9,7 +9,6 @@ DIR = $(NAME)-$(VERSION)
 build:
 	tar xzf $(DIR).tar.gz
 	patch $(DIR)/share/server/core/defines/global.php global.php.patch
-	patch $(DIR)/share/frontend/nagvis-js/classes/FrontendTemplateSystem.php fix-missing-share-path.patch
 
 install:
 	cd $(DIR) ; ./install.sh -q -F -c y -a n \
