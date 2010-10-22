@@ -117,7 +117,7 @@ case "$1" in
         status_npcd
         if ! [ $? -eq 0 ]; then
             echo "$servicename was not running... could not stop"
-            exit 1
+            exit 0
         fi
         echo -n "Stopping $servicename: "
 

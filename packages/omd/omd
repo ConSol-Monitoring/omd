@@ -933,7 +933,7 @@ def call_init_scripts(sitename, command):
         scripts.reverse()
     ok = True
     for script in scripts:
-        if 0 != os.system("%s/%s %s" % (rc_dir, script, command)):
+        if not os.system("%s/%s %s" % (rc_dir, script, command)) >> 8 in [ 0, 5 ]:
             ok = False
     if ok:
          return 0

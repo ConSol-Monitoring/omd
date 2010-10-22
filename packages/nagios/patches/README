@@ -42,4 +42,10 @@ Index of patches
     which contains the pid is not cleaned up the init script throws an
     error message when executing 'etc/init.d/nagios stop'.
     With this path the init script checks if the process is stil alive
-    before trying to kill it. 
+    before trying to kill it.
+
+0009:
+    When someone executes the init script with the stop action and the
+		pid file can not be found it is a good sign that nagios is not running
+		anymore. So don't terminate the script with exit code 1. Using exit
+		code 0 insted.
