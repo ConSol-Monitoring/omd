@@ -129,3 +129,8 @@ show_livestatus_errors = True
 # Quicksearch: Limit the number of hits to shop in dropdown.
 # Default is to show at most 80 items.
 # quicksearch_dropdown_limit = 80
+
+# NagVis Maps snapin: The NagVis maps snapin needs to know where the NagVis
+# base URL is. This is needed to fetch the map list from the webservice provided
+# by NagVis.
+nagvis_base_url = '/###SITE###/nagvis'
