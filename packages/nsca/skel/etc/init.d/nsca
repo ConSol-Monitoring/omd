@@ -9,7 +9,7 @@
 
 . ###ROOT###/etc/omd/site.conf
 if [ "$CONFIG_NSCA" != on ] ; then
-		    exit 5
+    exit 5
 fi
 
 
@@ -24,37 +24,37 @@ PIDFILE="###ROOT###/tmp/run/nsca.pid"
 ###
 # obviously if the daemon doesn't exist we should stop now
 if [ ! -x $DAEMON ]; then
-	exit 1
+    exit 1
 fi
 
 die(){
-	echo $@
-	exit 1
+    echo $@
+    exit 1
 }
 
 case "$1" in
 start)
-	echo -n "Starting $DESC: "
-	$DAEMON $OPTS || die "ERROR: could not start $NAME."
-	echo "$NAME."
+    echo -n "Starting $DESC: "
+    $DAEMON $OPTS || die "ERROR: could not start $NAME."
+    echo "$NAME."
     exit 0
 ;;
 stop)
-	echo -n "Stopping $DESC: "
-	kill $(cat $PIDFILE) || die "ERROR: could not stop $NAME."
-	rm -f $PIDFILE
-	echo "$NAME."
+    echo -n "Stopping $DESC: "
+    kill $(cat $PIDFILE) || die "ERROR: could not stop $NAME."
+    rm -f $PIDFILE
+    echo "$NAME."
     exit 0
 ;;
 reload|force-reload)
-	echo -n "Reloading $DESC: "
-	kill -HUP $(cat $PIDFILE) || die "ERROR: could not reload $NAME."
-	echo "$NAME."
+    echo -n "Reloading $DESC: "
+    kill -HUP $(cat $PIDFILE) || die "ERROR: could not reload $NAME."
+    echo "$NAME."
     exit 0
 ;;
 restart)
-	$0 stop
-	$0 start
+    $0 stop
+    $0 start
     exit 0
 ;;
 status)
