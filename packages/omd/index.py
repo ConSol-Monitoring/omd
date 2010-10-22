@@ -107,15 +107,11 @@ def page_welcome(req):
                               'Multisite is a fast, flexibile webinterface for '
                               'Nagios.<br />It uses MKLivestatus to connect to Nagios.'),
                              ('thruk', '<p>Thruk Monitoring Webinterface',
-                              'Thruk is an independent multibackend monitoring '
-                              'webinterface which currently supports Nagios, '
-                              'Icinga and Shinken as backend using the '
-                              'MKLivestatus addon.</p>'
-                              '<p>It is designed to be a "dropin" replacement. The '
-                              'target is to '
-                              'cover 100% of the original features plus '
-                              'additional enhancements for large '
-                              'installations.</p>'),
+                              'Thruk is a multibackend webinterface which '
+                              'supports Nagios, Icinga and Shinken as backend '
+                              'using the MKLivestatus addon.</p>'
+                              '<p>It is a "dropin" Nagios Gui replacement  with '
+                              'additional enhancements for large installations.</p>'),
                              ('nagvis', 'NagVis - The visualization addon',
                               '<p>NagVis is the leading visualization addon for Nagios.</p>'
                               '<p>NagVis can be used to visualize Nagios Data, e.g.  '
