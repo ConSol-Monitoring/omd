@@ -156,6 +156,6 @@ def handler(req):
         page_welcome(req)
     else:
         gui_url  = '/%s/%s/' % (sitename, gui)
-        util.redirect(req, gui)
+        util.redirect(req, gui_url)
 
     return apache.OK

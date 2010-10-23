@@ -8,7 +8,7 @@ Homepage: http://www.omdistro.org
 
 Package: omd-###OMD_VERSION###
 Architecture: any
-Depends:@${shlibs:Depends},@${misc:Depends},@###OS_PACKAGES###
+Depends:@${misc:Depends},@###OS_PACKAGES###
 Description:  Open Source Monitoring Distribution, containing Nagios,
  the Nagios plugins, Check_MK, Livestatus, Multisite,
  PNP4Nagios, NagVis, and other addons. Please visit
