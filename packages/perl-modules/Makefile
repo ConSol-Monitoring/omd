@@ -172,6 +172,7 @@ build:
 	    fi; \
 	done
 	rm -rf src/inc
+	cd dist/lib/perl5/ && rm -f utils.pm && ln -s ../../../nagios/plugins/utils.pm .
 
 install:
 	if [ -z $(DESTDIR) ]; then echo "cannot install without DESTDIR set!"; exit 1; fi
