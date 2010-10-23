@@ -94,6 +94,7 @@ pack:
 
 clean:
 	rm -rf $(DESTDIR)
+	rm -f debian/changelog
 	@for p in packages/* ; do \
             $(MAKE) -C $$p clean ; \
         done
@@ -187,26 +188,15 @@ deb-environment:
 	  exit 1; \
 	fi
 
-# newversion means new OMD version
-deb-newversion: deb-environment
-	dch --package omd-$(OMD_VERSION) \
-	    --newversion $(OMD_VERSION)build1 \
-            -b  --force-distribution \
-	    --distribution 'unstable' "new upstream version"
-
-deb-newlenny: deb-environment
+# create a debian/changelog to build the package 
+deb-changelog: deb-environment
 	# this is a hack!
 	rm -f debian/changelog
 	dch --create --package omd-$(OMD_VERSION) \
-	    --newversion $(OMD_VERSION)build1 \
-            --force-distribution \
-	    --distribution 'unstable' "new upstream version"
+	    --newversion $(DISTRO_CODE)1 "`cat debian/changelog.tmpl`"
+	dch --release "releasing ...."
 
-# incrementing debian packaging version (same OMD version)
-deb-incversion: deb-environment
-	dch -i --no-auto-nmu --force-distribution --distribution 'unstable'
-
-deb: 
+deb: deb-changelog
 	sed -e 's/###OMD_VERSION###/$(OMD_VERSION)/' \
 	    -e 's/###BUILD_PACKAGES###/$(BUILD_PACKAGES)/' \
 	    -e 's/###OS_PACKAGES###/$(OS_PACKAGES)/' \
@@ -220,12 +210,12 @@ deb:
 			-i.gitignore -I.gitignore \
 			-uc -us -rfakeroot
 	# -- renaming deb package to DISTRO_CODE dependend name
-	arch=`dpkg-architecture -qDEB_HOST_ARCH` ; \
-	build=`sed -e '1s/.*(\(.*\)).*/\1/;q' debian/changelog` ; \
-	distro=`echo $$build | sed -e 's/build/$(DISTRO_CODE)/' ` ; \
-	echo "$$arch $$build $$distro"; \
-	mv "../omd-$(OMD_VERSION)_$${build}_$${arch}.deb" \
-	   "../omd-$(OMD_VERSION)_$${distro}_$${arch}.deb" ;
+	# arch=`dpkg-architecture -qDEB_HOST_ARCH` ; \
+	# build=`sed -e '1s/.*(\(.*\)).*/\1/;q' debian/changelog` ; \
+	# distro=`echo $$build | sed -e 's/build/$(DISTRO_CODE)/' ` ; \
+	# echo "$$arch $$build $$distro"; \
+	# mv "../omd-$(OMD_VERSION)_$${build}_$${arch}.deb" \
+	#  "../omd-$(OMD_VERSION)_$${distro}_$${arch}.deb" ;
 
 # Only to be used for developement testing setup 
 setup: pack xzf
@@ -246,9 +236,4 @@ version:
 	    sed -ri 's/^(OMD_VERSION[[:space:]]*= *).*/\1'"$$newversion/" Makefile.omd ; \
 	    sed -ri 's/^(OMD_SERIAL[[:space:]]*= *).*/\1'"$(NEWSERIAL)/" Makefile.omd ; \
 	    sed -ri 's/^(OMD_VERSION[[:space:]]*= *).*/\1"'"$$newversion"'"/' packages/omd/omd ; \
-	    if [ "$(DISTRO_CODE)" == "lenny" ]; then \
-	      make deb-newlenny ; \
-	    else \
-	      make deb-newversion ; \
-	    fi; \
 	fi ;
