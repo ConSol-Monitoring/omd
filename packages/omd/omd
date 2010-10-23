@@ -86,7 +86,7 @@ def have_dialog():
 
 def run_dialog(args):
     env = {
-        "TERM":os.getenv("TERM", "linux"), 
+        "TERM": getenv("TERM", "linux"), 
         "LANG": "de_DE.UTF-8"
     }
     p = Popen(["dialog", "--shadow"] + args, env = env, stderr = PIPE)
@@ -307,22 +307,41 @@ def switch_to_site_user():
     os.setgroups([group_id('omd')])
     os.setuid(uid)
 
+# No using os.putenv, os.getenv os.unsetenv directly because
+# they seem not to work correctly in debian 503.
+#
+# Unsetting all vars with os.unsetenv and after that using os.getenv to read
+# some vars did not bring the expected result that the environment was empty.
+# The vars were still set.
+#
+# Same for os.putenv. Executing os.getenv right after os.putenv did not bring
+# the expected result.
+#
+# Directly modifying os.environ seems to work.
+def putenv(key, value):
+    os.environ[key] = value
+
+def getenv(key, default = None):
+    if not key in os.environ:
+        return default
+    return os.environ[key]
 
 def clear_environment():
     # first remove *all* current environment variables
     keep = [ "TERM" ]
-    for key in os.environ:
-        if key not in keep: 
-            os.unsetenv(key)
+    for key in os.environ.keys():
+        if key not in keep:
+            del os.environ[key]
 
 def set_environment():
-    os.putenv("OMD_SITE", g_sitename)
-    os.putenv("OMD_ROOT", g_sitedir)
-    os.putenv("PATH", "%s/local/bin:%s/bin:/usr/local/bin:/bin:/usr/bin:/sbin:/usr/sbin" %
-                                                                     (g_sitedir, g_sitedir))
-    os.putenv("USER", g_sitename)
-    os.putenv("LD_LIBRARY_PATH", "%s/local/lib:%s/lib" % (g_sitedir, g_sitedir))
-    os.putenv("HOME", g_sitedir)
+    putenv("OMD_SITE", g_sitename)
+    putenv("OMD_ROOT", g_sitedir)
+    putenv("PATH", "%s/local/bin:%s/bin:/usr/local/bin:/bin:/usr/bin:/sbin:/usr/sbin" %
+                                                                  (g_sitedir, g_sitedir))
+    putenv("USER", g_sitename + 'a')
+
+    putenv("LD_LIBRARY_PATH", "%s/local/lib:%s/lib" % (g_sitedir, g_sitedir))
+    putenv("HOME", g_sitedir)
 
     # allow user to define further environment variable in ~/etc/environment
     envfile = g_sitedir + "/etc/environment"
@@ -340,9 +359,16 @@ def set_environment():
             value = parts[1]
             if value.startswith('"'):
                 value = value.strip('"')
+
+            # Add the present environment when someone wants to append some
+            if value.startswith("$%s:" % varname):
+                before = getenv(varname, None)
+                if before:
+                    value = before + ":" + value.replace("$%s:" % varname, '')
+
             if value.startswith("'"):
                 value = value.strip("'")
-            os.putenv(varname, value)
+            putenv(varname, value)
 
 def hostname():
     try:
@@ -606,7 +632,7 @@ def merge_update_file(relpath, old_version, new_version):
     # user_patch = os.popen(
     while True:
         merge_message = patch_has_merge() and '(watch out for >>>>> and <<<<<)' or ''
-        editor = os.getenv("EDITOR", "/bin/vi")
+        editor = getenv("EDITOR", "/bin/vi")
 	choice = ask_user_choices("Conflicts in " + relpath + "!", "I've tried to merge the changes from version %s to %s into %s.\n"
 	   "Unfortunately there are conflicts with your changes. \n"
 	   "You have the following options: " %
@@ -1030,8 +1056,8 @@ def refresh_hooks():
 def call_hook(hookname, args):
     hook_file = g_sitedir + "/lib/omd/hooks/" + hookname
     argsstring = " ".join([ "'%s'" % arg for arg in args ])
-    os.putenv("OMD_ROOT", g_sitedir)
-    os.putenv("OMD_SITE", g_sitename)
+    putenv("OMD_ROOT", g_sitedir)
+    putenv("OMD_SITE", g_sitename)
     return os.popen(hook_file + " " + argsstring).read().strip()
 
 def config_load_hook(hookname):
