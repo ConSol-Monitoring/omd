@@ -154,7 +154,8 @@ MODULES = ExtUtils-MakeMaker-6.56.tar.gz \
           Catalyst-Plugin-Redirect-0.02.tar.gz \
           Monitoring-Livestatus-0.60.tar.gz \
           Monitoring-Livestatus-Class-0.03.tar.gz \
-          Monitoring-Availability-0.14.tar.gz
+          Monitoring-Availability-0.14.tar.gz \
+          YAML-Syck-1.15.tar.gz
 
 
 build:
