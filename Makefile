@@ -94,7 +94,6 @@ pack:
 
 clean:
 	rm -rf $(DESTDIR)
-	rm -f debian/changelog
 	@for p in packages/* ; do \
             $(MAKE) -C $$p clean ; \
         done
