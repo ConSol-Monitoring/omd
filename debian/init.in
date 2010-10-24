@@ -12,8 +12,8 @@
 #                    Distribution (OMD)
 ### END INIT INFO
 
-# -- don't start omd, if not configured in /etc/default/omd
-AUTOSTART=0
+# -- start omd, if not disabled in /etc/default/omd
+AUTOSTART=1
 
 PROGNAME=$0
 PROGNAME=${PROGNAME##*/}
