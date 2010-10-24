@@ -132,7 +132,7 @@ and execute the commands:</p>
 <pre>omd stop
 omd config</pre>
 Then browse to the &quot;WEB&quot; entry in the list and hit enter. Select
-the default GUI and quit all dialogs. After that finish the operatuin by
+the default GUI and quit all dialogs. After that start your site again by
 executing:
 <pre>
 omd start
