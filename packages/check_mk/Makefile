@@ -83,3 +83,6 @@ upstream:
           sed -e 's/nagiosadmin/omdadmin/g' \
               -e 's@^nagvis_base_url.*@nagvis_base_url = "/###SITE###/nagvis"@' \
                > skel/etc/check_mk/multisite.mk
+
+	# Add correct version number
+	sed -i "s/^check_mk_version.*/check_mk_version            = '$(VERSION)'/" skel/etc/check_mk/defaults
