@@ -1,17 +1,5 @@
 # Confguration for Check_MK Multisite
 
-# -------------------------------------------------------------------------
-# URLs and pathes handled by OMD. Please do not change anything here
-#
-# NagVis Maps snapin: The NagVis maps snapin needs to know where the NagVis
-# base URL is. This is needed to fetch the map list from the webservice provided
-# by NagVis.
-nagvis_base_url = '/###SITE###/nagvis'
-# 
-# 
-# 
-# -------------------------------------------------------------------------
-
 # Users with unrestricted permissions
 admin_users = [ "omdadmin" ]
 
@@ -45,6 +33,14 @@ admin_users = [ "omdadmin" ]
 #         "pnp_url":        "/paris/pnp4nagios/",
 #     },
 # }
+
+# 
+# NagVis
+#
+# The NagVis-Snapin needs to know the URL to nagvis.
+# This is not always /nagvis/ - especially not for OMD
+nagvis_base_url = "/###SITE###/nagvis"
+
 
 # Restrict number of datasets queries via Livestatus.
 # This prevents you from consuming too much ressources
@@ -86,9 +82,9 @@ custom_links['guest'] = [
   ( "Addons", True, [
         ( "PNP4Nagios", "../pnp4nagios/",       "link_reporting.gif" ),
         ( "NagVis", False, [
-            ( "Automap",    "../nagvis/index.php?map=__automap", "link_map.gif"),
-            ( "Demo map",   "../nagvis/index.php?map=demo-map",  "link_map.gif"),
-            ( "Demo Map 2", "../nagvis/index.php?map=demo2",     "link_map.gif"),
+            ( "Automap",    "../nagvis/index.php?automap=__automap", "link_map.gif"),
+            ( "Demo map",   "../nagvis/index.php?map=demo-map",      "link_map.gif"),
+            ( "Demo Map 2", "../nagvis/index.php?map=demo2",         "link_map.gif"),
         ]),
   ]),
 ]

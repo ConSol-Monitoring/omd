@@ -338,7 +338,7 @@ def set_environment():
     putenv("OMD_ROOT", g_sitedir)
     putenv("PATH", "%s/local/bin:%s/bin:/usr/local/bin:/bin:/usr/bin:/sbin:/usr/sbin" %
                                                                   (g_sitedir, g_sitedir))
-    putenv("USER", g_sitename + 'a')
+    putenv("USER", g_sitename)
 
     putenv("LD_LIBRARY_PATH", "%s/local/lib:%s/lib" % (g_sitedir, g_sitedir))
     putenv("HOME", g_sitedir)

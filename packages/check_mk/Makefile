@@ -80,5 +80,9 @@ upstream:
 	# multisite.mk - replace nagiosadmin with omadmin
 	tar xzf check_mk-$(VERSION).tar.gz --to-stdout check_mk-$(VERSION)/conf.tar.gz | \
           tar xzf - --to-stdout multisite.mk-$(VERSION) | \
-          sed 's/nagiosadmin/omdadmin/g' > \
-          skel/etc/check_mk/multisite.mk
+          sed -e 's/nagiosadmin/omdadmin/g' \
+              -e 's@^nagvis_base_url.*@nagvis_base_url = "/###SITE###/nagvis"@' \
+               > skel/etc/check_mk/multisite.mk
+
+	# Add correct version number
+	sed -i "s/^check_mk_version.*/check_mk_version            = '$(VERSION)'/" skel/etc/check_mk/defaults

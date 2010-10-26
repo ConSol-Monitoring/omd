@@ -10,7 +10,7 @@ fi
 # ex.: v0.42
 version=`git describe --tag --exact-match 2>/dev/null`
 if [ $? -eq 0 ]; then
-  echo $version
+  echo $version | tr -d 'v'
   exit 0
 fi
 
@@ -29,7 +29,7 @@ if [ $? -eq 0 ]; then
   fi
   version="$major.$minor"
 
-  echo $version.$date
+  echo $version.$date | tr -d 'v'
   exit 1
 fi
 
