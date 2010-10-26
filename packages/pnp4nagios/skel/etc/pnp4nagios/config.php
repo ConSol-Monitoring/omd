@@ -1,6 +1,6 @@
 <?php
 ##
-## Program: pnp4nagios-0.6.5 , Performance Data Addon for Nagios(r)
+## Program: pnp4nagios, Performance Data Addon for Nagios(r)
 ## License: GPL
 ## Copyright (c) 2005-2010 Joerg Linge (http://www.pnp4nagios.org)
 ##
