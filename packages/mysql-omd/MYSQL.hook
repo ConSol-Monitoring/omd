@@ -18,11 +18,10 @@ EOF
         echo "off: disable"
     ;;
     set)
-        if [ "$2" == "on" ]
-        then
-	    if [ ! -e ~/var/mysql/mysql ] ; then
- 	        mysql_install_db 
-            fi
+        if [ "$2" == "on" ]; then
+           if [ ! -e ~/var/mysql/mysql ] ; then
+               mysql_install_db > $OMD_ROOT/var/log/omd.log 2>&1 || echo "error"
+           fi
         fi
     ;;
 esac
