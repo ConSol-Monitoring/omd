@@ -81,9 +81,6 @@ def patch_has_merge():
     return patch_supports_merge
 
 
-def have_dialog():
-    return False # os.system("which dialog >/dev/null 2>&1") == 0
-
 def run_dialog(args):
     env = {
         "TERM": getenv("TERM", "linux"), 
@@ -124,54 +121,43 @@ def dialog_message(text, buttonlabel="OK"):
     run_dialog(["--ok-label", buttonlabel, "--msgbox", text, "0", "0"])
 
 def ask_user(title, message, yes_text, no_text):
-    if have_dialog():
-        p = Popen(["dialog", "--title", title, "--shadow", "--yes-label", yes_text, "--no-label", no_text, "--yesno", message, "0", "0"])
-	return 0 == os.waitpid(p.pid, 0)[1]
-    else:
-	sys.stdout.write(tty_bgblue + tty_white + tty_bold + title + tty_normal + ": ")
-	sys.stdout.write(message + "\n")
-	yes_answer = yes_text[0].lower()
-	for no_answer in no_text.lower():
-	    if yes_answer != no_answer:
-	        break
+    sys.stdout.write(tty_bgblue + tty_white + tty_bold + title + tty_normal + ": ")
+    sys.stdout.write(message + "\n")
+    yes_answer = yes_text[0].lower()
+    for no_answer in no_text.lower():
+	if yes_answer != no_answer:
+	    break
 
-	while True:
-	    sys.stdout.write("   %s / %s  [%s/%s] ==> " %
-	           	(yes_text, no_text, yes_answer.upper(), no_answer))
-	    sys.stdout.flush()
-	    a = sys.stdin.readline().strip().lower()
-	    if not a or a == yes_answer:
-		return True
-	    elif a == no_answer:
-		return False
+    while True:
+	sys.stdout.write("   %s / %s  [%s/%s] ==> " %
+		       (yes_text, no_text, yes_answer.upper(), no_answer))
+	sys.stdout.flush()
+	a = sys.stdin.readline().strip().lower()
+	if not a or a == yes_answer:
+	    return True
+	elif a == no_answer:
+	    return False
 
 def ask_user_choices(title, message, choices):
-    if have_dialog():
-        argv = [ "dialog", "--stderr", "--shadow", "--nocancel", "--title", title, "--menu", message, "16", "60", str(len(choices)) ]
-	for c, t in choices:
-	   argv += [ c, t ]
-	choice = Popen(argv, stderr=PIPE).stderr.read()
-        return choice.strip()
-    else:
-	sys.stdout.write(tty_bgcyan + tty_white + tty_bold + title + tty_normal + "\n")
-	sys.stdout.write(message + "\n\n")
-	chars = []
-	for choice, title in choices:
-	    sys.stdout.write("  %-10s - %s\n" % (choice, title))
-	    for c in choice:
-		if c.lower() not in chars:
-		    chars.append(c)
-		    break
-	sys.stdout.write("\n")
+    sys.stdout.write(tty_bgcyan + tty_white + tty_bold + title + tty_normal + "\n")
+    sys.stdout.write(message + "\n\n")
+    chars = []
+    for choice, title in choices:
+	sys.stdout.write("  %s%s%s%-10s - %s\n" % (tty_bold, choice[0], tty_normal, choice[1:], title))
+	for c in choice:
+	    if c.lower() not in chars:
+		chars.append(c)
+		break
+    sys.stdout.write("\n")
 
-	while True:
-	    sys.stdout.write("[%s] ==> " %
-		    "/".join([char for (char, (c,t)) in zip(chars, choices)]))
-	    sys.stdout.flush()
-	    a = sys.stdin.readline().strip().lower()
-	    for char, (choice, title) in zip(chars, choices):
-		if a == char:
-		    return choice
+    while True:
+	sys.stdout.write("[%s] ==> " %
+		"/".join([(tty_bold + char + tty_normal) for (char, (c,t)) in zip(chars, choices)]))
+	sys.stdout.flush()
+	a = sys.stdin.readline().strip().lower()
+	for char, (choice, title) in zip(chars, choices):
+	    if a == char:
+		return choice
 
 def bail_out(message):
     sys.stderr.write(message)
@@ -633,6 +619,7 @@ def merge_update_file(relpath, old_version, new_version):
     while True:
         merge_message = patch_has_merge() and '(watch out for >>>>> and <<<<<)' or ''
         editor = getenv("EDITOR", "/bin/vi")
+
 	choice = ask_user_choices("Conflicts in " + relpath + "!", "I've tried to merge the changes from version %s to %s into %s.\n"
 	   "Unfortunately there are conflicts with your changes. \n"
 	   "You have the following options: " %
@@ -640,6 +627,7 @@ def merge_update_file(relpath, old_version, new_version):
 		[ ( "diff",    "Show differences between your and the new default version" ),
 		  ( "you",     "Show your changes compared with the old default version" ),
 		  ( "new",     "Show what has changed from %s to %s" % (old_version, new_version) ),
+		  ( "missing", "Show which changes from the update have not been merged" ),
 		  ( "edit",    "Edit file with %s%s" % (editor, merge_message) ),
 		  ( "keep",    "Keep half-merged version of the file" ),
 		  ( "restore", "Restore your original version of the file" ),
@@ -669,6 +657,13 @@ def merge_update_file(relpath, old_version, new_version):
 	    sys.stdout.flush()
 	    os.system("diff -u %s-%s %s-%s" % (user_path, old_version, user_path, new_version))
 	    sys.stdout.write(tty_normal)
+        elif choice == "missing":
+	    reject_file = user_path + ".rej"
+	    if os.path.exists(reject_file):
+		sys.stdout.write(tty_bgblue + tty_white + file(reject_file).read() + tty_normal)
+	    else:
+		sys.stdout.write("File %s not found.\n" % reject_file)
+	    
 	elif choice == "shell":
 	    sys.stdout.write("Starting BASH. Type CTRL-D to continue.\n")
 	    thedir = "/".join(user_path.split("/")[:-1])
