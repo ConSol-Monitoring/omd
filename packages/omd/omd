@@ -580,6 +580,11 @@ def patch_template_file(src, dst, old, new):
     else:
         sys.stdout.write("%s: Cannot update due to your changes. Please check.\n" % dst)
 
+def get_editor():
+    editor = getenv("VISUAL", getenv("EDITOR", "/usr/bin/vi"))
+    if not os.exists(editor):
+        editor = 'vi'
+    return editor
 
 # Try to merge changes from old->new version and
 # old->user version
@@ -618,7 +623,7 @@ def merge_update_file(relpath, old_version, new_version):
     # user_patch = os.popen(
     while True:
         merge_message = patch_has_merge() and '(watch out for >>>>> and <<<<<)' or ''
-        editor = getenv("EDITOR", "/bin/vi")
+        editor = get_editor()
 
 	choice = ask_user_choices("Conflicts in " + relpath + "!", "I've tried to merge the changes from version %s to %s into %s.\n"
 	   "Unfortunately there are conflicts with your changes. \n"
