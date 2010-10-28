@@ -49,3 +49,10 @@ Index of patches
 		pid file can not be found it is a good sign that nagios is not running
 		anymore. So don't terminate the script with exit code 1. Using exit
 		code 0 insted.
+
+0010:
+    This patches fixed the problem to jump back to the start page
+    whenever you press F5.
+
+0011:
+    This patches removes a useless loop in the status summary page.
