@@ -157,7 +157,7 @@ MODULES = ExtUtils-MakeMaker-6.56.tar.gz \
           Monitoring-Availability-0.14.tar.gz \
           YAML-Syck-1.15.tar.gz \
           Math-Calc-Units-1.07.tar.gz \
-          Nagios-Plugin-0.34.tar.gz \
+          Nagios-Plugin-0.34.tar.gz
 
 
 build:
