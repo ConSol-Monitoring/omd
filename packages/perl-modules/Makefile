@@ -157,8 +157,12 @@ MODULES = ExtUtils-MakeMaker-6.56.tar.gz \
           Monitoring-Availability-0.14.tar.gz \
           YAML-Syck-1.15.tar.gz \
           Math-Calc-Units-1.07.tar.gz \
-          Nagios-Plugin-0.34.tar.gz
-
+          Nagios-Plugin-0.34.tar.gz \
+          Term-ShellUI-0.86.tar.gz \
+          Term-Size-0.207.tar.gz \
+          TermReadKey-2.30.tar.gz \
+          Term-Clui-1.61.tar.gz \
+          File-SearchPath-0.05.tar.gz
 
 build:
 	test -d dist || mkdir dist
@@ -190,7 +194,7 @@ clean:
 test:
 	cd src; \
 	for tarball in $(MODULES); do \
-	    PERL_MM_OPT=INSTALL_BASE=$$(pwd)/../dist MODULEBUILDRC=$$(pwd)/../dist/.modulebuildrc PERL5LIB=$$(pwd)/../dist/lib/perl5:$$(pwd)/../dist/lib/perl5/$(PERLARCH) ../build_module.sh $$tarball $(PERL) testony; \
+	    PERL_MM_OPT=INSTALL_BASE=$$(pwd)/../dist MODULEBUILDRC=$$(pwd)/../dist/.modulebuildrc PERL5LIB=$$(pwd)/../dist/lib/perl5:$$(pwd)/../dist/lib/perl5/$(PERLARCH) ../build_module.sh $$tarball $(PERL) testonly; \
 	    if [ $$? -eq 0 ]; then \
 	        echo "   ok"; \
 	    else \
