@@ -1,0 +1,3 @@
+bin/jmx4perl 0755
+bin/j4psh 0755
+lib/nagios/plugins/check_jmx4perl 0755
