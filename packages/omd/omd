@@ -222,7 +222,7 @@ def site_exists(sitename):
     return os.path.exists(site_dir(sitename))
 
 def all_sites():
-    return [ s for s in os.listdir("/omd/sites") if s[0] != '.' ]
+    return [ s for s in os.listdir("/omd/sites") if os.path.isdir(os.path.join("/omd/sites/", s)) ]
 
 # Check if site is completely stopped
 def site_is_stopped(sitename):
