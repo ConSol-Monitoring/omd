@@ -157,6 +157,7 @@ MODULES = ExtUtils-MakeMaker-6.56.tar.gz \
           Monitoring-Availability-0.14.tar.gz \
           YAML-Syck-1.15.tar.gz \
           Math-Calc-Units-1.07.tar.gz \
+	  Config-Tiny-2.13.tar.gz \
           Nagios-Plugin-0.34.tar.gz \
           Term-ShellUI-0.86.tar.gz \
           Term-Size-0.207.tar.gz \
@@ -182,8 +183,8 @@ build:
 
 install:
 	if [ -z $(DESTDIR) ]; then echo "cannot install without DESTDIR set!"; exit 1; fi
-	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/perl5
-	cp -rp dist/lib $(DESTDIR)$(OMD_ROOT)/lib/perl5/lib
+	[ -d $(DESTDIR)$(OMD_ROOT)/lib/perl5/ ] || mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/perl5
+	rsync -a dist/lib $(DESTDIR)$(OMD_ROOT)/lib/perl5/
 	echo "install  --install_base  $(DESTDIR)$(OMD_ROOT)/lib/perl5" > $(DESTDIR)$(OMD_ROOT)/lib/perl5/.modulebuildrc
 
 skel:
