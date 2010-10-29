@@ -582,7 +582,7 @@ def patch_template_file(src, dst, old, new):
 
 def get_editor():
     editor = getenv("VISUAL", getenv("EDITOR", "/usr/bin/vi"))
-    if not os.exists(editor):
+    if not os.path.exists(editor):
         editor = 'vi'
     return editor
 
