@@ -1051,6 +1051,7 @@ def config_load_hooks():
 def refresh_hooks():
     config_load_hooks()
     config_set_all() # execute 'set' functions with current values
+    call_all_hooks("refresh")
     config_save()
 
 def call_hook(hookname, args):
@@ -1059,6 +1060,11 @@ def call_hook(hookname, args):
     putenv("OMD_ROOT", g_sitedir)
     putenv("OMD_SITE", g_sitename)
     return os.popen(hook_file + " " + argsstring).read().strip()
+
+def call_all_hooks(command):
+    hook_dir = g_sitedir + "/lib/omd/hooks"
+    for hookname in os.listdir(hook_dir):
+        os.system("%s/%s '%s'" % (hook_dir, hookname, command))
 
 def config_load_hook(hookname):
 
@@ -1402,93 +1408,67 @@ def main_rm(args, options={}):
     delete_apache_hook(g_sitename)
     restart_apache()
 
-def main_mv(args, options={}):
+def main_mv_or_cp(what, args, options={}):
+    action = what == "mv" and "rename" or "copy"
+
     global g_sitename
     global g_sitedir
     if len(args) != 1:
-	bail_out("omd: Usage: omd mv oldname newname\n")
+	bail_out("omd: Usage: omd %s oldname newname\n" % what)
     new = args[0]
-    
+
     if site_exists(new):
         bail_out("Site %s already existing.\n" % new)
 
     old = g_sitename
     if site_is_running(old):
-	bail_out("Cannot rename site '%s' while it is running.\n" % old)
+	bail_out("Cannot %s site '%s' while it is running.\n" % (action, old))
 
-    unmount_tmpfs(old)
-    remove_from_fstab(old)
-    sys.stdout.write("Renaming site %s to %s..." % (old, new))
+    if what == "mv":
+        unmount_tmpfs(old)
+        remove_from_fstab(old)
+
+    sys.stdout.write("%sing site %s to %s..." % (what.title(), old, new))
     sys.stdout.flush()
 
-    # Rename base directory and apache config
-    os.rename(site_dir(old), site_dir(new))
-    delete_apache_hook(old)
-    create_apache_hook(new)
-
-    # Now reflect name change in configuration files which have been
-    # create from skeletons. We are only interested in plain files,
-    # directories and symlinks won't change.
-    patch_skeleton_files(old, new)
-
-    # Create new user and own over all files to him. Then delete old user
-    useradd(new)
-    chown_tree(site_dir(new), new)
-    userdel(old)
-
-    sys.stdout.write(tty_ok + "\n")
-
-    g_sitename = new
-    g_sitedir = site_dir(new)
-    refresh_hooks()
-
-    add_to_fstab(new)
-
-    # Tell Apache about changes (need real restart, group changed)
-    restart_apache()
-
-def main_cp(args, options={}):
-    global g_sitename
-    global g_sitedir
-
-    if len(args) != 1:
-	bail_out("omd: Usage: omd cp oldname newname\n")
-    new = args[0]
-    
-    if site_exists(new):
-        bail_out("Site %s already existing.\n" % new)
-
-    old = g_sitename
-    if site_is_running(old):
-	bail_out("Cannot copy while site '%s' is still running.\n" % old)
-
-    sys.stdout.write("Creating new site %s as a copy of %s..." % (new, g_sitename))
-    sys.stdout.flush()
-    # First make exact file-per-file copy with same
-    # user but already new name
-    os.mkdir(site_dir(new))
-    os.system("rsync -arx '%s/' '%s/'" % (site_dir(g_sitename), site_dir(new)))
-    # os.system("tar cf - -C '%s' --exclude tmp . | tar xf - -C '%s'" % \
-    #         (site_dir(g_sitename), site_dir(new)))
+    if what == "mv":
+        # Rename base directory and apache config
+        os.rename(site_dir(old), site_dir(new))
+        delete_apache_hook(old)
+    else:
+        # Make exact file-per-file copy with same user but already new name
+        os.mkdir(site_dir(new))
+        os.system("rsync -arx '%s/' '%s/'" % (site_dir(g_sitename), site_dir(new)))
 
     # Change config files from old to new site (see rename_site())
     patch_skeleton_files(g_sitename, new)
 
-    # Create new user and own over all files to him.
+    # Create new user and give him all files
     useradd(new)
     chown_tree(site_dir(new), new)
+
+    # In case of mv now delete old user
+    if what == "mv":
+        userdel(old)
+
     sys.stdout.write("OK\n")
 
+    # Now switch over to the new site as currently active site
     g_sitename = new
     g_sitedir = site_dir(new)
+    os.chdir(g_sitedir)
+    set_environment()
+
+    # Give hooks chance to update configuration
     refresh_hooks()
 
     # Entry for tmps in /etc/fstab
     add_to_fstab(new)
 
-    # Apache hook, restart apache (group changed)
+    # Make apache aware of new site
     create_apache_hook(new)
     restart_apache()
+
 
 def main_update(args, options={}):
     if site_is_running(g_sitename):
@@ -1678,12 +1658,12 @@ commands = [
     "- Remove the site home directory\n"
     "- Restart the system wide apache daemon\n"),
 
-  ( "mv",        True,  1, 1, False, "NEWNAME", main_mv,
+  ( "mv",        True,  1, 1, False, "NEWNAME", lambda args, opts: main_mv_or_cp("mv", args, opts),
     [],
     "Rename a site",
     ""),
 
-  ( "cp",        True,  1, 1, False, "NEWNAME", main_cp,
+  ( "cp",        True,  1, 1, False, "NEWNAME", lambda args, opts: main_mv_or_cp("cp", args, opts),
     [],
     "Make a copy of a site",
     ""),
