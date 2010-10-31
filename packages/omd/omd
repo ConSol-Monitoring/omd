@@ -601,20 +601,22 @@ def merge_update_file(relpath, old_version, new_version):
     content = file(user_path).read()
     permissions = os.stat(user_path).st_mode
 
-    for version in [ old_version, new_version ]:
-	file("%s-%s" % (user_path, version), "w").write(replace_tags(file("/omd/versions/%s/skel/%s" % (version, relpath)).read(), replacements))
-    version_patch = os.popen("diff -u %s-%s %s-%s" % (user_path, old_version, user_path, new_version)).read()
+    def try_merge():
+        for version in [ old_version, new_version ]:
+            file("%s-%s" % (user_path, version), "w").write(replace_tags(file("/omd/versions/%s/skel/%s" % (version, relpath)).read(), replacements))
+        version_patch = os.popen("diff -u %s-%s %s-%s" % (user_path, old_version, user_path, new_version)).read()
 
-    # First try to merge the changes in the version into the users' file
-    merge = patch_has_merge() and "--merge" or ""
-    f = os.popen("patch --force --backup --forward --silent %s %s" % (merge, user_path), "w")
-    f.write(version_patch)
-    status = f.close()
-    if status:
-	exitcode = status / 256
-    else:
-	exitcode = 0
-    if exitcode == 0:
+        # First try to merge the changes in the version into the users' file
+        merge = patch_has_merge() and "--merge" or ""
+        f = os.popen("patch --force --backup --forward --silent %s %s" % (merge, user_path), "w")
+        f.write(version_patch)
+        status = f.close()
+        if status:
+            return status / 256
+        else:
+            return 0
+
+    if try_merge() == 0:
 	sys.stdout.write("Successfully merged changes from %s -> %s into %s\n" %
 		(old_version, new_version, fn))
 	return
@@ -629,16 +631,17 @@ def merge_update_file(relpath, old_version, new_version):
 	   "Unfortunately there are conflicts with your changes. \n"
 	   "You have the following options: " %
 		( old_version, new_version, relpath ),
-		[ ( "diff",    "Show differences between your and the new default version" ),
-		  ( "you",     "Show your changes compared with the old default version" ),
-		  ( "new",     "Show what has changed from %s to %s" % (old_version, new_version) ),
-		  ( "missing", "Show which changes from the update have not been merged" ),
-		  ( "edit",    "Edit file with %s%s" % (editor, merge_message) ),
-		  ( "keep",    "Keep half-merged version of the file" ),
-		  ( "restore", "Restore your original version of the file" ),
-		  ( "install", "Install the new default version" ),
-		  ( "shell",   "Open a shell for looking around" ),
-	          ( "abort",   "Stop here and abort update!" ),
+		[ ( "diff",      "Show differences between your and the new default version" ),
+		  ( "you",       "Show your changes compared with the old default version" ),
+		  ( "new",       "Show what has changed from %s to %s" % (old_version, new_version) ),
+		  ( "missing",   "Show which changes from the update have not been merged" ),
+		  ( "edit",      "Edit file with %s%s" % (editor, merge_message) ),
+		  ( "keep",      "Keep half-merged version of the file" ),
+		  ( "restore",   "Restore your original version of the file" ),
+		  ( "install",   "Install the new default version" ),
+		  ( "shell",     "Open a shell for looking around" ),
+                  ( "try again", "Retry merging (after manual changes)" ),
+	          ( "abort",     "Stop here and abort update!" ),
 		])
         if choice == "abort":
 	    sys.stdout.write("Good bye.\n")
@@ -678,6 +681,13 @@ def merge_update_file(relpath, old_version, new_version):
             os.chmod(user_path, permissions)
 	    sys.stdout.write("Restored your version.\n")
 	    break
+        elif choice == "try again":
+            if 0 == try_merge():
+                sys.stdout.write("Successfully merged changes from %s -> %s into %s\n" %
+                        (old_version, new_version, fn))
+            return
+
+            
 	else:
 	    os.rename("%s-%s" % (user_path, new_version), user_path)
             os.chmod(user_path, permissions)
@@ -1705,6 +1715,9 @@ commands = [
 ]
 
 def handle_global_option(opt, orig):
+    global opt_verbose
+    global opt_force
+    global opt_interactive
     def opt_arg():
         global main_args
         if len(main_args) < 1:
@@ -1729,7 +1742,6 @@ def handle_global_option(opt, orig):
         opt_force = False
         opt_interactive = True
     elif opt in [ 'v', 'verbose' ]:
-        global opt_verbose
         opt_verbose = True
     else:
         sys.stdout.write("Invalid global option %s.\n" % orig)
@@ -1867,7 +1879,7 @@ if g_sitename:
     clear_environment()
     set_environment()
 
-if confirm:
+if (opt_interactive or confirm) and not opt_force:
     sys.stdout.write("%s (yes/NO): " % confirm_text)
     sys.stdout.flush()
     a = sys.stdin.readline().strip()
