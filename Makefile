@@ -165,7 +165,8 @@ $(SOURCE_TGZ) dist:
 rpm:
 	sed -e 's/^Requires:.*/Requires:	$(OS_PACKAGES)/' \
             -e 's/%{version}/$(OMD_VERSION)/g' \
-            -e 's/^Release:.*/Release: $(DISTRO_CODE).$(OMD_SERIAL)/' \
+            -e 's/^Version:.*/Version: $(DISTRO_CODE)/' \
+            -e 's/^Release:.*/Release: $(OMD_SERIAL)/' \
 	    -e 's#@APACHE_CONFDIR@#$(APACHE_CONF_DIR)#g' \
 	    -e 's#@APACHE_NAME@#$(APACHE_NAME)#g' \
 	    omd.spec.in > omd.spec

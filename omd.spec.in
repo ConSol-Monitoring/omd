@@ -1,6 +1,6 @@
 Summary:        OMD - OpenSource Monitoring Distribution
 Name:           omd-%{version}
-Version:        %{version}
+Version:        SET BY MAKEFILE
 Release:        SET BY MAKEFILE 
 License:        GPL
 URL:            http://omdistro.org/
@@ -43,8 +43,8 @@ rm -f $RPM_BUILD_ROOT/etc/init.d/omd
 %files
 %defattr(-,root,root)
 /opt/omd
-%attr(4750,root,omd)      /opt/omd/versions/%{version}/lib/nagios/plugins/check_icmp
-%attr(4750,root,omd)      /opt/omd/versions/%{version}/lib/nagios/plugins/check_dhcp
+%attr(4750,root,omd) /opt/omd/versions/%{version}/lib/nagios/plugins/check_icmp
+%attr(4750,root,omd) /opt/omd/versions/%{version}/lib/nagios/plugins/check_dhcp
 
 %pre
 groupadd -r omd 2>/dev/null || true
