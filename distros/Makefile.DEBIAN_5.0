@@ -1,6 +1,6 @@
 DISTRO_CODE       = lenny
-BUILD_PACKAGES    = build-essential libcairo2-dev libpango1.0-dev libxml2-dev patch libmcrypt-dev libperl-dev libssl-dev libgd2-xpm-dev libglib2.0-dev libgnutls-dev libldap2-dev libmcrypt-dev libmysqlclient15-dev libperl-dev dpatch git-buildpackage snmp
-OS_PACKAGES       = xinetd libltdl3 libdbi0 libpango1.0-0 libapache2-mod-php5 libapache2-mod-python libapache2-mod-fcgid libapache2-mod-proxy-html xinetd php5-gd php5-sqlite php5-mcrypt graphviz snmp libgd2-xpm dnsutils fping mysql-server php-pear php5 php5-cli unzip libnet-snmp-perl libsnmp-perl rsync dialog curl patch
+BUILD_PACKAGES    = build-essential libcairo2-dev libpango1.0-dev libxml2-dev patch libmcrypt-dev libperl-dev libssl-dev libgd2-xpm-dev libglib2.0-dev libgnutls-dev libldap2-dev libmcrypt-dev libmysqlclient15-dev libperl-dev dpatch git-buildpackage snmp libreadline5-dev
+OS_PACKAGES       = xinetd libltdl3 libdbi0 libpango1.0-0 libapache2-mod-php5 libapache2-mod-python libapache2-mod-fcgid libapache2-mod-proxy-html xinetd php5-gd php5-sqlite php5-mcrypt graphviz snmp libgd2-xpm dnsutils fping mysql-server php-pear php5 php5-cli unzip libnet-snmp-perl libsnmp-perl rsync dialog curl patch libreadline5
 USERADD_OPTIONS   = 
 ADD_USER_TO_GROUP = gpasswd -a %(user)s %(group)s
 PACKAGE_INSTALL   = aptitude -y update ; aptitude -y install
