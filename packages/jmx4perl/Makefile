@@ -24,6 +24,10 @@ install:
 	cp -p $(DIR)/blib/script/check_jmx4perl $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins/
 	[ -d $(DESTDIR)$(OMD_ROOT)/lib/perl5/lib/perl5 ] || mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/perl5/lib/perl5
 	rsync -a $(DIR)/blib/lib/ $(DESTDIR)$(OMD_ROOT)/lib/perl5/lib/perl5
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/man/man1
+	rsync -a $(DIR)/blib/bindoc/ $(DESTDIR)$(OMD_ROOT)/share/man/man1
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/jmx4perl
+	cp $(DIR)/agent/j4p.war $(DESTDIR)$(OMD_ROOT)/share/jmx4perl
 
 skel:
 
