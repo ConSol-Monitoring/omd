@@ -122,24 +122,28 @@ def dialog_yesno(text, yeslabel = "yes", nolabel = "no"):
 def dialog_message(text, buttonlabel="OK"):
     run_dialog(["--ok-label", buttonlabel, "--msgbox", text, "0", "0"])
 
-def ask_user(title, message, yes_text, no_text):
-    sys.stdout.write(tty_bgblue + tty_white + tty_bold + title + tty_normal + ": ")
-    sys.stdout.write(message + "\n")
-    yes_answer = yes_text[0].lower()
-    for no_answer in no_text.lower():
-	if yes_answer != no_answer:
-	    break
-
+def user_confirms(title, message, relpath, yes_choice, yes_text, no_choice, no_text):
+    user_path = g_sitedir + "/" + relpath
+    options = [ (yes_choice, yes_text), 
+                (no_choice,  no_text),
+                ("shell",    "Open a shell for looking around"),
+                ("abort",    "Stop here and abort update!")]
     while True:
-	sys.stdout.write("   %s / %s  [%s/%s] ==> " %
-		       (yes_text, no_text, yes_answer.upper(), no_answer))
-	sys.stdout.flush()
-	a = sys.stdin.readline().strip().lower()
-	if not a or a == yes_answer:
-	    return True
-	elif a == no_answer:
-	    return False
+        choice = ask_user_choices(title, message, options)
+        if choice == "abort":
+	    sys.stdout.write("Update aborted.\n")
+	    sys.exit(1)
+	elif choice == "shell":
+            relname = relpath.split("/")[-1]
+	    sys.stdout.write("\n Starting BASH. Type CTRL-D to continue.\n\n")
+	    thedir = "/".join(user_path.split("/")[:-1])
+	    os.system("cd '%s' ; bash -i" % thedir)
+        else:
+            return choice == yes_choice
 
+def ask_user(title, message, yes_choice, yes_text, no_choice, no_text):
+    return yes_choice == \
+        ask_user_choices(title, message, [ (yes_choice, yes_text), (no_choice, no_text) ])
 
 
 def wrap_text(text, width):
@@ -722,7 +726,7 @@ def merge_update_file(relpath, old_version, new_version):
 	   "You have the following options: " %
 		( old_version, new_version, relpath ), options)
         if choice == "abort":
-	    sys.stdout.write("Good bye.\n")
+	    sys.stdout.write("Update aborted.\n")
 	    sys.exit(1)
 	if choice == "keep":
 	    break
@@ -869,7 +873,7 @@ def update_file(old_version, new_version, userdir, relpath):
     # 1) New version ships new skeleton file -> simply install
     if not old_type and not user_type:
 	create_skeleton_file(new_skel, userdir, relpath, replacements)
-	sys.stdout.write(good + " Installed %-4s %s.\n" % (new_type, fn))
+	sys.stdout.write(good + " Installed %-4s %s\n" % (new_type, fn))
 
     # 2) new version ships new skeleton file, but user's own file/dir/link
     #    is in the way.
@@ -880,43 +884,53 @@ def update_file(old_version, new_version, userdir, relpath):
 
     # 2b) user's file has a different content or type
     elif not old_type:
-	if ask_user(relpath, "The new version ships the %s %s, "
+	if user_confirms("Conflict at " + relpath,
+                    "The new version ships the %s %s, "
 		    "but you have created a %s in that place "
 		    "yourself. Shall we keep your %s or replace "
-	            "is with mine?" % (new_type, relpath, user_type, user_type), "keep", "replace"):
-	    sys.stdout.write(warn + " Keeping your version of %s\n" % fn)
+	            "is with my %s?" % (new_type, relpath, user_type, user_type, new_type), 
+                    relpath,
+                    "keep", "Keep your %s" % user_type,
+                    "replace", "Replace your %s with the new default %s" % (user_type, new_type)):
+	    sys.stdout.write(warn + " Keeping your   %s\n" % fn)
 	else:
 	    create_skeleton_file(new_skel, userdir, relpath, replacements)
-	    sys.stdout.write(good + " Installing new default version of %s\n" % fn)
+	    sys.stdout.write(good + " Installed %-4s %s\n" % (new_type, fn))
 
     # 3) old version had a file which has vanished in new (got obsolete). If the user
     #    has deleted it himself, we are just happy
     elif not new_type and not user_type:
-	sys.stdout.write(good + " Obsolete  %s\n" % fn)
+	sys.stdout.write(good + " Obsolete       %s\n" % fn)
 
     # 3b) same, but user has not deleted and changed type
     elif not new_type and user_changed_type:
-	if ask_user(relpath, "The %s %s has become obsolete in "
+	if user_confirms("Obsolete file " + relpath, 
+                    "The %s %s has become obsolete in "
 		    "this version, but you have changed it into a "
 		    "%s. Do you want to keep your %s or "
 		    "may I delete it for you, please?" % (old_type, relpath, user_type, user_type),
-		    "keep", "delete"):
-	    sys.stdout.write(warn + " Keeping your %s\n" % fn)
+                    relpath,
+		    "keep", "Keep your %s" % user_type,
+                    "delete", "Delete it"):
+	    sys.stdout.write(warn + " Keeping your   %s\n" % fn)
 	else:
 	    delete_user_file(user_path)
-	    sys.stdout.write(warn + " Deleted %s\n" % fn)
+	    sys.stdout.write(warn + " Deleted        %s\n" % fn)
 
     # 3c) same, but user has changed it contents
     elif not new_type and user_changed_content:
-	if ask_user(relpath, "The %s %s has become obsolete in "
-		    "this version, but you have changed its contents. "
-		    "Do you want to keep your file or "
-		    "may I delete it for you, please?" % (old_type, relpath),
-		    "keep", "delete"):
-	    sys.stdout.write(warn + " Keeping your %s\n" % fn)
+	if user_confirms("Changes in obsolete %s %s" % (old_type, relpath), 
+                "The %s %s has become obsolete in "
+	        "the new version, but you have changed its contents. "
+	        "Do you want to keep your %s or "
+	        "may I delete it for you, please?" % (old_type, relpath, user_type),
+                relpath,
+                "keep", "keep your %s, though it is obsolete" % user_type,
+                "delete", "delete your %s" % user_type):
+	    sys.stdout.write(warn + " Keeping your   %s\n" % fn)
 	else:
 	    delete_user_file(user_path)
-	    sys.stdout.write(warn + " Deleted %s\n" % fn)
+	    sys.stdout.write(warn + " Deleted        %s\n" % fn)
 
     # 3d) same, but user hasn't changed anything -> silently delete
     elif not new_type:
@@ -929,9 +943,9 @@ def update_file(old_version, new_version, userdir, relpath):
     elif not user_type and not we_changed:
         sys.stdout.write(good + " Unwanted       %s (unchanged, deleted by you)\n" % fn)
 
-    # 4b) File changed in new version. Simply warn.
+    # 4b) File changed in new version. Simply warn if user has deleted it.
     elif not user_type:
-	sys.stdout.write(warn + " File %s has changed in new version, you've deleted it anyway. Ignoring.\n" % fn)
+	sys.stdout.write(warn + " Missing        %s\n" % fn)
 
     # B ---> UNCHANGED, EASY CASES
 
@@ -942,11 +956,11 @@ def update_file(old_version, new_version, userdir, relpath):
     # 6) User didn't change anything -> take over new version
     elif not user_changed:
 	create_skeleton_file(new_skel, userdir, relpath, replacements)
-	sys.stdout.write(good + " Updated        %s.\n" % fn)
+	sys.stdout.write(good + " Updated        %s\n" % fn)
 
     # 7) User changed, but accidentally exactly as we did -> no action neccessary
     elif not differs:
-	sys.stdout.write(good + " You've changed %s exactly as in the new version. Keeping.\n" % fn)
+	sys.stdout.write(good + " Identical      %s\n" % fn)
 
     # TEST UNTIL HERE
 
@@ -958,68 +972,82 @@ def update_file(old_version, new_version, userdir, relpath):
     # D ---> SYMLINKS
     # 8) all are symlinks, all changed
     elif old_type == "link" and new_type == "link" and user_type == "link":
-	if ask_user(relpath, "'%s' is a symlink that pointed to "
+	if user_confirms("Symbolic link conflict at " + relpath, 
+                "'%s' is a symlink that pointed to "
 		"%s in the old version and to "
 		"%s in the new version. But meanwhile you "
 		"changed to link target to %s. "
 		"Shall I keep your link or replace it with "
 		"the new default target?" %
 		(relpath, os.readlink(old_path), os.readlink(new_path), os.readlink(user_path)),
-		"keep", "replace"):
-	    sys.stdout.write(warn + " Keeping your link %s\n" % fn)
+                relpath,
+		"keep", "Keep your symbolic link pointing to %s" % os.readlink(user_path),
+                "replace", "Change link target to %s" % os.readlink(new_path)):
+	    sys.stdout.write(warn + " Keeping your   %s\n" % fn)
 	else:
 	    os.remove(user_path)
 	    os.symlink(os.readlink(new_path), user_path)
-	    sys.stdout.write(warn + " Set link %s to new target %s\n" % (fn, os.readline(new_path)))
+	    sys.stdout.write(warn + " Set link       %s to new target %s\n" % (fn, os.readlink(new_path)))
 
     # E ---> FILE TYPE HAS CHANGED (NASTY)
+
     # Now we have to handle cases, where the file types of the three
     # versions are not identical and at the same type the user or
     # have changed the third file to. We cannot merge here, the user
     # has to decide wether to keep his version of use ours.
 
-    # 9) We have changed to file type
+    # 9) We have changed the file type
     elif old_type != new_type:
-	if ask_user(relpath, "The %s %s has changed into a %s in "
+	if user_confirms("File type change at " + relpath, 
+                "The %s %s has been changed into a %s in "
 		"the new version. Meanwhile you have changed "
 		"the %s of your copy of that %s. "
-		"Do you want to keep your version or use "
-		"the new default? " %
+		"Do you want to keep your version or replace "
+		"it with the new default? " %
 		(old_type, relpath, new_type, user_changed_type and "type" or "content",
 		 old_type),
-		"keep", "use new"):
-	    sys.stdout.write(warn + " Keeping your version of %s" % fn)
+                relpath,
+		"keep", "Keep your %s" % user_type,
+                "replace", "Replace it with the new %s" % new_type):
+	    sys.stdout.write(warn + " Keeping your version of %s\n" % fn)
 	else:
 	    create_skeleton_file(new_skel, userdir, relpath, replacements)
 	    sys.stdout.write(warn + " Replaced your %s %s by new default %s.\n" % (user_type, relpath, new_type))
 
     # 10) The user has changed the file type, we just the content
     elif old_type != user_type:
-	if ask_user(relpath, "Usually %s is a %s in both the "
+	if user_confirms("Type change conflicts with content change at " + relpath, 
+                "Usually %s is a %s in both the "
 		"old and new version. But you have changed it "
-		"into a %s. Do you want to keep that of may "
+		"into a %s. Do you want to keep that or may "
 		"I replace your %s with the new default "
 		"%s, please?" % 
-		(relpath, old_type, user_type, new_type),
-		"keep", "replace"):
+		(relpath, old_type, user_type, user_type, new_type),
+                relpath,
+		"keep", "Keep your %s" % user_type,
+                "replace", "Replace it with the new %s" % new_type):
 	    sys.stdout.write(warn + " Keeping your %s %s.\n" % (user_type, fn))
 	else:
 	    create_skeleton_file(new_skel, userdir, relpath, replacements)
-	    sys.stdout.warn(warn + " Delete your %s and created new default %s %s.\n" % (user_type, new_type, fn))
+	    sys.stdout.write(warn + " Delete your %s and created new default %s %s.\n" % 
+                    (user_type, new_type, fn))
 
     # 11) This case should never happen, if I've not lost something
     else:
-	if ask_user(relpath, "You somehow fiddled along with "
+	if user_confirms("Something nasty happened at " + relpath, 
+               "You somehow fiddled along with "
 	       "%s, and I do not have the "
 	       "slightest idea what's going on here. May "
 	       "I please install the new default %s "
 	       "here, or do you want to keep your %s?" %
 	       (relpath, new_type, user_type),
-	       "keep", "install new"):
+               relpath,
+               "keep", "Keep your %s" % user_type,
+	       "replace", "Replace it with the new %s" % new_type):
 	    sys.stdout.write(warn + " Keeping your %s %s.\n" % (user_type, fn))
 	else:
 	    create_skeleton_file(new_skel, userdir, relpath, replacements)
-	    sys.stdout.warn(warn + " Delete your %s and created new default %s %s.\n" % (user_type, new_type, fn))
+	    sys.stdout.write(warn + " Delete your %s and created new default %s %s.\n" % (user_type, new_type, fn))
 
 def init_scripts(sitename):
     rc_dir = "/omd/sites/%s/etc/rc.d" % sitename
