@@ -1,0 +1,32 @@
+git diff
+diff --git a/share/pnp/index.php.in b/share/pnp/index.php.in
+index b5df0a9..44e2245 100644
+--- a/share/pnp/index.php.in
++++ b/share/pnp/index.php.in
+@@ -27,19 +27,17 @@ define('IN_PRODUCTION', TRUE);
+  * OMD path detection
+  *
+  */
+-if(preg_match ("/^\/opt\/omd\//", __FILE__)){
+-    $parts = preg_split('/\//', __FILE__ );
++if(substr($_SERVER["SCRIPT_FILENAME"], 0, 4) == '/omd') {
+     define('OMD', TRUE);
+-    define('OMD_VERSION', $parts[4]);
+-    define('OMD_ROOT', sprintf('/%s/%s/%s/%s', $parts[1],$parts[2],$parts[3],$parts[4]));
+-    $parts = preg_split('/\//', $_SERVER['REQUEST_URI'] );
+-    define('OMD_SITE', $parts[1]);
+-    define('OMD_SITE_ROOT', '/opt/omd/sites/'.$parts[1]);
+-    unset($parts);
++    $site_parts = array_slice(explode('/' ,dirname($_SERVER["SCRIPT_FILENAME"])), 0, -3);
++    define('OMD_SITE_ROOT', join($site_parts, '/'));
++    define('OMD_SITE', $site_parts[count($site_parts)-1]);
++    unset($site_parts);
+ }else{
+     define('OMD', FALSE);
+ }
+ 
++
+ /**
+  *
+  * Autodetect base URL
+
