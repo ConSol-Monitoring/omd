@@ -57,7 +57,7 @@ else:
 
 # Symbols for update
 good  = " " + tty_green +  tty_bold + "*" + tty_normal
-warn  = " " + tty_bgyellow + tty_black + tty_bold + "?" + tty_normal
+warn  = " " + tty_bgyellow + tty_black + tty_bold + "!" + tty_normal
 error = " " + tty_bgred +  tty_white +   tty_bold + "!" + tty_normal
 
 # Options to set via command line
@@ -258,8 +258,13 @@ def read_info():
 
 def read_skel_permissions():
     global g_skel_permissions
-    g_skel_permissions = {}
-    file_path = omd_root() + "/share/omd/skel.permissions"
+    g_skel_permissions = load_skel_permissions(OMD_VERSION)
+    if not g_skel_permissions:
+        bail_out("%s is missing or currupted.\n" % file_path)
+
+def load_skel_permissions(version):
+    perms = {}
+    file_path = "/omd/versions/%s/share/omd/skel.permissions" % version
     try:
         for line in file(file_path):
             line = line.strip()
@@ -267,9 +272,23 @@ def read_skel_permissions():
                 continue
             path, perm = line.split()
             mode = int(perm, 8)
-            g_skel_permissions[path] = mode
+            perms[path] = mode
+        return perms
     except:
-        bail_out("%s is missing or currupted.\n" % file_path)
+        return None
+
+def get_skel_permissions(version, perms, relpath):
+    try:
+        return perms[relpath]
+    except:
+        return get_file_permissions("/omd/versions/%s/skel/%s" % (version, relpath))
+
+def get_file_permissions(path):
+    try:
+        return os.stat(path).st_mode & 07777
+    except:
+        return 0
+
 
 def site_name():
         return pwd.getpwuid(os.getuid()).pw_name
@@ -627,12 +646,15 @@ def chown_tree(dir, user):
             os.lchown(dirpath + "/" + entry, uid, gid)
 
 def instantiate_skel(path):
-    t = file(path).read()
-    replacements = {
-        "###SITE###" : g_sitename,
-        "###ROOT###" : g_sitedir,
-    }
-    return replace_tags(t, replacements)
+    try:
+        t = file(path).read()
+        replacements = {
+            "###SITE###" : g_sitename,
+            "###ROOT###" : g_sitedir,
+        }
+        return replace_tags(t, replacements)
+    except:
+        return "" # e.g. due to permission error
 
 
 def patch_template_file(src, dst, old, new):
@@ -669,7 +691,6 @@ def get_editor():
 # old->user version
 def merge_update_file(relpath, old_version, new_version):
     fn = tty_bold + relpath + tty_normal
-    sys.stdout.write(warn + " Merging        %s...\n" % fn)
 
     replacements = {
         "###SITE###" : g_sitename,
@@ -681,7 +702,11 @@ def merge_update_file(relpath, old_version, new_version):
 
     def try_merge():
         for version in [ old_version, new_version ]:
-            file("%s-%s" % (user_path, version), "w").write(replace_tags(file("/omd/versions/%s/skel/%s" % (version, relpath)).read(), replacements))
+            try:
+                skel_content = file("/omd/versions/%s/skel/%s" % (version, relpath)).read()
+            except:
+                skel_content = "" # permission problems in 0.42
+            file("%s-%s" % (user_path, version), "w").write(replace_tags(skel_content, replacements))
         version_patch = os.popen("diff -u %s-%s %s-%s" % (user_path, old_version, user_path, new_version)).read()
 
         # First try to merge the changes in the version into the users' file
@@ -695,8 +720,7 @@ def merge_update_file(relpath, old_version, new_version):
             return 0
 
     if try_merge() == 0:
-	sys.stdout.write("Successfully merged changes from %s -> %s into %s\n" %
-		(old_version, new_version, fn))
+        sys.stdout.write(good + " Merged         %s\n" % fn)
 	return
 
     # No success. Should we try merging the users' changes onto the new file?
@@ -801,7 +825,7 @@ def filetype(p):
     return tp
 
 
-def update_file(old_version, new_version, userdir, relpath):
+def update_file(old_version, new_version, userdir, relpath, old_perms):
     old_skel = "/omd/versions/%s/skel" % old_version
     new_skel = "/omd/versions/%s/skel" % new_version
 
@@ -879,8 +903,7 @@ def update_file(old_version, new_version, userdir, relpath):
     #    is in the way.
     # 2a) the users file is identical with our new version
     elif not old_type and not differs:
-    	sys.stdout.write(good + " Both you and new version created a new %s %s with the same content. Good.\n" %
-		(new_type, fn))
+    	sys.stdout.write(good + " Identical new  %s\n" % fn)
 
     # 2b) user's file has a different content or type
     elif not old_type:
@@ -1048,6 +1071,68 @@ def update_file(old_version, new_version, userdir, relpath):
 	else:
 	    create_skeleton_file(new_skel, userdir, relpath, replacements)
 	    sys.stdout.write(warn + " Delete your %s and created new default %s %s.\n" % (user_type, new_type, fn))
+
+
+    # Now the new file/link/dir is in place, deleted or whatever. The
+    # user might have interferred and changed things. We need to make sure
+    # that file permissions are also updated. But the user might have changed
+    # something himself.
+
+    user_type = filetype(user_path)
+    old_perm     = get_skel_permissions(old_version, old_perms, relpath)
+    new_perm     = get_skel_permissions(new_version, g_skel_permissions, relpath)
+    user_perm    = get_file_permissions(user_path)
+
+    # Fix permissions not for links and only if the new type is as expected
+    # and the current permissions are not as the should be
+    what = None
+    if new_type != "link" \
+        and user_type == new_type \
+        and user_perm != new_perm:
+
+        # Permissions have changed, but file type not
+        if old_type == new_type \
+            and user_perm != old_perm \
+            and old_perm != new_perm:
+            if user_confirms("Permission conflict at " + relpath,
+                    "The proposed permissions of %s have changed from %04o "
+                    "to %04o in the new version, but you have set %04o. "
+                    "May I use the new default permissions or do "
+                    "you want to keep yours?" % 
+                    (relpath, old_perm, new_perm, user_perm),
+                    relpath,
+                    "keep", "Keep permissions at %04o" % user_perm,
+                    "default", "Set permission to %04o" % new_perm):
+                what = "keep"
+            else:
+                what = "default"
+
+
+        # Permissions have changed, no conflict with user
+        elif old_type == new_type \
+            and user_perm == old_perm:
+                what = "default"
+
+        # Permissions are not correct: all other cases (where type is as expected)
+        elif old_perm != new_perm:
+            if user_confirms("Wrong permission of " + relpath,
+                    "The proposed permissions of %s are %04o, but currently are "
+                    "%04o. May I use the new default "
+                    "permissions or keep yours?" % (relpath, new_perm, user_perm),
+                    relpath,
+                    "keep", "Keep permissions at %04o" % user_perm,
+                    "default", "Set permission to %04o" % new_perm):
+                what = "keep"
+            else:
+                what = "default"
+
+        if what == "keep":
+            sys.stdout.write(warn + " Permissions    %04o %s (unchanged)\n" % (user_perm, fn))
+        elif what == "default":
+            sys.stdout.write(good + " Permissions    %04o -> %04o %s\n" % (user_perm, new_perm, fn))
+            os.chmod(user_path, new_perm)
+
+
 
 def init_scripts(sitename):
     rc_dir = "/omd/sites/%s/etc/rc.d" % sitename
@@ -1430,9 +1515,13 @@ def main_version(args, options={}):
     sys.stdout.write("OMD - OpenSource Monitoring Distribution Version %s\n" % g_info["OMD_VERSION"])
 
 def main_versions(args, options={}):
-    for version in os.listdir("/omd/versions"):
-	if version != "default":
-	    sys.stdout.write("%s\n" % version)
+    for v in omd_versions():
+        sys.stdout.write("%s\n" % v)
+
+def omd_versions():
+    v = [ v for v in os.listdir("/omd/versions") if v != "default" ]
+    v.sort()
+    return v
 
 def main_sites(args, options={}):
     if on_tty:
@@ -1596,7 +1685,30 @@ def main_update(args, options={}):
     from_version = site_version(g_sitename)
     to_version = OMD_VERSION
     if from_version == to_version:
-	bail_out("Site '%s' already has version %s.\n" % (g_sitename, to_version))	
+        possible_versions = [ v for v in omd_versions() if v != from_version ]
+        possible_versions.sort(reverse=True)
+        if len(possible_versions) == 0:
+            bail_out("There is no other OMD version to update to.\n")
+        elif len(possible_versions) == 1:
+            to_version = possible_versions[0]
+        else:
+            ok, to_version = dialog_menu("Choose target version",
+                    "Please choose the version this site should be updated to",
+                    [ (v, "Version %s" % v) for v in possible_versions ],
+                    possible_versions[0],
+                    "Update now",
+                    "Cancel")
+            if not ok:
+                bail_out("Aborted.\n")
+        exec_other_omd(to_version)
+
+    if not opt_force and not dialog_yesno("You are going to update the site %s from version %s to version %s. "
+            "This will include updating all of you configuration files and merging "
+            "changes in the default files with changes made by you. In case of conflicts "
+            "your help will be needed." % (g_sitename, from_version, to_version),
+            "Update!", "Abort"):
+        bail_out("Aborted.\n")
+
     sys.stdout.write("Updating site '%s' from version %s to %s...\n\n" % 
 	    (g_sitename, from_version, to_version))
 
@@ -1608,7 +1720,10 @@ def main_update(args, options={}):
     #    files and applying that to the new default files
     # We implement the first method.
 
+    # read permissions
     read_skel_permissions()
+    old_perms = load_skel_permissions(from_version)
+
     from_skelroot = "/omd/versions/%s/skel" % from_version
     to_skelroot = "/omd/versions/%s/skel" % to_version
     tmp = tmp_dir(g_sitename)
@@ -1628,7 +1743,7 @@ def main_update(args, options={}):
                 path = path[2:]
 	    handled_paths.add(path)
 	    try:
-		update_file(from_version, to_version, g_sitedir, path)
+		update_file(from_version, to_version, g_sitedir, path, old_perms)
 	    except Exception, e:
 		sys.stderr.write("Error updating %s/%s: %s\n" % (g_sitedir, path, e))	
 		raise
@@ -1651,7 +1766,7 @@ def main_update(args, options={}):
 	    # handle only files not already handled while scanning to_skelroot
 	    if not os.path.exists(to_skelroot + "/" + entry):
 		try:
-		    update_file(from_version, to_version, g_sitedir, path)
+		    update_file(from_version, to_version, g_sitedir, path, old_perms)
 		except Exception, e:
 		    sys.stderr.write("Error updating %s/%s: %s\n" % (g_sitedir, path, e))	
 		    raise
@@ -1784,7 +1899,7 @@ commands = [
 
   ( "update",    False, 1, 1, False, "", main_update,
     [],
-    "Update site to version " + OMD_VERSION,
+    "Update site to other version of OMD",
     ""),
 
   ( "start",     False, 2, 1, False, "", lambda args, opts: main_init_action("start", args, opts),
@@ -1882,6 +1997,17 @@ def parse_command_options(args, options_spec):
     return (args, options)
 
 
+def exec_other_omd(version):
+    # Rerun with omd of other version
+    omd_path = "/omd/versions/%s/bin/omd" % version
+    if os.path.exists(omd_path):
+        os.execv(omd_path, sys.argv)
+        bail_out("Cannot run bin/omd of version %s.\n" % version)
+    else:
+        bail_out("Site %s uses version %s which is not installed.\n" 
+                "Please reinstall that version and retry this command.\n" % 
+                (g_sitename, version))
+
 
 # ----------------------------------------------------------
 #                                _       
@@ -1953,15 +2079,7 @@ if g_sitename != None and site_must_exist and not site_exists(g_sitename):
 if g_sitename and site_must_exist and command != "update":
     v = site_version(g_sitename)
     if OMD_VERSION != v:
-        # Rerun with omd of correct version
-        omd_path = "/omd/versions/%s/bin/omd" % v
-        if os.path.exists(omd_path):
-            os.execv(omd_path, sys.argv)
-	    bail_out("Cannot run bin/omd of version %s.\n" % v)
-        else:
-            bail_out("Site %s uses version %s which is not installed.\n" 
-                    "Please reinstall that version and retry this command.\n" % 
-                    (g_sitename, v))
+        exec_other_omd(v)
 
 
 if g_sitename:
