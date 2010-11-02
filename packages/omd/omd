@@ -1682,7 +1682,9 @@ def main_update(args, options={}):
     if from_version == to_version:
         possible_versions = [ v for v in omd_versions() if v != from_version ]
         possible_versions.sort(reverse=True)
-        if len(possible_versions) == 1:
+        if len(possible_versions) == 0:
+            bail_out("There is no other OMD version to update to.\n")
+        elif len(possible_versions) == 1:
             to_version = possible_versions[0]
         else:
             ok, to_version = dialog_menu("Choose target version",
