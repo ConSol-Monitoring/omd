@@ -57,7 +57,7 @@ else:
 
 # Symbols for update
 good  = " " + tty_green +  tty_bold + "*" + tty_normal
-warn  = " " + tty_bgyellow + tty_black + tty_bold + "?" + tty_normal
+warn  = " " + tty_bgyellow + tty_black + tty_bold + "!" + tty_normal
 error = " " + tty_bgred +  tty_white +   tty_bold + "!" + tty_normal
 
 # Options to set via command line
@@ -646,12 +646,15 @@ def chown_tree(dir, user):
             os.lchown(dirpath + "/" + entry, uid, gid)
 
 def instantiate_skel(path):
-    t = file(path).read()
-    replacements = {
-        "###SITE###" : g_sitename,
-        "###ROOT###" : g_sitedir,
-    }
-    return replace_tags(t, replacements)
+    try:
+        t = file(path).read()
+        replacements = {
+            "###SITE###" : g_sitename,
+            "###ROOT###" : g_sitedir,
+        }
+        return replace_tags(t, replacements)
+    except:
+        return "" # e.g. due to permission error
 
 
 def patch_template_file(src, dst, old, new):
@@ -688,7 +691,6 @@ def get_editor():
 # old->user version
 def merge_update_file(relpath, old_version, new_version):
     fn = tty_bold + relpath + tty_normal
-    sys.stdout.write(warn + " Merging        %s...\n" % fn)
 
     replacements = {
         "###SITE###" : g_sitename,
@@ -700,7 +702,11 @@ def merge_update_file(relpath, old_version, new_version):
 
     def try_merge():
         for version in [ old_version, new_version ]:
-            file("%s-%s" % (user_path, version), "w").write(replace_tags(file("/omd/versions/%s/skel/%s" % (version, relpath)).read(), replacements))
+            try:
+                skel_content = file("/omd/versions/%s/skel/%s" % (version, relpath)).read()
+            except:
+                skel_content = "" # permission problems in 0.42
+            file("%s-%s" % (user_path, version), "w").write(replace_tags(skel_content, replacements))
         version_patch = os.popen("diff -u %s-%s %s-%s" % (user_path, old_version, user_path, new_version)).read()
 
         # First try to merge the changes in the version into the users' file
@@ -714,8 +720,7 @@ def merge_update_file(relpath, old_version, new_version):
             return 0
 
     if try_merge() == 0:
-	sys.stdout.write("Successfully merged changes from %s -> %s into %s\n" %
-		(old_version, new_version, fn))
+        sys.stdout.write(good + " Merged         %s\n" % fn)
 	return
 
     # No success. Should we try merging the users' changes onto the new file?
@@ -898,7 +903,7 @@ def update_file(old_version, new_version, userdir, relpath, old_perms):
     #    is in the way.
     # 2a) the users file is identical with our new version
     elif not old_type and not differs:
-    	sys.stdout.write(good + " Identical new  %s\n" % (new_type, fn))
+    	sys.stdout.write(good + " Identical new  %s\n" % fn)
 
     # 2b) user's file has a different content or type
     elif not old_type:
