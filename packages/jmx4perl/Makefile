@@ -28,6 +28,7 @@ install:
 	rsync -a $(DIR)/blib/bindoc/ $(DESTDIR)$(OMD_ROOT)/share/man/man1
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/jmx4perl
 	cp $(DIR)/agent/j4p.war $(DESTDIR)$(OMD_ROOT)/share/jmx4perl
+	cp README.agent $(DESTDIR)$(OMD_ROOT)/share/jmx4perl/README
 
 skel:
 
