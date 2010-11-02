@@ -14,5 +14,6 @@
 # FOO2="With some spaces"
 #
 
+PERL5LIB=###ROOT###/lib/perl5/lib/perl5
 
 
