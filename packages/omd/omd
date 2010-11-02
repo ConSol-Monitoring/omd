@@ -1510,9 +1510,13 @@ def main_version(args, options={}):
     sys.stdout.write("OMD - OpenSource Monitoring Distribution Version %s\n" % g_info["OMD_VERSION"])
 
 def main_versions(args, options={}):
-    for version in os.listdir("/omd/versions"):
-	if version != "default":
-	    sys.stdout.write("%s\n" % version)
+    for v in omd_versions():
+        sys.stdout.write("%s\n" % v)
+
+def omd_versions():
+    v = [ v for v in os.listdir("/omd/versions") if v != "default" ]
+    v.sort()
+    return v
 
 def main_sites(args, options={}):
     if on_tty:
@@ -1676,7 +1680,28 @@ def main_update(args, options={}):
     from_version = site_version(g_sitename)
     to_version = OMD_VERSION
     if from_version == to_version:
-	bail_out("Site '%s' already has version %s.\n" % (g_sitename, to_version))	
+        possible_versions = [ v for v in omd_versions() if v != from_version ]
+        possible_versions.sort(reverse=True)
+        if len(possible_versions) == 1:
+            to_version = possible_versions[0]
+        else:
+            ok, to_version = dialog_menu("Choose target version",
+                    "Please choose the version this site should be updated to",
+                    [ (v, "Version %s" % v) for v in possible_versions ],
+                    possible_versions[0],
+                    "Update now",
+                    "Cancel")
+            if not ok:
+                bail_out("Aborted.\n")
+        exec_other_omd(to_version)
+
+    if not opt_force and not dialog_yesno("You are going to update the site %s from version %s to version %s. "
+            "This will include updating all of you configuration files and merging "
+            "changes in the default files with changes made by you. In case of conflicts "
+            "your help will be needed." % (g_sitename, from_version, to_version),
+            "Update!", "Abort"):
+        bail_out("Aborted.\n")
+
     sys.stdout.write("Updating site '%s' from version %s to %s...\n\n" % 
 	    (g_sitename, from_version, to_version))
 
@@ -1867,7 +1892,7 @@ commands = [
 
   ( "update",    False, 1, 1, False, "", main_update,
     [],
-    "Update site to version " + OMD_VERSION,
+    "Update site to other version of OMD",
     ""),
 
   ( "start",     False, 2, 1, False, "", lambda args, opts: main_init_action("start", args, opts),
@@ -1965,6 +1990,17 @@ def parse_command_options(args, options_spec):
     return (args, options)
 
 
+def exec_other_omd(version):
+    # Rerun with omd of other version
+    omd_path = "/omd/versions/%s/bin/omd" % version
+    if os.path.exists(omd_path):
+        os.execv(omd_path, sys.argv)
+        bail_out("Cannot run bin/omd of version %s.\n" % version)
+    else:
+        bail_out("Site %s uses version %s which is not installed.\n" 
+                "Please reinstall that version and retry this command.\n" % 
+                (g_sitename, version))
+
 
 # ----------------------------------------------------------
 #                                _       
@@ -2036,15 +2072,7 @@ if g_sitename != None and site_must_exist and not site_exists(g_sitename):
 if g_sitename and site_must_exist and command != "update":
     v = site_version(g_sitename)
     if OMD_VERSION != v:
-        # Rerun with omd of correct version
-        omd_path = "/omd/versions/%s/bin/omd" % v
-        if os.path.exists(omd_path):
-            os.execv(omd_path, sys.argv)
-	    bail_out("Cannot run bin/omd of version %s.\n" % v)
-        else:
-            bail_out("Site %s uses version %s which is not installed.\n" 
-                    "Please reinstall that version and retry this command.\n" % 
-                    (g_sitename, v))
+        exec_other_omd(v)
 
 
 if g_sitename:
