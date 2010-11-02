@@ -258,8 +258,13 @@ def read_info():
 
 def read_skel_permissions():
     global g_skel_permissions
-    g_skel_permissions = {}
-    file_path = omd_root() + "/share/omd/skel.permissions"
+    g_skel_permissions = load_skel_permissions(OMD_VERSION)
+    if not g_skel_permissions:
+        bail_out("%s is missing or currupted.\n" % file_path)
+
+def load_skel_permissions(version):
+    perms = {}
+    file_path = "/omd/versions/%s/share/omd/skel.permissions" % version
     try:
         for line in file(file_path):
             line = line.strip()
@@ -267,9 +272,23 @@ def read_skel_permissions():
                 continue
             path, perm = line.split()
             mode = int(perm, 8)
-            g_skel_permissions[path] = mode
+            perms[path] = mode
+        return perms
     except:
-        bail_out("%s is missing or currupted.\n" % file_path)
+        return None
+
+def get_skel_permissions(version, perms, relpath):
+    try:
+        return perms[relpath]
+    except:
+        return get_file_permissions("/omd/versions/%s/skel/%s" % (version, relpath))
+
+def get_file_permissions(path):
+    try:
+        return os.stat(path).st_mode & 07777
+    except:
+        return 0
+
 
 def site_name():
         return pwd.getpwuid(os.getuid()).pw_name
@@ -801,7 +820,7 @@ def filetype(p):
     return tp
 
 
-def update_file(old_version, new_version, userdir, relpath):
+def update_file(old_version, new_version, userdir, relpath, old_perms):
     old_skel = "/omd/versions/%s/skel" % old_version
     new_skel = "/omd/versions/%s/skel" % new_version
 
@@ -879,8 +898,7 @@ def update_file(old_version, new_version, userdir, relpath):
     #    is in the way.
     # 2a) the users file is identical with our new version
     elif not old_type and not differs:
-    	sys.stdout.write(good + " Both you and new version created a new %s %s with the same content. Good.\n" %
-		(new_type, fn))
+    	sys.stdout.write(good + " Identical new  %s\n" % (new_type, fn))
 
     # 2b) user's file has a different content or type
     elif not old_type:
@@ -1048,6 +1066,68 @@ def update_file(old_version, new_version, userdir, relpath):
 	else:
 	    create_skeleton_file(new_skel, userdir, relpath, replacements)
 	    sys.stdout.write(warn + " Delete your %s and created new default %s %s.\n" % (user_type, new_type, fn))
+
+
+    # Now the new file/link/dir is in place, deleted or whatever. The
+    # user might have interferred and changed things. We need to make sure
+    # that file permissions are also updated. But the user might have changed
+    # something himself.
+
+    user_type = filetype(user_path)
+    old_perm     = get_skel_permissions(old_version, old_perms, relpath)
+    new_perm     = get_skel_permissions(new_version, g_skel_permissions, relpath)
+    user_perm    = get_file_permissions(user_path)
+
+    # Fix permissions not for links and only if the new type is as expected
+    # and the current permissions are not as the should be
+    what = None
+    if new_type != "link" \
+        and user_type == new_type \
+        and user_perm != new_perm:
+
+        # Permissions have changed, but file type not
+        if old_type == new_type \
+            and user_perm != old_perm \
+            and old_perm != new_perm:
+            if user_confirms("Permission conflict at " + relpath,
+                    "The proposed permissions of %s have changed from %04o "
+                    "to %04o in the new version, but you have set %04o. "
+                    "May I use the new default permissions or do "
+                    "you want to keep yours?" % 
+                    (relpath, old_perm, new_perm, user_perm),
+                    relpath,
+                    "keep", "Keep permissions at %04o" % user_perm,
+                    "default", "Set permission to %04o" % new_perm):
+                what = "keep"
+            else:
+                what = "default"
+
+
+        # Permissions have changed, no conflict with user
+        elif old_type == new_type \
+            and user_perm == old_perm:
+                what = "default"
+
+        # Permissions are not correct: all other cases (where type is as expected)
+        elif old_perm != new_perm:
+            if user_confirms("Wrong permission of " + relpath,
+                    "The proposed permissions of %s are %04o, but currently are "
+                    "%04o. May I use the new default "
+                    "permissions or keep yours?" % (relpath, new_perm, user_perm),
+                    relpath,
+                    "keep", "Keep permissions at %04o" % user_perm,
+                    "default", "Set permission to %04o" % new_perm):
+                what = "keep"
+            else:
+                what = "default"
+
+        if what == "keep":
+            sys.stdout.write(warn + " Permissions    %04o %s (unchanged)\n" % (user_perm, fn))
+        elif what == "default":
+            sys.stdout.write(good + " Permissions    %04o -> %04o %s\n" % (user_perm, new_perm, fn))
+            os.chmod(user_path, new_perm)
+
+
 
 def init_scripts(sitename):
     rc_dir = "/omd/sites/%s/etc/rc.d" % sitename
@@ -1608,7 +1688,10 @@ def main_update(args, options={}):
     #    files and applying that to the new default files
     # We implement the first method.
 
+    # read permissions
     read_skel_permissions()
+    old_perms = load_skel_permissions(from_version)
+
     from_skelroot = "/omd/versions/%s/skel" % from_version
     to_skelroot = "/omd/versions/%s/skel" % to_version
     tmp = tmp_dir(g_sitename)
@@ -1628,7 +1711,7 @@ def main_update(args, options={}):
                 path = path[2:]
 	    handled_paths.add(path)
 	    try:
-		update_file(from_version, to_version, g_sitedir, path)
+		update_file(from_version, to_version, g_sitedir, path, old_perms)
 	    except Exception, e:
 		sys.stderr.write("Error updating %s/%s: %s\n" % (g_sitedir, path, e))	
 		raise
@@ -1651,7 +1734,7 @@ def main_update(args, options={}):
 	    # handle only files not already handled while scanning to_skelroot
 	    if not os.path.exists(to_skelroot + "/" + entry):
 		try:
-		    update_file(from_version, to_version, g_sitedir, path)
+		    update_file(from_version, to_version, g_sitedir, path, old_perms)
 		except Exception, e:
 		    sys.stderr.write("Error updating %s/%s: %s\n" % (g_sitedir, path, e))	
 		    raise
