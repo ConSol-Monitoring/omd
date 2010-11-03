@@ -1152,6 +1152,9 @@ def call_init_scripts(sitename, command):
         call_init_scripts(sitename, "start")
         return
 
+    # OMD guarantees OMD_ROOT to be the current directory
+    os.chdir(site_dir(sitename))
+
     # Call stop scripts in reverse order
     rc_dir, scripts = init_scripts(sitename)
     if command == "stop":
@@ -1424,6 +1427,10 @@ def config_configure_hook(hookname):
 def init_action(command):
     if command == "start":
         create_tmpfs(g_sitename)
+
+    # OMD guarantees that we are in OMD_ROOT
+    os.chdir(g_sitedir)
+
     if command == "status":
         return check_status(g_sitename)
     else:
@@ -1782,6 +1789,7 @@ def main_update(args, options={}):
 def main_init_action(command, args, options={}):
     global g_sitename
     global g_sitedir
+    
     only_version = options.get("version")
 
     # if no site is selected, all sites are affected
