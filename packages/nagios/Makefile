@@ -18,7 +18,7 @@ CONFIGUREOPTS = \
 
 build:
 	tar xzf $(DIR).tar.gz
-	for p in patches/*.dif ; do \
+	set -e ; for p in patches/*.dif ; do \
 	    echo "applying $$p..." ; \
 	    ( cd $(DIR) ; patch -p1 -b ) < $$p ; \
 	done
@@ -30,7 +30,8 @@ install:
 	$(MAKE) DESTDIR=$(DESTDIR) -C $(DIR) install-base install-cgis install-html
 	rm -f $(DESTDIR)$(OMD_ROOT)/share/nagios/htdocs/config.php.inc
 
-	install -m 664 $(DIR)/p1.pl $(DESTDIR)$(OMD_ROOT)/lib/nagios;
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/nagios
+	install -m 664 $(DIR)/p1.pl $(DESTDIR)$(OMD_ROOT)/lib/nagios
 
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/nagios/htdocs/ssi
 	install -m 755 ssi-wrapper.pl $(DESTDIR)$(OMD_ROOT)/share/nagios/htdocs/ssi
@@ -48,6 +49,9 @@ install:
 
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/skel/etc/init.d
 	install -m 644 $(DIR)/daemon-init $(DESTDIR)$(OMD_ROOT)/skel/etc/init.d/nagios
+
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/bin
+	install -m 755 merge-nagios-config $(DESTDIR)$(OMD_ROOT)/bin
   
 clean:
 	rm -rf $(DIR)
