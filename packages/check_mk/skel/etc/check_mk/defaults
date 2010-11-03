@@ -42,3 +42,7 @@ pnp_templates_dir           = '###ROOT###/share/check_mk/pnp-templates'
 pnp_rraconf_dir             = '###ROOT###/share/check_mk/pnp-rraconf'
 doc_dir                     = '###ROOT###/share/doc/check_mk'
 livebackendsdir             = '###ROOT###/share/check_mk/livestatus'
+
+# Special for OMD
+omd_site                    = '###SITE###'
+omd_root                    = '###ROOT###'
