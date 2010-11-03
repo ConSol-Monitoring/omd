@@ -19,6 +19,7 @@ install:
 	rm -rf $(DESTDIR)$(OMD_ROOT)/skel/etc/jmx4perl
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/skel/etc/jmx4perl
 	rsync -a $(DIR)/config $(DESTDIR)$(OMD_ROOT)/skel/etc/jmx4perl/
+	chmod 644 $(DESTDIR)$(OMD_ROOT)/skel/etc/jmx4perl/config/*.cfg
 	cp -p $(DIR)/blib/script/{jmx4perl,j4psh} $(DESTDIR)$(OMD_ROOT)/bin/
 	[ -d $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins ] || mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins
 	cp -p $(DIR)/blib/script/check_jmx4perl $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins/
