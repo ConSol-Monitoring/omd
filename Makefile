@@ -2,7 +2,23 @@ SHELL = /bin/bash
 include Makefile.omd
 # You can select a subset of the packages by overriding this
 # variale, e.g. make PACKAGES='nagios rrdtool' pack
-PACKAGES = *
+PACKAGES=perl-modules \
+         apache-omd \
+         check_mk \
+         dokuwiki \
+         example \
+         jmx4perl \
+         mk-livestatus \
+         mysql-omd \
+         nagios \
+         nagios-plugins \
+         nagvis \
+         nrpe \
+         nsca \
+         omd \
+         pnp4nagios \
+         rrdtool \
+         thruk
 
 # This file is kept by 'make config' and also may override
 # the list of packages
