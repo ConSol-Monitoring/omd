@@ -25,8 +25,6 @@ skel:
 	       -e 's|###APACHE_FCGID_MODULE###|$(APACHE_FCGID_MODULE)|g' \
 	       $(SKEL)/etc/apache/apache.conf
 	sed -i 's|###APACHE_BIN###|$(APACHE_BIN)|g' $(SKEL)/etc/init.d/apache
-	# Fix permissions
-	chmod +x $(SKEL)/etc/init.d/apache
 	# Create working directories
 	mkdir -p $(SKEL)/var/log/apache
 	mkdir -p $(SKEL)/var/www
