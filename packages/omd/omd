@@ -702,10 +702,26 @@ def merge_update_file(relpath, old_version, new_version):
 
     def try_merge():
         for version in [ old_version, new_version ]:
-            try:
-                skel_content = file("/omd/versions/%s/skel/%s" % (version, relpath)).read()
-            except:
-                skel_content = "" # permission problems in 0.42
+            p = "/omd/versions/%s/skel/%s" % (version, relpath)
+            while True:
+                try:
+                    skel_content = file(p).read()
+                    break
+                except:
+                    if not user_confirms("Skeleton file of version %s not readable" % version,
+                        "The file '%s' is not readable for the site user. "
+                        "This is most probably due a bug in release 0.42. "
+                        "You can either fix that problem by making the file "
+                        "readable with doing as root: chmod +r '%s' " 
+                        "or assume the file as empty. In that case you might "
+                        "damage your configuration file "
+                        "in case you have made changes to it in your site. What shall we do?" %
+                        (p, p),
+                        relpath,
+                        "retry", "Retry reading the file (after you've fixed it)",
+                        "ignore", "Assume the file to be empty"):
+                        skel_content = ""
+                        break
             file("%s-%s" % (user_path, version), "w").write(replace_tags(skel_content, replacements))
         version_patch = os.popen("diff -u %s-%s %s-%s" % (user_path, old_version, user_path, new_version)).read()
 
