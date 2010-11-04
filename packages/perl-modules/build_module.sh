@@ -3,6 +3,11 @@ MODULE=$1
 PERL=$2
 FORCE=$3
 
+if [ -z $MODULE ]; then
+    echo "module name missing";
+    exit 1
+fi
+
 LOG="install.log"
 printf "%-55s" "*** $MODULE"
 
@@ -56,51 +61,59 @@ if [ "$MODNAME" = "DBD::Oracle" ]; then
         if [ -f "$ORACLE_HOME/libclntsh.so" ]; then
             export LD_LIBRARY_PATH=$ORACLE_HOME
         else
-            exit 0
+            echo "skipped"
+            exit 3
         fi
     else
-        exit 0
+        echo "skipped"
+        exit 3
     fi
 fi
 
-$PERL -e "$PRE_CHECK use $MODNAME $MODVERS;" > /dev/null 2>&1
+result=`$PERL -e "$PRE_CHECK use $MODNAME $MODVERS;" 2>&1`
 rc=$?
 if [ "$FORCE" = "testonly" ]; then
   if [ "$rc" = "0" ]; then
-    exit 0;
+    echo "ok"
+    exit 2;
   else
+    echo "failed"
+    echo $result
     exit 1;
   fi
 fi
 if [ "$FORCE" = "no" -a "$rc" = "0" ]; then
-  exit 0;
+  echo "already installed"
+  exit 2;
 fi
 
 if [ ! -e $MODULE ]; then
-    echo "file: $MODULE does not exist"
+    echo "error: $MODULE does not exist"
     exit 1;
 fi
 
 tar zxf $MODULE
 dir=$(basename $MODULE | sed s/\.tar\.gz// )
 cd $dir
+echo "installing... "
 if [ -f Build.PL ]; then
     $PERL Build.PL >> $LOG 2>&1
-    if [ $? != 0 ]; then echo $?; cat $LOG; exit 1; fi
+    if [ $? != 0 ]; then echo "error: $?"; cat $LOG; exit 1; fi
     ./Build >> $LOG 2>&1
-    if [ $? != 0 ]; then echo $?; cat $LOG; exit 1; fi
+    if [ $? != 0 ]; then echo "error: $?"; cat $LOG; exit 1; fi
     ./Build install >> $LOG 2>&1
-    if [ $? != 0 ]; then echo $?; cat $LOG; exit 1; fi
+    if [ $? != 0 ]; then echo "error: $?"; cat $LOG; exit 1; fi
 elif [ -f Makefile.PL ]; then
     echo "" | $PERL Makefile.PL >> $LOG 2>&1
-    if [ $? != 0 ]; then echo $?; cat $LOG; exit 1; fi
+    if [ $? != 0 ]; then echo "error: $?"; cat $LOG; exit 1; fi
     make -j 4 >> $LOG 2>&1
-    if [ $? != 0 ]; then echo $?; cat $LOG; exit 1; fi
+    if [ $? != 0 ]; then echo "error: $?"; cat $LOG; exit 1; fi
     make install >> $LOG 2>&1
-    if [ $? != 0 ]; then echo $?; cat $LOG; exit 1; fi
+    if [ $? != 0 ]; then echo "error: $?"; cat $LOG; exit 1; fi
 else
-    echo "no Build.PL or Makefile.PL found in $MODULE!"
+    echo "error: no Build.PL or Makefile.PL found in $MODULE!"
     exit 1
 fi
 cd ..
 rm -rf $dir
+echo "ok"

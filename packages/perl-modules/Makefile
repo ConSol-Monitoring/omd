@@ -32,6 +32,7 @@ MODULES = ExtUtils-MakeMaker-6.56.tar.gz \
           Config-General-2.49.tar.gz \
           B-Hooks-EndOfScope-0.09.tar.gz \
           Sub-Identify-0.04.tar.gz \
+          threads-1.81.tar.gz \
           Test-Tester-0.107.tar.gz \
           Test-NoWarnings-1.02.tar.gz \
           File-Copy-Recursive-0.38.tar.gz \
@@ -157,14 +158,14 @@ MODULES = ExtUtils-MakeMaker-6.56.tar.gz \
           Monitoring-Availability-0.14.tar.gz \
           YAML-Syck-1.15.tar.gz \
           Math-Calc-Units-1.07.tar.gz \
-		  Config-Tiny-2.13.tar.gz \
+          Config-Tiny-2.13.tar.gz \
           Nagios-Plugin-0.34.tar.gz \
           Term-ShellUI-0.86.tar.gz \
           Term-Size-0.207.tar.gz \
           TermReadKey-2.30.tar.gz \
           Term-Clui-1.61.tar.gz \
           File-SearchPath-0.05.tar.gz \
-		  Term-ReadLine-Gnu-1.20.tar.gz \
+          Term-ReadLine-Gnu-1.20.tar.gz \
           DBD-mysql-4.018.tar.gz \
           DBD-Oracle-1.26.tar.gz
 
@@ -174,10 +175,7 @@ build:
 	cd src; \
 	for tarball in $(MODULES); do \
 	    PERL_MM_OPT=INSTALL_BASE=$$(pwd)/../dist MODULEBUILDRC=$$(pwd)/../dist/.modulebuildrc PERL5LIB=$$(pwd)/../dist/lib/perl5:$$(pwd)/../dist/lib/perl5/$(PERLARCH) ../build_module.sh $$tarball $(PERL); \
-	    if [ $$? -eq 0 ]; then \
-	        echo "   ok"; \
-	    else \
-	        echo "   not ok"; \
+	    if [ $$? -eq 1 ]; then \
 	        exit 1; \
 	    fi; \
 	done
@@ -199,10 +197,7 @@ test:
 	cd src; \
 	for tarball in $(MODULES); do \
 	    PERL_MM_OPT=INSTALL_BASE=$$(pwd)/../dist MODULEBUILDRC=$$(pwd)/../dist/.modulebuildrc PERL5LIB=$$(pwd)/../dist/lib/perl5:$$(pwd)/../dist/lib/perl5/$(PERLARCH) ../build_module.sh $$tarball $(PERL) testonly; \
-	    if [ $$? -eq 0 ]; then \
-	        echo "   ok"; \
-	    else \
-	        echo "   not ok"; \
+	    if [ $$? -eq 1 ]; then \
 	        exit 1; \
 	    fi; \
 	done
