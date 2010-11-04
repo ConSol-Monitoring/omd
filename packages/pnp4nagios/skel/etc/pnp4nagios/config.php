@@ -182,6 +182,7 @@ $conf['RRD_DAEMON_OPTS'] = 'unix:###ROOT###/tmp/run/rrdcached.sock';
 # Add your own template directories here
 # First match wins!
 $conf['template_dirs'][] = '###ROOT###/etc/pnp4nagios/templates';
+$conf['template_dirs'][] = '###ROOT###/local/share/check_mk/pnp-templates'; 
 $conf['template_dirs'][] = '###ROOT###/share/check_mk/pnp-templates';
 $conf['template_dirs'][] = '###ROOT###/share/pnp4nagios/htdocs/templates';
 $conf['template_dirs'][] = '###ROOT###/share/pnp4nagios/htdocs/templates.dist';

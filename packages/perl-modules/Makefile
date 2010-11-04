@@ -164,7 +164,9 @@ MODULES = ExtUtils-MakeMaker-6.56.tar.gz \
           TermReadKey-2.30.tar.gz \
           Term-Clui-1.61.tar.gz \
           File-SearchPath-0.05.tar.gz \
-		  Term-ReadLine-Gnu-1.20.tar.gz
+		  Term-ReadLine-Gnu-1.20.tar.gz \
+          DBD-mysql-4.018.tar.gz \
+          DBD-Oracle-1.26.tar.gz
 
 build:
 	test -d dist || mkdir dist

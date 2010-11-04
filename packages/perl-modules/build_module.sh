@@ -45,6 +45,17 @@ fi
 if [ "$MODNAME" = "Package::DeprecationManager" ]; then
     MODVERS="$MODVERS -deprecations => { blah => foo }"
 fi
+if [ "$MODNAME" = "DBD::Oracle" ]; then
+    if [ -n "$ORACLE_HOME" ]; then
+        if [ -f "$ORACLE_HOME/libclntsh.so" ]; then
+            export LD_LIBRARY_PATH=$ORACLE_HOME
+        else
+            exit 0
+        fi
+    else
+        exit 0
+    fi
+fi
 
 $PERL -e "use $MODNAME $MODVERS;" > /dev/null 2>&1
 rc=$?

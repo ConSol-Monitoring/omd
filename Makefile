@@ -4,7 +4,10 @@ include Makefile.omd
 # variale, e.g. make PACKAGES='nagios rrdtool' pack
 PACKAGES=perl-modules \
          apache-omd \
+         check_logfiles \
          check_mk \
+         check_mysql_health \
+         check_oracle_health \
          dokuwiki \
          example \
          jmx4perl \
