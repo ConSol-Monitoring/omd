@@ -20,8 +20,6 @@ if [ -z $PERL5LIB ]; then
   cd src
 fi
 
-# the Scalar::List::Utils tarball contains List::Util::XS, so do a rewrite here
-#PMOD=`echo $MODULE | sed -e 's/\-\([0-9].*\)\.tar\.gz/ \1/g' | sed -e 's/\-/::/g' | sed -e s/Scalar::List::Utils/List::Util::XS/g`
 PMOD=`echo $MODULE | sed -e 's/\-\([0-9].*\)\.tar\.gz/ \1/g' | sed -e 's/\-/::/g'`
 MODNAME=`echo $PMOD | awk '{ print $1 }'`
 MODVERS=`echo $PMOD | awk '{ print $2 }'`
@@ -79,7 +77,6 @@ tar zxf $MODULE
 dir=$(basename $MODULE | sed s/\.tar\.gz// )
 cd $dir
 if [ -f Build.PL ]; then
-    #$PERL Build.PL 2>&1 | tee -a $LOG | grep 'not found'
     $PERL Build.PL >> $LOG 2>&1
     if [ $? != 0 ]; then echo $?; cat $LOG; exit 1; fi
     ./Build >> $LOG 2>&1
@@ -87,7 +84,6 @@ if [ -f Build.PL ]; then
     ./Build install >> $LOG 2>&1
     if [ $? != 0 ]; then echo $?; cat $LOG; exit 1; fi
 elif [ -f Makefile.PL ]; then
-    #echo "" | $PERL Makefile.PL 2>&1 | tee -a $LOG | grep 'not found'
     echo "" | $PERL Makefile.PL >> $LOG 2>&1
     if [ $? != 0 ]; then echo $?; cat $LOG; exit 1; fi
     make -j 4 >> $LOG 2>&1
