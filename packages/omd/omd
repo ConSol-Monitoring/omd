@@ -1477,6 +1477,9 @@ def main_help(args=[], options={}):
                 synopsis = "SITE " + synopsis
 
         sys.stdout.write(" omd %-10s %-16s %s\n" % (command, synopsis, descr))
+    sys.stdout.write("\nGeneral Options:\n"
+                     " -V <version>                    set specific version, usefull in combination with update/create\n"
+                    )
 
 def main_setup(args, options={}):
     packages = g_info["OS_PACKAGES"].split()
