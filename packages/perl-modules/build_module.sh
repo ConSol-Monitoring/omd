@@ -95,7 +95,7 @@ fi
 tar zxf $MODULE
 dir=$(basename $MODULE | sed s/\.tar\.gz// )
 cd $dir
-echo "installing... "
+printf "installing... "
 if [ -f Build.PL ]; then
     $PERL Build.PL >> $LOG 2>&1
     if [ $? != 0 ]; then echo "error: $?"; cat $LOG; exit 1; fi
