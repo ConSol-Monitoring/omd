@@ -1616,6 +1616,7 @@ def main_rm(args, options={}):
 
     # remove include-hook for Apache and tell apache
     delete_apache_hook(g_sitename)
+    os.chdir("/") # Site dir not longer existant
     restart_apache()
 
 def main_mv_or_cp(what, args, options={}):
