@@ -6,6 +6,7 @@ PACKAGES=perl-modules \
          apache-omd \
          check_logfiles \
          check_mk \
+         check_mysql_health \
          dokuwiki \
          example \
          jmx4perl \
