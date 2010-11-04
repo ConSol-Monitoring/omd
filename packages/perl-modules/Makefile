@@ -166,6 +166,7 @@ MODULES = ExtUtils-MakeMaker-6.56.tar.gz \
           Term-Clui-1.61.tar.gz \
           File-SearchPath-0.05.tar.gz \
           Term-ReadLine-Gnu-1.20.tar.gz \
+          DBI-1.615.tar.gz \
           DBD-mysql-4.018.tar.gz \
           DBD-Oracle-1.26.tar.gz
 
