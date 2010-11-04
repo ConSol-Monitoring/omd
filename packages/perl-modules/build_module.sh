@@ -1,5 +1,4 @@
 #!/bin/bash
-
 MODULE=$1
 PERL=$2
 FORCE=$3
@@ -40,6 +39,15 @@ fi
 if [ "$MODNAME" = "IO::stringy" ]; then
     MODNAME="IO::Scalar"
 fi
+if [ "$MODNAME" = "TermReadKey" ]; then
+    MODNAME="Term::ReadKey"
+fi
+if [ "$MODNAME" = "IO::Compress" ]; then
+    MODNAME="IO::Compress::Base"
+fi
+if [ "$MODNAME" = "Term::ReadLine::Gnu" ]; then
+    PRE_CHECK="use Term::ReadLine; "
+fi
 if [ "$MODNAME" = "Package::DeprecationManager" ]; then
     MODVERS="$MODVERS -deprecations => { blah => foo }"
 fi
@@ -55,7 +63,7 @@ if [ "$MODNAME" = "DBD::Oracle" ]; then
     fi
 fi
 
-$PERL -e "use $MODNAME $MODVERS;" > /dev/null 2>&1
+$PERL -e "$PRE_CHECK use $MODNAME $MODVERS;" > /dev/null 2>&1
 rc=$?
 if [ "$FORCE" = "testonly" ]; then
   if [ "$rc" = "0" ]; then
