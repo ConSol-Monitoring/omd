@@ -56,3 +56,10 @@ Index of patches
 
 0011:
     This patches removes a useless loop in the status summary page.
+
+0012:
+    The patch merges the configuration files from nagios.d dir to nagios.cfg.
+    in the init script of nagios.
+
+0013:
+    This patch ensures a good OMD environment for the init script
