@@ -29,7 +29,7 @@ elsif($> != 0) {
 sub test_command {
     my $test = shift;
     my($prg,$arg) = split(/\s+/, $test->{'cmd'}, 2);
-    my $t = Test::Cmd->new(prog => $prg, workdir => '');
+    my $t = Test::Cmd->new(prog => $prg, workdir => '') or die($!);
     $t->run(args => $arg, stdin => $test->{'stdin'});
 
     # run the command

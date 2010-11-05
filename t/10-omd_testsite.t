@@ -10,7 +10,7 @@ BEGIN {
     import TestUtils;
 }
 
-plan( tests => 132 );
+plan( tests => 124 );
 
 ########################################
 # execute some commands
@@ -31,7 +31,8 @@ my $tests = [
                                                ]
   },
 
-  { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -H localhost -u /$site -e 401'",          exp => '/HTTP OK:/' },
+  { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -H localhost -u /$site -e 302'",          exp => '/HTTP OK:/' },
+  { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -H localhost -u /$site/ -e 302'",         exp => '/HTTP OK:/' },
   { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -H localhost -u /$site/omd -e 401'",      exp => '/HTTP OK:/' },
   { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -H localhost -u /$site/nagios -e 401'",   exp => '/HTTP OK:/' },
   { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -H localhost -u /$site/check_mk -e 401'", exp => '/HTTP OK:/' },
