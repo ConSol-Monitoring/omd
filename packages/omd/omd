@@ -1159,24 +1159,27 @@ def init_scripts(sitename):
     except:
         return rc_dir, []
 
-def call_init_scripts(sitename, command):
+def call_init_scripts(sitename, command, daemon = None):
     # Restart: Do not restart each service after another,
     # but first do stop all, then start all again! This
     # preserves the order.
     if command == "restart":
-        call_init_scripts(sitename, "stop")
-        call_init_scripts(sitename, "start")
+        call_init_scripts(sitename, "stop", daemon)
+        call_init_scripts(sitename, "start", daemon)
         return
 
     # OMD guarantees OMD_ROOT to be the current directory
     os.chdir(site_dir(sitename))
 
-    # Call stop scripts in reverse order
+    # Call stop scripts in reverse order. If daemon is set,
+    # then only that start script will be affected
     rc_dir, scripts = init_scripts(sitename)
     if command == "stop":
         scripts.reverse()
     ok = True
     for script in scripts:
+        if daemon and script.split("-")[-1] != daemon:
+            continue
         if not os.system("%s/%s %s" % (rc_dir, script, command)) >> 8 in [ 0, 5 ]:
             ok = False
     if ok:
@@ -1184,12 +1187,15 @@ def call_init_scripts(sitename, command):
     else:
          return 2
 
-def check_status(sitename, display=True):
+def check_status(sitename, display=True, daemon=None):
     num_running = 0
     num_unused = 0
+    num_stopped = 0
     rc_dir, scripts = init_scripts(sitename)
     for script in scripts:
         komponent = script.split("/")[-1].split('-')[-1]
+        if daemon and komponent != daemon:
+            continue
         if display:
             sys.stdout.write("%-16s" % (komponent + ":"))
         state = os.system("%s/%s status >/dev/null 2>&1" % (rc_dir, script)) >> 8
@@ -1206,15 +1212,19 @@ def check_status(sitename, display=True):
         else:
             if display:
                 sys.stdout.write(tty_red + "stopped")
+            num_stopped += 1
         if display:
             sys.stdout.write(tty_normal + "\n")
 
-    if num_running == 0:
+    if num_stopped > 0 and num_running == 0:
         exit_code = 1
         ovstate = tty_red + "stopped"
-    elif num_running + num_unused == len(scripts):
+    elif num_running > 0 and num_stopped == 0:
         exit_code = 0
         ovstate = tty_green + "running"
+    elif num_running == 0 and num_stopped == 0:
+        exit_code = 0
+        ovstate = tty_blue + "unused"
     else:
         exit_code = 2
         ovstate = tty_yellow + "partially running"
@@ -1443,17 +1453,22 @@ def config_configure_hook(hookname):
     if change:
         config_set_value(hook["name"], new_value)
 
-def init_action(command):
+def init_action(command, args):
     if command == "start":
         create_tmpfs(g_sitename)
+
+    if len(args) > 0:
+        daemon = args[0] # restrict to this daemon
+    else:
+        daemon = None
 
     # OMD guarantees that we are in OMD_ROOT
     os.chdir(g_sitedir)
 
     if command == "status":
-        return check_status(g_sitename)
+        return check_status(g_sitename, True, daemon)
     else:
-        return call_init_scripts(g_sitename, command)
+        return call_init_scripts(g_sitename, command, daemon)
 
 # ----------------------------------------------------------
 #                                                  _
@@ -1836,7 +1851,7 @@ def main_init_action(command, args, options={}):
             exit_status = max(exit_status, os.system("%s %s %s %s" % (sys.argv[0], command, site, " ".join(args))))
             sys.stdout.write("\n")
     else:
-	exit_status = init_action(command)
+	exit_status = init_action(command, args)
     sys.exit(exit_status)
 
 def main_config(args, options={}):
@@ -1934,27 +1949,27 @@ commands = [
     "Update site to other version of OMD",
     ""),
 
-  ( "start",     False, 2, 1, False, "", lambda args, opts: main_init_action("start", args, opts),
+  ( "start",     False, 2, 1, False, "[SERVICE]", lambda args, opts: main_init_action("start", args, opts),
     [ ( "version", "V", True ) ],
     "Start services of one or all sites",
     ""),
 
-  ( "stop",      False, 2, 1, False, "", lambda args, opts: main_init_action("stop", args, opts),
+  ( "stop",      False, 2, 1, False, "[SERVICE]", lambda args, opts: main_init_action("stop", args, opts),
     [ ( "version", "V", True ) ],
     "Stop services of site(s)",
     ""),
 
-  ( "restart",   False, 2, 1, False, "", lambda args, opts: main_init_action("restart", args, opts),
+  ( "restart",   False, 2, 1, False, "[SERVICE]", lambda args, opts: main_init_action("restart", args, opts),
     [ ( "version", "V", True ) ],
     "Restart services of site(s)",
     ""),
 
-  ( "reload",    False, 2, 1, False, "", lambda args, opts: main_init_action("reload", args, opts),
+  ( "reload",    False, 2, 1, False, "[SERVICE]", lambda args, opts: main_init_action("reload", args, opts),
     [ ( "version", "V", True ) ],
     "Reload services of site(s)",
     ""),
 
-  ( "status",    False, 2, 1, False, "", lambda args, opts: main_init_action("status", args, opts),
+  ( "status",    False, 2, 1, False, "[SERVICE]", lambda args, opts: main_init_action("status", args, opts),
     [ ( "version", "V", True ) ],
     "Show status of services of site(s)",
     ""),
