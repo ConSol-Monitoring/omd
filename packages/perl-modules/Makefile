@@ -175,7 +175,7 @@ build:
 	echo "install  --install_base  $$(pwd)/dist" > dist/.modulebuildrc
 	cd src; \
 	for tarball in $(MODULES); do \
-	    PERL_MM_OPT=INSTALL_BASE=$$(pwd)/../dist MODULEBUILDRC=$$(pwd)/../dist/.modulebuildrc PERL5LIB=$$(pwd)/../dist/lib/perl5:$$(pwd)/../dist/lib/perl5/$(PERLARCH) ../build_module.sh $$tarball $(PERL); \
+	    PERL_MM_OPT=INSTALL_BASE=$$(pwd)/../dist MODULEBUILDRC=$$(pwd)/../dist/.modulebuildrc PERL5LIB=$$(pwd)/../dist/lib/perl5:$$(pwd)/../dist/lib/perl5/$(PERLARCH) ./build_module.sh $$tarball $(PERL); \
 	    if [ $$? -eq 1 ]; then \
 	        exit 1; \
 	    fi; \
@@ -197,7 +197,7 @@ clean:
 test:
 	cd src; \
 	for tarball in $(MODULES); do \
-	    PERL_MM_OPT=INSTALL_BASE=$$(pwd)/../dist MODULEBUILDRC=$$(pwd)/../dist/.modulebuildrc PERL5LIB=$$(pwd)/../dist/lib/perl5:$$(pwd)/../dist/lib/perl5/$(PERLARCH) ../build_module.sh $$tarball $(PERL) testonly; \
+	    PERL_MM_OPT=INSTALL_BASE=$$(pwd)/../dist MODULEBUILDRC=$$(pwd)/../dist/.modulebuildrc PERL5LIB=$$(pwd)/../dist/lib/perl5:$$(pwd)/../dist/lib/perl5/$(PERLARCH) ./build_module.sh $$tarball $(PERL) testonly; \
 	    if [ $$? -eq 1 ]; then \
 	        exit 1; \
 	    fi; \
