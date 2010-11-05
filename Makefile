@@ -8,6 +8,7 @@ PACKAGES=perl-modules \
          check_mk \
          check_mysql_health \
          check_oracle_health \
+         check_webinject \
          dokuwiki \
          example \
          jmx4perl \

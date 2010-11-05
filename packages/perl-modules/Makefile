@@ -168,7 +168,11 @@ MODULES = ExtUtils-MakeMaker-6.56.tar.gz \
           Term-ReadLine-Gnu-1.20.tar.gz \
           DBI-1.615.tar.gz \
           DBD-mysql-4.018.tar.gz \
-          DBD-Oracle-1.26.tar.gz
+          DBD-Oracle-1.26.tar.gz \
+          XML-NamespaceSupport-1.11.tar.gz \
+          XML-SAX-0.96.tar.gz \
+          XML-Simple-2.18.tar.gz \
+          Error-0.17016.tar.gz
 
 build:
 	test -d dist || mkdir dist
