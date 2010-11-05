@@ -70,8 +70,13 @@ if [ "$MODNAME" = "DBD::Oracle" ]; then
     fi
 fi
 
-result=`$PERL -e "$PRE_CHECK use $MODNAME $MODVERS;" 2>&1`
+MODFILE=`echo "$MODNAME.pm" | sed -e 's/::/\//g'`
+result=`$PERL -MData::Dumper -e "$PRE_CHECK use $MODNAME $MODVERS; print Dumper \%INC" 2>&1`
 rc=$?
+if [ $rc = 0 ]; then
+    echo $result | grep /dist/lib/perl5/ |  grep $MODFILE > /dev/null 2>&1
+    rc=$?
+fi
 if [ "$FORCE" = "testonly" ]; then
   if [ "$rc" = "0" ]; then
     echo "ok"
