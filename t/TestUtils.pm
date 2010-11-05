@@ -31,14 +31,15 @@ sub test_command {
     my($prg,$arg) = split(/\s+/, $test->{'cmd'}, 2);
     my $t = Test::Cmd->new(prog => $prg, workdir => '') or die($!);
     $t->run(args => $arg, stdin => $test->{'stdin'});
+    my $rc = $?>>8;
 
     # run the command
-    isnt($?, undef, "cmd: ".$test->{'cmd'});
+    isnt($rc, undef, "cmd: ".$test->{'cmd'});
 
     # exit code?
     $test->{'exit'} = 0 unless exists $test->{'exit'};
     if(defined $test->{'exit'}) {
-        ok($? == $test->{'exit'}, "exit code == ".$test->{'exit'});
+        ok($rc == $test->{'exit'}, "exit code: ".$rc." == ".$test->{'exit'});
     }
 
     # matches on stdout?
