@@ -1,18 +1,11 @@
 <?php
 
-if(preg_match ("/^\/opt\/omd\//", __FILE__)){
-    $parts = preg_split('/\//', __FILE__ );
-    define('OMD', TRUE);
-    define('OMD_VERSION', $parts[4]);
-    define('OMD_ROOT', sprintf('/%s/%s/%s/%s',
-$parts[1],$parts[2],$parts[3],$parts[4]));
-    $parts = preg_split('/\//', $_SERVER['REQUEST_URI'] );
-    define('OMD_SITE', $parts[1]);
-    define('OMD_SITE_ROOT', '/opt/omd/sites/'.$parts[1]);
-    define('DOKU_CONF', '/opt/omd/sites/'.$parts[1].'/etc/dokuwiki/');
-    unset($parts);
-}else{
-    define('OMD', FALSE);
+if(substr($_SERVER["SCRIPT_FILENAME"], 0, 4) == '/omd') {
+    $site_parts = array_slice(explode('/' ,dirname($_SERVER["SCRIPT_FILENAME"])), 0, 4);
+    $site = $site_parts[count($site_parts)-1];
+    define('DOKU_CONF', '/omd/sites/'.$site.'/etc/dokuwiki/');
+    unset($site_parts);
+    unset($site);
 }
 
 $config_cascade = array(
