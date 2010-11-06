@@ -63,3 +63,7 @@ Index of patches
 
 0013:
     This patch ensures a good OMD environment for the init script
+
+0014:
+    Hopefully the last patch to the nagios init script. It prevents starting
+		nagios a second time when already running.
