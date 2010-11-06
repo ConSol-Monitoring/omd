@@ -10,17 +10,18 @@ BEGIN {
     import TestUtils;
 }
 
-plan( tests => 40 );
+plan( tests => 76 );
 
 ##################################################
 # create our test site
 my $site = TestUtils::create_test_site() or BAIL_OUT("no further testing without site");
 
+# not started site should give a nice error
+TestUtils::test_command({ cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -H localhost -u /$site -e 503 -r \"OMD: Site Not Started\"'",  exp => '/HTTP OK:/' });
+
 ##################################################
 # execute some checks
 my $tests = [
-  { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -H localhost -u /$site -e 503' -r \"OMD: Site Not Started\"",  exp => '/HTTP OK:/' },
-
   { cmd => "/usr/bin/omd start $site" },
 
   { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -H localhost -u /$site -e 302'",                      exp => '/HTTP OK:/' },
@@ -32,6 +33,15 @@ my $tests = [
 
   { cmd => "/usr/bin/omd stop $site" },
 ];
+for my $test (@{$tests}) {
+    TestUtils::test_command($test);
+}
+
+# switch webserver to shared mode
+TestUtils::test_command({ cmd => "/usr/bin/omd config $site set WEBSERVER shared" });
+TestUtils::test_command({ cmd => "/etc/init.d/apache2 reload" });
+
+# then run tests again
 for my $test (@{$tests}) {
     TestUtils::test_command($test);
 }

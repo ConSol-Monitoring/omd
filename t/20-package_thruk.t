@@ -10,7 +10,7 @@ BEGIN {
     import TestUtils;
 }
 
-plan( tests => 32 );
+plan( tests => 64 );
 
 ##################################################
 # create our test site
@@ -29,6 +29,15 @@ my $tests = [
 
   { cmd => "/usr/bin/omd stop $site" },
 ];
+for my $test (@{$tests}) {
+    TestUtils::test_command($test);
+}
+
+# switch webserver to shared mode
+TestUtils::test_command({ cmd => "/usr/bin/omd config $site set WEBSERVER shared" });
+TestUtils::test_command({ cmd => "/etc/init.d/apache2 reload" });
+
+# then run tests again
 for my $test (@{$tests}) {
     TestUtils::test_command($test);
 }

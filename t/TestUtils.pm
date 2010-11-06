@@ -19,6 +19,19 @@ elsif($> != 0) {
     plan( skip_all => "creating testsite requires root permission" );
 }
 
+
+##################################################
+
+=head2 read_distro_config
+
+  read the distro config
+
+=cut
+
+sub read_distro_config {
+    #/omd/versions/default/share/omd/distro.info
+}
+
 ##################################################
 
 =head2 test_command
@@ -55,6 +68,11 @@ sub test_command {
         for my $expr (ref $test->{'errexp'} eq 'ARRAY' ? @{$test->{'errexp'}} : $test->{'errexp'} ) {
             like($t->stderr, $expr, "stderr like ".$expr) or diag("stderr failed: ".$t->stderr());
         }
+    }
+
+    # sleep after the command?
+    if(defined $test->{'sleep'}) {
+        ok(sleep($test->{'sleep'}), "slept $test->{'sleep'} seconds");
     }
 }
 
