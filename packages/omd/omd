@@ -1643,6 +1643,7 @@ def main_rm(args, options={}):
 
     remove_from_fstab(g_sitename)
     sys.stdout.write("Deleting user and group %s..." % g_sitename)
+    os.chdir("/") # Site dir not longer existant after userdel
     userdel(g_sitename)
     sys.stdout.write(tty_ok + "\n")
 
@@ -1653,7 +1654,6 @@ def main_rm(args, options={}):
 
     # remove include-hook for Apache and tell apache
     delete_apache_hook(g_sitename)
-    os.chdir("/") # Site dir not longer existant
     restart_apache()
 
 def main_mv_or_cp(what, args, options={}):
