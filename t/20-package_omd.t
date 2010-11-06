@@ -17,19 +17,19 @@ plan( tests => 76 );
 my $site = TestUtils::create_test_site() or BAIL_OUT("no further testing without site");
 
 # not started site should give a nice error
-TestUtils::test_command({ cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -H localhost -u /$site -e 503 -r \"OMD: Site Not Started\"'",  exp => '/HTTP OK:/' });
+TestUtils::test_command({ cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -H localhost -u /$site -e 503 -r \"OMD: Site Not Started\"'",  like => '/HTTP OK:/' });
 
 ##################################################
 # execute some checks
 my $tests = [
   { cmd => "/usr/bin/omd start $site" },
 
-  { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -H localhost -u /$site -e 302'",                      exp => '/HTTP OK:/' },
-  { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -H localhost -u /$site/ -e 302'",                     exp => '/HTTP OK:/' },
-  { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -H localhost -u /$site/omd -e 401'",                  exp => '/HTTP OK:/' },
-  { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -H localhost -a omdadmin:omd -u /$site -e 302'",      exp => '/HTTP OK:/' },
-  { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -H localhost -a omdadmin:omd -u /$site/omd -e 301'",  exp => '/HTTP OK:/' },
-  { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -H localhost -a omdadmin:omd -u /$site/omd/ -e 200'", exp => '/HTTP OK:/' },
+  { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -H localhost -u /$site -e 302'",                      like => '/HTTP OK:/' },
+  { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -H localhost -u /$site/ -e 302'",                     like => '/HTTP OK:/' },
+  { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -H localhost -u /$site/omd -e 401'",                  like => '/HTTP OK:/' },
+  { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -H localhost -a omdadmin:omd -u /$site -e 302'",      like => '/HTTP OK:/' },
+  { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -H localhost -a omdadmin:omd -u /$site/omd -e 301'",  like => '/HTTP OK:/' },
+  { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -H localhost -a omdadmin:omd -u /$site/omd/ -e 200'", like => '/HTTP OK:/' },
 
   { cmd => "/usr/bin/omd stop $site" },
 ];
