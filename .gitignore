@@ -11,3 +11,4 @@ build-stamp
 patch-stamp
 .config
 *.log
+debian/changelog

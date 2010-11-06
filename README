@@ -22,7 +22,7 @@ What OMD contains
 OMD is no new Linux distribution. It is a collection of different software
 packages round about Nagios:
 
-  * nagios-3.2.2
+  * nagios
   * nagvis
   * pnp4nagios
   * rrdtool
@@ -32,9 +32,10 @@ packages round about Nagios:
   * dokuwiki
   * nsca
   * check_nrpe
-
-There are plans to integrate merlin, thruk, icinga and some important plugins
-too (check_logfiles, check_oracle_health, check_mysql_health, check_multi).
+  * Thruk
+  * check_oracle_health
+  * jmx4perl
+  * others...
 
 Features
 --------
@@ -70,8 +71,18 @@ Features
   OMD installs to /opt/omd on all plattforms. If you don't like this, you can
   symlink omd to every location you want.
 
+Licensing
+---------
+OMD is available under the terms of the GNU General Public License of
+version 2.  You find those terms in the file COPYING. Please note, that that
+license only applies to OMD itself (its scripts, patches, configuration files,
+etc.). The licenses of the packages it ships may differ. Please checkout
+those packages for details on their licensing.
+
 Further information
 -------------------
-
 Visit the OMD homepage at http://omdistro.org for online documentation,
 new releases, information on the mailing lists, etc.
+
+Some german documentation is available under http://mathias-kettner.de/omd.html.
+
