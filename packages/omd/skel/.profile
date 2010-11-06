@@ -16,5 +16,7 @@ then
     eval $(egrep -v '^[[:space:]]*(#|$)' < ~/etc/environment | sed 's/^/export /')
 fi
 
-. ~/.bashrc
-
+# Only load bashrc when in a bash shell
+if [ "$BASH" ]; then
+    . ~/.bashrc
+fi
