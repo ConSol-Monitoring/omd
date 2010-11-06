@@ -62,9 +62,10 @@ chkconfig omd on
 # SLES: make sure apache modules are activated
 if which a2enmod >/dev/null 2>&1
 then
-    echo "Makeing sure that Apache modules proxy and http_proxy are activated."
+    echo "Makeing sure that Apache modules proxy, http_proxy and rewrite are activated."
     a2enmod proxy 2>/dev/null || true
     a2enmod proxy_http 2>/dev/null || true
+    a2enmod rewrite 2>/dev/null || true
 fi
 
 # SLES: make sure that the following file exists:

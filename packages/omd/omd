@@ -1508,7 +1508,7 @@ def main_setup(args, options={}):
         sys.stdout.write(tty_ok + "\n")
 
     # Enable Apache modules
-    for mod in [ "proxy", "proxy_http" ]:
+    for mod in [ "proxy", "proxy_http", "rewrite" ]:
         command = g_info["APACHE_ENMOD"] % mod
         if 0 != os.system(command):
             sys.stdout.write("ERROR: Could not enable Apache module mod_%s\n" % mod)
