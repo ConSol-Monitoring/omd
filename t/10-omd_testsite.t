@@ -31,8 +31,8 @@ my $tests = [
                                                ]
   },
   { cmd => "/usr/bin/omd stop $site",       exp => '/Stopping nagios:/' },
-  { cmd => "/usr/bin/omd cp $site $site2",  exp => '/Cping site '.$site.' to '.$site2.'.../', errexp => '/Apache port \d+ is in use\. I\'ve choosen \d+ instead\./' },
-  { cmd => "/usr/bin/omd mv $site2 $site3", exp => '/Mving site '.$site2.' to '.$site3.'.../' },
+  { cmd => "/usr/bin/omd cp $site $site2",  exp => '/Copying site '.$site.' to '.$site2.'.../', errexp => '/Apache port \d+ is in use\. I\'ve choosen \d+ instead\./' },
+  { cmd => "/usr/bin/omd mv $site2 $site3", exp => '/Moving site '.$site2.' to '.$site3.'.../' },
   { cmd => "/usr/bin/omd rm $site3",        exp => '/Restarting Apache...OK/', stdin => "yes\n" },
   { cmd => "/usr/bin/omd rm $site",         exp => '/Restarting Apache...OK/', stdin => "yes\n" },
 ];
