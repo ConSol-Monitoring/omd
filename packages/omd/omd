@@ -1676,7 +1676,7 @@ def main_mv_or_cp(what, args, options={}):
         unmount_tmpfs(old)
         remove_from_fstab(old)
 
-    sys.stdout.write("%sing site %s to %s..." % (what.title(), old, new))
+    sys.stdout.write("%sing site %s to %s..." % (what == "mv" and "Mov" or "Copy", old, new))
     sys.stdout.flush()
 
     if what == "mv":
