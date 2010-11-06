@@ -1573,17 +1573,21 @@ def main_sites(args, options={}):
     for site in all_sites():
 	sys.stdout.write("%-16s %s\n" % (site, site_version(site)))
 
-def main_create(args, options={}):
+# Bail out if name for new site is not valid (needed by create/mv/cp)
+def sitename_must_be_valid(name):
     # Make sanity checks before starting any action
-    if site_exists(g_sitename):
-        bail_out("Site '%s' already existing.\n" % g_sitename)
-    if group_exists(g_sitename):
-        bail_out("Group '%s' already existing.\n" % g_sitename)
-    if user_exists(g_sitename):
-        bail_out("User '%s' already existing.\n" % g_sitename)
-    if not re.match("^[a-zA-Z_][a-zA-Z_0-9]{0,15}$", g_sitename):
+    if site_exists(name):
+        bail_out("Site '%s' already existing.\n" % name)
+    if group_exists(name):
+        bail_out("Group '%s' already existing.\n" % name)
+    if user_exists(name):
+        bail_out("User '%s' already existing.\n" % name)
+    if not re.match("^[a-zA-Z_][a-zA-Z_0-9]{0,15}$", name):
 	bail_out("Invalid site name. Must begin with a character, may contain characters, digits and _ and have length 1 up to 16\n")
 
+
+def main_create(args, options={}):
+    sitename_must_be_valid(g_sitename)
 
     # Create operating system user for site
     useradd(g_sitename)
@@ -1665,8 +1669,7 @@ def main_mv_or_cp(what, args, options={}):
 	bail_out("omd: Usage: omd %s oldname newname\n" % what)
     new = args[0]
 
-    if site_exists(new):
-        bail_out("Site %s already existing.\n" % new)
+    sitename_must_be_valid(new)
 
     old = g_sitename
     if site_is_running(old):
