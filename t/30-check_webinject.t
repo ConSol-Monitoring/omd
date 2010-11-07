@@ -21,7 +21,7 @@ my $site = TestUtils::create_test_site() or BAIL_OUT("no further testing without
 my $tests = [
   { cmd => "/usr/bin/omd start $site" },
 
-  { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_webinject'", exit => 3, exp => '/find any test case files to run./' },
+  { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_webinject'", exit => 3, like => '/find any test case files to run./' },
 
   { cmd => "/usr/bin/omd stop $site" },
 ];

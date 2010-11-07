@@ -18,11 +18,11 @@ my $site  = 'testsite';
 my $site2 = 'testsite2';
 my $site3 = 'testsite3';
 my $tests = [
-  { cmd => "/usr/bin/omd versions",     exp => '/^\d+\.\d+/'  },
-  { cmd => "/usr/bin/omd create $site", exp => '/Successfully created site '.$site.'./' },
-  { cmd => "/usr/bin/omd sites",        exp => '/^'.$site.'\s+\d+\.\d+/' },
-  { cmd => "/usr/bin/omd start $site",  exp => '/Starting nagios:/' },
-  { cmd => "/usr/bin/omd status $site", exp => [
+  { cmd => "/usr/bin/omd versions",     like => '/^\d+\.\d+/'  },
+  { cmd => "/usr/bin/omd create $site", like => '/Successfully created site '.$site.'./' },
+  { cmd => "/usr/bin/omd sites",        like => '/^'.$site.'\s+\d+\.\d+/' },
+  { cmd => "/usr/bin/omd start $site",  like => '/Starting nagios:/' },
+  { cmd => "/usr/bin/omd status $site", like => [
                                                 '/apache:\s*running/',
                                                 '/rrdcached:\s*running/',
                                                 '/npcd:\s*running/',
@@ -30,11 +30,11 @@ my $tests = [
                                                 '/Overall state:\s*running/',
                                                ]
   },
-  { cmd => "/usr/bin/omd stop $site",       exp => '/Stopping nagios:/' },
-  { cmd => "/usr/bin/omd cp $site $site2",  exp => '/Cping site '.$site.' to '.$site2.'.../', errexp => '/Apache port \d+ is in use\. I\'ve choosen \d+ instead\./' },
-  { cmd => "/usr/bin/omd mv $site2 $site3", exp => '/Mving site '.$site2.' to '.$site3.'.../' },
-  { cmd => "/usr/bin/omd rm $site3",        exp => '/Restarting Apache...OK/', stdin => "yes\n" },
-  { cmd => "/usr/bin/omd rm $site",         exp => '/Restarting Apache...OK/', stdin => "yes\n" },
+  { cmd => "/usr/bin/omd stop $site",       like => '/Stopping nagios:/' },
+  { cmd => "/usr/bin/omd cp $site $site2",  like => '/Copying site '.$site.' to '.$site2.'.../', errlike => '/Apache port \d+ is in use\. I\'ve choosen \d+ instead\./' },
+  { cmd => "/usr/bin/omd mv $site2 $site3", like => '/Moving site '.$site2.' to '.$site3.'.../' },
+  { cmd => "/usr/bin/omd rm $site3",        like => '/Restarting Apache...OK/', stdin => "yes\n" },
+  { cmd => "/usr/bin/omd rm $site",         like => '/Restarting Apache...OK/', stdin => "yes\n" },
 ];
 
 # run tests

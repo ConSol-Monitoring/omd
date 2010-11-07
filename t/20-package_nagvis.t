@@ -21,10 +21,10 @@ my $site = TestUtils::create_test_site() or BAIL_OUT("no further testing without
 my $tests = [
   { cmd => "/usr/bin/omd start $site" },
 
-  { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -H localhost -u /$site/nagvis -e 401'",                  exp => '/HTTP OK:/' },
-  { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -H localhost -a omdadmin:omd -u /$site/nagvis -e 301'",  exp => '/HTTP OK:/' },
-  { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -H localhost -a omdadmin:omd -u /$site/nagvis/ -e 302'", exp => '/HTTP OK:/' },
-  { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -H localhost -a omdadmin:omd -u /$site/nagvis/frontend/nagvis-js/index.php -e 302'", exp => '/HTTP OK:/' },
+  { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -H localhost -u /$site/nagvis -e 401'",                  like => '/HTTP OK:/' },
+  { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -H localhost -a omdadmin:omd -u /$site/nagvis -e 301'",  like => '/HTTP OK:/' },
+  { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -H localhost -a omdadmin:omd -u /$site/nagvis/ -e 302'", like => '/HTTP OK:/' },
+  { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -H localhost -a omdadmin:omd -u /$site/nagvis/frontend/nagvis-js/index.php -e 302'", like => '/HTTP OK:/' },
 
   { cmd => "/usr/bin/omd stop $site" },
 ];
