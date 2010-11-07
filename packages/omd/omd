@@ -1168,9 +1168,11 @@ def update_file(old_version, new_version, userdir, relpath, old_perms):
         if what == "keep":
             sys.stdout.write(warn + " Permissions    %04o %s (unchanged)\n" % (user_perm, fn))
         elif what == "default":
-            sys.stdout.write(good + " Permissions    %04o -> %04o %s\n" % (user_perm, new_perm, fn))
-            os.chmod(user_path, new_perm)
-
+            try:
+                os.chmod(user_path, new_perm)
+                sys.stdout.write(good + " Permissions    %04o -> %04o %s\n" % (user_perm, new_perm, fn))
+            except Exception, e:
+                sys.stdout.write(error + " Permission:    cannot change %04o -> %04o %s: %s\n" % (user_perm, new_perm, fn, e))
 
 
 def init_scripts(sitename):
