@@ -207,17 +207,19 @@ def getch():
 def ask_user_choices(title, message, choices):
     sys.stdout.write("\n")
     def pl(line):
-        sys.stdout.write(" %s %-76s %s\n" % (tty_bgcyan, line, tty_normal))
+        sys.stdout.write(" %s %-76s %s\n" % (tty_bgcyan + tty_white, line, tty_normal))
     pl("")
-    sys.stdout.write(" %s %-76s %s\n" % (tty_bgcyan + tty_bold, title, tty_normal))
+    sys.stdout.write(" %s %-76s %s\n" % (tty_bgcyan + tty_white + tty_bold, title, tty_normal))
     for line in wrap_text(message, 76):
         pl(line)
     pl("")
     chars = []
-    empty_line = " %s%-78s%s\n" % (tty_bgblue, "", tty_normal)
+    empty_line = " %s%-78s%s\n" % (tty_bgblue + tty_white, "", tty_normal)
     sys.stdout.write(empty_line)
     for choice, title in choices:
-	sys.stdout.write(" %s %s%s%s%-10s %-65s%s\n" % (tty_bgblue, tty_bold, choice[0], tty_normal + tty_bgblue, choice[1:], title, tty_normal))
+	sys.stdout.write(" %s %s%s%s%-10s %-65s%s\n" % 
+                (tty_bgblue + tty_white, tty_bold, choice[0], 
+                 tty_normal + tty_bgblue + tty_white, choice[1:], title, tty_normal))
 	for c in choice:
 	    if c.lower() not in chars:
 		chars.append(c)
