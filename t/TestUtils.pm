@@ -140,7 +140,127 @@ sub remove_test_site {
 =cut
 sub test_url {
     my $test = shift;
+
+    my $page = _request($test);
+
+    # response code?
+    $test->{'code'} = 200 unless exists $test->{'code'};
+    if(defined $test->{'code'}) {
+        is($page->{'code'}, $test->{'code'}, "response code for ".$test->{'url'}." is: ".$test->{'code'});
+    }
+
+    # content type?
+    if(defined $test->{'content_type'}) {
+        is($page->{'content_type'}, $test->{'content_type'}, 'Content-Type is: '.$test->{'content_type'});
+    }
+
+    # matches output?
+    if(defined $test->{'like'}) {
+        for my $expr (ref $test->{'like'} eq 'ARRAY' ? @{$test->{'like'}} : $test->{'like'} ) {
+            like($page->{'content'}, $expr, "content like ".$expr);
+        }
+    }
+
+    # not matching output
+    if(defined $test->{'unlike'}) {
+        for my $expr (ref $test->{'unlike'} eq 'ARRAY' ? @{$test->{'unlike'}} : $test->{'unlike'} ) {
+            unlike($page->{'content'}, $expr, "content unlike ".$expr);
+        }
+    }
+
+    # html valitidy
+    SKIP: {
+        if($page->{'content_type'} =~ 'text\/html') {
+            if($use_html_lint == 0) {
+                skip "no HTML::Lint installed", 2;
+            }
+            my $lint = new HTML::Lint;
+            isa_ok( $lint, "HTML::Lint" );
+
+            $lint->parse($page->{'content'});
+            my @errors = $lint->errors;
+            @errors = _diag_lint_errors_and_remove_some_exceptions($lint);
+            is( scalar @errors, 0, "No errors found in HTML" );
+            $lint->clear_errors();
+        }
+    }
+
+    # check for missing images / css or js
+    if($page->{'content_type'} =~ 'text\/html') {
+        my @matches = $page->{'content'} =~ m/(src|href)=['|"](.+?)['|"]/gi;
+        my $links_to_check;
+        my $x=0;
+        for my $match (@matches) {
+            $x++;
+            next if $x%2==1;
+            next if $match =~ m/^http/;
+            next if $match =~ m/^mailto:/;
+            next if $match =~ m/^#/;
+            next if $match =~ m/^javascript:/;
+            $links_to_check->{$match} = 1;
+        }
+        my $errors = 0;
+        for my $test_url (keys %{$links_to_check}) {
+            $test_url = _get_url($test->{'url'}, $test_url);
+            our $already_checked;
+            $already_checked = {} unless defined $already_checked;
+            next if defined $already_checked->{$test_url};
+            #diag("checking link: ".$test_url);
+            my $req = _request({url => $test_url, auth => $test->{'auth'}});
+            if($req->{'code'} == 200) {
+                $already_checked->{$test_url} = 1;
+            } else {
+                $errors++;
+                diag("got status ".$req->{'code'}." for url: '$test_url'");
+            }
+        }
+        is( $errors, 0, 'All stylesheets, images and javascript exist' );
+    }
+    return $page;
+}
+
+
+##################################################
+
+=head2 _diag_lint_errors_and_remove_some_exceptions
+
+  removes some lint errors we want to ignore
+
+=cut
+sub _diag_lint_errors_and_remove_some_exceptions {
+    my $lint = shift;
+    my @return;
+    for my $error ( $lint->errors ) {
+        my $err_str = $error->as_string;
+        if($err_str =~ m/<IMG SRC=".*?\/thruk\/.*?">\ tag\ has\ no\ HEIGHT\ and\ WIDTH\ attributes\./) {
+            next;
+        }
+        diag($error->as_string."\n");
+        push @return, $error;
+    }
+    return @return;
+}
+
+
+##################################################
+
+=head2 _request
+
+  returns a page
+
+  expects a hash
+  {
+    url     => url to request
+    auth    => authentication (realm:user:pass)
+  }
+
+=cut
+sub _request {
+    my $data = shift;
+
+    my $return = {};
     our $cookie_jar;
+
     if(!defined $cookie_jar or !-f $cookie_jar) {
         $cookie_jar = tmpnam();
     }
@@ -150,36 +270,75 @@ sub test_url {
     $ua->env_proxy;
     $ua->cookie_jar({ file => $cookie_jar });
 
-    if(defined $test->{'auth'}) {
-        $test->{'url'} =~ m/(http|https):\/\/(.*?)(\/|:\d+)/;
+    if(defined $data->{'auth'}) {
+        $data->{'url'} =~ m/(http|https):\/\/(.*?)(\/|:\d+)/;
         my $netloc = $2;
         my $port   = $3;
         if(defined $port and $port =~ m/^:(\d+)/) { $port = $1; } else { $port = 80; }
-        my($realm,$user,$pass) = split(/:/, $test->{'auth'}, 3);
+        my($realm,$user,$pass) = split(/:/, $data->{'auth'}, 3);
         $ua->credentials($netloc.":".$port, $realm, $user, $pass);
     }
 
-    my $response = $ua->get($test->{'url'});
+    my $response = $ua->get($data->{'url'});
 
-    # response code?
-    $test->{'code'} = 200 unless exists $test->{'code'};
-    if(defined $test->{'code'}) {
-        ok($response->code == $test->{'code'}, "response code: expected ".$response->code." but got ".$test->{'code'});
-    }
+    $return->{'code'}         = $response->code;
+    $return->{'content'}      = $response->decoded_content;
+    $return->{'content_type'} = $response->header('Content-Type');
 
-    # matches output?
-    if(defined $test->{'like'}) {
-        for my $expr (ref $test->{'like'} eq 'ARRAY' ? @{$test->{'like'}} : $test->{'like'} ) {
-            like($response->decoded_content, $expr, "content like ".$expr);
+    return($return);
+}
+
+
+##################################################
+
+=head2 _get_url
+
+  returns a absolute url
+
+  expects
+  $VAR1 = origin url
+  $VAR2 = target link
+
+=cut
+sub _get_url {
+    my $url  = shift;
+    my $link = shift;
+    my $newurl;
+
+    # split original url in host, path and file
+    if($url =~ m/^(http|https):\/\/([^\/]*)(|\/|:\d+)(.*?)$/) {
+        my $host     = $1."://".$2.$3;
+        $host        =~ s/\/$//;      # remove last /
+        my $fullpath = $4 || '';
+        $fullpath    =~ s/\?.*$//;
+        $fullpath    =~ s/^\///;
+        my($path,$file) = ('', '');
+        if($fullpath =~ m/^(.+)\/(.*)$/) {
+            $path = $1;
+            $file = $2;
+        }
+        else {
+            $file = $fullpath;
+        }
+        $path =~ s/^\///; # remove first /
+
+        if($link =~ m/^(http|https):\/\//) {
+            return $link;
+        }
+        elsif($link =~ m/^\//) { # absolute link
+            return $host.$link;
+        }
+        elsif($path eq '') {
+            return $host."/".$link;
+        } else {
+            return $host."/".$path."/".$link;
         }
     }
-
-    # not matching output
-    if(defined $test->{'unlike'}) {
-        for my $expr (ref $test->{'unlike'} eq 'ARRAY' ? @{$test->{'unlike'}} : $test->{'unlike'} ) {
-            unlike($response->decoded_content, $expr, "content unlike ".$expr);
-        }
+    else {
+        BAIL_OUT("unknown url scheme in _get_url: '".$url."'");
     }
+
+    return $newurl;
 }
 
 1;
