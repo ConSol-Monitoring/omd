@@ -765,6 +765,7 @@ def merge_update_file(relpath, old_version, new_version):
     merge_message = patch_has_merge() and ' (watch out for >>>>> and <<<<<)' or ''
     editor = get_editor()
     reject_file = user_path + ".rej"
+
     options = [
         ( "diff",      "Show differences between the new default and your version" ),
         ( "you",       "Show your changes compared with the old default version" ),
@@ -817,7 +818,7 @@ def merge_update_file(relpath, old_version, new_version):
 	    sys.stdout.write("\n Starting BASH. Type CTRL-D to continue.\n\n")
 	    thedir = "/".join(user_path.split("/")[:-1])
 	    os.system("cd '%s' ; bash -i" % thedir)
-	elif choice == "keep":
+	elif choice == "restore":
 	    os.rename(user_path + ".orig", user_path)
             os.chmod(user_path, permissions)
 	    sys.stdout.write("Restored your version.\n")
@@ -832,7 +833,7 @@ def merge_update_file(relpath, old_version, new_version):
             else:
                 sys.stdout.write(" Merge failed again.\n")
 
-	else:
+	else: # install
 	    os.rename("%s-%s" % (user_path, new_version), user_path)
             os.chmod(user_path, permissions)
 	    sys.stdout.write("Installed default file of version %s.\n" % new_version)
@@ -1029,7 +1030,12 @@ def update_file(old_version, new_version, userdir, relpath, old_perms):
     # C ---> PATCH DAY, HANDLE FILES
     # 7) old, new and user are files. And all are different
     elif old_type == "file" and new_type == "file" and user_type == "file":
-	merge_update_file(relpath, old_version, new_version)
+        try:
+            merge_update_file(relpath, old_version, new_version)
+        except KeyboardInterrupt:
+            raise
+        except Exception, e:
+            sys.stdout.write(error + " Cannot merge: %s\n" % e)
 
     # D ---> SYMLINKS
     # 8) all are symlinks, all changed
