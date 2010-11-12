@@ -1,12 +1,5 @@
 Index of patches
 
-0001:
-    Extend the configuration file nagios.cfg with files in nagios.d: After
-    reading the main configuration file, Nagios removes ".cfg" from the name
-    of the file (if the file ends in .cfg) and adds ".d". Then it reads in
-    all files in that directory ending with ".cfg" (non-recursive). The order
-    is not specified.
-
 0002:
     The file include/utils.inc.php includes config.inc.php by going up 
     one directory in the physical directory tree. This patch changes that
