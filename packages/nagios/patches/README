@@ -21,9 +21,6 @@ Index of patches
     the module in the traditional way. This prevents problems with tmpfs
     mounted as non-root (where Nagios places the module copy).
 
-0005:
-    Reverts patch which breaks deactivation of active checks. 
-
 0006:
     Adds OMD related config options and macros to the init script.
 
