@@ -22,7 +22,8 @@ PACKAGES=perl-modules \
          omd \
          pnp4nagios \
          rrdtool \
-         thruk
+         thruk \
+         maintenance
 
 # This file is kept by 'make config' and also may override
 # the list of packages

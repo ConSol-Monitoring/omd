@@ -1,0 +1,47 @@
+#!/bin/sh
+# 
+# Start only if Crontab is enabled
+. ###ROOT###/etc/omd/site.conf
+if [ "$CONFIG_CRONTAB" != on ] ; then
+    exit 5
+fi
+
+NAME="crontab"
+MERGECRONTABS="###ROOT###/bin/merge-crontabs"
+CROND="###ROOT###/etc/cron.d/*"
+CRONTAB=`which crontab`          
+USER="###SITE###"
+
+# See how we were called.
+case "$1" in
+
+    start)
+	echo -en "Initializing Crontab "
+	${MERGECRONTABS} ${CROND} | $CRONTAB -u $USER - > /dev/null
+        if [ $? -eq 0 ]; then
+            echo "done."
+            exit 0
+	else
+	    echo "failed."
+	    exit 1
+        fi
+        ;;
+
+    stop)
+	echo "Removing Crontab"
+	$CRONTAB -r -u $USER
+        ;;
+
+    restart|reload)
+        $0 stop
+        $0 start
+        ;;
+
+    *)
+        echo "Usage: crontab {start|stop|restart|reload|status}"
+        exit 1
+        ;;
+
+esac
+  
+# End of this script
