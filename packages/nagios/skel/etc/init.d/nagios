@@ -32,6 +32,11 @@
 #   script should terminate without starting the daemon
 # - When a reload is requested and the program is not running
 #   the init script should execute a start instead
+#
+# FIXME/TODO:
+# - Add ability to use the "fast startup options"
+#   - How to detect that the config changed?
+#   - WHere to place the generation of the cache here?
 
 cd ###ROOT###
 . ###ROOT###/.profile
@@ -62,7 +67,7 @@ esac
 nagios_proc() {
     PROC=$(ps -u $USR --ppid 1 -o pid,cmd \
              | grep "$BIN -d $CFG_FILE" 2>&1 | grep -v grep)
-    PID=$(echo "$PROC" | cut -d' ' -f1)
+    PID=$(echo "$PROC" | sed 's/^ //g' | cut -d' ' -f1)
     if [ "$PID" != "" ]; then
         echo "$PID"
         return 0
