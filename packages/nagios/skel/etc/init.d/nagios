@@ -213,8 +213,10 @@ case "$1" in
     ;;
     checkconfig)
         if ! verify_config; then
+            echo
             exit 1
         fi
+        echo
         exit 0
     ;;
     status)
