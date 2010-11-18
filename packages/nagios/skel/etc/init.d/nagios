@@ -213,10 +213,8 @@ case "$1" in
     ;;
     checkconfig)
         if ! verify_config; then
-            echo
             exit 1
         fi
-        echo
         exit 0
     ;;
     status)
@@ -250,7 +248,7 @@ case "$1" in
             exit $?
         fi
 
-        echo "Reloading nagios configuration (PID: $PID)... "
+        echo -n "Reloading nagios configuration (PID: $PID)... "
         if kill -HUP ${PID:-} >/dev/null 2>&1; then
             echo 'OK.'
             exit 0
