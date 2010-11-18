@@ -97,8 +97,14 @@ pidof_nagios() {
 }
 
 verify_config() {
+    if [ "$1" != "quiet" ]; then
+        echo -n "Running configuration check... "
+    fi
     RESULT=$($BIN -v $CFG_FILE 2>&1)
     if [ $? -eq 0 ]; then
+        if [ "$1" != "quiet" ]; then
+            echo -n "done."
+        fi
         return 0
     else
         if [ "$1" != "quiet" ]; then
@@ -151,7 +157,7 @@ nagios_wait_start() {
         return 1
     fi
   
-    if ! verify_config; then
+    if ! verify_config quiet; then
         return 1
     fi
 
@@ -206,11 +212,9 @@ case "$1" in
         fi
     ;;
     checkconfig)
-        echo -n "Running configuration check... "
         if ! verify_config; then
             exit 1
         fi
-        echo "done."
         exit 0
     ;;
     status)
@@ -224,11 +228,9 @@ case "$1" in
         fi
     ;;
     restart)
-        echo -n "Running configuration check... "
         if ! verify_config; then
             exit 1
         fi
-        echo "done."
 
         $0 stop || (echo "Unable to stop nagios. Terminating..." && exit 1)
         $0 start
@@ -236,11 +238,9 @@ case "$1" in
     ;;
     
     reload|force-reload)
-        echo -n "Running configuration check... "
         if ! verify_config; then
             exit 1
         fi
-        echo "done."
         
         # Execute a start when nagios is not running
         if ! pidof_nagios >/dev/null 2>&1; then
