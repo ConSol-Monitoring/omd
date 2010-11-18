@@ -248,17 +248,8 @@ case "$1" in
             exit $?
         fi
 
-        if nagios_wait_stop; then
-            echo 'OK.'
-            exit 0
-        else
-            echo 'ERROR.'
-            exit 1
-        fi
-        
         echo "Reloading nagios configuration (PID: $PID)... "
-        PID=$(pidof_nagios) || true
-        if kill -HUP {PID:-} >/dev/null 2>&1; then
+        if kill -HUP ${PID:-} >/dev/null 2>&1; then
             echo 'OK.'
             exit 0
         else
