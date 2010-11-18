@@ -103,7 +103,7 @@ verify_config() {
     RESULT=$($BIN -v $CFG_FILE 2>&1)
     if [ $? -eq 0 ]; then
         if [ "$1" != "quiet" ]; then
-            echo -n "done."
+            echo "done."
         fi
         return 0
     else
