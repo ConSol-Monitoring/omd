@@ -176,7 +176,7 @@ MODULES = ExtUtils-MakeMaker-6.56.tar.gz \
           Error-0.17016.tar.gz
 
 build:
-	test -d dist || mkdir dist
+	mkdir -p dist
 	echo "install  --install_base  $$(pwd)/dist" > dist/.modulebuildrc
 	cd src; \
 	for tarball in $(MODULES); do \
@@ -187,14 +187,17 @@ build:
 	done
 	rm -rf src/inc
 	cd dist/lib/perl5/ && rm -f utils.pm && ln -s ../../../nagios/plugins/utils.pm .
+	mkdir -p dist/lib/perl5/CPAN
+	cp MyConfig.pm dist/lib/perl5/CPAN/MyConfig.pm
 
 install:
 	if [ -z $(DESTDIR) ]; then echo "cannot install without DESTDIR set!"; exit 1; fi
-	[ -d $(DESTDIR)$(OMD_ROOT)/lib/perl5/ ] || mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/perl5
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/perl5
 	rsync -a dist/lib $(DESTDIR)$(OMD_ROOT)/lib/perl5/
-	echo "install  --install_base  $(DESTDIR)$(OMD_ROOT)/lib/perl5" > $(DESTDIR)$(OMD_ROOT)/lib/perl5/.modulebuildrc
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/local/lib/perl5
 
 skel:
+	echo "install  --install_base  ###ROOT###/local/lib/perl5" > $(SKEL)/.modulebuildrc
 
 clean:
 	rm -rf src/$(LLSRC) src/inc dist
