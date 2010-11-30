@@ -148,17 +148,19 @@ show_livestatus_errors = True
 
 # Host tags to be used in WATO
 config_files = [
-  ("omd-site.mk", "OMD Site Hosts", [ "admin" ] ),
+  ("wato-servers.mk", "Servers", [ "admin" ] ),
+  ("wato-network.mk", "Network", [ "admin" ] ),
 ]
 
 # Host tags to be used in WATO
 host_tags = [
- ( "Check_MK Agent", [
-      ( "tcp",  "Yes" ),
-      ( "ping", "No"  ),
-   ]),
- ( "SNMP", [
-      ( "snmp", "Yes" ),
-      ( None,   "No"  ),
-   ]),
+  ( "Check_MK Agent", [
+       ( "tcp",  "Yes" ),
+       ( "ping", "No"  ),
+    ]),
+  ( "SNMP", [
+       ( None,   "No"  ),
+       ( "snmp", "Yes" ),
+    ]),
 ]
+
