@@ -43,7 +43,7 @@ pnp_rraconf_dir             = '###ROOT###/share/check_mk/pnp-rraconf'
 doc_dir                     = '###ROOT###/share/doc/check_mk'
 livebackendsdir             = '###ROOT###/share/check_mk/livestatus'
 url_prefix                  = '/###SITE###/'
-check_mk_automation         = '###ROOT###/bin/check_mk --automation'
+check_mk_automation         = None
 
 # Special for OMD
 omd_site                    = '###SITE###'
