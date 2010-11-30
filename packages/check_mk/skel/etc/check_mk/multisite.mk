@@ -137,3 +137,28 @@ show_livestatus_errors = True
 # Quicksearch: Limit the number of hits to shop in dropdown.
 # Default is to show at most 80 items.
 # quicksearch_dropdown_limit = 80
+
+#   __        ___  _____ ___  
+#   \ \      / / \|_   _/ _ \ 
+#    \ \ /\ / / _ \ | || | | |
+#     \ V  V / ___ \| || |_| |
+#      \_/\_/_/   \_\_| \___/ 
+#                             
+# Check_MK's Web Administration Tool
+
+# Host tags to be used in WATO
+config_files = [
+  ("omd-site.mk", "OMD Site Hosts", [ "admin" ] ),
+]
+
+# Host tags to be used in WATO
+host_tags = [
+ ( "Check_MK Agent", [
+      ( "tcp",  "Yes" ),
+      ( "ping", "No"  ),
+   ]),
+ ( "SNMP", [
+      ( "snmp", "Yes" ),
+      ( None,   "No"  ),
+   ]),
+]
