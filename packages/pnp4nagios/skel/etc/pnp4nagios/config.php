@@ -85,6 +85,25 @@ $conf['multisite_base_url'] = "/###SITE###/check_mk";
 #
 $conf['multisite_site'] = "###SITE###";
 
+#
+# check authorization against mk_livestatus API 
+# Available since 0.6.10
+#
+$conf['auth_enabled'] = FALSE;
+
+#
+# Livestatus socket path
+# 
+$conf['livestatus_socket'] = "unix:###ROOT###/tmp/run/live";
+
+#
+# Which user is allowed to see all services or all hosts?
+# Keywords: <USERNAME>
+# Example: conf['allowed_for_all_services'] = "nagiosadmin,operator";
+# This option is used while $conf['auth_enabled'] = TRUE
+$conf['allowed_for_all_services'] = "omdadmin";
+$conf['allowed_for_all_hosts'] = "omdadmin";
+
 # Which user is allowed to see additional service links ?
 # Keywords: EVERYONE NONE <USERNAME>
 # Example: conf['allowed_for_service_links'] = "nagiosadmin,operator";
