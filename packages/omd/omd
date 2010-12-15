@@ -26,7 +26,7 @@
 import sys, os, shutil, pwd, grp, re, time, pprint, tty, termios
 from subprocess import *
 
-OMD_VERSION = "0.44"
+OMD_VERSION = "0.45"
 
 # colored output, if stdout is a tty
 on_tty = sys.stdout.isatty()
@@ -1587,7 +1587,7 @@ def main_uninstall(args, options={}):
 
 
 def main_version(args, options={}):
-    sys.stdout.write("OMD - OpenSource Monitoring Distribution Version %s\n" % g_info["OMD_VERSION"])
+    sys.stdout.write("OMD - Open Monitoring Distribution Version %s\n" % g_info["OMD_VERSION"])
 
 def main_versions(args, options={}):
     for v in omd_versions():

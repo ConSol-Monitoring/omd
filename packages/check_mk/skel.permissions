@@ -1,2 +1,5 @@
 var/check_mk/web 0775
 var/check_mk/logwatch 0775
+var/check_mk/wato 0775
+etc/check_mk/conf.d/wato-servers.mk 0664
+etc/check_mk/conf.d/wato-network.mk 0664

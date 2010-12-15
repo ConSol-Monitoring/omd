@@ -54,13 +54,13 @@ EOF
         cat <<EOF > $OMD_ROOT/etc/apache/listen-port.conf
 # This file is created by 'omd config set APACHE_TCP_PORT'. 
 # Better do not edit manually
-Listen 127.0.0.1:$PORT
+Listen localhost:$PORT
 EOF
         cat <<EOF > $OMD_ROOT/etc/apache/proxy-port.conf
 # This file is created by 'omd config set APACHE_TCP_PORT'. 
 # Better do not edit manually
 <IfModule mod_proxy_http.c>
-  <Proxy http://127.0.0.1:$PORT/$OMD_SITE>
+  <Proxy http://localhost:$PORT/$OMD_SITE>
     Order allow,deny
     allow from all
   </Proxy>
@@ -68,8 +68,8 @@ EOF
   <Location /$OMD_SITE>
     # Setting "retry=0" to prevent 60 second caching of problem states e.g. when
     # the site apache is down and someone tries to access the page.
-    ProxyPass http://127.0.0.1:$PORT/$OMD_SITE retry=0
-    ProxyPassReverse http://127.0.0.1:$PORT/$OMD_SITE
+    ProxyPass http://localhost:$PORT/$OMD_SITE retry=0
+    ProxyPassReverse http://localhost:$PORT/$OMD_SITE
   </Location>
 </IfModule>
 EOF

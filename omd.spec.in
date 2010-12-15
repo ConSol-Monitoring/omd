@@ -9,6 +9,7 @@ Source:         %{name}.tar.gz
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root
 AutoReq:        off
 AutoProv:       off
+Provides:       omd
 Requires:	
 
 #%define _missing_doc_files_terminate_build 0
