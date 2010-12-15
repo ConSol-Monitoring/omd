@@ -1,4 +1,4 @@
 #
 # Daily Logrotate
 #
-0 0 * * * [ -x /usr/sbin/logrotate ] && /usr/sbin/logrotate -s ###ROOT###/tmp/logrotate.state ###ROOT###/etc/logrotate.conf >/dev/null 2>&1
+0 0 * * * [ -x /usr/sbin/logrotate ] && /usr/sbin/logrotate -s ###ROOT###/tmp/run/logrotate.state ###ROOT###/etc/logrotate.conf >/dev/null 2>&1
