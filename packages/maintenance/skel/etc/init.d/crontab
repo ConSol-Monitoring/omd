@@ -36,7 +36,16 @@ case "$1" in
         $0 stop
         $0 start
         ;;
-
+    status)
+        $CRONTAB -u $USER -l >/dev/null 2>&1
+        if [ $? -eq 0 ]; then
+            echo "crontab initalized"
+            exit 0
+        else
+            echo "crontab is empty"
+            exit 1
+        fi
+        ;;
     *)
         echo "Usage: crontab {start|stop|restart|reload|status}"
         exit 1
