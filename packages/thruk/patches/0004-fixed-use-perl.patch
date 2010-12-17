@@ -1,0 +1,11 @@
+--- Thruk-0.72.2/script/thruk_fastcgi.pl-2010-12-17	2010-12-17 14:41:29.000000000 +0100
++++ Thruk-0.72.2/script/thruk_fastcgi.pl	2010-12-17 14:41:35.000000000 +0100
+@@ -7,7 +7,7 @@
+     use FindBin;
+     use Config;
+     if(-e $FindBin::Bin."/../local-lib") {
+-        use 5.10.0; # package is build with perl 5.10.0
++        #use 5.10.0; # package is build with perl 5.10.0
+         use lib $FindBin::Bin."/../local-lib/lib/perl5";
+         if(! -e $FindBin::Bin."/../local-lib/lib/perl5/".$Config{archname}) {
+             die("\nERROR: this is the wrong precompiled version, your archname is: ".$Config{archname}."\n\n");
