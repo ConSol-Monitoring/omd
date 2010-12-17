@@ -54,6 +54,9 @@ install:
 
 	# Install special version of check_mk dealing with site specific defaults
 	install -m 755 check_mk $(DESTDIR)$(OMD_ROOT)/bin
+	ln -sfn check_mk $(DESTDIR)$(OMD_ROOT)/bin/cmk
+	echo -e '#!/bin/sh\nexec check_mk -P "$@"' > $(DESTDIR)$(OMD_ROOT)/bin/mkp
+	chmod 755 $(DESTDIR)$(OMD_ROOT)/bin/mkp
 	install -m 755 lq       $(DESTDIR)$(OMD_ROOT)/bin
 
 	# defaults.py for Multisite which redirects to site specific defaults
