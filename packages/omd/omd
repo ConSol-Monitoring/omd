@@ -353,15 +353,25 @@ def site_is_running(sitename):
 def groupdel(groupname):
     os.system("groupdel " + groupname)
 
-def groupadd(groupname):
-    os.system("groupadd " + groupname)
+def groupadd(groupname, gid):
+    cmd = "groupadd "
+    if gid != None:
+        cmd += "-g %d " % int(gid)
+    cmd += groupname
 
-def useradd(sitename):
+    if 0 != os.system(cmd):
+        bail_out("Cannot create group for site user.\n")
+
+def useradd(sitename, uid = None, gid = None):
     # Create user for running site 'name'
-    groupadd(sitename)
+    groupadd(sitename, gid)
     useradd_options = g_info["USERADD_OPTIONS"]
-    os.system("useradd %s -d '%s' -c 'OMD site %s' -g %s -G omd %s -s /bin/bash" % \
-                (useradd_options, site_dir(sitename), sitename, sitename, sitename))
+    if uid != None:
+        useradd_options += "-u %d" % int(uid)
+    if 0 != os.system("useradd %s -d '%s' -c 'OMD site %s' -g %s -G omd %s -s /bin/bash" % \
+                      (useradd_options, site_dir(sitename), sitename, sitename, sitename)):
+        groupdel(sitename)
+        bail_out("Error creating site user.\n")
 
     # Add Apache to new group. It needs to be able to write in to the
     # command pipe and possible other stuff
@@ -1621,7 +1631,9 @@ def main_create(args, options={}):
     sitename_must_be_valid(g_sitename)
 
     # Create operating system user for site
-    useradd(g_sitename)
+    uid = options.get("uid")
+    gid = options.get("gid")
+    useradd(g_sitename, uid, gid)
 
     sitedir = site_dir(g_sitename)
     os.makedirs(sitedir)
@@ -1718,6 +1730,10 @@ def main_mv_or_cp(what, args, options={}):
         os.rename(site_dir(old), site_dir(new))
         delete_apache_hook(old)
     else:
+        uid = options.get("uid")
+        gid = options.get("gid")
+        useradd(new, uid, gid)
+
         # Make exact file-per-file copy with same user but already new name
         os.mkdir(site_dir(new))
         os.system("rsync -arx '%s/' '%s/'" % (site_dir(g_sitename), site_dir(new)))
@@ -1725,8 +1741,7 @@ def main_mv_or_cp(what, args, options={}):
     # Change config files from old to new site (see rename_site())
     patch_skeleton_files(g_sitename, new)
 
-    # Create new user and give him all files
-    useradd(new)
+    # give new user all files
     chown_tree(site_dir(new), new)
 
     # In case of mv now delete old user
@@ -1942,8 +1957,8 @@ commands = [
     ""),
 
   ( "create",    True,  1, 0, False, "",        main_create,
-    [],
-    "Create a new site",
+    [ ( "uid", "u", True ), ( "gid", "g", True )],
+    "Create a new site (-u UID, -g GID)",
 
     "This command performs the following actions on your system:\n"
     "- Create the system user <SITENAME>\n"
@@ -1974,7 +1989,7 @@ commands = [
     ""),
 
   ( "cp",        True,  1, 1, False, "NEWNAME", lambda args, opts: main_mv_or_cp("cp", args, opts),
-    [],
+    [ ( "uid", "u", True ), ( "gid", "g", True )],
     "Make a copy of a site",
     ""),
 
