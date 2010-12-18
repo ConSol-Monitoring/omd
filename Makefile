@@ -264,4 +264,4 @@ version:
 	fi ;
 
 test:
-	PERL_DL_NONLAZY=1 /usr/bin/env perl "-MExtUtils::Command::MM" "-e" "test_harness(0)" t/*.t
+	t/test_all.sh
