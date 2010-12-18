@@ -14,19 +14,12 @@ use Data::Dumper;
 use LWP::UserAgent;
 use File::Temp qw/ :POSIX /;
 use Test::Cmd;
+use HTML::Lint;
 
 if($> != 0) {
     plan( skip_all => "creating testsites requires root permission" );
 }
 our $omd_symlink_created = 0;
-
-##################################################
-# HTML::Lint installed?
-my $use_html_lint = 0;
-eval {
-    require HTML::Lint;
-    $use_html_lint = 1;
-};
 
 ##################################################
 
@@ -42,7 +35,7 @@ sub get_omd_bin {
 
     $omd_bin = $ENV{'OMD_BIN'} || 'destdir/opt/omd/versions/default/bin/omd';
 
-    # check /omd
+    # first check /omd
     if( ! -e '/omd' ) {
         if($omd_bin eq '/usr/bin/omd') {
             BAIL_OUT('Broken installation, got /usr/bin/omd but no /omd')
@@ -117,13 +110,13 @@ sub test_command {
     # exit code?
     $test->{'exit'} = 0 unless exists $test->{'exit'};
     if(defined $test->{'exit'}) {
-        ok($rc == $test->{'exit'}, "exit code: ".$rc." == ".$test->{'exit'});
+        ok($rc == $test->{'exit'}, "exit code: ".$rc." == ".$test->{'exit'}) || diag("\ncmd: '".$test->{'cmd'}."' failed\n");
     }
 
     # matches on stdout?
     if(defined $test->{'like'}) {
         for my $expr (ref $test->{'like'} eq 'ARRAY' ? @{$test->{'like'}} : $test->{'like'} ) {
-            like($t->stdout, $expr, "stdout like ".$expr);
+            like($t->stdout, $expr, "stdout like ".$expr) || diag("\ncmd: '".$test->{'cmd'}."' failed\n");
         }
     }
 
@@ -131,7 +124,7 @@ sub test_command {
     $test->{'errlike'} = '/^$/' unless exists $test->{'errlike'};
     if(defined $test->{'errlike'}) {
         for my $expr (ref $test->{'errlike'} eq 'ARRAY' ? @{$test->{'errlike'}} : $test->{'errlike'} ) {
-            like($t->stderr, $expr, "stderr like ".$expr);
+            like($t->stderr, $expr, "stderr like ".$expr) || diag("\ncmd: '".$test->{'cmd'}."' failed");
         }
     }
 
@@ -218,9 +211,6 @@ sub test_url {
     # html valitidy
     SKIP: {
         if($page->{'content_type'} =~ 'text\/html') {
-            if($use_html_lint == 0) {
-                skip "no HTML::Lint installed", 2;
-            }
             my $lint = new HTML::Lint;
             isa_ok( $lint, "HTML::Lint" );
 

@@ -30,7 +30,7 @@ if [ ! -z $OMD_PACKAGE ]; then
 fi
 
 if [ -z $OMD_BIN ]; then
-    OMD_BIN=destdir/usr/bin/omd
+    OMD_BIN=destdir/opt/omd/versions/default/bin/omd
 fi
 
 OMD_BIN=$OMD_BIN PERL_DL_NONLAZY=1 /usr/bin/env perl "-MExtUtils::Command::MM" "-e" "test_harness(0)" t/*.t

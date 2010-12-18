@@ -12,7 +12,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 44 );
+plan( tests => 47 );
 
 my $omd_bin = TestUtils::get_omd_bin();
 
@@ -23,6 +23,9 @@ my $site2 = 'testsite2';
 my $site3 = 'testsite3';
 my $tests = [
   { cmd => $omd_bin." versions",     like => '/^\d+\.\d+/'  },
+  { cmd => $omd_bin." rm $site",     stdin => "yes\n", 'exit' => undef, errlike => undef },
+  { cmd => $omd_bin." rm $site2",    stdin => "yes\n", 'exit' => undef, errlike => undef },
+  { cmd => $omd_bin." rm $site2",    stdin => "yes\n", 'exit' => undef, errlike => undef },
   { cmd => $omd_bin." create $site", like => '/Successfully created site '.$site.'./' },
   { cmd => $omd_bin." sites",        like => '/^'.$site.'\s+\d+\.\d+/' },
   { cmd => $omd_bin." start $site",  like => '/Starting nagios/' },
