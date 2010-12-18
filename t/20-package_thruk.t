@@ -12,23 +12,23 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan skip_all => "test requires omd installation (/usr/bin/omd: $!)" unless -x '/usr/bin/omd';
 plan( tests => 364 );
 
 ##################################################
 # create our test site
+my $omd_bin = TestUtils::get_omd_bin();
 my $site    = TestUtils::create_test_site() or BAIL_OUT("no further testing without site");
 my $auth    = 'OMD Monitoring Site '.$site.':omdadmin:omd';
 my $host    = "omd-".$site;
 my $service = "Dummy+Service";
 
 # set thruk as default
-TestUtils::test_command({ cmd => "/usr/bin/omd config $site set WEB thruk" });
+TestUtils::test_command({ cmd => $omd_bin." config $site set WEB thruk" });
 
 ##################################################
 # define some checks
 my $tests = [
-  { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -H localhost -u /$site/thruk -e 401'",                    like => '/HTTP OK:/' },
+  { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -H localhost -u /$site/thruk -e 401 -t 20'",              like => '/HTTP OK:/' },
   { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -H localhost -a omdadmin:omd -u /$site/thruk -e 301'",    like => '/HTTP OK:/' },
   { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -H localhost -a omdadmin:omd -u /$site/thruk/ -e 200'",   like => '/HTTP OK:/' },
   { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -H localhost -a omdadmin:omd -u \"/$site/thruk/cgi-bin/status.cgi?hostgroup=all&style=hostdetail\" -e 200 -r \"Host Status Details For All Host Groups\"'", like => '/HTTP OK:/' },
@@ -87,7 +87,7 @@ my $urls = [
 
 ##################################################
 # run our tests
-TestUtils::test_command({ cmd => "/usr/bin/omd start $site" });
+TestUtils::test_command({ cmd => $omd_bin." start $site" });
 TestUtils::test_command({ cmd => "/bin/su - $site -c './lib/nagios/plugins/check_http -H localhost -a omdadmin:omd -u /$site/nagios/cgi-bin/cmd.cgi -e 200 -P \"cmd_typ=7&cmd_mod=2&host=omd-$site&service=Dummy+Service&start_time=2010-11-06+09%3A46%3A02&force_check=on&btnSubmit=Commit\" -r \"Your command request was successfully submitted\"'", like => '/HTTP OK:/' });
 sleep(30);
 for my $test (@{$tests}) {
@@ -104,10 +104,10 @@ for my $url ( @{$urls} ) {
 
 ##################################################
 # switch webserver to shared mode
-TestUtils::test_command({ cmd => "/usr/bin/omd stop $site" });
-TestUtils::test_command({ cmd => "/usr/bin/omd config $site set WEBSERVER shared" });
+TestUtils::test_command({ cmd => $omd_bin." stop $site" });
+TestUtils::test_command({ cmd => $omd_bin." config $site set WEBSERVER shared" });
 TestUtils::test_command({ cmd => "/etc/init.d/apache2 reload" });
-TestUtils::test_command({ cmd => "/usr/bin/omd start $site" });
+TestUtils::test_command({ cmd => $omd_bin." start $site" });
 
 ##################################################
 # then run tests again

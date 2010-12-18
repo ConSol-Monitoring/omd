@@ -12,8 +12,9 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan skip_all => "test requires omd installation (/usr/bin/omd: $!)" unless -x '/usr/bin/omd';
 plan( tests => 44 );
+
+my $omd_bin = TestUtils::get_omd_bin();
 
 ########################################
 # execute some commands
@@ -21,11 +22,11 @@ my $site  = 'testsite';
 my $site2 = 'testsite2';
 my $site3 = 'testsite3';
 my $tests = [
-  { cmd => "/usr/bin/omd versions",     like => '/^\d+\.\d+/'  },
-  { cmd => "/usr/bin/omd create $site", like => '/Successfully created site '.$site.'./' },
-  { cmd => "/usr/bin/omd sites",        like => '/^'.$site.'\s+\d+\.\d+/' },
-  { cmd => "/usr/bin/omd start $site",  like => '/Starting nagios/' },
-  { cmd => "/usr/bin/omd status $site", like => [
+  { cmd => $omd_bin." versions",     like => '/^\d+\.\d+/'  },
+  { cmd => $omd_bin." create $site", like => '/Successfully created site '.$site.'./' },
+  { cmd => $omd_bin." sites",        like => '/^'.$site.'\s+\d+\.\d+/' },
+  { cmd => $omd_bin." start $site",  like => '/Starting nagios/' },
+  { cmd => $omd_bin." status $site", like => [
                                                 '/apache:\s*running/',
                                                 '/rrdcached:\s*running/',
                                                 '/npcd:\s*running/',
@@ -33,11 +34,11 @@ my $tests = [
                                                 '/Overall state:\s*running/',
                                                ]
   },
-  { cmd => "/usr/bin/omd stop $site",       like => '/Stopping nagios/' },
-  { cmd => "/usr/bin/omd cp $site $site2",  like => '/Copying site '.$site.' to '.$site2.'.../', errlike => '/Apache port \d+ is in use\. I\'ve choosen \d+ instead\./' },
-  { cmd => "/usr/bin/omd mv $site2 $site3", like => '/Moving site '.$site2.' to '.$site3.'.../' },
-  { cmd => "/usr/bin/omd rm $site3",        like => '/Restarting Apache...OK/', stdin => "yes\n" },
-  { cmd => "/usr/bin/omd rm $site",         like => '/Restarting Apache...OK/', stdin => "yes\n" },
+  { cmd => $omd_bin." stop $site",       like => '/Stopping nagios/' },
+  { cmd => $omd_bin." cp $site $site2",  like => '/Copying site '.$site.' to '.$site2.'.../', errlike => '/Apache port \d+ is in use\. I\'ve choosen \d+ instead\./' },
+  { cmd => $omd_bin." mv $site2 $site3", like => '/Moving site '.$site2.' to '.$site3.'.../' },
+  { cmd => $omd_bin." rm $site3",        like => '/Restarting Apache...OK/', stdin => "yes\n" },
+  { cmd => $omd_bin." rm $site",         like => '/Restarting Apache...OK/', stdin => "yes\n" },
 ];
 
 # run tests

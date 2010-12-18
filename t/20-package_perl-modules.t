@@ -12,12 +12,12 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan skip_all => "test requires omd installation (/usr/bin/omd: $!)" unless -x '/usr/bin/omd';
 plan( tests => 14 );
 
 ##################################################
 # create our test site
-my $site = TestUtils::create_test_site() or BAIL_OUT("no further testing without site");
+my $omd_bin = TestUtils::get_omd_bin();
+my $site    = TestUtils::create_test_site() or BAIL_OUT("no further testing without site");
 
 ##################################################
 # execute some checks
