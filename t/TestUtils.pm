@@ -389,7 +389,7 @@ sub _get_url {
 }
 
 END {
-    if($omd_symlink_created == 1) {
+    if(defined $omd_symlink_created and $omd_symlink_created == 1) {
         unlink('/omd');
     }
 };
