@@ -86,3 +86,25 @@ C<EXE_FILES: >
 
 =back
 
+=head2 Sat Dec 18 19:40:32 2010: C<Module> L<HTML::Lint|HTML::Lint>
+
+=over 4
+
+=item *
+
+C<installed into: /opt/share/omd/t/lib/lib/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 2.06>
+
+=item *
+
+C<EXE_FILES: bin/weblint>
+
+=back
+
