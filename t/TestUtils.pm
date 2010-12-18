@@ -8,18 +8,17 @@ package TestUtils;
 
 use warnings;
 use strict;
+use Cwd;
 use Test::More;
 use Data::Dumper;
 use LWP::UserAgent;
 use File::Temp qw/ :POSIX /;
+use Test::Cmd;
 
-eval { require Test::Cmd; };
-if($@) {
-    plan( skip_all => "creating testsite requires Test::Cmd" );
+if($> != 0) {
+    plan( skip_all => "creating testsites requires root permission" );
 }
-elsif($> != 0) {
-    plan( skip_all => "creating testsite requires root permission" );
-}
+our $omd_symlink_created = 0;
 
 ##################################################
 # HTML::Lint installed?
@@ -28,6 +27,54 @@ eval {
     require HTML::Lint;
     $use_html_lint = 1;
 };
+
+##################################################
+
+=head2 get_omd_bin
+
+  returns path to omd binary
+
+=cut
+
+sub get_omd_bin {
+    our $omd_bin;
+    return $omd_bin if defined $omd_bin;
+
+    $omd_bin = $ENV{'OMD_BIN'} || 'destdir/opt/omd/versions/default/bin/omd';
+
+    # check /omd
+    if( ! -e '/omd' ) {
+        if($omd_bin eq '/usr/bin/omd') {
+            BAIL_OUT('Broken installation, got /usr/bin/omd but no /omd')
+        } elsif($omd_bin eq 'destdir/opt/omd/versions/default/bin/omd') {
+            symlink(getcwd()."/destdir/omd", '/omd');
+            $omd_symlink_created = 1;
+        } else {
+            BAIL_OUT('did not find a valid /omd, please make sure it exists')
+        }
+    }
+    else {
+        if(-s '/omd') {
+            my $target = readlink('/omd');
+            if($omd_bin eq '/usr/bin/omd') {
+                if($target ne "/opt/omd") {
+                    BAIL_OUT('symlink for /omd already exists but is wrong: should be: /opt/omd but got: '.$target);
+                }
+            }
+            elsif($omd_bin eq 'destdir/opt/omd/versions/default/bin/omd') {
+                if($target ne getcwd()."/destdir/omd") {
+                    BAIL_OUT('symlink for /omd already exists but is wrong: should be: '.getcwd().'/destdir/omd but got: '.$target);
+                }
+            }
+        } else {
+            BAIL_OUT('cannot run tests, /omd has to be a symlink to '.getcwd().'/destdir/omd (or /opt/omd for testing packages) in order to run tests for the source version');
+        }
+    }
+
+    -x $omd_bin or BAIL_OUT($omd_bin." is required for further tests: $!");
+
+    return $omd_bin;
+}
 
 ##################################################
 
@@ -103,7 +150,7 @@ sub test_command {
 =cut
 sub create_test_site {
     my $site = "testsite"; # TODO: make uniq name
-    test_command({ cmd => "/usr/bin/omd create $site" });
+    test_command({ cmd => TestUtils::get_omd_bin()." create $site" });
     return $site;
 }
 
@@ -117,7 +164,7 @@ sub create_test_site {
 =cut
 sub remove_test_site {
     my $site = shift;
-    test_command({ cmd => "/usr/bin/omd rm $site", stdin => "yes\n" });
+    test_command({ cmd => TestUtils::get_omd_bin()." rm $site", stdin => "yes\n" });
     return;
 }
 
@@ -340,6 +387,12 @@ sub _get_url {
 
     return $newurl;
 }
+
+END {
+    if(defined $omd_symlink_created and $omd_symlink_created == 1) {
+        unlink('/omd');
+    }
+};
 
 1;
 
