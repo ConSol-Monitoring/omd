@@ -99,10 +99,22 @@ sub read_distro_config {
 =cut
 sub test_command {
     my $test = shift;
+    my( $rc, $stderr);
     my($prg,$arg) = split(/\s+/, $test->{'cmd'}, 2);
     my $t = Test::Cmd->new(prog => $prg, workdir => '') or die($!);
-    $t->run(args => $arg, stdin => $test->{'stdin'});
-    my $rc = $?>>8;
+    alarm(120);
+    eval {
+        local $SIG{ALRM} = sub { die "timeout on cmd: ".$test->{'cmd'}."\n" };
+        $t->run(args => $arg, stdin => $test->{'stdin'});
+        $rc = $?>>8;
+    };
+    if($@) {
+        $stderr = $@;
+    } else {
+        $stderr = $t->stderr;
+        $stderr = TestUtils::_clean_stderr($stderr);
+    }
+    alarm(0);
 
     # run the command
     isnt($rc, undef, "cmd: ".$test->{'cmd'});
@@ -124,7 +136,7 @@ sub test_command {
     $test->{'errlike'} = '/^$/' unless exists $test->{'errlike'};
     if(defined $test->{'errlike'}) {
         for my $expr (ref $test->{'errlike'} eq 'ARRAY' ? @{$test->{'errlike'}} : $test->{'errlike'} ) {
-            like($t->stderr, $expr, "stderr like ".$expr) || diag("\ncmd: '".$test->{'cmd'}."' failed");
+            like($stderr, $expr, "stderr like ".$expr) || diag("\ncmd: '".$test->{'cmd'}."' failed");
         }
     }
 
@@ -376,6 +388,20 @@ sub _get_url {
     }
 
     return $newurl;
+}
+
+
+##################################################
+
+=head2 _clean_stderr
+
+  remove some know errors from stderr
+
+=cut
+sub _clean_stderr {
+    my $text = shift || '';
+    $text =~ s/httpd: Could not reliably determine the server's fully qualified domain name, using 127.0.0.1 for ServerName//;
+    return $text;
 }
 
 END {
