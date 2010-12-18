@@ -56,11 +56,18 @@ sub get_omd_bin {
     else {
         if(-s '/omd') {
             my $target = readlink('/omd');
-            if($target ne getcwd()."/destdir/omd") {
-                BAIL_OUT('symlink for /omd already exists but is wrong: should be: '.getcwd().'/destdir/omd but got: '.$target);
+            if($omd_bin eq '/usr/bin/omd') {
+                if($target ne "/opt/omd") {
+                    BAIL_OUT('symlink for /omd already exists but is wrong: should be: /opt/omd but got: '.$target);
+                }
+            }
+            elsif($omd_bin eq 'destdir/opt/omd/versions/default/bin/omd') {
+                if($target ne getcwd()."/destdir/omd") {
+                    BAIL_OUT('symlink for /omd already exists but is wrong: should be: '.getcwd().'/destdir/omd but got: '.$target);
+                }
             }
         } else {
-            BAIL_OUT('cannot run tests, /omd has to be a symlink to '.getcwd().'/destdir/omd in order to run tests for the source version');
+            BAIL_OUT('cannot run tests, /omd has to be a symlink to '.getcwd().'/destdir/omd (or /opt/omd for testing packages) in order to run tests for the source version');
         }
     }
 
