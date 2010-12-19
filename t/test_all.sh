@@ -17,7 +17,7 @@ if [ ! -z $OMD_PACKAGE ]; then
 
     # Debian / Ubuntu
     if [ -x /usr/bin/apt-get  ]; then
-        apt-get -y install `dpkg-deb --info $OMD_PACKAGE | grep Depends: | sed -e 's/Depends://' -e 's/debconf.*debconf-2.0,//' | tr -d ','`
+        DEBIAN_FRONTEND=noninteractive apt-get -y --no-install-recommends install `dpkg-deb --info $OMD_PACKAGE | grep Depends: | sed -e 's/Depends://' -e 's/debconf.*debconf-2.0,//' | tr -d ','`
         dpkg -i $OMD_PACKAGE
 
     # Centos
