@@ -400,9 +400,11 @@ sub _get_url {
 =cut
 sub _clean_stderr {
     my $text = shift || '';
-    $text =~ s/httpd: Could not reliably determine the server's fully qualified domain name, using 127.0.0.1 for ServerName//;
+    $text =~ s/\w+: Could not reliably determine the server's fully qualified domain name, using .*? for ServerName//;
     return $text;
 }
+
+##################################################
 
 END {
     if(defined $omd_symlink_created and $omd_symlink_created == 1) {

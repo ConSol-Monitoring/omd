@@ -11,8 +11,13 @@ if [ $(id -u) -ne 0 ]; then
 fi
 
 # do we install a package?
-if [ ! -z $OMD_PACKAGE ]; then
+if [ ! -z "$OMD_PACKAGE" ]; then
     echo "###################################################################"
+
+    if [ ! -e "$OMD_PACKAGE" ]; then
+        echo "cannot install $OMD_PACKAGE: no such file"
+    fi
+
     echo "installing " `basename $OMD_PACKAGE`
 
     # Debian / Ubuntu
