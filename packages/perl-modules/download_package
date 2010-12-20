@@ -18,6 +18,7 @@ if($? != 0) {
 chdir("src");
 our @downloaded;
 for my $module (@ARGV) {
+    print $module." is a core module\n" if is_core_module($module);
     download_module($module);
 }
 # print result of all downloaded files

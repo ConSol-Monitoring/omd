@@ -11,6 +11,11 @@ build:
 	tar xzf template-arctic.tgz -C $(DIR)/lib/tpl/
 	tar xzf plugin-include.tgz -C $(DIR)/lib/plugins/
 
+	for p in patches/*.patch ; do \
+		echo "applying $$p..." ; \
+		( cd $(DIR) ; patch -p1 -b ) < $$p ; \
+	done
+
 install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/dokuwiki
 	cp preload.php $(DIR)/inc/
