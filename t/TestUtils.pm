@@ -8,26 +8,66 @@ package TestUtils;
 
 use warnings;
 use strict;
+use Cwd;
 use Test::More;
 use Data::Dumper;
 use LWP::UserAgent;
 use File::Temp qw/ :POSIX /;
+use Test::Cmd;
+use HTML::Lint;
 
-eval { require Test::Cmd; };
-if($@) {
-    plan( skip_all => "creating testsite requires Test::Cmd" );
+if($> != 0) {
+    plan( skip_all => "creating testsites requires root permission" );
 }
-elsif($> != 0) {
-    plan( skip_all => "creating testsite requires root permission" );
-}
+our $omd_symlink_created = 0;
 
 ##################################################
-# HTML::Lint installed?
-my $use_html_lint = 0;
-eval {
-    require HTML::Lint;
-    $use_html_lint = 1;
-};
+
+=head2 get_omd_bin
+
+  returns path to omd binary
+
+=cut
+
+sub get_omd_bin {
+    our $omd_bin;
+    return $omd_bin if defined $omd_bin;
+
+    $omd_bin = $ENV{'OMD_BIN'} || 'destdir/opt/omd/versions/default/bin/omd';
+
+    # first check /omd
+    if( ! -e '/omd' ) {
+        if($omd_bin eq '/usr/bin/omd') {
+            BAIL_OUT('Broken installation, got /usr/bin/omd but no /omd')
+        } elsif($omd_bin eq 'destdir/opt/omd/versions/default/bin/omd') {
+            symlink(getcwd()."/destdir/omd", '/omd');
+            $omd_symlink_created = 1;
+        } else {
+            BAIL_OUT('did not find a valid /omd, please make sure it exists')
+        }
+    }
+    else {
+        if(-s '/omd') {
+            my $target = readlink('/omd');
+            if($omd_bin eq '/usr/bin/omd') {
+                if($target ne "/opt/omd") {
+                    BAIL_OUT('symlink for /omd already exists but is wrong: should be: /opt/omd but got: '.$target);
+                }
+            }
+            elsif($omd_bin eq 'destdir/opt/omd/versions/default/bin/omd') {
+                if($target ne getcwd()."/destdir/omd") {
+                    BAIL_OUT('symlink for /omd already exists but is wrong: should be: '.getcwd().'/destdir/omd but got: '.$target);
+                }
+            }
+        } else {
+            BAIL_OUT('cannot run tests, /omd has to be a symlink to '.getcwd().'/destdir/omd (or /opt/omd for testing packages) in order to run tests for the source version');
+        }
+    }
+
+    -x $omd_bin or BAIL_OUT($omd_bin." is required for further tests: $!");
+
+    return $omd_bin;
+}
 
 ##################################################
 
@@ -59,10 +99,22 @@ sub read_distro_config {
 =cut
 sub test_command {
     my $test = shift;
+    my( $rc, $stderr);
     my($prg,$arg) = split(/\s+/, $test->{'cmd'}, 2);
     my $t = Test::Cmd->new(prog => $prg, workdir => '') or die($!);
-    $t->run(args => $arg, stdin => $test->{'stdin'});
-    my $rc = $?>>8;
+    alarm(120);
+    eval {
+        local $SIG{ALRM} = sub { die "timeout on cmd: ".$test->{'cmd'}."\n" };
+        $t->run(args => $arg, stdin => $test->{'stdin'});
+        $rc = $?>>8;
+    };
+    if($@) {
+        $stderr = $@;
+    } else {
+        $stderr = $t->stderr;
+        $stderr = TestUtils::_clean_stderr($stderr);
+    }
+    alarm(0);
 
     # run the command
     isnt($rc, undef, "cmd: ".$test->{'cmd'});
@@ -70,13 +122,13 @@ sub test_command {
     # exit code?
     $test->{'exit'} = 0 unless exists $test->{'exit'};
     if(defined $test->{'exit'}) {
-        ok($rc == $test->{'exit'}, "exit code: ".$rc." == ".$test->{'exit'});
+        ok($rc == $test->{'exit'}, "exit code: ".$rc." == ".$test->{'exit'}) || diag("\ncmd: '".$test->{'cmd'}."' failed\n");
     }
 
     # matches on stdout?
     if(defined $test->{'like'}) {
         for my $expr (ref $test->{'like'} eq 'ARRAY' ? @{$test->{'like'}} : $test->{'like'} ) {
-            like($t->stdout, $expr, "stdout like ".$expr);
+            like($t->stdout, $expr, "stdout like ".$expr) || diag("\ncmd: '".$test->{'cmd'}."' failed\n");
         }
     }
 
@@ -84,7 +136,7 @@ sub test_command {
     $test->{'errlike'} = '/^$/' unless exists $test->{'errlike'};
     if(defined $test->{'errlike'}) {
         for my $expr (ref $test->{'errlike'} eq 'ARRAY' ? @{$test->{'errlike'}} : $test->{'errlike'} ) {
-            like($t->stderr, $expr, "stderr like ".$expr);
+            like($stderr, $expr, "stderr like ".$expr) || diag("\ncmd: '".$test->{'cmd'}."' failed");
         }
     }
 
@@ -103,7 +155,7 @@ sub test_command {
 =cut
 sub create_test_site {
     my $site = "testsite"; # TODO: make uniq name
-    test_command({ cmd => "/usr/bin/omd create $site" });
+    test_command({ cmd => TestUtils::get_omd_bin()." create $site" });
     return $site;
 }
 
@@ -117,7 +169,7 @@ sub create_test_site {
 =cut
 sub remove_test_site {
     my $site = shift;
-    test_command({ cmd => "/usr/bin/omd rm $site", stdin => "yes\n" });
+    test_command({ cmd => TestUtils::get_omd_bin()." rm $site", stdin => "yes\n" });
     return;
 }
 
@@ -171,9 +223,6 @@ sub test_url {
     # html valitidy
     SKIP: {
         if($page->{'content_type'} =~ 'text\/html') {
-            if($use_html_lint == 0) {
-                skip "no HTML::Lint installed", 2;
-            }
             my $lint = new HTML::Lint;
             isa_ok( $lint, "HTML::Lint" );
 
@@ -340,6 +389,28 @@ sub _get_url {
 
     return $newurl;
 }
+
+
+##################################################
+
+=head2 _clean_stderr
+
+  remove some know errors from stderr
+
+=cut
+sub _clean_stderr {
+    my $text = shift || '';
+    $text =~ s/\w+: Could not reliably determine the server's fully qualified domain name, using .*? for ServerName//;
+    return $text;
+}
+
+##################################################
+
+END {
+    if(defined $omd_symlink_created and $omd_symlink_created == 1) {
+        unlink('/omd');
+    }
+};
 
 1;
 

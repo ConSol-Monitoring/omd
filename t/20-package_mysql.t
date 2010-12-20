@@ -8,23 +8,26 @@ BEGIN {
     use lib('t');
     require TestUtils;
     import TestUtils;
+    use FindBin;
+    use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
 plan( tests => 28 );
 
 ##################################################
 # create our test site
-my $site = TestUtils::create_test_site() or BAIL_OUT("no further testing without site");
+my $omd_bin = TestUtils::get_omd_bin();
+my $site    = TestUtils::create_test_site() or BAIL_OUT("no further testing without site");
 
 ##################################################
 # execute some checks
 my $tests = [
-  { cmd => "/usr/bin/omd config $site set MYSQL on" },
-  { cmd => "/usr/bin/omd config $site show MYSQL",  like => '/on/' },
-  { cmd => "/usr/bin/omd start  $site" },
-  { cmd => "/usr/bin/omd status $site",             like => '/mysql:\s*running/' },
+  { cmd => $omd_bin." config $site set MYSQL on" },
+  { cmd => $omd_bin." config $site show MYSQL",  like => '/on/' },
+  { cmd => $omd_bin." start  $site" },
+  { cmd => $omd_bin." status $site",             like => '/mysql:\s*running/' },
   { cmd => "/bin/su - $site -c 'mysql mysql'", stdin => "show tables;\n", like => [ '/user/', '/tables_priv/' ] },
-  { cmd => "/usr/bin/omd stop   $site" },
+  { cmd => $omd_bin." stop   $site" },
 ];
 for my $test (@{$tests}) {
     TestUtils::test_command($test);

@@ -8,13 +8,16 @@ BEGIN {
     use lib('t');
     require TestUtils;
     import TestUtils;
+    use FindBin;
+    use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
 plan( tests => 14 );
 
 ##################################################
 # create our test site
-my $site = TestUtils::create_test_site() or BAIL_OUT("no further testing without site");
+my $omd_bin = TestUtils::get_omd_bin();
+my $site    = TestUtils::create_test_site() or BAIL_OUT("no further testing without site");
 
 ##################################################
 # execute some checks
