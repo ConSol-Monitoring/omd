@@ -67,7 +67,7 @@ esac
 nagios_proc() {
     PROC=$(ps -u $USR --ppid 1 -o pid,cmd \
              | grep "$BIN -d $CFG_FILE" 2>&1 | grep -v grep)
-    PID=$(echo "$PROC" | sed 's/^ //g' | cut -d' ' -f1)
+    PID=$(echo "$PROC" | sed 's/^ *//g' | cut -d' ' -f1)
     if [ "$PID" != "" ]; then
         echo "$PID"
         return 0
@@ -84,16 +84,6 @@ nagios_proc() {
 pidof_nagios() {
     nagios_proc
     return $?
-    
-    if [ -e "$PID_FILE" ]; then
-        PID=$(cat "$PID_FILE")
-        [ -z "$PID" ] && return 1
-        if ps $PID >/dev/null 2>&1; then
-            echo $PID
-            return 0
-        fi
-    fi
-    return 1
 }
 
 verify_config() {
