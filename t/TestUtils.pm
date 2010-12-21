@@ -99,10 +99,10 @@ sub read_distro_config {
 =cut
 sub test_command {
     my $test = shift;
-    my( $rc, $stderr);
+    my($rc, $stderr) = ( -1, '') ;
     my($prg,$arg) = split(/\s+/, $test->{'cmd'}, 2);
     my $t = Test::Cmd->new(prog => $prg, workdir => '') or die($!);
-    alarm(120);
+    alarm(300);
     eval {
         local $SIG{ALRM} = sub { die "timeout on cmd: ".$test->{'cmd'}."\n" };
         $t->run(args => $arg, stdin => $test->{'stdin'});
@@ -133,7 +133,7 @@ sub test_command {
     }
 
     # matches on stderr?
-    $test->{'errlike'} = '/^$/' unless exists $test->{'errlike'};
+    $test->{'errlike'} = '/^\s*$/' unless exists $test->{'errlike'};
     if(defined $test->{'errlike'}) {
         for my $expr (ref $test->{'errlike'} eq 'ARRAY' ? @{$test->{'errlike'}} : $test->{'errlike'} ) {
             like($stderr, $expr, "stderr like ".$expr) || diag("\ncmd: '".$test->{'cmd'}."' failed");
@@ -400,7 +400,9 @@ sub _get_url {
 =cut
 sub _clean_stderr {
     my $text = shift || '';
-    $text =~ s/\w+: Could not reliably determine the server's fully qualified domain name, using .*? for ServerName//;
+    $text =~ s/[\w\-]+: Could not reliably determine the server's fully qualified domain name, using .*? for ServerName//g;
+    $text =~ s/[\w\-]+: apr_sockaddr_info_get\(\) failed for \w+//gms;
+    $text =~ s/Syntax OK//g;
     return $text;
 }
 

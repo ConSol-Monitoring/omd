@@ -14,6 +14,8 @@ fi
 if [ ! -z "$OMD_PACKAGE" ]; then
     echo "###################################################################"
 
+    OMD_PACKAGE=`ls -1 $OMD_PACKAGE | head -n 1`
+
     if [ ! -e "$OMD_PACKAGE" ]; then
         echo "cannot install $OMD_PACKAGE: no such file"
     fi
