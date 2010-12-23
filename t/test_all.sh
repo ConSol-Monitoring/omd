@@ -24,7 +24,7 @@ if [ ! -z "$OMD_PACKAGE" ]; then
 
     # Debian / Ubuntu
     if [ -x /usr/bin/apt-get  ]; then
-        apt-get update && DEBIAN_FRONTEND=noninteractive apt-get -y --no-install-recommends install `dpkg-deb --info $OMD_PACKAGE | grep Depends: | sed -e 's/Depends://' -e 's/debconf.*debconf-2.0,//' | tr -d ','` && dpkg -i $OMD_PACKAGE
+        apt-get -qq update && DEBIAN_FRONTEND=noninteractive apt-get -q -y --no-install-recommends install `dpkg-deb --info $OMD_PACKAGE | grep Depends: | sed -e 's/Depends://' -e 's/debconf.*debconf-2.0,//' | tr -d ','` && dpkg -i $OMD_PACKAGE
 
     # Centos
     elif [ -x /usr/bin/yum  ]; then
@@ -32,7 +32,7 @@ if [ ! -z "$OMD_PACKAGE" ]; then
 
     # Suse
     elif [ -x /usr/bin/zypper  ]; then
-        /usr/bin/zypper install -n -l --no-recommends $OMD_PACKAGE
+        /usr/bin/zypper --quiet --non-interactive install $OMD_PACKAGE || /bin/rpm -i $OMD_PACKAGE
     fi
 
     rc=$?
