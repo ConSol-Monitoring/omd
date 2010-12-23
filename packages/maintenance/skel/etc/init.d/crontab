@@ -17,7 +17,7 @@ case "$1" in
 
     start)
 	echo -en "Initializing Crontab "
-	${MERGECRONTABS} ${CROND} | $CRONTAB -u $USER - > /dev/null
+	${MERGECRONTABS} ${CROND} | $CRONTAB - > /dev/null
         if [ $? -eq 0 ]; then
             echo "done."
             exit 0
