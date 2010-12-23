@@ -14,12 +14,20 @@ use Data::Dumper;
 use LWP::UserAgent;
 use File::Temp qw/ :POSIX /;
 use Test::Cmd;
-use HTML::Lint;
 
 if($> != 0) {
     plan( skip_all => "creating testsites requires root permission" );
 }
 our $omd_symlink_created = 0;
+
+##################################################
+# HTML::Lint installed?
+my $use_html_lint = 0;
+eval {
+    require HTML::Lint;
+    $use_html_lint = 1;
+};
+
 
 ##################################################
 
@@ -223,6 +231,10 @@ sub test_url {
     # html valitidy
     SKIP: {
         if($page->{'content_type'} =~ 'text\/html') {
+            if($use_html_lint == 0) {
+                skip "no HTML::Lint installed", 2;
+            }
+
             my $lint = new HTML::Lint;
             isa_ok( $lint, "HTML::Lint" );
 
