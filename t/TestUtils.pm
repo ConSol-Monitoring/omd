@@ -14,19 +14,12 @@ use Data::Dumper;
 use LWP::UserAgent;
 use File::Temp qw/ :POSIX /;
 use Test::Cmd;
+use HTML::Lint;
 
 if($> != 0) {
     plan( skip_all => "creating testsites requires root permission" );
 }
 our $omd_symlink_created = 0;
-
-##################################################
-# HTML::Lint installed?
-my $use_html_lint = 0;
-eval {
-    require HTML::Lint;
-    $use_html_lint = 1;
-};
 
 ##################################################
 
@@ -42,7 +35,7 @@ sub get_omd_bin {
 
     $omd_bin = $ENV{'OMD_BIN'} || 'destdir/opt/omd/versions/default/bin/omd';
 
-    # check /omd
+    # first check /omd
     if( ! -e '/omd' ) {
         if($omd_bin eq '/usr/bin/omd') {
             BAIL_OUT('Broken installation, got /usr/bin/omd but no /omd')
@@ -106,10 +99,22 @@ sub read_distro_config {
 =cut
 sub test_command {
     my $test = shift;
+    my($rc, $stderr) = ( -1, '') ;
     my($prg,$arg) = split(/\s+/, $test->{'cmd'}, 2);
     my $t = Test::Cmd->new(prog => $prg, workdir => '') or die($!);
-    $t->run(args => $arg, stdin => $test->{'stdin'});
-    my $rc = $?>>8;
+    alarm(300);
+    eval {
+        local $SIG{ALRM} = sub { die "timeout on cmd: ".$test->{'cmd'}."\n" };
+        $t->run(args => $arg, stdin => $test->{'stdin'});
+        $rc = $?>>8;
+    };
+    if($@) {
+        $stderr = $@;
+    } else {
+        $stderr = $t->stderr;
+        $stderr = TestUtils::_clean_stderr($stderr);
+    }
+    alarm(0);
 
     # run the command
     isnt($rc, undef, "cmd: ".$test->{'cmd'});
@@ -117,21 +122,21 @@ sub test_command {
     # exit code?
     $test->{'exit'} = 0 unless exists $test->{'exit'};
     if(defined $test->{'exit'}) {
-        ok($rc == $test->{'exit'}, "exit code: ".$rc." == ".$test->{'exit'});
+        ok($rc == $test->{'exit'}, "exit code: ".$rc." == ".$test->{'exit'}) || diag("\ncmd: '".$test->{'cmd'}."' failed\n");
     }
 
     # matches on stdout?
     if(defined $test->{'like'}) {
         for my $expr (ref $test->{'like'} eq 'ARRAY' ? @{$test->{'like'}} : $test->{'like'} ) {
-            like($t->stdout, $expr, "stdout like ".$expr);
+            like($t->stdout, $expr, "stdout like ".$expr) || diag("\ncmd: '".$test->{'cmd'}."' failed\n");
         }
     }
 
     # matches on stderr?
-    $test->{'errlike'} = '/^$/' unless exists $test->{'errlike'};
+    $test->{'errlike'} = '/^\s*$/' unless exists $test->{'errlike'};
     if(defined $test->{'errlike'}) {
         for my $expr (ref $test->{'errlike'} eq 'ARRAY' ? @{$test->{'errlike'}} : $test->{'errlike'} ) {
-            like($t->stderr, $expr, "stderr like ".$expr);
+            like($stderr, $expr, "stderr like ".$expr) || diag("\ncmd: '".$test->{'cmd'}."' failed");
         }
     }
 
@@ -218,9 +223,6 @@ sub test_url {
     # html valitidy
     SKIP: {
         if($page->{'content_type'} =~ 'text\/html') {
-            if($use_html_lint == 0) {
-                skip "no HTML::Lint installed", 2;
-            }
             my $lint = new HTML::Lint;
             isa_ok( $lint, "HTML::Lint" );
 
@@ -387,6 +389,24 @@ sub _get_url {
 
     return $newurl;
 }
+
+
+##################################################
+
+=head2 _clean_stderr
+
+  remove some know errors from stderr
+
+=cut
+sub _clean_stderr {
+    my $text = shift || '';
+    $text =~ s/[\w\-]+: Could not reliably determine the server's fully qualified domain name, using .*? for ServerName//g;
+    $text =~ s/[\w\-]+: apr_sockaddr_info_get\(\) failed for \w+//gms;
+    $text =~ s/Syntax OK//g;
+    return $text;
+}
+
+##################################################
 
 END {
     if(defined $omd_symlink_created and $omd_symlink_created == 1) {

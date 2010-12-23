@@ -14,6 +14,8 @@ build:
 
 install:
 	$(MAKE) DESTDIR=$(DESTDIR) -C $(DIR) install
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/bin
+	install -m 755 lq $(DESTDIR)$(OMD_ROOT)/bin
 
 skel:
 

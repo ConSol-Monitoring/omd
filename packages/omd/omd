@@ -1725,15 +1725,17 @@ def main_mv_or_cp(what, args, options={}):
     sys.stdout.write("%sing site %s to %s..." % (what == "mv" and "Mov" or "Copy", old, new))
     sys.stdout.flush()
 
+    # Create new user. Note: even on mv we need to create a new user.
+    # Linux does not (officially) allow to rename a user.
+    uid = options.get("uid")
+    gid = options.get("gid")
+    useradd(new, uid, gid)
+
     if what == "mv":
         # Rename base directory and apache config
         os.rename(site_dir(old), site_dir(new))
         delete_apache_hook(old)
     else:
-        uid = options.get("uid")
-        gid = options.get("gid")
-        useradd(new, uid, gid)
-
         # Make exact file-per-file copy with same user but already new name
         os.mkdir(site_dir(new))
         os.system("rsync -arx '%s/' '%s/'" % (site_dir(g_sitename), site_dir(new)))

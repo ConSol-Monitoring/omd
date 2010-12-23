@@ -1,3 +1,0 @@
-#!/bin/bash
-echo -e "$1" | unixcat ~/tmp/run/live
-exit $?
