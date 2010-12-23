@@ -12,6 +12,12 @@ CROND="###ROOT###/etc/cron.d/*"
 CRONTAB=`which crontab`          
 USER="###SITE###"
 
+# check for root
+if [ `id -u` -eq "0" ]; then
+        echo "This script will not run as root."
+        exit 1
+fi
+
 # See how we were called.
 case "$1" in
 
