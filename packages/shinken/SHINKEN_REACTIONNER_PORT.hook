@@ -1,0 +1,21 @@
+#!/bin/bash
+
+case "$1" in
+    alias)
+        echo "TCP port the Shinken reactionner listens on"
+    ;;
+    description)
+        cat << EOF
+If you configured Shinken as the monitoring core, this is the
+listening port of the reactionner .
+EOF
+    ;;
+    default)
+        echo "7769"
+    ;;
+    choices)
+        echo "[0-9]{1,5}"
+    ;;
+    set)
+    ;;
+esac

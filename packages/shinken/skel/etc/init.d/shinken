@@ -1,0 +1,286 @@
+#!/bin/sh
+
+### BEGIN INIT INFO
+# Provides:          shinken
+# Required-Start:    $local_fs
+# Required-Stop:     $local_fs
+# Default-Start:     2 3 4 5
+# Default-Stop:      S 0 1 6
+# Short-Description: shinken
+# Description:       shinken monitoring daemon
+### END INIT INFO
+
+cd ###ROOT###
+. ###ROOT###/.profile
+. ###ROOT###/etc/omd/site.conf
+[ "$CONFIG_CORE" = "shinken" ] || exit 5
+
+NAME="shinken"
+SCRIPTNAME=$0
+AVAIL_MODULES="scheduler poller reactionner broker arbiter"
+BIN="###ROOT###/bin"
+RUN="###ROOT###/tmp/shinken/run"
+VAR="###ROOT###/var"
+ETC="###ROOT###/tmp/shinken"
+
+# raw data and fragment files
+SOURCE_ETC=###ROOT###/etc/shinken
+# final config files
+TARGET_ETC=###ROOT###/tmp/shinken
+
+SHINKEN_ARBITER_PORT=${CONFIG_SHINKEN_ARBITER_PORT:=7770}
+SHINKEN_SCHEDULER_PORT=${CONFIG_SHINKEN_SCHEDULER_PORT:=7768}
+SHINKEN_POLLER_PORT=${CONFIG_SHINKEN_POLLER_PORT:=7771}
+SHINKEN_REACTIONNER_PORT=${CONFIG_SHINKEN_REACTIONNER_PORT:=7769}
+SHINKEN_BROKER_PORT=${CONFIG_SHINKEN_BROKER_PORT:=7772}
+
+WEB=${CONFIG_WEB:=nagios}
+LIVESTATUS_TCP=${CONFIG_LIVESTATUS_TCP:=off}
+LIVESTATUS_TCP_PORT=${CONFIG_LIVESTATUS_TCP_PORT:=6557}
+NSCA=${CONFIG_NSCA:=off}
+NSCA_TCP_PORT=${CONFIG_NSCA_TCP_PORT:=5667}
+
+# OMD: create configuration file out of fragments
+case "$1" in start|restart|reload|checkconfig)
+    merge-shinken-config \
+       $SOURCE_ETC/shinken.d/* \
+       $SOURCE_ETC/shinken.cfg \
+       > $TARGET_ETC/shinken.cfg || rm -f $TARGET_ETC/shinken.cfg
+
+    # change the listener ports in the process sections 
+    sed -ri 's/^([[:space:]]*port[[:space:]]*)([0-9]+)/\1'${SHINKEN_ARBITER_PORT}'/' $SOURCE_ETC/shinken-specific.d/arbiter.cfg
+    sed -ri 's/^([[:space:]]*port[[:space:]]*)([0-9]+)/\1'${SHINKEN_SCHEDULER_PORT}'/' $SOURCE_ETC/shinken-specific.d/scheduler.cfg
+    sed -ri 's/^([[:space:]]*port[[:space:]]*)([0-9]+)/\1'${SHINKEN_POLLER_PORT}'/' $SOURCE_ETC/shinken-specific.d/poller.cfg
+    sed -ri 's/^([[:space:]]*port[[:space:]]*)([0-9]+)/\1'${SHINKEN_REACTIONNER_PORT}'/' $SOURCE_ETC/shinken-specific.d/reactionner.cfg
+    sed -ri 's/^([[:space:]]*port[[:space:]]*)([0-9]+)/\1'${SHINKEN_BROKER_PORT}'/' $SOURCE_ETC/shinken-specific.d/broker.cfg
+    # all webservers except these two use livestatus
+    if [ "$WEB" != "nagios" -a "$WEB" != "none" ] ; then
+      sed -ri 's/^([[:space:]]*modules[[:space:]]*)(.+)/\1\2,Livestatus/' $SOURCE_ETC/shinken-specific.d/broker.cfg
+    fi
+    if [ "$LIVESTATUS_TCP" = "on" ]; then
+      sed -ri 's/^([[:space:]]*port[[:space:]]*)(.+)/\1'${LIVESTATUS_TCP_PORT}'/' $SOURCE_ETC/shinken-specific.d/module_livestatus.cfg
+    else
+      sed -ri 's/^([[:space:]]*port[[:space:]]*)(.+)/\1none/' $SOURCE_ETC/shinken-specific.d/module_livestatus.cfg
+    fi
+    # add the npcd module to the broker
+    if [ "$PNP4NAGIOS" = "on" ]; then
+      sed -ri 's/^([[:space:]]*modules[[:space:]]*)(.+)/\1\2,NPCD/' $SOURCE_ETC/shinken-specific.d/broker.cfg
+    fi
+    # add the nsca module to the arbiter
+    if [ "$NSCA" = "on" ]; then
+      sed -ri 's/^([[:space:]]*modules[[:space:]]*)(.+)/\1\2,NSCA/' $SOURCE_ETC/shinken-specific.d/arbiter.cfg
+      sed -ri 's/^([[:space:]]*port[[:space:]]*)([0-9]+)/\1'${NSCA_TCP_PORT}'/' $SOURCE_ETC/shinken-specific.d/module_nsca_server.cfg
+    fi
+    merge-shinken-specific-config \
+       $SOURCE_ETC/shinken-specific.d/* \
+       > $TARGET_ETC/shinken-specific.cfg || rm -f $TARGET_ETC/shinken-specific.cfg
+    cp $SOURCE_ETC/shinken-ini.d/*.ini $TARGET_ETC
+    sed -ri 's/^([[:space:]]*port[[:space:]]*=[[:space:]]*)([0-9]+)/\1'${SHINKEN_SCHEDULER_PORT}'/' $TARGET_ETC/schedulerd.ini
+    sed -ri 's/^([[:space:]]*port[[:space:]]*=[[:space:]]*)([0-9]+)/\1'${SHINKEN_POLLER_PORT}'/' $TARGET_ETC/pollerd.ini
+    sed -ri 's/^([[:space:]]*port[[:space:]]*=[[:space:]]*)([0-9]+)/\1'${SHINKEN_REACTIONNER_PORT}'/' $TARGET_ETC/reactionnerd.ini
+    sed -ri 's/^([[:space:]]*port[[:space:]]*=[[:space:]]*)([0-9]+)/\1'${SHINKEN_BROKER_PORT}'/' $TARGET_ETC/brokerd.ini
+esac
+
+usage() {
+    echo "Usage: $SCRIPTNAME [ -d ] {start|stop|restart|status|check} [ <$AVAIL_MODULES> ]" >&2
+    echo ""                                                                           >&2
+    echo " -d  start module in debug mode, only useful with start|restart"            >&2
+    echo ""                                                                           >&2
+    exit 3
+}
+
+DEBUG=0
+while getopts "d" flag; do
+    case "$flag" in
+        d)
+            DEBUG=1
+        ;;
+    esac
+done
+shift `expr $OPTIND - 1`
+
+CMD=$1
+shift
+SUBMODULES=$*
+
+if [ -z "$SUBMODULES" ]; then
+    SUBMODULES=$AVAIL_MODULES
+else
+    # verify given modules
+    for mod1 in $SUBMODULES; do
+        found=0
+        for mod2 in $AVAIL_MODULES; do
+            [ $mod1 = $mod2 ] && found=1;
+        done
+        [ $found = 0 ] && usage
+    done
+fi
+
+
+# Read configuration variable file if it is present
+[ -r /etc/default/$NAME ] && . /etc/default/$NAME
+
+# Load the VERBOSE setting and other rcS variables
+[ -f /etc/default/rcS ] && . /etc/default/rcS
+
+# Define LSB log_* functions.
+. /lib/lsb/init-functions
+
+#
+# return the pid for a submodule
+#
+getmodpid() {
+    mod=$1
+    pidfile="$RUN/${mod}d.pid"
+    if [ -s $pidfile ]; then
+        cat $pidfile
+    fi
+}
+
+#
+# stop modules
+#
+do_stop() {
+    ok=0
+    fail=0
+    echo "stoping $NAME...";
+    for mod in $SUBMODULES; do
+        pid=`getmodpid $mod`;
+        printf "%-15s: " $mod
+        if [ ! -z $pid ]; then
+            for cpid in $(ps -aef | grep $pid | grep "shinken-" | awk '{print $2}'); do
+                kill $cpid > /dev/null 2>&1
+            done
+        fi
+        echo "done"
+    done
+    return 0
+}
+
+
+#
+# Display status
+#
+do_status() {
+    MODULES=$1
+    [ -z $MODULES ] && MODULES=$SUBMODULES;
+    ok=0
+    fail=0
+    echo "status $NAME: ";
+    for mod in $MODULES; do
+        pid=`getmodpid $mod`;
+        printf "%-15s: " $mod
+        if [ ! -z $pid ]; then
+            ps -p $pid >/dev/null 2>&1
+            if [ $? = 0 ]; then
+                echo "RUNNING (pid $pid)"
+                ok=$((ok+1))
+            else
+                echo "NOT RUNNING"
+                fail=$((fail+1))
+            fi
+        else
+            echo "NOT RUNNING"
+            fail=$((fail+1))
+        fi
+    done
+    if [ $fail -gt 0 ]; then
+        return 1
+    fi
+    return 0
+}
+
+#
+# start our modules
+#
+do_start() {
+    printf "starting $NAME";
+    [ $DEBUG = 1 ] && printf " (DEBUG Mode)"
+    echo ": "
+    for mod in $SUBMODULES; do
+        printf "%-15s: " $mod
+        DEBUGCMD=""
+        [ $DEBUG = 1 ] && DEBUGCMD="--debug $VAR/${mod}-debug.log"
+        `do_status $mod  > /dev/null 2>&1`
+        if [ $? = 0 ]; then
+            pid=`getmodpid $mod`;
+            echo "ALREADY RUNNING (pid $pid)"
+        else
+            if [ $mod != "arbiter" ]; then
+                output=`$BIN/shinken-${mod} -d -c $ETC/${mod}d.ini $DEBUGCMD 2>&1`
+            else
+                output=`$BIN/shinken-${mod} -d -c $ETC/shinken.cfg -c $ETC/shinken-specific.cfg $DEBUGCMD 2>&1`
+            fi
+            if [ $? = 0 ]; then
+                echo "OK"
+            else
+                output=`echo $output | tail -1` # only show one line of error output...
+                echo "FAILED $output" 
+            fi
+        fi
+    done
+}
+
+#
+# do the config check
+#
+do_check() {
+    $BIN/shinken-arbiter -v -c $ETC/../shinken.cfg -c $ETC/shinken-specific.cfg $DEBUGCMD 2>&1
+    return $?
+}
+
+#
+# check for our command
+#
+case "$CMD" in
+  start)
+    [ "$VERBOSE" != no ] && log_daemon_msg "Starting $NAME"
+    do_start
+    do_status > /dev/null 2>&1
+    case "$?" in
+        0) [ "$VERBOSE" != no ] && log_end_msg 0 ;;
+        1) [ "$VERBOSE" != no ] && log_end_msg 1 ;;
+    esac
+    ;;
+  stop)
+    [ "$VERBOSE" != no ] && log_daemon_msg "Stopping $NAME"
+    do_stop
+    do_status > /dev/null 2>&1
+    case "$?" in
+        0) [ "$VERBOSE" != no ] && log_end_msg 1 ;;
+        1) [ "$VERBOSE" != no ] && log_end_msg 0 ;;
+    esac
+    ;;
+  restart)
+    [ "$VERBOSE" != no ] && log_daemon_msg "Restarting $NAME"
+    do_stop
+    do_status > /dev/null 2>&1
+    case "$?" in
+      1)
+        do_start
+        do_status > /dev/null 2>&1
+        case "$?" in
+            0) log_end_msg 0 ;;
+            *) log_end_msg 1 ;; # Failed to start
+        esac
+        ;;
+      *)
+        # Failed to stop
+        log_end_msg 1
+        ;;
+    esac
+    ;;
+  status)
+    do_status
+    ;;
+  check|checkconfig)
+    do_check
+    case "$?" in
+        0) log_end_msg 0 ;;
+        *) log_end_msg 1 ;; # Failed config check
+    esac
+    ;;
+  *)
+    usage;
+    ;;
+esac

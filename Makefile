@@ -22,6 +22,7 @@ PACKAGES=perl-modules \
          omd \
          pnp4nagios \
          rrdtool \
+         shinken \
          thruk \
          maintenance
 
