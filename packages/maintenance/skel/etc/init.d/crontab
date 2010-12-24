@@ -43,7 +43,7 @@ case "$1" in
         $0 start
         ;;
     status)
-        $CRONTAB -u $USER -l >/dev/null 2>&1
+        $CRONTAB -l >/dev/null 2>&1
         if [ $? -eq 0 ]; then
             echo "crontab initalized"
             exit 0
