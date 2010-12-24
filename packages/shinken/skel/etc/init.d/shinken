@@ -40,6 +40,9 @@ LIVESTATUS_TCP_PORT=${CONFIG_LIVESTATUS_TCP_PORT:=6557}
 NSCA=${CONFIG_NSCA:=off}
 NSCA_TCP_PORT=${CONFIG_NSCA_TCP_PORT:=5667}
 
+# Pyro and multiprocessing have been installed locally
+PYTHONPATH=###ROOT###/lib/python
+
 # OMD: create configuration file out of fragments
 case "$1" in start|restart|reload|checkconfig)
     merge-shinken-config \
