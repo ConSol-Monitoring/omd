@@ -1,0 +1,8 @@
+Python-Module
+- multiprocessing
+  Ist erst seit 2.6 im Standardumfang von Python
+  Fuer aeltere Versionen muss multiprocessing extra installiert werden
+  http://pypi.python.org/packages/source/m/multiprocessing/multiprocessing-2.6.2.1.tar.gz
+- Pyro
+  http://www.xs4all.nl/~irmen/pyro3/download/Pyro-3.11.tar.gz
+
