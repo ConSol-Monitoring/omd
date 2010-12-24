@@ -35,7 +35,7 @@ case "$1" in
 
     stop)
 	echo "Removing Crontab"
-	$CRONTAB -r -u $USER
+	$CRONTAB -r
         ;;
 
     restart|reload)
