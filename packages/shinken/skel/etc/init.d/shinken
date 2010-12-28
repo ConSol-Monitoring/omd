@@ -22,11 +22,13 @@ BIN="###ROOT###/bin"
 RUN="###ROOT###/tmp/shinken/run"
 VAR="###ROOT###/var"
 ETC="###ROOT###/tmp/shinken"
+TMP="###ROOT###/tmp"
 
 # raw data and fragment files
 SOURCE_ETC=###ROOT###/etc/shinken
 # final config files
 TARGET_ETC=###ROOT###/tmp/shinken
+TARGET_ETC_FOR_NAGIOS=###ROOT###/tmp/nagios
 
 SHINKEN_ARBITER_PORT=${CONFIG_SHINKEN_ARBITER_PORT:=7770}
 SHINKEN_SCHEDULER_PORT=${CONFIG_SHINKEN_SCHEDULER_PORT:=7768}
@@ -41,49 +43,68 @@ NSCA=${CONFIG_NSCA:=off}
 NSCA_TCP_PORT=${CONFIG_NSCA_TCP_PORT:=5667}
 
 # Pyro and multiprocessing have been installed locally
-PYTHONPATH=###ROOT###/lib/python
+export PYTHONPATH=###ROOT###/lib/python
 
 # OMD: create configuration file out of fragments
 case "$1" in start|restart|reload|checkconfig)
     merge-shinken-config \
-       $SOURCE_ETC/shinken.d/* \
+       $SOURCE_ETC/shinken.d/*.cfg \
        $SOURCE_ETC/shinken.cfg \
        > $TARGET_ETC/shinken.cfg || rm -f $TARGET_ETC/shinken.cfg
 
+    rm -rf $TARGET_ETC/shinken.specific.d
+    cp -r $SOURCE_ETC/shinken-specific.d $TARGET_ETC
+    cat <<EOTXT > $SOURCE_ETC/shinken-specific.d/README
+Do not edit the files in this directory. They were copied over from
+$SOURCE_ETC/shinken-specific.d and will be written to ../shinken-specific.cfg
+EOTXT
     # change the listener ports in the process sections 
-    sed -ri 's/^([[:space:]]*port[[:space:]]*)([0-9]+)/\1'${SHINKEN_ARBITER_PORT}'/' $SOURCE_ETC/shinken-specific.d/arbiter.cfg
-    sed -ri 's/^([[:space:]]*port[[:space:]]*)([0-9]+)/\1'${SHINKEN_SCHEDULER_PORT}'/' $SOURCE_ETC/shinken-specific.d/scheduler.cfg
-    sed -ri 's/^([[:space:]]*port[[:space:]]*)([0-9]+)/\1'${SHINKEN_POLLER_PORT}'/' $SOURCE_ETC/shinken-specific.d/poller.cfg
-    sed -ri 's/^([[:space:]]*port[[:space:]]*)([0-9]+)/\1'${SHINKEN_REACTIONNER_PORT}'/' $SOURCE_ETC/shinken-specific.d/reactionner.cfg
-    sed -ri 's/^([[:space:]]*port[[:space:]]*)([0-9]+)/\1'${SHINKEN_BROKER_PORT}'/' $SOURCE_ETC/shinken-specific.d/broker.cfg
+    sed -ri 's/^([[:space:]]*port[[:space:]]*)([0-9]+)/\1'${SHINKEN_ARBITER_PORT}'/' $TARGET_ETC/shinken-specific.d/arbiter.cfg
+    sed -ri 's/^([[:space:]]*port[[:space:]]*)([0-9]+)/\1'${SHINKEN_SCHEDULER_PORT}'/' $TARGET_ETC/shinken-specific.d/scheduler.cfg
+    sed -ri 's/^([[:space:]]*port[[:space:]]*)([0-9]+)/\1'${SHINKEN_POLLER_PORT}'/' $TARGET_ETC/shinken-specific.d/poller.cfg
+    sed -ri 's/^([[:space:]]*port[[:space:]]*)([0-9]+)/\1'${SHINKEN_REACTIONNER_PORT}'/' $TARGET_ETC/shinken-specific.d/reactionner.cfg
+    sed -ri 's/^([[:space:]]*port[[:space:]]*)([0-9]+)/\1'${SHINKEN_BROKER_PORT}'/' $TARGET_ETC/shinken-specific.d/broker.cfg
     # all webservers except these two use livestatus
     if [ "$WEB" != "nagios" -a "$WEB" != "none" ] ; then
-      sed -ri 's/^([[:space:]]*modules[[:space:]]*)(.+)/\1\2,Livestatus/' $SOURCE_ETC/shinken-specific.d/broker.cfg
+      sed -ri 's/^([[:space:]]*modules[[:space:]]*)(.+)/\1\2,Livestatus/' $TARGET_ETC/shinken-specific.d/broker.cfg
     fi
     if [ "$LIVESTATUS_TCP" = "on" ]; then
-      sed -ri 's/^([[:space:]]*port[[:space:]]*)(.+)/\1'${LIVESTATUS_TCP_PORT}'/' $SOURCE_ETC/shinken-specific.d/module_livestatus.cfg
+      sed -ri 's/^([[:space:]]*port[[:space:]]*)(.+)/\1'${LIVESTATUS_TCP_PORT}'/' $TARGET_ETC/shinken-specific.d/module_livestatus.cfg
     else
-      sed -ri 's/^([[:space:]]*port[[:space:]]*)(.+)/\1none/' $SOURCE_ETC/shinken-specific.d/module_livestatus.cfg
+      sed -ri 's/^([[:space:]]*port[[:space:]]*)(.+)/\1none/' $TARGET_ETC/shinken-specific.d/module_livestatus.cfg
     fi
     # add the npcd module to the broker
     if [ "$PNP4NAGIOS" = "on" ]; then
-      sed -ri 's/^([[:space:]]*modules[[:space:]]*)(.+)/\1\2,NPCD/' $SOURCE_ETC/shinken-specific.d/broker.cfg
+      sed -ri 's/^([[:space:]]*modules[[:space:]]*)(.+)/\1\2,NPCD/' $TARGET_ETC/shinken-specific.d/broker.cfg
     fi
     # add the nsca module to the arbiter
     if [ "$NSCA" = "on" ]; then
-      sed -ri 's/^([[:space:]]*modules[[:space:]]*)(.+)/\1\2,NSCA/' $SOURCE_ETC/shinken-specific.d/arbiter.cfg
-      sed -ri 's/^([[:space:]]*port[[:space:]]*)([0-9]+)/\1'${NSCA_TCP_PORT}'/' $SOURCE_ETC/shinken-specific.d/module_nsca_server.cfg
+      sed -ri 's/^([[:space:]]*modules[[:space:]]*)(.+)/\1\2,NSCA/' $TARGET_ETC/shinken-specific.d/arbiter.cfg
+      sed -ri 's/^([[:space:]]*port[[:space:]]*)([0-9]+)/\1'${NSCA_TCP_PORT}'/' $TARGET_ETC/shinken-specific.d/module_nsca_server.cfg
     fi
     merge-shinken-specific-config \
-       $SOURCE_ETC/shinken-specific.d/* \
+       $TARGET_ETC/shinken-specific.d/*.cfg \
        > $TARGET_ETC/shinken-specific.cfg || rm -f $TARGET_ETC/shinken-specific.cfg
     cp $SOURCE_ETC/shinken-ini.d/*.ini $TARGET_ETC
     sed -ri 's/^([[:space:]]*port[[:space:]]*=[[:space:]]*)([0-9]+)/\1'${SHINKEN_SCHEDULER_PORT}'/' $TARGET_ETC/schedulerd.ini
     sed -ri 's/^([[:space:]]*port[[:space:]]*=[[:space:]]*)([0-9]+)/\1'${SHINKEN_POLLER_PORT}'/' $TARGET_ETC/pollerd.ini
     sed -ri 's/^([[:space:]]*port[[:space:]]*=[[:space:]]*)([0-9]+)/\1'${SHINKEN_REACTIONNER_PORT}'/' $TARGET_ETC/reactionnerd.ini
     sed -ri 's/^([[:space:]]*port[[:space:]]*=[[:space:]]*)([0-9]+)/\1'${SHINKEN_BROKER_PORT}'/' $TARGET_ETC/brokerd.ini
-    # force creation of a run-directory for the pid-files
+    # Force creation of a run-directory for the pid-files
     test -d ${RUN} || mkdir -p ${RUN}
+    # Now something ugly. The cgi scripts of the classical web interface
+    # can't handle shinken-specific settings in the main config file.
+    # Create a nagios.cfg-compatible shinken.cfg
+    cp $TARGET_ETC/shinken.cfg $TARGET_ETC/shinken-apache.cfg
+    SHINKEN_ONLY_PARAMS="shinken_user shinken_group"
+    for param in $SHINKEN_ONLY_PARAMS; do
+      sed -ri 's/^([[:space:]]*'${param}')/#\1/' $TARGET_ETC/shinken-apache.cfg
+    done
+    cat <<-EOTXT >> $TARGET_ETC/shinken-apache.cfg
+	check_result_path=$TMP
+	status_file=$TARGET_ETC_FOR_NAGIOS/status.dat
+	object_cache_file=$VAR/nagios/objects.cache
+EOTXT
 esac
 
 usage() {
