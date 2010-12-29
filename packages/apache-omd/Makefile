@@ -53,7 +53,7 @@ modfcgid:
 	tar zxf $(FCGI_FILE).tar.gz
 	patch -p0 < ./patches/0001-mod_fcgid.patch
 	patch -p0 < ./patches/0002-mod_fcgid.patch
-	cd $(FCGI_FILE) && ./configure.apxs
+	cd $(FCGI_FILE) && APXS=/usr/sbin/apxs ./configure.apxs
 	$(MAKE) -C $(FCGI_FILE)
 
 modfcgid_install:
