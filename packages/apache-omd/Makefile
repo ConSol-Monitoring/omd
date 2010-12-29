@@ -26,7 +26,6 @@ build: $(APACHE_MODULES)
 
 install: $(APACHE_MODULES_INSTALL)
 	# Install software below $(DESTDIR)$(OMD_ROOT)/{bin,lib,share}
-	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/apache
 
 skel:
 	# Replace macros
@@ -58,4 +57,5 @@ modfcgid:
 	$(MAKE) -C $(FCGI_FILE)
 
 modfcgid_install:
-	cp $(FCGI_FILE)/modules/fcgid/.libs/mod_fcgid.so $(DESTDIR)$(OMD_ROOT)/lib/apache
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/apache
+	cp $(FCGI_FILE)/modules/fcgid/.libs/mod_fcgid.so $(DESTDIR)$(OMD_ROOT)/lib/apache/
