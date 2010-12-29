@@ -283,6 +283,33 @@ sub test_url {
 
 ##################################################
 
+=head2 config
+
+  return config value
+
+=cut
+sub config {
+    my $key = shift;
+    our $config;
+    return $config->{$key} if defined $config;
+
+    $config = {};
+    my $conf_file = "/omd/versions/default/share/omd/distro.info";
+    open(my $fh, '<', $conf_file) or carp("cannot open $conf_file: $!");
+    while(<$fh>) {
+        my($key,$value) = split/\s+=\s+/,$_,2;
+        $key   =~ s/^\s+//;
+        $value =~ s/\s+$//;
+        $config->{$key} = $value;
+    }
+    close($fh);
+    return $config->{$key};
+}
+
+
+
+##################################################
+
 =head2 _diag_lint_errors_and_remove_some_exceptions
 
   removes some lint errors we want to ignore
