@@ -1,5 +1,5 @@
 DISTRO_CODE     = lucid
-BUILD_PACKAGES    = build-essential libcairo2-dev libpango1.0-dev libxml2-dev patch libmcrypt-dev libssl-dev libgd2-xpm-dev libglib2.0-dev libgnutls-dev libldap2-dev libmcrypt-dev libmysqlclient15-dev libperl-dev dpatch git-buildpackage snmp libreadline-dev python-setuptools
+BUILD_PACKAGES    = build-essential libcairo2-dev libpango1.0-dev libxml2-dev patch libmcrypt-dev libssl-dev libgd2-xpm-dev libglib2.0-dev libgnutls-dev libldap2-dev libmcrypt-dev libmysqlclient15-dev libperl-dev dpatch git-buildpackage snmp libreadline-dev python-setuptools python-dev
 OS_PACKAGES       = xinetd libdbi0 libapache2-mod-php5 libapache2-mod-python libapache2-mod-fcgid libapache2-mod-proxy-html xinetd php5-gd php5-sqlite php5-mcrypt graphviz snmp libgd2-xpm dnsutils fping mysql-server php-pear php5 php5-cli php5-sqlite php5-mcrypt libdbi0 smbclient unzip libnet-snmp-perl libsnmp-perl rsync dialog libpango1.0-0 curl patch libreadline5 pyro
 USERADD_OPTIONS   = 
 ADD_USER_TO_GROUP = gpasswd -a %(user)s %(group)s
