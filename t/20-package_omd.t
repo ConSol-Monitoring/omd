@@ -42,7 +42,7 @@ for my $test (@{$tests}) {
 
 # switch webserver to shared mode
 TestUtils::test_command({ cmd => $omd_bin." config $site set WEBSERVER shared" });
-TestUtils::test_command({ cmd => "/etc/init.d/apache2 reload" });
+TestUtils::test_command({ cmd => TestUtils::config('APACHE_INIT')." reload" });
 
 # then run tests again
 for my $test (@{$tests}) {

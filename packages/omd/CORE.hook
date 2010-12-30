@@ -29,6 +29,7 @@ EOF
         if [ "$2" != "shinken" ]
         then
             rm -f $OMD_ROOT/shinken
+            rm -f $OMD_ROOT/etc/apache/conf.d/nagios.conf
         fi
         # now setup the new selection
         if [ "$2" == "nagios" ]
@@ -36,7 +37,8 @@ EOF
             ln -sfn ../../nagios/apache.conf $OMD_ROOT/etc/apache/conf.d/nagios.conf 
         elif [ "$2" == "shinken" ]
         then
-            # no cgi stuff. Thruk is the default interface
+            # Thruk is the default interface, but classic is possible
+            ln -sfn ../../shinken/apache.conf $OMD_ROOT/etc/apache/conf.d/nagios.conf 
             ln -sfn $OMD_ROOT/lib/shinken/shinken $OMD_ROOT/shinken
         else
             rm -f $OMD_ROOT/etc/apache/conf.d/nagios.conf

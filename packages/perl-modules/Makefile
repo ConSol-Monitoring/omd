@@ -84,7 +84,7 @@ MODULES = ExtUtils-MakeMaker-6.56.tar.gz \
           Class-Accessor-Chained-0.01.tar.gz \
           Data-Page-2.02.tar.gz \
           File-Slurp-9999.13.tar.gz \
-          Date-Manip-6.12.tar.gz \
+          Date-Manip-6.20.tar.gz \
           OLE-Storage_Lite-0.19.tar.gz \
           Parse-RecDescent-1.965001.tar.gz \
           Spreadsheet-WriteExcel-2.37.tar.gz \
