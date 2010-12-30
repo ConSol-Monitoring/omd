@@ -440,7 +440,6 @@ sub _get_url {
 sub _clean_stderr {
     my $text = shift || '';
     $text =~ s/[\w\-]+: Could not reliably determine the server's fully qualified domain name, using .*? for ServerName//g;
-    $text =~ s/[\w\-]+: apr_sockaddr_info_get\(\) failed for \w+//gms;
     $text =~ s/Syntax OK//g;
     return $text;
 }
