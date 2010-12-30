@@ -48,10 +48,10 @@ installshinken:
 	install -m 755 merge-shinken-specific-config $(DESTDIR)$(OMD_ROOT)/bin
   
 installpyro:
-	( cd $(PYRO) ; python setup.py install --home=$(DESTDIR)$(OMD_ROOT) --install-scripts=$(DESTDIR)$(OMD_ROOT)/tmp --install-data=$(DESTDIR)$(OMD_ROOT)/tmp )
+	( cd $(PYRO) ; python setup.py install --prefix=$(DESTDIR)$(OMD_ROOT) --install-scripts=$(DESTDIR)$(OMD_ROOT)/tmp --install-data=$(DESTDIR)$(OMD_ROOT)/tmp )
 
 installmp:
-	( cd $(MP) ; PYTHONPATH=$(DESTDIR)$(OMD_ROOT)/lib/python python setup.py install --home=$(DESTDIR)$(OMD_ROOT) --install-scripts=$(DESTDIR)$(OMD_ROOT)/tmp --install-data=$(DESTDIR)$(OMD_ROOT)/tmp )
+	( cd $(MP) ; PYTHONPATH=$(DESTDIR)$(OMD_ROOT)/lib/python python setup.py install --prefix=$(DESTDIR)$(OMD_ROOT) --install-scripts=$(DESTDIR)$(OMD_ROOT)/tmp --install-data=$(DESTDIR)$(OMD_ROOT)/tmp )
 
 clean:
 	rm -rf $(DIR)
