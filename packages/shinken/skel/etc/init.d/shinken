@@ -218,7 +218,7 @@ do_stop() {
         pid=`getmodpid $mod`;
         printf "%-15s: " $mod
         if [ ! -z $pid ]; then
-            for cpid in $(ps -aef | grep $pid | grep "shinken-" | awk '{print $2}'); do
+            for cpid in $(ps -aefw | grep $pid | grep "shinken-" | awk '{print $2}'); do
                 kill $cpid > /dev/null 2>&1
             done
         fi
