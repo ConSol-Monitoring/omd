@@ -6,7 +6,7 @@ case "$1" in
     description)
             cat << EOF
 Here you can choose your monitoring core to run. Currently available
-is only Nagios. You also can decide to run no monitoring core in 
+are Nagios and Shinken. You also can decide to run no monitoring core in 
 this instance. This can be usefull for instances running a GUI such
 as Check_MK Multisite or Thruk which can connect to other monitoring
 sites via Livestatus.
@@ -17,7 +17,7 @@ EOF
     ;;
     choices)
             echo "nagios: Nagios"
-            echo "shinken: Shinken"
+            echo "shinken: Shinken (experimental)"
             echo "none: No monitoring core"
     ;;
     set)
