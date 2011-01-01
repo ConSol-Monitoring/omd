@@ -17,25 +17,31 @@ cd ###ROOT###
 
 NAME="shinken"
 SCRIPTNAME=$0
-AVAIL_MODULES="scheduler poller reactionner broker arbiter"
 BIN="###ROOT###/bin"
 RUN="###ROOT###/tmp/shinken/run"
 VAR="###ROOT###/var"
 ETC="###ROOT###/tmp/shinken"
 TMP="###ROOT###/tmp"
 
-# raw data and fragment files
+#
+# Directory with raw data and fragment files
+#
 SOURCE_ETC=###ROOT###/etc/shinken
-# final config files
+
+#
+# Directories where the final config files reside
+#
 TARGET_ETC=###ROOT###/tmp/shinken
 TARGET_ETC_FOR_NAGIOS=###ROOT###/tmp/nagios
 
+#
+# OMD-Config-Settings and default values
+#
 SHINKEN_ARBITER_PORT=${CONFIG_SHINKEN_ARBITER_PORT:=7770}
 SHINKEN_SCHEDULER_PORT=${CONFIG_SHINKEN_SCHEDULER_PORT:=7768}
 SHINKEN_POLLER_PORT=${CONFIG_SHINKEN_POLLER_PORT:=7771}
 SHINKEN_REACTIONNER_PORT=${CONFIG_SHINKEN_REACTIONNER_PORT:=7769}
 SHINKEN_BROKER_PORT=${CONFIG_SHINKEN_BROKER_PORT:=7772}
-
 WEB=${CONFIG_WEB:=nagios}
 LIVESTATUS_TCP=${CONFIG_LIVESTATUS_TCP:=off}
 LIVESTATUS_TCP_PORT=${CONFIG_LIVESTATUS_TCP_PORT:=6557}
@@ -43,10 +49,21 @@ NSCA=${CONFIG_NSCA:=off}
 NSCA_TCP_PORT=${CONFIG_NSCA_TCP_PORT:=5667}
 PNP4NAGIOS=${CONFIG_PNP4NAGIOS:=on}
 
+#
 # Pyro and multiprocessing have been installed locally
+# The python search path must be extended to the 
+# local installation directory
+#
 export PYTHONPATH=###ROOT###/lib/python
 
+#
+# The Shinken processes to start
+#
+AVAIL_MODULES="scheduler poller reactionner broker arbiter"
+
+#
 # OMD: create configuration file out of fragments
+#
 case "$1" in start|restart|reload|checkconfig)
     merge-shinken-config \
        $SOURCE_ETC/shinken.d/*.cfg \
@@ -59,13 +76,17 @@ case "$1" in start|restart|reload|checkconfig)
 Do not edit the files in this directory. They were copied over from
 $SOURCE_ETC/shinken-specific.d and will be written to ../shinken-specific.cfg
 EOTXT
-    # change the listener ports in the process sections 
+    #
+    # Change the listener ports in the process sections 
+    #
     sed -ri 's/^([[:space:]]*port[[:space:]]*)([0-9]+)/\1'${SHINKEN_ARBITER_PORT}'/' $TARGET_ETC/shinken-specific.d/arbiter.cfg
     sed -ri 's/^([[:space:]]*port[[:space:]]*)([0-9]+)/\1'${SHINKEN_SCHEDULER_PORT}'/' $TARGET_ETC/shinken-specific.d/scheduler.cfg
     sed -ri 's/^([[:space:]]*port[[:space:]]*)([0-9]+)/\1'${SHINKEN_POLLER_PORT}'/' $TARGET_ETC/shinken-specific.d/poller.cfg
     sed -ri 's/^([[:space:]]*port[[:space:]]*)([0-9]+)/\1'${SHINKEN_REACTIONNER_PORT}'/' $TARGET_ETC/shinken-specific.d/reactionner.cfg
     sed -ri 's/^([[:space:]]*port[[:space:]]*)([0-9]+)/\1'${SHINKEN_BROKER_PORT}'/' $TARGET_ETC/shinken-specific.d/broker.cfg
-    # all webservers except these two use livestatus
+    #
+    # All webservers except these two use livestatus
+    #
     if [ "$WEB" != "nagios" -a "$WEB" != "none" ] ; then
       sed -ri 's/^([[:space:]]*modules[[:space:]]*)(.+)/\1\2,Livestatus/' $TARGET_ETC/shinken-specific.d/broker.cfg
     fi
@@ -74,33 +95,55 @@ EOTXT
     else
       sed -ri 's/^([[:space:]]*port[[:space:]]*)(.+)/\1none/' $TARGET_ETC/shinken-specific.d/module_livestatus.cfg
     fi
-    # add the npcd module to the broker
+    #
+    # Add the npcd module to the broker
+    #
     if [ "$PNP4NAGIOS" = "on" ]; then
       sed -ri 's/^([[:space:]]*modules[[:space:]]*)(.+)/\1\2,NPCD/' $TARGET_ETC/shinken-specific.d/broker.cfg
     fi
-    # add the nsca module to the arbiter
+    #
+    # Add the nsca module to the arbiter
+    #
     if [ "$NSCA" = "on" ]; then
       sed -ri 's/^([[:space:]]*modules[[:space:]]*)(.+)/\1\2,NSCA/' $TARGET_ETC/shinken-specific.d/arbiter.cfg
       sed -ri 's/^([[:space:]]*port[[:space:]]*)([0-9]+)/\1'${NSCA_TCP_PORT}'/' $TARGET_ETC/shinken-specific.d/module_nsca_server.cfg
     fi
+    #
+    # Combine the shinken-specific file fragments to
+    # one final configuration file
+    #
     merge-shinken-specific-config \
        $TARGET_ETC/shinken-specific.d/*.cfg \
        > $TARGET_ETC/shinken-specific.cfg || rm -f $TARGET_ETC/shinken-specific.cfg
+    #
+    # Customize the shinken-daemons' ini-files
+    #
     cp $SOURCE_ETC/shinken-ini.d/*.ini $TARGET_ETC
     sed -ri 's/^([[:space:]]*port[[:space:]]*=[[:space:]]*)([0-9]+)/\1'${SHINKEN_SCHEDULER_PORT}'/' $TARGET_ETC/schedulerd.ini
     sed -ri 's/^([[:space:]]*port[[:space:]]*=[[:space:]]*)([0-9]+)/\1'${SHINKEN_POLLER_PORT}'/' $TARGET_ETC/pollerd.ini
     sed -ri 's/^([[:space:]]*port[[:space:]]*=[[:space:]]*)([0-9]+)/\1'${SHINKEN_REACTIONNER_PORT}'/' $TARGET_ETC/reactionnerd.ini
     sed -ri 's/^([[:space:]]*port[[:space:]]*=[[:space:]]*)([0-9]+)/\1'${SHINKEN_BROKER_PORT}'/' $TARGET_ETC/brokerd.ini
+    #
     # Force creation of a run-directory for the pid-files
+    #
     test -d ${RUN} || mkdir -p ${RUN}
+    #
     # Now something ugly. The cgi scripts of the classical web interface
     # can't handle shinken-specific settings in the main config file.
     # Create a nagios.cfg-compatible shinken.cfg
+    #
     cp $TARGET_ETC/shinken.cfg $TARGET_ETC/shinken-apache.cfg
+    #
+    # Remove settings which are unknown to the cgis
+    #
     SHINKEN_ONLY_PARAMS="shinken_user shinken_group"
     for param in $SHINKEN_ONLY_PARAMS; do
       sed -ri 's/^([[:space:]]*'${param}')/#\1/' $TARGET_ETC/shinken-apache.cfg
     done
+    #
+    # Add settings which are unknown to Shinken or configured in
+    # brokers' configuration file
+    #
     cat <<-EOTXT >> $TARGET_ETC/shinken-apache.cfg
 	check_result_path=$TMP
 	status_file=$TARGET_ETC_FOR_NAGIOS/status.dat
@@ -261,7 +304,7 @@ do_check() {
 #
 case "$CMD" in
   start)
-    [ "$VERBOSE" != no ] && log_daemon_msg "Starting $NAME"
+    [ "$VERBOSE" != no ] && echo -n "Starting $NAME"
     do_start
     do_status > /dev/null 2>&1
     case "$?" in
@@ -270,7 +313,7 @@ case "$CMD" in
     esac
     ;;
   stop)
-    [ "$VERBOSE" != no ] && log_daemon_msg "Stopping $NAME"
+    [ "$VERBOSE" != no ] && echo -n "Stopping $NAME"
     do_stop
     do_status > /dev/null 2>&1
     case "$?" in
@@ -279,7 +322,7 @@ case "$CMD" in
     esac
     ;;
   restart)
-    [ "$VERBOSE" != no ] && log_daemon_msg "Restarting $NAME"
+    [ "$VERBOSE" != no ] && echo -n "Restarting $NAME"
     do_stop
     do_status > /dev/null 2>&1
     case "$?" in
