@@ -1683,7 +1683,7 @@ def main_create(args, options={}):
 
 
 def main_rm(args, options={}):
-    stop_if_not_stopped(g_sitename)
+    stop_site(g_sitename)
     if user_logged_in(g_sitename):
         bail_out("User '%s' still logged in or running processes.\n" % g_sitename)
     unmount_tmpfs(g_sitename)
