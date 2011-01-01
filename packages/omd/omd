@@ -353,7 +353,7 @@ def site_is_running(sitename):
 def groupdel(groupname):
     os.system("groupdel " + groupname)
 
-def groupadd(groupname, gid):
+def groupadd(groupname, gid = None):
     cmd = "groupadd "
     if gid != None:
         cmd += "-g %d " % int(gid)
