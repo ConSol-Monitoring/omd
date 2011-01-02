@@ -148,6 +148,8 @@ EOTXT
 	check_result_path=$TMP
 	status_file=$TARGET_ETC_FOR_NAGIOS/status.dat
 	object_cache_file=$VAR/nagios/objects.cache
+	check_external_commands=1
+	log_file=$VAR/nagios/nagios.log
 EOTXT
 esac
 
