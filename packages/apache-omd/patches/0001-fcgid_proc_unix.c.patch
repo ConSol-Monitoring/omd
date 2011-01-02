@@ -1,0 +1,26 @@
+--- mod_fcgid-2.3.6/modules/fcgid/fcgid_proc_unix.c.orig	2010-12-28 23:13:16.000000000 +0100
++++ mod_fcgid-2.3.6/modules/fcgid/fcgid_proc_unix.c	2011-01-02 22:24:59.000000000 +0100
+@@ -180,13 +180,16 @@
+  */
+ static apr_status_t exec_setuid_cleanup(void *dummy)
+ {
+-    if (seteuid(0) == -1) {
+-        log_setid_failure("mod_fcgid child", "effective uid", 0);
+-        _exit(1);
+-    }
+-    if (setuid(ap_unixd_config.user_id) == -1) {
+-        log_setid_failure("mod_fcgid child", "uid", ap_unixd_config.user_id);
+-        _exit(1);
++    return APR_SUCCESS;
++    if (getuid() != ap_unixd_config.user_id) {
++        if (seteuid(0) == -1) {
++            log_setid_failure("mod_fcgid child", "effective uid", 0);
++            _exit(1);
++        }
++        if (setuid(ap_unixd_config.user_id) == -1) {
++            log_setid_failure("mod_fcgid child", "uid", ap_unixd_config.user_id);
++            _exit(1);
++        }
+     }
+     return APR_SUCCESS;
+ }
