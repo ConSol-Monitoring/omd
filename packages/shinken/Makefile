@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 
-SHINKEN=shinken-0.4.1
+SHINKEN=shinken-0.4.2
 SHINKEN_FILE=$(SHINKEN).tar.gz
 SHINKEN_URL=http://sourceforge.net/projects/shinken/files/$(SHINKEN_FILE)
 #
