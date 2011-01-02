@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 
-SHINKEN=shinken-0.4.1
+SHINKEN=shinken-0.4.2
 SHINKEN_FILE=$(SHINKEN).tar.gz
 SHINKEN_URL=http://sourceforge.net/projects/shinken/files/$(SHINKEN_FILE)
 #
@@ -29,12 +29,16 @@ STOOLS_URL=http://pypi.python.org/packages/source/s/setuptools/$(STOOLS_FILE)
 SQLITE=pysqlite-2.6.0
 SQLITE_FILE=$(SQLITE).tar.gz
 SQLITE_URL=http://pysqlite.googlecode.com/files/$(SQLITE_FILE)
+#
+# This is where the python modules are going to be installed to
+LOCALPYTHONDIR=$(DESTDIR)$(OMD_ROOT)/lib/python
 
 # Find the directory where python distutils are located
+PYTHONPATH=
 DISTUTILS=$(shell python -c "import sys; import os; print [os.path.join(p, 'distutils') for p in sys.path if os.path.exists(os.path.join(p, 'distutils'))][0]")
 # This is where the distutils module is temporary copied to
 TMP_DISTU=/tmp/temp_distutils
-PYTHONPATH=$(TMP_DISTU):$(DESTDIR)$(OMD_ROOT)/lib/python
+PYTHONPATH=$(TMP_DISTU):$(LOCALPYTHONDIR)
 export PYTHONPATH
 
 build:
@@ -58,7 +62,7 @@ build:
 
 install:
 	$(MAKE) installshinken
-	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/python
+	mkdir -p $(LOCALPYTHONDIR)
 	$(MAKE) repairdistutils
 	$(MAKE) installstools
 	$(MAKE) installpyro
@@ -111,6 +115,7 @@ installpyro:
 installmp:
 	( cd $(MP) ; python setup.py install \
 		--home=$(DESTDIR)$(OMD_ROOT) \
+		--install-platlib=$(LOCALPYTHONDIR) \
 		--install-scripts=$(DESTDIR)$(OMD_ROOT)/tmp \
 		--install-data=$(DESTDIR)$(OMD_ROOT)/tmp )
 
@@ -125,6 +130,7 @@ installsqlite:
 installjson:
 	( cd $(SJSON) ; python setup.py install \
 		--home=$(DESTDIR)$(OMD_ROOT) \
+		--install-platlib=$(LOCALPYTHONDIR) \
 		--install-scripts=$(DESTDIR)$(OMD_ROOT)/tmp \
 		--install-data=$(DESTDIR)$(OMD_ROOT)/tmp )
 
