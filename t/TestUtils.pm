@@ -441,6 +441,7 @@ sub _clean_stderr {
     my $text = shift || '';
     $text =~ s/[\w\-]+: Could not reliably determine the server's fully qualified domain name, using .*? for ServerName//g;
     $text =~ s/Syntax OK//g;
+    $text =~ s/no crontab for \w+//g;
     return $text;
 }
 
