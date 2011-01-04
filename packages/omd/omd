@@ -24,6 +24,7 @@
 # Boston, MA 02110-1301 USA.
 
 import sys, os, shutil, pwd, grp, re, time, pprint, tty, termios
+from multiprocessing import Process
 from subprocess import *
 
 OMD_VERSION = "0.45"
@@ -421,6 +422,16 @@ def switch_to_site_user():
     os.setgid(gid)
     os.setgroups([group_id('omd')])
     os.setuid(uid)
+
+# Starts a subprocess to execute a python function as other user
+# without switching the user for the whole main process
+def execute_as_user(function, arguments):
+    def run():
+        switch_to_site_user()
+        function(*arguments)
+    p = Process(target=run)
+    p.start()
+    p.join(20)
 
 # No using os.putenv, os.getenv os.unsetenv directly because
 # they seem not to work correctly in debian 503.
@@ -1683,7 +1694,12 @@ def main_create(args, options={}):
 
 
 def main_rm(args, options={}):
-    stop_site(g_sitename)
+    # omd rm is called as root but the init scripts need to be called as
+    # site user but later steps need root privilegies. So a simple user
+    # switch to the site user would not work. Better create a subprocess
+    # for this dedicated action and switch to the user in that subprocess
+    execute_as_user(stop_site, (g_sitename, ))
+
     if user_logged_in(g_sitename):
         bail_out("User '%s' still logged in or running processes.\n" % g_sitename)
     unmount_tmpfs(g_sitename)
