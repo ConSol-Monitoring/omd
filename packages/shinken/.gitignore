@@ -2,5 +2,9 @@ Pyro-3.11.tar.gz
 Pyro-3.11
 multiprocessing-2.6.2.1.tar.gz
 multiprocessing-2.6.2.1
-shinken-0.4.1.tar.gz
-shinken-0.4.1
+setuptools-0.6c11.tar.gz
+setuptools-0.6c11
+simplejson-2.1.2.tar.gz
+simplejson-2.1.2
+shinken-[0-9].[0-9].[0-9].tar.gz
+shinken-[0-9].[0-9].[0-9]
