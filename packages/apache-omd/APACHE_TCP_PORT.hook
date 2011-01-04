@@ -1,5 +1,13 @@
 #!/bin/bash
 
+# Load other config options. This hook needs 
+# APACHE_TCP_PORT.
+if [ -f $OMD_ROOT/etc/omd/site.conf ]; then
+    . $OMD_ROOT/etc/omd/site.conf
+else
+    CONFIG_APACHE_TCP_ADDR=127.0.0.1
+fi
+
 port_is_used ()
 {
     local PORT=$1
@@ -43,7 +51,7 @@ EOF
     default)
         # Scan for a free port number by looking at the
         # configuration of the other sites...
-	PORT=$(next_free_hook 5000)
+        PORT=$(next_free_hook 5000)
         echo "$PORT"
     ;;
     choices)
@@ -54,13 +62,13 @@ EOF
         cat <<EOF > $OMD_ROOT/etc/apache/listen-port.conf
 # This file is created by 'omd config set APACHE_TCP_PORT'. 
 # Better do not edit manually
-Listen 127.0.0.1:$PORT
+Listen $CONFIG_APACHE_TCP_ADDR:$PORT
 EOF
         cat <<EOF > $OMD_ROOT/etc/apache/proxy-port.conf
 # This file is created by 'omd config set APACHE_TCP_PORT'. 
 # Better do not edit manually
 <IfModule mod_proxy_http.c>
-  <Proxy http://127.0.0.1:$PORT/$OMD_SITE>
+  <Proxy http://$CONFIG_APACHE_TCP_ADDR:$PORT/$OMD_SITE>
     Order allow,deny
     allow from all
   </Proxy>
@@ -68,8 +76,8 @@ EOF
   <Location /$OMD_SITE>
     # Setting "retry=0" to prevent 60 second caching of problem states e.g. when
     # the site apache is down and someone tries to access the page.
-    ProxyPass http://127.0.0.1:$PORT/$OMD_SITE retry=0
-    ProxyPassReverse http://127.0.0.1:$PORT/$OMD_SITE
+    ProxyPass http://$CONFIG_APACHE_TCP_ADDR:$PORT/$OMD_SITE retry=0
+    ProxyPassReverse http://$CONFIG_APACHE_TCP_ADDR:$PORT/$OMD_SITE
   </Location>
 </IfModule>
 EOF
