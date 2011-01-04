@@ -24,7 +24,11 @@
 # Boston, MA 02110-1301 USA.
 
 import sys, os, shutil, pwd, grp, re, time, pprint, tty, termios
-from multiprocessing import Process
+try:
+    from multiprocessing import Process
+except:
+    # The package is named processing in debian
+    from processing import Process
 from subprocess import *
 
 OMD_VERSION = "0.45"
