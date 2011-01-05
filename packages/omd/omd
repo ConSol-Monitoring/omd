@@ -24,11 +24,6 @@
 # Boston, MA 02110-1301 USA.
 
 import sys, os, shutil, pwd, grp, re, time, pprint, tty, termios
-try:
-    from multiprocessing import Process
-except:
-    # The package is named processing in debian
-    from processing import Process
 from subprocess import *
 
 OMD_VERSION = "0.45"
@@ -429,6 +424,16 @@ def switch_to_site_user():
 
 # Starts a subprocess to execute a python function as other user
 # without switching the user for the whole main process
+#
+# Would need:
+# try:
+#    from multiprocessing import Process
+# except:
+#     # The package is named processing in debian
+#     from processing import Process
+#
+# Has been removed since multiprocessing is not available on
+# e.g. CentOS. Too modern stuff...
 def execute_as_user(function, arguments):
     def run():
         switch_to_site_user()
@@ -1702,7 +1707,8 @@ def main_rm(args, options={}):
     # site user but later steps need root privilegies. So a simple user
     # switch to the site user would not work. Better create a subprocess
     # for this dedicated action and switch to the user in that subprocess
-    execute_as_user(stop_site, (g_sitename, ))
+    #execute_as_user(stop_site, (g_sitename, ))
+    os.system('omd stop %s' % g_sitename)
 
     if user_logged_in(g_sitename):
         bail_out("User '%s' still logged in or running processes.\n" % g_sitename)
