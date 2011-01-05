@@ -118,19 +118,21 @@ prep_start() {
 }
 
 nagios_wait_stop() {
-    pidtmp=$(pidof_nagios) || true
-    if kill -0 "${pidtmp:-}" >/dev/null 2>&1; then
-        pid=$pidtmp
-        kill $pid
-    else
+    pid=$(pidof_nagios) || true
+    if ! kill -0 "${pid:-}" >/dev/null 2>&1; then
         echo -n 'Not running. '
         return 0
     fi
-  
-    # wait until really stopped
+
+    # wait until really stopped.
+    # it might happen that nagios has a subprocess which
+    # is left running and becomes ppid 1 after killing the
+    # main nagios process. So fetch the process id again
+    # multiple times to fetch new processes until all are gone.
     if [ -n "${pid:-}" ]; then
         I=0
         while kill -0 "${pid:-}" >/dev/null 2>&1;  do
+            kill $pid
             if [ $I = '60' ]; then
                 return 1
             else
@@ -138,6 +140,7 @@ nagios_wait_stop() {
                 I=$(($I+1))
                 sleep 1
             fi
+            pid=$(pidof_nagios) || true
         done
     fi
     
