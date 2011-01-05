@@ -35,6 +35,8 @@ LOCALPYTHONDIR=$(DESTDIR)$(OMD_ROOT)/lib/python
 
 # Find the directory where python distutils are located
 PYTHONPATH=
+export PYTHONPATH
+RM_DISTU=$(shell rm -rf /tmp/temp_distutils)
 DISTUTILS=$(shell python -c "import sys; import os; print [os.path.join(p, 'distutils') for p in sys.path if os.path.exists(os.path.join(p, 'distutils'))][0]")
 # This is where the distutils module is temporary copied to
 TMP_DISTU=/tmp/temp_distutils
@@ -61,8 +63,9 @@ build:
 
 
 install:
-	$(MAKE) installshinken
+	rm -rf $(TMP_DISTU)
 	mkdir -p $(LOCALPYTHONDIR)
+	$(MAKE) installshinken
 	$(MAKE) repairdistutils
 	$(MAKE) installstools
 	$(MAKE) installpyro
@@ -90,7 +93,6 @@ installshinken:
 
 
 repairdistutils:
-	rm -rf $(TMP_DISTU)
 	mkdir $(TMP_DISTU)
 	cp -r $(DISTUTILS) $(TMP_DISTU)
 	# SuSE prevents installation of modules to private locations
@@ -101,6 +103,8 @@ repairdistutils:
 installstools:
 	( cd $(STOOLS) ; python setup.py install \
 		--home=$(DESTDIR)$(OMD_ROOT) \
+		--install-platlib=$(LOCALPYTHONDIR) \
+		--install-purelib=$(LOCALPYTHONDIR) \
 		--install-scripts=$(DESTDIR)$(OMD_ROOT)/tmp \
 		--install-data=$(DESTDIR)$(OMD_ROOT)/tmp )
   
@@ -108,6 +112,8 @@ installstools:
 installpyro:
 	( cd $(PYRO) ; python setup.py install \
 		--home=$(DESTDIR)$(OMD_ROOT) \
+		--install-platlib=$(LOCALPYTHONDIR) \
+		--install-purelib=$(LOCALPYTHONDIR) \
 		--install-scripts=$(DESTDIR)$(OMD_ROOT)/tmp \
 		--install-data=$(DESTDIR)$(OMD_ROOT)/tmp )
 
@@ -123,6 +129,7 @@ installmp:
 installsqlite:
 	( cd $(SQLITE) ; python setup.py install \
 		--home=$(DESTDIR)$(OMD_ROOT) \
+		--install-platlib=$(LOCALPYTHONDIR) \
 		--install-scripts=$(DESTDIR)$(OMD_ROOT)/tmp \
 		--install-data=$(DESTDIR)$(OMD_ROOT)/tmp )
 
