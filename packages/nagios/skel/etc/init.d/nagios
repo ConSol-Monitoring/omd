@@ -65,8 +65,8 @@ esac
 # It returns 1 when no process can be found and echos the PID while
 # returning 0 when a process can be found.
 nagios_proc() {
-    PROC=$(ps -u $USR --ppid 1 -o pid,cmd \
-             | grep "$BIN -d $CFG_FILE" 2>&1 | grep -v grep)
+    PROC=$(ps -u $USR --ppid 1 -o pid,ppid,cmd \
+             | grep ' 1 ' | grep "$BIN -d $CFG_FILE" 2>&1 | grep -v grep)
     PID=$(echo "$PROC" | sed 's/^ *//g' | cut -d' ' -f1)
     if [ "$PID" != "" ]; then
         echo "$PID"
