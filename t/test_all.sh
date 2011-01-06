@@ -32,7 +32,9 @@ if [ ! -z "$OMD_PACKAGE" ]; then
 
     # Suse
     elif [ -x /usr/bin/zypper  ]; then
-        /usr/bin/zypper --quiet --non-interactive install $OMD_PACKAGE || /bin/rpm -i $OMD_PACKAGE
+        # remove version if alread installed
+        /usr/bin/zypper --quiet --non-interactive remove `rpm -qp $OMD_PACKAGE`
+        /usr/bin/zypper --quiet --non-interactive install $OMD_PACKAGE
     fi
 
     rc=$?
