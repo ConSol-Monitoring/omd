@@ -31,8 +31,11 @@ skel:
 	# Replace macros
 	sed -i -e 's|###APACHE_MODULE_DIR###|$(MODULE_DIR)|g' \
 	       -e 's|###APACHE_PHP_MODULE###|$(APACHE_PHP_MODULE)|g' \
-	       -e 's|###APACHE_PYTHON_MODULE###|$(APACHE_PYTHON_MODULE)|g' \
 	       $(SKEL)/etc/apache/apache.conf
+
+	sed -i -e 's|###APACHE_MODULE_DIR###|$(MODULE_DIR)|g' \
+	       -e 's|###APACHE_PYTHON_MODULE###|$(APACHE_PYTHON_MODULE)|g' \
+	       $(SKEL)/etc/apache/conf.d/python.conf
 
 	sed -i -e 's|###APACHE_FCGID_MODULE###|$(APACHE_FCGID_PATH)|g' \
 	       $(SKEL)/etc/apache/conf.d/fcgid.conf
