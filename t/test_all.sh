@@ -24,7 +24,12 @@ if [ ! -z "$OMD_PACKAGE" ]; then
 
     # Debian / Ubuntu
     if [ -x /usr/bin/apt-get  ]; then
-        apt-get -qq update && DEBIAN_FRONTEND=noninteractive apt-get -q -y --no-install-recommends install `dpkg-deb --info $OMD_PACKAGE | grep Depends: | sed -e 's/Depends://' -e 's/debconf.*debconf-2.0,//' | tr -d ','` && dpkg -i $OMD_PACKAGE
+        VERSION=`dpkg-deb -W --showformat='${Package}\n' $OMD_PACKAGE | sed -e 's/^omd-//'`
+        DEPENDS=`dpkg-deb -W --showformat='${Depends}\n' $OMD_PACKAGE | sed -e 's/debconf.*debconf-2.0,//' | tr -d ','`
+        apt-get -qq update && \
+        DEBIAN_FRONTEND=noninteractive apt-get -q -y --no-install-recommends install $DEPENDS && \
+        dpkg -i $OMD_PACKAGE && \
+        /usr/sbin/update-alternatives --set omd /omd/versions/$VERSION
 
     # Centos
     elif [ -x /usr/bin/yum  ]; then
