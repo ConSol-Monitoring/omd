@@ -55,7 +55,7 @@ sub get_omd_bin {
         }
     }
     else {
-        if(-s '/omd') {
+        if(-l '/omd') {
             my $target = readlink('/omd');
             if($omd_bin eq '/usr/bin/omd') {
                 if($target ne "/opt/omd") {
