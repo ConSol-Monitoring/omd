@@ -56,7 +56,9 @@ fi
 echo "###################################################################"
 echo "running tests..."
 TESTS=t/*.t
+VERBOSE="0"
 if [ ! -z $1 ]; then
   TESTS=$*
+  VERBOSE="1"
 fi
-OMD_BIN=$OMD_BIN PERL_DL_NONLAZY=1 /usr/bin/env perl "-MExtUtils::Command::MM" "-e" "test_harness(1)" $TESTS
+OMD_BIN=$OMD_BIN PERL_DL_NONLAZY=1 /usr/bin/env perl "-MExtUtils::Command::MM" "-e" "test_harness($VERBOSE)" $TESTS
