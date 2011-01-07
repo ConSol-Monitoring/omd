@@ -55,4 +55,8 @@ fi
 
 echo "###################################################################"
 echo "running tests..."
-OMD_BIN=$OMD_BIN PERL_DL_NONLAZY=1 /usr/bin/env perl "-MExtUtils::Command::MM" "-e" "test_harness(0)" t/*.t
+TESTS=t/*.t
+if [ ! -z $1 ]; then
+  TESTS=$*
+fi
+OMD_BIN=$OMD_BIN PERL_DL_NONLAZY=1 /usr/bin/env perl "-MExtUtils::Command::MM" "-e" "test_harness(1)" $TESTS

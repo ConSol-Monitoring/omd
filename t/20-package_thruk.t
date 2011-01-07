@@ -12,7 +12,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 364 );
+plan( tests => 367 );
 
 ##################################################
 # create our test site
@@ -106,7 +106,7 @@ for my $url ( @{$urls} ) {
 # switch webserver to shared mode
 TestUtils::test_command({ cmd => $omd_bin." stop $site" });
 TestUtils::test_command({ cmd => $omd_bin." config $site set WEBSERVER shared" });
-TestUtils::test_command({ cmd => TestUtils::config('APACHE_INIT')." reload" });
+TestUtils::test_command({ cmd => TestUtils::config('APACHE_INIT')." restart" });
 TestUtils::test_command({ cmd => $omd_bin." start $site" });
 
 ##################################################
@@ -124,4 +124,5 @@ for my $url ( @{$urls} ) {
 
 ##################################################
 # cleanup test site
+TestUtils::test_command({ cmd => TestUtils::config('APACHE_INIT')." restart" });
 TestUtils::remove_test_site($site);
