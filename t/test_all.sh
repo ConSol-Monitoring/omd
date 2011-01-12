@@ -49,6 +49,10 @@ if [ ! -z "$OMD_PACKAGE" ]; then
     fi
 fi
 
+# set perl environment
+PERLARCH=$(perl -e 'use Config; print $Config{archname}')
+export PERL5LIB="/omd/versions/default/lib/perl5/lib/perl5/${PERLARCH}:/omd/versions/default/lib/perl5/lib/perl5:$PERL5LIB"
+
 if [ -z $OMD_BIN ]; then
     OMD_BIN=destdir/opt/omd/versions/default/bin/omd
 fi

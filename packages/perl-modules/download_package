@@ -2,6 +2,7 @@
 
 use warnings;
 use strict;
+use lib '/omd/versions/default/lib/perl5/lib/perl5';
 use YAML;
 use Data::Dumper;
 
