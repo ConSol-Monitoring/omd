@@ -12,7 +12,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 364 );
+plan( tests => 367 );
 
 ##################################################
 # create our test site
@@ -29,8 +29,8 @@ TestUtils::test_command({ cmd => $omd_bin." config $site set WEB thruk" });
 # define some checks
 my $tests = [
   { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -t 20 -H localhost -u /$site/thruk -e 401'",                    like => '/HTTP OK:/' },
-  { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -t 20 -H localhost -a omdadmin:omd -u /$site/thruk -e 301'",    like => '/HTTP OK:/' },
-  { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -t 20 -H localhost -a omdadmin:omd -u /$site/thruk/ -e 200'",   like => '/HTTP OK:/' },
+  { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -t 60 -H localhost -a omdadmin:omd -u /$site/thruk -e 301'",    like => '/HTTP OK:/' },
+  { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -t 60 -H localhost -a omdadmin:omd -u /$site/thruk/ -e 200'",   like => '/HTTP OK:/' },
   { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -t 20 -H localhost -a omdadmin:omd -u \"/$site/thruk/cgi-bin/status.cgi?hostgroup=all&style=hostdetail\" -e 200 -r \"Host Status Details For All Host Groups\"'", like => '/HTTP OK:/' },
   { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -t 20 -H localhost -a omdadmin:omd -u \"/$site/thruk/cgi-bin/tac.cgi\" -e 200 -r \"Logged in as <i>omdadmin<\/i>\"'", like => '/HTTP OK:/' },
 ];
@@ -106,7 +106,7 @@ for my $url ( @{$urls} ) {
 # switch webserver to shared mode
 TestUtils::test_command({ cmd => $omd_bin." stop $site" });
 TestUtils::test_command({ cmd => $omd_bin." config $site set WEBSERVER shared" });
-TestUtils::test_command({ cmd => TestUtils::config('APACHE_INIT')." reload" });
+TestUtils::test_command({ cmd => TestUtils::config('APACHE_INIT')." restart" });
 TestUtils::test_command({ cmd => $omd_bin." start $site" });
 
 ##################################################
@@ -124,4 +124,5 @@ for my $url ( @{$urls} ) {
 
 ##################################################
 # cleanup test site
+TestUtils::test_command({ cmd => TestUtils::config('APACHE_INIT')." restart" });
 TestUtils::remove_test_site($site);

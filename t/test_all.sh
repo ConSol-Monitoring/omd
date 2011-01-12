@@ -24,7 +24,12 @@ if [ ! -z "$OMD_PACKAGE" ]; then
 
     # Debian / Ubuntu
     if [ -x /usr/bin/apt-get  ]; then
-        apt-get -qq update && DEBIAN_FRONTEND=noninteractive apt-get -q -y --no-install-recommends install `dpkg-deb --info $OMD_PACKAGE | grep Depends: | sed -e 's/Depends://' -e 's/debconf.*debconf-2.0,//' | tr -d ','` && dpkg -i $OMD_PACKAGE
+        VERSION=`dpkg-deb -W --showformat='${Package}\n' $OMD_PACKAGE | sed -e 's/^omd-//'`
+        DEPENDS=`dpkg-deb -W --showformat='${Depends}\n' $OMD_PACKAGE | sed -e 's/debconf.*debconf-2.0,//' | tr -d ','`
+        apt-get -qq update && \
+        DEBIAN_FRONTEND=noninteractive apt-get -q -y --no-install-recommends install $DEPENDS && \
+        dpkg -i $OMD_PACKAGE && \
+        /usr/sbin/update-alternatives --set omd /omd/versions/$VERSION
 
     # Centos
     elif [ -x /usr/bin/yum  ]; then
@@ -32,7 +37,9 @@ if [ ! -z "$OMD_PACKAGE" ]; then
 
     # Suse
     elif [ -x /usr/bin/zypper  ]; then
-        /usr/bin/zypper --quiet --non-interactive install $OMD_PACKAGE || /bin/rpm -i $OMD_PACKAGE
+        # remove version if alread installed
+        /usr/bin/zypper --quiet --non-interactive remove `rpm -qp $OMD_PACKAGE`
+        /usr/bin/zypper --quiet --non-interactive install $OMD_PACKAGE
     fi
 
     rc=$?
@@ -42,10 +49,20 @@ if [ ! -z "$OMD_PACKAGE" ]; then
     fi
 fi
 
+# set perl environment
+PERLARCH=$(perl -e 'use Config; print $Config{archname}')
+export PERL5LIB="/omd/versions/default/lib/perl5/lib/perl5/${PERLARCH}:/omd/versions/default/lib/perl5/lib/perl5:$PERL5LIB"
+
 if [ -z $OMD_BIN ]; then
     OMD_BIN=destdir/opt/omd/versions/default/bin/omd
 fi
 
 echo "###################################################################"
 echo "running tests..."
-OMD_BIN=$OMD_BIN PERL_DL_NONLAZY=1 /usr/bin/env perl "-MExtUtils::Command::MM" "-e" "test_harness(0)" t/*.t
+TESTS=t/*.t
+VERBOSE="0"
+if [ ! -z $1 ]; then
+  TESTS=$*
+  VERBOSE="1"
+fi
+OMD_BIN=$OMD_BIN PERL_DL_NONLAZY=1 /usr/bin/env perl "-MExtUtils::Command::MM" "-e" "test_harness($VERBOSE)" $TESTS

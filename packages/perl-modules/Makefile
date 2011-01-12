@@ -174,7 +174,9 @@ MODULES = ExtUtils-MakeMaker-6.56.tar.gz \
           XML-SAX-0.96.tar.gz \
           XML-Simple-2.18.tar.gz \
           Error-0.17016.tar.gz \
-          Encode-2.40.tar.gz
+          Encode-2.40.tar.gz \
+          Date-Calc-XS-6.2.tar.gz \
+          HTML-Lint-2.06.tar.gz
 
 build:
 	mkdir -p dist
