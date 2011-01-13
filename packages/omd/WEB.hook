@@ -21,5 +21,8 @@ EOF
             echo "nagvis: NagVis - The visualisation addon for Nagios"
             echo "none: No default webinterface"
     ;;
+    depends)
+        [ "$CONFIG_WEBSERVER" != none ]
+    ;;
 esac
 

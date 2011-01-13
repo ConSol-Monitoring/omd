@@ -18,4 +18,7 @@ EOF
     set)
         sed -ri 's/^([[:space:]]*server_port[[:space:]]*=[[:space:]]*)([0-9]+)/\1'$2'/' $OMD_ROOT/etc/nsca/nsca.cfg
     ;;
+    depends)
+        [ "$CONFIG_CORE" != none -a "$CONFIG_NSCA" = on ]
+    ;;
 esac

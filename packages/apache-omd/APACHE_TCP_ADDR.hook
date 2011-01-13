@@ -56,4 +56,7 @@ EOF
 </IfModule>
 EOF
     ;;
+    depends)
+        [ "$CONFIG_WEBSERVER" = own ]
+    ;;
 esac

@@ -86,4 +86,7 @@ EOF
             echo "$PORT"
         fi
     ;;
+    depends)
+        [ "$CONFIG_WEBSERVER" = own ]
+    ;;
 esac
