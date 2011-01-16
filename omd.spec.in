@@ -49,7 +49,11 @@ rm -f $RPM_BUILD_ROOT/etc/init.d/omd
 
 %pre
 groupadd -r omd 2>/dev/null || true
-ln -sfn /opt/omd /omd
+# create symlink if not exists
+if [ ! -e /omd ]
+then
+    ln -sfn /opt/omd /omd
+fi
 
 %post
 echo "New default version is %{version}."
