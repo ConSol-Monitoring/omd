@@ -19,4 +19,7 @@ EOF
     ;;
     set)
     ;;
+    depends)
+        [ "$CONFIG_CORE" != none ]
+    ;;
 esac

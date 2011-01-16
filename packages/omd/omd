@@ -1311,6 +1311,7 @@ def config_load():
         if not var.startswith("CONFIG_"):
             sys.stderr.write("Ignoring invalid variable %s.\n" % var)
         else:
+            os.putenv(var, value)
             var = var[7:]
             if var in g_hooks:
                 g_hooks[var]["value"] = value
@@ -1332,13 +1333,26 @@ def config_load_hooks():
     g_hooks = {}
     hook_dir = g_sitedir + "/lib/omd/hooks"
     for hookname in os.listdir(hook_dir):
-	if hookname[0] != '.':
-            hook = config_load_hook(hookname)
-            # only load configuration hooks
-            if hook.get("choices", None) != None:
-                g_hooks[hookname] = hook
+        try:
+            if hookname[0] != '.':
+                hook = config_load_hook(hookname)
+                # only load configuration hooks
+                if hook.get("choices", None) != None:
+                    g_hooks[hookname] = hook
+        except:
+            pass
     # now load actual values from site.conf, if available
     config_load()
+    load_hook_dependencies()
+
+def load_hook_dependencies():
+    for hookname, hook in g_hooks.items():
+        exitcode, content = call_hook(hookname, ["depends"])
+        if exitcode:
+            hook["active"] = False
+        else:
+            hook["active"] = True
+        
 
 def refresh_hooks():
     config_load_hooks()
@@ -1351,7 +1365,10 @@ def call_hook(hookname, args):
     argsstring = " ".join([ "'%s'" % arg for arg in args ])
     putenv("OMD_ROOT", g_sitedir)
     putenv("OMD_SITE", g_sitename)
-    return os.popen(hook_file + " " + argsstring).read().strip()
+    pipe = os.popen(hook_file + " " + argsstring)
+    content = pipe.read().strip()
+    exitcode = pipe.close()
+    return exitcode, content
 
 def call_all_hooks(command):
     hook_dir = g_sitedir + "/lib/omd/hooks"
@@ -1361,7 +1378,7 @@ def call_all_hooks(command):
 def config_load_hook(hookname):
 
     def get_hook_info(info):
-	return call_hook(hookname, [info])
+	return call_hook(hookname, [info])[1]
 
     hook = { "name" : hookname }
     hook["alias"] = get_hook_info("alias")
@@ -1443,6 +1460,7 @@ def config_set_value(hookname, value):
 
     hook["value"] = value
     config_save()
+    config_load_hooks()
 
 def config_usage():
     sys.stdout.write("""Usage of config command:
@@ -1458,7 +1476,9 @@ def config_show(args):
 	hooknames = g_hooks.keys()
 	hooknames.sort()
 	for hookname in hooknames:
-	    sys.stdout.write("%s: %s\n" % (hookname, g_hooks[hookname]["value"]))
+            hook = g_hooks[hookname]
+            if hook["active"]:
+                sys.stdout.write("%s: %s\n" % (hookname, g_hooks[hookname]["value"]))
     else:
         output = []
         for hookname in args:
@@ -1467,6 +1487,7 @@ def config_show(args):
                 sys.stderr.write("No such variable %s\n" % hookname)
             else:
                 output.append(hook["value"])
+
 	sys.stdout.write(" ".join(output))
 	sys.stdout.write("\n")
 
@@ -1478,7 +1499,8 @@ def config_configure():
         choices = []
         for hookname in hooknames:
             hook = g_hooks[hookname]
-            choices.append((hookname, hook["value"]))
+            if hook["active"]:
+                choices.append((hookname, hook["value"]))
         change, current_hookname = \
             dialog_menu("Configuration of site %s" % g_sitename,
                 "Interactive setting of site configuration variables. You "
