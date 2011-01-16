@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # 
 # Start only if Crontab is enabled
 . ###ROOT###/etc/omd/site.conf
