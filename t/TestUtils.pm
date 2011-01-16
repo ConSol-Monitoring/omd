@@ -79,18 +79,6 @@ sub get_omd_bin {
 
 ##################################################
 
-=head2 read_distro_config
-
-  read the distro config
-
-=cut
-
-sub read_distro_config {
-    #/omd/versions/default/share/omd/distro.info
-}
-
-##################################################
-
 =head2 test_command
 
   execute a test command

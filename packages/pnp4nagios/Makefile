@@ -3,7 +3,7 @@ include ../../Makefile.omd
 .PHONY: skel
 
 NAME = pnp4nagios
-VERSION = 0.6.10
+VERSION = 0.6.11
 DIR = $(NAME)-$(VERSION)
 
 # Configure options for PNP4Nagios. Since we want to compile
