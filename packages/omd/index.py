@@ -116,7 +116,11 @@ def page_welcome(req):
                               '<p>NagVis is the leading visualization addon for Nagios.</p>'
                               '<p>NagVis can be used to visualize Nagios Data, e.g.  '
                               'to display IT processes like a mail system or a '
-                              'network infrastructure.</p>')]:
+                              'network infrastructure.</p>'),
+                             ('pnp4nagios', 'PNP4Nagios',
+                              'PNP is an addon to Nagios which analyzes performance data '
+                              'provided by plugins and stores them automatically into '
+                              'RRD-databases (Round Robin Databases, see RRDTool).') ]:
         req.write("""
 <a class="gui" href="../%s/">
 <img src="img/%s-small.png" title="%s" />
