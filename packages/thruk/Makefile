@@ -17,7 +17,10 @@ build:
 	cd $(DIR) && make clean
 	mkdir -p $(DIR)/root/thruk/plugins
 	rm -f $(DIR)/root/thruk/plugins/statusmap
+	rm -f $(DIR)/root/thruk/plugins/outagespbimp
 	cd $(DIR)/root/thruk/plugins && ln -s ../../../plugins/plugins-enabled/statusmap/root statusmap
+	cd $(DIR)/root/thruk/plugins && ln -s ../../../plugins/plugins-enabled/outagespbimp/root outagespbimp
+	cd $(DIR)/plugins/plugins-enabled && ln -s ../plugins-available/outagespbimp outagespbimp
 
 
 install:

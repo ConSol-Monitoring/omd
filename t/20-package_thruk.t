@@ -12,7 +12,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 467 );
+plan( tests => 937 );
 
 ##################################################
 # create our test site
@@ -24,6 +24,7 @@ my $service = "Dummy+Service";
 
 # set thruk as default
 TestUtils::test_command({ cmd => $omd_bin." config $site set WEB thruk" });
+TestUtils::test_command({ cmd => $omd_bin." start $site" });
 
 ##################################################
 # define some checks
@@ -85,41 +86,47 @@ my $urls = [
   { url => '/thruk/cgi-bin/trends.cgi?host='.$host.'&service='.$service.'&t1=1264820912&t2=1265425712&includesoftstates=no&assumestateretention=yes&assumeinitialstates=yes&assumestatesduringnotrunning=yes&initialassumedservicestate=0&backtrack=4', 'like' => '/Host and Service State Trends/' },
 ];
 
-##################################################
-# run our tests
-TestUtils::test_command({ cmd => $omd_bin." start $site" });
-TestUtils::test_command({ cmd => "/bin/su - $site -c './lib/nagios/plugins/check_http -H localhost -a omdadmin:omd -u /$site/nagios/cgi-bin/cmd.cgi -e 200 -P \"cmd_typ=7&cmd_mod=2&host=omd-$site&service=Dummy+Service&start_time=2010-11-06+09%3A46%3A02&force_check=on&btnSubmit=Commit\" -r \"Your command request was successfully submitted\"'", like => '/HTTP OK:/' });
-sleep(30);
-for my $test (@{$tests}) {
-    TestUtils::test_command($test);
-}
-##################################################
-# and request some pages
+# complete the url
 for my $url ( @{$urls} ) {
-    $url->{'url'}    = "http://localhost/".$site.$url->{'url'};
+    $url->{'url'} = "http://localhost/".$site.$url->{'url'};
     $url->{'auth'}   = $auth;
     $url->{'unlike'} = [ '/internal server error/', '/"\/thruk\//', '/\'\/thruk\//' ];
-    TestUtils::test_url($url);
 }
 
-##################################################
-# switch webserver to shared mode
-TestUtils::test_command({ cmd => $omd_bin." stop $site" });
-TestUtils::test_command({ cmd => $omd_bin." config $site set WEBSERVER shared" });
-TestUtils::test_command({ cmd => TestUtils::config('APACHE_INIT')." restart" });
-TestUtils::test_command({ cmd => $omd_bin." start $site" });
+for my $core (qw/nagios shinken/) {
+    ##################################################
+    # run our tests
+    TestUtils::test_command({ cmd => $omd_bin." stop $site" });
+    TestUtils::test_command({ cmd => $omd_bin." config $site set CORE $core" });
+    TestUtils::test_command({ cmd => $omd_bin." start $site" });
+    TestUtils::test_command({ cmd => "/bin/su - $site -c './lib/nagios/plugins/check_http -H localhost -a omdadmin:omd -u /$site/nagios/cgi-bin/cmd.cgi -e 200 -P \"cmd_typ=7&cmd_mod=2&host=omd-$site&service=Dummy+Service&start_time=2010-11-06+09%3A46%3A02&force_check=on&btnSubmit=Commit\" -r \"Your command request was successfully submitted\"'", like => '/HTTP OK:/' });
+    sleep(30);
+    for my $test (@{$tests}) {
+        TestUtils::test_command($test);
+    }
+    ##################################################
+    # and request some pages
+    for my $url ( @{$urls} ) {
+        TestUtils::test_url($url);
+    }
 
-##################################################
-# then run tests again
-for my $test (@{$tests}) {
-    TestUtils::test_command($test);
-}
-##################################################
-# and request some pages
-for my $url ( @{$urls} ) {
-    $url->{'auth'}   = $auth;
-    $url->{'unlike'} = [ '/internal server error/', '/"\/thruk\//', '/\'\/thruk\//' ];
-    TestUtils::test_url($url);
+    ##################################################
+    # switch webserver to shared mode
+    TestUtils::test_command({ cmd => $omd_bin." stop $site" });
+    TestUtils::test_command({ cmd => $omd_bin." config $site set WEBSERVER shared" });
+    TestUtils::test_command({ cmd => TestUtils::config('APACHE_INIT')." restart" });
+    TestUtils::test_command({ cmd => $omd_bin." start $site" });
+
+    ##################################################
+    # then run tests again
+    for my $test (@{$tests}) {
+        TestUtils::test_command($test);
+    }
+    ##################################################
+    # and request some pages
+    for my $url ( @{$urls} ) {
+        TestUtils::test_url($url);
+    }
 }
 
 ##################################################
