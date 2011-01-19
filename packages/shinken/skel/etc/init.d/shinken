@@ -101,11 +101,15 @@ EOTXT
     if [ "$WEB" != "nagios" -a "$WEB" != "none" ] ; then
       sed -ri 's/^([[:space:]]*modules[[:space:]]*)(.+)/\1\2,Livestatus/' $TARGET_ETC/shinken-specific.d/broker.cfg
     fi
-    if [ "$LIVESTATUS_TCP" = "on" ]; then
-      sed -ri 's/^([[:space:]]*port[[:space:]]*)(.+)/\1'${LIVESTATUS_TCP_PORT}'/' $TARGET_ETC/shinken-specific.d/module_livestatus.cfg
-    else
-      sed -ri 's/^([[:space:]]*port[[:space:]]*)(.+)/\1none/' $TARGET_ETC/shinken-specific.d/module_livestatus.cfg
-    fi
+    # 
+    # This is commented out because livestatus tcp is handled by an extra xinetd
+    # The broker would crash if it tried to open the port himself
+    #
+    #if [ "$LIVESTATUS_TCP" = "on" ]; then
+    #  sed -ri 's/^([[:space:]]*port[[:space:]]*)(.+)/\1'${LIVESTATUS_TCP_PORT}'/' $TARGET_ETC/shinken-specific.d/module_livestatus.cfg
+    #else
+    #  sed -ri 's/^([[:space:]]*port[[:space:]]*)(.+)/\1none/' $TARGET_ETC/shinken-specific.d/module_livestatus.cfg
+    #fi
     #
     # Add the npcd module to the broker
     #
