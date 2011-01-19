@@ -12,7 +12,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 367 );
+plan( tests => 467 );
 
 ##################################################
 # create our test site
@@ -98,7 +98,7 @@ for my $test (@{$tests}) {
 for my $url ( @{$urls} ) {
     $url->{'url'}    = "http://localhost/".$site.$url->{'url'};
     $url->{'auth'}   = $auth;
-    $url->{'unlike'} = '/internal server error/';
+    $url->{'unlike'} = [ '/internal server error/', '/"\/thruk\//', '/\'\/thruk\//' ];
     TestUtils::test_url($url);
 }
 
@@ -118,7 +118,7 @@ for my $test (@{$tests}) {
 # and request some pages
 for my $url ( @{$urls} ) {
     $url->{'auth'}   = $auth;
-    $url->{'unlike'} = '/internal server error/';
+    $url->{'unlike'} = [ '/internal server error/', '/"\/thruk\//', '/\'\/thruk\//' ];
     TestUtils::test_url($url);
 }
 
