@@ -58,7 +58,7 @@ sub get_omd_bin {
         if(-l '/omd') {
             my $target = readlink('/omd');
             if($omd_bin eq '/usr/bin/omd') {
-                if($target ne "/opt/omd") {
+                if($target ne "/opt/omd" && $target ne "opt/omd") {
                     BAIL_OUT('symlink for /omd already exists but is wrong: should be: /opt/omd but got: '.$target);
                 }
             }

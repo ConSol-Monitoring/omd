@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 NAME     = Thruk
-VERSION  = 0.78.1
+VERSION  = 0.78.2
 DIR      = $(NAME)-$(VERSION)
 PERLARCH = $(shell $(PERL) -e 'use Config; print $$Config{archname}')
 
@@ -17,6 +17,7 @@ build:
 	cd $(DIR) && make clean
 	mkdir -p $(DIR)/root/thruk/plugins
 	rm -f $(DIR)/root/thruk/plugins/statusmap
+	rm -f $(DIR)/root/thruk/plugins/outagespbimp
 	cd $(DIR)/root/thruk/plugins && ln -s ../../../plugins/plugins-enabled/statusmap/root statusmap
 
 
