@@ -84,6 +84,8 @@ opt_verbose = False
 opt_interactive = False
 opt_force = False
 
+g_hooks = None
+
 def show_success(exit_code):
     if exit_code == True or exit_code == 0:
         sys.stdout.write(tty_ok + "\n")
@@ -1327,9 +1329,13 @@ def config_save():
         hook = g_hooks[hookname]
 	f.write("CONFIG_%s='%s'\n" % (hookname, hook["value"]))
 
+
 # Get information about all hooks
-def config_load_hooks():
+def config_load_hooks(force_reload = False):
     global g_hooks
+    if not force_reload and g_hooks != None:
+        return # already loaded
+
     g_hooks = {}
     hook_dir = g_sitedir + "/lib/omd/hooks"
     for hookname in os.listdir(hook_dir):
@@ -1345,6 +1351,9 @@ def config_load_hooks():
     config_load()
     load_hook_dependencies()
 
+def config_reload_hooks():
+    config_load_hooks(True)
+
 def load_hook_dependencies():
     for hookname, hook in g_hooks.items():
         exitcode, content = call_hook(hookname, ["depends"])
@@ -1359,6 +1368,7 @@ def refresh_hooks():
     config_set_all() # execute 'set' functions with current values
     call_all_hooks("refresh")
     config_save()
+    config_reload_hooks()
 
 def call_hook(hookname, args):
     hook_file = g_sitedir + "/lib/omd/hooks/" + hookname
@@ -1460,7 +1470,6 @@ def config_set_value(hookname, value):
 
     hook["value"] = value
     config_save()
-    config_load_hooks()
 
 def config_usage():
     sys.stdout.write("""Usage of config command:
@@ -1535,6 +1544,7 @@ def config_configure_hook(hookname):
         dialog_function(title, descr, choices, value, "Change", "Cancel")
     if change:
         config_set_value(hook["name"], new_value)
+        config_reload_hooks()
 
 def init_action(command, args):
     if command == "start":
