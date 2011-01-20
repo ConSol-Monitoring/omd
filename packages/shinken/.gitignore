@@ -2,5 +2,6 @@ Pyro-3.11
 multiprocessing-2.6.2.1
 setuptools-0.6c11
 simplejson-2.1.2
+ctypes-1.0.2
 shinken-[0-9].[0-9].[0-9]
 shinken-[0-9].[0-9]
