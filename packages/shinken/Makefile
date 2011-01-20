@@ -25,6 +25,11 @@ STOOLS=setuptools-0.6c11
 STOOLS_FILE=$(STOOLS).tar.gz
 STOOLS_URL=http://pypi.python.org/packages/source/s/setuptools/$(STOOLS_FILE)
 #
+# ctypes is only needed for CentOS and it's Python 2.4
+CTYPES=ctypes-1.0.2
+CTYPES_FILE=$(CTYPES).tar.gz
+CTYPES_URL=http://downloads.sourceforge.net/project/ctypes/ctypes/1.0.2/$(CTYPES_FILE)
+#
 # Hopefully this is never needed
 SQLITE=pysqlite-2.6.0
 SQLITE_FILE=$(SQLITE).tar.gz
@@ -58,6 +63,8 @@ build:
 	tar xzf $(SJSON_FILE)
 	test -f $(STOOLS_FILE) || wget $(STOOLS_URL)
 	tar xzf $(STOOLS_FILE)
+	test -f $(CTYPES_FILE) || wget $(CTYPES_URL)
+	tar xzf $(CTYPES_FILE)
 	#test -f $(SQLITE_FILE) || wget $(SQLITE_URL)
 	#tar xzf $(SQLITE_FILE)
 
@@ -71,6 +78,10 @@ install:
 	$(MAKE) installpyro
 	$(MAKE) installmp
 	$(MAKE) installjson
+	echo "distro is " $(DISTRO_NAME)
+	if [ $(DISTRO_NAME) = "CENTOS" ]; then \
+		$(MAKE) installctypes; \
+	fi
 	#$(MAKE) installsqlite
 	rm -rf $(TMP_DISTU)
 
@@ -142,6 +153,14 @@ installjson:
 		--install-data=$(DESTDIR)$(OMD_ROOT)/tmp )
 
 
+installctypes:
+	( cd $(CTYPES) ; python setup.py install \
+		--home=$(DESTDIR)$(OMD_ROOT) \
+		--install-platlib=$(LOCALPYTHONDIR) \
+		--install-scripts=$(DESTDIR)$(OMD_ROOT)/tmp \
+		--install-data=$(DESTDIR)$(OMD_ROOT)/tmp )
+
+
 
 clean:
 	rm -rf $(SHINKEN)
@@ -149,4 +168,5 @@ clean:
 	rm -rf $(MP)
 	rm -rf $(SJSON)
 	rm -rf $(STOOLS)
+	rm -rf $(CTYPES)
 	rm -rf $(SQLITE)
