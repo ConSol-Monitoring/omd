@@ -11,6 +11,10 @@
 if [ "$CONFIG_NSCA" != on ] ; then
     exit 5
 fi
+if [ "$CONFIG_CORE" = "shinken" ] ; then
+    # Shinken has it's own nsca listener
+    exit 5
+fi
 
 
 DAEMON=###ROOT###/bin/nsca
