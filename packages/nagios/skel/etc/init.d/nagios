@@ -131,10 +131,10 @@ nagios_wait_stop() {
     # multiple times to fetch new processes until all are gone.
     if [ -n "${pid:-}" ]; then
         I=0
-        while kill -0 "${pid:-}" >/dev/null 2>&1; do
+        while kill -0 ${pid:-} >/dev/null 2>&1; do
             # Send single kill per process
             kill $pid
-            while kill -0 "${pid:-}" >/dev/null 2>&1;  do
+            while kill -0 ${pid:-} >/dev/null 2>&1;  do
                 if [ $I = '60' ]; then
                     return 1
                 else
