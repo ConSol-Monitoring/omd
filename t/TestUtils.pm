@@ -118,7 +118,7 @@ sub test_command {
     # exit code?
     $test->{'exit'} = 0 unless exists $test->{'exit'};
     if(defined $test->{'exit'}) {
-        ok($rc == $test->{'exit'}, "exit code: ".$rc." == ".$test->{'exit'}) || diag("\ncmd: '".$test->{'cmd'}."' failed\nstdout: ".$t->stdout."\nstderr: ".$t->stderr);
+        ok($rc == $test->{'exit'}, "exit code: ".$rc." == ".$test->{'exit'}) || _diag_cmd($test, $t);
     }
 
     # matches on stdout?
@@ -431,6 +431,35 @@ sub _clean_stderr {
     $text =~ s/Syntax OK//g;
     $text =~ s/no crontab for \w+//g;
     return $text;
+}
+
+##################################################
+
+=head2 _clean_stderr
+
+  remove some know errors from stderr
+
+=cut
+sub _diag_cmd {
+    my $test = shift;
+    my $cmd  = shift;
+    diag("\ncmd: '".$test->{'cmd'}."' failed\n");
+    diag("stdout: ".$cmd->stdout."\n");
+    diag("stderr: ".$cmd->stderr."\n");
+
+    # check logfiles on apache errors
+    if($cmd->stdout =~ m/Starting dedicated Apache for site (\w+)[\.\ ]*ERROR/ ) {
+        my $site = $1;
+        diag("apache logs:");
+        my $files = ["/omd/sites/$site/var/log/apache/error_log"];
+        for my $file (@{$files}) {
+            if(-f $file) {
+                diag("$file:");
+                diag(`tail -n20 $file`);
+            }
+        }
+    }
+    return;
 }
 
 ##################################################
