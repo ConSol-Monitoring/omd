@@ -144,7 +144,7 @@ nagios_wait_stop() {
                 fi
             done
             # Is there another proc with ppid 1?
-            pid=$(pidof_nagios) || true
+            pid=$(pidof_nagios | head -n1) || true
         done
     fi
     
