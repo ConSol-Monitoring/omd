@@ -41,7 +41,7 @@ sub get_omd_bin {
     our $omd_bin;
     return $omd_bin if defined $omd_bin;
 
-    $omd_bin = $ENV{'OMD_BIN'} || 'destdir/opt/omd/versions/default/bin/omd';
+    $omd_bin = $ENV{'OMD_BIN'} || '/usr/bin/omd';
 
     # first check /omd
     if( ! -e '/omd' ) {

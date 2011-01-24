@@ -54,7 +54,7 @@ PERLARCH=$(perl -e 'use Config; print $Config{archname}')
 export PERL5LIB="/omd/versions/default/lib/perl5/lib/perl5/${PERLARCH}:/omd/versions/default/lib/perl5/lib/perl5:$PERL5LIB"
 
 if [ -z $OMD_BIN ]; then
-    OMD_BIN=destdir/opt/omd/versions/default/bin/omd
+    OMD_BIN=/usr/bin/omd
 fi
 
 echo "###################################################################"
