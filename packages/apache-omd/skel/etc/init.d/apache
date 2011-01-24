@@ -71,7 +71,7 @@ apache_wait_start() {
   
   i=0
   while pidof_apache >/dev/null 2>&1;  do
-    if [ $i = '10' ]; then
+    if [ $i = '20' ]; then
       return 1
     else
       echo -n "."
