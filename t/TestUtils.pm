@@ -96,6 +96,10 @@ sub get_omd_bin {
 sub test_command {
     my $test = shift;
     my($rc, $stderr) = ( -1, '') ;
+
+    # run the command
+    isnt($test->{'cmd'}, undef, "running cmd: ".$test->{'cmd'});
+
     my($prg,$arg) = split(/\s+/, $test->{'cmd'}, 2);
     my $t = Test::Cmd->new(prog => $prg, workdir => '') or die($!);
     alarm(300);
@@ -111,9 +115,6 @@ sub test_command {
         $stderr = TestUtils::_clean_stderr($stderr);
     }
     alarm(0);
-
-    # run the command
-    isnt($rc, undef, "cmd: ".$test->{'cmd'});
 
     # exit code?
     $test->{'exit'} = 0 unless exists $test->{'exit'};
