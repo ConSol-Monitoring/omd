@@ -19,7 +19,7 @@ install:
 	export docdir='$(OMD_ROOT)/share/doc/check_mk' ; \
 	export checkmandir='$(OMD_ROOT)/share/doc/check_mk/checks' ; \
 	export agentsdir='$(OMD_ROOT)/share/check_mk/agents' ; \
-	export agentslibdir='$(OMD_ROOT)/lib/check_mk_agent' ; \
+	export agentslibdir='/usr/lib/check_mk_agent' ; \
 	export nagios_binary='$(OMD_ROOT)/bin/nagios' ; \
 	export check_icmp_path='$(OMD_ROOT)/lib/nagios/plugins/check_icmp' ; \
 	export pnptemplates='$(OMD_ROOT)/share/check_mk/pnp-templates' ; \
