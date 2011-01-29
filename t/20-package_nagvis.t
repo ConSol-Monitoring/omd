@@ -12,7 +12,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 82 );
+plan( tests => 79 );
 
 ##################################################
 # create our test site
@@ -51,12 +51,12 @@ my $urls = [
   { url => "/nagvis/frontend/wui/index.php",                                   like => [ '/<title>NagVis .+ &rsaquo; WUI<\/title>/',
 	                                                                                       '/Welcome to the NagVis WUI/' ] },
   { url => "/nagvis/frontend/nagvis-js/index.php?mod=Info",                    like => '/NagVis Support Information<\/title>/' },
-  { url => "/nagvis/frontend/nagvis-js/index.php?mod=Map&act=view&show=demo",  like => '/, \'demo\'/' },
-  { url => "/nagvis/frontend/wui/index.php?mod=Map&act=edit&show=demo",        like => [ '/WUI<\/title>/', '/var mapname = \'demo\';/' ] },
+  { url => "/nagvis/frontend/nagvis-js/index.php?mod=Map&act=view&show=demo",  like => '/, \'demo\'/', 'skip_html_lint' => 1 },
+  { url => "/nagvis/frontend/wui/index.php?mod=Map&act=edit&show=demo",        like => [ '/WUI<\/title>/', '/var mapname = \'demo\';/' ], 'skip_html_lint' => 1 },
 
 	# Old redirects to maps
-  { url => "/nagvis/index.php?map=demo",       like => '/, \'demo\'/' },
-  { url => "/nagvis/config.php?map=demo",      like => [ '/WUI<\/title>/', '/var mapname = \'demo\';/' ] },
+  { url => "/nagvis/index.php?map=demo",       like => '/, \'demo\'/', 'skip_html_lint' => 1 },
+  { url => "/nagvis/config.php?map=demo",      like => [ '/WUI<\/title>/', '/var mapname = \'demo\';/' ], 'skip_html_lint' => 1 },
 ];
 
 # complete the url and perform tests
