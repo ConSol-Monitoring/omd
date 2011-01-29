@@ -179,11 +179,12 @@ sub remove_test_site {
 
   needs test hash
   {
-    url     => url to request
-    auth    => authentication (realm:user:pass)
-    code    => expected response code
-    like    => (list of) regular expressions which have to match content
-    unlike  => (list of) regular expressions which must not match content
+    url            => url to request
+    auth           => authentication (realm:user:pass)
+    code           => expected response code
+    like           => (list of) regular expressions which have to match content
+    unlike         => (list of) regular expressions which must not match content
+    skip_html_lint => flag to disable the html lint checking
   }
 
 =cut
@@ -222,6 +223,8 @@ sub test_url {
         if($page->{'content_type'} =~ 'text\/html') {
             if($use_html_lint == 0) {
                 skip "no HTML::Lint installed", 2;
+            } elsif(defined $test->{'skip_html_lint'} && $test->{'skip_html_lint'} == 1) {
+                skip "HTML::Lint check disabled", 2;
             }
 
             my $lint = new HTML::Lint;
