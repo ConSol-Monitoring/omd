@@ -20,7 +20,7 @@ my $omd_bin = TestUtils::get_omd_bin();
 my $site    = TestUtils::create_test_site() or BAIL_OUT("no further testing without site");
 my $auth    = 'OMD Monitoring Site '.$site.':omdadmin:omd';
 
-TestUtils::test_command({ cmd => "/d1/nagvis/mache" });
+#TestUtils::test_command({ cmd => "/d1/nagvis/mache" });
 
 # set nagvis as default
 TestUtils::test_command({ cmd => $omd_bin." config $site set WEB nagvis" });
