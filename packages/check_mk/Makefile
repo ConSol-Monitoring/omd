@@ -2,7 +2,7 @@ include ../../Makefile.omd
 
 SHELL = /bin/bash
 NAME = check_mk
-VERSION = 1.1.9i5
+VERSION = 1.1.9i6
 DIR = $(NAME)-$(VERSION)
 
 .PHONY: skel
@@ -69,8 +69,11 @@ skel:
 clean:
 	rm -rf check_mk-*.*.*[0-9]
 
+# Get new upstream version (as in VERSION)
 # Adapt configuration files for skeleton from upstream version
 upstream:
+	rm -f check_mk-*.tar.gz
+	wget http://mathias-kettner.de/download/check_mk-$(VERSION).tar.gz
 	# check_mk_templates.cfg -> enter correct URLs and paths
 	tar xzf check_mk-$(VERSION).tar.gz --to-stdout check_mk-$(VERSION)/doc.tar.gz | \
           tar xzf - --to-stdout check_mk_templates.cfg | \
