@@ -118,11 +118,12 @@ EOTXT
     fi
     #
     # Add the nsca module to the arbiter
-    #
-    if [ "$NSCA" = "on" ]; then
-      sed -ri 's/^([[:space:]]*modules[[:space:]]*)(.+)/\1\2,NSCA/' $TARGET_ETC/shinken-specific.d/arbiter.cfg
-      sed -ri 's/^([[:space:]]*port[[:space:]]*)([0-9]+)/\1'${NSCA_TCP_PORT}'/' $TARGET_ETC/shinken-specific.d/module_nsca_server.cfg
-    fi
+    # uncomment this if the arbiter listens
+    # leave the comments if an external nsca daemon is used
+    #if [ "$NSCA" = "on" ]; then
+    #  sed -ri 's/^([[:space:]]*modules[[:space:]]*)(.+)/\1\2,NSCA/' $TARGET_ETC/shinken-specific.d/arbiter.cfg
+    #  sed -ri 's/^([[:space:]]*port[[:space:]]*)([0-9]+)/\1'${NSCA_TCP_PORT}'/' $TARGET_ETC/shinken-specific.d/module_nsca_server.cfg
+    #fi
 
     #
     # Step 3

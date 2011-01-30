@@ -41,7 +41,7 @@ sub get_omd_bin {
     our $omd_bin;
     return $omd_bin if defined $omd_bin;
 
-    $omd_bin = $ENV{'OMD_BIN'} || 'destdir/opt/omd/versions/default/bin/omd';
+    $omd_bin = $ENV{'OMD_BIN'} || '/usr/bin/omd';
 
     # first check /omd
     if( ! -e '/omd' ) {
@@ -96,6 +96,10 @@ sub get_omd_bin {
 sub test_command {
     my $test = shift;
     my($rc, $stderr) = ( -1, '') ;
+
+    # run the command
+    isnt($test->{'cmd'}, undef, "running cmd: ".$test->{'cmd'});
+
     my($prg,$arg) = split(/\s+/, $test->{'cmd'}, 2);
     my $t = Test::Cmd->new(prog => $prg, workdir => '') or die($!);
     alarm(300);
@@ -111,9 +115,6 @@ sub test_command {
         $stderr = TestUtils::_clean_stderr($stderr);
     }
     alarm(0);
-
-    # run the command
-    isnt($rc, undef, "cmd: ".$test->{'cmd'});
 
     # exit code?
     $test->{'exit'} = 0 unless exists $test->{'exit'};
@@ -178,11 +179,12 @@ sub remove_test_site {
 
   needs test hash
   {
-    url     => url to request
-    auth    => authentication (realm:user:pass)
-    code    => expected response code
-    like    => (list of) regular expressions which have to match content
-    unlike  => (list of) regular expressions which must not match content
+    url            => url to request
+    auth           => authentication (realm:user:pass)
+    code           => expected response code
+    like           => (list of) regular expressions which have to match content
+    unlike         => (list of) regular expressions which must not match content
+    skip_html_lint => flag to disable the html lint checking
   }
 
 =cut
@@ -221,6 +223,8 @@ sub test_url {
         if($page->{'content_type'} =~ 'text\/html') {
             if($use_html_lint == 0) {
                 skip "no HTML::Lint installed", 2;
+            } elsif(defined $test->{'skip_html_lint'} && $test->{'skip_html_lint'} == 1) {
+                skip "HTML::Lint check disabled", 2;
             }
 
             my $lint = new HTML::Lint;
