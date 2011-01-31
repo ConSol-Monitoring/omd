@@ -1,6 +1,6 @@
 <?php
 ##
-## Program: pnp4nagios-0.6.5 , Performance Data Addon for Nagios(r)
+## Program: pnp4nagios, Performance Data Addon for Nagios(r)
 ## License: GPL
 ## Copyright (c) 2005-2010 Joerg Linge (http://www.pnp4nagios.org)
 ##
@@ -84,6 +84,25 @@ $conf['multisite_base_url'] = "/###SITE###/check_mk";
 # This is the same value as defined in etc/multisite.mk
 #
 $conf['multisite_site'] = "###SITE###";
+
+#
+# check authorization against mk_livestatus API 
+# Available since 0.6.10
+#
+$conf['auth_enabled'] = FALSE;
+
+#
+# Livestatus socket path
+# 
+$conf['livestatus_socket'] = "unix:###ROOT###/tmp/run/live";
+
+#
+# Which user is allowed to see all services or all hosts?
+# Keywords: <USERNAME>
+# Example: conf['allowed_for_all_services'] = "nagiosadmin,operator";
+# This option is used while $conf['auth_enabled'] = TRUE
+$conf['allowed_for_all_services'] = "omdadmin";
+$conf['allowed_for_all_hosts'] = "omdadmin";
 
 # Which user is allowed to see additional service links ?
 # Keywords: EVERYONE NONE <USERNAME>
@@ -182,6 +201,7 @@ $conf['RRD_DAEMON_OPTS'] = 'unix:###ROOT###/tmp/run/rrdcached.sock';
 # Add your own template directories here
 # First match wins!
 $conf['template_dirs'][] = '###ROOT###/etc/pnp4nagios/templates';
+$conf['template_dirs'][] = '###ROOT###/local/share/check_mk/pnp-templates'; 
 $conf['template_dirs'][] = '###ROOT###/share/check_mk/pnp-templates';
 $conf['template_dirs'][] = '###ROOT###/share/pnp4nagios/htdocs/templates';
 $conf['template_dirs'][] = '###ROOT###/share/pnp4nagios/htdocs/templates.dist';

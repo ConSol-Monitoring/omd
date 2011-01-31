@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 NAME = nagios
-VERSION = 3.2.2
+VERSION = 3.2.3
 DIR = $(NAME)-$(VERSION)
 
 # Configure options for Nagios. Since we want to compile
@@ -18,7 +18,7 @@ CONFIGUREOPTS = \
 
 build:
 	tar xzf $(DIR).tar.gz
-	for p in patches/*.dif ; do \
+	set -e ; for p in patches/*.dif ; do \
 	    echo "applying $$p..." ; \
 	    ( cd $(DIR) ; patch -p1 -b ) < $$p ; \
 	done
@@ -30,7 +30,8 @@ install:
 	$(MAKE) DESTDIR=$(DESTDIR) -C $(DIR) install-base install-cgis install-html
 	rm -f $(DESTDIR)$(OMD_ROOT)/share/nagios/htdocs/config.php.inc
 
-	install -m 664 $(DIR)/p1.pl $(DESTDIR)$(OMD_ROOT)/lib/nagios;
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/nagios
+	install -m 664 $(DIR)/p1.pl $(DESTDIR)$(OMD_ROOT)/lib/nagios
 
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/nagios/htdocs/ssi
 	install -m 755 ssi-wrapper.pl $(DESTDIR)$(OMD_ROOT)/share/nagios/htdocs/ssi
@@ -46,10 +47,8 @@ install:
 	   install -m 644 $(DIR)/$$file $(DESTDIR)$(OMD_ROOT)/share/doc/$(NAME); \
 	done
 
-	mkdir -p $(DESTDIR)$(OMD_ROOT)/skel/etc/init.d
-	install -m 755 $(DIR)/daemon-init $(DESTDIR)$(OMD_ROOT)/skel/etc/init.d/nagios
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/bin
+	install -m 755 merge-nagios-config $(DESTDIR)$(OMD_ROOT)/bin
   
-skel:
-
 clean:
 	rm -rf $(DIR)

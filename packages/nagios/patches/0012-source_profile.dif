@@ -1,0 +1,11 @@
+--- nagios-3.2.2/daemon-init.in-2010-11-03	2010-11-03 09:06:42.000000000 +0100
++++ nagios-3.2.2/daemon-init.in	2010-11-03 09:07:25.000000000 +0100
+@@ -30,6 +30,8 @@
+ #              used to provide network services status.
+ #
+   
++cd ###ROOT###
++. ###ROOT###/.profile
+ . ###ROOT###/etc/omd/site.conf
+ [ "$CONFIG_CORE" = "nagios" ] || exit 5
+ 

@@ -1,14 +1,15 @@
 #!/bin/bash
 
+cd ###ROOT###
+
 # Check if MySQL is enabled in OMD. If not terminate.
-. ###ROOT###/etc/omd/site.conf
+. etc/omd/site.conf
 if [ "$CONFIG_MYSQL" != on ] ; then
     exit 5
 fi
 
-MYSQLD_USER=###SITE###
-MYSQLD_PID=###ROOT###/tmp/run/mysqld/mysqld.pid
-MYSQL_CNF=###ROOT###/.my.cnf
+MYSQLD_PID=tmp/run/mysqld/mysqld.pid
+MYSQL_CNF=.my.cnf
 
 ## Checks if there is a server running and if so if it is accessible.
 #
@@ -38,7 +39,7 @@ mysql_wait_start() {
         echo -n "already running. "
         return 1
     else
-        mysqld_safe --defaults-file=$MYSQL_CNF --user=$MYSQLD_USER >/dev/null 2>&1 &
+        mysqld_safe --defaults-file=$MYSQL_CNF >/dev/null 2>&1 &
         i=0
         while mysqld_status check_dead nowarn;  do
             if [ $i = '10' ]; then

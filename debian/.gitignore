@@ -5,8 +5,10 @@ ex/
 omd/
 files
 *.debhelper
+preinst
 postinst
+prerm
 postrm
 control
 links
-
+init

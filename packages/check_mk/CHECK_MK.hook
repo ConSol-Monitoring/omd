@@ -2,6 +2,7 @@
 
 case "$1" in
     refresh)
-        check_mk -U
+        echo -n "Updating precompiled host checks for Check_MK..."
+        check_mk -C && echo OK || echo Failed
     ;;
 esac

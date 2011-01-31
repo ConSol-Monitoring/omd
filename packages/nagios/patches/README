@@ -1,12 +1,5 @@
 Index of patches
 
-0001:
-    Extend the configuration file nagios.cfg with files in nagios.d: After
-    reading the main configuration file, Nagios removes ".cfg" from the name
-    of the file (if the file ends in .cfg) and adds ".d". Then it reads in
-    all files in that directory ending with ".cfg" (non-recursive). The order
-    is not specified.
-
 0002:
     The file include/utils.inc.php includes config.inc.php by going up 
     one directory in the physical directory tree. This patch changes that
@@ -28,9 +21,6 @@ Index of patches
     the module in the traditional way. This prevents problems with tmpfs
     mounted as non-root (where Nagios places the module copy).
 
-0005:
-    Reverts patch which breaks deactivation of active checks. 
-
 0006:
     Adds OMD related config options and macros to the init script.
 
@@ -42,4 +32,28 @@ Index of patches
     which contains the pid is not cleaned up the init script throws an
     error message when executing 'etc/init.d/nagios stop'.
     With this path the init script checks if the process is stil alive
-    before trying to kill it. 
+    before trying to kill it.
+
+0009:
+    When someone executes the init script with the stop action and the
+		pid file can not be found it is a good sign that nagios is not running
+		anymore. So don't terminate the script with exit code 1. Using exit
+		code 0 insted.
+
+0010:
+    This patches fixed the problem to jump back to the start page
+    whenever you press F5.
+
+0011:
+    This patches removes a useless loop in the status summary page.
+
+0012:
+    The patch merges the configuration files from nagios.d dir to nagios.cfg.
+    in the init script of nagios.
+
+0013:
+    This patch ensures a good OMD environment for the init script
+
+0014:
+    Hopefully the last patch to the nagios init script. It prevents starting
+		nagios a second time when already running.

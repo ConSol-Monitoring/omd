@@ -9,3 +9,6 @@ rpm.buildroot
 omd-*-*.rpm
 build-stamp
 patch-stamp
+.config
+*.log
+debian/changelog

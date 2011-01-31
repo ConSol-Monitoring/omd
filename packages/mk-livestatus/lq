@@ -1,0 +1,7 @@
+#!/bin/bash
+if [ $# -ge 1 ]
+then
+    echo -e "$@" 
+else
+    cat
+fi | unixcat ~/tmp/run/live

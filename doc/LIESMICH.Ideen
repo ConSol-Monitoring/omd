@@ -1,5 +1,0 @@
-Ein Konfigschalter "AUTOSTART", der per default of "on" ist.
-Wenn der Rechner bootet (man als root ein 'omd start' ohne site macht),
-dann entscheidet der Schalter, ob die site gestartet wird. So
-kann man Sites anlegen, die man nicht unbedingt immer starten
-will.

@@ -1,14 +1,15 @@
---- nagios-3.2.2.orig/html/main.php	2010-09-01 23:17:33.000000000 +0200
-+++ nagios-3.2.2/html/main.php	2010-09-19 09:20:54.159293600 +0200
-@@ -27,37 +27,10 @@
+diff -ur nagios-3.2.3.orig/html/main.php nagios-3.2.3/html/main.php
+--- nagios-3.2.3.orig/html/main.php	2010-10-04 05:56:55.000000000 +0200
++++ nagios-3.2.3/html/main.php	2010-11-12 20:20:55.000000000 +0100
+@@ -27,37 +27,9 @@
  <div class="product">Nagios<sup><span style="font-size: small;">&reg;</span></sup> Core<sup><span style="font-size: small;">&trade;</span></sup></div>
- <div class="version">Version 3.2.2</div>
- <div class="releasedate">September 01, 2010</div>
--<div class="checkforupdates"><a href="http://www.nagios.org/checkforupdates/?version=3.2.2&product=nagioscore" target="_blank">Check for updates</a></div>
+ <div class="version">Version 3.2.3</div>
+ <div class="releasedate">October 03, 2010</div>
+-<div class="checkforupdates"><a href="http://www.nagios.org/checkforupdates/?version=3.2.3&product=nagioscore" target="_blank">Check for updates</a></div>
  <div class="whatsnew"><a href="docs/whatsnew.html">Read what's new in Nagios Core 3</a></div>
  </div>
  
- 
+-
 -<div id="updateversioninfo">
 -<?php
 -	$updateinfo=get_update_information();

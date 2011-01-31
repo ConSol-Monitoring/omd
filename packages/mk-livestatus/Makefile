@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 NAME = mk-livestatus
-VERSION = 1.1.8b2
+VERSION = 1.1.9i6
 DIR = $(NAME)-$(VERSION)
 
 CONFIGUREOPTS = \
@@ -14,8 +14,17 @@ build:
 
 install:
 	$(MAKE) DESTDIR=$(DESTDIR) -C $(DIR) install
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/bin
+	install -m 755 lq $(DESTDIR)$(OMD_ROOT)/bin
 
 skel:
 
 clean:
 	rm -rf mk-livestatus-*.*.*[0-9]
+
+upstream:
+	git rm mk-livestatus-*.tar.gz
+	rm -f mk-livestatus-*.tar.gz
+	wget http://mathias-kettner.de/download/mk-livestatus-$(VERSION).tar.gz
+	git add mk-livestatus-$(VERSION).tar.gz
+

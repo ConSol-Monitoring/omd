@@ -1,6 +1,6 @@
 Summary:        OMD - OpenSource Monitoring Distribution
 Name:           omd-%{version}
-Version:        %{version}
+Version:        SET BY MAKEFILE
 Release:        SET BY MAKEFILE 
 License:        GPL
 URL:            http://omdistro.org/
@@ -9,6 +9,7 @@ Source:         %{name}.tar.gz
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root
 AutoReq:        off
 AutoProv:       off
+Provides:       omd
 Requires:	
 
 #%define _missing_doc_files_terminate_build 0
@@ -41,30 +42,18 @@ rm -f $RPM_BUILD_ROOT/@APACHE_CONFDIR@/*
 rm -f $RPM_BUILD_ROOT/etc/init.d/omd
 
 %files
+%defattr(-,root,root)
 /opt/omd
-%dir %attr(770,root,root) /opt/omd/versions/%{version}/skel/var/check_mk/logwatch
-%dir %attr(770,root,root) /opt/omd/versions/%{version}/skel/var/check_mk/web
-%dir %attr(775,root,root) /opt/omd/versions/%{version}/skel/etc/nagvis
-%dir %attr(775,root,root) /opt/omd/versions/%{version}/skel/etc/nagvis/maps
-%attr(664,root,root)      /opt/omd/versions/%{version}/skel/etc/nagvis/maps/*
-%dir %attr(775,root,root) /opt/omd/versions/%{version}/skel/etc/nagvis/automaps
-%attr(664,root,root)      /opt/omd/versions/%{version}/skel/etc/nagvis/automaps/*
-%attr(664,root,root)      /opt/omd/versions/%{version}/skel/etc/nagvis/nagvis.ini.php
-%attr(664,root,root)      /opt/omd/versions/%{version}/skel/etc/nagvis/auth.db
-%dir %attr(775,root,root) /opt/omd/versions/%{version}/skel/var/nagvis/userfiles/images/maps
-%attr(664,root,root)      /opt/omd/versions/%{version}/skel/var/nagvis/userfiles/images/maps/*
-%dir %attr(775,root,root) /opt/omd/versions/%{version}/skel/var/nagvis/userfiles/images/shapes
-%attr(664,root,root)      /opt/omd/versions/%{version}/skel/var/nagvis/userfiles/images/shapes/*
-%dir %attr(775,root,root) /opt/omd/versions/%{version}/skel/tmp/nagvis
-%dir %attr(775,root,root) /opt/omd/versions/%{version}/skel/tmp/nagvis/share
-%dir %attr(775,root,root) /opt/omd/versions/%{version}/skel/tmp/nagvis/tmpl/cache
-%dir %attr(775,root,root) /opt/omd/versions/%{version}/skel/tmp/nagvis/tmpl/compile
-%attr(4750,root,omd)      /opt/omd/versions/%{version}/lib/nagios/plugins/check_icmp
-%attr(4750,root,omd)      /opt/omd/versions/%{version}/lib/nagios/plugins/check_dhcp
+%attr(4750,root,omd) /opt/omd/versions/%{version}/lib/nagios/plugins/check_icmp
+%attr(4750,root,omd) /opt/omd/versions/%{version}/lib/nagios/plugins/check_dhcp
 
 %pre
 groupadd -r omd 2>/dev/null || true
-ln -sfn /opt/omd /omd
+# create symlink if not exists
+if [ ! -e /omd ]
+then
+    ln -sfn /opt/omd /omd
+fi
 
 %post
 echo "New default version is %{version}."
@@ -78,9 +67,10 @@ chkconfig omd on
 # SLES: make sure apache modules are activated
 if which a2enmod >/dev/null 2>&1
 then
-    echo "Makeing sure that Apache modules proxy and http_proxy are activated."
+    echo "Makeing sure that Apache modules proxy, http_proxy and rewrite are activated."
     a2enmod proxy 2>/dev/null || true
     a2enmod proxy_http 2>/dev/null || true
+    a2enmod rewrite 2>/dev/null || true
 fi
 
 # SLES: make sure that the following file exists:

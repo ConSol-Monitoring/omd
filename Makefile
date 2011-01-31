@@ -1,5 +1,34 @@
 SHELL = /bin/bash
 include Makefile.omd
+# You can select a subset of the packages by overriding this
+# variale, e.g. make PACKAGES='nagios rrdtool' pack
+PACKAGES=perl-modules \
+         apache-omd \
+         check_logfiles \
+         check_mk \
+         check_mysql_health \
+         check_oracle_health \
+         check_webinject \
+         dokuwiki \
+         example \
+         jmx4perl \
+         mk-livestatus \
+         mysql-omd \
+         nagios \
+         nagios-plugins \
+         nagvis \
+         nrpe \
+         nsca \
+         omd \
+         pnp4nagios \
+         rrdtool \
+         shinken \
+         thruk \
+         maintenance
+
+# This file is kept by 'make config' and also may override
+# the list of packages
+-include .config
 
 DESTDIR ?=$(shell pwd)/destdir
 RPM_TOPDIR=$$(pwd)/rpm.topdir
@@ -10,9 +39,6 @@ NEWSERIAL=$$(($(OMD_SERIAL) + 1))
 APACHE_NAME=$(notdir $(APACHE_INIT))
 
 .PHONY: install-global
-# You can select a subset of the packages by overriding this
-# variale, e.g. make PACKAGES='nagios rrdtool' pack
-PACKAGES = *
 
 omd: build
 
@@ -20,6 +46,14 @@ build:
 	@set -e ; cd packages ; for p in $(PACKAGES) ; do \
 	    $(MAKE) -C $$p build ; \
         done
+
+speed:
+	@set -e ; cd packages ; for p in $(PACKAGES) ; do \
+            ( NOW=$$(date +%s) ; \
+              $(MAKE) -C $$p build > ../$$p.log 2>&1 \
+              && echo "$$p(ok - $$(( $$(date +%s) - NOW ))s)" \
+              || "$$p(ERROR)" ) & \
+	done ; wait ; echo "FINISHED."
 
 pack:
 	rm -rf $(DESTDIR)
@@ -32,9 +66,11 @@ pack:
                 install -m 755 $$p/$$hook $(DESTDIR)$(OMD_ROOT)/lib/omd/hooks/$${hook%.hook} ; \
             done ; \
         done
+
 	# Repair packages that install with silly modes (such as Nagios)
 	chmod -R o+Xr $(DESTDIR)$(OMD_ROOT)
 	$(MAKE) install-global
+
 	# Install skeleton files (subdirs skel/ in packages' directories)
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/skel
 	@set -e ; cd packages ; for p in $(PACKAGES) ; do \
@@ -43,6 +79,32 @@ pack:
             fi ;\
             $(MAKE) SKEL=$(DESTDIR)$(OMD_ROOT)/skel -C $$p skel ;\
         done
+
+        # Create permissions file for skel
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/omd
+	@set -e ; cd packages ; for p in $(PACKAGES) ; do \
+	    if [ -e $$p/skel.permissions ] ; then \
+	        echo "# $$p" ; \
+	        cat $$p/skel.permissions ; \
+	    fi ; \
+	done > $(DESTDIR)$(OMD_ROOT)/share/omd/skel.permissions
+
+        # Make sure, all permissions in skel are set to 0755, 0644
+	@failed=$$(find $(DESTDIR)$(OMD_ROOT)/skel -type d -not -perm 0755) ; \
+	if [ -n "$$failed" ] ; then \
+	    echo "Invalid permissions for skeleton dirs. Must be 0755:" ; \
+            echo "I'll fix this for you this time..." ; \
+            chmod -c 755 $$failed ; \
+            echo "$$failed" ; \
+        fi
+	@failed=$$(find $(DESTDIR)$(OMD_ROOT)/skel -type f -not -perm 0644) ; \
+	if [ -n "$$failed" ] ; then \
+	    echo "Invalid permissions for skeleton files. Must be 0644:" ; \
+            echo "$$failed" ; \
+            echo "I'll fix this for you this time..." ; \
+            chmod -c 644 $$failed ; \
+        fi
+
 	# Fix packages which did not add ###ROOT###
 	find $(DESTDIR)$(OMD_ROOT)/skel -type f | xargs -n1 sed -i -e 's+$(OMD_ROOT)+###ROOT###+g'
 
@@ -60,6 +122,26 @@ clean:
 
 mrproper:
 	git clean -xfd
+
+config:
+	@inarray () { \
+            elem="$$1" ; \
+            shift ; \
+            for x in "$$@" ; do if [ $$elem = $$x ] ; then return 0 ; fi ; done ; \
+            return 1  ; \
+        } ; \
+        if [ "$(PACKAGES)" = '*' ] ; \
+        then \
+            enabled='*' ; \
+        else \
+            enabled=( $(PACKAGES) ) ; \
+        fi ; \
+        echo "$$enabled" ; \
+        avail=$$(for p in $$(cd packages ; ls) ; do if [ "$$enabled" = '*' ] || inarray $$p $${enabled[@]} ; then en=on ; else en="-" ; fi ; echo -n "$$p - $$en " ; done) ; \
+        if packages=$$(dialog --stdout --checklist "Package configuration" 1 0 0 $$avail ) ; \
+        then \
+            echo "PACKAGES = $$packages" | sed 's/"//g' > .config ; \
+        fi
 
 
 # Create installations files that do not lie beyond /omd/versions/$(OMD_VERSION)
@@ -89,6 +171,10 @@ install-global:
 	install -m 644 distros/Makefile.$(DISTRO_NAME)_$(DISTRO_VERSION) $(DESTDIR)$(OMD_ROOT)/share/omd/distro.info
 	echo -e "OMD_VERSION = $(OMD_VERSION)\nOMD_PHYSICAL_BASE = $(OMD_PHYSICAL_BASE)" > $(DESTDIR)$(OMD_ROOT)/share/omd/omd.info
 
+	# README files and license information
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/doc
+	install -m 644 README COPYING TEAM $(DESTDIR)$(OMD_ROOT)/share/doc
+
 
 # Create source tarball. This currently only works in a checked out GIT 
 # repository.
@@ -105,7 +191,8 @@ $(SOURCE_TGZ) dist:
 rpm:
 	sed -e 's/^Requires:.*/Requires:	$(OS_PACKAGES)/' \
             -e 's/%{version}/$(OMD_VERSION)/g' \
-            -e 's/^Release:.*/Release: $(DISTRO_CODE).$(OMD_SERIAL)/' \
+            -e 's/^Version:.*/Version: $(DISTRO_CODE)/' \
+            -e 's/^Release:.*/Release: $(OMD_SERIAL)/' \
 	    -e 's#@APACHE_CONFDIR@#$(APACHE_CONF_DIR)#g' \
 	    -e 's#@APACHE_NAME@#$(APACHE_NAME)#g' \
 	    omd.spec.in > omd.spec
@@ -127,19 +214,20 @@ deb-environment:
 	  exit 1; \
 	fi
 
-# newversion means new OMD version
-deb-newversion: deb-environment
-	dch --package omd-$(OMD_VERSION) \
-	    --newversion $(OMD_VERSION)build1 \
-            -b \
-	    --distributor 'unstable' "new upstream version"
+# create a debian/changelog to build the package 
+deb-changelog: deb-environment
+	# this is a hack!
+	rm -f debian/changelog
+	dch --create --package omd-$(OMD_VERSION) \
+	    --newversion $(DISTRO_CODE)1 "`cat debian/changelog.tmpl`"
+	dch --release "releasing ...."
 
-# incrementing debian packaging version (same OMD version)
-deb-incversion: deb-environment
-	dch -i --distributor 'unstable'
-
-deb: 
+deb: deb-changelog
 	sed -e 's/###OMD_VERSION###/$(OMD_VERSION)/' \
+	    -e 's/###BUILD_PACKAGES###/$(BUILD_PACKAGES)/' \
+	    -e 's/###OS_PACKAGES###/$(OS_PACKAGES)/' \
+	    -e '/Depends:/s/\> /, /g' \
+	    -e '/Depends:/s/@/ /g' \
 	   `pwd`/debian/control.in > `pwd`/debian/control
 	fakeroot debian/rules clean
 	debuild --no-lintian -i\.git -I\.git \
@@ -147,6 +235,13 @@ deb:
 			-Iomd-bin-$(OMD_VERSION).tar.gz \
 			-i.gitignore -I.gitignore \
 			-uc -us -rfakeroot
+	# -- renaming deb package to DISTRO_CODE dependend name
+	# arch=`dpkg-architecture -qDEB_HOST_ARCH` ; \
+	# build=`sed -e '1s/.*(\(.*\)).*/\1/;q' debian/changelog` ; \
+	# distro=`echo $$build | sed -e 's/build/$(DISTRO_CODE)/' ` ; \
+	# echo "$$arch $$build $$distro"; \
+	# mv "../omd-$(OMD_VERSION)_$${build}_$${arch}.deb" \
+	#  "../omd-$(OMD_VERSION)_$${distro}_$${arch}.deb" ;
 
 # Only to be used for developement testing setup 
 setup: pack xzf
@@ -156,14 +251,18 @@ xzf:
 	tar xzf $(BIN_TGZ) -C / # HACK: Add missing suid bits if compiled as non-root
 	chmod 4755 $(OMD_ROOT)/lib/nagios/plugins/check_{icmp,dhcp}
 	$(APACHE_CTL) -k graceful
-	
-
 
 version:
-	@newversion=$$(dialog --stdout --inputbox "New Version:" 0 0 "$(OMD_VERSION)") ; \
+	@if [ -z "$(VERSION)" ] ; then \
+	    newversion=$$(dialog --stdout --inputbox "New Version:" 0 0 "$(OMD_VERSION)") ; \
+        else \
+            newversion=$(VERSION) ; \
+        fi ; \
 	if [ -n "$$newversion" ] && [ "$$newversion" != "$(OMD_VERSION)" ]; then \
 	    sed -ri 's/^(OMD_VERSION[[:space:]]*= *).*/\1'"$$newversion/" Makefile.omd ; \
 	    sed -ri 's/^(OMD_SERIAL[[:space:]]*= *).*/\1'"$(NEWSERIAL)/" Makefile.omd ; \
 	    sed -ri 's/^(OMD_VERSION[[:space:]]*= *).*/\1"'"$$newversion"'"/' packages/omd/omd ; \
-	    make deb-newversion ; \
 	fi ;
+
+test:
+	t/test_all.sh

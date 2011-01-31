@@ -19,4 +19,8 @@ EOF
     set)
         sed -ri 's/^([[:space:]]*port[[:space:]]*=[[:space:]]*)([0-9]+)/\1'$2'/' $OMD_ROOT/etc/mk-livestatus/xinetd.conf
     ;;
+    depends)
+        [ "$CONFIG_CORE" != none -a "$CONFIG_LIVESTATUS_TCP" = on ]
+    ;;
 esac
+

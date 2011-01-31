@@ -1,0 +1,28 @@
+--- nagios-3.2.2/daemon-init.in.orig	2010-11-06 17:08:12.000000000 +0100
++++ nagios-3.2.2/daemon-init.in	2010-11-06 17:17:10.000000000 +0100
+@@ -79,6 +79,9 @@
+ {
+ 
+ 	if [ ! -f $NagiosRunFile ]; then
++		if [ "$1" = "start" ]; then
++			return 0
++		fi
+ 		echo -n "PID-file not found ($NagiosRunFile)."
+ 		if [ "$1" = "stop" ]; then
+ 			echo " Could not stop."
+@@ -145,6 +148,15 @@
+ 
+ 	start)
+ 		echo -n "Starting nagios:"
++
++		pid_nagios start
++		if [ ! -z "$NagiosPID" ]; then
++			if status_nagios nagios; then
++				echo "Nagios is already running. Exiting."
++				exit 0
++			fi
++		fi
++
+ 		$NagiosBin -v $NagiosCfgFile > /dev/null 2>&1;
+ 		if [ $? -eq 0 ]; then
+ 			rm -f $NagiosCommandFile

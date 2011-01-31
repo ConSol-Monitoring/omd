@@ -3,7 +3,7 @@ include ../../Makefile.omd
 .PHONY: skel
 
 NAME = pnp4nagios
-VERSION = 0.6.7
+VERSION = 0.6.11
 DIR = $(NAME)-$(VERSION)
 
 # Configure options for PNP4Nagios. Since we want to compile
@@ -27,6 +27,11 @@ CONFIGUREOPTS = \
 
 build:
 	tar xzf $(DIR).tar.gz
+	#for p in patches/*.dif ; do \
+	#	echo "applying $$p..." ; \
+	#	( cd $(DIR) ; patch -p1 -b ) < $$p ; \
+        #done
+
 	cd $(DIR) ; ./configure $(CONFIGUREOPTS)
 	$(MAKE) -C $(DIR) all
 
@@ -37,7 +42,7 @@ install:
 	rm $(DESTDIR)$(OMD_ROOT)/share/pnp4nagios/htdocs/install.php
 	rm -rf $(DESTDIR)$(OMD_ROOT)/etc/pnp4nagios
 	rm -rf $(DESTDIR)$(OMD_ROOT)/var/pnp4nagios
-	mkdir $(DESTDIR)$(OMD_ROOT)/share/doc/pnp4nagios
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/doc/pnp4nagios
 	install -m 644 $(DIR)/README $(DESTDIR)$(OMD_ROOT)/share/doc/pnp4nagios
 	install -m 644 $(DIR)/COPYING $(DESTDIR)$(OMD_ROOT)/share/doc/pnp4nagios
 	install -m 644 $(DIR)/AUTHORS $(DESTDIR)$(OMD_ROOT)/share/doc/pnp4nagios
@@ -57,7 +62,6 @@ install:
 	rm $(DESTDIR)$(OMD_ROOT)/lib/pnp4nagios/check_pnp_rrds.pl
 
 
-skel:
 
 clean:
 	rm -rf $(DIR)

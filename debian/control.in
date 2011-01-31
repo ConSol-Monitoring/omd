@@ -2,14 +2,13 @@ Source: omd-###OMD_VERSION###
 Section: admin
 Priority: optional
 Maintainer: <debian@omdistro.org>
-Build-Depends: dpatch, debhelper (>= 7), autotools-dev,  build-essential, libcairo2-dev, libpango1.0-dev, libxml2-dev, libexpect-perl, libssl-dev, snmp, git-buildpackage, libgnutls-dev, libldap2-dev, libmcrypt-dev, libmysqlclient15-dev, libperl-dev
+Build-Depends:@dpatch,@debhelper@(>=@7),@###BUILD_PACKAGES###
 Standards-Version: 3.8.3
 Homepage: http://www.omdistro.org
 
 Package: omd-###OMD_VERSION###
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, libapache2-mod-python, libapache2-mod-php5, php5-sqlite, php5-mcrypt, libgd2-xpm, libdbi0, libapache2-mod-proxy-html, rsync, dialog, php5-gd
-Recommends: xinetd, mysql-server, graphviz, dnsutils, snmp, fping, smblclient, unzip, libnet-snmp-perl, libxml-simple-perl
+Depends:@${misc:Depends},@###OS_PACKAGES###
 Description:  Open Source Monitoring Distribution, containing Nagios,
  the Nagios plugins, Check_MK, Livestatus, Multisite,
  PNP4Nagios, NagVis, and other addons. Please visit

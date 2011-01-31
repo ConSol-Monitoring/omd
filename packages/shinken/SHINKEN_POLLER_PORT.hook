@@ -1,0 +1,24 @@
+#!/bin/bash
+
+case "$1" in
+    alias)
+        echo "TCP port the Shinken poller listens on"
+    ;;
+    description)
+        cat << EOF
+If you configured Shinken as the monitoring core, this is the
+listening port of the poller .
+EOF
+    ;;
+    default)
+        echo "7771"
+    ;;
+    choices)
+        echo "[0-9]{1,5}"
+    ;;
+    set)
+    ;;
+    depends)
+    [ "$CONFIG_CORE" = shinken ]
+    ;;
+esac

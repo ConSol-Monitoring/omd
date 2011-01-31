@@ -11,13 +11,18 @@ someone opens your site in a browser without a specific URL.
 EOF
     ;;
     default)
-            echo "nagios"
+            echo "welcome"
     ;;
     choices)
+            echo "welcome: Welcome page which lists all available GUIs"
             echo "nagios: Classic Nagios webinterface"
             echo "check_mk: The Check_MK's Multisite GUI"
-#            echo "thruk: Thruk Monitoring Webinterface"
+            echo "thruk: Thruk Monitoring Webinterface"
+            echo "nagvis: NagVis - The visualisation addon for Nagios"
             echo "none: No default webinterface"
+    ;;
+    depends)
+        [ "$CONFIG_WEBSERVER" != none ]
     ;;
 esac
 
