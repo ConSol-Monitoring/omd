@@ -12,7 +12,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 180 );
+plan( tests => 236 );
 
 ##################################################
 # create our test site
@@ -172,20 +172,61 @@ TestUtils::test_url(
                  like => [ '/{"state":/' ]})
 );
 
+###############################################################################
 # OVERVIEW
+###############################################################################
 # /nagvis/server/core/ajax_handler.php?mod=Overview&act=getOverviewProperties
-# /nagvis/server/core/ajax_handler.php?mod=Overview&act=getOverviewMaps
-# /nagvis/server/core/ajax_handler.php?mod=Overview&act=getOverviewAutomaps
-# /nagvis/server/core/ajax_handler.php?mod=Overview&act=getOverviewRotations
-# /nagvis/server/core/ajax_handler.php?mod=General&act=getObjectStates&ty=state&i[]=automap-0&t[]=automap&n1[]=meine-automap&n2[]=
+# {"cellsperrow":4,"showautomaps":1,"showmaps":1,"showgeomap":0,"showmapthumbs":0,"showrotations":1,"page_title":"NagVis 1.5.7","favicon_image":"\/nagvis\/frontend\/nagvis-js\/images\/internal\/favicon.png","background_color":"#ffffff","lang_mapIndex":"Map Index","lang_automapIndex":"Automap Index","lang_rotationPools":"Rotation Pools","event_log":0,"event_log_level":"info","event_log_height":100,"event_log_hidden":1}
+TestUtils::test_url(
+  api_url({ url  => '/nagvis/server/core/ajax_handler.php?mod=Overview&act=getOverviewProperties',
+            like => [ '/"showautomaps":1,"showmaps":1,"showgeomap":0,"showmapthumbs":0,"showrotations":1/', ]})
+);
 
+# /nagvis/server/core/ajax_handler.php?mod=Overview&act=getOverviewMaps
+TestUtils::test_url(
+  api_url_list({ url  => '/nagvis/server/core/ajax_handler.php?mod=Overview&act=getOverviewMaps',
+                 like => [ '/"alias":/', ]})
+);
+
+# /nagvis/server/core/ajax_handler.php?mod=Overview&act=getOverviewAutomaps
+TestUtils::test_url(
+  api_url_list({ url  => '/nagvis/server/core/ajax_handler.php?mod=Overview&act=getOverviewAutomaps',
+                 like => [ '/"alias":/', ]})
+);
+
+# /nagvis/server/core/ajax_handler.php?mod=Overview&act=getOverviewRotations
+TestUtils::test_url(
+  api_url_list({ url  => '/nagvis/server/core/ajax_handler.php?mod=Overview&act=getOverviewRotations',
+                 like => [ '/"name":"demo",/', ]})
+);
+
+# /nagvis/server/core/ajax_handler.php?mod=General&act=getObjectStates&ty=state&i[]=automap-0&t[]=automap&n1[]=__automap&n2[]=
+TestUtils::test_url(
+  api_url_list({ url  => '/nagvis/server/core/ajax_handler.php?mod=General&act=getObjectStates&ty=state&i[]=automap-0&t[]=automap&n1[]=__automap',
+                 like => [ '/"state":"/', ]})
+);
+
+###############################################################################
 # AUTOMAP
+###############################################################################
 # /nagvis/server/core/ajax_handler.php?mod=AutoMap&act=getAutomapProperties&show=__automap&childLayers=2
+TestUtils::test_url(
+  api_url({ url  => '/nagvis/server/core/ajax_handler.php?mod=AutoMap&act=getAutomapProperties&show=__automap&childLayers=2',
+            like => [ '/"map_name":"__automap","alias":"Default Automap"/', ]})
+);
+
 # /nagvis/server/core/ajax_handler.php?mod=AutoMap&act=getAutomapObjects&show=__automap&childLayers=2
-#
-# FIXME: Test the different automap params
+TestUtils::test_url(
+  api_url_list({ url  => '/nagvis/server/core/ajax_handler.php?mod=AutoMap&act=getAutomapObjects&show=__automap&childLayers=2',
+                 like => [ '/"alias":"Default Automap"/', ]})
+);
+
 # /nagvis/server/core/ajax_handler.php?mod=AutoMap&act=getObjectStates&show=__automap&ty=state&i[]=0&t[]=host&n1[]=localhost&n2[]=&childLayers=2
-#
+# FIXME: Test the different automap params
+TestUtils::test_url(
+  api_url_list({ url  => '/nagvis/server/core/ajax_handler.php?mod=AutoMap&act=getObjectStates&show=__automap&ty=state&i[]=0&t[]=host&n1[]=localhost&n2[]=&childLayers=2',
+                 like => [ '/"state":"/', ]})
+);
 
 ##################################################
 # cleanup test site
