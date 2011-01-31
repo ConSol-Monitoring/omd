@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 NAME = mk-livestatus
-VERSION = 1.1.9i5
+VERSION = 1.1.9i6
 DIR = $(NAME)-$(VERSION)
 
 CONFIGUREOPTS = \
@@ -21,3 +21,10 @@ skel:
 
 clean:
 	rm -rf mk-livestatus-*.*.*[0-9]
+
+upstream:
+	git rm mk-livestatus-*.tar.gz
+	rm -f mk-livestatus-*.tar.gz
+	wget http://mathias-kettner.de/download/mk-livestatus-$(VERSION).tar.gz
+	git add mk-livestatus-$(VERSION).tar.gz
+

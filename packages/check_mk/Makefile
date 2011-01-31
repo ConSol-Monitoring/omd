@@ -2,7 +2,7 @@ include ../../Makefile.omd
 
 SHELL = /bin/bash
 NAME = check_mk
-VERSION = 1.1.9i5
+VERSION = 1.1.9i6
 DIR = $(NAME)-$(VERSION)
 
 .PHONY: skel
@@ -19,7 +19,7 @@ install:
 	export docdir='$(OMD_ROOT)/share/doc/check_mk' ; \
 	export checkmandir='$(OMD_ROOT)/share/doc/check_mk/checks' ; \
 	export agentsdir='$(OMD_ROOT)/share/check_mk/agents' ; \
-	export agentslibdir='$(OMD_ROOT)/lib/check_mk_agent' ; \
+	export agentslibdir='/usr/lib/check_mk_agent' ; \
 	export nagios_binary='$(OMD_ROOT)/bin/nagios' ; \
 	export check_icmp_path='$(OMD_ROOT)/lib/nagios/plugins/check_icmp' ; \
 	export pnptemplates='$(OMD_ROOT)/share/check_mk/pnp-templates' ; \
@@ -69,8 +69,11 @@ skel:
 clean:
 	rm -rf check_mk-*.*.*[0-9]
 
+# Get new upstream version (as in VERSION)
 # Adapt configuration files for skeleton from upstream version
 upstream:
+	rm -f check_mk-*.tar.gz
+	wget http://mathias-kettner.de/download/check_mk-$(VERSION).tar.gz
 	# check_mk_templates.cfg -> enter correct URLs and paths
 	tar xzf check_mk-$(VERSION).tar.gz --to-stdout check_mk-$(VERSION)/doc.tar.gz | \
           tar xzf - --to-stdout check_mk_templates.cfg | \
