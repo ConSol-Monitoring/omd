@@ -599,7 +599,7 @@ def create_skeleton_files(sitename, dir):
 	    create_skeleton_file(skelroot, sitedir, dirpath + "/" + entry, replacements)
 
 def delete_user_file(user_path):
-    if os.path.isdir(user_path):
+    if not os.path.islink(user_path) and os.path.isdir(user_path):
 	shutil.rmtree(user_path)
     else:
 	os.remove(user_path)
