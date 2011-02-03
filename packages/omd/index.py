@@ -117,7 +117,10 @@ def page_welcome(req):
                              ('pnp4nagios', 'PNP4Nagios',
                               'PNP is an addon to Nagios which analyzes performance data '
                               'provided by plugins and stores them automatically into '
-                              'RRD-databases (Round Robin Databases, see RRDTool).') ]:
+                              'RRD-databases (Round Robin Databases, see RRDTool).'),
+                             ('wiki', 'DokuWiki',
+                              'DokuWiki is a standards compliant, simple to use Wiki, '
+                              'mainly aimed at creating documentation of any kind.') ]:
         req.write("""
 <a class="gui" href="../%s/">
 <img src="img/%s-small.png" title="%s" />
@@ -140,7 +143,7 @@ omd start
 </pre>
 </div>
 <p class="footer">
-Copyright (c) 2010 OMD Team and Contributors - 
+Copyright (c) 2010-2011 OMD Team and Contributors - 
 <a href="http://omdistro.org/" title="Official OMD Homepage"
 target="_blank">omdistro.org</a>
 </p>
