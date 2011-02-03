@@ -23,7 +23,7 @@ my $site    = TestUtils::create_test_site() or BAIL_OUT("no further testing with
 # execute some checks
 my $tests = [
   { cmd => $omd_bin." config $site set MYSQL on" },
-  { cmd => $omd_bin." config $site show MYSQL",  like => '/on/' },
+  { cmd => $omd_bin." config $site show MYSQL",  like => '/on/', 'unlike' => [ '/error/', '/off/' ] },
   { cmd => $omd_bin." start  $site" },
   { cmd => $omd_bin." status $site",             like => '/mysql:\s*running/' },
   { cmd => "/bin/su - $site -c 'mysql mysql'", stdin => "show tables;\n", like => [ '/user/', '/tables_priv/' ] },
