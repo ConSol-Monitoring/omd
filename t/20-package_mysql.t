@@ -3,6 +3,7 @@
 use warnings;
 use strict;
 use Test::More;
+use POSIX;
 
 BEGIN {
     use lib('t');
@@ -12,7 +13,12 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 28 );
+my @uname = POSIX::uname();
+if($uname[3] =~ m/ubuntu/i) {
+  plan( skip_all => "MySQL on Ubuntu does not work due to AppArmor restrictions" );
+} else {
+  plan( tests => 28 );
+}
 
 ##################################################
 # create our test site
@@ -23,7 +29,7 @@ my $site    = TestUtils::create_test_site() or BAIL_OUT("no further testing with
 # execute some checks
 my $tests = [
   { cmd => $omd_bin." config $site set MYSQL on" },
-  { cmd => $omd_bin." config $site show MYSQL",  like => '/on/' },
+  { cmd => $omd_bin." config $site show MYSQL",  like => '/on/', 'unlike' => [ '/error/', '/off/' ] },
   { cmd => $omd_bin." start  $site" },
   { cmd => $omd_bin." status $site",             like => '/mysql:\s*running/' },
   { cmd => "/bin/su - $site -c 'mysql mysql'", stdin => "show tables;\n", like => [ '/user/', '/tables_priv/' ] },

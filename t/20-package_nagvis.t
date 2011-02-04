@@ -12,7 +12,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 236 );
+plan( tests => 242 );
 
 ##################################################
 # create our test site
@@ -20,7 +20,7 @@ my $omd_bin = TestUtils::get_omd_bin();
 my $site    = TestUtils::create_test_site() or BAIL_OUT("no further testing without site");
 my $auth    = 'OMD Monitoring Site '.$site.':omdadmin:omd';
 # Create code to find this out
-my $version = '1.5.7';
+my $version = '1.5.8';
 
 #TestUtils::test_command({ cmd => "/d1/nagvis/mache" });
 
@@ -56,10 +56,9 @@ my $urls = [
 	      like => '/<title>NagVis '.$version.'<\/title>/' }),
   url({ url  => "/nagvis/frontend/wui/index.php",
         like => [ '/<title>NagVis '.$version.' &rsaquo; WUI<\/title>/',
-                  '/Welcome to the NagVis WUI/' ] }),
-# FIXME: This is buggy in 1.5.7 -> re-enable in 1.5.8
-#  url({ url  => "/nagvis/frontend/nagvis-js/index.php?mod=Info",
-#        like => '/NagVis Support Information<\/title>/' }),
+                  '/Welcome to the NagVis WUI/' ], 'skip_html_lint' => 1 }),
+  url({ url  => "/nagvis/frontend/nagvis-js/index.php?mod=Info",
+        like => '/NagVis Support Information<\/title>/' }),
   url({ url  => "/nagvis/frontend/nagvis-js/index.php?mod=Map&act=view&show=demo",
         like => '/, \'demo\'/', 'skip_html_lint' => 1 }),
   url({ url  => "/nagvis/frontend/wui/index.php?mod=Map&act=edit&show=demo",
