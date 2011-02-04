@@ -56,7 +56,7 @@ my $urls = [
 	      like => '/<title>NagVis '.$version.'<\/title>/' }),
   url({ url  => "/nagvis/frontend/wui/index.php",
         like => [ '/<title>NagVis '.$version.' &rsaquo; WUI<\/title>/',
-                  '/Welcome to the NagVis WUI/' ] }),
+                  '/Welcome to the NagVis WUI/' ], 'skip_html_lint' => 1 }),
   url({ url  => "/nagvis/frontend/nagvis-js/index.php?mod=Info",
         like => '/NagVis Support Information<\/title>/' }),
   url({ url  => "/nagvis/frontend/nagvis-js/index.php?mod=Map&act=view&show=demo",
