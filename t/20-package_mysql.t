@@ -14,8 +14,8 @@ BEGIN {
 }
 
 my @uname = POSIX::uname();
-if($uname[4] =~ m/ubuntu/i) {
-  plan( skip_all => "Mysql on Ubuntu does not work due to Apparmor restrictions" );
+if($uname[3] =~ m/ubuntu/i) {
+  plan( skip_all => "MySQL on Ubuntu does not work due to AppArmor restrictions" );
 } else {
   plan( tests => 28 );
 }
