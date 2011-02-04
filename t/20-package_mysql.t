@@ -3,6 +3,7 @@
 use warnings;
 use strict;
 use Test::More;
+use POSIX;
 
 BEGIN {
     use lib('t');
@@ -12,7 +13,12 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 28 );
+my @uname = POSIX::uname();
+if($uname[4] =~ m/ubuntu/i) {
+  plan( skip_all => "Mysql on Ubuntu does not work due to Apparmor restrictions" );
+} else {
+  plan( tests => 28 );
+}
 
 ##################################################
 # create our test site
