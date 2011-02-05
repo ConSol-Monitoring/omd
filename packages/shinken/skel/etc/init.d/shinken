@@ -296,8 +296,9 @@ do_start() {
             if [ $? = 0 ]; then
                 echo "OK"
             else
-                output=`echo $output | tail -1` # only show one line of error output...
-                echo "FAILED $output" 
+                output=`echo "$output" | tail -1` # only show one line of error output...
+                printf "FAILED: " 
+                echo "$output" 
             fi
         fi
     done
@@ -307,7 +308,7 @@ do_start() {
 # do the config check
 #
 do_check() {
-    $BIN/shinken-arbiter -v -c $ETC/../shinken.cfg -c $ETC/shinken-specific.cfg $DEBUGCMD 2>&1
+    $BIN/shinken-arbiter -v -c $ETC/shinken.cfg -c $ETC/shinken-specific.cfg $DEBUGCMD 2>&1
     return $?
 }
 
