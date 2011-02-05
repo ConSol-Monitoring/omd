@@ -24,7 +24,8 @@ PACKAGES=perl-modules \
          rrdtool \
          shinken \
          thruk \
-         maintenance
+         maintenance \
+         patch
 
 # This file is kept by 'make config' and also may override
 # the list of packages
