@@ -81,7 +81,7 @@ install:
 	install -m 644 $(SRCDIR)/README $(OMD_ROOT)/share/doc/check_multi
 
 	#--- allow to find testdir in plugin directory
-	ln -s $(SRCDIR) check_multi
+	test -L check_multi || ln -s $(SRCDIR) check_multi
 
 skel:
 	# Optional target called to create additional files below skel
