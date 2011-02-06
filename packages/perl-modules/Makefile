@@ -2,7 +2,6 @@ include ../../Makefile.omd
 
 NAME     = perl-modules
 VERSION  = $(OMD_VERSION)
-LLSRC    = $(shell basename src/local-lib-*.gz | sed s/\.tar\.gz// )
 PERLARCH = $(shell $(PERL) -e 'use Config; print $$Config{archname}')
 
 
@@ -10,6 +9,7 @@ MODULES = ExtUtils-MakeMaker-6.56.tar.gz \
           ExtUtils-CBuilder-0.2703.tar.gz \
           ExtUtils-ParseXS-2.2206.tar.gz \
           version-0.88.tar.gz \
+          Module-CoreList-2.44.tar.gz \
           Module-Build-0.3607.tar.gz \
           ExtUtils-Install-1.54.tar.gz \
           CPAN-1.9402.tar.gz \
@@ -204,7 +204,7 @@ skel:
 	echo "install  --install_base  ###ROOT###/local/lib/perl5" > $(SKEL)/.modulebuildrc
 
 clean:
-	rm -rf src/$(LLSRC) src/inc dist
+	rm -rf src/inc dist
 
 test:
 	cd src; \
