@@ -118,6 +118,9 @@ sub is_core_module {
     my($module) = @_;
     our %_stdmod;
 
+    return 0 if $module eq 'version';
+    return 0 if $module eq 'Module::CoreList';
+
     unless (keys %_stdmod) {
         chomp(my $perlmodlib = cmd("perldoc -l perlmodlib"));
         open my $fh, "<", $perlmodlib

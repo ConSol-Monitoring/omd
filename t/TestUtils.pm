@@ -310,10 +310,13 @@ sub config {
 sub _diag_lint_errors_and_remove_some_exceptions {
     my $lint = shift;
     my @return;
-    for my $error ( $lint->errors ) {
+    LINT_ERROR: for my $error ( $lint->errors ) {
         my $err_str = $error->as_string;
-        if($err_str =~ m/<IMG SRC=".*?\/thruk\/.*?">\ tag\ has\ no\ HEIGHT\ and\ WIDTH\ attributes\./) {
-            next;
+        for my $exclude_pattern (
+            "<IMG SRC=[^>]*>\ tag\ has\ no\ HEIGHT\ and\ WIDTH\ attributes\.",
+            "<IMG SRC=[^>]*>\ does\ not\ have\ ALT\ text\ defined",
+        ) {
+            next LINT_ERROR if($err_str =~ m/$exclude_pattern/i);
         }
         diag($error->as_string."\n");
         push @return, $error;

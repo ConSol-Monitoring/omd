@@ -2,7 +2,7 @@ include ../../Makefile.omd
 
 SHELL = /bin/bash
 NAME = check_mk
-VERSION = 1.1.9i7
+VERSION = 1.1.9i8
 DIR = $(NAME)-$(VERSION)
 
 .PHONY: skel
@@ -92,3 +92,5 @@ upstream:
 
 	# Add correct version number
 	sed -i "s/^check_mk_version.*/check_mk_version            = '$(VERSION)'/" skel/etc/check_mk/defaults
+
+	git add check_mk-$(VERSION).tar.gz

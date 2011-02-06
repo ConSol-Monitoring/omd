@@ -1,0 +1,108 @@
+diff -Naur shinken-0.5.1.orig/bin/shinken-arbiter shinken-0.5.1/bin/shinken-arbiter
+--- shinken-0.5.1.orig/bin/shinken-arbiter	2011-01-20 15:34:38.000000000 +0100
++++ shinken-0.5.1/bin/shinken-arbiter	2011-02-06 17:44:36.000000000 +0100
+@@ -744,9 +744,11 @@
+                         #If FIFO, read external command
+                         if s == self.fifo:
+                             ext_cmds = self.external_command.get()
+-                            for ext_cmd in ext_cmds:
+-                                self.external_commands.append(ext_cmd)
+-                            self.fifo = self.external_command.open()
++                            if ext_cmds:
++                                for ext_cmd in ext_cmds:
++                                    self.external_commands.append(ext_cmd)
++                            else:
++                                self.fifo = self.external_command.open()
+ 
+             else: #Timeout
+                 self.dispatcher.check_alive()
+diff -Naur shinken-0.5.1.orig/shinken/external_command.py shinken-0.5.1/shinken/external_command.py
+--- shinken-0.5.1.orig/shinken/external_command.py	2011-01-20 15:34:38.000000000 +0100
++++ shinken-0.5.1/shinken/external_command.py	2011-02-06 17:45:20.000000000 +0100
+@@ -213,6 +213,7 @@
+         self.timeperiods = conf.timeperiods
+         self.pipe_path = conf.command_file
+         self.fifo = None
++        self.restbuffer = ''
+         if self.mode == 'dispatcher':
+             self.confs = conf.confs
+ 
+@@ -242,17 +243,24 @@
+ 
+     def get(self):
+         buf = os.read(self.fifo, 8096)
+-        os.close(self.fifo)
+         r = []
+-        if buf != '':
+-            t = buf.split('\n')
+-            for s in t:
+-                if s != '':
+-                    excmd = ExternalCommand(s)
+-                    r.append(excmd)
+-            return r
+-        return []
+-
++        fullbuf = len(buf) == 8096 and True or False
++        # If the buffer ended with a fragment last time, prepend it here
++        buf = self.restbuffer + buf
++        buflen = len(buf)
++        self.restbuffer = ''
++        if fullbuf and buf[-1] != '\n':
++            # The buffer was full but ends with a command fragment
++            r.extend([ExternalCommand(s) for s in (buf.split('\n'))[:-1] if s])
++            self.restbuffer = (buf.split('\n'))[-1]
++        elif buflen:
++            # The buffer is either half-filled or full with a '\n' at the end.
++            r.extend([ExternalCommand(s) for s in buf.split('\n') if s])
++        else:
++            # The buffer is empty. We "reset" the fifo here. It will be
++            # re-opened in the main loop.
++            os.close(self.fifo)
++        return r
+ 
+ 
+     def resolve_command(self, excmd):
+@@ -294,9 +302,8 @@
+     #We need to get the first part, the command name
+     def get_command_and_args(self, command):
+         print "Trying to resolve", command
+-        if command[-1] == '\n':
+-            command = command[:-1]
+-        elts = command.split(';')
++        command = command.rstrip()
++        elts = command.split(';') # danger!!! passive checkresults with perfdata
+         part1 = elts[0]
+ 
+         elts2 = part1.split(' ')
+@@ -311,6 +318,14 @@
+             print "This command is not recognized, sorry"
+             return None
+ 
++        # Split again based on the number of args we expect. We cannot split
++        # on every ; because this character may appear in the perfdata of
++        # passive check results.
++        numargs = len(ExternalCommandManager.commands[c_name]['args'])
++        if numargs and 'service' in ExternalCommandManager.commands[c_name]['args']:
++            numargs += 1
++        elts = command.split(';', numargs)
++
+         if self.mode == 'dispatcher' and ExternalCommandManager.commands[c_name]['global']:
+             print "This command is a global one, we resent it to all schedulers"
+             self.dispatch_global_command(command)
+diff -Naur shinken-0.5.1.orig/shinken/modules/livestatus_broker/livestatus_broker.py shinken-0.5.1/shinken/modules/livestatus_broker/livestatus_broker.py
+--- shinken-0.5.1.orig/shinken/modules/livestatus_broker/livestatus_broker.py	2011-01-20 15:34:38.000000000 +0100
++++ shinken-0.5.1/shinken/modules/livestatus_broker/livestatus_broker.py	2011-02-06 17:44:36.000000000 +0100
+@@ -541,11 +541,11 @@
+             elif type == 'PASSIVE SERVICE CHECK':
+                 logobject = LOGOBJECT_SERVICE
+                 logclass = LOGCLASS_PASSIVECHECK
+-                host_name, service_description, state, check_plugin_output = options.split(';')
++                host_name, service_description, state, check_plugin_output = options.split(';', 3)
+             elif type == 'PASSIVE HOST CHECK':
+                 logobject = LOGOBJECT_HOST
+                 logclass = LOGCLASS_PASSIVECHECK
+-                host_name, state, check_plugin_output = options.split(';')
++                host_name, state, check_plugin_output = options.split(';', 2)
+ 
+             elif type == 'SERVICE EVENT HANDLER':
+                 # SERVICE EVENT HANDLER: test_host_0;test_ok_0;CRITICAL;SOFT;1;eventhandler
