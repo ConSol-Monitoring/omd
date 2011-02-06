@@ -3,6 +3,7 @@ include ../../Makefile.omd
 NAME     = perl-modules
 VERSION  = $(OMD_VERSION)
 PERLARCH = $(shell $(PERL) -e 'use Config; print $$Config{archname}')
+TMPDIST  = $(shell pwd)/dist
 
 
 MODULES = ExtUtils-MakeMaker-6.56.tar.gz \
@@ -180,37 +181,25 @@ MODULES = ExtUtils-MakeMaker-6.56.tar.gz \
           HTML-Lint-2.06.tar.gz
 
 build:
-	mkdir -p dist
-	echo "install  --install_base  $$(pwd)/dist" > dist/.modulebuildrc
-	cd src; \
-	for tarball in $(MODULES); do \
-	    PERL_MM_OPT=INSTALL_BASE=$$(pwd)/../dist MODULEBUILDRC=$$(pwd)/../dist/.modulebuildrc PERL5LIB=$$(pwd)/../dist/lib/perl5:$$(pwd)/../dist/lib/perl5/$(PERLARCH) ./build_module.sh $$tarball $(PERL); \
-	    if [ $$? -eq 1 ]; then \
-	        exit 1; \
-	    fi; \
-	done
+	mkdir -p $(TMPDIST)
+	echo "install --install_base $(TMPDIST)" > $(TMPDIST)/.modulebuildrc
+	cd src && PERL_MM_OPT=INSTALL_BASE=$(TMPDIST) MODULEBUILDRC=$(TMPDIST)/.modulebuildrc PERL5LIB=$(TMPDIST)/lib/perl5:$(TMPDIST)/lib/perl5/$(PERLARCH) ./build_module.pl $(PERL) $(MODULES)
 	rm -rf src/inc
-	cd dist/lib/perl5/ && rm -f utils.pm && ln -s ../../../nagios/plugins/utils.pm .
-	mkdir -p dist/lib/perl5/CPAN
-	cp MyConfig.pm dist/lib/perl5/CPAN/MyConfig.pm
+	cd $(TMPDIST)/lib/perl5/ && rm -f utils.pm && ln -s ../../../nagios/plugins/utils.pm .
+	mkdir -p $(TMPDIST)/lib/perl5/CPAN
+	cp MyConfig.pm $(TMPDIST)/lib/perl5/CPAN/MyConfig.pm
 
 install:
 	if [ -z $(DESTDIR) ]; then echo "cannot install without DESTDIR set!"; exit 1; fi
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/perl5
-	rsync -a dist/lib $(DESTDIR)$(OMD_ROOT)/lib/perl5/
+	rsync -a $(TMPDIST)/lib $(DESTDIR)$(OMD_ROOT)/lib/perl5/
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/local/lib/perl5
 
 skel:
 	echo "install  --install_base  ###ROOT###/local/lib/perl5" > $(SKEL)/.modulebuildrc
 
 clean:
-	rm -rf src/inc dist
+	rm -rf src/inc $(TMPDIST)
 
 test:
-	cd src; \
-	for tarball in $(MODULES); do \
-	    PERL_MM_OPT=INSTALL_BASE=$$(pwd)/../dist MODULEBUILDRC=$$(pwd)/../dist/.modulebuildrc PERL5LIB=$$(pwd)/../dist/lib/perl5:$$(pwd)/../dist/lib/perl5/$(PERLARCH) ./build_module.sh $$tarball $(PERL) testonly; \
-	    if [ $$? -eq 1 ]; then \
-	        exit 1; \
-	    fi; \
-	done
+	cd src && PERL_MM_OPT=INSTALL_BASE=$(TMPDIST) MODULEBUILDRC=$(TMPDIST)/.modulebuildrc PERL5LIB=$(TMPDIST)/lib/perl5:$(TMPDIST)/lib/perl5/$(PERLARCH) ./build_module.pl $(PERL) testonly $(MODULES);
