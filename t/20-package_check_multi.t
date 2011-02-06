@@ -24,7 +24,7 @@ my $host    = "omd-check_multi";
 # prepare check_multi test environment (from skel/etc/check_multi/test)
 TestUtils::test_command({ cmd => $omd_bin." config $site set WEB welcome" });
 TestUtils::test_command({ cmd => "/bin/cp t/packages/check_multi/test/localhost.cfg /omd/sites/$site/etc/nagios/conf.d/check_multi_test.cfg" });
-TestUtils::test_command({ cmd => "/bin/mkdir /omd/sites/$site/etc/check_multi" });
+TestUtils::test_command({ cmd => "/usr/bin/test -d /omd/sites/$site/etc/check_multi || /bin/mkdir /omd/sites/$site/etc/check_multi" });
 TestUtils::test_command({ cmd => "/bin/cp t/packages/check_multi/test/* /omd/sites/$site/etc/check_multi" });
 TestUtils::test_command({ cmd => $omd_bin." start $site" });
 
@@ -53,8 +53,6 @@ my $urls = [
 	{ url => "/nagios/cgi-bin/extinfo.cgi?type=2&host=$host&service=pnp4nagios",	like => '/pnp4nagios.*pnp4nagios.*plugins checked/'		},
 	{ url => "/nagios/cgi-bin/extinfo.cgi?type=2&host=$host&service=nagios",	like => '/nagios.*plugins checked.*SITE.*ROOT.*tmp_dir.*proc_nagios_inst.*checkresults_dir/'},
 	{ url => "/nagios/cgi-bin/extinfo.cgi?type=2&host=$host&service=nagios",	like => '/proc_nagios_inst/'					},
-	{ url => "/nagios/cgi-bin/extinfo.cgi?type=2&host=$host&service=proc_rss",	like => '/proc_rss/'						},
-	{ url => "/nagios/cgi-bin/extinfo.cgi?type=2&host=$host&service=proc_vsz",	like => '/proc_vsz/'						},
 	{ url => "/pnp4nagios/graph?host=$host&srv=disk_root",				like => '/Service.*disk_root/'					},
 	{ url => "/nagios/cgi-bin/extinfo.cgi?type=2&host=$host&service=nagios",	like => '/plugins checked.*SITE.*ROOT/'				},
 	{ url => "/nagios/cgi-bin/extinfo.cgi?type=2&host=$host&service=livestatus",	like => '/livestatus.*plugins checked/'				},
