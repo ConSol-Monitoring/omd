@@ -52,7 +52,7 @@ speed:
             ( NOW=$$(date +%s) ; \
               $(MAKE) -C $$p build > ../$$p.log 2>&1 \
               && echo "$$p(ok - $$(( $$(date +%s) - NOW ))s)" \
-              || "$$p(ERROR)" ) & \
+              || echo "$$p(ERROR - $$(( $$(date +%s) - NOW ))s)" ) & \
 	done ; wait ; echo "FINISHED."
 
 pack:
