@@ -24,9 +24,9 @@ my $site    = TestUtils::create_test_site() or BAIL_OUT("no further testing with
 my $tests = [
   { cmd => $omd_bin." start $site" },
 
-  { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -H localhost -u /$site/check_mk -e 401'",                  like => '/HTTP OK:/' },
-  { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -H localhost -a omdadmin:omd -u /$site/check_mk -e 301'",  like => '/HTTP OK:/' },
-  { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -H localhost -a omdadmin:omd -u /$site/check_mk/ -e 200'", like => '/HTTP OK:/' },
+  { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -t 30 -H localhost -u /$site/check_mk -e 401'",                  like => '/HTTP OK:/' },
+  { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -t 30 -H localhost -a omdadmin:omd -u /$site/check_mk -e 301'",  like => '/HTTP OK:/' },
+  { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -t 30 -H localhost -a omdadmin:omd -u /$site/check_mk/ -e 200'", like => '/HTTP OK:/' },
 
   { cmd => $omd_bin." stop $site" },
 ];
