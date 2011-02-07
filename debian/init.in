@@ -2,7 +2,7 @@
 # Startskript for OMD sites
 
 ### BEGIN INIT INFO
-# Provides:          omd
+# Provides:          omd-###OMD_VERSION###
 # Required-Start:    $syslog
 # Required-Stop:     $syslog
 # Default-Start:     2 3 4 5
