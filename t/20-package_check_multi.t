@@ -12,9 +12,8 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 203 );
+plan( tests => 144 );
 
-##################################################
 # create our test site
 my $omd_bin = TestUtils::get_omd_bin();
 my $site    = TestUtils::create_test_site() or BAIL_OUT("no further testing without site");
@@ -48,48 +47,122 @@ TestUtils::test_command({ cmd => "/bin/sh -c '(cd packages/check_multi/check_mul
 #
 #
 my $urls = [
-	{ url => "/nagios/cgi-bin/status.cgi?host=all",					like => '/system.*plugins checked/',	skip_html_lint=>1 	},
-	{ url => "/nagios/cgi-bin/status.cgi?host=$host",				like => '/Service Status Details For Host/', skip_html_lint=>1	},
-	{ url => "/nagios/cgi-bin/extinfo.cgi?type=2&host=$host&service=livestatus",	like => '/livestatus/'						},
-	{ url => "/nagios/cgi-bin/extinfo.cgi?type=2&host=$host&service=statusdat",	like => '/statusdat/'						},
-	{ url => "/nagios/cgi-bin/extinfo.cgi?type=2&host=$host&service=pnp4nagios",	like => '/pnp4nagios.*pnp4nagios.*plugins checked/'		},
-	{ url => "/nagios/cgi-bin/extinfo.cgi?type=2&host=$host&service=nagios",	like => '/nagios.*plugins checked.*SITE.*ROOT.*tmp_dir.*proc_nagios_inst.*checkresults_dir/'},
-	{ url => "/nagios/cgi-bin/extinfo.cgi?type=2&host=$host&service=nagios",	like => '/proc_nagios_inst/'					},
-	{ url => "/pnp4nagios/graph?host=$host&srv=disk_root",				like => '/Service.*disk_root/'					},
-	{ url => "/nagios/cgi-bin/extinfo.cgi?type=2&host=$host&service=nagios",	like => '/plugins checked.*SITE.*ROOT/'				},
-	{ url => "/nagios/cgi-bin/extinfo.cgi?type=2&host=$host&service=livestatus",	like => '/livestatus.*plugins checked/'				},
-	{ url => "/nagios/cgi-bin/extinfo.cgi?type=2&host=$host&service=statusdat",	like => '/statusdat.*plugins checked/'				},
-	#{ url => "",      like => '//' },
+	{
+		url => '/nagios/cgi-bin/status.cgi?host=all',
+		like => [
+			'/Service Status Details/',
+			'/livestatus.*plugins checked/ms',
+			'/nagios.*\d+ plugins checked/ms',
+			'/pnp4nagios.*\d+ plugins checked/ms',
+			'/rss.*\d+ plugins checked/ms',
+			'/vsz.*\d+ plugins checked/ms',
+			'/cpu.*\d+ plugins checked/ms',
+			'/statusdat.*\d+ plugins checked/ms',
+			'/system.*\d+ plugins checked/ms',
+		],
+		skip_html_lint=>1,
+	},
+	{
+		url => '/thruk/cgi-bin/status.cgi?host=all',
+		like => [
+			'/Service Status Details/',
+			'/livestatus.*plugins checked/ms',
+			'/nagios.*\d+ plugins checked/ms',
+			'/pnp4nagios.*\d+ plugins checked/ms',
+			'/rss.*\d+ plugins checked/ms',
+			'/vsz.*\d+ plugins checked/ms',
+			'/cpu.*\d+ plugins checked/ms',
+			'/statusdat.*\d+ plugins checked/ms',
+			'/system.*\d+ plugins checked/ms',
+		],
+	},
+	{
+		url => "/nagios/cgi-bin/status.cgi?host=$host",
+		like => [
+			"/Service Status Details/",
+			'/livestatus.*plugins checked/ms',
+			'/nagios.*\d+ plugins checked/ms',
+			'/pnp4nagios.*\d+ plugins checked/ms',
+			'/rss.*\d+ plugins checked/ms',
+			'/vsz.*\d+ plugins checked/ms',
+			'/cpu.*\d+ plugins checked/ms',
+			'/statusdat.*\d+ plugins checked/ms',
+			'/system.*\d+ plugins checked/ms',
+		],
+		skip_html_lint=>1,
+	},
+	{
+		url => "/nagios/cgi-bin/extinfo.cgi?type=2&host=$host&service=livestatus",
+		like => [
+			"/Service.*livestatus.*On Host.*$host/ms",
+			'/livestatus.*plugins checked/ms',
+			'/all_omd-check_multi_nagios.*\d+ plugins checked/ms',
+			'/all_omd-check_multi_pnp4nagios.*pnp4nagios.*\d+ plugins checked/ms',
+		],
+	},
+	{
+		url => "/nagios/cgi-bin/extinfo.cgi?type=2&host=$host&service=statusdat",
+		like => [
+			'/Service.*statusdat.*On Host.*omd-check_multi/ms',
+			'/all_omd-check_multi_livestatus.*plugins checked/ms',
+			'/all_omd-check_multi_nagios.*.*\d+ plugins checked/ms',
+			'/all_omd-check_multi_pnp4nagios.*pnp4nagios.*\d+ plugins checked/ms',
+			'/all_omd-check_multi_proc_rss.*rss.*\d+ plugins checked/ms',
+			'/all_omd-check_multi_proc_vsz.*vsz.*\d+ plugins checked/ms',
+			'/all_omd-check_multi_proc_cpu.*cpu.*\d+ plugins checked/ms',
+			'/all_omd-check_multi_statusdat.*statusdat.*\d+ plugins checked/ms',
+			'/all_omd-check_multi_system.*system.*\d+ plugins checked/ms',
+		],
+	},
+	{
+		url => "/nagios/cgi-bin/extinfo.cgi?type=2&host=$host&service=pnp4nagios",
+		like => [
+			'/Service.*pnp4nagios/',
+			'/pnp4nagios.*\d+ plugins checked/ms',
+			'/rrdcached/',
+			'/npcd/',
+			'/var_diskspace/',
+			'/var_updated_recently/',
+			'/process_perfdata_timeout/',
+			'/error_in_npcd_log/',
+		],
+	},
+	{
+		url => "/nagios/cgi-bin/extinfo.cgi?type=2&host=$host&service=nagios",
+		like => [
+			'/Service.*nagios.*On Host/',
+			'/SITE.*testsite/',
+			'/ROOT.*\/omd\/sites\/testsite/',
+			'/check_nagios/',
+			'/checkresults_dir/',
+		],
+	},
+	{
+		url => "/pnp4nagios/graph?host=$host&srv=disk_root",
+		like => [
+			'/Service details omd-check_multi.*disk_root/',
+		],
+	},
 ];
 
 # complete the url
 foreach my $url ( @{$urls} ) {
-	$url->{'url'}			= "http://localhost/".$site.$url->{'url'};
-	$url->{'auth'}			= $auth;
-	$url->{'unlike'}		= [ '/internal server error/' ];
-	#$url->{'skip_html_lint'}	= 1;
+	$url->{'url'}		= "http://localhost/".$site.$url->{'url'};
+	$url->{'auth'}		= $auth;
+	$url->{'unlike'}	= [ '/internal server error/' ];
 }
 
-#for my $core (qw/shinken nagios/) {
-#for my $core (qw/nagios/) {
-#for my $core (qw/shinken/) {
-for my $core (qw/nagios shinken/) {
-	##################################################
-	# run our tests
+for my $core (qw/nagios/) {
 	TestUtils::test_command({ cmd => $omd_bin." stop $site" });
 	TestUtils::test_command({ cmd => $omd_bin." config $site set CORE $core" });
 	TestUtils::test_command({ cmd => $omd_bin." start $site" });
 	TestUtils::test_command({ cmd => "/bin/sed 's/escape_html_tags=[01]/escape_html_tags=0/' < /omd/sites/$site/etc/$core/cgi.cfg > /omd/sites/$site/etc/$core/cgi.cfg.new && mv /omd/sites/$site/etc/$core/cgi.cfg.new /omd/sites/$site/etc/$core/cgi.cfg && grep escape_html_tags /omd/sites/$site/etc/$core/cgi.cfg",	like=> '/escape_html_tags=0/' });
 	TestUtils::test_command({ cmd => "/bin/su - $site -c './lib/nagios/plugins/check_http -t 30 -H localhost -a omdadmin:omd -u /$site/nagios/cgi-bin/cmd.cgi -e 200 -P \"cmd_typ=17&host=$host&cmd_mod=2&start_time=2010-11-06+09%3A46%3A02&force_check=on&btnSubmit=Commit\" -r \"Your command request was successfully submitted\"'", like => '/HTTP OK:/', sleep => 30 });
-	#TestUtils::test_command({ cmd => "/bin/su - $site -c './lib/nagios/plugins/check_http -H localhost -a omdadmin:omd -u /$site/nagios/cgi-bin/cmd.cgi -e 200 -P \"cmd_typ=17&cmd_mod=2&host=$host&force_check=on&start_time=2010-11-06+09%3A46%3A02&btnSubmit=Commit\" -r \"Your command request was successfully submitted\"'", like => '/HTTP OK:/', sleep => 10 });
-	###############################################
-	# and request some pages
+
 	for my $url ( @{$urls} ) {
 		TestUtils::test_url($url);
 	}
 }
 
-##################################################
-# cleanup test site
 TestUtils::test_command({ cmd => TestUtils::config('APACHE_INIT')." restart" });
 TestUtils::remove_test_site($site);
