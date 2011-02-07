@@ -12,7 +12,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 219 );
+plan( tests => 203 );
 
 ##################################################
 # create our test site
@@ -26,6 +26,8 @@ TestUtils::test_command({ cmd => $omd_bin." config $site set WEB welcome" });
 TestUtils::test_command({ cmd => "/bin/cp t/packages/check_multi/test/localhost.cfg /omd/sites/$site/etc/nagios/conf.d/check_multi_test.cfg" });
 TestUtils::test_command({ cmd => "/usr/bin/test -d /omd/sites/$site/etc/check_multi || /bin/mkdir /omd/sites/$site/etc/check_multi" });
 TestUtils::test_command({ cmd => "/bin/cp t/packages/check_multi/test/* /omd/sites/$site/etc/check_multi" });
+TestUtils::test_command({ cmd => "/bin/sed 's/sleep_time = [0-9][0-9]/sleep_time = 5/' < /omd/sites/$site/etc/pnp4nagios/npcd.cfg > /omd/sites/$site/etc/pnp4nagios/npcd.cfg.new && mv /omd/sites/$site/etc/pnp4nagios/npcd.cfg.new /omd/sites/$site/etc/pnp4nagios/npcd.cfg && grep sleep_time /omd/sites/$site/etc/pnp4nagios/npcd.cfg",	like=> '/sleep_time = 5/' });
+TestUtils::test_command({ cmd => "/bin/sed 's/perfdata_file_processing_interval = [0-9][0-9]/perfdata_file_processing_interval = 5/' < /omd/sites/$site/etc/pnp4nagios/npcd.cfg > /omd/sites/$site/etc/pnp4nagios/npcd.cfg.new && mv /omd/sites/$site/etc/pnp4nagios/npcd.cfg.new /omd/sites/$site/etc/pnp4nagios/npcd.cfg && grep perfdata_file_processing_interval /omd/sites/$site/etc/pnp4nagios/npcd.cfg",	like=> '/perfdata_file_processing_interval = 5/' });
 TestUtils::test_command({ cmd => $omd_bin." start $site" });
 
 # check_multi's own tests
@@ -78,7 +80,7 @@ for my $core (qw/nagios shinken/) {
 	TestUtils::test_command({ cmd => $omd_bin." config $site set CORE $core" });
 	TestUtils::test_command({ cmd => $omd_bin." start $site" });
 	TestUtils::test_command({ cmd => "/bin/sed 's/escape_html_tags=[01]/escape_html_tags=0/' < /omd/sites/$site/etc/$core/cgi.cfg > /omd/sites/$site/etc/$core/cgi.cfg.new && mv /omd/sites/$site/etc/$core/cgi.cfg.new /omd/sites/$site/etc/$core/cgi.cfg && grep escape_html_tags /omd/sites/$site/etc/$core/cgi.cfg",	like=> '/escape_html_tags=0/' });
-	TestUtils::test_command({ cmd => "/bin/su - $site -c './lib/nagios/plugins/check_http -H localhost -a omdadmin:omd -u /$site/nagios/cgi-bin/cmd.cgi -e 200 -P \"cmd_typ=17&host=$host&cmd_mod=2&start_time=2010-11-06+09%3A46%3A02&force_check=on&btnSubmit=Commit\" -r \"Your command request was successfully submitted\"'", like => '/HTTP OK:/', sleep => 30 });
+	TestUtils::test_command({ cmd => "/bin/su - $site -c './lib/nagios/plugins/check_http -t 30 -H localhost -a omdadmin:omd -u /$site/nagios/cgi-bin/cmd.cgi -e 200 -P \"cmd_typ=17&host=$host&cmd_mod=2&start_time=2010-11-06+09%3A46%3A02&force_check=on&btnSubmit=Commit\" -r \"Your command request was successfully submitted\"'", like => '/HTTP OK:/', sleep => 30 });
 	#TestUtils::test_command({ cmd => "/bin/su - $site -c './lib/nagios/plugins/check_http -H localhost -a omdadmin:omd -u /$site/nagios/cgi-bin/cmd.cgi -e 200 -P \"cmd_typ=17&cmd_mod=2&host=$host&force_check=on&start_time=2010-11-06+09%3A46%3A02&btnSubmit=Commit\" -r \"Your command request was successfully submitted\"'", like => '/HTTP OK:/', sleep => 10 });
 	###############################################
 	# and request some pages
