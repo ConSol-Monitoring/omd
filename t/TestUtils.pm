@@ -302,6 +302,35 @@ sub config {
 
 ##################################################
 
+=head2 config
+
+  return config value
+
+=cut
+sub wait_for_file {
+    my $file    = shift;
+    my $timeout = shift || 60;
+
+    my $x = 0;
+    if(-f $file) {
+        pass("file: $file does already exist");
+        return;
+    }
+    while($x < $timeout) {
+        if(-f $file) {
+            pass("file: $file occured after $x seconds");
+            return;
+        }
+        $x++;
+        sleep(1);
+    }
+    fail("file: $file did not occure within $x seconds");
+    return;
+}
+
+
+##################################################
+
 =head2 _diag_lint_errors_and_remove_some_exceptions
 
   removes some lint errors we want to ignore
