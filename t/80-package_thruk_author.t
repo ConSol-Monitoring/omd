@@ -16,7 +16,7 @@ BEGIN {
 unless($ENV{THRUK_AUTHOR}) {
   plan( skip_all => 'Thruk Author test. Set $ENV{THRUK_AUTHOR} to a true value to run.' );
 } else {
-  plan( tests => 66 );
+  plan( tests => 69 );
 }
 
 ##################################################
@@ -24,6 +24,9 @@ unless($ENV{THRUK_AUTHOR}) {
 my $omd_bin = TestUtils::get_omd_bin();
 my $site    = TestUtils::create_test_site() or BAIL_OUT("no further testing without site");
 my $auth    = 'OMD Monitoring Site '.$site.':omdadmin:omd';
+
+# decrease pnp interval
+TestUtils::test_command({ cmd => "/usr/bin/env sed -i -e 's/^perfdata_file_processing_interval = 15/perfdata_file_processing_interval = 2/g' -e 's/^sleep_time = 15/sleep_time = 2/g' /opt/omd/sites/$site/etc/pnp4nagios/npcd.cfg" });
 
 # set thruk as default
 TestUtils::test_command({ cmd => $omd_bin." config $site set WEB thruk" });

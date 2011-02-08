@@ -12,7 +12,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 941 );
+plan( tests => 944 );
 
 ##################################################
 # create our test site
@@ -21,6 +21,9 @@ my $site    = TestUtils::create_test_site() or BAIL_OUT("no further testing with
 my $auth    = 'OMD Monitoring Site '.$site.':omdadmin:omd';
 my $host    = "omd-".$site;
 my $service = "Dummy+Service";
+
+# decrease pnp interval
+TestUtils::test_command({ cmd => "/usr/bin/env sed -i -e 's/^perfdata_file_processing_interval = 15/perfdata_file_processing_interval = 2/g' -e 's/^sleep_time = 15/sleep_time = 2/g' /opt/omd/sites/$site/etc/pnp4nagios/npcd.cfg" });
 
 # set thruk as default
 TestUtils::test_command({ cmd => $omd_bin." config $site set WEB thruk" });
