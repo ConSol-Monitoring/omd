@@ -54,7 +54,7 @@ PNP4NAGIOS=${CONFIG_PNP4NAGIOS:=on}
 # The python search path must be extended to the 
 # local installation directory
 #
-export PYTHONPATH=###ROOT###/lib/python
+export PYTHONPATH=###ROOT###/lib/python:###ROOT###/lib/shinken
 
 #
 # The Shinken processes to start
