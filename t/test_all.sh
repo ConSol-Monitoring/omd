@@ -33,6 +33,8 @@ if [ ! -z "$OMD_PACKAGE" ]; then
 
     # Centos
     elif [ -x /usr/bin/yum  ]; then
+        # remove version if alread installed
+        /usr/bin/yum remove -y `rpm -qp $OMD_PACKAGE`
         /usr/bin/yum install -y --nogpgcheck $OMD_PACKAGE
 
     # Suse

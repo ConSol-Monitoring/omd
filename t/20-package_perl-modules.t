@@ -12,7 +12,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 14 );
+plan( tests => 527 );
 
 ##################################################
 # create our test site
@@ -26,6 +26,26 @@ my $tests = [
 ];
 for my $test (@{$tests}) {
     TestUtils::test_command($test);
+}
+
+##################################################
+for my $tarball (glob("packages/perl-modules/src/*.gz")) {
+    $tarball =~ s/^.*\///gmx;
+    $tarball =~ s/\-([0-9\.]+)\.tar\.gz//gmx;
+    my $version = $1;
+    $tarball =~ s/\-/::/gmx;
+    if($tarball eq 'Scalar::List::Utils')            { $tarball = 'List::Util::XS'; }
+    elsif($tarball eq 'libwww::perl')                { $tarball = 'LWP'; }
+    elsif($tarball eq 'Module::Install')             { $tarball = 'inc::Module::Install'; }
+    elsif($tarball eq 'Template::Toolkit')           { $tarball = 'Template'; }
+    elsif($tarball eq 'IO::stringy')                 { $tarball = 'IO::Scalar'; }
+    elsif($tarball eq 'TermReadKey')                 { $tarball = 'Term::ReadKey'; }
+    elsif($tarball eq 'IO::Compress')                { $tarball = 'IO::Compress::Base'; }
+    elsif($tarball eq 'Term::ReadLine::Gnu')         { $tarball = 'Term::ReadLine; use '; }
+    elsif($tarball eq 'Package::DeprecationManager') { $version .= ' -deprecations => { blah => foo }'; }
+    elsif($tarball eq 'DBD::Oracle')                 { next; }
+    elsif($tarball eq 'Test::NoWarnings')            { next; }
+    TestUtils::test_command({ cmd => "/bin/su - $site -c 'perl -e \"use $tarball $version;\"'" });
 }
 
 ##################################################

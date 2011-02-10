@@ -96,9 +96,10 @@ sub get_omd_bin {
 sub test_command {
     my $test = shift;
     my($rc, $stderr) = ( -1, '') ;
+    my $return = 1;
 
     # run the command
-    isnt($test->{'cmd'}, undef, "running cmd: ".$test->{'cmd'});
+    isnt($test->{'cmd'}, undef, "running cmd: ".$test->{'cmd'}) or $return = 0;
 
     my($prg,$arg) = split(/\s+/, $test->{'cmd'}, 2);
     my $t = Test::Cmd->new(prog => $prg, workdir => '') or die($!);
@@ -119,13 +120,13 @@ sub test_command {
     # exit code?
     $test->{'exit'} = 0 unless exists $test->{'exit'};
     if(defined $test->{'exit'}) {
-        ok($rc == $test->{'exit'}, "exit code: ".$rc." == ".$test->{'exit'}) || _diag_cmd($test, $t);
+        ok($rc == $test->{'exit'}, "exit code: ".$rc." == ".$test->{'exit'}) or do { _diag_cmd($test, $t); $return = 0 };
     }
 
     # matches on stdout?
     if(defined $test->{'like'}) {
         for my $expr (ref $test->{'like'} eq 'ARRAY' ? @{$test->{'like'}} : $test->{'like'} ) {
-            like($t->stdout, $expr, "stdout like ".$expr) || diag("\ncmd: '".$test->{'cmd'}."' failed\n");
+            like($t->stdout, $expr, "stdout like ".$expr) or do { diag("\ncmd: '".$test->{'cmd'}."' failed\n"); $return = 0 };
         }
     }
 
@@ -133,14 +134,16 @@ sub test_command {
     $test->{'errlike'} = '/^\s*$/' unless exists $test->{'errlike'};
     if(defined $test->{'errlike'}) {
         for my $expr (ref $test->{'errlike'} eq 'ARRAY' ? @{$test->{'errlike'}} : $test->{'errlike'} ) {
-            like($stderr, $expr, "stderr like ".$expr) || diag("\ncmd: '".$test->{'cmd'}."' failed");
+            like($stderr, $expr, "stderr like ".$expr) or do { diag("\ncmd: '".$test->{'cmd'}."' failed"); $return = 0 };
         }
     }
 
     # sleep after the command?
     if(defined $test->{'sleep'}) {
-        ok(sleep($test->{'sleep'}), "slept $test->{'sleep'} seconds");
+        ok(sleep($test->{'sleep'}), "slept $test->{'sleep'} seconds") or do { $return = 0 };
     }
+
+    return $return;
 }
 
 ##################################################
@@ -302,6 +305,56 @@ sub config {
 
 ##################################################
 
+=head2 config
+
+  return config value
+
+=cut
+sub wait_for_file {
+    my $file    = shift;
+    my $timeout = shift || 60;
+
+    my $x = 0;
+    if(-e $file) {
+        pass("file: $file does already exist");
+        return 1;
+    }
+    while($x < $timeout) {
+        if(-e $file) {
+            pass("file: $file occured after $x seconds");
+            return 1;
+        }
+        $x++;
+        sleep(1);
+    }
+    fail("file: $file did not occure within $x seconds");
+    return 0;
+}
+
+
+##################################################
+
+=head2 bail_out_clean
+
+  bail out from testing but some minor cleanup before
+
+=cut
+sub bail_out_clean {
+    my $msg = shift;
+
+    diag("cleaning up before bailout");
+
+    my $omd_bin = get_omd_bin();
+    for my $site (qw/testsite testsite2 testsite3/) {
+        test_command({ cmd => $omd_bin." rm $site", stdin => "yes\n", 'exit' => undef, errlike => undef });
+    }
+
+    BAIL_OUT($msg);
+    return;
+}
+
+##################################################
+
 =head2 _diag_lint_errors_and_remove_some_exceptions
 
   removes some lint errors we want to ignore
@@ -310,10 +363,13 @@ sub config {
 sub _diag_lint_errors_and_remove_some_exceptions {
     my $lint = shift;
     my @return;
-    for my $error ( $lint->errors ) {
+    LINT_ERROR: for my $error ( $lint->errors ) {
         my $err_str = $error->as_string;
-        if($err_str =~ m/<IMG SRC=".*?\/thruk\/.*?">\ tag\ has\ no\ HEIGHT\ and\ WIDTH\ attributes\./) {
-            next;
+        for my $exclude_pattern (
+            "<IMG SRC=[^>]*>\ tag\ has\ no\ HEIGHT\ and\ WIDTH\ attributes\.",
+            "<IMG SRC=[^>]*>\ does\ not\ have\ ALT\ text\ defined",
+        ) {
+            next LINT_ERROR if($err_str =~ m/$exclude_pattern/i);
         }
         diag($error->as_string."\n");
         push @return, $error;
