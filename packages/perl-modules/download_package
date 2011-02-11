@@ -5,14 +5,8 @@ use strict;
 use lib '/omd/versions/default/lib/perl5/lib/perl5';
 use YAML;
 use Data::Dumper;
-
-####################################
-# we need perlmodlib for determing core modules
-`perldoc -l perlmodlib > /dev/null`;
-if($? != 0) {
-    print "you have to install the perl-doc package\n";
-    exit 1;
-}
+use lib 'src';
+use OMDHelper;
 
 ####################################
 # download modules
@@ -21,7 +15,7 @@ our @downloaded;
 for my $module (@ARGV) {
     $module =~ s/\//::/g;
     $module =~ s/\.pm$//g;
-    print $module." is a core module\n" if is_core_module($module);
+    print $module." is a core module\n" if OMDHelper::is_core_module($module);
     download_module($module);
 }
 # print result of all downloaded files
@@ -47,10 +41,9 @@ sub download_module {
 
     # we dont need core modules or perl dependency
     return if $mod eq 'perl';
-    return if is_core_module($mod);
 
     my $urlpath;
-    my $out=cmd("wget -O - 'http://search.cpan.org/perldoc?".$mod."'");
+    my $out = OMDHelper::cmd("wget -O - 'http://search.cpan.org/perldoc?".$mod."'");
     if($out =~ m/href="(\/CPAN\/authors\/id\/.*?\/.*?\.tar\.gz)">/) {
         $urlpath = $1;
     }
@@ -75,8 +68,11 @@ sub download_module {
         }
     }
 
-    if( $download ) {
-        cmd('wget -q "http://search.cpan.org'.$urlpath.'"');
+    if($urlpath =~ m/perl\-[\d\.]+\.tar\.gz/) {
+        # dont download perl
+    }
+    elsif( $download ) {
+        OMDHelper::cmd('wget -q "http://search.cpan.org'.$urlpath.'"');
         $already_downloaded{$urlpath} = 1;
         get_deps($tarball);
         push @downloaded, $tarball;
@@ -85,6 +81,7 @@ sub download_module {
         print "$modbasename already downloaded\n";
         get_deps($curfile[0]);
     }
+    return;
 }
 
 ####################################
@@ -96,14 +93,14 @@ sub get_deps {
     return if defined $already_checked{$file};
     $already_checked{$file} = 1;
     print " -> checking dependecies for: $file\n";
-    cmd("tar zxf $file");
+    OMDHelper::cmd("tar zxf $file");
     my $dir = $file;
     $dir =~  s/\.tar\.gz//g;
     my $meta;
     if(-s "$dir/META.yml") {
         $meta = YAML::LoadFile("$dir/META.yml");
     }
-    cmd("rm -fr $dir");
+    OMDHelper::cmd("rm -fr $dir");
     return unless defined $meta->{requires};
     for my $dep (keys %{$meta->{requires}}) {
         next if $dep eq 'perl';
@@ -113,50 +110,3 @@ sub get_deps {
     }
 }
 
-
-####################################
-# is this a core module?
-sub is_core_module {
-    my($module) = @_;
-    our %_stdmod;
-
-    # override some modules, which are core in later perl versions
-    return 0 if $module eq 'version';
-    return 0 if $module eq 'Module::CoreList';
-    return 0 if $module eq 'Attribute::Handlers';
-    return 0 if $module eq 'IPC::Cmd';
-    return 0 if $module eq 'Params::Check';
-    return 0 if $module eq 'Locale::Maketext::Simple';
-    return 0 if $module eq 'Module::Load::Conditional';
-    return 0 if $module eq 'Module::Load';
-
-    unless (keys %_stdmod) {
-        chomp(my $perlmodlib = cmd("perldoc -l perlmodlib"));
-        open my $fh, "<", $perlmodlib
-          or die "$0: open $perlmodlib: $!\n";
-
-        while (<$fh>) {
-            next unless /^=head\d\s+Pragmatic\s+Modules/ ..
-                        /^=head\d\s+CPAN/;
-
-            if (/^=item\s+(\w+(::\w+)*)/) {
-                ++$_stdmod{ lc $1 };
-            }
-        }
-    }
-
-    exists $_stdmod{ lc $module } ? $module : ();
-}
-
-####################################
-# execute a command
-sub cmd {
-    my $cmd = shift;
-    my $out = "";
-    open(my $ph, '-|', $cmd." 2>&1") or die("cannot execute cmd: $cmd");
-    while(my $line = <$ph>) {
-        $out .= $line;
-    }
-    close($ph) or die("cmd failed (rc:$?): $cmd\n$out");
-    return $out;
-}

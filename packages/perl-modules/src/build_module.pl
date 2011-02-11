@@ -2,6 +2,8 @@
 use warnings;
 use strict;
 use Config;
+use lib '.';
+use OMDHelper;
 
 my $verbose = 0;
 my $PERL    = "/usr/bin/perl";
@@ -61,7 +63,6 @@ sub install_module {
     if( $modname eq "TermReadKey" )                { $modname   = "Term::ReadKey"; }
     if( $modname eq "IO::Compress" )               { $modname   = "IO::Compress::Base"; }
     if( $modname eq "Term::ReadLine::Gnu" )        { $pre_check = "use Term::ReadLine;"; }
-    if( $modname eq "Package::DeprecationManager") { $modvers  .= " -deprecations => { blah => foo }"; }
     if( $modname eq "DBD::Oracle") {
         if(defined $ENV{'ORACLE_HOME'}) {
             if(-f $ENV{'ORACLE_HOME'}."/libclntsh.so") {
@@ -80,12 +81,22 @@ sub install_module {
     $modfile =~ s/::/\//g;
     my $rc     = -1;
     my $result = "";
+
+    my $core   = OMDHelper::is_core_module($modname);
+    $core      =~ s/_\d+$//g if defined $core;
+    if($FORCE ne "testonly" and $core >= $modvers) {
+        print "skipped core module $core\n";
+        return(1);
+    }
+
+    if( $modname eq "Package::DeprecationManager") { $modvers  .= " -deprecations => { blah => foo }"; }
+
     # ExtUtils::Install is not detected correctly, because the file is part of another package
-    if( $modname eq "ExtUtils::Install" or $FORCE eq "testonly") {
+    if( $modname eq "ExtUtils::Install" or $FORCE eq "testonly" ) {
         # complete test in testmode
         $result=`$PERL -MData::Dumper -e "$pre_check use $modname $modvers; print Dumper \\%INC" 2>&1`;
         $rc=$?;
-        if($rc == 0) {
+        if($rc == 0 and !$core) {
           $modfile =~ s/^inc\///g;
           $modfile =~ s/\.pm$//g;
           `echo "$result" | grep /dist/lib/perl5/ | grep $modfile > /dev/null 2>&1`;
@@ -104,7 +115,9 @@ sub install_module {
     }
     if($FORCE eq "testonly") {
         if( $rc == 0 ) {
-            print "ok\n";
+            my $cs = "";
+            $cs = sprintf(" core version %7s is older than %s", $core, $modvers) if $core > 0 and $FORCE ne "testonly";
+            print "ok$cs\n";
             return(1);
         } else {
             print "failed\n";
@@ -136,3 +149,4 @@ sub install_module {
     `rm -rf $dir`;
     print "ok\n";
 }
+
