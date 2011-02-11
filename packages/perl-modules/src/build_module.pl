@@ -124,10 +124,10 @@ sub install_module {
     print "installing... ";
     if( -f "Build.PL" ) {
         `$PERL Build.PL >> $LOG 2>&1 && ./Build >> $LOG 2>&1 && ./Build install >> $LOG 2>&1`;
-        if($? != 0 ) { print "error: $?"; print `cat $LOG`, "\n"; return(0); }
+        if($? != 0 ) { print "error: rc $?\n"; print `cat $LOG`, "\n"; return(0); }
     } elsif( -f "Makefile.PL" ) {
         `echo "" | $PERL Makefile.PL >> $LOG 2>&1 && make -j 5 >> $LOG 2>&1 && make install >> $LOG 2>&1`;
-        if($? != 0 ) { print "error: $?"; print `cat $LOG`, "\n"; return(0); }
+        if($? != 0 ) { print "error: rc $?\n"; print `cat $LOG`, "\n"; return(0); }
     } else {
         print "error: no Build.PL or Makefile.PL found in $module!\n";
         return(0);

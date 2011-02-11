@@ -19,6 +19,8 @@ if($? != 0) {
 chdir("src");
 our @downloaded;
 for my $module (@ARGV) {
+    $module =~ s/\//::/g;
+    $module =~ s/\.pm$//g;
     print $module." is a core module\n" if is_core_module($module);
     download_module($module);
 }
@@ -118,8 +120,15 @@ sub is_core_module {
     my($module) = @_;
     our %_stdmod;
 
+    # override some modules, which are core in later perl versions
     return 0 if $module eq 'version';
     return 0 if $module eq 'Module::CoreList';
+    return 0 if $module eq 'Attribute::Handlers';
+    return 0 if $module eq 'IPC::Cmd';
+    return 0 if $module eq 'Params::Check';
+    return 0 if $module eq 'Locale::Maketext::Simple';
+    return 0 if $module eq 'Module::Load::Conditional';
+    return 0 if $module eq 'Module::Load';
 
     unless (keys %_stdmod) {
         chomp(my $perlmodlib = cmd("perldoc -l perlmodlib"));

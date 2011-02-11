@@ -7,6 +7,12 @@ TMPDIST  = $(shell pwd)/dist
 
 
 MODULES = ExtUtils-MakeMaker-6.56.tar.gz \
+          Locale-Maketext-Simple-0.21.tar.gz \
+          Params-Check-0.28.tar.gz \
+          Attribute-Handlers-0.88.tar.gz \
+          Module-Load-0.18.tar.gz \
+          Module-Load-Conditional-0.44.tar.gz \
+          IPC-Cmd-0.70.tar.gz \
           ExtUtils-CBuilder-0.280202.tar.gz \
           ExtUtils-ParseXS-2.2206.tar.gz \
           version-0.88.tar.gz \
@@ -14,6 +20,7 @@ MODULES = ExtUtils-MakeMaker-6.56.tar.gz \
           Perl-OSType-1.002.tar.gz \
           Module-Metadata-1.000004.tar.gz \
           Module-Build-0.3624.tar.gz \
+          Params-Validate-0.95.tar.gz \
           ExtUtils-Install-1.54.tar.gz \
           CPAN-1.9402.tar.gz \
           File-Remove-1.42.tar.gz \
@@ -42,7 +49,6 @@ MODULES = ExtUtils-MakeMaker-6.56.tar.gz \
           File-Copy-Recursive-0.38.tar.gz \
           URI-1.58.tar.gz \
           parent-0.224.tar.gz \
-          Params-Validate-0.95.tar.gz \
           Storable-2.25.tar.gz \
           Sub-Name-0.05.tar.gz \
           Task-Weaken-1.03.tar.gz \
