@@ -224,20 +224,19 @@ sub test_url {
     # html valitidy
     SKIP: {
         if($page->{'content_type'} =~ 'text\/html') {
-            if($use_html_lint == 0) {
-                skip "no HTML::Lint installed", 2;
-            } elsif(defined $test->{'skip_html_lint'} && $test->{'skip_html_lint'} == 1) {
-                skip "HTML::Lint check disabled", 2;
+            unless(defined $test->{'skip_html_lint'} && $test->{'skip_html_lint'} == 1) {
+                if($use_html_lint == 0) {
+                    skip "no HTML::Lint installed", 2;
+                }
+                my $lint = new HTML::Lint;
+                isa_ok( $lint, "HTML::Lint" );
+
+                $lint->parse($page->{'content'});
+                my @errors = $lint->errors;
+                @errors = _diag_lint_errors_and_remove_some_exceptions($lint);
+                is( scalar @errors, 0, "No errors found in HTML" );
+                $lint->clear_errors();
             }
-
-            my $lint = new HTML::Lint;
-            isa_ok( $lint, "HTML::Lint" );
-
-            $lint->parse($page->{'content'});
-            my @errors = $lint->errors;
-            @errors = _diag_lint_errors_and_remove_some_exceptions($lint);
-            is( scalar @errors, 0, "No errors found in HTML" );
-            $lint->clear_errors();
         }
     }
 
@@ -321,13 +320,13 @@ sub wait_for_file {
     }
     while($x < $timeout) {
         if(-e $file) {
-            pass("file: $file occured after $x seconds");
+            pass("file: $file appeared after $x seconds");
             return 1;
         }
         $x++;
         sleep(1);
     }
-    fail("file: $file did not occure within $x seconds");
+    fail("file: $file did not appear within $x seconds");
     return 0;
 }
 

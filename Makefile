@@ -24,7 +24,8 @@ PACKAGES=perl-modules \
          rrdtool \
          shinken \
          thruk \
-         maintenance
+         maintenance \
+         patch
 
 # This file is kept by 'make config' and also may override
 # the list of packages
@@ -242,6 +243,11 @@ deb: deb-changelog
 	# echo "$$arch $$build $$distro"; \
 	# mv "../omd-$(OMD_VERSION)_$${build}_$${arch}.deb" \
 	#  "../omd-$(OMD_VERSION)_$${distro}_$${arch}.deb" ;
+
+deb-snap: deb-environment
+	make clean && git checkout -- Makefile.omd packages/omd/omd && \
+	make VERSION=`./get_version` version && make deb && \
+	git checkout -- Makefile.omd packages/omd/omd
 
 # Only to be used for developement testing setup 
 setup: pack xzf

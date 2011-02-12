@@ -43,7 +43,6 @@ case "$1" in
     update-alternatives --install /omd/versions/default \
        omd /omd/versions/###OMD_VERSION### ###OMD_SERIAL### \
        --slave /usr/bin/omd omd.bin /omd/versions/###OMD_VERSION###/bin/omd \
-       --slave /etc/init.d/omd omd.init /etc/init.d/omd-###OMD_VERSION### \
        --slave /usr/share/man/man8/omd.8.gz omd.man8 \
                /omd/versions/###OMD_VERSION###/share/man/man8/omd.8.gz
 
