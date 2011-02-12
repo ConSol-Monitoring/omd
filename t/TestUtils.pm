@@ -320,13 +320,13 @@ sub wait_for_file {
     }
     while($x < $timeout) {
         if(-e $file) {
-            pass("file: $file occured after $x seconds");
+            pass("file: $file appeared after $x seconds");
             return 1;
         }
         $x++;
         sleep(1);
     }
-    fail("file: $file did not occure within $x seconds");
+    fail("file: $file did not appear within $x seconds");
     return 0;
 }
 
