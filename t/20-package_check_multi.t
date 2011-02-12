@@ -82,29 +82,6 @@ my $urls = [
 		skip_html_lint=>1,
 	},
 	{
-		url => "/nagios/cgi-bin/extinfo.cgi?type=2&host=$host&service=livestatus",
-		like => [
-			"/Service.*livestatus.*On Host.*$host/ms",
-			'/livestatus.*plugins checked/ms',
-			'/all_omd-check_multi_nagios.*\d+ plugins checked/ms',
-			'/all_omd-check_multi_pnp4nagios.*pnp4nagios.*\d+ plugins checked/ms',
-		],
-	},
-	{
-		url => "/nagios/cgi-bin/extinfo.cgi?type=2&host=$host&service=statusdat",
-		like => [
-			'/Service.*statusdat.*On Host.*omd-check_multi/ms',
-			#'/all_omd-check_multi_livestatus.*plugins checked/ms',
-			'/all_omd-check_multi_nagios.*.*\d+ plugins checked/ms',
-			'/all_omd-check_multi_pnp4nagios.*pnp4nagios.*\d+ plugins checked/ms',
-			'/all_omd-check_multi_proc_rss.*rss.*\d+ plugins checked/ms',
-			'/all_omd-check_multi_proc_vsz.*vsz.*\d+ plugins checked/ms',
-			'/all_omd-check_multi_proc_cpu.*cpu.*\d+ plugins checked/ms',
-			'/all_omd-check_multi_statusdat.*statusdat.*\d+ plugins checked/ms',
-			'/all_omd-check_multi_system.*system.*\d+ plugins checked/ms',
-		],
-	},
-	{
 		url => "/nagios/cgi-bin/extinfo.cgi?type=2&host=$host&service=pnp4nagios",
 		like => [
 			'/Service.*pnp4nagios/',
@@ -133,6 +110,29 @@ my $urls = [
 			'/Service details omd-check_multi.*disk_root/',
 		],
 	},
+	{
+		url => "/nagios/cgi-bin/extinfo.cgi?type=2&host=$host&service=statusdat",
+		like => [
+			'/Service.*statusdat.*On Host.*omd-check_multi/ms',
+			#'/all_omd-check_multi_livestatus.*plugins checked/ms',
+			'/all_omd-check_multi_nagios.*.*\d+ plugins checked/ms',
+			'/all_omd-check_multi_pnp4nagios.*pnp4nagios.*\d+ plugins checked/ms',
+			'/all_omd-check_multi_proc_rss.*rss.*\d+ plugins checked/ms',
+			'/all_omd-check_multi_proc_vsz.*vsz.*\d+ plugins checked/ms',
+			'/all_omd-check_multi_proc_cpu.*cpu.*\d+ plugins checked/ms',
+			'/all_omd-check_multi_statusdat.*statusdat.*\d+ plugins checked/ms',
+			'/all_omd-check_multi_system.*system.*\d+ plugins checked/ms',
+		],
+	},
+	{
+		url => "/nagios/cgi-bin/extinfo.cgi?type=2&host=$host&service=livestatus",
+		like => [
+			"/Service.*livestatus.*On Host.*$host/ms",
+			'/livestatus.*plugins checked/ms',
+			'/all_omd-check_multi_nagios.*\d+ plugins checked/ms',
+			'/all_omd-check_multi_pnp4nagios.*pnp4nagios.*\d+ plugins checked/ms',
+		],
+	},
 ];
 
 # complete the url
@@ -150,12 +150,12 @@ for my $core (qw/nagios/) {
 	TestUtils::test_command({ cmd => $omd_bin." start $site" })   or TestUtils::bail_out_clean("No need to test $package without proper startup");
 	TestUtils::wait_for_file("/omd/sites/$site/tmp/run/live", 60) or TestUtils::bail_out_clean("No need to test $package without livestatus connection");
 
+	#--- reschedule all checks and wait for result
+	TestUtils::test_command({ cmd => "/bin/su - $site -c './lib/nagios/plugins/check_http -t 30 -H localhost -a omdadmin:omd -u /$site/nagios/cgi-bin/cmd.cgi -e 200 -P \"cmd_typ=17&host=$host&cmd_mod=2&start_time=2010-11-06+09%3A46%3A02&force_check=on&btnSubmit=Commit\" -r \"Your command request was successfully submitted\"'", like => '/HTTP OK:/', sleep => 10 });
+	TestUtils::wait_for_file("/omd/sites/$site/var/pnp4nagios/perfdata/omd-$site/Dummy_Service.rrd", 60);
+
 	#--- check_multi specific cgi.cfg setting
 	TestUtils::test_command({ cmd => "/bin/sed -i -e 's/escape_html_tags=1/escape_html_tags=0/' /omd/sites/$site/etc/$core/cgi.cfg" });
-
-	#--- reschedule all checks and wait for result
-	TestUtils::test_command({ cmd => "/bin/su - $site -c './lib/nagios/plugins/check_http -t 30 -H localhost -a omdadmin:omd -u /$site/nagios/cgi-bin/cmd.cgi -e 200 -P \"cmd_typ=17&host=$host&cmd_mod=2&start_time=2010-11-06+09%3A46%3A02&force_check=on&btnSubmit=Commit\" -r \"Your command request was successfully submitted\"'", like => '/HTTP OK:/'});
-	TestUtils::wait_for_file("/omd/sites/$site/var/pnp4nagios/perfdata/omd-$site/Dummy_Service.rrd", 60);
 
 	for my $url ( @{$urls} ) {
 		TestUtils::test_url($url);
