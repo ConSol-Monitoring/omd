@@ -26,7 +26,7 @@
 import sys, os, shutil, pwd, grp, re, time, pprint, tty, termios
 from subprocess import *
 
-OMD_VERSION = "0.45"
+OMD_VERSION = "0.47"
 
 # colored output, if stdout is a tty
 on_tty = sys.stdout.isatty()
@@ -1655,7 +1655,13 @@ def main_version(args, options={}):
 
 def main_versions(args, options={}):
     for v in omd_versions():
-        sys.stdout.write("%s\n" % v)
+        if v == default_version():
+            sys.stdout.write("%s (default)\n" % v)
+        else:
+            sys.stdout.write("%s\n" % v)
+
+def default_version():
+    return os.path.basename(os.path.realpath("/omd/versions/default"))
 
 def omd_versions():
     v = [ v for v in os.listdir("/omd/versions") if v != "default" ]
@@ -1666,7 +1672,11 @@ def main_sites(args, options={}):
     if on_tty:
 	sys.stdout.write("SITE             VERSION\n")
     for site in all_sites():
-	sys.stdout.write("%-16s %s\n" % (site, site_version(site)))
+        v = site_version(site)
+        if v == default_version():
+	    sys.stdout.write("%-16s %s (default)\n" % (site, v))
+        else:
+            sys.stdout.write("%-16s %s\n" % (site, v))
 
 # Bail out if name for new site is not valid (needed by create/mv/cp)
 def sitename_must_be_valid(name):
