@@ -1650,8 +1650,23 @@ def main_uninstall(args, options={}):
     sys.stdout.write("Good bye.\n")
 
 
+def main_setversion(args, options={}):
+    if len(args) == 0:
+        bail_out("No version given.\n")
+    version = args[0]
+    if not version in omd_versions():
+        bail_out("The given version does not exist.\n")
+    if version == default_version():
+        bail_out("The given version is already default.\n")
+
+    if os.path.exists("/omd/versions/default"):
+	os.remove("/omd/versions/default")
+    os.symlink("/omd/versions/%s" % version, "/omd/versions/default")
+
+
 def main_version(args, options={}):
     sys.stdout.write("OMD - Open Monitoring Distribution Version %s\n" % g_info["OMD_VERSION"])
+
 
 def main_versions(args, options={}):
     for v in omd_versions():
@@ -2012,6 +2027,11 @@ commands = [
 
     "BE WARNED: You are about to remove everything your system\n"
     "           have ever known about omd."),
+
+  ( "setversion", True, 0, 0, False, "VERSION", main_setversion,
+    [ ( "version", "v", True ) ],
+    "Sets the default version of OMD which will be used by new sites",
+    ""),
 
   ( "version",   False, 0, 0, False, "",        main_version,
     [],
