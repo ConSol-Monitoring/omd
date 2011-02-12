@@ -17,35 +17,25 @@ plan( tests => 144 );
 # create our test site
 my $omd_bin = TestUtils::get_omd_bin();
 my $site    = TestUtils::create_test_site() or BAIL_OUT("no further testing without site");
+my $package = "check_multi";
+my $host    = "omd-$package";
 my $auth    = 'OMD Monitoring Site '.$site.':omdadmin:omd';
-my $host    = "omd-check_multi";
 
 # prepare check_multi test environment (from skel/etc/check_multi/test)
 TestUtils::test_command({ cmd => $omd_bin." config $site set WEB welcome" });
 TestUtils::test_command({ cmd => "/bin/cp t/packages/check_multi/test/localhost.cfg /omd/sites/$site/etc/nagios/conf.d/check_multi_test.cfg" });
 TestUtils::test_command({ cmd => "/usr/bin/test -d /omd/sites/$site/etc/check_multi || /bin/mkdir /omd/sites/$site/etc/check_multi" });
 TestUtils::test_command({ cmd => "/bin/cp t/packages/check_multi/test/* /omd/sites/$site/etc/check_multi" });
-TestUtils::test_command({ cmd => "/bin/sed 's/sleep_time = [0-9][0-9]/sleep_time = 5/' < /omd/sites/$site/etc/pnp4nagios/npcd.cfg > /omd/sites/$site/etc/pnp4nagios/npcd.cfg.new && mv /omd/sites/$site/etc/pnp4nagios/npcd.cfg.new /omd/sites/$site/etc/pnp4nagios/npcd.cfg && grep sleep_time /omd/sites/$site/etc/pnp4nagios/npcd.cfg",	like=> '/sleep_time = 5/' });
-TestUtils::test_command({ cmd => "/bin/sed 's/perfdata_file_processing_interval = [0-9][0-9]/perfdata_file_processing_interval = 5/' < /omd/sites/$site/etc/pnp4nagios/npcd.cfg > /omd/sites/$site/etc/pnp4nagios/npcd.cfg.new && mv /omd/sites/$site/etc/pnp4nagios/npcd.cfg.new /omd/sites/$site/etc/pnp4nagios/npcd.cfg && grep perfdata_file_processing_interval /omd/sites/$site/etc/pnp4nagios/npcd.cfg",	like=> '/perfdata_file_processing_interval = 5/' });
-TestUtils::test_command({ cmd => $omd_bin." start $site" });
+TestUtils::test_command({ cmd => "/bin/sed -i -e 's/sleep_time = 15/sleep_time = 2/' -e 's/perfdata_file_processing_interval = 15/perfdata_file_processing_interval = 2/' /omd/sites/$site/etc/pnp4nagios/npcd.cfg" });
+TestUtils::test_command({ cmd => $omd_bin." start $site" })   or TestUtils::bail_out_clean("No need to test $package without proper startup");
+TestUtils::wait_for_file("/omd/sites/$site/tmp/run/live", 60) or TestUtils::bail_out_clean("No need to test $package without livestatus connection");
+
+TestUtils::test_command({ cmd => "/bin/su - $site -c './lib/nagios/plugins/check_http -H localhost -a omdadmin:omd -u /$site/nagios/cgi-bin/cmd.cgi -e 200 -P \"cmd_typ=7&cmd_mod=2&host=omd-$site&service=Dummy+Service&start_time=2010-11-06+09%3A46%3A02&force_check=on&btnSubmit=Commit\" -r \"Your command request was successfully submitted\"'", like => '/HTTP OK:/' });
+TestUtils::wait_for_file("/omd/sites/$site/var/pnp4nagios/perfdata/omd-$site/Dummy_Service.rrd", 60);
 
 # check_multi's own tests
 TestUtils::test_command({ cmd => "/bin/sh -c '(cd packages/check_multi/check_multi/plugins/t; make OMD_SITE=test OMD_ROOT=/tmp test-all test-extreme)'" });
 
-#=head2 test_url
-#
-#  test a url
-#
-#  needs test hash
-#  {
-#    url     => url to request
-#    auth    => authentication (realm:user:pass)
-#    code    => expected response code
-#    like    => (list of) regular expressions which have to match content
-#    unlike  => (list of) regular expressions which must not match content
-#  }
-#
-#
 my $urls = [
 	{
 		url => '/nagios/cgi-bin/status.cgi?host=all',
@@ -104,7 +94,7 @@ my $urls = [
 		url => "/nagios/cgi-bin/extinfo.cgi?type=2&host=$host&service=statusdat",
 		like => [
 			'/Service.*statusdat.*On Host.*omd-check_multi/ms',
-			'/all_omd-check_multi_livestatus.*plugins checked/ms',
+			#'/all_omd-check_multi_livestatus.*plugins checked/ms',
 			'/all_omd-check_multi_nagios.*.*\d+ plugins checked/ms',
 			'/all_omd-check_multi_pnp4nagios.*pnp4nagios.*\d+ plugins checked/ms',
 			'/all_omd-check_multi_proc_rss.*rss.*\d+ plugins checked/ms',
@@ -152,12 +142,20 @@ foreach my $url ( @{$urls} ) {
 	$url->{'unlike'}	= [ '/internal server error/' ];
 }
 
+#for my $core (qw/shinken/) {
 for my $core (qw/nagios/) {
+	#--- perform proper initialization
 	TestUtils::test_command({ cmd => $omd_bin." stop $site" });
 	TestUtils::test_command({ cmd => $omd_bin." config $site set CORE $core" });
-	TestUtils::test_command({ cmd => $omd_bin." start $site" });
-	TestUtils::test_command({ cmd => "/bin/sed 's/escape_html_tags=[01]/escape_html_tags=0/' < /omd/sites/$site/etc/$core/cgi.cfg > /omd/sites/$site/etc/$core/cgi.cfg.new && mv /omd/sites/$site/etc/$core/cgi.cfg.new /omd/sites/$site/etc/$core/cgi.cfg && grep escape_html_tags /omd/sites/$site/etc/$core/cgi.cfg",	like=> '/escape_html_tags=0/' });
-	TestUtils::test_command({ cmd => "/bin/su - $site -c './lib/nagios/plugins/check_http -t 30 -H localhost -a omdadmin:omd -u /$site/nagios/cgi-bin/cmd.cgi -e 200 -P \"cmd_typ=17&host=$host&cmd_mod=2&start_time=2010-11-06+09%3A46%3A02&force_check=on&btnSubmit=Commit\" -r \"Your command request was successfully submitted\"'", like => '/HTTP OK:/', sleep => 30 });
+	TestUtils::test_command({ cmd => $omd_bin." start $site" })   or TestUtils::bail_out_clean("No need to test $package without proper startup");
+	TestUtils::wait_for_file("/omd/sites/$site/tmp/run/live", 60) or TestUtils::bail_out_clean("No need to test $package without livestatus connection");
+
+	#--- check_multi specific cgi.cfg setting
+	TestUtils::test_command({ cmd => "/bin/sed -i -e 's/escape_html_tags=1/escape_html_tags=0/' /omd/sites/$site/etc/$core/cgi.cfg" });
+
+	#--- reschedule all checks and wait for result
+	TestUtils::test_command({ cmd => "/bin/su - $site -c './lib/nagios/plugins/check_http -t 30 -H localhost -a omdadmin:omd -u /$site/nagios/cgi-bin/cmd.cgi -e 200 -P \"cmd_typ=17&host=$host&cmd_mod=2&start_time=2010-11-06+09%3A46%3A02&force_check=on&btnSubmit=Commit\" -r \"Your command request was successfully submitted\"'", like => '/HTTP OK:/'});
+	TestUtils::wait_for_file("/omd/sites/$site/var/pnp4nagios/perfdata/omd-$site/Dummy_Service.rrd", 60);
 
 	for my $url ( @{$urls} ) {
 		TestUtils::test_url($url);

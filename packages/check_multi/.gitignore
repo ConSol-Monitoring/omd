@@ -1,2 +1,3 @@
-flackem-check_multi*
-check_multi-[0-9.]*
+check_multi
+t/*
+t
