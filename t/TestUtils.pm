@@ -333,6 +333,53 @@ sub wait_for_file {
 
 ##################################################
 
+=head2 wait_for_content
+
+  waits for web page content until timeout
+
+  needs test hash
+  {
+    url            => url to request
+    auth           => authentication (realm:user:pass)
+    code           => expected response code
+    like           => (list of) regular expressions which have to match content
+  }
+
+=cut
+sub wait_for_content {
+    my $test    = shift;
+    my $timeout = shift || 60;
+
+    my $req;
+    my $x = 0;
+    while ($x < $timeout) {
+    	$req = _request($test);
+	if($req->{'code'} == 200) {
+		#diag("code:$req->{code} url:$test->{url} auth:$test->{auth}");
+		my $errors=0;
+		foreach my $pattern (@{$test->{'like'}}) {
+			if ($req->{'content'}!~/$pattern/) {
+				#diag("errors:$errors pattern:$pattern");
+				$errors++;
+			}
+		}
+		if ($errors == 0) {
+            		pass(sprintf "content: [ %s ] appeared after $x seconds", join(',',@{$test->{'like'}}));
+			return 1;
+		}
+	} else {
+		diag("Error searching for web content:\ncode:$req->{code}\nurl:$test->{url}\nauth:$test->{auth}\ncontent:$req->{content}");
+	}
+        $x++;
+        sleep(1);
+    }
+    fail(sprintf "content: [ %s ] did not appear within $x seconds", join(',',@{$test->{'like'}}));
+    return 0;
+}
+
+
+##################################################
+
 =head2 bail_out_clean
 
   bail out from testing but some minor cleanup before
