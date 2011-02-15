@@ -144,7 +144,7 @@ def dialog_message(text, buttonlabel="OK"):
     run_dialog(["--ok-label", buttonlabel, "--msgbox", text, "0", "0"])
 
 def user_confirms(title, message, relpath, yes_choice, yes_text, no_choice, no_text):
-    user_path = g_sitedir + "/" + relpath
+    user_path = os.path.join(g_sitedir, relpath)
     options = [ (yes_choice, yes_text),
                 (no_choice,  no_text),
                 ("shell",    "Open a shell for looking around"),
@@ -155,9 +155,9 @@ def user_confirms(title, message, relpath, yes_choice, yes_text, no_choice, no_t
 	    sys.stdout.write("Update aborted.\n")
 	    sys.exit(1)
 	elif choice == "shell":
-            relname = relpath.split("/")[-1]
+            relname = os.path.basename(relpath)
+	    thedir = os.path.dirname(user_path.split)
 	    sys.stdout.write("\n Starting BASH. Type CTRL-D to continue.\n\n")
-	    thedir = "/".join(user_path.split("/")[:-1])
 	    os.system("cd '%s' ; bash -i" % thedir)
         else:
             return choice == yes_choice
@@ -266,16 +266,16 @@ def bail_out(message):
     sys.exit(1)
 
 def omd_root():
-    return "/omd/versions/" + OMD_VERSION
+    return os.path.join("/omd/versions", OMD_VERSION)
 
 # Read distro- and version specific values
 def read_info():
     global g_info
     g_info = {}
-    info_dir = omd_root() + "/share/omd"
+    info_dir = os.path.join(omd_root(), "share", "omd")
     for f in os.listdir(info_dir):
 	if f.endswith(".info"):
-	    for line in file(info_dir + "/" + f):
+	    for line in file(os.path.join(info_dir, f)):
 		var, value = line.split('=')
 		value = value.strip()
 		if var.endswith("+"):
@@ -284,7 +284,6 @@ def read_info():
 		else:
 		    g_info[var.strip()] = value
                 
-
 def read_skel_permissions():
     global g_skel_permissions
     g_skel_permissions = load_skel_permissions(OMD_VERSION)
@@ -293,7 +292,7 @@ def read_skel_permissions():
 
 def load_skel_permissions(version):
     perms = {}
-    file_path = "/omd/versions/%s/share/omd/skel.permissions" % version
+    file_path = os.path.join("/omd/versions", version, "share/omd/skel.permissions")
     try:
         for line in file(file_path):
             line = line.strip()
@@ -310,7 +309,7 @@ def get_skel_permissions(version, perms, relpath):
     try:
         return perms[relpath]
     except:
-        return get_file_permissions("/omd/versions/%s/skel/%s" % (version, relpath))
+        return get_file_permissions(os.path.join("/omd/versions", version, "skel", relpath))
 
 def get_file_permissions(path):
     try:
@@ -323,33 +322,33 @@ def site_name():
         return pwd.getpwuid(os.getuid()).pw_name
 
 def site_dir(sitename):
-    return "/omd/sites/" + sitename
+    return os.path.join("/omd/sites", sitename)
 
 def tmp_dir(sitename):
-    return "/omd/sites/%s/tmp" % sitename
+    return os.path.join("/omd/sites", sitename, "tmp")
 
 # The version of a site is solely determined by the
 # link ~SITE/version
 def site_version(sitename):
-    version_link = site_dir(sitename) + "/version"
+    version_link = os.path.join(site_dir(sitename), "version")
     try:
-        version = os.readlink(version_link).split("/")[-1]
+        version = os.path.basename(os.readlink(version_link))
         return version
     except:
         return None
 
 def create_version_symlink(sitename, version):
-    linkname = site_dir(sitename) + "/version"
+    linkname = os.path.join(site_dir(sitename), "version")
     if os.path.exists(linkname):
 	os.remove(linkname)
-    os.symlink("../../versions/%s" % OMD_VERSION, linkname)
+    os.symlink(os.path.join("../../versions", OMD_VERSION), linkname)
 
 
 def site_exists(sitename):
     return os.path.exists(site_dir(sitename))
 
 def all_sites():
-    l = [ s for s in os.listdir("/omd/sites") if os.path.isdir(os.path.join("/omd/sites/", s)) ]
+    l = [ s for s in os.listdir("/omd/sites") if os.path.isdir(os.path.join("/omd/sites", s)) ]
     l.sort()
     return l
 
@@ -489,7 +488,7 @@ def set_environment():
     putenv("HOME", g_sitedir)
 
     # allow user to define further environment variable in ~/etc/environment
-    envfile = g_sitedir + "/etc/environment"
+    envfile = os.path.join(g_sitedir, "etc/environment")
     if os.path.exists(envfile):
         lineno = 0
         for line in file(envfile):
@@ -525,7 +524,7 @@ def tmpfs_mounted(sitename):
     # Problem here: if /omd is a symbolic link somewhere else,
     # then in /proc/mounts the physical path will appear and be
     # different from tmp_path. We just check the suffix therefore.
-    path_suffix = "sites/%s/tmp" % sitename
+    path_suffix = os.path.join("sites", sitename, "tmp")
     for line in file("/proc/mounts"):
         device, mp, fstype, options, dump, fsck = line.split()
         if mp.endswith(path_suffix) and fstype == 'tmpfs':
@@ -593,7 +592,7 @@ def create_skeleton_files(sitename, dir):
     }
     # Hack: exclude tmp if dir is '.'
     exclude_tmp = dir == "."
-    skelroot = "/omd/versions/%s/skel" % OMD_VERSION
+    skelroot = os.path.join("/omd/versions", OMD_VERSION, "skel")
     os.chdir(skelroot)  # make relative paths
     for dirpath, dirnames, filenames in os.walk(dir):
         if dirpath.startswith("./"):
@@ -604,7 +603,7 @@ def create_skeleton_files(sitename, dir):
                     continue
                 if dirpath == "tmp" or dirpath.startswith("tmp/"):
                     continue
-	    create_skeleton_file(skelroot, sitedir, dirpath + "/" + entry, replacements)
+	    create_skeleton_file(skelroot, sitedir, os.path.join(dirpath, entry), replacements)
 
 def delete_user_file(user_path):
     if not os.path.islink(user_path) and os.path.isdir(user_path):
@@ -614,8 +613,8 @@ def delete_user_file(user_path):
 
 
 def create_skeleton_file(skelbase, userbase, relpath, replacements):
-    skel_path = skelbase + "/" + relpath
-    user_path = userbase + "/" + relpath
+    skel_path = os.path.join(skelbase, relpath)
+    user_path = os.path.join(userbase, relpath)
 
     # Remove old version, if existing (needed during update)
     if os.path.exists(user_path):
@@ -677,17 +676,17 @@ def stop_site(sitename):
 # Change site specific information in files originally create from
 # skeleton files. Skip files below tmp/
 def patch_skeleton_files(old, new):
-    skelroot = "/omd/versions/%s/skel" % OMD_VERSION
+    skelroot = os.path.join("/omd/versions", OMD_VERSION, "skel")
     os.chdir(skelroot)  # make relative paths
     for dirpath, dirnames, filenames in os.walk("."):
         if dirpath.startswith("./"):
             dirpath = dirpath[2:]
-        targetdir = site_dir(new) + "/" + dirpath
+        targetdir = os.path.join(site_dir(new), dirpath)
         if targetdir.startswith(tmp_dir(new)):
             continue # Skip files below tmp
         for fn in filenames:
-            src = dirpath + "/" + fn
-            dst = targetdir + "/" + fn
+            src = os.path.join(dirpath, fn)
+            dst = os.path.join(targetdir, fn)
             if os.path.isfile(src) and not os.path.islink(src) \
                 and os.path.exists(dst): # not deleted by user
 		try:
@@ -704,7 +703,7 @@ def chown_tree(dir, user):
     os.chown(dir, uid, gid)
     for dirpath, dirnames, filenames in os.walk(dir):
         for entry in dirnames + filenames:
-            os.lchown(dirpath + "/" + entry, uid, gid)
+            os.lchown(os.path.join(dirpath, entry), uid, gid)
 
 def instantiate_skel(path):
     try:
@@ -757,13 +756,13 @@ def merge_update_file(relpath, old_version, new_version):
         "###SITE###" : g_sitename,
         "###ROOT###" : g_sitedir,
     }
-    user_path = g_sitedir + "/" + relpath
+    user_path = os.path.join(g_sitedir, relpath)
     content = file(user_path).read()
     permissions = os.stat(user_path).st_mode
 
     def try_merge():
         for version in [ old_version, new_version ]:
-            p = "/omd/versions/%s/skel/%s" % (version, relpath)
+            p = os.path.join("/omd/versions", version, "skel", relpath)
             while True:
                 try:
                     skel_content = file(p).read()
@@ -849,7 +848,7 @@ def merge_update_file(relpath, old_version, new_version):
 		sys.stdout.write("File %s not found.\n" % reject_file)
 
 	elif choice == "shell":
-            relname = relpath.split("/")[-1]
+            relname = os.path.basename(relpath)
             sys.stdout.write(" %-25s: the current half-merged file\n" % relname)
             sys.stdout.write(" %-25s: the default version of %s\n" % (relname + "." + old_version, old_version))
             sys.stdout.write(" %-25s: the default version of %s\n" % (relname + "." + new_version, new_version))
@@ -858,7 +857,7 @@ def merge_update_file(relpath, old_version, new_version):
                 sys.stdout.write(" %-25s: changes that haven't been merged\n" % relname + ".rej")
 
 	    sys.stdout.write("\n Starting BASH. Type CTRL-D to continue.\n\n")
-	    thedir = "/".join(user_path.split("/")[:-1])
+	    thedir = os.path.dirname(user_path)
 	    os.system("cd '%s' ; bash -i" % thedir)
 	elif choice == "restore":
 	    os.rename(user_path + ".orig", user_path)
@@ -908,17 +907,17 @@ def filetype(p):
 
 
 def update_file(old_version, new_version, userdir, relpath, old_perms):
-    old_skel = "/omd/versions/%s/skel" % old_version
-    new_skel = "/omd/versions/%s/skel" % new_version
+    old_skel = os.path.join("/omd/versions", old_version, "skel")
+    new_skel = os.path.join("/omd/versions", new_version, "skel")
 
     replacements = {
 	"###SITE###" : g_sitename,
 	"###ROOT###" : g_sitedir,
     }
 
-    old_path = old_skel + "/" + relpath
-    new_path = new_skel + "/" + relpath
-    user_path = userdir + "/" + relpath
+    old_path = os.path.join(old_skel, relpath)
+    new_path = os.path.join(new_skel, relpath)
+    user_path = os.path.join(userdir, relpath)
 
     old_type  = filetype(old_path)
     new_type  = filetype(new_path)
@@ -1224,7 +1223,7 @@ def update_file(old_version, new_version, userdir, relpath, old_perms):
 
 
 def init_scripts(sitename):
-    rc_dir = "/omd/sites/%s/etc/rc.d" % sitename
+    rc_dir = os.path.join("/omd/sites", sitename, "etc/rc.d")
     try:
         scripts = os.listdir(rc_dir)
         scripts.sort()
@@ -1266,7 +1265,7 @@ def check_status(sitename, display=True, daemon=None):
     num_stopped = 0
     rc_dir, scripts = init_scripts(sitename)
     for script in scripts:
-        komponent = script.split("/")[-1].split('-')[-1]
+        komponent = os.path.basename(script).split('-')[-1]
         if daemon and komponent != daemon:
             continue
         if display:
@@ -1309,7 +1308,7 @@ def check_status(sitename, display=True, daemon=None):
 
 
 def config_load():
-    confpath = g_sitedir + "/etc/omd/site.conf"
+    confpath = os.path.join(g_sitedir, "etc/omd/site.conf")
     if not os.path.exists(confpath):
         return
 
@@ -1329,10 +1328,10 @@ def config_load():
                 g_hooks[var]["value"] = value
 
 def config_save():
-    confdir = g_sitedir + "/etc/omd"
+    confdir = os.path.join(g_sitedir, "etc/omd")
     if not os.path.exists(confdir):
         os.mkdir(confdir)
-    f = file(g_sitedir + "/etc/omd/site.conf", "w")
+    f = file(os.path.join(g_sitedir, "etc/omd/site.conf"), "w")
     hooknames = g_hooks.keys()
     hooknames.sort()
     for hookname in hooknames:
@@ -1347,7 +1346,7 @@ def config_load_hooks(force_reload = False):
         return # already loaded
 
     g_hooks = {}
-    hook_dir = g_sitedir + "/lib/omd/hooks"
+    hook_dir = os.path.join(g_sitedir, "lib/omd/hooks")
     for hookname in os.listdir(hook_dir):
         try:
             if hookname[0] != '.':
@@ -1381,7 +1380,7 @@ def refresh_hooks():
     config_reload_hooks()
 
 def call_hook(hookname, args):
-    hook_file = g_sitedir + "/lib/omd/hooks/" + hookname
+    hook_file = os.path.join(g_sitedir, "lib/omd/hooks", hookname)
     argsstring = " ".join([ "'%s'" % arg for arg in args ])
     putenv("OMD_ROOT", g_sitedir)
     putenv("OMD_SITE", g_sitename)
@@ -1391,7 +1390,7 @@ def call_hook(hookname, args):
     return exitcode, content
 
 def call_all_hooks(command):
-    hook_dir = g_sitedir + "/lib/omd/hooks"
+    hook_dir = os.path.join(g_sitedir, "lib/omd/hooks")
     for hookname in os.listdir(hook_dir):
         os.system("%s/%s '%s'" % (hook_dir, hookname, command))
 
@@ -1617,7 +1616,7 @@ def main_setup(args, options={}):
             sys.stdout.write("ERROR: Could not enable Apache module mod_%s\n" % mod)
 
     # Activate init script of OMD and APACHE
-    for service in [ 'omd',  g_info["APACHE_INIT"].split('/')[-1] ]:
+    for service in [ 'omd',  os.pat.basename(g_info["APACHE_INIT"]) ]:
         sys.stdout.write("Activating init script for \"%s\"\n" % service)
         command = g_info["ACTIVATE_INITSCRIPT"].replace("%s", service)
         sys.stdout.write("Going to execute '%s'\n" % command)
@@ -1633,7 +1632,8 @@ def main_setup(args, options={}):
     # non RPM/DEB installations (FIXME: find a more elegant
     # solution later)
     for plugin in [ 'check_icmp', 'check_dhcp' ]:
-        path = "/omd/versions/%s/lib/nagios/plugins/%s" % (OMD_VERSION, plugin)
+        path = os.pat.join("/omd/versions", OMD_VERSION,
+                           "lib/nagios/plugins", plugin)
         os.system("chgrp omd '%s'" % path)
         os.system("chmod 4750 '%s'" % path)
 
@@ -1648,7 +1648,7 @@ def main_uninstall(args, options={}):
 
     for path in [ g_info["OMD_PHYSICAL_BASE"],
 		  "/omd",
-		  g_info["APACHE_CONF_DIR"] + "/zzz_omd.conf",
+		  os.path.join(g_info["APACHE_CONF_DIR"], "zzz_omd.conf"),
 		  "/etc/init.d/omd",
 		  "/usr/bin/omd" ]:
 	os.system("rm -rf '%s'" % path)
@@ -1678,7 +1678,7 @@ def main_setversion(args, options={}):
 
     if os.path.exists("/omd/versions/default"):
 	os.remove("/omd/versions/default")
-    os.symlink("/omd/versions/%s" % version, "/omd/versions/default")
+    os.symlink(os.path.join("/omd/versions", version), "/omd/versions/default")
 
 
 def main_version(args, options={}):
@@ -1742,7 +1742,7 @@ def main_create(args, options={}):
     # Build up directory structure with symbolic links relative to
     # the version link we just create
     for d in [ 'bin', 'include', 'lib', 'share' ]:
-        os.symlink("version/" + d, sitedir + "/" + d)
+        os.symlink(os.path.join("version", d), os.path.join(sitedir,  d))
 
     # Create skeleton files of non-tmp directories
     create_skeleton_files(g_sitename, '.')
@@ -1922,8 +1922,8 @@ def main_update(args, options={}):
     read_skel_permissions()
     old_perms = load_skel_permissions(from_version)
 
-    from_skelroot = "/omd/versions/%s/skel" % from_version
-    to_skelroot = "/omd/versions/%s/skel" % to_version
+    from_skelroot = os.path.join("/omd/versions", from_version, "skel")
+    to_skelroot = os.path.join("/omd/versions", to_version, "skel")
     tmp = tmp_dir(g_sitename)
 
     handled_paths = set([])
@@ -1936,14 +1936,14 @@ def main_update(args, options={}):
 	    continue
 
 	for entry in dirnames + filenames:
-	    path = dirpath + "/" + entry
+	    path = os.path.join(dirpath, entry)
             if path.startswith("./"):
                 path = path[2:]
 	    handled_paths.add(path)
 	    try:
 		update_file(from_version, to_version, g_sitedir, path, old_perms)
 	    except Exception, e:
-		sys.stderr.write("Error updating %s/%s: %s\n" % (g_sitedir, path, e))
+		sys.stderr.write("Error updating %s: %s\n" % (os.path.join(g_sitedir, path), e))
 		raise
 
     # Now handle files present in old but not in new skel files
@@ -1955,18 +1955,18 @@ def main_update(args, options={}):
 	    continue
 
 	for entry in dirnames + filenames:
-	    path = dirpath + "/" + entry
+	    path = os.path.join(dirpath, entry)
             if path.startswith("./"):
                 path = path[2:]
 	    if path in handled_paths:
 		continue
 
 	    # handle only files not already handled while scanning to_skelroot
-	    if not os.path.exists(to_skelroot + "/" + entry):
+	    if not os.path.exists(os.path.join(to_skelroot, entry)):
 		try:
 		    update_file(from_version, to_version, g_sitedir, path, old_perms)
 		except Exception, e:
-		    sys.stderr.write("Error updating %s/%s: %s\n" % (g_sitedir, path, e))
+		    sys.stderr.write("Error updating %s: %s\n" % (os.path.join(g_sitedir, path), e))
 		    raise
 
     # Change symbolic link pointing to new version
@@ -2154,7 +2154,7 @@ def handle_global_option(opt, orig):
         # Switch to other version of bin/omd
         version = opt_arg()
         if version != OMD_VERSION:
-            omd_path = "/omd/versions/%s/bin/omd" % version
+            omd_path = os.path.join("/omd/versions", version, "bin/omd")
             if not os.path.exists(omd_path):
                 bail_out("OMD version '%s' is not installed.\n" % version)
             os.execv(omd_path, sys.argv)
@@ -2204,7 +2204,7 @@ def parse_command_options(args, options_spec):
 
 def exec_other_omd(version):
     # Rerun with omd of other version
-    omd_path = "/omd/versions/%s/bin/omd" % version
+    omd_path = os.path.join("/omd/versions", version, "bin/omd")
     if os.path.exists(omd_path):
         os.execv(omd_path, sys.argv)
         bail_out("Cannot run bin/omd of version %s.\n" % version)
