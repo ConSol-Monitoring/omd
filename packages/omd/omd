@@ -272,8 +272,7 @@ def ask_user_choices(title, message, choices):
                 return choice
 
 def bail_out(message):
-    sys.stderr.write(message)
-    sys.exit(1)
+    sys.exit(message)
 
 def omd_root():
     return os.path.join("/omd/versions", OMD_VERSION)
@@ -298,7 +297,7 @@ def read_skel_permissions():
     global g_skel_permissions
     g_skel_permissions = load_skel_permissions(OMD_VERSION)
     if not g_skel_permissions:
-        bail_out("%s is missing or currupted.\n" % file_path)
+        bail_out("%s is missing or currupted." % file_path)
 
 def load_skel_permissions(version):
     perms = {}
@@ -379,7 +378,7 @@ def groupadd(groupname, gid = None):
     cmd += groupname
 
     if 0 != os.system(cmd):
-        bail_out("Cannot create group for site user.\n")
+        bail_out("Cannot create group for site user.")
 
 def useradd(sitename, uid = None, gid = None):
     # Create user for running site 'name'
@@ -390,7 +389,7 @@ def useradd(sitename, uid = None, gid = None):
     if 0 != os.system("useradd %s -d '%s' -c 'OMD site %s' -g %s -G omd %s -s /bin/bash" % \
                       (useradd_options, site_dir(sitename), sitename, sitename, sitename)):
         groupdel(sitename)
-        bail_out("Error creating site user.\n")
+        bail_out("Error creating site user.")
 
     # Add Apache to new group. It needs to be able to write in to the
     # command pipe and possible other stuff
@@ -508,7 +507,7 @@ def set_environment():
                 continue # allow empty lines and comments
             parts = line.split("=")
             if len(parts) != 2:
-                bail_out("%s: syntax error in line %d\n" % (envfile, lineno))
+                bail_out("%s: syntax error in line %d" % (envfile, lineno))
             varname = parts[0]
             value = parts[1]
             if value.startswith('"'):
@@ -569,7 +568,7 @@ def unmount_tmpfs(sitename):
             sys.stdout.write(".")
             sys.stdout.flush()
             time.sleep(1)
-        bail_out(tty_error + ": Cannot unmount tmp filesystem.\n")
+        bail_out(tty_error + ": Cannot unmount tmp filesystem.")
 
 def add_to_fstab(sitename):
     # tmpfs                   /opt/omd/sites/b01/tmp  tmpfs   user,uid=b01,gid=b01 0 0
@@ -1677,14 +1676,14 @@ def main_setversion(args, options={}):
                 "Make default",
                 "Cancel")
         if not ok:
-            bail_out("Aborted.\n")
+            bail_out("Aborted.")
     else:
         version = args[0]
 
     if not version in omd_versions():
-        bail_out("The given version does not exist.\n")
+        bail_out("The given version does not exist.")
     if version == default_version():
-        bail_out("The given version is already default.\n")
+        bail_out("The given version is already default.")
 
     if os.path.exists("/omd/versions/default"):
         os.remove("/omd/versions/default")
@@ -1724,13 +1723,13 @@ def main_sites(args, options={}):
 def sitename_must_be_valid(name):
     # Make sanity checks before starting any action
     if site_exists(name):
-        bail_out("Site '%s' already existing.\n" % name)
+        bail_out("Site '%s' already existing." % name)
     if group_exists(name):
-        bail_out("Group '%s' already existing.\n" % name)
+        bail_out("Group '%s' already existing." % name)
     if user_exists(name):
-        bail_out("User '%s' already existing.\n" % name)
+        bail_out("User '%s' already existing." % name)
     if not re.match("^[a-zA-Z_][a-zA-Z_0-9]{0,15}$", name):
-        bail_out("Invalid site name. Must begin with a character, may contain characters, digits and _ and have length 1 up to 16\n")
+        bail_out("Invalid site name. Must begin with a character, may contain characters, digits and _ and have length 1 up to 16")
 
 
 def main_create(args, options={}):
@@ -1797,7 +1796,7 @@ def main_rm(args, options={}):
     os.system('omd stop %s' % g_sitename)
 
     if user_logged_in(g_sitename):
-        bail_out("User '%s' still logged in or running processes.\n" % g_sitename)
+        bail_out("User '%s' still logged in or running processes." % g_sitename)
     unmount_tmpfs(g_sitename)
 
     remove_from_fstab(g_sitename)
@@ -1821,14 +1820,14 @@ def main_mv_or_cp(what, args, options={}):
     global g_sitename
     global g_sitedir
     if len(args) != 1:
-        bail_out("omd: Usage: omd %s oldname newname\n" % what)
+        bail_out("omd: Usage: omd %s oldname newname" % what)
     new = args[0]
 
     sitename_must_be_valid(new)
 
     old = g_sitename
     if site_is_running(old):
-        bail_out("Cannot %s site '%s' while it is running.\n" % (action, old))
+        bail_out("Cannot %s site '%s' while it is running." % (action, old))
 
     if what == "mv":
         unmount_tmpfs(old)
@@ -1883,7 +1882,7 @@ def main_mv_or_cp(what, args, options={}):
 
 def main_update(args, options={}):
     if site_is_running(g_sitename):
-        bail_out("Cannot update site '%s' while it is running.\n" % g_sitename)
+        bail_out("Cannot update site '%s' while it is running." % g_sitename)
 
     # Unmount tmp. We need to recreate the files and directories
     # from the new version after updating.
@@ -1896,7 +1895,7 @@ def main_update(args, options={}):
         possible_versions = [ v for v in omd_versions() if v != from_version ]
         possible_versions.sort(reverse=True)
         if len(possible_versions) == 0:
-            bail_out("There is no other OMD version to update to.\n")
+            bail_out("There is no other OMD version to update to.")
         elif len(possible_versions) == 1:
             to_version = possible_versions[0]
         else:
@@ -1907,7 +1906,7 @@ def main_update(args, options={}):
                     "Update now",
                     "Cancel")
             if not ok:
-                bail_out("Aborted.\n")
+                bail_out("Aborted.")
         exec_other_omd(to_version)
 
     if not opt_force and not dialog_yesno("You are going to update the site %s from version %s to version %s. "
@@ -1915,7 +1914,7 @@ def main_update(args, options={}):
             "changes in the default files with changes made by you. In case of conflicts "
             "your help will be needed." % (g_sitename, from_version, to_version),
             "Update!", "Abort"):
-        bail_out("Aborted.\n")
+        bail_out("Aborted.")
 
     sys.stdout.write("Updating site '%s' from version %s to %s...\n\n" %
             (g_sitename, from_version, to_version))
@@ -2155,7 +2154,7 @@ def handle_global_option(opt, orig):
     def opt_arg():
         global main_args
         if len(main_args) < 1:
-            bail_out("Option %s needs an argument.\n" % opt)
+            bail_out("Option %s needs an argument." % opt)
         arg = main_args[0]
         main_args = main_args[1:]
         return arg
@@ -2166,9 +2165,9 @@ def handle_global_option(opt, orig):
         if version != OMD_VERSION:
             omd_path = os.path.join("/omd/versions", version, "bin/omd")
             if not os.path.exists(omd_path):
-                bail_out("OMD version '%s' is not installed.\n" % version)
+                bail_out("OMD version '%s' is not installed." % version)
             os.execv(omd_path, sys.argv)
-            bail_out("Cannot execute %s.\n" % omd_path)
+            bail_out("Cannot execute %s." % omd_path)
     elif opt in [ 'f', 'force' ]:
         opt_force = True
         opt_interactive = False
@@ -2199,13 +2198,13 @@ def parse_command_options(args, options_spec):
                         entries.append(e)
 
         if len(entries) == 0:
-            bail_out("Invalid option '%s'\n" % opt)
+            bail_out("Invalid option '%s'" % opt)
 
         for llong, sshort, needs_arg in entries:
             arg = None
             if needs_arg:
                 if len(args) == 0:
-                    bail_out("Option '%s' needs an argument.\n" % opt)
+                    bail_out("Option '%s' needs an argument." % opt)
                 arg = args[0]
                 args = args[1:]
             options[llong] = arg
@@ -2217,10 +2216,10 @@ def exec_other_omd(version):
     omd_path = os.path.join("/omd/versions", version, "bin/omd")
     if os.path.exists(omd_path):
         os.execv(omd_path, sys.argv)
-        bail_out("Cannot run bin/omd of version %s.\n" % version)
+        bail_out("Cannot run bin/omd of version %s." % version)
     else:
         bail_out("Site %s uses version %s which is not installed.\n"
-                "Please reinstall that version and retry this command.\n" %
+                "Please reinstall that version and retry this command." %
                 (g_sitename, version))
 
 
@@ -2262,10 +2261,10 @@ for c, only_root, needs_site, site_must_exist, confirm, argumentlist, command_fu
         break
 
 if not found:
-    bail_out("omd: no such command: %s\n" % command)
+    bail_out("omd: no such command: %s" % command)
 
 if os.getuid() != 0 and only_root:
-    bail_out("omd: root permissions are needed for this command.\n")
+    bail_out("omd: root permissions are needed for this command.")
 
 # Parse command options. We need to do this now in order to know,
 # if a site name has been specified or not
@@ -2281,12 +2280,12 @@ if needs_site > 0:
             g_sitename = args[0]
             args = args[1:]
         elif needs_site == 1:
-            bail_out("omd: please specify site.\n")
+            bail_out("omd: please specify site.")
     else:
         g_sitename = site_name()
 
 if g_sitename != None and site_must_exist and not site_exists(g_sitename):
-    bail_out("omd: no such site: %s\n" % g_sitename)
+    bail_out("omd: no such site: %s" % g_sitename)
 
 # Commands operating on an existing site *must* run omd in
 # the same version as the site has! Sole exception: update.
