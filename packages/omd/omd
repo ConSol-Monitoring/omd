@@ -162,8 +162,7 @@ def user_confirms(title, message, relpath, yes_choice, yes_text, no_choice, no_t
     while True:
         choice = ask_user_choices(title, message, options)
         if choice == "abort":
-            sys.stdout.write("Update aborted.\n")
-            sys.exit(1)
+            bail_out("Update aborted.")
         elif choice == "shell":
             relname = os.path.basename(relpath)
             thedir = os.path.dirname(user_path.split)
@@ -838,8 +837,7 @@ def merge_update_file(relpath, old_version, new_version):
            "You have the following options: " %
                 ( old_version, new_version, relpath ), options)
         if choice == "abort":
-            sys.stdout.write("Update aborted.\n")
-            sys.exit(1)
+            bail_out("Update aborted.")
         if choice == "keep":
             break
         elif choice == "edit":
@@ -1434,8 +1432,7 @@ def config_load_hook(hookname):
                 descr = descr.strip()
                 choices.append( (val, descr) )
         except:
-            sys.stderr.write("Invalid output of hook: %s\n" % choicestxt)
-            sys.exit(1)
+            bail_out("Invalid output of hook: %s" % choicestxt)
 
     hook["choices"] = choices
     return hook
@@ -2177,9 +2174,8 @@ def handle_global_option(opt, orig):
     elif opt in [ 'v', 'verbose' ]:
         opt_verbose = True
     else:
-        sys.stdout.write("Invalid global option %s.\n" % orig)
-        sys.stdout.write("Call omd help for available options.\n")
-        sys.exit(1)
+        bail_out("Invalid global option %s.\n"
+                 "Call omd help for available options." % orig)
 
 def parse_command_options(args, options_spec):
     options = {}
@@ -2325,5 +2321,4 @@ if (opt_interactive or confirm) and not opt_force:
 try:
     command_function(args, command_options)
 except KeyboardInterrupt:
-    sys.stderr.write(tty_normal + "Aborted.\n")
-    sys.exit(1)
+    bail_out(tty_normal + "Aborted.")
