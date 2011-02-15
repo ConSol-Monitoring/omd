@@ -296,10 +296,21 @@ sub config {
     my $conf_file = "/omd/versions/default/share/omd/distro.info";
     open(my $fh, '<', $conf_file) or carp("cannot open $conf_file: $!");
     while(<$fh>) {
-        my($key,$value) = split/\s+=\s+/,$_,2;
+        my $line = $_;
+        my $append = 0;
+        my($key,$value) = split/\s+\+=\s+/,$line,2;
+        if(defined $value) {
+            $append = 1;
+        } else {
+            ($key,$value) = split/\s+=\s+/,$line,2;
+        }
         $key   =~ s/^\s+//;
         $value =~ s/\s+$//;
-        $config->{$key} = $value;
+        if($append) {
+            $config->{$key} .= " ".$value;
+        } else {
+            $config->{$key} = $value;
+        }
     }
     close($fh);
     return $config->{$key};

@@ -276,8 +276,14 @@ def read_info():
     for f in os.listdir(info_dir):
 	if f.endswith(".info"):
 	    for line in file(info_dir + "/" + f):
-	       var, value = line.split('=')
-	       g_info[var.strip()] = value.strip()
+		var, value = line.split('=')
+		value = value.strip()
+		if var.endswith("+"):
+		    var = var[:-1] # remove +
+		    g_info[var.strip()] += " " + value
+		else:
+		    g_info[var.strip()] = value
+                
 
 def read_skel_permissions():
     global g_skel_permissions
