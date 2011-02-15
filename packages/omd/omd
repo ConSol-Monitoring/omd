@@ -26,7 +26,7 @@
 import sys, os, shutil, pwd, grp, re, time, pprint, tty, termios
 from subprocess import *
 
-OMD_VERSION = "0.46"
+OMD_VERSION = "0.47"
 
 # colored output, if stdout is a tty
 on_tty = sys.stdout.isatty()
@@ -98,7 +98,7 @@ def patch_has_merge():
     # check wether our version of patch supports the option '--merge'
     global patch_supports_merge
     if patch_supports_merge == None:
-	patch_supports_merge = (0 == os.system("true | patch --merge >/dev/null 2>&1"))
+	patch_supports_merge = (0 == os.system("true | PATH=/omd/versions/default/bin:$PATH patch --merge >/dev/null 2>&1"))
         if not patch_supports_merge:
 	    sys.stdout.write("Your version of patch does not support --merge.\n")
     return patch_supports_merge
@@ -724,7 +724,7 @@ def patch_template_file(src, dst, old, new):
 
     # Now create patch from old to new and immediately apply on
     # existing - possibly user modified - file.
-    if 0 == os.system("diff -u %s.skel.%s %s.skel.%s | patch --force --backup --forward --silent %s" %
+    if 0 == os.system("diff -u %s.skel.%s %s.skel.%s | PATH=/omd/versions/default/bin:$PATH patch --force --backup --forward --silent %s" %
             (dst, old, dst, new, dst)):
         # remove unnecessary files
         try:
@@ -782,7 +782,7 @@ def merge_update_file(relpath, old_version, new_version):
 
         # First try to merge the changes in the version into the users' file
         merge = patch_has_merge() and "--merge" or ""
-        f = os.popen("patch --force --backup --forward --silent %s %s >/dev/null" % (merge, user_path), "w")
+        f = os.popen("PATH=/omd/versions/default/bin:$PATH patch --force --backup --forward --silent %s %s >/dev/null" % (merge, user_path), "w")
         f.write(version_patch)
         status = f.close()
         if status:
@@ -1652,12 +1652,42 @@ def main_uninstall(args, options={}):
     sys.stdout.write("Good bye.\n")
 
 
+def main_setversion(args, options={}):
+    if len(args) == 0:
+        ok, version = dialog_menu("Choose new default",
+                "Please choose the version to make the new default",
+                [ (v, "Version %s" % v) for v in omd_versions() if not v == default_version() ],
+                None,
+                "Make default",
+                "Cancel")
+        if not ok:
+            bail_out("Aborted.\n")
+    else:
+        version = args[0]
+
+    if not version in omd_versions():
+        bail_out("The given version does not exist.\n")
+    if version == default_version():
+        bail_out("The given version is already default.\n")
+
+    if os.path.exists("/omd/versions/default"):
+	os.remove("/omd/versions/default")
+    os.symlink("/omd/versions/%s" % version, "/omd/versions/default")
+
+
 def main_version(args, options={}):
     sys.stdout.write("OMD - Open Monitoring Distribution Version %s\n" % g_info["OMD_VERSION"])
 
+
 def main_versions(args, options={}):
     for v in omd_versions():
-        sys.stdout.write("%s\n" % v)
+        if v == default_version():
+            sys.stdout.write("%s (default)\n" % v)
+        else:
+            sys.stdout.write("%s\n" % v)
+
+def default_version():
+    return os.path.basename(os.path.realpath("/omd/versions/default"))
 
 def omd_versions():
     v = [ v for v in os.listdir("/omd/versions") if v != "default" ]
@@ -1668,7 +1698,11 @@ def main_sites(args, options={}):
     if on_tty:
 	sys.stdout.write("SITE             VERSION\n")
     for site in all_sites():
-	sys.stdout.write("%-16s %s\n" % (site, site_version(site)))
+        v = site_version(site)
+        if v == default_version():
+	    sys.stdout.write("%-16s %s (default)\n" % (site, v))
+        else:
+            sys.stdout.write("%-16s %s\n" % (site, v))
 
 # Bail out if name for new site is not valid (needed by create/mv/cp)
 def sitename_must_be_valid(name):
@@ -2004,6 +2038,11 @@ commands = [
 
     "BE WARNED: You are about to remove everything your system\n"
     "           have ever known about omd."),
+
+  ( "setversion", True, 0, 0, False, "VERSION", main_setversion,
+    [],
+    "Sets the default version of OMD which will be used by new sites",
+    ""),
 
   ( "version",   False, 0, 0, False, "",        main_version,
     [],
