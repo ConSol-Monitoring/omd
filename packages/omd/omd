@@ -1637,11 +1637,12 @@ def main_setup(args, options={}):
     # set SUID bit for certain plugins (neccessary for
     # non RPM/DEB installations (FIXME: find a more elegant
     # solution later)
+    gid = group_id('omd')
     for plugin in [ 'check_icmp', 'check_dhcp' ]:
         path = os.pat.join("/omd/versions", OMD_VERSION,
                            "lib/nagios/plugins", plugin)
-        os.system("chgrp omd '%s'" % path)
-        os.system("chmod 4750 '%s'" % path)
+        os.chown(path, -1, gid)
+        os.chmod(path, 04750)
 
 
 def main_uninstall(args, options={}):
@@ -1657,7 +1658,7 @@ def main_uninstall(args, options={}):
                   os.path.join(g_info["APACHE_CONF_DIR"], "zzz_omd.conf"),
                   "/etc/init.d/omd",
                   "/usr/bin/omd" ]:
-        os.system("rm -rf '%s'" % path)
+        shutil.rmtree(path, ignore_errors=True)
 
     groupdel('omd')
 
@@ -1739,7 +1740,7 @@ def main_create(args, options={}):
 
     sitedir = site_dir(g_sitename)
     os.makedirs(sitedir)
-    os.system("chown %s:%s '%s'" % (g_sitename, g_sitename, sitedir))
+    os.chown(sitedir, pwd.getpwnam(g_sitename).pw_uid, group_id(g_sitename))
     add_to_fstab(g_sitename)
 
     # Create symbolic link to version
@@ -1759,7 +1760,7 @@ def main_create(args, options={}):
     config_save()
 
     # Change ownership of all files and dirs to site user
-    os.system("chown -R %s:%s '%s'" % (g_sitename, g_sitename, sitedir))
+    chown_tree(sitedir, g_sitename)
 
     # Create include-hook for Apache and reload apache
     create_apache_hook(g_sitename)
