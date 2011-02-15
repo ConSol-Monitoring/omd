@@ -791,6 +791,8 @@ def merge_update_file(relpath, old_version, new_version):
             return 0
 
     if try_merge() == 0:
+        # ACHTUNG: Hier müssen die Dateien $DATEI-alt, $DATEI-neu und $DATEI.orig
+        # gelöscht werden
         sys.stdout.write(good + " Merged         %s\n" % fn)
 	return
 
