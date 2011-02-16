@@ -143,6 +143,11 @@ sub test_command {
         ok(sleep($test->{'sleep'}), "slept $test->{'sleep'} seconds") or do { $return = 0 };
     }
 
+    # set some values
+    $test->{'stdout'} = $t->stdout;
+    $test->{'stderr'} = $t->stderr;
+    $test->{'exit'}   = $rc;
+
     return $return;
 }
 
