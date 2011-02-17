@@ -59,7 +59,6 @@ install:
 	# TODO: Add config file option
 	rm $(DESTDIR)$(OMD_ROOT)/lib/pnp4nagios/verify_pnp_config.pl
 	rm $(DESTDIR)$(OMD_ROOT)/lib/pnp4nagios/rrd_convert.pl
-	rm $(DESTDIR)$(OMD_ROOT)/lib/pnp4nagios/check_pnp_rrds.pl
 
 
 
