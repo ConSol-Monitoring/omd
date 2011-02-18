@@ -1,5 +1,5 @@
 DISTRO_CODE     = sles11
-BUILD_PACKAGES  = ""
+BUILD_PACKAGES  =
 BUILD_PACKAGES += cairo-devel
 BUILD_PACKAGES += freetype2-devel
 BUILD_PACKAGES += gcc
@@ -21,7 +21,7 @@ BUILD_PACKAGES += patch
 BUILD_PACKAGES += python
 BUILD_PACKAGES += python-devel
 BUILD_PACKAGES += readline-devel
-OS_PACKAGES     = ""
+OS_PACKAGES     =
 OS_PACKAGES    += apache2
 OS_PACKAGES    += apache2-mod_fcgid
 OS_PACKAGES    += apache2-mod_php5

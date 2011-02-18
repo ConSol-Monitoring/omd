@@ -1,5 +1,5 @@
 DISTRO_CODE     = maverick
-BUILD_PACKAGES  = ""
+BUILD_PACKAGES  =
 BUILD_PACKAGES += build-essential
 BUILD_PACKAGES += dpatch
 BUILD_PACKAGES += git-buildpackage
@@ -20,7 +20,7 @@ BUILD_PACKAGES += patch
 BUILD_PACKAGES += python-dev
 BUILD_PACKAGES += python-setuptools
 BUILD_PACKAGES += snmp
-OS_PACKAGES     = ""
+OS_PACKAGES     =
 OS_PACKAGES    += curl
 OS_PACKAGES    += dialog
 OS_PACKAGES    += dnsutils
