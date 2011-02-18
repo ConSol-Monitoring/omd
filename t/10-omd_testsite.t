@@ -40,8 +40,8 @@ my $tests = [
   { cmd => $omd_bin." stop $site",       like => '/Stopping nagios/' },
   { cmd => $omd_bin." cp $site $site2",  like => '/Copying site '.$site.' to '.$site2.'.../', errlike => '/Apache port \d+ is in use\. I\'ve choosen \d+ instead\./' },
   { cmd => $omd_bin." mv $site2 $site3", like => '/Moving site '.$site2.' to '.$site3.'.../' },
-  { cmd => $omd_bin." rm $site3",        like => '/Restarting Apache...OK/', stdin => "yes\n" },
-  { cmd => $omd_bin." rm $site",         like => '/Restarting Apache...OK/', stdin => "yes\n" },
+  { cmd => $omd_bin." rm $site3",        like => '/Restarting Apache...\s*OK/', stdin => "yes\n" },
+  { cmd => $omd_bin." rm $site",         like => '/Restarting Apache...\s*OK/', stdin => "yes\n" },
 ];
 
 # run tests
