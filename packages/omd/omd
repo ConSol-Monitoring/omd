@@ -555,7 +555,7 @@ def create_tmpfs(sitename):
         switch_to_site_user()
 
     tmp = tmp_dir(sitename)
-    print "Creating temporary filesystem..."
+    print "Creating temporary filesystem...",
     sys.stdout.flush()
     if not os.path.exists(tmp):
         os.mkdir(tmp)
@@ -568,7 +568,7 @@ def create_tmpfs(sitename):
 
 def unmount_tmpfs(sitename):
     if tmpfs_mounted(sitename):
-        print "Unmounting temporary filesystem..."
+        print "Unmounting temporary filesystem...",
         for t in range(0, 10):
             if 0 == os.system("umount '%s'" % tmp_dir(sitename)):
                 print tty_ok
@@ -587,7 +587,7 @@ def add_to_fstab(sitename):
 
 def remove_from_fstab(sitename):
     mountpoint = tmp_dir(sitename)
-    print "Removing", mountpoint, "from /etc/fstab..."
+    print "Removing", mountpoint, "from /etc/fstab...",
     newtab = open("/etc/fstab.new", "w")
     for line in open("/etc/fstab"):
         if "uid=%s," % sitename in line and mountpoint in line:
@@ -673,7 +673,7 @@ def reload_apache():
     show_success(os.system("%s reload" % g_info["APACHE_CTL"]))
 
 def restart_apache():
-    print "Restarting Apache..."
+    print "Restarting Apache...",
     sys.stdout.flush()
     show_success(os.system("%s restart >/dev/null" % g_info["APACHE_INIT"]))
 
@@ -1810,7 +1810,7 @@ def main_rm(args, options={}):
     unmount_tmpfs(g_sitename)
 
     remove_from_fstab(g_sitename)
-    print "Deleting user and group", g_sitename, "..."
+    print "Deleting user and group", g_sitename, "...",
     os.chdir("/") # Site dir not longer existant after userdel
     userdel(g_sitename)
     print tty_ok
