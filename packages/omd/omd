@@ -273,7 +273,7 @@ def read_info():
     info_dir = omd_root() + "/share/omd"
     for f in os.listdir(info_dir):
         if f.endswith(".info"):
-            for line in open(info_dir + "/" + f):
+            for line in file(info_dir + "/" + f):
                 var, value = line.split('=')
                 value = value.strip()
                 if var.endswith("+"):
@@ -292,7 +292,7 @@ def load_skel_permissions(version):
     perms = {}
     file_path = "/omd/versions/%s/share/omd/skel.permissions" % version
     try:
-        for line in open(file_path):
+        for line in file(file_path):
             line = line.strip()
             if line == "" or line[0] == "#":
                 continue
@@ -489,7 +489,7 @@ def set_environment():
     envfile = g_sitedir + "/etc/environment"
     if os.path.exists(envfile):
         lineno = 0
-        for line in open(envfile):
+        for line in file(envfile):
             lineno += 1
             line = line.strip()
             if line == "" or line[0] == "#":
@@ -523,7 +523,7 @@ def tmpfs_mounted(sitename):
     # then in /proc/mounts the physical path will appear and be
     # different from tmp_path. We just check the suffix therefore.
     path_suffix = "sites/%s/tmp" % sitename
-    for line in open("/proc/mounts"):
+    for line in file("/proc/mounts"):
         device, mp, fstype, options, dump, fsck = line.split()
         if mp.endswith(path_suffix) and fstype == 'tmpfs':
             return True
@@ -563,13 +563,13 @@ def add_to_fstab(sitename):
     # tmpfs                   /opt/omd/sites/b01/tmp  tmpfs   user,uid=b01,gid=b01 0 0
     mountpoint = tmp_dir(sitename)
     sys.stdout.write("Adding %s to /etc/fstab.\n" % mountpoint)
-    open("/etc/fstab", "a+").write("tmpfs  %s tmpfs noauto,user,mode=755,uid=%s,gid=%s 0 0\n" % \
+    file("/etc/fstab", "a+").write("tmpfs  %s tmpfs noauto,user,mode=755,uid=%s,gid=%s 0 0\n" % \
         (mountpoint, sitename, sitename))
 
 def remove_from_fstab(sitename):
     mountpoint = tmp_dir(sitename)
     sys.stdout.write("Removing %s from /etc/fstab..." % mountpoint)
-    newtab = open("/etc/fstab.new", "w")
+    newtab = file("/etc/fstab.new", "w")
     for line in file("/etc/fstab"):
         if "uid=%s," % sitename in line and mountpoint in line:
             continue
@@ -624,7 +624,7 @@ def create_skeleton_file(skelbase, userbase, relpath, replacements):
     elif os.path.isdir(skel_path):
         os.makedirs(user_path)
     else:
-        open(user_path, "w").write(replace_tags(open(skel_path).read(), replacements))
+        file(user_path, "w").write(replace_tags(file(skel_path).read(), replacements))
 
     if not os.path.islink(skel_path):
         mode = g_skel_permissions.get(relpath)
@@ -637,7 +637,7 @@ def create_skeleton_file(skelbase, userbase, relpath, replacements):
 
 
 def create_apache_hook(sitename):
-    open("/omd/apache/%s.conf" % sitename, "w").write("Include %s/etc/apache/mode.conf\n" % site_dir(sitename))
+    file("/omd/apache/%s.conf" % sitename, "w").write("Include %s/etc/apache/mode.conf\n" % site_dir(sitename))
 
 def delete_apache_hook(sitename):
     hook_path = "/omd/apache/%s.conf" % sitename
@@ -705,7 +705,7 @@ def chown_tree(dir, user):
 
 def instantiate_skel(path):
     try:
-        t = open(path).read()
+        t = file(path).read()
         replacements = {
             "###SITE###" : g_sitename,
             "###ROOT###" : g_sitedir,
@@ -717,13 +717,13 @@ def instantiate_skel(path):
 
 def patch_template_file(src, dst, old, new):
     # Create patch from old instanciated skeleton file to new one
-    content = open(src).read()
+    content = file(src).read()
     for site in [ old, new ]:
         replacements = {
             "###SITE###" : site,
             "###ROOT###" : site_dir(site),
         }
-        open("%s.skel.%s" % (dst, site), "w").write(replace_tags(content, replacements))
+        file("%s.skel.%s" % (dst, site), "w").write(replace_tags(content, replacements))
 
     # Now create patch from old to new and immediately apply on
     # existing - possibly user modified - file.
@@ -755,7 +755,7 @@ def merge_update_file(relpath, old_version, new_version):
         "###ROOT###" : g_sitedir,
     }
     user_path = g_sitedir + "/" + relpath
-    content = open(user_path).read()
+    content = file(user_path).read()
     permissions = os.stat(user_path).st_mode
 
     def try_merge():
@@ -763,7 +763,7 @@ def merge_update_file(relpath, old_version, new_version):
             p = "/omd/versions/%s/skel/%s" % (version, relpath)
             while True:
                 try:
-                    skel_content = open(p).read()
+                    skel_content = file(p).read()
                     break
                 except:
                     if not user_confirms("Skeleton file of version %s not readable" % version,
@@ -780,7 +780,7 @@ def merge_update_file(relpath, old_version, new_version):
                         "ignore", "Assume the file to be empty"):
                         skel_content = ""
                         break
-            open("%s-%s" % (user_path, version), "w").write(replace_tags(skel_content, replacements))
+            file("%s-%s" % (user_path, version), "w").write(replace_tags(skel_content, replacements))
         version_patch = os.popen("diff -u %s-%s %s-%s" % (user_path, old_version, user_path, new_version)).read()
 
         # First try to merge the changes in the version into the users' file
@@ -840,7 +840,7 @@ def merge_update_file(relpath, old_version, new_version):
             os.system("diff -u %s-%s %s-%s" % (user_path, old_version, user_path, new_version))
         elif choice == "missing":
             if os.path.exists(reject_file):
-                sys.stdout.write(tty_bgblue + tty_white + open(reject_file).read() + tty_normal)
+                sys.stdout.write(tty_bgblue + tty_white + file(reject_file).read() + tty_normal)
             else:
                 sys.stdout.write("File %s not found.\n" % reject_file)
 
@@ -924,7 +924,7 @@ def update_file(old_version, new_version, userdir, relpath, old_perms):
         old_content = instantiate_skel(old_path)
 
     if user_type == "file":
-        user_content = open(user_path).read()
+        user_content = file(user_path).read()
 
     if new_type == "file":
         new_content = instantiate_skel(new_path)
@@ -1309,7 +1309,7 @@ def config_load():
     if not os.path.exists(confpath):
         return
 
-    for line in open(confpath):
+    for line in file(confpath):
         line = line.strip()
         if line == "" or line[0] == "#":
             continue
@@ -1328,7 +1328,7 @@ def config_save():
     confdir = g_sitedir + "/etc/omd"
     if not os.path.exists(confdir):
         os.mkdir(confdir)
-    f = open(g_sitedir + "/etc/omd/site.conf", "w")
+    f = file(g_sitedir + "/etc/omd/site.conf", "w")
     hooknames = g_hooks.keys()
     hooknames.sort()
     for hookname in hooknames:
