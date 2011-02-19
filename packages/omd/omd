@@ -38,11 +38,6 @@ from subprocess import *
 
 OMD_VERSION = "0.47"
 
-class FT_FILE: pass
-class FT_DIR: pass
-class FT_LINK: pass
-
-
 # colored output, if stdout is a tty
 on_tty = sys.stdout.isatty()
 
@@ -907,13 +902,13 @@ def filetype(p):
     # case os.path.exists checks the links target for existance
     # and reports it is non-existing.
     if os.path.islink(p):
-        tp = FT_LINK
+        tp = "link"
     elif not os.path.exists(p):
         tp = None
     elif os.path.isdir(p):
-        tp = FT_DIR
+        tp = "dir"
     else:
-        tp = FT_FILE
+        tp = "file"
     return tp
 
 
@@ -934,46 +929,43 @@ def update_file(old_version, new_version, userdir, relpath, old_perms):
     new_type  = filetype(new_path)
     user_type = filetype(user_path)
 
-    if old_type is FT_FILE:
+    if old_type == "file":
         old_content = instantiate_skel(old_path)
 
-    if user_type is FT_FILE:
+    if user_type == "file":
         user_content = open(user_path).read()
 
-    if new_type is FT_FILE:
+    if new_type == "file":
         new_content = instantiate_skel(new_path)
 
     # compare our new version with the user's version
     type_differs = user_type != new_type
-    content_differs = ((user_type is FT_FILE
-                        and new_type is FT_FILE
-                        and user_content != new_content)
-                       or
-                       (user_type is FT_LINK
-                        and new_type is FT_LINK
-                        and os.readlink(user_path) != os.readlink(new_path)))
+    content_differs =   (user_type == "file" \
+                           and new_type == "file" \
+                           and user_content != new_content) or \
+                           (user_type == "link" \
+                            and new_type == "link" \
+                            and os.readlink(user_path) != os.readlink(new_path))
     differs = type_differs or content_differs
 
     # compare our old version with the user's version
     user_changed_type = old_type != user_type
-    user_changed_content = ((old_type is FT_FILE
-                             and user_type is FT_FILE
-                             and old_content != user_content)
-                            or
-                            (old_type is FT_LINK
-                             and user_type is FT_LINK
-                             and os.readlink(old_path) != os.readlink(user_path)))
+    user_changed_content = (old_type == "file" \
+                           and user_type == "file" \
+                           and old_content != user_content) or \
+                           (old_type == "link" \
+                            and user_type == "link" \
+                            and os.readlink(old_path) != os.readlink(user_path))
     user_changed = user_changed_type or user_changed_content
 
     # compare our old with our new version
     we_changed_type = old_type != new_type
-    we_changed_content = ((old_type is FT_FILE
-                           and new_type is FT_FILE
-                           and old_content != new_content)
-                          or
-                          (old_type is FT_LINK
-                           and new_type is FT_LINK
-                           and os.readlink(old_path) != os.readlink(new_path)))
+    we_changed_content =   (old_type == "file" \
+                           and new_type == "file" \
+                           and old_content != new_content) or \
+                           (old_type == "link" \
+                            and new_type == "link" \
+                            and os.readlink(old_path) != os.readlink(new_path))
     we_changed = we_changed_type or we_changed_content
 
 #     if opt_verbose:
@@ -1084,7 +1076,7 @@ def update_file(old_version, new_version, userdir, relpath, old_perms):
 
     # C ---> PATCH DAY, HANDLE FILES
     # 7) old, new and user are files. And all are different
-    elif old_type is FT_FILE and new_type is FT_FILE and user_type is FT_FILE:
+    elif old_type == "file" and new_type == "file" and user_type == "file":
         try:
             merge_update_file(relpath, old_version, new_version)
         except KeyboardInterrupt:
@@ -1094,7 +1086,7 @@ def update_file(old_version, new_version, userdir, relpath, old_perms):
 
     # D ---> SYMLINKS
     # 8) all are symlinks, all changed
-    elif old_type is FT_LINK and new_type is FT_LINK and user_type is FT_LINK:
+    elif old_type == "link" and new_type == "link" and user_type == "link":
         if user_confirms("Symbolic link conflict at " + relpath,
                 "'%s' is a symlink that pointed to "
                 "%s in the old version and to "
@@ -1186,7 +1178,7 @@ def update_file(old_version, new_version, userdir, relpath, old_perms):
     # Fix permissions not for links and only if the new type is as expected
     # and the current permissions are not as the should be
     what = None
-    if new_type is not FT_LINK \
+    if new_type != "link" \
         and user_type == new_type \
         and user_perm != new_perm:
 
