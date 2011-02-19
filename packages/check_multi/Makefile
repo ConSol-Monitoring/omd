@@ -3,7 +3,7 @@ include ../../Makefile.omd
 .PHONY: skel
 
 NAME     = check_multi
-VERSION  = 634c295
+VERSION  = 81ccb8f
 SRCDIR   = $(NAME)-$(VERSION)
 ROOTDIR  = \\\$$ENV{OMD_ROOT}
 SITE     = \\\$$ENV{OMD_SITE}
