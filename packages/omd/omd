@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- encoding: utf-8; py-indent-offset: 4 -*-
+# vim: tabstop=4 expandtab shiftwidth=4 softtabstop=4
 #
 #       U  ___ u  __  __   ____
 #        \/"_ \/U|' \/ '|u|  _"\
@@ -98,9 +99,9 @@ def patch_has_merge():
     # check wether our version of patch supports the option '--merge'
     global patch_supports_merge
     if patch_supports_merge == None:
-	patch_supports_merge = (0 == os.system("true | patch --merge >/dev/null 2>&1"))
+        patch_supports_merge = (0 == os.system("true | PATH=/omd/versions/default/bin:$PATH patch --merge >/dev/null 2>&1"))
         if not patch_supports_merge:
-	    sys.stdout.write("Your version of patch does not support --merge.\n")
+            sys.stdout.write("Your version of patch does not support --merge.\n")
     return patch_supports_merge
 
 
@@ -152,13 +153,11 @@ def user_confirms(title, message, relpath, yes_choice, yes_text, no_choice, no_t
     while True:
         choice = ask_user_choices(title, message, options)
         if choice == "abort":
-	    sys.stdout.write("Update aborted.\n")
-	    sys.exit(1)
-	elif choice == "shell":
-            relname = relpath.split("/")[-1]
-	    sys.stdout.write("\n Starting BASH. Type CTRL-D to continue.\n\n")
-	    thedir = "/".join(user_path.split("/")[:-1])
-	    os.system("cd '%s' ; bash -i" % thedir)
+            bail_out("Update aborted.")
+        elif choice == "shell":
+	        thedir = "/".join(user_path.split("/")[:-1])
+            sys.stdout.write("\n Starting BASH. Type CTRL-D to continue.\n\n")
+            os.system("cd '%s' ; bash -i" % thedir)
         else:
             return choice == yes_choice
 
@@ -238,13 +237,13 @@ def ask_user_choices(title, message, choices):
     empty_line = " %s%-78s%s\n" % (tty_bgblue + tty_white, "", tty_normal)
     sys.stdout.write(empty_line)
     for choice, title in choices:
-	sys.stdout.write(" %s %s%s%s%-10s %-65s%s\n" % 
+        sys.stdout.write(" %s %s%s%s%-10s %-65s%s\n" % 
                 (tty_bgblue + tty_white, tty_bold, choice[0], 
                  tty_normal + tty_bgblue + tty_white, choice[1:], title, tty_normal))
-	for c in choice:
-	    if c.lower() not in chars:
-		chars.append(c)
-		break
+        for c in choice:
+            if c.lower() not in chars:
+                chars.append(c)
+                break
     sys.stdout.write(empty_line)
 
     choicetxt = (tty_bold + tty_magenta + "/").join([(tty_bold + tty_white + char + tty_normal + tty_bgmagenta) for (char, (c,t)) in zip(chars, choices)])
@@ -255,15 +254,14 @@ def ask_user_choices(title, message, choices):
     sys.stdout.write("\b" * (71 - l))
     sys.stdout.write(tty_normal)
     while True:
-	a = getch()
-	for char, (choice, title) in zip(chars, choices):
-	    if a == char:
+        a = getch()
+        for char, (choice, title) in zip(chars, choices):
+            if a == char:
                 sys.stdout.write(tty_bold + tty_bgred + tty_white + a + tty_normal + "\n\n")
-		return choice
+                return choice
 
 def bail_out(message):
-    sys.stderr.write(message)
-    sys.exit(1)
+    sys.exit(message)
 
 def omd_root():
     return "/omd/versions/" + OMD_VERSION
@@ -274,16 +272,21 @@ def read_info():
     g_info = {}
     info_dir = omd_root() + "/share/omd"
     for f in os.listdir(info_dir):
-	if f.endswith(".info"):
-	    for line in file(info_dir + "/" + f):
-	       var, value = line.split('=')
-	       g_info[var.strip()] = value.strip()
+        if f.endswith(".info"):
+            for line in file(info_dir + "/" + f):
+                var, value = line.split('=')
+                value = value.strip()
+                if var.endswith("+"):
+                    var = var[:-1] # remove +
+                    g_info[var.strip()] += " " + value
+                else:
+                    g_info[var.strip()] = value
 
 def read_skel_permissions():
     global g_skel_permissions
     g_skel_permissions = load_skel_permissions(OMD_VERSION)
     if not g_skel_permissions:
-        bail_out("%s is missing or currupted.\n" % file_path)
+        bail_out("%s is missing or currupted." % file_path)
 
 def load_skel_permissions(version):
     perms = {}
@@ -335,7 +338,7 @@ def site_version(sitename):
 def create_version_symlink(sitename, version):
     linkname = site_dir(sitename) + "/version"
     if os.path.exists(linkname):
-	os.remove(linkname)
+        os.remove(linkname)
     os.symlink("../../versions/%s" % OMD_VERSION, linkname)
 
 
@@ -364,7 +367,7 @@ def groupadd(groupname, gid = None):
     cmd += groupname
 
     if 0 != os.system(cmd):
-        bail_out("Cannot create group for site user.\n")
+        bail_out("Cannot create group for site user.")
 
 def useradd(sitename, uid = None, gid = None):
     # Create user for running site 'name'
@@ -375,7 +378,7 @@ def useradd(sitename, uid = None, gid = None):
     if 0 != os.system("useradd %s -d '%s' -c 'OMD site %s' -g %s -G omd %s -s /bin/bash" % \
                       (useradd_options, site_dir(sitename), sitename, sitename, sitename)):
         groupdel(sitename)
-        bail_out("Error creating site user.\n")
+        bail_out("Error creating site user.")
 
     # Add Apache to new group. It needs to be able to write in to the
     # command pipe and possible other stuff
@@ -394,24 +397,24 @@ def userdel(name):
 
 def user_exists(name):
     try:
-	pwd.getpwnam(name)
-	return True
+        pwd.getpwnam(name)
+        return True
     except:
-	return False
+        return False
 
 def group_exists(name):
     try:
-	grp.getgrnam(name)
-	return True
+        grp.getgrnam(name)
+        return True
     except:
-	return False
+        return False
 
 def group_id(name):
     try:
-	g = grp.getgrnam(name)
-	return g.gr_gid
+        g = grp.getgrnam(name)
+        return g.gr_gid
     except:
-	return None
+        return None
 
 def user_logged_in(name):
     # Check, if processes of named user are existing
@@ -493,7 +496,7 @@ def set_environment():
                 continue # allow empty lines and comments
             parts = line.split("=")
             if len(parts) != 2:
-                bail_out("%s: syntax error in line %d\n" % (envfile, lineno))
+                bail_out("%s: syntax error in line %d" % (envfile, lineno))
             varname = parts[0]
             value = parts[1]
             if value.startswith('"'):
@@ -547,14 +550,14 @@ def create_tmpfs(sitename):
 def unmount_tmpfs(sitename):
     if tmpfs_mounted(sitename):
         sys.stdout.write("Unmounting temporary filesystem...")
-	for t in range(0, 10):
-	    if 0 == os.system("umount '%s'" % tmp_dir(sitename)):
-	        sys.stdout.write(tty_ok + "\n")
-		return
-	    sys.stdout.write(".")
-	    sys.stdout.flush()
-	    time.sleep(1)
-        bail_out(tty_error + ": Cannot unmount tmp filesystem.\n")
+        for t in range(0, 10):
+            if 0 == os.system("umount '%s'" % tmp_dir(sitename)):
+                sys.stdout.write(tty_ok + "\n")
+                return
+            sys.stdout.write(".")
+            sys.stdout.flush()
+            time.sleep(1)
+        bail_out(tty_error + ": Cannot unmount tmp filesystem.")
 
 def add_to_fstab(sitename):
     # tmpfs                   /opt/omd/sites/b01/tmp  tmpfs   user,uid=b01,gid=b01 0 0
@@ -582,8 +585,8 @@ def create_skeleton_files(sitename, dir):
     read_skel_permissions()
     sitedir = site_dir(sitename)
     replacements = {
-	"###SITE###" : sitename,
-	"###ROOT###" : sitedir,
+        "###SITE###" : sitename,
+        "###ROOT###" : sitedir,
     }
     # Hack: exclude tmp if dir is '.'
     exclude_tmp = dir == "."
@@ -592,19 +595,19 @@ def create_skeleton_files(sitename, dir):
     for dirpath, dirnames, filenames in os.walk(dir):
         if dirpath.startswith("./"):
             dirpath = dirpath[2:]
-	for entry in dirnames + filenames:
+        for entry in dirnames + filenames:
             if exclude_tmp:
                 if dirpath == "." and entry == "tmp":
                     continue
                 if dirpath == "tmp" or dirpath.startswith("tmp/"):
                     continue
-	    create_skeleton_file(skelroot, sitedir, dirpath + "/" + entry, replacements)
+	        create_skeleton_file(skelroot, sitedir, dirpath + "/" + entry, replacements)
 
 def delete_user_file(user_path):
     if not os.path.islink(user_path) and os.path.isdir(user_path):
-	shutil.rmtree(user_path)
+        shutil.rmtree(user_path)
     else:
-	os.remove(user_path)
+        os.remove(user_path)
 
 
 def create_skeleton_file(skelbase, userbase, relpath, replacements):
@@ -613,15 +616,15 @@ def create_skeleton_file(skelbase, userbase, relpath, replacements):
 
     # Remove old version, if existing (needed during update)
     if os.path.exists(user_path):
-	delete_user_file(user_path)
+        delete_user_file(user_path)
 
     # Create directories, symlinks and files
     if os.path.islink(skel_path):
         os.symlink(os.readlink(skel_path), user_path)
     elif os.path.isdir(skel_path):
-	os.makedirs(user_path)
+        os.makedirs(user_path)
     else:
-	file(user_path, "w").write(replace_tags(file(skel_path).read(), replacements))
+        file(user_path, "w").write(replace_tags(file(skel_path).read(), replacements))
 
     if not os.path.islink(skel_path):
         mode = g_skel_permissions.get(relpath)
@@ -630,7 +633,7 @@ def create_skeleton_file(skelbase, userbase, relpath, replacements):
                 mode = 0755
             else:
                 mode = 0644
-	os.chmod(user_path, mode)
+        os.chmod(user_path, mode)
 
 
 def create_apache_hook(sitename):
@@ -641,9 +644,9 @@ def delete_apache_hook(sitename):
     if not os.path.exists(hook_path):
         return
     try:
-	os.remove(hook_path)
+        os.remove(hook_path)
     except Exception, e:
-	sys.stderr.write("Cannot remove apache hook %s: %s\n" % (hook_path, e))
+        sys.stderr.write("Cannot remove apache hook %s: %s\n" % (hook_path, e))
 
 def reload_apache():
     sys.stdout.write("Reloading Apache...")
@@ -684,8 +687,8 @@ def patch_skeleton_files(old, new):
             dst = targetdir + "/" + fn
             if os.path.isfile(src) and not os.path.islink(src) \
                 and os.path.exists(dst): # not deleted by user
-		try:
-		    patch_template_file(src, dst, old, new)
+                try:
+                    patch_template_file(src, dst, old, new)
                 except Exception, e:
                     sys.stderr.write("Error patching template file '%s': %s\n" %
                             (dst, e))
@@ -724,7 +727,7 @@ def patch_template_file(src, dst, old, new):
 
     # Now create patch from old to new and immediately apply on
     # existing - possibly user modified - file.
-    if 0 == os.system("diff -u %s.skel.%s %s.skel.%s | patch --force --backup --forward --silent %s" %
+    if 0 == os.system("diff -u %s.skel.%s %s.skel.%s | PATH=/omd/versions/default/bin:$PATH patch --force --backup --forward --silent %s" %
             (dst, old, dst, new, dst)):
         # remove unnecessary files
         try:
@@ -782,7 +785,7 @@ def merge_update_file(relpath, old_version, new_version):
 
         # First try to merge the changes in the version into the users' file
         merge = patch_has_merge() and "--merge" or ""
-        f = os.popen("patch --force --backup --forward --silent %s %s >/dev/null" % (merge, user_path), "w")
+        f = os.popen("PATH=/omd/versions/default/bin:$PATH patch --force --backup --forward --silent %s %s >/dev/null" % (merge, user_path), "w")
         f.write(version_patch)
         status = f.close()
         if status:
@@ -791,8 +794,10 @@ def merge_update_file(relpath, old_version, new_version):
             return 0
 
     if try_merge() == 0:
+        # ACHTUNG: Hier müssen die Dateien $DATEI-alt, $DATEI-neu und $DATEI.orig
+        # gelöscht werden
         sys.stdout.write(good + " Merged         %s\n" % fn)
-	return
+        return
 
     # No success. Should we try merging the users' changes onto the new file?
     # user_patch = os.popen(
@@ -817,30 +822,29 @@ def merge_update_file(relpath, old_version, new_version):
     ]
 
     while True:
-	choice = ask_user_choices("Conflicts in " + relpath + "!", "I've tried to merge the changes from version %s to %s into %s.\n"
-	   "Unfortunately there are conflicts with your changes. \n"
-	   "You have the following options: " %
-		( old_version, new_version, relpath ), options)
+        choice = ask_user_choices("Conflicts in " + relpath + "!", "I've tried to merge the changes from version %s to %s into %s.\n"
+           "Unfortunately there are conflicts with your changes. \n"
+           "You have the following options: " %
+                ( old_version, new_version, relpath ), options)
         if choice == "abort":
-	    sys.stdout.write("Update aborted.\n")
-	    sys.exit(1)
-	if choice == "keep":
-	    break
-	elif choice == "edit":
-	    os.system("%s '%s'" % (editor, user_path))
-	elif choice == "diff":
-	    os.system("diff -u %s.orig %s-%s" % (user_path, user_path, new_version))
-	elif choice == "you":
-	    os.system("diff -u %s-%s %s.orig" % (user_path, old_version, user_path))
-	elif choice == "new":
-	    os.system("diff -u %s-%s %s-%s" % (user_path, old_version, user_path, new_version))
+            bail_out("Update aborted.")
+        if choice == "keep":
+            break
+        elif choice == "edit":
+            os.system("%s '%s'" % (editor, user_path))
+        elif choice == "diff":
+            os.system("diff -u %s.orig %s-%s" % (user_path, user_path, new_version))
+        elif choice == "you":
+            os.system("diff -u %s-%s %s.orig" % (user_path, old_version, user_path))
+        elif choice == "new":
+            os.system("diff -u %s-%s %s-%s" % (user_path, old_version, user_path, new_version))
         elif choice == "missing":
-	    if os.path.exists(reject_file):
-		sys.stdout.write(tty_bgblue + tty_white + file(reject_file).read() + tty_normal)
-	    else:
-		sys.stdout.write("File %s not found.\n" % reject_file)
+            if os.path.exists(reject_file):
+                sys.stdout.write(tty_bgblue + tty_white + file(reject_file).read() + tty_normal)
+            else:
+                sys.stdout.write("File %s not found.\n" % reject_file)
 
-	elif choice == "shell":
+        elif choice == "shell":
             relname = relpath.split("/")[-1]
             sys.stdout.write(" %-25s: the current half-merged file\n" % relname)
             sys.stdout.write(" %-25s: the default version of %s\n" % (relname + "." + old_version, old_version))
@@ -849,17 +853,17 @@ def merge_update_file(relpath, old_version, new_version):
             if os.path.exists(reject_file):
                 sys.stdout.write(" %-25s: changes that haven't been merged\n" % relname + ".rej")
 
-	    sys.stdout.write("\n Starting BASH. Type CTRL-D to continue.\n\n")
-	    thedir = "/".join(user_path.split("/")[:-1])
-	    os.system("cd '%s' ; bash -i" % thedir)
-	elif choice == "restore":
-	    os.rename(user_path + ".orig", user_path)
+            sys.stdout.write("\n Starting BASH. Type CTRL-D to continue.\n\n")
+            thedir = "/".join(user_path.split("/")[:-1])
+            os.system("cd '%s' ; bash -i" % thedir)
+        elif choice == "restore":
+            os.rename(user_path + ".orig", user_path)
             os.chmod(user_path, permissions)
-	    sys.stdout.write("Restored your version.\n")
-	    break
+            sys.stdout.write("Restored your version.\n")
+            break
         elif choice == "try again":
-	    os.rename(user_path + ".orig", user_path)
-	    os.system("%s '%s'" % (editor, user_path))
+            os.rename(user_path + ".orig", user_path)
+            os.system("%s '%s'" % (editor, user_path))
             if 0 == try_merge():
                 sys.stdout.write("Successfully merged changes from %s -> %s into %s\n" %
                         (old_version, new_version, fn))
@@ -867,21 +871,21 @@ def merge_update_file(relpath, old_version, new_version):
             else:
                 sys.stdout.write(" Merge failed again.\n")
 
-	else: # install
-	    os.rename("%s-%s" % (user_path, new_version), user_path)
+        else: # install
+            os.rename("%s-%s" % (user_path, new_version), user_path)
             os.chmod(user_path, permissions)
-	    sys.stdout.write("Installed default file of version %s.\n" % new_version)
-	    break
+            sys.stdout.write("Installed default file of version %s.\n" % new_version)
+            break
 
     # Clean up temporary files
     for p in [ "%s-%s" % (user_path, old_version),
-	       "%s-%s" % (user_path, new_version),
-	       "%s.orig" % user_path,
+               "%s-%s" % (user_path, new_version),
+               "%s.orig" % user_path,
                "%s.rej" % user_path]:
-	try:
-	    os.remove(p)
-	except:
-	    pass
+        try:
+            os.remove(p)
+        except:
+            pass
 
 
 def filetype(p):
@@ -889,13 +893,13 @@ def filetype(p):
     # case os.path.exists checks the links target for existance
     # and reports it is non-existing.
     if os.path.islink(p):
-	tp = "link"
+        tp = "link"
     elif not os.path.exists(p):
-	tp = None
+        tp = None
     elif os.path.isdir(p):
-	tp = "dir"
+        tp = "dir"
     else:
-	tp = "file"
+        tp = "file"
     return tp
 
 
@@ -904,8 +908,8 @@ def update_file(old_version, new_version, userdir, relpath, old_perms):
     new_skel = "/omd/versions/%s/skel" % new_version
 
     replacements = {
-	"###SITE###" : g_sitename,
-	"###ROOT###" : g_sitedir,
+        "###SITE###" : g_sitename,
+        "###ROOT###" : g_sitedir,
     }
 
     old_path = old_skel + "/" + relpath
@@ -917,42 +921,42 @@ def update_file(old_version, new_version, userdir, relpath, old_perms):
     user_type = filetype(user_path)
 
     if old_type == "file":
-	old_content = instantiate_skel(old_path)
+        old_content = instantiate_skel(old_path)
 
     if user_type == "file":
-	user_content = file(user_path).read()
+        user_content = file(user_path).read()
 
     if new_type == "file":
-	new_content = instantiate_skel(new_path)
+        new_content = instantiate_skel(new_path)
 
     # compare our new version with the user's version
     type_differs = user_type != new_type
     content_differs =   (user_type == "file" \
-			   and new_type == "file" \
-			   and user_content != new_content) or \
-		           (user_type == "link" \
-			    and new_type == "link" \
-			    and os.readlink(user_path) != os.readlink(new_path))
+                           and new_type == "file" \
+                           and user_content != new_content) or \
+                           (user_type == "link" \
+                            and new_type == "link" \
+                            and os.readlink(user_path) != os.readlink(new_path))
     differs = type_differs or content_differs
 
     # compare our old version with the user's version
     user_changed_type = old_type != user_type
     user_changed_content = (old_type == "file" \
-			   and user_type == "file" \
-			   and old_content != user_content) or \
-		           (old_type == "link" \
-			    and user_type == "link" \
-			    and os.readlink(old_path) != os.readlink(user_path))
+                           and user_type == "file" \
+                           and old_content != user_content) or \
+                           (old_type == "link" \
+                            and user_type == "link" \
+                            and os.readlink(old_path) != os.readlink(user_path))
     user_changed = user_changed_type or user_changed_content
 
     # compare our old with our new version
     we_changed_type = old_type != new_type
     we_changed_content =   (old_type == "file" \
-			   and new_type == "file" \
-			   and old_content != new_content) or \
-		           (old_type == "link" \
-			    and new_type == "link" \
-			    and os.readlink(old_path) != os.readlink(new_path))
+                           and new_type == "file" \
+                           and old_content != new_content) or \
+                           (old_type == "link" \
+                            and new_type == "link" \
+                            and os.readlink(old_path) != os.readlink(new_path))
     we_changed = we_changed_type or we_changed_content
 
 #     if opt_verbose:
@@ -970,69 +974,69 @@ def update_file(old_version, new_version, userdir, relpath, old_perms):
 
     # 1) New version ships new skeleton file -> simply install
     if not old_type and not user_type:
-	create_skeleton_file(new_skel, userdir, relpath, replacements)
-	sys.stdout.write(good + " Installed %-4s %s\n" % (new_type, fn))
+        create_skeleton_file(new_skel, userdir, relpath, replacements)
+        sys.stdout.write(good + " Installed %-4s %s\n" % (new_type, fn))
 
     # 2) new version ships new skeleton file, but user's own file/dir/link
     #    is in the way.
     # 2a) the users file is identical with our new version
     elif not old_type and not differs:
-    	sys.stdout.write(good + " Identical new  %s\n" % fn)
+            sys.stdout.write(good + " Identical new  %s\n" % fn)
 
     # 2b) user's file has a different content or type
     elif not old_type:
-	if user_confirms("Conflict at " + relpath,
+        if user_confirms("Conflict at " + relpath,
                     "The new version ships the %s %s, "
-		    "but you have created a %s in that place "
-		    "yourself. Shall we keep your %s or replace "
-	            "is with my %s?" % (new_type, relpath, user_type, user_type, new_type),
+                    "but you have created a %s in that place "
+                    "yourself. Shall we keep your %s or replace "
+                    "is with my %s?" % (new_type, relpath, user_type, user_type, new_type),
                     relpath,
                     "keep", "Keep your %s" % user_type,
                     "replace", "Replace your %s with the new default %s" % (user_type, new_type)):
-	    sys.stdout.write(warn + " Keeping your   %s\n" % fn)
-	else:
-	    create_skeleton_file(new_skel, userdir, relpath, replacements)
-	    sys.stdout.write(good + " Installed %-4s %s\n" % (new_type, fn))
+            sys.stdout.write(warn + " Keeping your   %s\n" % fn)
+        else:
+            create_skeleton_file(new_skel, userdir, relpath, replacements)
+            sys.stdout.write(good + " Installed %-4s %s\n" % (new_type, fn))
 
     # 3) old version had a file which has vanished in new (got obsolete). If the user
     #    has deleted it himself, we are just happy
     elif not new_type and not user_type:
-	sys.stdout.write(good + " Obsolete       %s\n" % fn)
+        sys.stdout.write(good + " Obsolete       %s\n" % fn)
 
     # 3b) same, but user has not deleted and changed type
     elif not new_type and user_changed_type:
-	if user_confirms("Obsolete file " + relpath,
+        if user_confirms("Obsolete file " + relpath,
                     "The %s %s has become obsolete in "
-		    "this version, but you have changed it into a "
-		    "%s. Do you want to keep your %s or "
-		    "may I delete it for you, please?" % (old_type, relpath, user_type, user_type),
+                    "this version, but you have changed it into a "
+                    "%s. Do you want to keep your %s or "
+                    "may I delete it for you, please?" % (old_type, relpath, user_type, user_type),
                     relpath,
-		    "keep", "Keep your %s" % user_type,
+                    "keep", "Keep your %s" % user_type,
                     "delete", "Delete it"):
-	    sys.stdout.write(warn + " Keeping your   %s\n" % fn)
-	else:
-	    delete_user_file(user_path)
-	    sys.stdout.write(warn + " Deleted        %s\n" % fn)
+            sys.stdout.write(warn + " Keeping your   %s\n" % fn)
+        else:
+            delete_user_file(user_path)
+            sys.stdout.write(warn + " Deleted        %s\n" % fn)
 
     # 3c) same, but user has changed it contents
     elif not new_type and user_changed_content:
-	if user_confirms("Changes in obsolete %s %s" % (old_type, relpath),
+        if user_confirms("Changes in obsolete %s %s" % (old_type, relpath),
                 "The %s %s has become obsolete in "
-	        "the new version, but you have changed its contents. "
-	        "Do you want to keep your %s or "
-	        "may I delete it for you, please?" % (old_type, relpath, user_type),
+                "the new version, but you have changed its contents. "
+                "Do you want to keep your %s or "
+                "may I delete it for you, please?" % (old_type, relpath, user_type),
                 relpath,
                 "keep", "keep your %s, though it is obsolete" % user_type,
                 "delete", "delete your %s" % user_type):
-	    sys.stdout.write(warn + " Keeping your   %s\n" % fn)
-	else:
-	    delete_user_file(user_path)
-	    sys.stdout.write(warn + " Deleted        %s\n" % fn)
+            sys.stdout.write(warn + " Keeping your   %s\n" % fn)
+        else:
+            delete_user_file(user_path)
+            sys.stdout.write(warn + " Deleted        %s\n" % fn)
 
     # 3d) same, but user hasn't changed anything -> silently delete
     elif not new_type:
-	delete_user_file(user_path)
-	sys.stdout.write(good + " Vanished       %s\n" % fn)
+        delete_user_file(user_path)
+        sys.stdout.write(good + " Vanished       %s\n" % fn)
 
     # 4) old and new exist, but user file not. User has deleted that
     #    file. We simply do nothing in that case. The user surely has
@@ -1042,22 +1046,22 @@ def update_file(old_version, new_version, userdir, relpath, old_perms):
 
     # 4b) File changed in new version. Simply warn if user has deleted it.
     elif not user_type:
-	sys.stdout.write(warn + " Missing        %s\n" % fn)
+        sys.stdout.write(warn + " Missing        %s\n" % fn)
 
     # B ---> UNCHANGED, EASY CASES
 
     # 5) New version didn't change anything -> no need to update
     elif not we_changed:
-	pass
+        pass
 
     # 6) User didn't change anything -> take over new version
     elif not user_changed:
-	create_skeleton_file(new_skel, userdir, relpath, replacements)
-	sys.stdout.write(good + " Updated        %s\n" % fn)
+        create_skeleton_file(new_skel, userdir, relpath, replacements)
+        sys.stdout.write(good + " Updated        %s\n" % fn)
 
     # 7) User changed, but accidentally exactly as we did -> no action neccessary
     elif not differs:
-	sys.stdout.write(good + " Identical      %s\n" % fn)
+        sys.stdout.write(good + " Identical      %s\n" % fn)
 
     # TEST UNTIL HERE
 
@@ -1074,22 +1078,22 @@ def update_file(old_version, new_version, userdir, relpath, old_perms):
     # D ---> SYMLINKS
     # 8) all are symlinks, all changed
     elif old_type == "link" and new_type == "link" and user_type == "link":
-	if user_confirms("Symbolic link conflict at " + relpath,
+        if user_confirms("Symbolic link conflict at " + relpath,
                 "'%s' is a symlink that pointed to "
-		"%s in the old version and to "
-		"%s in the new version. But meanwhile you "
-		"changed to link target to %s. "
-		"Shall I keep your link or replace it with "
-		"the new default target?" %
-		(relpath, os.readlink(old_path), os.readlink(new_path), os.readlink(user_path)),
+                "%s in the old version and to "
+                "%s in the new version. But meanwhile you "
+                "changed to link target to %s. "
+                "Shall I keep your link or replace it with "
+                "the new default target?" %
+                (relpath, os.readlink(old_path), os.readlink(new_path), os.readlink(user_path)),
                 relpath,
-		"keep", "Keep your symbolic link pointing to %s" % os.readlink(user_path),
+                "keep", "Keep your symbolic link pointing to %s" % os.readlink(user_path),
                 "replace", "Change link target to %s" % os.readlink(new_path)):
-	    sys.stdout.write(warn + " Keeping your   %s\n" % fn)
-	else:
-	    os.remove(user_path)
-	    os.symlink(os.readlink(new_path), user_path)
-	    sys.stdout.write(warn + " Set link       %s to new target %s\n" % (fn, os.readlink(new_path)))
+            sys.stdout.write(warn + " Keeping your   %s\n" % fn)
+        else:
+            os.remove(user_path)
+            os.symlink(os.readlink(new_path), user_path)
+            sys.stdout.write(warn + " Set link       %s to new target %s\n" % (fn, os.readlink(new_path)))
 
     # E ---> FILE TYPE HAS CHANGED (NASTY)
 
@@ -1100,56 +1104,56 @@ def update_file(old_version, new_version, userdir, relpath, old_perms):
 
     # 9) We have changed the file type
     elif old_type != new_type:
-	if user_confirms("File type change at " + relpath,
+        if user_confirms("File type change at " + relpath,
                 "The %s %s has been changed into a %s in "
-		"the new version. Meanwhile you have changed "
-		"the %s of your copy of that %s. "
-		"Do you want to keep your version or replace "
-		"it with the new default? " %
-		(old_type, relpath, new_type, user_changed_type and "type" or "content",
-		 old_type),
+                "the new version. Meanwhile you have changed "
+                "the %s of your copy of that %s. "
+                "Do you want to keep your version or replace "
+                "it with the new default? " %
+                (old_type, relpath, new_type, user_changed_type and "type" or "content",
+                 old_type),
                 relpath,
-		"keep", "Keep your %s" % user_type,
+                "keep", "Keep your %s" % user_type,
                 "replace", "Replace it with the new %s" % new_type):
-	    sys.stdout.write(warn + " Keeping your version of %s\n" % fn)
-	else:
-	    create_skeleton_file(new_skel, userdir, relpath, replacements)
-	    sys.stdout.write(warn + " Replaced your %s %s by new default %s.\n" % (user_type, relpath, new_type))
+            sys.stdout.write(warn + " Keeping your version of %s\n" % fn)
+        else:
+            create_skeleton_file(new_skel, userdir, relpath, replacements)
+            sys.stdout.write(warn + " Replaced your %s %s by new default %s.\n" % (user_type, relpath, new_type))
 
     # 10) The user has changed the file type, we just the content
     elif old_type != user_type:
-	if user_confirms("Type change conflicts with content change at " + relpath,
+        if user_confirms("Type change conflicts with content change at " + relpath,
                 "Usually %s is a %s in both the "
-		"old and new version. But you have changed it "
-		"into a %s. Do you want to keep that or may "
-		"I replace your %s with the new default "
-		"%s, please?" %
-		(relpath, old_type, user_type, user_type, new_type),
+                "old and new version. But you have changed it "
+                "into a %s. Do you want to keep that or may "
+                "I replace your %s with the new default "
+                "%s, please?" %
+                (relpath, old_type, user_type, user_type, new_type),
                 relpath,
-		"keep", "Keep your %s" % user_type,
+                "keep", "Keep your %s" % user_type,
                 "replace", "Replace it with the new %s" % new_type):
-	    sys.stdout.write(warn + " Keeping your %s %s.\n" % (user_type, fn))
-	else:
-	    create_skeleton_file(new_skel, userdir, relpath, replacements)
-	    sys.stdout.write(warn + " Delete your %s and created new default %s %s.\n" %
+            sys.stdout.write(warn + " Keeping your %s %s.\n" % (user_type, fn))
+        else:
+            create_skeleton_file(new_skel, userdir, relpath, replacements)
+            sys.stdout.write(warn + " Delete your %s and created new default %s %s.\n" %
                     (user_type, new_type, fn))
 
     # 11) This case should never happen, if I've not lost something
     else:
-	if user_confirms("Something nasty happened at " + relpath,
+        if user_confirms("Something nasty happened at " + relpath,
                "You somehow fiddled along with "
-	       "%s, and I do not have the "
-	       "slightest idea what's going on here. May "
-	       "I please install the new default %s "
-	       "here, or do you want to keep your %s?" %
-	       (relpath, new_type, user_type),
+               "%s, and I do not have the "
+               "slightest idea what's going on here. May "
+               "I please install the new default %s "
+               "here, or do you want to keep your %s?" %
+               (relpath, new_type, user_type),
                relpath,
                "keep", "Keep your %s" % user_type,
-	       "replace", "Replace it with the new %s" % new_type):
-	    sys.stdout.write(warn + " Keeping your %s %s.\n" % (user_type, fn))
-	else:
-	    create_skeleton_file(new_skel, userdir, relpath, replacements)
-	    sys.stdout.write(warn + " Delete your %s and created new default %s %s.\n" % (user_type, new_type, fn))
+               "replace", "Replace it with the new %s" % new_type):
+            sys.stdout.write(warn + " Keeping your %s %s.\n" % (user_type, fn))
+        else:
+            create_skeleton_file(new_skel, userdir, relpath, replacements)
+            sys.stdout.write(warn + " Delete your %s and created new default %s %s.\n" % (user_type, new_type, fn))
 
 
     # Now the new file/link/dir is in place, deleted or whatever. The
@@ -1306,12 +1310,12 @@ def config_load():
         return
 
     for line in file(confpath):
-	line = line.strip()
-	if line == "" or line[0] == "#":
-	    continue
-	var, value = line.split("=", 1)
-	value = value.strip('"').strip("'")
-	var = var.strip()
+        line = line.strip()
+        if line == "" or line[0] == "#":
+            continue
+        var, value = line.split("=", 1)
+        value = value.strip('"').strip("'")
+        var = var.strip()
         if not var.startswith("CONFIG_"):
             sys.stderr.write("Ignoring invalid variable %s.\n" % var)
         else:
@@ -1329,7 +1333,7 @@ def config_save():
     hooknames.sort()
     for hookname in hooknames:
         hook = g_hooks[hookname]
-	f.write("CONFIG_%s='%s'\n" % (hookname, hook["value"]))
+        f.write("CONFIG_%s='%s'\n" % (hookname, hook["value"]))
 
 
 # Get information about all hooks
@@ -1390,7 +1394,7 @@ def call_all_hooks(command):
 def config_load_hook(hookname):
 
     def get_hook_info(info):
-	return call_hook(hookname, [info])[1]
+        return call_hook(hookname, [info])[1]
 
     hook = { "name" : hookname }
     hook["alias"] = get_hook_info("alias")
@@ -1418,8 +1422,7 @@ def config_load_hook(hookname):
                 descr = descr.strip()
                 choices.append( (val, descr) )
         except:
-            sys.stderr.write("Invalid output of hook: %s\n" % choicestxt)
-            sys.exit(1)
+            bail_out("Invalid output of hook: %s" % choicestxt)
 
     hook["choices"] = choices
     return hook
@@ -1427,9 +1430,9 @@ def config_load_hook(hookname):
 
 def config_set(args):
     if len(args) != 2:
-	sys.stderr.write("Please specify variable name and value\n")
-	config_usage()
-	return
+        sys.stderr.write("Please specify variable name and value\n")
+        config_usage()
+        return
 
     if not site_is_stopped(g_sitename):
         sys.stderr.write("Cannot change config variables while site is running.\n")
@@ -1439,8 +1442,8 @@ def config_set(args):
     value = args[1]
     hook = g_hooks.get(hookname)
     if not hook:
-	sys.stderr.write("No such variable '%s'\n" % hookname)
-	return
+        sys.stderr.write("No such variable '%s'\n" % hookname)
+        return
 
     # Check if value is valid. Choices are either a list of allowed
     # keys or a regular expression
@@ -1484,9 +1487,9 @@ omd config set VAR VALUE - set VAR to VALUE
 
 def config_show(args):
     if len(args) == 0:
-	hooknames = g_hooks.keys()
-	hooknames.sort()
-	for hookname in hooknames:
+        hooknames = g_hooks.keys()
+        hooknames.sort()
+        for hookname in hooknames:
             hook = g_hooks[hookname]
             if hook["active"]:
                 sys.stdout.write("%s: %s\n" % (hookname, g_hooks[hookname]["value"]))
@@ -1499,8 +1502,8 @@ def config_show(args):
             else:
                 output.append(hook["value"])
 
-	sys.stdout.write(" ".join(output))
-	sys.stdout.write("\n")
+        sys.stdout.write(" ".join(output))
+        sys.stdout.write("\n")
 
 def config_configure():
     hooknames = g_hooks.keys()
@@ -1624,34 +1627,59 @@ def main_setup(args, options={}):
     # set SUID bit for certain plugins (neccessary for
     # non RPM/DEB installations (FIXME: find a more elegant
     # solution later)
+    gid = group_id('omd')
     for plugin in [ 'check_icmp', 'check_dhcp' ]:
         path = "/omd/versions/%s/lib/nagios/plugins/%s" % (OMD_VERSION, plugin)
-        os.system("chgrp omd '%s'" % path)
-        os.system("chmod 4750 '%s'" % path)
+        os.chown(path, -1, gid)
+        os.chmod(path, 04750)
 
 
 def main_uninstall(args, options={}):
     global g_sitename
     global g_sitedir
     for sitename in all_sites():
-	g_sitename = sitename
+        g_sitename = sitename
         g_sitedir = site_dir(g_sitename)
-	main_rm([])
+        main_rm([])
 
     for path in [ g_info["OMD_PHYSICAL_BASE"],
-		  "/omd",
-		  g_info["APACHE_CONF_DIR"] + "/zzz_omd.conf",
-		  "/etc/init.d/omd",
-		  "/usr/bin/omd" ]:
-	os.system("rm -rf '%s'" % path)
+                  "/omd",
+		          g_info["APACHE_CONF_DIR"] + "/zzz_omd.conf",
+                  "/etc/init.d/omd",
+                  "/usr/bin/omd" ]:
+        shutil.rmtree(path, ignore_errors=True)
 
     groupdel('omd')
 
     sys.stdout.write("Good bye.\n")
 
 
+def main_setversion(args, options={}):
+    if len(args) == 0:
+        ok, version = dialog_menu("Choose new default",
+                "Please choose the version to make the new default",
+                [ (v, "Version %s" % v) for v in omd_versions() if not v == default_version() ],
+                None,
+                "Make default",
+                "Cancel")
+        if not ok:
+            bail_out("Aborted.")
+    else:
+        version = args[0]
+
+    if not version in omd_versions():
+        bail_out("The given version does not exist.")
+    if version == default_version():
+        bail_out("The given version is already default.")
+
+    if os.path.exists("/omd/versions/default"):
+        os.remove("/omd/versions/default")
+    os.symlink("/omd/versions/%s" % version, "/omd/versions/default")
+
+
 def main_version(args, options={}):
     sys.stdout.write("OMD - Open Monitoring Distribution Version %s\n" % g_info["OMD_VERSION"])
+
 
 def main_versions(args, options={}):
     for v in omd_versions():
@@ -1670,11 +1698,11 @@ def omd_versions():
 
 def main_sites(args, options={}):
     if on_tty:
-	sys.stdout.write("SITE             VERSION\n")
+        sys.stdout.write("SITE             VERSION\n")
     for site in all_sites():
         v = site_version(site)
         if v == default_version():
-	    sys.stdout.write("%-16s %s (default)\n" % (site, v))
+            sys.stdout.write("%-16s %s (default)\n" % (site, v))
         else:
             sys.stdout.write("%-16s %s\n" % (site, v))
 
@@ -1682,13 +1710,13 @@ def main_sites(args, options={}):
 def sitename_must_be_valid(name):
     # Make sanity checks before starting any action
     if site_exists(name):
-        bail_out("Site '%s' already existing.\n" % name)
+        bail_out("Site '%s' already existing." % name)
     if group_exists(name):
-        bail_out("Group '%s' already existing.\n" % name)
+        bail_out("Group '%s' already existing." % name)
     if user_exists(name):
-        bail_out("User '%s' already existing.\n" % name)
+        bail_out("User '%s' already existing." % name)
     if not re.match("^[a-zA-Z_][a-zA-Z_0-9]{0,15}$", name):
-	bail_out("Invalid site name. Must begin with a character, may contain characters, digits and _ and have length 1 up to 16\n")
+        bail_out("Invalid site name. Must begin with a character, may contain characters, digits and _ and have length 1 up to 16")
 
 
 def main_create(args, options={}):
@@ -1701,7 +1729,7 @@ def main_create(args, options={}):
 
     sitedir = site_dir(g_sitename)
     os.makedirs(sitedir)
-    os.system("chown %s:%s '%s'" % (g_sitename, g_sitename, sitedir))
+    os.chown(sitedir, pwd.getpwnam(g_sitename).pw_uid, group_id(g_sitename))
     add_to_fstab(g_sitename)
 
     # Create symbolic link to version
@@ -1721,7 +1749,7 @@ def main_create(args, options={}):
     config_save()
 
     # Change ownership of all files and dirs to site user
-    os.system("chown -R %s:%s '%s'" % (g_sitename, g_sitename, sitedir))
+    chown_tree(sitedir, g_sitename)
 
     # Create include-hook for Apache and reload apache
     create_apache_hook(g_sitename)
@@ -1755,7 +1783,7 @@ def main_rm(args, options={}):
     os.system('omd stop %s' % g_sitename)
 
     if user_logged_in(g_sitename):
-        bail_out("User '%s' still logged in or running processes.\n" % g_sitename)
+        bail_out("User '%s' still logged in or running processes." % g_sitename)
     unmount_tmpfs(g_sitename)
 
     remove_from_fstab(g_sitename)
@@ -1779,14 +1807,14 @@ def main_mv_or_cp(what, args, options={}):
     global g_sitename
     global g_sitedir
     if len(args) != 1:
-	bail_out("omd: Usage: omd %s oldname newname\n" % what)
+        bail_out("omd: Usage: omd %s oldname newname" % what)
     new = args[0]
 
     sitename_must_be_valid(new)
 
     old = g_sitename
     if site_is_running(old):
-	bail_out("Cannot %s site '%s' while it is running.\n" % (action, old))
+        bail_out("Cannot %s site '%s' while it is running." % (action, old))
 
     if what == "mv":
         unmount_tmpfs(old)
@@ -1841,7 +1869,7 @@ def main_mv_or_cp(what, args, options={}):
 
 def main_update(args, options={}):
     if site_is_running(g_sitename):
-	bail_out("Cannot update site '%s' while it is running.\n" % g_sitename)
+        bail_out("Cannot update site '%s' while it is running." % g_sitename)
 
     # Unmount tmp. We need to recreate the files and directories
     # from the new version after updating.
@@ -1854,7 +1882,7 @@ def main_update(args, options={}):
         possible_versions = [ v for v in omd_versions() if v != from_version ]
         possible_versions.sort(reverse=True)
         if len(possible_versions) == 0:
-            bail_out("There is no other OMD version to update to.\n")
+            bail_out("There is no other OMD version to update to.")
         elif len(possible_versions) == 1:
             to_version = possible_versions[0]
         else:
@@ -1865,7 +1893,7 @@ def main_update(args, options={}):
                     "Update now",
                     "Cancel")
             if not ok:
-                bail_out("Aborted.\n")
+                bail_out("Aborted.")
         exec_other_omd(to_version)
 
     if not opt_force and not dialog_yesno("You are going to update the site %s from version %s to version %s. "
@@ -1873,10 +1901,10 @@ def main_update(args, options={}):
             "changes in the default files with changes made by you. In case of conflicts "
             "your help will be needed." % (g_sitename, from_version, to_version),
             "Update!", "Abort"):
-        bail_out("Aborted.\n")
+        bail_out("Aborted.")
 
     sys.stdout.write("Updating site '%s' from version %s to %s...\n\n" %
-	    (g_sitename, from_version, to_version))
+            (g_sitename, from_version, to_version))
 
     # Now apply changes of skeleton files. This can be done
     # in two ways:
@@ -1900,42 +1928,42 @@ def main_update(args, options={}):
     for dirpath, dirnames, filenames in os.walk("."):
         if dirpath.startswith("./"):
             dirpath = dirpath[2:]
-	if dirpath.startswith("tmp"):
-	    continue
+        if dirpath.startswith("tmp"):
+            continue
 
-	for entry in dirnames + filenames:
-	    path = dirpath + "/" + entry
+        for entry in dirnames + filenames:
+	        path = dirpath + "/" + entry
             if path.startswith("./"):
                 path = path[2:]
-	    handled_paths.add(path)
-	    try:
-		update_file(from_version, to_version, g_sitedir, path, old_perms)
-	    except Exception, e:
-		sys.stderr.write("Error updating %s/%s: %s\n" % (g_sitedir, path, e))
-		raise
+            handled_paths.add(path)
+            try:
+                update_file(from_version, to_version, g_sitedir, path, old_perms)
+            except Exception, e:
+		        sys.stderr.write("Error updating %s/%s: %s\n" % (g_sitedir, path, e))
+                raise
 
     # Now handle files present in old but not in new skel files
     os.chdir(from_skelroot)
     for dirpath, dirnames, filenames in os.walk("."):
         if dirpath.startswith("./"):
             dirpath = dirpath[2:]
-	if dirpath.startswith("tmp"):
-	    continue
+        if dirpath.startswith("tmp"):
+            continue
 
-	for entry in dirnames + filenames:
-	    path = dirpath + "/" + entry
+        for entry in dirnames + filenames:
+	        path = dirpath + "/" + entry
             if path.startswith("./"):
                 path = path[2:]
-	    if path in handled_paths:
-		continue
+            if path in handled_paths:
+                continue
 
-	    # handle only files not already handled while scanning to_skelroot
-	    if not os.path.exists(to_skelroot + "/" + entry):
-		try:
-		    update_file(from_version, to_version, g_sitedir, path, old_perms)
-		except Exception, e:
-		    sys.stderr.write("Error updating %s/%s: %s\n" % (g_sitedir, path, e))
-		    raise
+            # handle only files not already handled while scanning to_skelroot
+            if not os.path.exists(to_skelroot + "/" + entry):
+                try:
+                    update_file(from_version, to_version, g_sitedir, path, old_perms)
+                except Exception, e:
+		            sys.stderr.write("Error updating %s/%s: %s\n" % (g_sitedir, path, e))
+                    raise
 
     # Change symbolic link pointing to new version
     create_version_symlink(g_sitename, to_version)
@@ -1954,7 +1982,7 @@ def main_init_action(command, args, options={}):
     # if no site is selected, all sites are affected
     if not g_sitename:
         exit_status = 0
-	for site in all_sites():
+        for site in all_sites():
             if only_version and site_version(site) != only_version:
                 continue
             # We need to do an os.system(), because each
@@ -1972,7 +2000,7 @@ def main_init_action(command, args, options={}):
             exit_status = max(exit_status, os.system("%s %s %s %s" % (sys.argv[0], command, site, " ".join(args))))
             sys.stdout.write("\n")
     else:
-	exit_status = init_action(command, args)
+        exit_status = init_action(command, args)
     sys.exit(exit_status)
 
 def main_config(args, options={}):
@@ -2012,6 +2040,11 @@ commands = [
 
     "BE WARNED: You are about to remove everything your system\n"
     "           have ever known about omd."),
+
+  ( "setversion", True, 0, 0, False, "VERSION", main_setversion,
+    [],
+    "Sets the default version of OMD which will be used by new sites",
+    ""),
 
   ( "version",   False, 0, 0, False, "",        main_version,
     [],
@@ -2108,7 +2141,7 @@ def handle_global_option(opt, orig):
     def opt_arg():
         global main_args
         if len(main_args) < 1:
-            bail_out("Option %s needs an argument.\n" % opt)
+            bail_out("Option %s needs an argument." % opt)
         arg = main_args[0]
         main_args = main_args[1:]
         return arg
@@ -2119,9 +2152,9 @@ def handle_global_option(opt, orig):
         if version != OMD_VERSION:
             omd_path = "/omd/versions/%s/bin/omd" % version
             if not os.path.exists(omd_path):
-                bail_out("OMD version '%s' is not installed.\n" % version)
+                bail_out("OMD version '%s' is not installed." % version)
             os.execv(omd_path, sys.argv)
-            bail_out("Cannot execute %s.\n" % omd_path)
+            bail_out("Cannot execute %s." % omd_path)
     elif opt in [ 'f', 'force' ]:
         opt_force = True
         opt_interactive = False
@@ -2131,9 +2164,8 @@ def handle_global_option(opt, orig):
     elif opt in [ 'v', 'verbose' ]:
         opt_verbose = True
     else:
-        sys.stdout.write("Invalid global option %s.\n" % orig)
-        sys.stdout.write("Call omd help for available options.\n")
-        sys.exit(1)
+        bail_out("Invalid global option %s.\n"
+                 "Call omd help for available options." % orig)
 
 def parse_command_options(args, options_spec):
     options = {}
@@ -2152,13 +2184,13 @@ def parse_command_options(args, options_spec):
                         entries.append(e)
 
         if len(entries) == 0:
-            bail_out("Invalid option '%s'\n" % opt)
+            bail_out("Invalid option '%s'" % opt)
 
         for llong, sshort, needs_arg in entries:
             arg = None
             if needs_arg:
                 if len(args) == 0:
-                    bail_out("Option '%s' needs an argument.\n" % opt)
+                    bail_out("Option '%s' needs an argument." % opt)
                 arg = args[0]
                 args = args[1:]
             options[llong] = arg
@@ -2170,10 +2202,10 @@ def exec_other_omd(version):
     omd_path = "/omd/versions/%s/bin/omd" % version
     if os.path.exists(omd_path):
         os.execv(omd_path, sys.argv)
-        bail_out("Cannot run bin/omd of version %s.\n" % version)
+        bail_out("Cannot run bin/omd of version %s." % version)
     else:
         bail_out("Site %s uses version %s which is not installed.\n"
-                "Please reinstall that version and retry this command.\n" %
+                "Please reinstall that version and retry this command." %
                 (g_sitename, version))
 
 
@@ -2212,13 +2244,13 @@ found = False
 for c, only_root, needs_site, site_must_exist, confirm, argumentlist, command_function, option_spec, description, confirm_text in commands:
     if c == command:
         found = True
-	break
+        break
 
 if not found:
-    bail_out("omd: no such command: %s\n" % command)
+    bail_out("omd: no such command: %s" % command)
 
 if os.getuid() != 0 and only_root:
-    bail_out("omd: root permissions are needed for this command.\n")
+    bail_out("omd: root permissions are needed for this command.")
 
 # Parse command options. We need to do this now in order to know,
 # if a site name has been specified or not
@@ -2230,16 +2262,16 @@ args, command_options = parse_command_options(args, option_spec)
 g_sitename = None
 if needs_site > 0:
     if os.getuid() == 0:
-	if len(args) >= 1:
-	    g_sitename = args[0]
-	    args = args[1:]
+        if len(args) >= 1:
+            g_sitename = args[0]
+            args = args[1:]
         elif needs_site == 1:
-	    bail_out("omd: please specify site.\n")
+            bail_out("omd: please specify site.")
     else:
         g_sitename = site_name()
 
 if g_sitename != None and site_must_exist and not site_exists(g_sitename):
-    bail_out("omd: no such site: %s\n" % g_sitename)
+    bail_out("omd: no such site: %s" % g_sitename)
 
 # Commands operating on an existing site *must* run omd in
 # the same version as the site has! Sole exception: update.
@@ -2274,10 +2306,9 @@ if (opt_interactive or confirm) and not opt_force:
     sys.stdout.flush()
     a = sys.stdin.readline().strip()
     if a.lower() != "yes":
-	sys.exit(0)
+        sys.exit(0)
 
 try:
     command_function(args, command_options)
 except KeyboardInterrupt:
-    sys.stderr.write(tty_normal + "Aborted.\n")
-    sys.exit(1)
+    bail_out(tty_normal + "Aborted.")

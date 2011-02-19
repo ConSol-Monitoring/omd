@@ -143,6 +143,11 @@ sub test_command {
         ok(sleep($test->{'sleep'}), "slept $test->{'sleep'} seconds") or do { $return = 0 };
     }
 
+    # set some values
+    $test->{'stdout'} = $t->stdout;
+    $test->{'stderr'} = $t->stderr;
+    $test->{'exit'}   = $rc;
+
     return $return;
 }
 
@@ -291,10 +296,21 @@ sub config {
     my $conf_file = "/omd/versions/default/share/omd/distro.info";
     open(my $fh, '<', $conf_file) or carp("cannot open $conf_file: $!");
     while(<$fh>) {
-        my($key,$value) = split/\s+=\s+/,$_,2;
+        my $line = $_;
+        my $append = 0;
+        my($key,$value) = split/\s+\+=\s+/,$line,2;
+        if(defined $value) {
+            $append = 1;
+        } else {
+            ($key,$value) = split/\s+=\s+/,$line,2;
+        }
         $key   =~ s/^\s+//;
         $value =~ s/\s+$//;
-        $config->{$key} = $value;
+        if($append) {
+            $config->{$key} .= " ".$value;
+        } else {
+            $config->{$key} = $value;
+        }
     }
     close($fh);
     return $config->{$key};
@@ -320,13 +336,13 @@ sub wait_for_file {
     }
     while($x < $timeout) {
         if(-e $file) {
-            pass("file: $file occured after $x seconds");
+            pass("file: $file appeared after $x seconds");
             return 1;
         }
         $x++;
         sleep(1);
     }
-    fail("file: $file did not occure within $x seconds");
+    fail("file: $file did not appear within $x seconds");
     return 0;
 }
 

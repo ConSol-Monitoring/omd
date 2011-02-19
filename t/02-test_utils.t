@@ -12,7 +12,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 11 );
+plan( tests => 13 );
 
 is(TestUtils::_get_url('http://localhost', '/test/'),                     'http://localhost/test/');
 is(TestUtils::_get_url('http://localhost', 'test/'),                      'http://localhost/test/');
@@ -25,3 +25,6 @@ is(TestUtils::_get_url('http://localhost:3000/1.html', '/test'),          'http:
 is(TestUtils::_get_url('http://localhost:3000/1/2.html', '/test'),        'http://localhost:3000/test');
 is(TestUtils::_get_url('http://localhost:3000/1/2.html', '3.html'),       'http://localhost:3000/1/3.html');
 is(TestUtils::_get_url('http://localhost:3000/1/2.html?blah', '3.html'),  'http://localhost:3000/1/3.html');
+
+isnt(TestUtils::config('BUILD_PACKAGES'), undef);
+ok(length(TestUtils::config('BUILD_PACKAGES')) > 20, "got string from config: length ".length(TestUtils::config('BUILD_PACKAGES')));

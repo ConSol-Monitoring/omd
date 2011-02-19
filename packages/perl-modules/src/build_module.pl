@@ -135,16 +135,27 @@ sub install_module {
     `tar zxf $module`;
     chdir($dir);
     print "installing... ";
-    if( -f "Build.PL" ) {
-        `$PERL Build.PL >> $LOG 2>&1 && ./Build >> $LOG 2>&1 && ./Build install >> $LOG 2>&1`;
-        if($? != 0 ) { print "error: rc $?\n"; print `cat $LOG`, "\n"; return(0); }
-    } elsif( -f "Makefile.PL" ) {
-        `echo "" | $PERL Makefile.PL >> $LOG 2>&1 && make -j 5 >> $LOG 2>&1 && make install >> $LOG 2>&1`;
-        if($? != 0 ) { print "error: rc $?\n"; print `cat $LOG`, "\n"; return(0); }
-    } else {
-        print "error: no Build.PL or Makefile.PL found in $module!\n";
+
+    eval {
+        local $SIG{ALRM} = sub { die "timeout on: $module\n" };
+        alarm(300); # single module should not take longer than 5minutes
+        if( -f "Build.PL" ) {
+            `$PERL Build.PL >> $LOG 2>&1 && ./Build >> $LOG 2>&1 && ./Build install >> $LOG 2>&1`;
+            if($? != 0 ) { print "error: rc $?\n"; print `cat $LOG`, "\n"; return(0); }
+        } elsif( -f "Makefile.PL" ) {
+            `echo "\n\n\n" | $PERL Makefile.PL >> $LOG 2>&1 && make -j 5 >> $LOG 2>&1 && make install >> $LOG 2>&1`;
+            if($? != 0 ) { print "error: rc $?\n"; print `cat $LOG`, "\n"; return(0); }
+        } else {
+            print "error: no Build.PL or Makefile.PL found in $module!\n";
+            return(0);
+        }
+        alarm(0);
+    };
+    if($@) {
+        print "error: $@\n";
         return(0);
     }
+
     chdir("..");
     `rm -rf $dir`;
     print "ok\n";
