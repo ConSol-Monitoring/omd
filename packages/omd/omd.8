@@ -104,10 +104,31 @@ and group of that site. This - of course - needs root permissions.
 Rename a site. The site must be stopped. the NEWNAME must be a valid
 site name as described in "omd create". Root permissions are needed.
 .TP
-.B omd cp         SITE NEWNAME     
+.B omd cp [OPTIONS] SITE NEWNAME     
 Make a copy of a site. A new site with the name NEWSITE will be created
 as an exact copy of SITE. All occurrances of SITE will be replaced by 
 NEWSITE in the sites configuration files.
+
+The following options can be used:
+
+\fB-u UID\fP Force a specific user id for the new user
+
+\fB-g GID\fP Force a specific group id for the group of the new user
+
+\fB--no-rrds\fP Do not copy any performance data from the past. This
+includes RRD and XML files created by PNP4Nagios as well as journal
+files from the RRD caching daemon. This option usually greatly speeds
+up the copying.
+
+\fB--no-logs\fP Do not copy any logfiles from the past. This
+include the Nagios logfiles, which bear the historical events. While
+this does speed up the copying, the new site will have no history
+of past events.
+
+The option \fB-N\fP or \fB--no-past\fP combines both \fB--no-rrds\fP and \fB--no-logs\fP.
+This is very useful especially for copies that are created for testing
+purposes.
+
 .TP
 .B omd update     SITE             
 Update SITE to the current default version of OMD. The default version
