@@ -51,8 +51,10 @@ Show short summary of available commands.
 Show the default version of you OMD installation. OMD supports
 multiple versions to be installed in parallel.
 .TP
-.B omd versions                    
-Show a list of all installed versions of OMD.
+.B omd versions [--bare, -b]
+Show a list of all installed versions of OMD. The option \fB-b\fP or \fB--bare\fP
+makes the output leave out a hint to the default version and easier parseable by
+scripts.
 .TP
 .B omd setup                       
 Prepare operating system for OMD. This includes installing all software
@@ -77,8 +79,10 @@ Note: Do not use \fBomd uninstall\fP if you've installed omd via RPM or DEB.
 Better remove all sites via by using \fBomd rm\fP and remove the RPM/DEB
 package afterwards.
 .TP
-.B omd sites                       
-Show a list of all sites and the version of OMD each site uses.
+.B omd sites [--bare, -b]
+Show a list of all sites and the version of OMD each site uses. If you specify
+the option \fB-b\fP or \fB--bare\fP, then the output leaves out hints to the
+versions, so it is better parseable by scripts.
 .TP
 .B omd create     SITE             
 Create a new site. The name of the site must be at most 16 characters
