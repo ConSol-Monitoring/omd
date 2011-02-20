@@ -1,3 +1,3 @@
-to enable pnp graphs rename 
-'status-header.ssi-pnp'  -> 'status-header.ssi'
-'extinfo-header.ssi-pnp' -> 'extinfo-header.ssi'
+to disable pnp graphs rename 
+'status-header.ssi'  -> 'status-header.ssi-pnp'
+'extinfo-header.ssi' -> 'extinfo-header.ssi-pnp'
