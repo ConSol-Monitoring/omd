@@ -39,7 +39,7 @@ apache_wait_stop() {
     pid=$pidtmp
     $APACHE_BIN -f "$CONFIG_FILE" -k stop
   else
-    echo -n 'Not running. '
+    echo -n '(not running)...'
     return 0
   fi
 
@@ -63,7 +63,7 @@ apache_wait_stop() {
 
 apache_wait_start() {
   if pidof_apache >/dev/null 2>&1; then
-    echo -n 'Already running. '
+    echo -n '(already running)...'
     return 1
   fi
 
@@ -87,22 +87,22 @@ apache_wait_start() {
 
 case $1 in 
   start)
-    echo -n "Starting dedicated Apache for site ###SITE###... "
+    echo -n "Starting dedicated Apache for site ###SITE###..."
     if apache_wait_start; then
-      echo 'OK.'
+      echo 'OK'
       exit 0
     else
-      echo 'ERROR.'
+      echo 'ERROR'
       exit 1
     fi
   ;;
   stop)
-    echo -n "Stopping dedicated Apache for site ###SITE###... "
+    echo -n "Stopping dedicated Apache for site ###SITE###..."
     if apache_wait_stop; then
-      echo 'OK.'
+      echo 'OK'
       exit 0
     else
-      echo 'ERROR.'
+      echo 'ERROR'
       exit 1
     fi
   ;;

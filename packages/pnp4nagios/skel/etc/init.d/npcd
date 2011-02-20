@@ -104,12 +104,12 @@ case "$1" in
             echo "$servicename already started..."
             exit 1
         fi
-        echo -n "Starting $servicename:"
+        echo -n "Starting $servicename..."
         touch $NpcdRunFile
         chown $NpcdUser:$NpcdGroup $NpcdRunFile
         $NpcdBin -d -f $NpcdCfgFile
         if [ -d $NpcdLockDir ]; then touch $NpcdLockDir/$NpcdLockFile; fi
-        echo " done."
+        echo "OK"
         exit 0
         ;;
 
@@ -119,7 +119,7 @@ case "$1" in
             echo "$servicename was not running... could not stop"
             exit 0
         fi
-        echo -n "Stopping $servicename: "
+        echo -n "Stopping $servicename..."
 
         pid_npcd
         killproc_npcd npcd
@@ -142,7 +142,7 @@ case "$1" in
              echo ''
              echo 'Warning - $servicename did not exit in a timely manner'
          else
-             echo 'done.'
+             echo 'OK'
          fi
         rm -f $NpcdLockDir/$NpcdLockFile 
         ;;
