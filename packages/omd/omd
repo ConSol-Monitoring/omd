@@ -75,6 +75,12 @@ else:
     tty_ok        = 'OK'
     tty_error     = 'ERROR'
 
+def ok():
+    sys.stdout.write(tty_ok + "\n")
+
+def error():
+    sys.stdout.write(tty_error + "\n")
+
 # Symbols for update
 good  = " " + tty_green +  tty_bold + "*" + tty_normal
 warn  = " " + tty_bgyellow + tty_black + tty_bold + "!" + tty_normal
@@ -89,9 +95,9 @@ g_hooks = None
 
 def show_success(exit_code):
     if exit_code == True or exit_code == 0:
-        sys.stdout.write(tty_ok + "\n")
+        ok()
     else:
-        sys.stdout.write(tty_error + "\n")
+        error()
     return exit_code
 
 patch_supports_merge = None
@@ -536,7 +542,7 @@ def create_tmpfs(sitename):
         switch_to_site_user()
 
     tmp = tmp_dir(sitename)
-    sys.stdout.write("Creating temporary filesystem...")
+    sys.stdout.write("Creating temporary filesystem %s..." % tmp)
     sys.stdout.flush()
     if not os.path.exists(tmp):
         os.mkdir(tmp)
@@ -545,15 +551,14 @@ def create_tmpfs(sitename):
         return
     create_skeleton_files(sitename, "tmp")
     chown_tree(tmp, sitename)
-    sys.stdout.write(tty_ok + "\n")
+    ok()
 
 def unmount_tmpfs(sitename):
     if tmpfs_mounted(sitename):
         sys.stdout.write("Unmounting temporary filesystem...")
         for t in range(0, 10):
             if 0 == os.system("umount '%s'" % tmp_dir(sitename)):
-                sys.stdout.write(tty_ok + "\n")
-                return
+                ok()
             sys.stdout.write(".")
             sys.stdout.flush()
             time.sleep(1)
@@ -575,7 +580,7 @@ def remove_from_fstab(sitename):
             continue
         newtab.write(line)
     os.rename("/etc/fstab.new", "/etc/fstab")
-    sys.stdout.write(tty_ok + "\n")
+    ok()
 
 def start_site(sitename):
     create_tmpfs(sitename)
@@ -601,7 +606,7 @@ def create_skeleton_files(sitename, dir):
                     continue
                 if dirpath == "tmp" or dirpath.startswith("tmp/"):
                     continue
-	        create_skeleton_file(skelroot, sitedir, dirpath + "/" + entry, replacements)
+	    create_skeleton_file(skelroot, sitedir, dirpath + "/" + entry, replacements)
 
 def delete_user_file(user_path):
     if not os.path.islink(user_path) and os.path.isdir(user_path):
@@ -1603,7 +1608,7 @@ def main_setup(args, options={}):
     command = "%s %s" % (install_cmd, " ".join(packages))
     sys.stdout.write("Going to execute '%s'\n" % command)
     if 0 == os.system(command):
-        sys.stdout.write(tty_ok + "\n")
+        ok()
 
     # Enable Apache modules
     for mod in [ "proxy", "proxy_http", "rewrite" ]:
@@ -1790,12 +1795,12 @@ def main_rm(args, options={}):
     sys.stdout.write("Deleting user and group %s..." % g_sitename)
     os.chdir("/") # Site dir not longer existant after userdel
     userdel(g_sitename)
-    sys.stdout.write(tty_ok + "\n")
+    ok()
 
     if os.path.exists(g_sitedir): # should be done by userdel
         sys.stdout.write("Deleting all data (%s)..." % g_sitedir)
         shutil.rmtree(site_dir(g_sitename))
-        sys.stdout.write(tty_ok + "\n")
+        ok()
 
     # remove include-hook for Apache and tell apache
     delete_apache_hook(g_sitename)
