@@ -30,7 +30,6 @@ install: $(APACHE_MODULES_INSTALL)
 skel:
 	# Replace macros
 	sed -i -e 's|###APACHE_MODULE_DIR###|$(MODULE_DIR)|g' \
-	       -e 's|###APACHE_PHP_MODULE###|$(APACHE_PHP_MODULE)|g' \
 	       $(SKEL)/etc/apache/apache.conf
 
 	sed -i -e 's|###APACHE_MODULE_DIR###|$(MODULE_DIR)|g' \
@@ -41,6 +40,7 @@ skel:
 	       $(SKEL)/etc/apache/conf.d/02_fcgid.conf
 
 	sed -i 's|###APACHE_BIN###|$(APACHE_BIN)|g' $(SKEL)/etc/init.d/apache
+	sed -i 's|###PHP_FCGI_BIN###|$(PHP_FCGI_BIN)|g' $(SKEL)/etc/apache/php-wrapper
 	# Create working directories
 	mkdir -p $(SKEL)/var/log/apache
 	mkdir -p $(SKEL)/var/www
