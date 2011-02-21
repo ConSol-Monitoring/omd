@@ -46,5 +46,5 @@ my $tests = [
 
 # run tests
 for my $test (@{$tests}) {
-    TestUtils::test_command($test);
+    TestUtils::test_command($test) or BAIL_OUT("no further testing without working omd");
 }
