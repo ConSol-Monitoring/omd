@@ -4,15 +4,13 @@ use warnings;
 use strict;
 use Test::More;
 
-BEGIN {
-    use lib('t');
-    require TestUtils;
-    import TestUtils;
-    use FindBin;
-    use lib "$FindBin::Bin/lib/lib/perl5";
-}
+use lib('t');
+use FindBin;
+use lib "$FindBin::Bin/lib/lib/perl5";
 
-plan tests => 2;
+plan tests => 3;
+
+use_ok("TestUtils") or BAIL_OUT("fatal error in TestUtils");
 
 my $omd_bin = TestUtils::get_omd_bin();
 
