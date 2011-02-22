@@ -906,10 +906,43 @@ def filetype(p):
         tp = "dir"
     else:
         tp = "file"
+
     return tp
 
 
-def update_file(old_version, new_version, userdir, relpath, old_perms):
+def file_contents(path):
+    """ Returns the file contents of a site file or a skel file """
+    if '/skel/' in path:
+        return instantiate_skel(path)
+    else:
+        return file(path).read()
+
+
+def file_status(source_path, target_path):
+    """ Compares two files and returns infos wether the file type or contants have changed """
+    source_type  = filetype(source_path)
+    target_type  = filetype(target_path)
+
+    if source_type == "file":
+        source_content = file_contents(source_path)
+
+    if target_type == "file":
+        target_content = file_contents(target_path)
+
+    changed_type = source_type != target_type
+    # FIXME: Was ist, wenn aus einer Datei ein Link gemacht wurde? Oder umgekehrt?
+    changed_content = (source_type == "file" \
+                       and target_type == "file" \
+                       and source_content != target_content) or \
+                      (source_type == "link" \
+                       and target_type == "link" \
+                       and os.readlink(source_path) != os.readlink(target_path))
+    changed = changed_type or changed_content
+
+    return (changed_type, changed_content, changed)
+
+
+def update_file(old_version, new_version, userdir, old_perms, relpath):
     old_skel = "/omd/versions/%s/skel" % old_version
     new_skel = "/omd/versions/%s/skel" % new_version
 
@@ -926,44 +959,14 @@ def update_file(old_version, new_version, userdir, relpath, old_perms):
     new_type  = filetype(new_path)
     user_type = filetype(user_path)
 
-    if old_type == "file":
-        old_content = instantiate_skel(old_path)
-
-    if user_type == "file":
-        user_content = file(user_path).read()
-
-    if new_type == "file":
-        new_content = instantiate_skel(new_path)
-
     # compare our new version with the user's version
-    type_differs = user_type != new_type
-    content_differs =   (user_type == "file" \
-                           and new_type == "file" \
-                           and user_content != new_content) or \
-                           (user_type == "link" \
-                            and new_type == "link" \
-                            and os.readlink(user_path) != os.readlink(new_path))
-    differs = type_differs or content_differs
+    type_differs, content_differs, differs = file_status(user_path, new_path)
 
     # compare our old version with the user's version
-    user_changed_type = old_type != user_type
-    user_changed_content = (old_type == "file" \
-                           and user_type == "file" \
-                           and old_content != user_content) or \
-                           (old_type == "link" \
-                            and user_type == "link" \
-                            and os.readlink(old_path) != os.readlink(user_path))
-    user_changed = user_changed_type or user_changed_content
+    user_changed_type, user_changed_content, user_changed = file_status(old_path, user_path)
 
     # compare our old with our new version
-    we_changed_type = old_type != new_type
-    we_changed_content =   (old_type == "file" \
-                           and new_type == "file" \
-                           and old_content != new_content) or \
-                           (old_type == "link" \
-                            and new_type == "link" \
-                            and os.readlink(old_path) != os.readlink(new_path))
-    we_changed = we_changed_type or we_changed_content
+    we_changed_type, we_changed_content, we_changed = file_status(old_path, new_path)
 
 #     if opt_verbose:
 #         sys.stdout.write("%s%s%s:\n" % (tty_bold, relpath, tty_normal))
@@ -1897,6 +1900,97 @@ def main_mv_or_cp(what, args, options={}):
     restart_apache()
 
 
+def diff_list(from_skelroot, g_sitedir):
+    """ Outputs only a list of changed/deleted files compared to the current version."""
+    def print_diff(source_path, target_path, site_to_version, relpath):
+        deleted_label = 'Deleted'
+        if site_to_version:
+            deleted_label = 'Added'
+            # Ignore several files which be added during site creation
+            # FIXME: This must skip all files which are modified by hooks
+            if relpath in [ 'include', 'lib', 'share', 'bin', 'version', ]:
+                return
+
+        source_file = source_path + '/' + relpath
+        target_file = target_path + '/' + relpath
+
+        source_type = filetype(source_file)
+        target_type = filetype(target_file)
+
+        changed_type, changed_content, changed = file_status(source_file, target_file)
+
+        if not changed:
+            return
+
+        fn = tty_bold + tty_bgblue + tty_white + relpath + tty_normal
+        fn = tty_bold + relpath + tty_normal
+
+        if not target_type:
+            sys.stdout.write(good + " %s %s\n" % (deleted_label, fn))
+
+        elif changed_type and changed_content:
+            sys.stdout.write(good + " Changed type and content %s\n" % (fn))
+
+        elif changed_type and not changed_content:
+            sys.stdout.write(good + " Changed type %s\n" % (fn))
+
+        elif changed_content and not changed_type:
+            sys.stdout.write(good + " Changed content %s\n" % (fn))
+
+        # FIXME: Changed permissions
+        # FIXME: Chanded owner
+
+    handled_paths = walk_skel(from_skelroot, print_diff, (from_skelroot, g_sitedir, False))
+    walk_skel(g_sitedir, print_diff, (g_sitedir, from_skelroot, True), from_skelroot)
+
+
+def main_diff(args, options={}):
+    from_skelroot = "/omd/versions/%s/skel" % site_version(g_sitename)
+
+    # First implementation: Outputs only a list of changed/deleted files compared
+    # to the current version. With dir/file name given the diff could show more details
+    # like te file contents and so on
+    diff_list(from_skelroot, g_sitedir)
+
+
+def walk_skel(root, handler, args, compare_with = None):
+    """
+    Walks all files in the skeleton dir to execute a function for each file
+    The given handler is called with the provided args. Additionally the relative
+    path of the file to handle is handed over in the 'relpath' parameter.
+
+    When called with a path in 'compare_with' the function only handles files which
+    were not handled before or exist in that dir.
+
+    The function returns a set of already handled files.
+    """
+    handled_paths = set([])
+    os.chdir(root)
+    for dirpath, dirnames, filenames in os.walk("."):
+        if dirpath.startswith("./"):
+            dirpath = dirpath[2:]
+        if dirpath.startswith("tmp"):
+            continue
+
+        for entry in dirnames + filenames:
+            path = dirpath + "/" + entry
+            if path.startswith("./"):
+                path = path[2:]
+            if compare_with and path in handled_paths:
+                continue
+
+            handled_paths.add(path)
+
+            if not compare_with or \
+               compare_with and not os.path.exists(compare_with + "/" + entry):
+                try:
+                    handler(*args, relpath = path)
+                except Exception, e:
+                    sys.stderr.write("Error updating %s/%s: %s\n" % (g_sitedir, path, e))
+                    raise
+    return handled_paths
+
+
 def main_update(args, options={}):
     if site_is_running(g_sitename):
         bail_out("Cannot update site '%s' while it is running." % g_sitename)
@@ -1952,48 +2046,11 @@ def main_update(args, options={}):
     to_skelroot = "/omd/versions/%s/skel" % to_version
     tmp = tmp_dir(g_sitename)
 
-    handled_paths = set([])
     # First walk through skeleton files of new version
-    os.chdir(to_skelroot)  # make relative paths
-    for dirpath, dirnames, filenames in os.walk("."):
-        if dirpath.startswith("./"):
-            dirpath = dirpath[2:]
-        if dirpath.startswith("tmp"):
-            continue
-
-        for entry in dirnames + filenames:
-	    path = dirpath + "/" + entry
-            if path.startswith("./"):
-                path = path[2:]
-            handled_paths.add(path)
-            try:
-                update_file(from_version, to_version, g_sitedir, path, old_perms)
-            except Exception, e:
-		sys.stderr.write("Error updating %s/%s: %s\n" % (g_sitedir, path, e))
-                raise
+    handled_paths = walk_skel(to_skelroot, update_file, (from_version, to_version, g_sitedir, old_perms))
 
     # Now handle files present in old but not in new skel files
-    os.chdir(from_skelroot)
-    for dirpath, dirnames, filenames in os.walk("."):
-        if dirpath.startswith("./"):
-            dirpath = dirpath[2:]
-        if dirpath.startswith("tmp"):
-            continue
-
-        for entry in dirnames + filenames:
-	    path = dirpath + "/" + entry
-            if path.startswith("./"):
-                path = path[2:]
-            if path in handled_paths:
-                continue
-
-            # handle only files not already handled while scanning to_skelroot
-            if not os.path.exists(to_skelroot + "/" + entry):
-                try:
-                    update_file(from_version, to_version, g_sitedir, path, old_perms)
-                except Exception, e:
-		    sys.stderr.write("Error updating %s/%s: %s\n" % (g_sitedir, path, e))
-                    raise
+    walk_skel(from_skelroot, update_file, (from_version, to_version, g_sitedir, old_perms), to_skelroot)
 
     # Change symbolic link pointing to new version
     create_version_symlink(g_sitename, to_version)
@@ -2167,6 +2224,12 @@ commands = [
     [ ],
     "Show and set site configuration parameters",
     ""),
+
+  ( "diff",      False, 1, 1, False, "", main_diff,
+    [],
+    "Shows differences compared to the original version files",
+    ""),
+
 ]
 
 def handle_global_option(opt, orig):
