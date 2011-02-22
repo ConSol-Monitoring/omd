@@ -523,7 +523,8 @@ sub _diag_cmd {
     diag("stderr: ".$cmd->stderr."\n");
 
     # check logfiles on apache errors
-    if($cmd->stdout =~ m/Starting dedicated Apache for site (\w+)[\.\ ]*ERROR/) {
+    if(   $cmd->stdout =~ m/Starting dedicated Apache for site (\w+)[\.\ ]*ERROR/
+       or $cmd->stdout =~ m/500 Internal Server Error/) {
         my $site = $1;
         _tail("apache logs:", "/omd/sites/$site/var/log/apache/error_log");
    }
