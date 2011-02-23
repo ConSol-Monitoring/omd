@@ -16,7 +16,7 @@ fi
 
 # if we are not on a exact tag, use the last tag and add the date
 # ex.: v0.43.20101018
-version=`git describe --tag --abbrev=0 --always 2>/dev/null`
+version=`git tag -l | tail -n 1`
 if [ $? -eq 0 ]; then
   date=`date +%Y%m%d`
   major=`echo $version | cut -d . -f 1`
