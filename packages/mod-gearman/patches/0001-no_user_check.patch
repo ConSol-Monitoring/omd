@@ -1,38 +1,30 @@
---- a/configure.ac	2011-02-22 11:43:17.000000000 +0100
-+++ b/configure.ac	2011-02-22 11:43:40.000000000 +0100
-@@ -49,21 +49,21 @@
+--- a/configure	2011-02-07 11:04:20.000000000 +0100
++++ b/configure	2011-02-23 23:12:36.000000000 +0100
+@@ -5288,17 +5288,17 @@
+ user="$with_user"
  
- ##############################################
- # Determine the user
--AC_ARG_WITH([user],
--[AS_HELP_STRING([--with-user],
--[specify the user @<:@default="nagios"@:>@])],
--[], [with_user="nagios"])
--user="$with_user"
--AC_SUBST(user)
--
--AC_MSG_CHECKING(if user $user exists)
+ 
+-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking if user $user exists" >&5
+-$as_echo_n "checking if user $user exists... " >&6; }
 -id -a $user > /dev/null 2>&1
 -if test "$?" != "0" ; then
--    AC_MSG_RESULT(no)
--    AC_MSG_ERROR(user $user does not exist)
+-    { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+-$as_echo "no" >&6; }
+-    as_fn_error "user $user does not exist" "$LINENO" 5
 -else
--    AC_MSG_RESULT(yes)
+-    { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+-$as_echo "yes" >&6; }
 -fi
-+#AC_ARG_WITH([user],
-+#[AS_HELP_STRING([--with-user],
-+#[specify the user @<:@default="nagios"@:>@])],
-+#[], [with_user="nagios"])
-+#user="$with_user"
-+#AC_SUBST(user)
-+#
-+#AC_MSG_CHECKING(if user $user exists)
++#{ $as_echo "$as_me:${as_lineno-$LINENO}: checking if user $user exists" >&5
++#$as_echo_n "checking if user $user exists... " >&6; }
 +#id -a $user > /dev/null 2>&1
 +#if test "$?" != "0" ; then
-+#    AC_MSG_RESULT(no)
-+#    AC_MSG_ERROR(user $user does not exist)
++#    { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
++#$as_echo "no" >&6; }
++#    as_fn_error "user $user does not exist" "$LINENO" 5
 +#else
-+#    AC_MSG_RESULT(yes)
++#    { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
++#$as_echo "yes" >&6; }
 +#fi
  
  ##############################################
