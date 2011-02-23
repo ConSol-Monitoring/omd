@@ -529,7 +529,11 @@ sub _diag_cmd {
        or $stdout =~ m/500 Internal Server Error/) {
         my $site = $1;
         _tail("apache logs:", "/omd/sites/$site/var/log/apache/error_log") if defined $site;
-   }
+    }
+    if( $stderr =~ m/User '(\w+)' still logged in or running processes/ ) {
+        my $site = $1;
+        diag("ps: ".`ps -fu $site`) if $site;
+    }
     return;
 }
 
