@@ -1,0 +1,94 @@
+#!/bin/sh
+
+### BEGIN INIT INFO
+# Provides:          mod_gearman_worker
+# Required-Start:    $local_fs
+# Required-Stop:     $local_fs
+# Should-Start:
+# Should-Stop:
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Start/Stop the mod_gearman worker daemon
+### END INIT INFO
+
+# Check if Mod-Gearman is enabled in OMD. If not terminate.
+. etc/omd/site.conf
+if [ "$CONFIG_DISTRIBUTED_MONITORING" != "mod-gearman" -o "$CONFIG_GEARMAN_WORKER" != "on" ] ; then
+    exit 5
+fi
+
+DAEMON=###ROOT###/bin/mod_gearman_worker
+NAME=gearman_worker
+CONFIG=###ROOT###/etc/mod-gearman/worker.cfg
+PIDFILE=###ROOT###/tmp/run/gearman_worker.pid
+USER=
+USERID=`id -u`
+
+case "$1" in
+    start)
+        echo -n "Starting $NAME..."
+        mkdir -p ###ROOT###/tmp/run
+        mkdir -p ###ROOT###/var/log/gearman
+        CMD="$DAEMON -d --config=$CONFIG --pidfile=$PIDFILE"
+        if [ "$USERID" -eq 0 ]; then
+            su -s $SHELL - $USER -c  "$CMD"
+        else
+            $CMD
+        fi
+        if [ $? -eq 0 ]; then
+            echo "OK"
+        else
+            echo "failed"
+        fi
+        ;;
+    stop)
+        echo -n "Stopping $NAME"
+        pid=`cat $PIDFILE 2>/dev/null`
+        if [ -z $pid ]; then
+            echo ". Not running."
+        else
+            kill $pid
+            for x in 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5; do
+                echo -n "."
+                ps -p $pid > /dev/null 2>&1 && sleep 1;
+            done
+            ps -p $pid > /dev/null 2>&1;
+            if [ $? -ne 0 ]; then
+                echo "done"
+                exit 0;
+            else
+                echo "failed"
+                exit 1;
+            fi
+        fi
+        ;;
+    reload|force-reload)
+        echo "Reloading $NAME configuration files"
+        pid=`cat $PIDFILE 2>/dev/null`
+        if [ "$pid" != "" ]; then
+            kill -HUP $pid
+        fi
+    ;;
+    status)
+        pid=`cat $PIDFILE 2>/dev/null`
+        if [ "$pid" != "" ]; then
+            ps -p $pid > /dev/null 2>&1
+            if [ $? -eq 0 ]; then
+                echo "$NAME is running with pid $pid"
+                exit 0;
+            fi
+        fi
+        echo "$NAME is not running"
+        exit 1;
+    ;;
+    restart)
+        $0 stop && sleep 1 && $0 start
+        exit $?
+        ;;
+    *)
+        echo "Usage: $NAME {start|stop|status|restart}"
+        exit 1
+        ;;
+esac
+
+exit 0

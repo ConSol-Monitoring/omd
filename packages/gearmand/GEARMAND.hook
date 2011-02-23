@@ -1,0 +1,34 @@
+#!/bin/bash
+case "$1" in
+        alias)
+                echo "Gearman Daemon"
+        ;;
+        description)
+                cat << EOF
+Gearman is the central job server for distributed monitoring
+based on Mod-Gearman. You have to start at least one job server
+somewhere. Keep the gearmand close to the nagios core for maximum
+performance.
+EOF
+    ;;
+    default)
+        echo "on"
+    ;;
+    choices)
+        echo "on: enable gearman daemon"
+        echo "off: disable gearman daemon"
+    ;;
+    set)
+        if [ "$2" != "off" ]; then
+            # generate random key
+            KEYSTORE="$OMD_ROOT/etc/mod-gearman/secret.key"
+            if [ ! -s $KEYSTORE ]; then
+                key=`head -n 20 /dev/urandom | strings | tr -d "\n"`
+                echo ${key:0:32} > $KEYSTORE
+            fi
+        fi
+    ;;
+    depends)
+        [ "$CONFIG_DISTRIBUTED_MONITORING" = "mod-gearman" ]
+    ;;
+esac

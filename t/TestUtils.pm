@@ -518,15 +518,17 @@ sub _clean_stderr {
 sub _diag_cmd {
     my $test = shift;
     my $cmd  = shift;
+    my $stdout = $cmd->stdout || '';
+    my $stderr = $cmd->stderr || '';
     diag("\ncmd: '".$test->{'cmd'}."' failed\n");
-    diag("stdout: ".$cmd->stdout."\n");
-    diag("stderr: ".$cmd->stderr."\n");
+    diag("stdout: ".$stdout."\n");
+    diag("stderr: ".$stderr."\n");
 
     # check logfiles on apache errors
-    if(   $cmd->stdout =~ m/Starting dedicated Apache for site (\w+)[\.\ ]*ERROR/
-       or $cmd->stdout =~ m/500 Internal Server Error/) {
+    if(   $stdout =~ m/Starting dedicated Apache for site (\w+)[\.\ ]*ERROR/
+       or $stdout =~ m/500 Internal Server Error/) {
         my $site = $1;
-        _tail("apache logs:", "/omd/sites/$site/var/log/apache/error_log");
+        _tail("apache logs:", "/omd/sites/$site/var/log/apache/error_log") if defined $site;
    }
     return;
 }

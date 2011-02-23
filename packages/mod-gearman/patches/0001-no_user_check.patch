@@ -1,0 +1,39 @@
+--- a/configure.ac	2011-02-22 11:43:17.000000000 +0100
++++ b/configure.ac	2011-02-22 11:43:40.000000000 +0100
+@@ -49,21 +49,21 @@
+ 
+ ##############################################
+ # Determine the user
+-AC_ARG_WITH([user],
+-[AS_HELP_STRING([--with-user],
+-[specify the user @<:@default="nagios"@:>@])],
+-[], [with_user="nagios"])
+-user="$with_user"
+-AC_SUBST(user)
+-
+-AC_MSG_CHECKING(if user $user exists)
+-id -a $user > /dev/null 2>&1
+-if test "$?" != "0" ; then
+-    AC_MSG_RESULT(no)
+-    AC_MSG_ERROR(user $user does not exist)
+-else
+-    AC_MSG_RESULT(yes)
+-fi
++#AC_ARG_WITH([user],
++#[AS_HELP_STRING([--with-user],
++#[specify the user @<:@default="nagios"@:>@])],
++#[], [with_user="nagios"])
++#user="$with_user"
++#AC_SUBST(user)
++#
++#AC_MSG_CHECKING(if user $user exists)
++#id -a $user > /dev/null 2>&1
++#if test "$?" != "0" ; then
++#    AC_MSG_RESULT(no)
++#    AC_MSG_ERROR(user $user does not exist)
++#else
++#    AC_MSG_RESULT(yes)
++#fi
+ 
+ ##############################################
+ # Check some functions
