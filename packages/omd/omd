@@ -321,6 +321,11 @@ def get_file_permissions(path):
     except:
         return 0
 
+def get_file_owner(path):
+    try:
+        return pwd.getpwuid(os.stat(path).st_uid)[0]
+    except:
+        return None
 
 def site_name():
         return pwd.getpwuid(os.getuid()).pw_name
@@ -1900,19 +1905,21 @@ def main_mv_or_cp(what, args, options={}):
     restart_apache()
 
 
-def diff_list(from_skelroot, g_sitedir):
+def diff_list(from_skelroot, g_sitedir, from_version):
     """ Outputs only a list of changed/deleted files compared to the current version."""
-    def print_diff(source_path, target_path, site_to_version, relpath):
+    def print_diff(source_path, target_path, source_version, source_perms, site_to_version, relpath):
         deleted_label = 'Deleted'
         if site_to_version:
             deleted_label = 'Added'
             # Ignore several files which be added during site creation
-            # FIXME: This must skip all files which are modified by hooks
             if relpath in [ 'include', 'lib', 'share', 'bin', 'version', ]:
                 return
 
         source_file = source_path + '/' + relpath
         target_file = target_path + '/' + relpath
+
+        source_perm = get_skel_permissions(source_version, source_perms, relpath)
+        target_perm = get_file_permissions(target_file)
 
         source_type = filetype(source_file)
         target_type = filetype(target_file)
@@ -1937,20 +1944,31 @@ def diff_list(from_skelroot, g_sitedir):
         elif changed_content and not changed_type:
             sys.stdout.write(good + " Changed content %s\n" % (fn))
 
-        # FIXME: Changed permissions
-        # FIXME: Chanded owner
+        if source_perm != target_perm:
+            sys.stdout.write(warn + " Changed permissions %s\n" % (fn))
 
-    handled_paths = walk_skel(from_skelroot, print_diff, (from_skelroot, g_sitedir, False))
-    walk_skel(g_sitedir, print_diff, (g_sitedir, from_skelroot, True), from_skelroot)
+        if site_to_version:
+            owner = get_file_owner(source_file)
+            if owner != g_sitename:
+                sys.stdout.write(warn + " Changed owner (%s) %s\n" % (owner, fn))
+
+    read_skel_permissions()
+    old_perms = load_skel_permissions(from_version)
+
+    handled_paths = walk_skel(from_skelroot, print_diff,
+                              (from_skelroot, g_sitedir, from_version, old_perms, False))
+    walk_skel(g_sitedir, print_diff,
+              (g_sitedir, from_skelroot, from_version, old_perms, True), from_skelroot)
 
 
 def main_diff(args, options={}):
-    from_skelroot = "/omd/versions/%s/skel" % site_version(g_sitename)
+    from_version  = site_version(g_sitename)
+    from_skelroot = "/omd/versions/%s/skel" % from_version
 
     # First implementation: Outputs only a list of changed/deleted files compared
     # to the current version. With dir/file name given the diff could show more details
     # like te file contents and so on
-    diff_list(from_skelroot, g_sitedir)
+    diff_list(from_skelroot, g_sitedir, from_version)
 
 
 def walk_skel(root, handler, args, compare_with = None):
