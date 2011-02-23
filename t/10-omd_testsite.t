@@ -12,9 +12,14 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 47 );
+plan( tests => 49 );
 
 my $omd_bin = TestUtils::get_omd_bin();
+
+# print omd version
+my $vtest = { cmd => $omd_bin." version", "exit" => undef };
+TestUtils::test_command($vtest) or BAIL_OUT("no further testing without working omd");
+diag($vtest->{'stdout'});
 
 ########################################
 # execute some commands
