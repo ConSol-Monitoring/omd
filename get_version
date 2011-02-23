@@ -16,7 +16,9 @@ fi
 
 # if we are not on a exact tag, use the last tag and add the date
 # ex.: v0.43.20101018
-version=`git tag -l | tail -n 1`
+# "git describe --tag --abbrev=0 --always" does not work correctly with git versions < 1.7
+# see issue #198
+version=`git tag -l | sed -e 's/^v//g' | sort -n | tail -n 1`
 if [ $? -eq 0 ]; then
   date=`date +%Y%m%d`
   major=`echo $version | cut -d . -f 1`
