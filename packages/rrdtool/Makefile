@@ -14,6 +14,7 @@ build:
 	tar xzf $(DIR).tar.gz
 	# set perl environment to match the other perl modules
 	echo "install  --install_base  $(DESTDIR)$(OMD_ROOT)/lib/perl5" > .modulebuildrc
+	export PERL5LIB=$$(pwd)/../perl-modules/dist/lib/perl5:$$(pwd)/../perl-modules/dist/lib/perl5/$(PERLARCH); \
 	export PERL_MM_OPT=INSTALL_BASE=$(DESTDIR)$(OMD_ROOT)/lib/perl5; \
 	export MODULEBUILDRC=$$(pwd)/.modulebuildrc; \
 	cd $(DIR) && \
