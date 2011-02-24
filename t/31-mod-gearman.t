@@ -42,10 +42,13 @@ for my $test (@{$tests}) {
 }
 
 # verify the jobs done
-my $test = { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_gearman -H localhost:4730 -q worker_".hostname." -t 10 -s check'", like => [ '/check_gearman OK/', '/worker=3/' ] };
+my $test = { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_gearman -H localhost:4730 -q worker_".hostname." -t 10 -s check'", like => [ '/check_gearman OK/' ] };
 TestUtils::test_command($test);
 chomp($test->{'stdout'});
 unlike($test->{'stdout'}, qr/jobs=0c/, "worker has jobs done: ".$test->{'stdout'});
+my $worker = 0;
+if( $test->{'stdout'} =~ m/worker=(\d+)/ ) { $worker = $1 }
+ok($worker >= 3, "worker number >= 3: $worker");
 
 ##################################################
 # cleanup test site
