@@ -204,7 +204,7 @@ sub test_url {
     # response code?
     $test->{'code'} = 200 unless exists $test->{'code'};
     if(defined $test->{'code'}) {
-        is($page->{'code'}, $test->{'code'}, "response code for ".$test->{'url'}." is: ".$test->{'code'});
+        is($page->{'code'}, $test->{'code'}, "response code for ".$test->{'url'}." is: ".$test->{'code'}) or _diag_request($test, $page);
     }
 
     # content type?
@@ -222,7 +222,7 @@ sub test_url {
     # not matching output
     if(defined $test->{'unlike'}) {
         for my $expr (ref $test->{'unlike'} eq 'ARRAY' ? @{$test->{'unlike'}} : $test->{'unlike'} ) {
-            unlike($page->{'content'}, $expr, "content unlike ".$expr);
+            unlike($page->{'content'}, $expr, "content unlike ".$expr)  or _diag_request($test, $page);;
         }
     }
 
@@ -510,35 +510,76 @@ sub _clean_stderr {
 
 ##################################################
 
-=head2 _clean_stderr
+=head2 _diag_cmd
 
-  remove some know errors from stderr
+  print diagnostic output for failed commands
 
 =cut
 sub _diag_cmd {
     my $test = shift;
     my $cmd  = shift;
+    my $stdout = $cmd->stdout || '';
+    my $stderr = $cmd->stderr || '';
     diag("\ncmd: '".$test->{'cmd'}."' failed\n");
-    diag("stdout: ".$cmd->stdout."\n");
-    diag("stderr: ".$cmd->stderr."\n");
+    diag("stdout: ".$stdout."\n");
+    diag("stderr: ".$stderr."\n");
 
     # check logfiles on apache errors
-    if($cmd->stdout =~ m/Starting dedicated Apache for site (\w+)[\.\ ]*ERROR/ ) {
+    if(   $stdout =~ m/Starting dedicated Apache for site (\w+)[\.\ ]*ERROR/
+       or $stdout =~ m/500 Internal Server Error/) {
         my $site = $1;
-        diag("apache logs:");
-        my $files = ["/omd/sites/$site/var/log/apache/error_log"];
-        for my $file (@{$files}) {
-            if(-f $file) {
-                diag("$file:");
-                diag(`tail -n20 $file`);
-            }
-        }
+        _tail("apache logs:", "/omd/sites/$site/var/log/apache/error_log") if defined $site;
+    }
+    if( $stderr =~ m/User '(\w+)' still logged in or running processes/ ) {
+        my $site = $1;
+        diag("ps: ".`ps -fu $site`) if $site;
     }
     return;
 }
 
 ##################################################
 
+=head2 _diag_request
+
+  print diagnostic output for failed requests
+
+=cut
+sub _diag_request {
+    my $test  = shift;
+    my $page  = shift;
+
+    $test->{'url'} =~ m/localhost\/(\w+)\//;
+    my $site = $1;
+    return unless defined $site;
+
+    # check logfiles on apache errors
+    if(   $page->{'code'}    == 500
+       or $page->{'content'} =~ m/Internal Server Error/) {
+        _tail("apache logs:", "/omd/sites/$site/var/log/apache/error_log");
+    }
+    return;
+}
+
+##################################################
+
+=head2 _tail
+
+  print tail of fail
+
+=cut
+sub _tail {
+    my $name = shift;
+    my $file = shift;
+    diag($name);
+    if(-f $file) {
+        diag(`tail -n20 $file`);
+    } else {
+        diag("cannot read $file: $!");
+    }
+}
+
+##################################################
+ 
 END {
     if(defined $omd_symlink_created and $omd_symlink_created == 1) {
         unlink('/omd');

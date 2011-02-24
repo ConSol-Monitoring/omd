@@ -1,0 +1,30 @@
+#!/bin/bash
+case "$1" in
+    alias)
+        echo "Mod-Gearman NEB Module"
+    ;;
+    description)
+        cat << EOF
+The Mod-Gearman NEB Module is the server part running in the nagios core. Make
+sure you have at least one gearmand job server and one worker running.
+EOF
+    ;;
+    default)
+        echo "on"
+    ;;
+    choices)
+        echo "on: enable"
+        echo "off: disable"
+    ;;
+    set)
+        if [ "$2" = "off" -o "$CONFIG_DISTRIBUTED_MONITORING" != "mod-gearman" ]; then
+            rm -f $OMD_ROOT/etc/nagios/nagios.d/mod-gearman.cfg
+        elif [ "$2" = "on" ]; then
+            mkdir -p $OMD_ROOT/etc/nagios/nagios.d
+            ln -sfn ../../mod-gearman/nagios.cfg $OMD_ROOT/etc/nagios/nagios.d/mod-gearman.cfg
+        fi
+    ;;
+    depends)
+        [ "$CONFIG_DISTRIBUTED_MONITORING" = "mod-gearman" ]
+    ;;
+esac

@@ -1,1 +1,2 @@
 etc/init.d/apache 755
+etc/apache/php-wrapper 755
