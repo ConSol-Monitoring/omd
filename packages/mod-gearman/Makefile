@@ -1,18 +1,14 @@
 include ../../Makefile.omd
 
 NAME     = mod_gearman
-VERSION  = 1.0
+VERSION  = 1.0.1
 DIR      = mod_gearman-$(VERSION)
 
 .PHONY: skel
 
 build:
-	test -f mod_gearman-${VERSION}.tar.gz || wget "http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.0.tar.gz"
+	test -f mod_gearman-${VERSION}.tar.gz || wget "http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-$(VERSION).tar.gz"
 	tar xzf mod_gearman-$(VERSION).tar.gz
-	for p in patches/*.patch ; do \
-	    echo "applying $$p..." ; \
-	    ( cd $(DIR) ; patch -p1 -b ) < $$p ; \
-	done
 	cd $(DIR) && \
     export LIBRARY_PATH=$(shell pwd)/../gearmand/gearmand-0.14/libgearman/.libs && \
     export LD_LIBRARY_PATH=$(shell pwd)/../gearmand/gearmand-0.14/libgearman/.libs && \
@@ -24,6 +20,7 @@ install:
 	# fix path for plugin
 	[ -d $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins ] || mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins
 	mv $(DESTDIR)$(OMD_ROOT)/bin/check_gearman $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins/
+	rm -rf $(DESTDIR)$(OMD_ROOT)/etc/mod-gearman
 
 skel:
 

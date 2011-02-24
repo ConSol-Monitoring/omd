@@ -21,8 +21,14 @@ DAEMON=###ROOT###/bin/mod_gearman_worker
 NAME=gearman_worker
 CONFIG=###ROOT###/etc/mod-gearman/worker.cfg
 PIDFILE=###ROOT###/tmp/run/gearman_worker.pid
-USER=
+USER=###SITE###
 USERID=`id -u`
+
+# create state dir
+if [ "$USERID" -eq 0 ]; then
+  mkdir -p $(dirname $PIDFILE)
+  chown $USER: $(dirname $PIDFILE)
+fi
 
 case "$1" in
     start)
@@ -42,7 +48,7 @@ case "$1" in
         fi
         ;;
     stop)
-        echo -n "Stopping $NAME"
+        echo -n "Stopping $NAME..."
         pid=`cat $PIDFILE 2>/dev/null`
         if [ -z $pid ]; then
             echo ". Not running."
@@ -54,7 +60,7 @@ case "$1" in
             done
             ps -p $pid > /dev/null 2>&1;
             if [ $? -ne 0 ]; then
-                echo "done"
+                echo "OK"
                 exit 0;
             else
                 echo "failed"

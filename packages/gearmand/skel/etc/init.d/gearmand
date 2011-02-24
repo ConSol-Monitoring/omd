@@ -27,13 +27,25 @@ if [ -z "$LISTEN" ]; then
 fi
 PIDFILE=###ROOT###/tmp/run/gearmand.pid
 LOGFILE=###ROOT###/var/log/gearman/gearmand.log
-USER=
+USER=###SITE###
 GRACEFUL_SHUTDOWN_TIME=30
-for f in $( which netcat nc ) ; do
+LIBEVENTMINVERSION=1.4
+for f in $( which netcat nc 2>/dev/null ) ; do
   if [ -x "$f" ]; then
     NC=$f
   fi
 done
+
+# check libevent version
+# io threads are only supported in lib event >= 1.4
+LIBEVENTVERSION=`/sbin/ldconfig -p 2>&1 | grep libevent- | sed -e 's/.*libevent\-\(.*\)\.so.*/\1/g' -e 's/[^0-9\.]//g'`
+if [ ! -z "$LIBEVENTVERSION" ]; then
+  [ `echo "$LIBEVENTVERSION $LIBEVENTMINVERSION" | awk '{if ($1 >= $2) print 1}'` ] && OPTIONS="$OPTIONS -t 10"
+fi
+
+# create state dir
+mkdir -p $(dirname $LOGFILE)
+chown $USER: $(dirname $LOGFILE)
 
 get_status() {
         pid=$( cat $PIDFILE 2>/dev/null )
@@ -105,14 +117,14 @@ case "$1" in
         fi
         ;;
     stop)
-        printf '%s' "Stopping $NAME"
+        printf '%s' "Stopping $NAME..."
         pid=$( cat $PIDFILE 2>/dev/null )
         if [ -z "$pid" ]; then
             echo ". Not running."
         else
             # do a graceful shutdown
             if [ ! -z $NC ]; then
-                printf '%s' " gracefully..."
+                printf '%s' " gracefully "
                 echo "shutdown graceful" | $NC -w 1 -i 1 $LISTEN $PORT > /dev/null
                 x=$GRACEFUL_SHUTDOWN_TIME
                 while [ $x -gt 0 ]; do
@@ -137,7 +149,7 @@ case "$1" in
         kill_gearmand;
         ;;
     reload|force-reload)
-        printf '%s' "Reloading $NAME configuration files "
+        printf '%s' "Reloading $NAME configuration files..."
         pid=$( cat $PIDFILE 2>/dev/null )
         if [ -n "$pid" ]; then
             kill -HUP "$pid"
