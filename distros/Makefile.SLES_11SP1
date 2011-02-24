@@ -34,6 +34,7 @@ OS_PACKAGES    += fping
 OS_PACKAGES    += graphviz
 OS_PACKAGES    += libpng12-0
 OS_PACKAGES    += libevent-1_4-2
+OS_PACKAGES    += libltdl7
 OS_PACKAGES    += libreadline5
 OS_PACKAGES    += libuuid1
 OS_PACKAGES    += mysql
