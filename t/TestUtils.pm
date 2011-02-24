@@ -292,8 +292,24 @@ sub config {
     our $config;
     return $config->{$key} if defined $config;
 
-    $config = {};
     my $conf_file = "/omd/versions/default/share/omd/distro.info";
+    $config = read_config($conf_file);
+
+    return $config->{$key};
+}
+
+
+##################################################
+
+=head2 read_config
+
+  return config from file
+
+=cut
+sub read_config {
+    my $conf_file = shift;
+
+    my $config = {};
     open(my $fh, '<', $conf_file) or carp("cannot open $conf_file: $!");
     while(<$fh>) {
         my $line = $_;
@@ -313,7 +329,7 @@ sub config {
         }
     }
     close($fh);
-    return $config->{$key};
+    return $config;
 }
 
 
