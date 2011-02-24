@@ -12,7 +12,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 551 );
+plan( tests => 554 );
 
 ##################################################
 # create our test site
@@ -27,6 +27,9 @@ my $tests = [
 for my $test (@{$tests}) {
     TestUtils::test_command($test);
 }
+
+##################################################
+TestUtils::test_command({ cmd => "/bin/su - $site -c 'perl -e \"use RRDs 1.4004;\"'" });
 
 ##################################################
 for my $tarball (glob("packages/perl-modules/src/*.gz")) {
