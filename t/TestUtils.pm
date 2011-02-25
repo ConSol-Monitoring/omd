@@ -28,6 +28,15 @@ eval {
     $use_html_lint = 1;
 };
 
+##################################################
+# dont test over a proxy
+delete $ENV{'HTTP_PROXY'};
+delete $ENV{'HTTPS_PROXY'};
+delete $ENV{'FTP_PROXY'};
+delete $ENV{'http_proxy'};
+delete $ENV{'https_proxy'};
+delete $ENV{'ftp_proxy'};
+
 
 ##################################################
 
