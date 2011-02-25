@@ -22,6 +22,7 @@ build:
 	$(MAKE) all
 
 install:
+	export PERL5LIB=$$(pwd)/../perl-modules/dist/lib/perl5:$$(pwd)/../perl-modules/dist/lib/perl5/$(PERLARCH); \
 	$(MAKE) DESTDIR=$(DESTDIR) -C $(DIR) install
 	
 	mkdir $(DESTDIR)$(OMD_ROOT)/share/doc/rrdtool
