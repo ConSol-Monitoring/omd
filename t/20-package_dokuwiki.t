@@ -17,7 +17,7 @@ plan( tests => 28 );
 ##################################################
 # create our test site
 my $omd_bin = TestUtils::get_omd_bin();
-my $site    = TestUtils::create_test_site() or BAIL_OUT("no further testing without site");
+my $site    = TestUtils::create_test_site() or TestUtils::bail_out_clean("no further testing without site");
 
 ##################################################
 # execute some checks

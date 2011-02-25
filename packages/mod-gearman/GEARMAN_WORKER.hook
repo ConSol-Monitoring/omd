@@ -27,6 +27,7 @@ EOF
                 echo ${key:0:32} > $KEYSTORE
             fi
         fi
+    ;;
     depends)
         [ "$CONFIG_DISTRIBUTED_MONITORING" = "mod-gearman" ]
     ;;

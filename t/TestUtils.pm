@@ -502,7 +502,7 @@ sub _get_url {
         }
     }
     else {
-        BAIL_OUT("unknown url scheme in _get_url: '".$url."'");
+        TestUtils::bail_out_clean("unknown url scheme in _get_url: '".$url."'");
     }
 
     return $newurl;
