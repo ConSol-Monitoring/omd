@@ -1,8 +1,8 @@
 include ../../Makefile.omd
 
 NAME = nagvis
-VERSION = 1.5.8
-#VERSION = 1.5-nightly
+#VERSION = 1.5.8
+VERSION = 1.6-nightly
 DIR = $(NAME)-$(VERSION)
 
 .PHONY: skel
@@ -21,14 +21,21 @@ install:
 	 -b $(DESTDIR)/usr/bin \
 	 -p $(DESTDIR)$(OMD_ROOT)/share/nagvis
 	
-	# And last but not least relocate the NagVis shared directory to have the same path
-	# as all the other packages
+	# Relocate the NagVis shared directory to have the same path as all the other packages
 	test -d $(DESTDIR)$(OMD_ROOT)/share/nagvis/share && \
 	  mv $(DESTDIR)$(OMD_ROOT)/share/nagvis/share $(DESTDIR)$(OMD_ROOT)/share/nagvis/htdocs
 	
 	# Move userfiles to skel to allow site specific modifications
-	mkdir -p $(DESTDIR)$(OMD_ROOT)/skel/var/nagvis
-	mv $(DESTDIR)$(OMD_ROOT)/share/nagvis/htdocs/userfiles $(DESTDIR)$(OMD_ROOT)/skel/var/nagvis/userfiles
+	#mkdir -p $(DESTDIR)$(OMD_ROOT)/skel/var/nagvis
+	#mv $(DESTDIR)$(OMD_ROOT)/share/nagvis/htdocs/userfiles $(DESTDIR)$(OMD_ROOT)/skel/var/nagvis/userfiles
+	
+	# Create local structure
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/local/share/nagvis/htdocs/userfiles/gadgets
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/local/share/nagvis/htdocs/userfiles/styles
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/local/share/nagvis/htdocs/userfiles/templates
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/local/share/nagvis/htdocs/userfiles/images/iconsets
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/local/share/nagvis/htdocs/userfiles/images/maps
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/local/share/nagvis/htdocs/userfiles/images/shapes
 	
 	# Move package documentations to have these files in the binary packages
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/doc/$(NAME)
