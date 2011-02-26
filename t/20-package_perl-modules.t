@@ -12,12 +12,12 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 551 );
+plan( tests => 554 );
 
 ##################################################
 # create our test site
 my $omd_bin = TestUtils::get_omd_bin();
-my $site    = TestUtils::create_test_site() or BAIL_OUT("no further testing without site");
+my $site    = TestUtils::create_test_site() or TestUtils::bail_out_clean("no further testing without site");
 
 ##################################################
 # execute some checks
@@ -27,6 +27,9 @@ my $tests = [
 for my $test (@{$tests}) {
     TestUtils::test_command($test);
 }
+
+##################################################
+TestUtils::test_command({ cmd => "/bin/su - $site -c 'perl -e \"use RRDs 1.4004;\"'" });
 
 ##################################################
 for my $tarball (glob("packages/perl-modules/src/*.gz")) {

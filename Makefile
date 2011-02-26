@@ -26,6 +26,8 @@ PACKAGES=perl-modules \
          shinken \
          thruk \
          maintenance \
+         gearmand \
+         mod-gearman \
          patch
 
 # This file is kept by 'make config' and also may override

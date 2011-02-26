@@ -22,7 +22,7 @@ CONFIGUREOPTS = \
     --with-nagios-user=$$(id -un) \
     --with-nagios-group=$$(id -gn) \
     --with-rrdtool=/bin/true \
-    --with-perl_lib_path=$(OMD_ROOT)/lib/perl \
+    --with-perl_lib_path=$(OMD_ROOT)/lib/perl5/lib/perl5 \
     --with-base-url='/\#\#\#SITE\#\#\#/pnp4nagios'
 
 build:

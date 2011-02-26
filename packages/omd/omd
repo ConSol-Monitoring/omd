@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # -*- encoding: utf-8; py-indent-offset: 4 -*-
-# vim: tabstop=4 expandtab shiftwidth=4 softtabstop=4
+# vim: tabstop=8 expandtab shiftwidth=4 softtabstop=4
 #
 #       U  ___ u  __  __   ____
 #        \/"_ \/U|' \/ '|u|  _"\
@@ -75,6 +75,12 @@ else:
     tty_ok        = 'OK'
     tty_error     = 'ERROR'
 
+def ok():
+    sys.stdout.write(tty_ok + "\n")
+
+def error():
+    sys.stdout.write(tty_error + "\n")
+
 # Symbols for update
 good  = " " + tty_green +  tty_bold + "*" + tty_normal
 warn  = " " + tty_bgyellow + tty_black + tty_bold + "!" + tty_normal
@@ -89,9 +95,9 @@ g_hooks = None
 
 def show_success(exit_code):
     if exit_code == True or exit_code == 0:
-        sys.stdout.write(tty_ok + "\n")
+        ok()
     else:
-        sys.stdout.write(tty_error + "\n")
+        error()
     return exit_code
 
 patch_supports_merge = None
@@ -155,7 +161,7 @@ def user_confirms(title, message, relpath, yes_choice, yes_text, no_choice, no_t
         if choice == "abort":
             bail_out("Update aborted.")
         elif choice == "shell":
-	        thedir = "/".join(user_path.split("/")[:-1])
+	    thedir = "/".join(user_path.split("/")[:-1])
             sys.stdout.write("\n Starting BASH. Type CTRL-D to continue.\n\n")
             os.system("cd '%s' ; bash -i" % thedir)
         else:
@@ -536,7 +542,7 @@ def create_tmpfs(sitename):
         switch_to_site_user()
 
     tmp = tmp_dir(sitename)
-    sys.stdout.write("Creating temporary filesystem...")
+    sys.stdout.write("Creating temporary filesystem %s..." % tmp)
     sys.stdout.flush()
     if not os.path.exists(tmp):
         os.mkdir(tmp)
@@ -545,14 +551,14 @@ def create_tmpfs(sitename):
         return
     create_skeleton_files(sitename, "tmp")
     chown_tree(tmp, sitename)
-    sys.stdout.write(tty_ok + "\n")
+    ok()
 
 def unmount_tmpfs(sitename):
     if tmpfs_mounted(sitename):
         sys.stdout.write("Unmounting temporary filesystem...")
         for t in range(0, 10):
             if 0 == os.system("umount '%s'" % tmp_dir(sitename)):
-                sys.stdout.write(tty_ok + "\n")
+                ok()
                 return
             sys.stdout.write(".")
             sys.stdout.flush()
@@ -575,7 +581,7 @@ def remove_from_fstab(sitename):
             continue
         newtab.write(line)
     os.rename("/etc/fstab.new", "/etc/fstab")
-    sys.stdout.write(tty_ok + "\n")
+    ok()
 
 def start_site(sitename):
     create_tmpfs(sitename)
@@ -601,7 +607,7 @@ def create_skeleton_files(sitename, dir):
                     continue
                 if dirpath == "tmp" or dirpath.startswith("tmp/"):
                     continue
-	        create_skeleton_file(skelroot, sitedir, dirpath + "/" + entry, replacements)
+	    create_skeleton_file(skelroot, sitedir, dirpath + "/" + entry, replacements)
 
 def delete_user_file(user_path):
     if not os.path.islink(user_path) and os.path.isdir(user_path):
@@ -1603,7 +1609,7 @@ def main_setup(args, options={}):
     command = "%s %s" % (install_cmd, " ".join(packages))
     sys.stdout.write("Going to execute '%s'\n" % command)
     if 0 == os.system(command):
-        sys.stdout.write(tty_ok + "\n")
+        ok()
 
     # Enable Apache modules
     for mod in [ "proxy", "proxy_http", "rewrite" ]:
@@ -1683,7 +1689,7 @@ def main_version(args, options={}):
 
 def main_versions(args, options={}):
     for v in omd_versions():
-        if v == default_version():
+        if v == default_version() and not "bare" in options:
             sys.stdout.write("%s (default)\n" % v)
         else:
             sys.stdout.write("%s\n" % v)
@@ -1697,14 +1703,17 @@ def omd_versions():
     return v
 
 def main_sites(args, options={}):
-    if on_tty:
+    if on_tty and not "bare" in options:
         sys.stdout.write("SITE             VERSION\n")
     for site in all_sites():
-        v = site_version(site)
-        if v == default_version():
-            sys.stdout.write("%-16s %s (default)\n" % (site, v))
+        if "bare" in options:
+            sys.stdout.write("%s\n" % site)
         else:
-            sys.stdout.write("%-16s %s\n" % (site, v))
+            v = site_version(site)
+            if v == default_version():
+                sys.stdout.write("%-16s %s (default)\n" % (site, v))
+            else:
+                sys.stdout.write("%-16s %s\n" % (site, v))
 
 # Bail out if name for new site is not valid (needed by create/mv/cp)
 def sitename_must_be_valid(name):
@@ -1790,12 +1799,12 @@ def main_rm(args, options={}):
     sys.stdout.write("Deleting user and group %s..." % g_sitename)
     os.chdir("/") # Site dir not longer existant after userdel
     userdel(g_sitename)
-    sys.stdout.write(tty_ok + "\n")
+    ok()
 
     if os.path.exists(g_sitedir): # should be done by userdel
         sys.stdout.write("Deleting all data (%s)..." % g_sitedir)
         shutil.rmtree(site_dir(g_sitename))
-        sys.stdout.write(tty_ok + "\n")
+        ok()
 
     # remove include-hook for Apache and tell apache
     delete_apache_hook(g_sitename)
@@ -1827,7 +1836,7 @@ def main_mv_or_cp(what, args, options={}):
     # Linux does not (officially) allow to rename a user.
     uid = options.get("uid")
     gid = options.get("gid")
-    useradd(new, uid, gid)
+    useradd(new, uid, gid) # None for uid/gid means: let Linux decide
 
     if what == "mv":
         # Rename base directory and apache config
@@ -1836,7 +1845,28 @@ def main_mv_or_cp(what, args, options={}):
     else:
         # Make exact file-per-file copy with same user but already new name
         os.mkdir(site_dir(new))
-        os.system("rsync -arx '%s/' '%s/'" % (site_dir(g_sitename), site_dir(new)))
+        addopts = ""
+        excludes = []
+        if "no-rrds" in options or "no-past" in options:
+            excludes.append("var/pnp4nagios/perfdata/")
+            excludes.append("var/pnp4nagios/spool/")
+            excludes.append("var/rrdcached/")
+            excludes.append("var/pnp4nagios/states/")
+        if "no-logs" in options or "no-past" in options:
+            excludes.append("var/log/*/")
+            excludes.append("var/nagios/nagios.log")
+            excludes.append("var/nagios/archive/")
+            excludes.append("var/pnp4nagios/log/")
+            excludes.append("var/pnp4nagios/perfdata.dump")
+        
+        for p in excludes:
+            addopts += " --exclude '/%s'" % p
+
+        if opt_verbose:
+            addopts += " -v"
+        
+        os.system("rsync -arx %s '%s/' '%s/'" % 
+                (addopts, site_dir(g_sitename), site_dir(new)))
 
     # Change config files from old to new site (see rename_site())
     patch_skeleton_files(g_sitename, new)
@@ -1932,14 +1962,14 @@ def main_update(args, options={}):
             continue
 
         for entry in dirnames + filenames:
-	        path = dirpath + "/" + entry
+	    path = dirpath + "/" + entry
             if path.startswith("./"):
                 path = path[2:]
             handled_paths.add(path)
             try:
                 update_file(from_version, to_version, g_sitedir, path, old_perms)
             except Exception, e:
-		        sys.stderr.write("Error updating %s/%s: %s\n" % (g_sitedir, path, e))
+		sys.stderr.write("Error updating %s/%s: %s\n" % (g_sitedir, path, e))
                 raise
 
     # Now handle files present in old but not in new skel files
@@ -1951,7 +1981,7 @@ def main_update(args, options={}):
             continue
 
         for entry in dirnames + filenames:
-	        path = dirpath + "/" + entry
+	    path = dirpath + "/" + entry
             if path.startswith("./"):
                 path = path[2:]
             if path in handled_paths:
@@ -1962,7 +1992,7 @@ def main_update(args, options={}):
                 try:
                     update_file(from_version, to_version, g_sitedir, path, old_perms)
                 except Exception, e:
-		            sys.stderr.write("Error updating %s/%s: %s\n" % (g_sitedir, path, e))
+		    sys.stderr.write("Error updating %s/%s: %s\n" % (g_sitedir, path, e))
                     raise
 
     # Change symbolic link pointing to new version
@@ -2052,12 +2082,12 @@ commands = [
     ""),
 
   ( "versions",  False, 0, 0, False, "",        main_versions,
-    [],
+    [("bare", "b", False)],
     "List installed OMD versions",
     ""),
 
   ( "sites",     False, 0, 0, False, "", main_sites,
-    [],
+    [("bare", "b", False)],
     "Show list of sites",
     ""),
 
@@ -2094,7 +2124,12 @@ commands = [
     ""),
 
   ( "cp",        True,  1, 1, False, "NEWNAME", lambda args, opts: main_mv_or_cp("cp", args, opts),
-    [ ( "uid", "u", True ), ( "gid", "g", True )],
+    [ ( "uid", "u", True ), 
+      ( "gid", "g", True ),
+      ( "no-rrds", None, False ), # skip RRD files when copying site
+      ( "no-logs", None, False ), # skip Logfiles when copying site
+      ( "no-past", "N", False),   # skip RRDs and logfiles when copying site
+    ],
     "Make a copy of a site",
     ""),
 

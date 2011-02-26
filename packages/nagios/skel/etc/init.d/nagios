@@ -193,22 +193,22 @@ esac
           
 case "$1" in
     start)
-         echo -n "Starting nagios... "
+         echo -n "Starting nagios..."
          if nagios_wait_start; then
-             echo 'OK.'
+             echo 'OK'
              exit 0
          else
-             echo 'ERROR.'
+             echo 'ERROR'
              exit 1
          fi
     ;;
     stop)
         echo -n "Stopping nagios..."
         if nagios_wait_stop; then
-            echo 'OK.'
+            echo 'OK'
             exit 0
         else
-            echo 'ERROR.'
+            echo 'ERROR'
             exit 1
         fi
     ;;
@@ -251,7 +251,7 @@ case "$1" in
 
         echo -n "Reloading nagios configuration (PID: $PID)... "
         if kill -HUP ${PID:-} >/dev/null 2>&1; then
-            echo 'OK.'
+            echo 'OK'
             exit 0
         else
             $0 restart
