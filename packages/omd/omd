@@ -1907,14 +1907,7 @@ def main_mv_or_cp(what, args, options={}):
 
 def diff_list(from_skelroot, g_sitedir, from_version):
     """ Outputs only a list of changed/deleted files compared to the current version."""
-    def print_diff(source_path, target_path, source_version, source_perms, site_to_version, relpath):
-        deleted_label = 'Deleted'
-        if site_to_version:
-            deleted_label = 'Added'
-            # Ignore several files which be added during site creation
-            if relpath in [ 'include', 'lib', 'share', 'bin', 'version', ]:
-                return
-
+    def print_diff(source_path, target_path, source_version, source_perms, relpath):
         source_file = source_path + '/' + relpath
         target_file = target_path + '/' + relpath
 
@@ -1933,7 +1926,8 @@ def diff_list(from_skelroot, g_sitedir, from_version):
         fn = tty_bold + relpath + tty_normal
 
         if not target_type:
-            sys.stdout.write(good + " %s %s\n" % (deleted_label, fn))
+            sys.stdout.write(good + " Deleted %s\n" % (fn))
+            return
 
         elif changed_type and changed_content:
             sys.stdout.write(good + " Changed type and content %s\n" % (fn))
@@ -1947,18 +1941,10 @@ def diff_list(from_skelroot, g_sitedir, from_version):
         if source_perm != target_perm:
             sys.stdout.write(warn + " Changed permissions %s\n" % (fn))
 
-        if site_to_version:
-            owner = get_file_owner(source_file)
-            if owner != g_sitename:
-                sys.stdout.write(warn + " Changed owner (%s) %s\n" % (owner, fn))
-
     read_skel_permissions()
     old_perms = load_skel_permissions(from_version)
 
-    handled_paths = walk_skel(from_skelroot, print_diff,
-                              (from_skelroot, g_sitedir, from_version, old_perms, False))
-    walk_skel(g_sitedir, print_diff,
-              (g_sitedir, from_skelroot, from_version, old_perms, True), from_skelroot)
+    walk_skel(from_skelroot, print_diff, (from_skelroot, g_sitedir, from_version, old_perms))
 
 
 def main_diff(args, options={}):
