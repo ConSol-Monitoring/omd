@@ -12,22 +12,20 @@ sesscookiepath="/###SITE###/nagvis"
 
 [paths]
 base="###ROOT###/share/nagvis/"
+local_base="###ROOT###/local/share/nagvis/"
 cfg="###ROOT###/etc/nagvis/"
 mapcfg="###ROOT###/etc/nagvis/maps/"
+automapcfg="###ROOT###/etc/nagvis/automaps/"
 var="###ROOT###/tmp/nagvis/"
 sharedvar="###ROOT###/tmp/nagvis/share/"
-automapcfg="###ROOT###/etc/nagvis/automaps/"
-templates="###ROOT###/var/nagvis/userfiles/templates/"
-gadget="###ROOT###/var/nagvis/userfiles/gadgets/"
-icon="###ROOT###/var/nagvis/userfiles/images/iconsets/"
-shape="###ROOT###/var/nagvis/userfiles/images/shapes/"
-map="###ROOT###/var/nagvis/userfiles/images/maps/"
+profiles="###ROOT###/var/nagvis/profiles/"
 htmlbase="/###SITE###/nagvis"
+local_htmlbase="/###SITE###/nagvis/local"
 htmlcgi="/###SITE###/nagios/cgi-bin"
 
 [defaults]
-backend="live_1"
+backend="###SITE###"
 
-[backend_live_1]
+[backend_###SITE###]
 backendtype="mklivestatus"
 socket="unix:###ROOT###/tmp/run/live"

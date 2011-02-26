@@ -25,6 +25,8 @@ install:
 	test -d $(DESTDIR)$(OMD_ROOT)/share/nagvis/share && \
 	  mv $(DESTDIR)$(OMD_ROOT)/share/nagvis/share $(DESTDIR)$(OMD_ROOT)/share/nagvis/htdocs
 	
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/skel/var/nagvis/profiles
+	
 	# Move userfiles to skel to allow site specific modifications
 	#mkdir -p $(DESTDIR)$(OMD_ROOT)/skel/var/nagvis
 	#mv $(DESTDIR)$(OMD_ROOT)/share/nagvis/htdocs/userfiles $(DESTDIR)$(OMD_ROOT)/skel/var/nagvis/userfiles
