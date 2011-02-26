@@ -18,7 +18,7 @@ my $omd_bin = TestUtils::get_omd_bin();
 
 # print omd version
 my $vtest = { cmd => $omd_bin." version", "exit" => undef };
-TestUtils::test_command($vtest) or BAIL_OUT("no further testing without working omd");
+TestUtils::test_command($vtest) or TestUtils::bail_out_clean("no further testing without working omd");
 diag($vtest->{'stdout'});
 
 ########################################
@@ -51,5 +51,5 @@ my $tests = [
 
 # run tests
 for my $test (@{$tests}) {
-    TestUtils::test_command($test) or BAIL_OUT("no further testing without working omd");
+    TestUtils::test_command($test) or TestUtils::bail_out_clean("no further testing without working omd");
 }

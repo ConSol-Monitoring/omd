@@ -17,7 +17,7 @@ plan skip_all => 'Author test. Set $ENV{TEST_AUTHOR} to a true value to run.' un
 plan( tests => 12 );
 
 my $omd_bin  = TestUtils::get_omd_bin();
-my $site     = TestUtils::create_test_site() or BAIL_OUT("no further testing without site");
+my $site     = TestUtils::create_test_site() or TestUtils::bail_out_clean("no further testing without site");
 my $versions_test = { cmd => $omd_bin." versions"};
 TestUtils::test_command($versions_test);
 my @versions = $versions_test->{'stdout'} =~ m/(^[0-9\.]+)$/mxg;

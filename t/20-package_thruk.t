@@ -17,7 +17,7 @@ plan( tests => 944 );
 ##################################################
 # create our test site
 my $omd_bin = TestUtils::get_omd_bin();
-my $site    = TestUtils::create_test_site() or BAIL_OUT("no further testing without site");
+my $site    = TestUtils::create_test_site() or TestUtils::bail_out_clean("no further testing without site");
 my $auth    = 'OMD Monitoring Site '.$site.':omdadmin:omd';
 my $host    = "omd-".$site;
 my $service = "Dummy+Service";

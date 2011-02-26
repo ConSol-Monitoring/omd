@@ -20,6 +20,12 @@ EOF
         if [ "$2" = "off" -o "$CONFIG_DISTRIBUTED_MONITORING" != "mod-gearman" ]; then
             rm -f $OMD_ROOT/etc/nagios/nagios.d/mod-gearman.cfg
         elif [ "$2" = "on" ]; then
+            # generate random key
+            KEYSTORE="$OMD_ROOT/etc/mod-gearman/secret.key"
+            if [ ! -s $KEYSTORE ]; then
+                key=`head -n 20 /dev/urandom | tr -d -c "[:alnum:]"`
+                echo ${key:0:32} > $KEYSTORE
+            fi
             mkdir -p $OMD_ROOT/etc/nagios/nagios.d
             ln -sfn ../../mod-gearman/nagios.cfg $OMD_ROOT/etc/nagios/nagios.d/mod-gearman.cfg
         fi

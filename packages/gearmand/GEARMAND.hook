@@ -19,14 +19,6 @@ EOF
         echo "off: disable gearman daemon"
     ;;
     set)
-        if [ "$2" != "off" ]; then
-            # generate random key
-            KEYSTORE="$OMD_ROOT/etc/mod-gearman/secret.key"
-            if [ ! -s $KEYSTORE ]; then
-                key=`head -n 20 /dev/urandom | strings | tr -d "\n"`
-                echo ${key:0:32} > $KEYSTORE
-            fi
-        fi
     ;;
     depends)
         [ "$CONFIG_DISTRIBUTED_MONITORING" = "mod-gearman" ]
