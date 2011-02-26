@@ -2021,7 +2021,7 @@ def main_init_action(command, args, options={}):
             if command in [ "start", "restart", "reload" ]:
                 g_sitename = site
                 g_sitedir = site_dir(g_sitename)
-                config_load_hooks()
+                config_load_hooks(True)
                 if g_hooks["AUTOSTART"]["value"] != "on":
                     sys.stdout.write("Ignoring site '%s': AUTOSTART != on\n" % site)
                     continue
