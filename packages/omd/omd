@@ -1905,7 +1905,7 @@ def main_mv_or_cp(what, args, options={}):
     restart_apache()
 
 
-def diff_list(from_skelroot, g_sitedir, from_version):
+def diff_list(from_skelroot, g_sitedir, from_version, relbase):
     """ Outputs only a list of changed/deleted files compared to the current version."""
     def print_diff(source_path, target_path, source_version, source_perms, relpath):
         source_file = source_path + '/' + relpath
@@ -1944,20 +1944,26 @@ def diff_list(from_skelroot, g_sitedir, from_version):
     read_skel_permissions()
     old_perms = load_skel_permissions(from_version)
 
-    walk_skel(from_skelroot, print_diff, (from_skelroot, g_sitedir, from_version, old_perms))
+    walk_skel(from_skelroot, print_diff, (from_skelroot, g_sitedir, from_version, old_perms), relbase = relbase)
 
 
 def main_diff(args, options={}):
     from_version  = site_version(g_sitename)
     from_skelroot = "/omd/versions/%s/skel" % from_version
 
+    relbase = len(args) > 0 and args[0].rstrip('/') or '.'
+
+    path = from_skelroot + '/' + relbase
+    if not os.path.isdir(path):
+        bail_out("The given path %s is no directory" % path)
+
     # First implementation: Outputs only a list of changed/deleted files compared
     # to the current version. With dir/file name given the diff could show more details
     # like te file contents and so on
-    diff_list(from_skelroot, g_sitedir, from_version)
+    diff_list(from_skelroot, g_sitedir, from_version, relbase)
 
 
-def walk_skel(root, handler, args, compare_with = None):
+def walk_skel(root, handler, args, compare_with = None, relbase = '.'):
     """
     Walks all files in the skeleton dir to execute a function for each file
     The given handler is called with the provided args. Additionally the relative
@@ -1966,11 +1972,14 @@ def walk_skel(root, handler, args, compare_with = None):
     When called with a path in 'compare_with' the function only handles files which
     were not handled before or exist in that dir.
 
+    The option 'relbase' is optional. It can contain a relative path which can be used
+    as base for the walk instead of walking the whole tree.
+
     The function returns a set of already handled files.
     """
     handled_paths = set([])
     os.chdir(root)
-    for dirpath, dirnames, filenames in os.walk("."):
+    for dirpath, dirnames, filenames in os.walk(relbase):
         if dirpath.startswith("./"):
             dirpath = dirpath[2:]
         if dirpath.startswith("tmp"):
@@ -2229,7 +2238,7 @@ commands = [
     "Show and set site configuration parameters",
     ""),
 
-  ( "diff",      False, 1, 1, False, "", main_diff,
+  ( "diff",      False, 1, 1, False, "([RELBASE])", main_diff,
     [],
     "Shows differences compared to the original version files",
     ""),
