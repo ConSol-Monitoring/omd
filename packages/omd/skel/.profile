@@ -20,6 +20,6 @@ then
 fi
 
 # Only load bashrc when in a bash shell
-if [ "$BASH" ]; then
+if [ "$BASH" -a -s ~/.bashrc ]; then
     . ~/.bashrc
 fi
