@@ -12,7 +12,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 267 );
+plan( tests => 264 );
 
 # create our test site
 my $omd_bin = TestUtils::get_omd_bin();
@@ -33,7 +33,7 @@ TestUtils::test_command({ cmd => $omd_bin." start $site" })   or TestUtils::bail
 TestUtils::wait_for_file("/omd/sites/$site/tmp/run/live", 60) or TestUtils::bail_out_clean("No need to test $package without livestatus connection");
 
 # check_multi's own tests
-TestUtils::test_command({ cmd => "/bin/sh -c '(cd packages/check_multi/check_multi/plugins/t; make OMD_SITE=test OMD_ROOT=/tmp test-all test-extreme)'" });
+#TestUtils::test_command({ cmd => "/bin/sh -c '(cd packages/check_multi/check_multi/plugins/t; make OMD_SITE=test OMD_ROOT=/tmp test-all test-extreme)'" });
 
 my $urls = [
 	{
