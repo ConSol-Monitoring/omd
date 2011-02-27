@@ -20,7 +20,7 @@ my $omd_bin = TestUtils::get_omd_bin();
 my $site    = TestUtils::create_test_site() or TestUtils::bail_out_clean("no further testing without site");
 my $auth    = 'OMD Monitoring Site '.$site.':omdadmin:omd';
 # Create code to find this out
-my $version = '1.5.8';
+my $version = '1.6a1';
 
 #TestUtils::test_command({ cmd => "/d1/nagvis/mache" });
 
@@ -36,7 +36,7 @@ TestUtils::test_command({ cmd => $omd_bin." start $site" });
 my $tests = [
   { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -t 30 -H localhost -u /$site/nagvis -e 401'",                  like => '/HTTP OK:/' },
   { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -t 30 -H localhost -a omdadmin:omd -u /$site/nagvis -e 301'",  like => '/HTTP OK:/' },
-  { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -t 30 -H localhost -a omdadmin:omd -u /$site/nagvis/ -e 302'", like => '/HTTP OK:/' },
+  { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -t 30 -H localhost -a omdadmin:omd -u /$site/nagvis/ -e 301'", like => '/HTTP OK:/' },
   { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -t 30 -H localhost -a omdadmin:omd -u /$site/nagvis/frontend/nagvis-js/index.php -e 302'", like => '/HTTP OK:/' },
 ];
 
@@ -51,37 +51,41 @@ my $urls = [
   # OMD welcome page in NagVis mode
   url({ url => "", like => '/<title>NagVis '.$version.'<\/title>/' }),
 
-	# default pages
+  # default pages
   url({ url  => "/nagvis/frontend/nagvis-js/index.php",
-	      like => '/<title>NagVis '.$version.'<\/title>/' }),
+        like => '/<title>NagVis '.$version.'<\/title>/' }),
   url({ url  => "/nagvis/frontend/wui/index.php",
         like => [ '/<title>NagVis '.$version.' &rsaquo; WUI<\/title>/',
                   '/Welcome to the NagVis WUI/' ], 'skip_html_lint' => 1 }),
-  url({ url  => "/nagvis/frontend/nagvis-js/index.php?mod=Info",
+  url({ url  => "/nagvis/frontend/nagvis-js/index.php?mod=Info&lang=en_US",
         like => '/NagVis Support Information<\/title>/' }),
   url({ url  => "/nagvis/frontend/nagvis-js/index.php?mod=Map&act=view&show=demo",
         like => '/, \'demo\'/', 'skip_html_lint' => 1 }),
   url({ url  => "/nagvis/frontend/wui/index.php?mod=Map&act=edit&show=demo",
         like => [ '/WUI<\/title>/', '/var mapname = \'demo\';/' ], 'skip_html_lint' => 1 }),
 
-	# Old redirects to maps
+  # Old redirects to maps
   url({ url  => "/nagvis/index.php?map=demo",
         like => '/, \'demo\'/', 'skip_html_lint' => 1 }),
   url({ url  => "/nagvis/config.php?map=demo",
         like => [ '/WUI<\/title>/', '/var mapname = \'demo\';/' ], 'skip_html_lint' => 1 }),
 
   # Ajax fetched dialogs
-	# FIXME: only valid when not using trusted auth:
-	#api_url({ url  => '/nagvis/server/core/ajax_handler.php?mod=ChangePassword&act=view',
-	#          like => [ '/{"code":"/', '/changePasswordForm/' ]}),
-	api_url({ url  => '/nagvis/server/core/ajax_handler.php?mod=UserMgmt&act=view',
+  # FIXME: only valid when not using trusted auth:
+  #api_url({ url  => '/nagvis/server/core/ajax_handler.php?mod=ChangePassword&act=view',
+  #          like => [ '/{"code":"/', '/changePasswordForm/' ]}),
+  api_url({ url  => '/nagvis/server/core/ajax_handler.php?mod=UserMgmt&act=view&lang=en_US',
             like => [ '/Create User/', '/"code":"/' ]}),
-	api_url({ url  => '/nagvis/server/core/ajax_handler.php?mod=RoleMgmt&act=view',
+  api_url({ url  => '/nagvis/server/core/ajax_handler.php?mod=RoleMgmt&act=view&lang=en_US',
             like => [ '/Create Role/', '/"code":"/' ]}),
 
   # Language switch
-	url({ url  => "/nagvis/frontend/nagvis-js/index.php?lang=de_DE",
+  url({ url  => "/nagvis/frontend/nagvis-js/index.php?lang=de_DE",
         like => '/Sprache w&auml;hlen/'}),
+
+  # Language switch back
+  url({ url  => "/nagvis/frontend/nagvis-js/index.php?lang=en_US",
+        like => '/Choose Language/'}),
 ];
 
 # perform tests
@@ -129,25 +133,18 @@ TestUtils::test_url(
             like => '/^{"mainCfg":'.site_mtime($site, 'etc/nagvis/nagvis.ini.php').',"__automap":'.site_touch($site, 'etc/nagvis/automaps/__automap.cfg').'}$/' })
 );
 
-# /nagvis/server/core/ajax_handler.php?mod=General&act=getStateProperties
-# {"UNREACHABLE":{"normal":"9","ack":"5","ack_bgcolor":"","downtime":"5","downtime_bgcolor":"","bgcolor":"#F1811B","color":"#F1811B","sound":"std_unreachable.mp3"},"DOWN":{"normal":"8","ack":"5","ack_bgcolor":"","downtime":"5","downtime_bgcolor":"","bgcolor":"#FF0000","color":"#FF0000","sound":"std_down.mp3"},"CRITICAL":{"normal":"7","ack":"5","ack_bgcolor":"","downtime":"5","downtime_bgcolor":"","bgcolor":"#FF0000","color":"#FF0000","sound":"std_critical.mp3"},"WARNING":{"normal":"6","ack":"4","ack_bgcolor":"","downtime":"4","downtime_bgcolor":"","bgcolor":"#FFFF00","color":"#FFFF00","sound":"std_warning.mp3"},"UNKNOWN":{"normal":"3","ack":"2","ack_bgcolor":"","downtime":"2","downtime_bgcolor":"","bgcolor":"#FFCC66","color":"#FFCC66","sound":""},"ERROR":{"normal":"3","ack":"2","ack_bgcolor":"","downtime":"2","downtime_bgcolor":"","bgcolor":"#0000FF","color":"#0000FF","sound":""},"UP":{"normal":"1","downtime":"1","bgcolor":"#00FF00","color":"#00FF00","sound":""},"OK":{"normal":"1","downtime":"1","bgcolor":"#00FF00","color":"#00FF00","sound":""},"PENDING":{"normal":"0","downtime":"0","bgcolor":"#C0C0C0","color":"#C0C0C0","sound":""}}
-TestUtils::test_url(
-  api_url({ url  => '/nagvis/server/core/ajax_handler.php?mod=General&act=getStateProperties',
-            like => [ '/"UNREACHABLE"/', '/"UNKNOWN"/' ]})
-);
-
 # /nagvis/server/core/ajax_handler.php?mod=General&act=getHoverTemplate&name[]=default
 # [{"name":"default","code":"<...>"}]
 TestUtils::test_url(
   api_url_list({ url  => '/nagvis/server/core/ajax_handler.php?mod=General&act=getHoverTemplate&name[]=default',
-                 like => [ '/"name":"default","code":/' ]})
+                 like => [ '/"name":"default","css_file":/' ]})
 );
 
 # /nagvis/server/core/ajax_handler.php?mod=General&act=getContextTemplate&name[]=default
 # [{"name":"default","code":"<...>"}]
 TestUtils::test_url(
   api_url_list({ url  => '/nagvis/server/core/ajax_handler.php?mod=General&act=getContextTemplate&name[]=default',
-                 like => [ '/"name":"default","code":/' ]})
+                 like => [ '/"name":"default","css_file":/' ]})
 );
 
 # /nagvis/server/core/ajax_handler.php?mod=Map&act=getMapProperties&show=demo
@@ -167,8 +164,12 @@ TestUtils::test_url(
 # /nagvis/server/core/ajax_handler.php?mod=Map&act=getObjectStates&show=demo&ty=state&i[]=2&t[]=host&n1[]=host-down-hard&n2[]=
 # FIXME: Add sepecial tests for object states here using the test backend
 TestUtils::test_url(
-  api_url_list({ url  => '/nagvis/server/core/ajax_handler.php?mod=Map&act=getObjectStates&show=demo&ty=state&i[]=1&t[]=host&n1[]=localhost',
+  api_url_list({ url  => '/nagvis/server/core/ajax_handler.php?mod=Map&act=getObjectStates&show=demo&ty=state&i[]=1dd76b',
                  like => [ '/{"state":/' ]})
+);
+TestUtils::test_url(
+  api_url_list({ url  => '/nagvis/server/core/ajax_handler.php?mod=Map&act=getObjectStates&show=demo&ty=state&i[]=1dd76x',
+                 like => [ '/\[\]/' ]})
 );
 
 ###############################################################################
@@ -200,9 +201,15 @@ TestUtils::test_url(
 );
 
 # /nagvis/server/core/ajax_handler.php?mod=General&act=getObjectStates&ty=state&i[]=automap-0&t[]=automap&n1[]=__automap&n2[]=
+# http://127.0.0.1/nagvis/server/core/ajax_handler.php?mod=Overview&act=getObjectStates&ty=state&i[]=automap-__automap&_t=1298764833000
 TestUtils::test_url(
-  api_url_list({ url  => '/nagvis/server/core/ajax_handler.php?mod=General&act=getObjectStates&ty=state&i[]=automap-0&t[]=automap&n1[]=__automap',
+  api_url_list({ url  => '/nagvis/server/core/ajax_handler.php?mod=Overview&act=getObjectStates&ty=state&i[]=automap-__automap',
                  like => [ '/"state":"/', ]})
+);
+
+TestUtils::test_url(
+  api_url_list({ url  => '/nagvis/server/core/ajax_handler.php?mod=Overview&act=getObjectStates&ty=state&i[]=automap-notexisting',
+                 like => [ '/"state":"ERROR/', '/Map configuration file does not exist/' ]})
 );
 
 ###############################################################################
@@ -241,6 +248,7 @@ sub url {
     $url->{'url'} = "http://localhost/".$site.$url->{'url'};
     $url->{'auth'}   = $auth;
     $url->{'unlike'} = [ '/internal server error/' ];
+    $url->{'skip_link_check'} = [ 'lang=' ];
     return $url;
 }
 sub api_url {
@@ -248,7 +256,7 @@ sub api_url {
     my $obj_match = shift;
     if(!defined $obj_match) {
         $obj_match = '/^{.*}$/';
-		}
+    }
 
     $url->{'no_html_lint'} = 1;
 
@@ -257,15 +265,15 @@ sub api_url {
     if(defined $url->{'like'}) {
         if(ref $url->{'like'} ne 'ARRAY') {
             $url->{'like'} = [ $url->{'like'} ];
-				}
+        }
         push(@{$url->{'like'}}, @{$def_like});
     } else {
         $url->{'like'} = $def_like;
-		}
+    }
     return $url;
 }
 sub api_url_list {
-	return api_url(shift, '/^\[.*\]$/')
+    return api_url(shift, '/^\[.*\]$/')
 }
 
 =head2 site_touch
