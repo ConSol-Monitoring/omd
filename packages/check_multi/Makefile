@@ -71,14 +71,14 @@ build:
 
 install:
 	#--- plugin
-	test -d $(OMD_ROOT)/lib/nagios/plugins || \
-		mkdir -p $(OMD_ROOT)/lib/nagios/plugins
-	install -m 755 $(SRCDIR)/plugins/check_multi $(OMD_ROOT)/lib/nagios/plugins
+	test -d $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins || \
+		mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins
+	install -m 755 $(SRCDIR)/plugins/check_multi $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins
 
 	#--- readme
-	test -d $(OMD_ROOT)/share/doc/plugins || \
-		mkdir -p $(OMD_ROOT)/share/doc/check_multi
-	install -m 644 $(SRCDIR)/README $(OMD_ROOT)/share/doc/check_multi
+	test -d $(DESTDIR)$(OMD_ROOT)/share/doc/plugins || \
+		mkdir -p $(DESTDIR)$(OMD_ROOT)/share/doc/check_multi
+	install -m 644 $(SRCDIR)/README $(DESTDIR)$(OMD_ROOT)/share/doc/check_multi
 
 	#--- allow to find testdir in plugin directory
 	test -L check_multi || ln -s $(SRCDIR) check_multi
