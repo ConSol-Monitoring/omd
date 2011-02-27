@@ -12,7 +12,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 232 );
+plan( tests => 257 );
 
 ##################################################
 # create our test site
@@ -86,6 +86,12 @@ my $urls = [
   # Language switch back
   url({ url  => "/nagvis/frontend/nagvis-js/index.php?lang=en_US",
         like => '/Choose Language/'}),
+
+  # Documentations
+  url({ url  => "/nagvis/docs/de_DE/index.html",
+        like => '/NagVis (.*) Dokumentation/'}),
+  url({ url  => "/nagvis/docs/en_US/index.html",
+        like => '/NagVis (.*) Documentation/'}),
 ];
 
 # perform tests
