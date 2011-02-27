@@ -201,7 +201,8 @@ sub remove_test_site {
     code           => expected response code
     like           => (list of) regular expressions which have to match content
     unlike         => (list of) regular expressions which must not match content
-    skip_html_lint => flag to disable the html lint checking
+    skip_html_lint   => flag to disable the html lint checking
+    skip_link_check  => (list of) regular expressions to skip the link checks for
   }
 
 =cut
@@ -266,6 +267,15 @@ sub test_url {
             next if $match =~ m/^mailto:/;
             next if $match =~ m/^#/;
             next if $match =~ m/^javascript:/;
+            if(defined $test->{'skip_link_check'}) {
+                my $skip = 0;
+                for my $expr (ref $test->{'skip_link_check'} eq 'ARRAY' ? @{$test->{'skip_link_check'}} : $test->{'skip_link_check'} ) {
+                    if($skip == 0 and $match =~ m/$expr/) {
+                        $skip = 1;
+                    }
+                }
+                next if $skip == 1;
+            }
             $links_to_check->{$match} = 1;
         }
         my $errors = 0;
@@ -287,7 +297,6 @@ sub test_url {
     }
     return $page;
 }
-
 
 ##################################################
 
