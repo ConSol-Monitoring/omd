@@ -6,6 +6,7 @@ PACKAGES=perl-modules \
          apache-omd \
          check_logfiles \
          check_mk \
+         check_multi \
          check_mysql_health \
          check_oracle_health \
          check_webinject \

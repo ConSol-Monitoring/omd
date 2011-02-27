@@ -1,0 +1,1 @@
+statusdat [ all ] = .*:.*

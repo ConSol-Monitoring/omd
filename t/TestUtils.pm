@@ -201,7 +201,8 @@ sub remove_test_site {
     code           => expected response code
     like           => (list of) regular expressions which have to match content
     unlike         => (list of) regular expressions which must not match content
-    skip_html_lint => flag to disable the html lint checking
+    skip_html_lint   => flag to disable the html lint checking
+    skip_link_check  => (list of) regular expressions to skip the link checks for
   }
 
 =cut
@@ -266,6 +267,15 @@ sub test_url {
             next if $match =~ m/^mailto:/;
             next if $match =~ m/^#/;
             next if $match =~ m/^javascript:/;
+            if(defined $test->{'skip_link_check'}) {
+                my $skip = 0;
+                for my $expr (ref $test->{'skip_link_check'} eq 'ARRAY' ? @{$test->{'skip_link_check'}} : $test->{'skip_link_check'} ) {
+                    if($skip == 0 and $match =~ m/$expr/) {
+                        $skip = 1;
+                    }
+                }
+                next if $skip == 1;
+            }
             $links_to_check->{$match} = 1;
         }
         my $errors = 0;
@@ -287,7 +297,6 @@ sub test_url {
     }
     return $page;
 }
-
 
 ##################################################
 
@@ -374,6 +383,53 @@ sub wait_for_file {
 
 ##################################################
 
+=head2 wait_for_content
+
+  waits for web page content until timeout
+
+  needs test hash
+  {
+    url            => url to request
+    auth           => authentication (realm:user:pass)
+    code           => expected response code
+    like           => (list of) regular expressions which have to match content
+  }
+
+=cut
+sub wait_for_content {
+    my $test    = shift;
+    my $timeout = shift || 60;
+
+    my $req;
+    my $x = 0;
+    while ($x < $timeout) {
+    	$req = _request($test);
+	if($req->{'code'} == 200) {
+		#diag("code:$req->{code} url:$test->{url} auth:$test->{auth}");
+		my $errors=0;
+		foreach my $pattern (@{$test->{'like'}}) {
+			if ($req->{'content'}!~/$pattern/) {
+				#diag("errors:$errors pattern:$pattern");
+				$errors++;
+			}
+		}
+		if ($errors == 0) {
+            		pass(sprintf "content: [ %s ] appeared after $x seconds", join(',',@{$test->{'like'}}));
+			return 1;
+		}
+	} else {
+		diag("Error searching for web content:\ncode:$req->{code}\nurl:$test->{url}\nauth:$test->{auth}\ncontent:$req->{content}");
+	}
+        $x++;
+        sleep(1);
+    }
+    fail(sprintf "content: [ %s ] did not appear within $x seconds", join(',',@{$test->{'like'}}));
+    return 0;
+}
+
+
+##################################################
+
 =head2 bail_out_clean
 
   bail out from testing but some minor cleanup before
@@ -408,6 +464,7 @@ sub _diag_lint_errors_and_remove_some_exceptions {
         for my $exclude_pattern (
             "<IMG SRC=[^>]*>\ tag\ has\ no\ HEIGHT\ and\ WIDTH\ attributes\.",
             "<IMG SRC=[^>]*>\ does\ not\ have\ ALT\ text\ defined",
+            "<input>\ is\ not\ a\ container\ \-\-\ <\/input>\ is\ not\ allowed",
         ) {
             next LINT_ERROR if($err_str =~ m/$exclude_pattern/i);
         }
