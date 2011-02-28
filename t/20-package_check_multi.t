@@ -12,7 +12,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 264 );
+plan( tests => 222 );
 
 # create our test site
 my $omd_bin = TestUtils::get_omd_bin();
@@ -43,9 +43,6 @@ my $urls = [
 			'/livestatus.*plugins checked/ms',
 			'/nagios.*\d+ plugins checked/ms',
 			'/pnp4nagios.*\d+ plugins checked/ms',
-			'/rss.*\d+ plugins checked/ms',
-			'/vsz.*\d+ plugins checked/ms',
-			'/cpu.*\d+ plugins checked/ms',
 			'/statusdat.*\d+ plugins checked/ms',
 			'/system.*\d+ plugins checked/ms',
 		],
@@ -58,9 +55,6 @@ my $urls = [
 			'/livestatus.*plugins checked/ms',
 			'/nagios.*\d+ plugins checked/ms',
 			'/pnp4nagios.*\d+ plugins checked/ms',
-			'/rss.*\d+ plugins checked/ms',
-			'/vsz.*\d+ plugins checked/ms',
-			'/cpu.*\d+ plugins checked/ms',
 			'/statusdat.*\d+ plugins checked/ms',
 			'/system.*\d+ plugins checked/ms',
 		],
@@ -72,9 +66,6 @@ my $urls = [
 			'/livestatus.*plugins checked/ms',
 			'/nagios.*\d+ plugins checked/ms',
 			'/pnp4nagios.*\d+ plugins checked/ms',
-			'/rss.*\d+ plugins checked/ms',
-			'/vsz.*\d+ plugins checked/ms',
-			'/cpu.*\d+ plugins checked/ms',
 			'/statusdat.*\d+ plugins checked/ms',
 			'/system.*\d+ plugins checked/ms',
 		],
@@ -116,9 +107,6 @@ my $urls = [
 #			#'/all_omd-check_multi_livestatus.*plugins checked/ms',
 #			'/all_omd-check_multi_nagios.*\d+ plugins checked/ms',
 #			'/all_omd-check_multi_pnp4nagios.*pnp4nagios.*\d+ plugins checked/ms',
-#			'/all_omd-check_multi_proc_rss.*rss.*\d+ plugins checked/ms',
-#			'/all_omd-check_multi_proc_vsz.*vsz.*\d+ plugins checked/ms',
-#			'/all_omd-check_multi_proc_cpu.*cpu.*\d+ plugins checked/ms',
 #			'/all_omd-check_multi_.*statusdat.*\d+ plugins checked/ms',
 #			'/all_omd-check_multi_system.*system.*\d+ plugins checked/ms',
 #		],
@@ -157,9 +145,6 @@ for my $core (qw/nagios shinken/) {
 	#TestUtils::test_command({ cmd => "/bin/su - $site -c './lib/nagios/plugins/check_http -t 30 -H localhost -a omdadmin:omd -u /$site/nagios/cgi-bin/cmd.cgi -e 200 -P \"cmd_typ=17&host=$host&cmd_mod=2&start_time=2222-22-22:22%3A22%3A22&force_check=on&btnSubmit=Commit\" -r \"Your command request was successfully submitted\"'", like => '/HTTP OK:/' });
 	TestUtils::test_command({ cmd => "/bin/su - $site -c './lib/nagios/plugins/check_http -H localhost -a omdadmin:omd -u /$site/nagios/cgi-bin/cmd.cgi -e 200 -P \"cmd_typ=7&cmd_mod=2&host=$host&service=nagios&start_time=2010-11-06+09%3A46%3A02&force_check=on&btnSubmit=Commit\" -r \"Your command request was successfully submitted\"'", like => '/HTTP OK:/' });
 	TestUtils::test_command({ cmd => "/bin/su - $site -c './lib/nagios/plugins/check_http -H localhost -a omdadmin:omd -u /$site/nagios/cgi-bin/cmd.cgi -e 200 -P \"cmd_typ=7&cmd_mod=2&host=$host&service=pnp4nagios&start_time=2010-11-06+09%3A46%3A02&force_check=on&btnSubmit=Commit\" -r \"Your command request was successfully submitted\"'", like => '/HTTP OK:/' });
-	TestUtils::test_command({ cmd => "/bin/su - $site -c './lib/nagios/plugins/check_http -H localhost -a omdadmin:omd -u /$site/nagios/cgi-bin/cmd.cgi -e 200 -P \"cmd_typ=7&cmd_mod=2&host=$host&service=proc_cpu&start_time=2010-11-06+09%3A46%3A02&force_check=on&btnSubmit=Commit\" -r \"Your command request was successfully submitted\"'", like => '/HTTP OK:/' });
-	TestUtils::test_command({ cmd => "/bin/su - $site -c './lib/nagios/plugins/check_http -H localhost -a omdadmin:omd -u /$site/nagios/cgi-bin/cmd.cgi -e 200 -P \"cmd_typ=7&cmd_mod=2&host=$host&service=proc_rss&start_time=2010-11-06+09%3A46%3A02&force_check=on&btnSubmit=Commit\" -r \"Your command request was successfully submitted\"'", like => '/HTTP OK:/' });
-	TestUtils::test_command({ cmd => "/bin/su - $site -c './lib/nagios/plugins/check_http -H localhost -a omdadmin:omd -u /$site/nagios/cgi-bin/cmd.cgi -e 200 -P \"cmd_typ=7&cmd_mod=2&host=$host&service=proc_vsz&start_time=2010-11-06+09%3A46%3A02&force_check=on&btnSubmit=Commit\" -r \"Your command request was successfully submitted\"'", like => '/HTTP OK:/' });
 	TestUtils::test_command({ cmd => "/bin/su - $site -c './lib/nagios/plugins/check_http -H localhost -a omdadmin:omd -u /$site/nagios/cgi-bin/cmd.cgi -e 200 -P \"cmd_typ=7&cmd_mod=2&host=$host&service=system&start_time=2010-11-06+09%3A46%3A02&force_check=on&btnSubmit=Commit\" -r \"Your command request was successfully submitted\"'", like => '/HTTP OK:/' });
 	TestUtils::test_command({ cmd => "/bin/su - $site -c './lib/nagios/plugins/check_http -H localhost -a omdadmin:omd -u /$site/nagios/cgi-bin/cmd.cgi -e 200 -P \"cmd_typ=7&cmd_mod=2&host=$host&service=statusdat&start_time=2010-11-06+09%3A46%3A02&force_check=on&btnSubmit=Commit\" -r \"Your command request was successfully submitted\"'", like => '/HTTP OK:/' });
 	TestUtils::test_command({ cmd => "/bin/su - $site -c './lib/nagios/plugins/check_http -H localhost -a omdadmin:omd -u /$site/nagios/cgi-bin/cmd.cgi -e 200 -P \"cmd_typ=7&cmd_mod=2&host=$host&service=livestatus&start_time=2010-11-06+09%3A46%3A02&force_check=on&btnSubmit=Commit\" -r \"Your command request was successfully submitted\"'", like => '/HTTP OK:/' });
