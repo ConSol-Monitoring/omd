@@ -103,8 +103,8 @@ verify_config() {
     else
         if [ "$1" != "quiet" ]; then
             echo "CONFIG ERROR! Aborted. Check your Nagios configuration."
-            echo "$RESULT"
         fi
+        echo "$RESULT" >&2
         return 1
     fi
 }
