@@ -232,7 +232,7 @@ sub test_url {
     # not matching output
     if(defined $test->{'unlike'}) {
         for my $expr (ref $test->{'unlike'} eq 'ARRAY' ? @{$test->{'unlike'}} : $test->{'unlike'} ) {
-            unlike($page->{'content'}, $expr, "content unlike ".$expr)  or _diag_request($test, $page);;
+            unlike($page->{'content'}, $expr, "content unlike ".$expr)  or _diag_request($test, $page);
         }
     }
 
@@ -291,6 +291,8 @@ sub test_url {
             } else {
                 $errors++;
                 diag("got status ".$req->{'code'}." for url: '$test_url'");
+                my $tmp_test = { 'url' => $test_url };
+                _diag_request($tmp_test, $req);
             }
         }
         is( $errors, 0, 'All stylesheets, images and javascript exist' );
@@ -611,6 +613,7 @@ sub _diag_cmd {
        or $stdout =~ m/500 Internal Server Error/) {
         my $site = $1;
         _tail("apache logs:", "/omd/sites/$site/var/log/apache/error_log") if defined $site;
+        _tail_apache_logs();
     }
     if( $stderr =~ m/User '(\w+)' still logged in or running processes/ ) {
         my $site = $1;
@@ -638,6 +641,7 @@ sub _diag_request {
     if(   $page->{'code'}    == 500
        or $page->{'content'} =~ m/Internal Server Error/) {
         _tail("apache logs:", "/omd/sites/$site/var/log/apache/error_log");
+        _tail_apache_logs();
     }
     return;
 }
@@ -652,14 +656,30 @@ sub _diag_request {
 sub _tail {
     my $name = shift;
     my $file = shift;
+    return unless defined $file;
     diag($name);
     if(-f $file) {
         diag(`tail -n20 $file`);
     } else {
         diag("cannot read $file: $!");
     }
+    return;
 }
 
+
+##################################################
+
+=head2 _tail_apache_logs
+
+  print tail of all apache logs
+
+=cut
+sub _tail_apache_logs {
+    _tail("global apache logs:", glob('/var/log/apache*/error*log'));
+    _tail("global apache logs:", glob('/var/log/httpd*/error*log'));
+    return;
+}
+ 
 ##################################################
  
 END {
