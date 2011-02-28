@@ -1905,7 +1905,7 @@ def main_mv_or_cp(what, args, options={}):
     restart_apache()
 
 
-def diff_list(from_skelroot, g_sitedir, from_version, relbase):
+def diff_list(from_skelroot, g_sitedir, from_version, relbase, bare):
     """ Outputs only a list of changed/deleted files compared to the current version."""
     def print_diff(source_path, target_path, source_version, source_perms, relpath):
         source_file = source_path + '/' + relpath
@@ -1925,21 +1925,27 @@ def diff_list(from_skelroot, g_sitedir, from_version, relbase):
         fn = tty_bold + tty_bgblue + tty_white + relpath + tty_normal
         fn = tty_bold + relpath + tty_normal
 
+        def print_status(color, f, status, long_out):
+            if bare:
+                sys.stdout.write("%s %s\n" % (status, f))
+            else:
+                sys.stdout.write(color + " %s %s\n" % (long_out, f))
+
         if not target_type:
-            sys.stdout.write(good + " Deleted %s\n" % (fn))
+            print_status(good, fn, 'd', 'Deleted')
             return
 
         elif changed_type and changed_content:
-            sys.stdout.write(good + " Changed type and content %s\n" % (fn))
+            print_status(good, fn, 'tc', 'Changed type and content')
 
         elif changed_type and not changed_content:
-            sys.stdout.write(good + " Changed type %s\n" % (fn))
+            print_status(good, fn, 't', 'Changed type')
 
         elif changed_content and not changed_type:
-            sys.stdout.write(good + " Changed content %s\n" % (fn))
+            print_status(good, fn, 'c', 'Changed content')
 
         if source_perm != target_perm:
-            sys.stdout.write(warn + " Changed permissions %s\n" % (fn))
+            print_status(warn, pn, 'c', 'Changed permissions')
 
     read_skel_permissions()
     old_perms = load_skel_permissions(from_version)
@@ -1960,7 +1966,7 @@ def main_diff(args, options={}):
     # First implementation: Outputs only a list of changed/deleted files compared
     # to the current version. With dir/file name given the diff could show more details
     # like te file contents and so on
-    diff_list(from_skelroot, g_sitedir, from_version, relbase)
+    diff_list(from_skelroot, g_sitedir, from_version, relbase, "bare" in options)
 
 
 def walk_skel(root, handler, args, compare_with = None, relbase = '.'):
@@ -2239,7 +2245,7 @@ commands = [
     ""),
 
   ( "diff",      False, 1, 1, False, "([RELBASE])", main_diff,
-    [],
+    [("bare", "b", False)],
     "Shows differences compared to the original version files",
     ""),
 
