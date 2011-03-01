@@ -947,7 +947,7 @@ def file_status(source_path, target_path):
     return (changed_type, changed_content, changed)
 
 
-def update_file(old_version, new_version, userdir, old_perms, relpath):
+def update_file(relpath, old_version, new_version, userdir, old_perms):
     old_skel = "/omd/versions/%s/skel" % old_version
     new_skel = "/omd/versions/%s/skel" % new_version
 
@@ -1907,7 +1907,7 @@ def main_mv_or_cp(what, args, options={}):
 
 def diff_list(from_skelroot, g_sitedir, from_version, relbase, bare):
     """ Outputs only a list of changed/deleted files compared to the current version."""
-    def print_diff(source_path, target_path, source_version, source_perms, relpath):
+    def print_diff(relpath, source_path, target_path, source_version, source_perms):
         source_file = source_path + '/' + relpath
         target_file = target_path + '/' + relpath
 
@@ -2003,7 +2003,7 @@ def walk_skel(root, handler, args, compare_with = None, relbase = '.'):
             if not compare_with or \
                compare_with and not os.path.exists(compare_with + "/" + entry):
                 try:
-                    handler(*args, relpath = path)
+                    handler(path, *args)
                 except Exception, e:
                     sys.stderr.write("Error updating %s/%s: %s\n" % (g_sitedir, path, e))
                     raise
