@@ -1552,7 +1552,7 @@ def config_configure_hook(hookname):
 
     hook = g_hooks[hookname]
     title = hook["alias"]
-    descr = hook["description"].replace("\n", " ")
+    descr = hook["description"].replace("\n\n", "\001").replace("\n", " ").replace("\001", "\n\n")
     value = hook["value"]
     choices = hook["choices"]
     if type(choices) == list:
