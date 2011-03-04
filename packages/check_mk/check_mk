@@ -2,20 +2,13 @@
 
 # OMD: determine our current site. This file is shared between
 # all sites of the same version. We make use of the fact that
-# this file is called via its symbolic path /omd/sites/$SITE/bin/check_mk.
+# this file is called via its symbolic path $OMD_ROOT/bin/check_mk.
 # Also we know the site if we are not root.
-if [ "$USER" != root ]
+
+if [ -z "$OMD_ROOT" ]
 then
-    SITE=$USER
-elif [ "${0:0:1}" = / ]
-then
-    # Called with an absolute path
-    SITE=${0#/*/*}
-    SITE=${SITE%%/*}
-else
-    # Called with a relative path. FIXME: handle this
-    echo "Please do not call check_mk with a relative path"
+    echo "You can call check_mk only as OMD site user." >&2
     exit 1
 fi
 
-exec python /omd/sites/$SITE/share/check_mk/modules/check_mk.py --defaults /omd/sites/$SITE/etc/check_mk/defaults "$@"
+exec python $OMD_ROOT/share/check_mk/modules/check_mk.py --defaults $OMD_ROOT/etc/check_mk/defaults "$@"
