@@ -21,6 +21,6 @@ EOF
     set)
     ;;
     depends)
-        [ "$CONFIG_DISTRIBUTED_MONITORING" = "mod-gearman" ]
+        [ "$CONFIG_MOD_GEARMAN" = "on" ]
     ;;
 esac

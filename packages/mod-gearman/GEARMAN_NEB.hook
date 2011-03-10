@@ -17,7 +17,7 @@ EOF
         echo "off: disable"
     ;;
     set)
-        if [ "$2" = "off" -o "$CONFIG_DISTRIBUTED_MONITORING" != "mod-gearman" ]; then
+        if [ "$2" = "off" -o "$CONFIG_MOD_GEARMAN" != "on" ]; then
             rm -f $OMD_ROOT/etc/nagios/nagios.d/mod-gearman.cfg
         elif [ "$2" = "on" ]; then
             # generate random key
@@ -31,6 +31,6 @@ EOF
         fi
     ;;
     depends)
-        [ "$CONFIG_DISTRIBUTED_MONITORING" = "mod-gearman" ]
+        [ "$CONFIG_MOD_GEARMAN" = "on" ]
     ;;
 esac

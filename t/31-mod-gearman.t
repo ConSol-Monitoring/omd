@@ -25,7 +25,7 @@ my $service = "Dummy+Service";
 ##################################################
 # execute some checks
 my $tests = [
-  { cmd => $omd_bin." config $site set DISTRIBUTED_MONITORING mod-gearman" },
+  { cmd => $omd_bin." config $site set MOD_GEARMAN on" },
   { cmd => "/usr/bin/test -s /omd/sites/$site/etc/mod-gearman/secret.key", "exit" => 0 },
   { cmd => $omd_bin." start $site", like => [ '/gearmand\.\.\.OK/', '/gearman_worker\.\.\.OK/'], sleep => 1 },
   { cmd => $omd_bin." status $site", like => [ '/gearmand:\s+running/', '/gearman_worker:\s*running/'] },
