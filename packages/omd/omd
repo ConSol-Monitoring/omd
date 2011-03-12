@@ -1538,27 +1538,59 @@ def config_configure():
     hooknames = g_hooks.keys()
     hooknames.sort()
     current_hookname = ""
+    menu_open = False
+    current_menu = "Basic"
+
+    # force certain order in main menu
+    menu_choices = [ "Basic", "Web GUI", "Addons", "Distributed Monitoring" ]
+
     while True:
         choices = []
+
+        # Rebuild hook information (values possible changed)
+        menu = {}
         for hookname in hooknames:
             hook = g_hooks[hookname]
             if hook["active"]:
-                choices.append((hookname, hook["value"]))
-        change, current_hookname = \
-            dialog_menu("Configuration of site %s" % g_sitename,
-                "Interactive setting of site configuration variables. You "
-                "can change values only while the site is stopped.",
-                choices,
-                current_hookname,
-                "Change",
-                "Exit")
-        if not change:
-            return
+                mp = hook.get("menu", "Other")
+                entries = menu.get(mp, [])
+                entries.append((hookname, hook["value"]))
+                menu[mp] = entries
+                if mp not in menu_choices:
+                    menu_choices.append(mp)
 
-        try:
-            config_configure_hook(current_hookname)
-        except Exception, e:
-            bail_out("Error in hook %s: %s" % (current_hookname, e))
+        # Handle main menu
+        if not menu_open:
+            change, current_menu = \
+                dialog_menu("Configuration of site %s" % g_sitename,
+                        "Interactive setting of site configuration variables. You "
+                        "can change values only while the site is stopped.",
+                        [ (e, "") for e in menu_choices ],
+                        current_menu,
+                        "Enter",
+                        "Exit")
+            if not change:
+                return
+            current_hookname = None
+            menu_open = True
+
+        else:
+            change, current_hookname = \
+                dialog_menu(
+                    current_menu,
+                    "",
+                    menu[current_menu],
+                    current_hookname,
+                    "Change",
+                    "Main menu")
+            if change:
+                try:
+                    config_configure_hook(current_hookname)
+                except Exception, e:
+                    bail_out("Error in hook %s: %s" % (current_hookname, e))
+            else:
+                menu_open = False
+
 
 def config_configure_hook(hookname):
     if not site_is_stopped(g_sitename):
