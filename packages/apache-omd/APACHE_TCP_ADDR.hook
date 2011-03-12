@@ -55,6 +55,6 @@ EOF
 EOF
     ;;
     depends)
-        [ "$CONFIG_WEBSERVER" = own ]
+        [ "$CONFIG_APACHE_MODE" = own ]
     ;;
 esac

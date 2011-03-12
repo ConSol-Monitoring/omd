@@ -16,7 +16,7 @@
 
 case "$1" in
     default)
-            echo "own"
+            if [ ! -z "$CONFIG_WEBSERVER" ]; then echo "$CONFIG_WEBSERVER"; else  echo "own"; fi
     ;;
     choices)
             echo "own: Run an own webserver process for this instance"

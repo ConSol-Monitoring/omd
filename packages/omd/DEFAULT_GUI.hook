@@ -9,7 +9,7 @@
 
 case "$1" in
     default)
-            echo "welcome"
+            if [ ! -z "$CONFIG_WEB" ]; then echo "$CONFIG_WEB"; else  echo "welcome"; fi
     ;;
     choices)
             echo "welcome: Welcome page which lists all available GUIs"
@@ -20,7 +20,7 @@ case "$1" in
             echo "none: No default webinterface"
     ;;
     depends)
-        [ "$CONFIG_WEBSERVER" != none ]
+        [ "$CONFIG_APACHE_MODE" != none ]
     ;;
 esac
 

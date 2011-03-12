@@ -29,6 +29,6 @@ case "$1" in
         fi
     ;;
     depends)
-        [ "$CONFIG_MOD_GEARMAN" = "on" ]
+        [ "$CONFIG_MOD_GEARMAN" = "on" -a "$CONFIG_CORE" = "nagios" ]
     ;;
 esac
