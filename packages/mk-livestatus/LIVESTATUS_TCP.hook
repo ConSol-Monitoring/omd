@@ -1,17 +1,14 @@
 #!/bin/bash
 
+# Alias: Make MK Livestatus accessable via TCP
+# Menu: Distributed Monitoring
+# Description: 
+#  MK Livestatus usually listens only on a local UNIX socket - 
+#  for reasons of performance and security. This option is used
+#  to make it reachable via TCP on a port configurable with
+#  LIVESTATUS_TCP_PORT.
+
 case "$1" in
-    alias)
-        echo "Make MK Livestatus accessable via TCP"
-    ;;
-    description)
-        cat << EOF
-MK Livestatus usually listens only on a local UNIX socket - 
-for reasons of performance and security. This option is used
-to make it reachable via TCP on a port configurable with
-LIVESTATUS_TCP_PORT.
-EOF
-    ;;
     default)
         echo "off"
     ;;

@@ -1,16 +1,14 @@
 #!/bin/bash
+
+# Alias: Gearman Daemon
+# Menu: Distributed Monitoring
+# Description: 
+#  Gearman is the central job server for distributed monitoring
+#  based on Mod-Gearman. You have to start at least one job server
+#  somewhere. Keep the gearmand close to the nagios core for maximum
+#  performance.
+
 case "$1" in
-        alias)
-                echo "Gearman Daemon"
-        ;;
-        description)
-                cat << EOF
-Gearman is the central job server for distributed monitoring
-based on Mod-Gearman. You have to start at least one job server
-somewhere. Keep the gearmand close to the nagios core for maximum
-performance.
-EOF
-    ;;
     default)
         echo "on"
     ;;

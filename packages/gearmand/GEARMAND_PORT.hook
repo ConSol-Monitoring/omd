@@ -1,15 +1,13 @@
 #!/bin/bash
+
+# Alias: Port for the Gearman Daemon
+# Menu: Distributed Monitoring
+# Description: 
+#  Set the listen address and port for gearmand. Use the fqdn instead of localhost
+#  to make gearman accessible from other hosts too. Use ":port" to bind on all
+#  interfaces.
+
 case "$1" in
-        alias)
-                echo "Port for the Gearman Daemon"
-        ;;
-        description)
-                cat << EOF
-Set the listen address and port for gearmand. Use the fqdn instead of localhost
-to make gearman accessible from other hosts too. Use ":port" to bind on all
-interfaces.
-EOF
-   ;;
    default)
        echo "localhost:4730"
    ;;

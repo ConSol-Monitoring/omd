@@ -1,14 +1,12 @@
 #!/bin/bash
+
+# Alias: Mod-Gearman NEB Module
+# Menu: Distributed Monitoring
+# Description: 
+#  The Mod-Gearman NEB Module is the server part running in the nagios core. Make
+#  sure you have at least one gearmand job server and one worker running.
+
 case "$1" in
-    alias)
-        echo "Mod-Gearman NEB Module"
-    ;;
-    description)
-        cat << EOF
-The Mod-Gearman NEB Module is the server part running in the nagios core. Make
-sure you have at least one gearmand job server and one worker running.
-EOF
-    ;;
     default)
         echo "on"
     ;;

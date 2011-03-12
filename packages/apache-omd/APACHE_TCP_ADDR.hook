@@ -1,5 +1,19 @@
 #!/bin/bash
 
+# Alias: TCP host address for Apache
+# Menu: Web GUI
+# Description: 
+#  Configure the TCP host address for the Apache webserver
+#  process of this site. This option is only useful if 
+#  APACHE is set to "on" and WEBSERVER is set to "own".
+#  
+#  It might be useful to change the host address the site
+#  Apache webserver listes to.
+#  
+#  After changing this variable, the man Apache webserver
+#  must be restarted.
+
+
 # Load other config options. This hook needs 
 # APACHE_TCP_PORT.
 if [ -f $OMD_ROOT/etc/omd/site.conf ]; then
@@ -9,22 +23,6 @@ else
 fi
 
 case "$1" in
-    alias)
-        echo "TCP host address for Apache"
-    ;;
-    description)
-        cat << EOF
-Configure the TCP host address for the Apache webserver
-process of this site. This option is only useful if 
-APACHE is set to "on" and WEBSERVER is set to "own".
-
-It might be useful to change the host address the site
-Apache webserver listes to.
-
-After changing this variable, the man Apache webserver
-must be restarted.
-EOF
-    ;;
     default)
         echo "127.0.0.1"
     ;;

@@ -1408,13 +1408,26 @@ def call_all_hooks(command):
         os.system("%s/%s '%s'" % (hook_dir, hookname, command))
 
 def config_load_hook(hookname):
+    hook = { "name" : hookname }
+
+    description = ""
+    description_active = False
+    for line in file(g_sitedir + "/lib/omd/hooks/" + hookname):
+        if line.startswith("# Alias:"):
+            hook["alias"] = line[8:].strip()
+        elif line.startswith("# Menu:"):
+            hook["menu"] = line[7:].strip()
+        elif line.startswith("# Description:"):
+            description_active = True
+        elif line.startswith("#  ") and description_active:
+            description += line[3:].strip() + "\n"
+        else:
+            description_active = False
+    hook["description"] = description
 
     def get_hook_info(info):
         return call_hook(hookname, [info])[1]
 
-    hook = { "name" : hookname }
-    hook["alias"] = get_hook_info("alias")
-    hook["description"] = get_hook_info("description")
     hook["default"] = get_hook_info("default")
     hook["value"] = hook["default"]
     # The choices can either be a list of possible keys. Then
@@ -1542,7 +1555,10 @@ def config_configure():
         if not change:
             return
 
-        config_configure_hook(current_hookname)
+        try:
+            config_configure_hook(current_hookname)
+        except Exception, e:
+            bail_out("Error in hook %s: %s" % (current_hookname, e))
 
 def config_configure_hook(hookname):
     if not site_is_stopped(g_sitename):
