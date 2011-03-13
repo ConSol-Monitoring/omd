@@ -49,6 +49,7 @@ skel:
 	       $(SKEL)/etc/apache/conf.d/02_fcgid.conf
 
 	sed -i 's|###APACHE_BIN###|$(APACHE_BIN)|g' $(SKEL)/etc/init.d/apache
+	sed -i 's|###PHP_FCGI_BIN###|$(PHP_FCGI_BIN)|g' $(SKEL)/etc/init.d/apache
 	sed -i 's|###PHP_FCGI_BIN###|$(REPLACE_PHP_FCGI_BIN)|g' $(SKEL)/etc/apache/php-wrapper
 	# Create working directories
 	mkdir -p $(SKEL)/var/log/apache
