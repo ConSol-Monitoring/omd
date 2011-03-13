@@ -22,7 +22,7 @@ my $host    = "omd-$package";
 my $auth    = 'OMD Monitoring Site '.$site.':omdadmin:omd';
 
 # prepare check_multi test environment (from skel/etc/check_multi/test)
-TestUtils::test_command({ cmd => $omd_bin." config $site set WEB welcome" });
+TestUtils::test_command({ cmd => $omd_bin." config $site set DEFAULT_GUI welcome" });
 TestUtils::test_command({ cmd => "/bin/cp t/packages/check_multi/test/localhost.cfg /omd/sites/$site/etc/nagios/conf.d/check_multi_test.cfg" });
 TestUtils::test_command({ cmd => "/usr/bin/test -d /omd/sites/$site/etc/check_multi || /bin/mkdir /omd/sites/$site/etc/check_multi" });
 TestUtils::test_command({ cmd => "/bin/cp t/packages/check_multi/test/* /omd/sites/$site/etc/check_multi" });

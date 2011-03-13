@@ -154,7 +154,7 @@ target="_blank">omdistro.org</a>
 def handler(req):
     sitename = site_name(req)
     config   = config_load(sitename)
-    gui      = 'WEB' in config and config['WEB'] or 'nagios'
+    gui      = 'DEFAULT_GUI' in config and config['DEFAULT_GUI'] or 'nagios'
 
     if gui == 'welcome':
         page_welcome(req)

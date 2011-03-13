@@ -26,7 +26,7 @@ my $service = "Dummy+Service";
 TestUtils::test_command({ cmd => "/usr/bin/env sed -i -e 's/^perfdata_file_processing_interval = 15/perfdata_file_processing_interval = 2/g' -e 's/^sleep_time = 15/sleep_time = 2/g' /opt/omd/sites/$site/etc/pnp4nagios/npcd.cfg" });
 
 # set thruk as default
-TestUtils::test_command({ cmd => $omd_bin." config $site set WEB thruk" });
+TestUtils::test_command({ cmd => $omd_bin." config $site set DEFAULT_GUI thruk" });
 TestUtils::test_command({ cmd => $omd_bin." start $site" });
 
 ##################################################
@@ -119,7 +119,7 @@ for my $core (qw/nagios shinken/) {
     ##################################################
     # switch webserver to shared mode
     TestUtils::test_command({ cmd => $omd_bin." stop $site" });
-    TestUtils::test_command({ cmd => $omd_bin." config $site set WEBSERVER shared" });
+    TestUtils::test_command({ cmd => $omd_bin." config $site set APACHE_MODE shared" });
     TestUtils::test_command({ cmd => TestUtils::config('APACHE_INIT')." restart" });
     TestUtils::test_command({ cmd => $omd_bin." start $site" });
 
