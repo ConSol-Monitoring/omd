@@ -168,9 +168,11 @@ sub test_command {
 
 =cut
 sub create_test_site {
-    my $site = "testsite"; # TODO: make uniq name
-    test_command({ cmd => TestUtils::get_omd_bin()." create $site" });
-    return $site;
+    my $site = "testsite";
+    if(test_command({ cmd => TestUtils::get_omd_bin()." create $site" })) {
+        return $site;
+    }
+    return;
 }
 
 
