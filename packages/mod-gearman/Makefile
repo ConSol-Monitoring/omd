@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 NAME     = mod_gearman
-VERSION  = 1.0.1
+VERSION  = 1.0.2
 DIR      = mod_gearman-$(VERSION)
 
 .PHONY: skel
