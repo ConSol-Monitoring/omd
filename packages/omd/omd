@@ -27,7 +27,7 @@
 import sys, os, shutil, pwd, grp, re, time, pprint, tty, termios
 from subprocess import *
 
-OMD_VERSION = "0.47.20110315"
+OMD_VERSION = "0.47"
 
 # colored output, if stdout is a tty
 on_tty = sys.stdout.isatty()
@@ -2155,12 +2155,14 @@ def main_init_action(command, args, options={}):
             # We need to do an os.system(), because each
             # site must be started with the account of the
             # site user. And after setuid() we cannot return.
-            if command in [ "start", "restart", "reload" ]:
+            if command in [ "start", "restart", "reload" ] or \
+		 ( "auto" in options and command == "status" ):
                 g_sitename = site
                 g_sitedir = site_dir(g_sitename)
                 config_load_hooks(True)
                 if g_hooks["AUTOSTART"]["value"] != "on":
-                    sys.stdout.write("Ignoring site '%s': AUTOSTART != on\n" % site)
+		    if not bare:
+			sys.stdout.write("Ignoring site '%s': AUTOSTART != on\n" % site)
                     continue
 
 	    if bare:
@@ -2303,6 +2305,7 @@ commands = [
 
   ( "status",    False, 2, 1, False, "[SERVICE]", lambda args, opts: main_init_action("status", args, opts),
     [ ( "version", "V", True ),
+      ( "auto", None, False), 
       ( "bare", "b", False) ],
     "Show status of services of site(s)",
     ""),
