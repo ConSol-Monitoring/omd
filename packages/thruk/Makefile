@@ -23,6 +23,7 @@ install:
 	cp -rp $(DIR) $(DESTDIR)$(OMD_ROOT)/share/thruk
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/skel/etc/thruk
 	rm -rf $(DESTDIR)$(OMD_ROOT)/share/thruk/plugins/plugins-enabled
+	rm -rf $(DESTDIR)$(OMD_ROOT)/share/thruk/t
 
 skel:
 	# logfile has to be group writeable for shared apache
@@ -31,9 +32,9 @@ skel:
 	mkdir -p $(SKEL)/etc/thruk/plugins/plugins-enabled
 	mkdir -p $(SKEL)/etc/thruk/plugins/plugins-available
 	# set links for available plugins
-	for link in `ls -1 $(DIR)/plugins/plugins-available/`; do cd $(SKEL)/etc/thruk/plugins/plugins-available && ln -s ../../../../share/thruk/plugins/plugins-available/$$link $$link; done
+	for link in `ls -1 $(DIR)/plugins/plugins-available/`; do cd $(SKEL)/etc/thruk/plugins/plugins-available && ln -sfn $$link $$link; done
 	# set links for enabled plugins
-	for link in `ls -1 $(DIR)/plugins/plugins-enabled/`; do cd $(SKEL)/etc/thruk/plugins/plugins-enabled && ln -s ../plugins-available/$$link $$link; done
+	for link in `ls -1 $(DIR)/plugins/plugins-enabled/`; do cd $(SKEL)/etc/thruk/plugins/plugins-enabled && ln -sfn ../plugins-available/$$link $$link; done
 
 clean:
 	rm -rf $(DIR)
