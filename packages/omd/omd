@@ -27,7 +27,7 @@
 import sys, os, shutil, pwd, grp, re, time, pprint, tty, termios
 from subprocess import *
 
-OMD_VERSION = "0.47"
+OMD_VERSION = "0.47.20110315"
 
 # colored output, if stdout is a tty
 on_tty = sys.stdout.isatty()
@@ -1270,7 +1270,7 @@ def call_init_scripts(sitename, command, daemon = None):
     else:
          return 2
 
-def check_status(sitename, display=True, daemon=None):
+def check_status(sitename, display=True, daemon=None, bare=False):
     num_running = 0
     num_unused = 0
     num_stopped = 0
@@ -1283,22 +1283,29 @@ def check_status(sitename, display=True, daemon=None):
         state = os.system("%s/%s status >/dev/null 2>&1" % (rc_dir, script)) >> 8
 
         if display and (state != 5 or opt_verbose):
-            sys.stdout.write("%-16s" % (komponent + ":"))
-            sys.stdout.write(tty_bold)
+	    if bare:
+		sys.stdout.write(komponent + " ")
+	    else:
+		sys.stdout.write("%-16s" % (komponent + ":"))
+		sys.stdout.write(tty_bold)
+
+	if bare:
+	    if state != 5 or opt_verbose:
+		sys.stdout.write("%d\n" % state)
 
         if state == 0:
-            if display:
+            if display and not bare:
                 sys.stdout.write(tty_green + "running\n")
             num_running += 1
         elif state == 5:
-            if display and opt_verbose:
+            if display and opt_verbose and not bare:
                 sys.stdout.write(tty_blue + "unused\n")
             num_unused += 1
         else:
-            if display:
+            if display and not bare:
                 sys.stdout.write(tty_red + "stopped\n")
             num_stopped += 1
-        if display:
+        if display and not bare:
             sys.stdout.write(tty_normal)
 
     if num_stopped > 0 and num_running == 0:
@@ -1314,8 +1321,11 @@ def check_status(sitename, display=True, daemon=None):
         exit_code = 2
         ovstate = tty_yellow + "partially running"
     if display:
-        sys.stdout.write("-----------------------\n")
-        sys.stdout.write("Overall state:  %s\n" %
+	if bare:
+	    sys.stdout.write("OVERALL %d\n" % exit_code)
+	else:
+	    sys.stdout.write("-----------------------\n")
+            sys.stdout.write("Overall state:  %s\n" %
                 (tty_bold + ovstate + tty_normal))
     return exit_code
 
@@ -1615,7 +1625,7 @@ def config_configure_hook(hookname):
         config_set_value(hook["name"], new_value)
         config_reload_hooks()
 
-def init_action(command, args):
+def init_action(command, args, options):
     if command == "start":
         create_tmpfs(g_sitename)
 
@@ -1628,7 +1638,7 @@ def init_action(command, args):
     os.chdir(g_sitedir)
 
     if command == "status":
-        return check_status(g_sitename, True, daemon)
+        return check_status(g_sitename, True, daemon, "bare" in options)
     else:
         return call_init_scripts(g_sitename, command, daemon)
 
@@ -1658,7 +1668,7 @@ def main_help(args=[], options={}):
 
         sys.stdout.write(" omd %-10s %-16s %s\n" % (command, synopsis, descr))
     sys.stdout.write("\nGeneral Options:\n"
-                     " -V <version>                    set specific version, useful in combination with update/create\n"
+                     " -V <version>                    set specific version, usefull in combination with update/create\n"
                     )
 
 def main_setup(args, options={}):
@@ -2134,6 +2144,7 @@ def main_init_action(command, args, options={}):
     global g_sitedir
 
     only_version = options.get("version")
+    bare = "bare" in options
 
     # if no site is selected, all sites are affected
     if not g_sitename:
@@ -2152,11 +2163,17 @@ def main_init_action(command, args, options={}):
                     sys.stdout.write("Ignoring site '%s': AUTOSTART != on\n" % site)
                     continue
 
-            sys.stdout.write("%sDoing '%s' on site %s:%s\n" % (tty_bold, command, site, tty_normal))
-            exit_status = max(exit_status, os.system("%s %s %s %s" % (sys.argv[0], command, site, " ".join(args))))
-            sys.stdout.write("\n")
+	    if bare:
+		sys.stdout.write('[%s]\n' % site)
+	    else:
+		sys.stdout.write("%sDoing '%s' on site %s:%s\n" % (tty_bold, command, site, tty_normal))
+	    sys.stdout.flush()
+            exit_status = max(exit_status, os.system("%s %s %s %s %s" % 
+			(sys.argv[0], command, "bare" in options and "--bare" or "", site, " ".join(args))))
+	    if not bare:
+		sys.stdout.write("\n")
     else:
-        exit_status = init_action(command, args)
+        exit_status = init_action(command, args, options)
     sys.exit(exit_status)
 
 def main_config(args, options={}):
@@ -2285,7 +2302,8 @@ commands = [
     ""),
 
   ( "status",    False, 2, 1, False, "[SERVICE]", lambda args, opts: main_init_action("status", args, opts),
-    [ ( "version", "V", True ) ],
+    [ ( "version", "V", True ),
+      ( "bare", "b", False) ],
     "Show status of services of site(s)",
     ""),
 

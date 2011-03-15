@@ -166,6 +166,13 @@ how to specify sites.
 .B omd status     [SITE] [SERVICE]
 Show status of site(s). Refer to \fBomd start\fP for
 how to specify sites.
+
+If this is called for one specific site, then the exit code is as follows:
+\fB0\fP if the site is running, \fB1\fP if the site is stopped and \fB2\fP
+if the site is partially running (some services running, some stopped).
+
+The option \fB-b\fP or \fB--bare\fP produces a machine-readable output
+format.
 .TP
 .B omd config     [SITE] [set|show] [VARIABLE] [VALUE]
 This command is used to view and change the configuration of a site. Each
