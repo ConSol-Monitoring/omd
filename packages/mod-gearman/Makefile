@@ -21,6 +21,12 @@ install:
 	[ -d $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins ] || mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins
 	mv $(DESTDIR)$(OMD_ROOT)/bin/check_gearman $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins/
 	rm -rf $(DESTDIR)$(OMD_ROOT)/etc/mod-gearman
+	rm -rf $(DESTDIR)$(OMD_ROOT)/etc/init.d/gearmand
+	rm -rf $(DESTDIR)$(OMD_ROOT)/etc/init.d/mod_gearman_worker
+	rmdir $(DESTDIR)$(OMD_ROOT)/etc/init.d
+	rmdir $(DESTDIR)$(OMD_ROOT)/etc
+	rm -rf $(DESTDIR)$(OMD_ROOT)/var/mod_gearman
+	rmdir $(DESTDIR)$(OMD_ROOT)/var
 
 skel:
 
