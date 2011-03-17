@@ -78,9 +78,6 @@ else:
 def ok():
     sys.stdout.write(tty_ok + "\n")
 
-def error():
-    sys.stdout.write(tty_error + "\n")
-
 # Symbols for update
 good  = " " + tty_green +  tty_bold + "*" + tty_normal
 warn  = " " + tty_bgyellow + tty_black + tty_bold + "!" + tty_normal
@@ -97,7 +94,7 @@ def show_success(exit_code):
     if exit_code == True or exit_code == 0:
         ok()
     else:
-        error()
+        sys.stdout.write(tty_error + "\n")
     return exit_code
 
 patch_supports_merge = None
