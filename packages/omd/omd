@@ -2261,7 +2261,9 @@ commands = [
     "- Restart the system wide apache daemon\n"),
 
   ( "mv",        True,  1, 1, False, "NEWNAME", lambda args, opts: main_mv_or_cp("mv", args, opts),
-    [],
+    [ ( "uid", "u", True ), 
+      ( "gid", "g", True ),
+    ],
     "Rename a site",
     ""),
 
