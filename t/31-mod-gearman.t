@@ -13,7 +13,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 62 );
+plan( tests => 66 );
 
 ##################################################
 # create our test site
@@ -21,6 +21,10 @@ my $omd_bin = TestUtils::get_omd_bin();
 my $site    = TestUtils::create_test_site() or TestUtils::bail_out_clean("no further testing without site");
 my $host    = "omd-".$site;
 my $service = "Dummy+Service";
+
+
+# decrease status update interval
+TestUtils::test_command({ cmd => "/usr/bin/env sed -i -e 's/^status_update_interval=30/status_update_interval=3/g' /opt/omd/sites/$site/etc/nagios/nagios.d/tuning.cfg" });
 
 ##################################################
 # prepare site
@@ -49,6 +53,15 @@ my $tests = [
 for my $test (@{$tests}) {
     TestUtils::test_command($test);
 }
+
+#--- wait for all services being checked
+TestUtils::wait_for_content({
+    url => "http://localhost/$site/nagios/cgi-bin/status.cgi?host=$host&servicestatustypes=1&hoststatustypes=15",
+    auth    => "OMD Monitoring Site $site:omdadmin:omd",
+    like    => [ "0 Matching Service Entries Displayed" ],
+    },
+    60
+);
 
 # verify the jobs done
 my $test = { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_gearman -H localhost:4730 -q worker_".hostname." -t 10 -s check'", like => [ '/check_gearman OK/' ] };
