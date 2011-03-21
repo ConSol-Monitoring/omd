@@ -382,7 +382,7 @@ def useradd(sitename, uid = None, gid = None):
     groupadd(sitename, gid)
     useradd_options = g_info["USERADD_OPTIONS"]
     if uid != None:
-        useradd_options += "-u %d" % int(uid)
+        useradd_options += " -u %d" % int(uid)
     if 0 != os.system("useradd %s -d '%s' -c 'OMD site %s' -g %s -G omd %s -s /bin/bash" % \
                       (useradd_options, site_dir(sitename), sitename, sitename, sitename)):
         groupdel(sitename)
@@ -2261,7 +2261,9 @@ commands = [
     "- Restart the system wide apache daemon\n"),
 
   ( "mv",        True,  1, 1, False, "NEWNAME", lambda args, opts: main_mv_or_cp("mv", args, opts),
-    [],
+    [ ( "uid", "u", True ), 
+      ( "gid", "g", True ),
+    ],
     "Rename a site",
     ""),
 
