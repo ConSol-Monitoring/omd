@@ -163,7 +163,7 @@ MODULES = ExtUtils-MakeMaker-6.56.tar.gz \
           FCGI-ProcManager-0.19.tar.gz \
           FCGI-ProcManager-MaxRequests-0.02.tar.gz \
           Catalyst-Plugin-Redirect-0.02.tar.gz \
-          Monitoring-Livestatus-0.66.tar.gz \
+          Monitoring-Livestatus-0.68.tar.gz \
           Monitoring-Livestatus-Class-0.03.tar.gz \
           Monitoring-Availability-0.16.tar.gz \
           YAML-Syck-1.17.tar.gz \
