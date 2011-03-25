@@ -163,9 +163,19 @@ Reload services of site(s). That is the same as calling all of the sites
 init scripts with the option \fBreload\fP. Refer to \fBomd start\fP for
 how to specify sites.
 .TP
-.B omd status     [SITE] [SERVICE]
+.B omd status     [SITE] [SERVICE] [-b,--bare] [--auto]
 Show status of site(s). Refer to \fBomd start\fP for
 how to specify sites.
+
+If this is called for one specific site, then the exit code is as follows:
+\fB0\fP if the site is running, \fB1\fP if the site is stopped and \fB2\fP
+if the site is partially running (some services running, some stopped).
+
+The option \fB-b\fP or \fB--bare\fP produces a machine-readable output
+format.
+
+If you add the option \fB--auto\fP then only the status of those sites will
+be displayed, that are set to {AUTOSTART} = {on}.
 .TP
 .B omd config     [SITE] [set|show] [VARIABLE] [VALUE]
 This command is used to view and change the configuration of a site. Each

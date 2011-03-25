@@ -34,7 +34,7 @@ install: $(APACHE_MODULES_INSTALL)
 
 skel:
 	if [ $(CENTOS_WORKAROUND) -eq 1 ]; then \
-		echo -e "[Session]\nsession.save_path='###ROOT###/tmp/php/session'\nupload_tmp_dir='###ROOT###/tmp/php/upload'\nsoap.wsdl_cache_dir='###ROOT###/tmp/php/wsdl-cache'\n" > $(SKEL)/etc/apache/php.ini; \
+		echo -e "[Session]\nsession.save_path='###ROOT###/tmp/php/session'\nupload_tmp_dir='###ROOT###/tmp/php/upload'\nsoap.wsdl_cache_dir='###ROOT###/tmp/php/wsdl-cache'\nsafe_mode='Off'\n" > $(SKEL)/etc/apache/php.ini; \
 	fi
 
 	# Replace macros
