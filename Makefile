@@ -183,11 +183,7 @@ install-global:
 # Create source tarball. This currently only works in a checked out GIT 
 # repository.
 $(SOURCE_TGZ) dist:
-	rm -rf omd-$(OMD_VERSION)
-	mkdir -p omd-$(OMD_VERSION)
-	git archive HEAD | tar xf - -C omd-$(OMD_VERSION)
-	tar czf $(SOURCE_TGZ) omd-$(OMD_VERSION)
-	rm -rf omd-$(OMD_VERSION)
+	git archive --prefix=omd-$(OMD_VERSION)/ --format=tar HEAD | gzip > $(SOURCE_TGZ)
 
 
 # Build RPM from source code. This currently needs 'make dist' and thus only
