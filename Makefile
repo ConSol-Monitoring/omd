@@ -179,29 +179,43 @@ install-global:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/doc
 	install -m 644 README COPYING TEAM $(DESTDIR)$(OMD_ROOT)/share/doc
 
-
 # Create source tarball. This currently only works in a checked out GIT 
 # repository.
 $(SOURCE_TGZ) dist:
-	git archive --prefix=omd-$(OMD_VERSION)/ --format=tar HEAD | gzip > $(SOURCE_TGZ)
+	rm -rf omd-$(OMD_VERSION)
+	mkdir -p omd-$(OMD_VERSION)
+	git archive HEAD | tar xf - -C omd-$(OMD_VERSION)
+	tar czf $(SOURCE_TGZ) omd-$(OMD_VERSION)
+	rm -rf omd-$(OMD_VERSION)
 
+# Creates source tarball. This does only work well in directories extracted
+# from a CLEAN git archive tarball.
+$(SOURCE_TGZ)-snap snap:
+	rm -rf omd-$(OMD_VERSION)
+	mkdir -p omd-$(OMD_VERSION)
+	tar cf - --exclude="rpm.topdir" --exclude="*~" --exclude=".gitignore" --exclude "omd-$(OMD_VERSION)" . | tar xf - -C omd-$(OMD_VERSION)
+	tar czf $(SOURCE_TGZ) omd-$(OMD_VERSION)
+	rm -rf omd-$(OMD_VERSION)
 
-# Build RPM from source code. This currently needs 'make dist' and thus only
-# works within a GIT repository.
+# Build RPM from source code.
+# When called from a git repository this uses 'make dist' and thus 'git archive'
+# to create the source rpm.
+# The second choice is to call this form a CLEAN git archive directory which
+# then uses 'make snap' to use that snapshot.
 rpm:
-	sed -e 's/^Requires:.*/Requires:	$(OS_PACKAGES)/' \
-            -e 's/%{version}/$(OMD_VERSION)/g' \
-            -e 's/^Version:.*/Version: $(DISTRO_CODE)/' \
-            -e 's/^Release:.*/Release: $(OMD_SERIAL)/' \
+	sed -e 's/^Requires:.*/Requires:        $(OS_PACKAGES)/' \
+	    -e 's/%{version}/$(OMD_VERSION)/g' \
+	    -e 's/^Version:.*/Version: $(DISTRO_CODE)/' \
+	    -e 's/^Release:.*/Release: $(OMD_SERIAL)/' \
 	    -e 's#@APACHE_CONFDIR@#$(APACHE_CONF_DIR)#g' \
 	    -e 's#@APACHE_NAME@#$(APACHE_NAME)#g' \
 	    omd.spec.in > omd.spec
 	rm -f $(SOURCE_TGZ)
-	$(MAKE) $(SOURCE_TGZ)
+	test -d .git && $(MAKE) $(SOURCE_TGZ) || $(MAKE) $(SOURCE_TGZ)-snap
 	mkdir -p $(RPM_TOPDIR)/{SOURCES,BUILD,RPMS,SRPMS,SPECS}
 	cp $(SOURCE_TGZ) $(RPM_TOPDIR)/SOURCES
 	rpmbuild -ba --define "_topdir $(RPM_TOPDIR)" \
-             --buildroot=$$(pwd)/rpm.buildroot omd.spec
+	     --buildroot=$$(pwd)/rpm.buildroot omd.spec
 	mv -v $(RPM_TOPDIR)/RPMS/*/*.rpm .
 	mv -v $(RPM_TOPDIR)/SRPMS/*.src.rpm .
 	rm -rf $(RPM_TOPDIR) rpm.buildroot
