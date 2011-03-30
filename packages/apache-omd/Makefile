@@ -55,6 +55,7 @@ skel:
 	mkdir -p $(SKEL)/var/log/apache
 	mkdir -p $(SKEL)/var/www
 	mkdir -p $(SKEL)/tmp/apache/run
+	mkdir -p $(SKEL)/tmp/apache/fcgid_sock
 	mkdir -p $(SKEL)/tmp/php/session
 	mkdir -p $(SKEL)/tmp/php/upload
 	mkdir -p $(SKEL)/tmp/php/wsdl-cache
