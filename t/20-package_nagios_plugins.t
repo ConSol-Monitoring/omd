@@ -12,7 +12,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 10 );
+plan( tests => 22 );
 
 ##################################################
 # create our test site
@@ -22,7 +22,10 @@ my $site    = TestUtils::create_test_site() or TestUtils::bail_out_clean("no fur
 ##################################################
 # execute some checks
 my $tests = [
-  { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_webinject'", exit => 3, like => '/find any test case files to run./' },
+  { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_icmp'",     exit => 3, like => '/check_icmp: No hosts to check/' },
+  { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_snmp'",     exit => 3, like => '/check_snmp: Could not parse arguments/' },
+  { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_mysql'",    exit => 2, like => '/Can\'t connect to local MySQL server through socket/' },
+  { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_logfiles'", exit => 3, like => '/Usage: check_logfiles/' },
 ];
 for my $test (@{$tests}) {
     TestUtils::test_command($test);
