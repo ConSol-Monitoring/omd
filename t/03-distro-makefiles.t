@@ -10,7 +10,7 @@ use FindBin;
 use lib "$FindBin::Bin/lib/lib/perl5";
 
 if(-d "distros") {
-    plan tests => 169;
+    plan tests => 190;
 }
 else {
     plan( skip_all => 'need distros directory to run, please run from the project root' );
