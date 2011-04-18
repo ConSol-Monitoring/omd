@@ -20,7 +20,7 @@ my $omd_bin = TestUtils::get_omd_bin();
 my $site    = TestUtils::create_test_site() or TestUtils::bail_out_clean("no further testing without site");
 my $auth    = 'OMD Monitoring Site '.$site.':omdadmin:omd';
 # Create code to find this out
-my $version = '1.5.8';
+my $version = '1.5.9';
 
 #TestUtils::test_command({ cmd => "/d1/nagvis/mache" });
 
