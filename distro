@@ -38,6 +38,10 @@ then
         REL=${REL%% *}
         echo "CENTOS$SEP$REL"
         exit 0
+    elif [ "${VERSION:0:43}" = "Red Hat Enterprise Linux Server release 6.0" ]
+    then
+	echo "REDHAT${SEP}6.0"
+	exit 0
     fi
 fi
 
