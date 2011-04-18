@@ -2002,7 +2002,7 @@ def diff_list(from_skelroot, g_sitedir, from_version, relbase, bare):
             print_status(good, fn, 'c', 'Changed content')
 
         if source_perm != target_perm:
-            print_status(warn, pn, 'c', 'Changed permissions')
+            print_status(warn, fn, 'c', 'Changed permissions')
 
     read_skel_permissions()
     old_perms = load_skel_permissions(from_version)
