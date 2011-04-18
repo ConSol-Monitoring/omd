@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 NAME = nagvis
-VERSION = 1.5.8
+VERSION = 1.5.9
 #VERSION = 1.5-nightly
 DIR = $(NAME)-$(VERSION)
 
