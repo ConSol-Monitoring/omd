@@ -9,10 +9,7 @@ use lib('t');
 use FindBin;
 use lib "$FindBin::Bin/lib/lib/perl5";
 
-if(-d "distros") {
-    plan tests => 190;
-}
-else {
+unless(-d "distros") {
     plan( skip_all => 'need distros directory to run, please run from the project root' );
 }
 
@@ -36,3 +33,4 @@ for my $file (keys %{$all_confs}) {
     }
 }
 
+done_testing();
