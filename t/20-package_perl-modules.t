@@ -12,7 +12,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 554 );
+plan( tests => 563 );
 
 ##################################################
 # create our test site
@@ -44,6 +44,7 @@ for my $tarball (glob("packages/perl-modules/src/*.gz")) {
     elsif($tarball eq 'IO::stringy')                 { $tarball = 'IO::Scalar'; }
     elsif($tarball eq 'TermReadKey')                 { $tarball = 'Term::ReadKey'; }
     elsif($tarball eq 'IO::Compress')                { $tarball = 'IO::Compress::Base'; }
+    elsif($tarball eq 'Gearman')                     { $tarball = 'Gearman::Client'; }
     elsif($tarball eq 'Term::ReadLine::Gnu')         { $tarball = 'Term::ReadLine; use '; }
     elsif($tarball eq 'Package::DeprecationManager') { $version .= ' -deprecations => { blah => foo }'; }
     elsif($tarball eq 'DBD::Oracle')                 { next; }
