@@ -14,7 +14,7 @@
 
 # Start only if PNP is enabled
 . ###ROOT###/etc/omd/site.conf
-if [ "$CONFIG_PNP4NAGIOS" != on ] ; then
+if [ "$CONFIG_PNP4NAGIOS" == off ] ; then
     exit 5
 fi
 
