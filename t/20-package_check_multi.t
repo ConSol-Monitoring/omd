@@ -139,7 +139,8 @@ for my $core (qw/nagios shinken/) {
 	#--- perform proper initialization
 	TestUtils::test_command({ cmd => $omd_bin." stop $site" });
 	TestUtils::test_command({ cmd => $omd_bin." config $site set CORE $core" });
-	TestUtils::test_command({ cmd => $omd_bin." start $site" })   or TestUtils::bail_out_clean("No need to test $package without proper startup");
+	TestUtils::test_command({ cmd => $omd_bin." start $site" })         or TestUtils::bail_out_clean("No need to test $package without proper startup");
+    TestUtils::wait_for_file("/omd/sites/$site/tmp/run/nagios.cmd", 60) or TestUtils::bail_out_clean("No need to test $package without proper startup");;
 
 	#--- reschedule all checks and wait for result (note: shinken cmd.cgi is to be addressed via nagios CGIs)
 	#TestUtils::test_command({ cmd => "/bin/su - $site -c './lib/nagios/plugins/check_http -t 30 -H localhost -a omdadmin:omd -u /$site/nagios/cgi-bin/cmd.cgi -e 200 -P \"cmd_typ=17&host=$host&cmd_mod=2&start_time=2222-22-22:22%3A22%3A22&force_check=on&btnSubmit=Commit\" -r \"Your command request was successfully submitted\"'", like => '/HTTP OK:/' });
