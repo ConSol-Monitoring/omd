@@ -3,7 +3,7 @@ include ../../Makefile.omd
 
 SHINKEN=shinken-0.5.6
 SHINKEN_FILE=$(SHINKEN).tar.gz
-SHINKEN_URL=http://sourceforge.net/projects/shinken/files/$(SHINKEN_FILE)
+SHINKEN_URL=http://shinken-monitoring.org/pub/$(SHINKEN).tar.gz
 #
 # Python Remote Objects
 PYRO=Pyro-3.11
