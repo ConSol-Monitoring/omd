@@ -288,6 +288,9 @@ do_start() {
             pid=`getmodpid $mod`;
             echo "ALREADY RUNNING (pid $pid)"
         else
+            if [ "$mod" = "broker" ]; then
+                rm -f $TMP/run/nagios.cmd
+            fi
             if [ $mod != "arbiter" ]; then
                 output=`$BIN/shinken-${mod} -d -c $ETC/${mod}d.ini $DEBUGCMD 2>&1`
             else
