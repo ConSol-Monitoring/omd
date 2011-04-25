@@ -269,6 +269,7 @@ sub test_url {
             next if $match =~ m/^mailto:/;
             next if $match =~ m/^#/;
             next if $match =~ m/^javascript:/;
+            next if $match =~ m/internal&srv=runtime/;
             if(defined $test->{'skip_link_check'}) {
                 my $skip = 0;
                 for my $expr (ref $test->{'skip_link_check'} eq 'ARRAY' ? @{$test->{'skip_link_check'}} : $test->{'skip_link_check'} ) {

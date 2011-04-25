@@ -12,7 +12,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 222 );
+plan( tests => 224 );
 
 # create our test site
 my $omd_bin = TestUtils::get_omd_bin();
