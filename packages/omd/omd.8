@@ -163,9 +163,19 @@ Reload services of site(s). That is the same as calling all of the sites
 init scripts with the option \fBreload\fP. Refer to \fBomd start\fP for
 how to specify sites.
 .TP
-.B omd status     [SITE] [SERVICE]
+.B omd status     [SITE] [SERVICE] [-b,--bare] [--auto]
 Show status of site(s). Refer to \fBomd start\fP for
 how to specify sites.
+
+If this is called for one specific site, then the exit code is as follows:
+\fB0\fP if the site is running, \fB1\fP if the site is stopped and \fB2\fP
+if the site is partially running (some services running, some stopped).
+
+The option \fB-b\fP or \fB--bare\fP produces a machine-readable output
+format.
+
+If you add the option \fB--auto\fP then only the status of those sites will
+be displayed, that are set to {AUTOSTART} = {on}.
 .TP
 .B omd config     [SITE] [set|show] [VARIABLE] [VALUE]
 This command is used to view and change the configuration of a site. Each
@@ -188,7 +198,7 @@ Setting and querying variables in batch mode can be done with
 .br
 \fBomd config [SITE] get VARIABLE\fP
 .TP
-.B omd diff ([RELBASE])
+.B omd diff [RELBASE] [-b, --bare]
 Shows the differences of files in the current site compared to the files delivered
 with the omd version used by the current site.
 
@@ -198,6 +208,9 @@ to filter the scope of the diff.
 
 The command lists files which meet at least one criteria: modified content, changed
 types, modified permissions, modified owner, deleted files.
+
+If you specify the option \fB-b\fP or \fB--bare\fP, then the output leaves out things
+to make the output more human readable, so it is better parseable by scripts.
 .SH SEE ALSO
 .BR http://www.omdistro.org
 .br

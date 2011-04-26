@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 NAME     = Thruk
-VERSION  = 0.82.1
+VERSION  = 0.94
 DIR      = $(NAME)-$(VERSION)
 PERLARCH = $(shell $(PERL) -e 'use Config; print $$Config{archname}')
 
@@ -14,11 +14,7 @@ build:
 	    ( cd $(DIR) ; patch -p1 -b ) < $$p ; \
 	done
 	export PERL5LIB=$$(pwd)/../perl-modules/dist/lib/perl5:$$(pwd)/../perl-modules/dist/lib/perl5/$(PERLARCH); cd $(DIR) ; echo "" | $(PERL) Makefile.PL
-	cd $(DIR) && make clean
-	mkdir -p $(DIR)/root/thruk/plugins
-	rm -f $(DIR)/root/thruk/plugins/statusmap
-	rm -f $(DIR)/root/thruk/plugins/outagespbimp
-	cd $(DIR)/root/thruk/plugins && ln -s ../../../plugins/plugins-enabled/statusmap/root statusmap
+	cd $(DIR) && make distclean
 
 
 install:
@@ -26,13 +22,19 @@ install:
 	rm -rf $(DESTDIR)$(OMD_ROOT)/share/thruk
 	cp -rp $(DIR) $(DESTDIR)$(OMD_ROOT)/share/thruk
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/skel/etc/thruk
-	cp $(DIR)/thruk.conf $(DESTDIR)$(OMD_ROOT)/skel/etc/thruk/thruk.conf
-	cp $(DIR)/menu.conf $(DESTDIR)$(OMD_ROOT)/skel/etc/thruk/menu.conf
+	rm -rf $(DESTDIR)$(OMD_ROOT)/share/thruk/plugins/plugins-enabled
+	rm -rf $(DESTDIR)$(OMD_ROOT)/share/thruk/t
 
 skel:
 	# logfile has to be group writeable for shared apache
 	mkdir -p $(SKEL)/var/log
 	touch $(SKEL)/var/log/thruk.log
+	mkdir -p $(SKEL)/etc/thruk/plugins/plugins-enabled
+	mkdir -p $(SKEL)/etc/thruk/plugins/plugins-available
+	# set links for available plugins
+	for link in `ls -1 $(DIR)/plugins/plugins-available/`; do cd $(SKEL)/etc/thruk/plugins/plugins-available && ln -sfn $$link $$link; done
+	# set links for enabled plugins
+	for link in `ls -1 $(DIR)/plugins/plugins-enabled/`; do cd $(SKEL)/etc/thruk/plugins/plugins-enabled && ln -sfn ../plugins-available/$$link $$link; done
 
 clean:
 	rm -rf $(DIR)

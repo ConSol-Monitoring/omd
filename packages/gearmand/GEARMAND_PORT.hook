@@ -1,20 +1,18 @@
 #!/bin/bash
+
+# Alias: Port for the Gearman Daemon
+# Menu: Distributed Monitoring
+# Description: 
+#  Set the listen address and port for gearmand. Use the fqdn instead of localhost
+#  to make gearman accessible from other hosts too. Use ":port" to bind on all
+#  interfaces.
+
 case "$1" in
-        alias)
-                echo "Port for the Gearman Daemon"
-        ;;
-        description)
-                cat << EOF
-Set the listen address and port for gearmand. Use the fqdn instead of localhost
-to make gearman accessible from other hosts too. Use ":port" to bind on all
-interfaces.
-EOF
-   ;;
    default)
        echo "localhost:4730"
    ;;
    choices)
-       echo "[a-zA-Z]*:[1-9][0-9]{0,4}"
+       echo "[a-zA-Z0-9\.\-]*:[1-9][0-9]{0,4}"
    ;;
    set)
         cat <<EOF > $OMD_ROOT/etc/mod-gearman/port.conf
@@ -24,6 +22,6 @@ server=$2
 EOF
    ;;
     depends)
-       [ "$CONFIG_DISTRIBUTED_MONITORING" = "mod-gearman" ]
+       [ "$CONFIG_MOD_GEARMAN" = "on" ]
     ;;
 esac

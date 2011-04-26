@@ -32,11 +32,6 @@
 #   script should terminate without starting the daemon
 # - When a reload is requested and the program is not running
 #   the init script should execute a start instead
-#
-# FIXME/TODO:
-# - Add ability to use the "fast startup options"
-#   - How to detect that the config changed?
-#   - WHere to place the generation of the cache here?
 
 cd ###ROOT###
 . ###ROOT###/.profile
@@ -60,6 +55,8 @@ case "$1" in start|restart|reload|checkconfig)
        > $CFG_FILE || rm -f $CFG_FILE 
 esac
 
+OPTIONS="-ud"
+
 # Fetches the pid of the currently running nagios process of the given
 # user.
 #
@@ -70,7 +67,7 @@ esac
 # returning 0 when a process can be found.
 nagios_proc() {
     PROC=$(ps -u $USR --ppid 1 -o pid,ppid,cmd \
-             | grep "$BIN -d $CFG_FILE" 2>&1 | grep ' 1 ' | grep -v grep)
+             | grep "$BIN $OPTIONS $CFG_FILE" 2>&1 | grep ' 1 ' | grep -v grep)
     PID=$(echo "$PROC" | sed 's/^ *//g' | cut -d' ' -f1)
     if [ "$PID" != "" ]; then
         echo "$PID"
@@ -94,7 +91,7 @@ verify_config() {
     if [ "$1" != "quiet" ]; then
         echo -n "Running configuration check... "
     fi
-    RESULT=$($BIN -v $CFG_FILE 2>&1)
+    RESULT=$($BIN -pv $CFG_FILE 2>&1)
     if [ $? -eq 0 ]; then
         if [ "$1" != "quiet" ]; then
             echo "done."
@@ -103,8 +100,8 @@ verify_config() {
     else
         if [ "$1" != "quiet" ]; then
             echo "CONFIG ERROR! Aborted. Check your Nagios configuration."
-            echo "$RESULT"
         fi
+        echo "$RESULT" >&2
         return 1
     fi
 }
@@ -153,17 +150,8 @@ nagios_wait_stop() {
 }
 
 nagios_wait_start() {
-    if pidof_nagios >/dev/null 2>&1; then
-        echo -n 'Already running. '
-        return 1
-    fi
-  
-    if ! verify_config quiet; then
-        return 1
-    fi
-
     prep_start
-    $BIN -d $CFG_FILE
+    $BIN $OPTIONS $CFG_FILE
 
     I=0
     while ! pidof_nagios >/dev/null 2>&1;  do
@@ -194,6 +182,15 @@ esac
 case "$1" in
     start)
          echo -n "Starting nagios..."
+         if pidof_nagios >/dev/null 2>&1; then
+             echo 'Already running.'
+             exit 1
+         fi
+
+         if ! verify_config quiet; then
+             exit 1
+         fi
+
          if nagios_wait_start; then
              echo 'OK'
              exit 0
@@ -212,7 +209,7 @@ case "$1" in
             exit 1
         fi
     ;;
-    checkconfig)
+    check|checkconfig)
         if ! verify_config; then
             exit 1
         fi
@@ -234,8 +231,14 @@ case "$1" in
         fi
 
         $0 stop || (echo "Unable to stop nagios. Terminating..." && exit 1)
-        $0 start
-        exit $?
+        echo -n "Starting nagios..."
+        if nagios_wait_start; then
+            echo 'OK'
+            exit 0
+        else
+            echo 'ERROR'
+            exit 1
+        fi
     ;;
     
     reload|force-reload)

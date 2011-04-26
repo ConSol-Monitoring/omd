@@ -1,16 +1,13 @@
 #!/bin/bash
+
+# Alias: Mod-Gearman Worker
+# Menu: Distributed Monitoring
+# Description: 
+#  You need at least one Worker to make distributed monitoring with
+#  Mod-Gearman work. The worker does not have to be on the same host
+#  like nagios. You can add more worker to spread the load even
+#  further.
 case "$1" in
-    alias)
-        echo "Mod-Gearman Worker"
-    ;;
-    description)
-        cat << EOF
-You need at least one Worker to make distributed monitoring with
-Mod-Gearman work. The worker does not have to be on the same host
-like nagios. You can add more worker to spread the load even
-further.
-EOF
-    ;;
     default)
         echo "on"
     ;;
@@ -19,7 +16,7 @@ EOF
         echo "off: disable worker"
     ;;
     set)
-        if [ "$2" = "on" -o "$CONFIG_DISTRIBUTED_MONITORING" = "mod-gearman" ]; then
+        if [ "$2" = "on" -o "$CONFIG_MOD_GEARMAN" = "on" ]; then
             # generate random key
             KEYSTORE="$OMD_ROOT/etc/mod-gearman/secret.key"
             if [ ! -s $KEYSTORE ]; then
@@ -29,6 +26,6 @@ EOF
         fi
     ;;
     depends)
-        [ "$CONFIG_DISTRIBUTED_MONITORING" = "mod-gearman" ]
+        [ "$CONFIG_MOD_GEARMAN" = "on" ]
     ;;
 esac

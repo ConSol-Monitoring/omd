@@ -12,7 +12,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 16 );
+plan( tests => 10 );
 
 ##################################################
 # create our test site
@@ -22,11 +22,7 @@ my $site    = TestUtils::create_test_site() or TestUtils::bail_out_clean("no fur
 ##################################################
 # execute some checks
 my $tests = [
-  { cmd => $omd_bin." start $site" },
-
   { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_webinject'", exit => 3, like => '/find any test case files to run./' },
-
-  { cmd => $omd_bin." stop $site" },
 ];
 for my $test (@{$tests}) {
     TestUtils::test_command($test);

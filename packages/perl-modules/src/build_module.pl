@@ -61,6 +61,7 @@ sub install_module {
     if( $modname eq "Template::Toolkit" )          { $modname   = "Template"; }
     if( $modname eq "IO::stringy" )                { $modname   = "IO::Scalar"; }
     if( $modname eq "TermReadKey" )                { $modname   = "Term::ReadKey"; }
+    if( $modname eq "Gearman" )                    { $modname   = "Gearman::Client"; }
     if( $modname eq "IO::Compress" )               { $modname   = "IO::Compress::Base"; }
     if( $modname eq "Term::ReadLine::Gnu" )        { $pre_check = "use Term::ReadLine;"; }
     if( $modname eq "DBD::Oracle") {

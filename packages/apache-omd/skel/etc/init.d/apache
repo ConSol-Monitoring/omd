@@ -1,7 +1,7 @@
 #!/bin/bash
 
 . ###ROOT###/etc/omd/site.conf
-if [ "$CONFIG_WEBSERVER" != own ] ; then
+if [ "$CONFIG_APACHE_MODE" != own ] ; then
   exit 5
 fi
 
@@ -48,6 +48,7 @@ apache_wait_stop() {
     i=0
     while kill -0 "${pid:-}" 2> /dev/null;  do
       if [ $i = '60' ]; then
+        kill_stale_php_cgis
         return 1
       else
         echo -n "."
@@ -58,6 +59,7 @@ apache_wait_stop() {
   fi
   
   [ -f "$PID_FILE" ] && rm -f "$PID_FILE"
+  kill_stale_php_cgis
   return 0
 }
 
@@ -82,6 +84,21 @@ apache_wait_start() {
     fi
   done
 
+  return 0
+}
+
+kill_stale_php_cgis() {
+  # kill stale php-cgis
+  ps -fu ###SITE### | grep ###PHP_FCGI_BIN### | awk '{ print $2 }' | xargs -r kill >/dev/null 2>&1
+  i=0
+  while [ $(ps -fu ###SITE### | grep -c ###PHP_FCGI_BIN### 2>/dev/null) -gt 0 ]; do
+    if [ $i = '5' ]; then
+      return 1
+    else
+      i=$(($i+1))
+      sleep 1
+    fi
+  done
   return 0
 }
 

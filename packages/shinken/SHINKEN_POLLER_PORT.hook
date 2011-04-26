@@ -1,15 +1,12 @@
 #!/bin/bash
 
+# Alias: TCP port the Shinken poller listens on
+# Menu: Basic
+# Description:
+#  If you configured Shinken as the monitoring core, this is the
+#  listening port of the poller .
+
 case "$1" in
-    alias)
-        echo "TCP port the Shinken poller listens on"
-    ;;
-    description)
-        cat << EOF
-If you configured Shinken as the monitoring core, this is the
-listening port of the poller .
-EOF
-    ;;
     default)
         echo "7771"
     ;;

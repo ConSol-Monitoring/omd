@@ -163,7 +163,7 @@ MODULES = ExtUtils-MakeMaker-6.56.tar.gz \
           FCGI-ProcManager-0.19.tar.gz \
           FCGI-ProcManager-MaxRequests-0.02.tar.gz \
           Catalyst-Plugin-Redirect-0.02.tar.gz \
-          Monitoring-Livestatus-0.64.tar.gz \
+          Monitoring-Livestatus-0.74.tar.gz \
           Monitoring-Livestatus-Class-0.03.tar.gz \
           Monitoring-Availability-0.16.tar.gz \
           YAML-Syck-1.17.tar.gz \
@@ -186,7 +186,10 @@ MODULES = ExtUtils-MakeMaker-6.56.tar.gz \
           Error-0.17016.tar.gz \
           Encode-2.42.tar.gz \
           Date-Calc-XS-6.2.tar.gz \
-          HTML-Lint-2.06.tar.gz
+          HTML-Lint-2.06.tar.gz \
+          String-CRC32-1.4.tar.gz \
+          Gearman-1.11.tar.gz \
+          Crypt-Rijndael-1.09.tar.gz
 
 build:
 	mkdir -p $(TMPDIST)

@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 NAME     = mod_gearman
-VERSION  = 1.0.1
+VERSION  = 1.0.4
 DIR      = mod_gearman-$(VERSION)
 
 .PHONY: skel
@@ -13,14 +13,20 @@ build:
     export LIBRARY_PATH=$(shell pwd)/../gearmand/gearmand-0.14/libgearman/.libs && \
     export LD_LIBRARY_PATH=$(shell pwd)/../gearmand/gearmand-0.14/libgearman/.libs && \
     ./configure --prefix=$(OMD_ROOT) && \
-	$(MAKE)
+	$(MAKE) -j 1
 
 install:
-	$(MAKE) DESTDIR=$(DESTDIR) -C $(DIR) install
+	$(MAKE) DESTDIR=$(DESTDIR) -C $(DIR) -j 1 install
 	# fix path for plugin
 	[ -d $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins ] || mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins
 	mv $(DESTDIR)$(OMD_ROOT)/bin/check_gearman $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins/
 	rm -rf $(DESTDIR)$(OMD_ROOT)/etc/mod-gearman
+	rm -rf $(DESTDIR)$(OMD_ROOT)/etc/init.d/gearmand
+	rm -rf $(DESTDIR)$(OMD_ROOT)/etc/init.d/mod_gearman_worker
+	rmdir $(DESTDIR)$(OMD_ROOT)/etc/init.d
+	rmdir $(DESTDIR)$(OMD_ROOT)/etc
+	rm -rf $(DESTDIR)$(OMD_ROOT)/var/mod_gearman
+	rmdir $(DESTDIR)$(OMD_ROOT)/var
 
 skel:
 

@@ -27,7 +27,7 @@ my $version = '1.6a1';
 ##################################################
 # Prepare the site for testing...
 
-TestUtils::test_command({ cmd => $omd_bin." config $site set WEB nagvis" });
+TestUtils::test_command({ cmd => $omd_bin." config $site set DEFAULT_GUI nagvis" });
 TestUtils::test_command({ cmd => $omd_bin." start $site" });
 
 ##################################################

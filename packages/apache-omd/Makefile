@@ -15,7 +15,7 @@ APACHE_MODULES_INSTALL=
 APACHE_FCGID_PATH=$(MODULE_DIR)/$(APACHE_FCGID_MODULE)
 CENTOS_WORKAROUND=0
 REPLACE_PHP_FCGI_BIN=$(PHP_FCGI_BIN)
-ifeq ($(shell ../../distro),CENTOS 5.5)
+ifeq ($(DISTRO_NAME),CENTOS)
   CENTOS_WORKAROUND=1
   APACHE_MODULES=modfcgid
   APACHE_MODULES_INSTALL=modfcgid_install
@@ -34,7 +34,7 @@ install: $(APACHE_MODULES_INSTALL)
 
 skel:
 	if [ $(CENTOS_WORKAROUND) -eq 1 ]; then \
-		echo -e "[Session]\nsession.save_path='###ROOT###/tmp/php/session'\nupload_tmp_dir='###ROOT###/tmp/php/upload'\nsoap.wsdl_cache_dir='###ROOT###/tmp/php/wsdl-cache'\n" > $(SKEL)/etc/apache/php.ini; \
+		echo -e "[Session]\nsession.save_path='###ROOT###/tmp/php/session'\nupload_tmp_dir='###ROOT###/tmp/php/upload'\nsoap.wsdl_cache_dir='###ROOT###/tmp/php/wsdl-cache'\nsafe_mode='Off'\n" > $(SKEL)/etc/apache/php.ini; \
 	fi
 
 	# Replace macros
@@ -49,11 +49,13 @@ skel:
 	       $(SKEL)/etc/apache/conf.d/02_fcgid.conf
 
 	sed -i 's|###APACHE_BIN###|$(APACHE_BIN)|g' $(SKEL)/etc/init.d/apache
+	sed -i 's|###PHP_FCGI_BIN###|$(PHP_FCGI_BIN)|g' $(SKEL)/etc/init.d/apache
 	sed -i 's|###PHP_FCGI_BIN###|$(REPLACE_PHP_FCGI_BIN)|g' $(SKEL)/etc/apache/php-wrapper
 	# Create working directories
 	mkdir -p $(SKEL)/var/log/apache
 	mkdir -p $(SKEL)/var/www
 	mkdir -p $(SKEL)/tmp/apache/run
+	mkdir -p $(SKEL)/tmp/apache/fcgid_sock
 	mkdir -p $(SKEL)/tmp/php/session
 	mkdir -p $(SKEL)/tmp/php/upload
 	mkdir -p $(SKEL)/tmp/php/wsdl-cache

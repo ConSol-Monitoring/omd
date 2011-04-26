@@ -12,7 +12,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 49 );
+plan( tests => 93 );
 
 my $omd_bin = TestUtils::get_omd_bin();
 
@@ -43,10 +43,25 @@ my $tests = [
                                                ]
   },
   { cmd => $omd_bin." stop $site",       like => '/Stopping nagios/' },
-  { cmd => $omd_bin." cp $site $site2",  like => '/Copying site '.$site.' to '.$site2.'.../', errlike => '/Apache port \d+ is in use\. I\'ve choosen \d+ instead\./' },
+  { cmd => $omd_bin." cp $site $site2",  like => '/Copying site '.$site.' to '.$site2.'.../', 
+                                         errlike => '/Apache port \d+ is in use\. I\'ve choosen \d+ instead\./' },
   { cmd => $omd_bin." mv $site2 $site3", like => '/Moving site '.$site2.' to '.$site3.'.../' },
   { cmd => $omd_bin." rm $site3",        like => '/Restarting Apache...\s*OK/', stdin => "yes\n" },
   { cmd => $omd_bin." rm $site",         like => '/Restarting Apache...\s*OK/', stdin => "yes\n" },
+  { cmd => $omd_bin." create -u 7017 -g 7018 $site", 
+                                         like => '/Successfully created site '.$site.'./' },
+  { cmd => "/usr/bin/id -u $site",       like => '/7017/' },
+  { cmd => "/usr/bin/id -g $site",       like => '/7018/' },
+  { cmd => $omd_bin." cp -u 7019 -g 7020 $site $site2", 
+                                         like => '/Copying site '.$site.' to '.$site2.'.../', 
+                                         errlike => '/Apache port \d+ is in use\. I\'ve choosen \d+ instead\./' },
+  { cmd => "/usr/bin/id -u $site2",      like => '/7019/' },
+  { cmd => "/usr/bin/id -g $site2",      like => '/7020/' },
+  { cmd => $omd_bin." mv -u 7021 -g 7022 $site2 $site3", like => '/Moving site '.$site2.' to '.$site3.'.../' },
+  { cmd => "/usr/bin/id -u $site3",      like => '/7021/' },
+  { cmd => "/usr/bin/id -g $site3",      like => '/7022/' },
+  { cmd => $omd_bin." rm $site",         like => '/Restarting Apache...\s*OK/', stdin => "yes\n" },
+  { cmd => $omd_bin." rm $site3",        like => '/Restarting Apache...\s*OK/', stdin => "yes\n" },
 ];
 
 # run tests

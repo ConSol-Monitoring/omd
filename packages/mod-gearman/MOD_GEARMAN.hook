@@ -1,0 +1,26 @@
+#!/bin/bash
+
+# Alias: Mod-Gearman
+# Menu: Distributed Monitoring
+# Description: 
+#  Here you can enable/disable distributed features based on Gearman. 
+#  Using Mod-Gearman will reduce the latency and load caused by check execution - 
+#  even when used on the same host - because the Mod-Gearman worker 
+#  is smaller and more efficient in the creation of processes than Nagios.  
+
+case "$1" in
+    default)
+        echo "off"
+    ;;
+    choices)
+        echo "off: disable gearman features"
+        echo "on: enable gearman features"
+    ;;
+    set)
+        # this just enables/disables the gearman settings tree
+        if [ "$2" = "on" ]; then
+            mkdir -p $OMD_ROOT/etc/nagios/nagios.d
+            ln -sfn ../../mod-gearman/nagios.cfg $OMD_ROOT/etc/nagios/nagios.d/mod-gearman.cfg
+        fi
+    ;;
+esac

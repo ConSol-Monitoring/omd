@@ -42,7 +42,7 @@ SHINKEN_SCHEDULER_PORT=${CONFIG_SHINKEN_SCHEDULER_PORT:=7768}
 SHINKEN_POLLER_PORT=${CONFIG_SHINKEN_POLLER_PORT:=7771}
 SHINKEN_REACTIONNER_PORT=${CONFIG_SHINKEN_REACTIONNER_PORT:=7769}
 SHINKEN_BROKER_PORT=${CONFIG_SHINKEN_BROKER_PORT:=7772}
-WEB=${CONFIG_WEB:=nagios}
+WEB=${CONFIG_DEFAULT_GUI:=nagios}
 LIVESTATUS_TCP=${CONFIG_LIVESTATUS_TCP:=off}
 LIVESTATUS_TCP_PORT=${CONFIG_LIVESTATUS_TCP_PORT:=6557}
 NSCA=${CONFIG_NSCA:=off}
@@ -288,6 +288,9 @@ do_start() {
             pid=`getmodpid $mod`;
             echo "ALREADY RUNNING (pid $pid)"
         else
+            if [ "$mod" = "broker" ]; then
+                rm -f $TMP/run/nagios.cmd
+            fi
             if [ $mod != "arbiter" ]; then
                 output=`$BIN/shinken-${mod} -d -c $ETC/${mod}d.ini $DEBUGCMD 2>&1`
             else

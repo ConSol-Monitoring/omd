@@ -13,7 +13,7 @@
 
 # Check if Mod-Gearman is enabled in OMD. If not terminate.
 . etc/omd/site.conf
-if [ "$CONFIG_DISTRIBUTED_MONITORING" != "mod-gearman" -o "$CONFIG_GEARMAND" != "on" ] ; then
+if [ "$CONFIG_MOD_GEARMAN" != "on" -o "$CONFIG_GEARMAND" != "on" ] ; then
     exit 5
 fi
 
@@ -28,7 +28,7 @@ fi
 PIDFILE=###ROOT###/tmp/run/gearmand.pid
 LOGFILE=###ROOT###/var/log/gearman/gearmand.log
 USER=###SITE###
-GRACEFUL_SHUTDOWN_TIME=30
+GRACEFUL_SHUTDOWN_TIME=10
 LIBEVENTMINVERSION=1.4
 for f in $( which netcat nc 2>/dev/null ) ; do
   if [ -x "$f" ]; then
