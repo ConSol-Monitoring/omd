@@ -23,7 +23,6 @@ BUILD_PACKAGES   += readline-devel
 BUILD_PACKAGES   += compat-readline5
 BUILD_PACKAGES   += rpm-build
 BUILD_PACKAGES   += samba-client
-BUILD_PACKAGES   += uuid-devel
 BUILD_PACKAGES   += libuuid-devel
 BUILD_PACKAGES   += which
 BUILD_PACKAGES   += perl-devel
