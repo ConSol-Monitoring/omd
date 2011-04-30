@@ -3,7 +3,7 @@ export OMD_SITE=###SITE###
 export OMD_ROOT=###ROOT###
 
 PATH=~/local/bin:~/bin:~/local/lib/perl5/bin:$PATH
-export LD_LIBRARY_PATH=~/local/lib:~/lib
+export LD_LIBRARY_PATH=$OMD_ROOT/local/lib:$OMD_ROOT/lib
 
 # enable local perl env
 perlarch=$(perl -e 'use Config; print $Config{archname}')
