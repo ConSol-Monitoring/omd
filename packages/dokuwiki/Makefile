@@ -19,7 +19,6 @@ build:
 install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/dokuwiki
 	cp preload.php $(DIR)/inc/
-	cp htaccess $(DIR)/.htaccess
 	touch $(DIR)/lib/plugins/plugin/disabled
 	touch $(DIR)/conf $(DIR)/data
 	rm -r $(DIR)/conf $(DIR)/data
