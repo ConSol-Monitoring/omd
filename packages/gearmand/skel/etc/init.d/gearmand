@@ -152,11 +152,9 @@ case "$1" in
         printf '%s' "Reloading $NAME configuration files..."
         pid=$( cat $PIDFILE 2>/dev/null )
         if [ -n "$pid" ]; then
-            kill -HUP "$pid"
-            echo "OK"
-            exit 0;
+            $0 stop && sleep 1 && $0 start
+            exit $?
         else
-            echo ""
             echo "$NAME is not running"
             exit 1;
         fi
