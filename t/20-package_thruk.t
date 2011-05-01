@@ -42,7 +42,7 @@ my $urls = [
 # static html pages
   { url => "",                       like => '/<title>Thruk<\/title>/' },
   { url => "/thruk/index.html",      like => '/<title>Thruk<\/title>/' },
-  { url => "/thruk/docs/index.html", like => '/<title>Thruk Documentation<\/title>/' },
+  { url => "/thruk/docs/index.html", like => '/<title>Documentation<\/title>/' },
   { url => "/thruk/main.html",       like => '/<title>Thruk Monitoring Webinterface<\/title>/' },
   { url => "/thruk/side.html",       like => '/<title>Thruk<\/title>/' },
 
