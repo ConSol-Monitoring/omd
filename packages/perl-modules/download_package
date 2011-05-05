@@ -44,7 +44,7 @@ sub download_module {
 
     my $urlpath;
     my $out = OMDHelper::cmd("wget -O - 'http://search.cpan.org/perldoc?".$mod."'");
-    if($out =~ m/href="(\/CPAN\/authors\/id\/.*?\/.*?\.tar\.gz)">/) {
+    if($out =~ m/href="(\/CPAN\/authors\/id\/.*?\/.*?(\.tar\.gz|\.tgz))">/) {
         $urlpath = $1;
     }
     else {
@@ -54,13 +54,13 @@ sub download_module {
     }
     return if defined $already_downloaded{$urlpath};
     my $tarball=$urlpath; $tarball =~ s/^.*\///g;
-    my $modbasename=$tarball; $modbasename =~ s/\-[0-9\.]*\.tar\.gz//g;
+    my $modbasename=$tarball; $modbasename =~ s/\-[0-9\.\w]*(\.tar\.gz|\.tgz)//g;
     my @curfile = glob("$modbasename*");
 
     # check if we have the right version
     my $download = 1;
     for my $file (@curfile) {
-        if($tarball =~ m/\-([0-9\.]*)\.tar\.gz/) {
+        if($tarball =~ m/\-([0-9\.]*)(\.[\w\d]+)*(\.tar\.gz|\.tgz)/) {
             my $fver = $1;
             if($fver >= $ver) {
                 $download = 0;
@@ -95,7 +95,7 @@ sub get_deps {
     print " -> checking dependecies for: $file\n";
     OMDHelper::cmd("tar zxf $file");
     my $dir = $file;
-    $dir =~  s/\.tar\.gz//g;
+    $dir =~  s/(\.tar\.gz|\.tgz)//g;
     my $meta;
     if(-s "$dir/META.yml") {
         $meta = YAML::LoadFile("$dir/META.yml");

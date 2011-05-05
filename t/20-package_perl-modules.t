@@ -34,9 +34,11 @@ TestUtils::test_command({ cmd => "/bin/su - $site -c 'perl -e \"use RRDs 1.4004;
 ##################################################
 for my $tarball (glob("packages/perl-modules/src/*.gz")) {
     $tarball =~ s/^.*\///gmx;
-    $tarball =~ s/\-([0-9\.]+)\.tar\.gz//gmx;
+    $tarball =~ s/\-([0-9\.]+)(\.[\w\d]*)*\.tar\.gz//gmx;
     my $version = $1;
+    print STDERR $version,"\n":
     $tarball =~ s/\-/::/gmx;
+    my $check = "use $tarball $version";
     if($tarball eq 'Scalar::List::Utils')            { $tarball = 'List::Util::XS'; }
     elsif($tarball eq 'libwww::perl')                { $tarball = 'LWP'; }
     elsif($tarball eq 'Module::Install')             { $tarball = 'inc::Module::Install'; }
@@ -45,11 +47,15 @@ for my $tarball (glob("packages/perl-modules/src/*.gz")) {
     elsif($tarball eq 'TermReadKey')                 { $tarball = 'Term::ReadKey'; }
     elsif($tarball eq 'IO::Compress')                { $tarball = 'IO::Compress::Base'; }
     elsif($tarball eq 'Gearman')                     { $tarball = 'Gearman::Client'; }
-    elsif($tarball eq 'Term::ReadLine::Gnu')         { $tarball = 'Term::ReadLine; use '; }
+    elsif($tarball eq 'Term::ReadLine::Gnu')         { $tarball = 'Term::ReadLine; use Term::ReadLine::Gnu'; }
     elsif($tarball eq 'Package::DeprecationManager') { $version .= ' -deprecations => { blah => foo }'; }
     elsif($tarball eq 'DBD::Oracle')                 { next; }
     elsif($tarball eq 'Test::NoWarnings')            { next; }
-    TestUtils::test_command({ cmd => "/bin/su - $site -c 'perl -e \"use $tarball $version;\"'" });
+    my $check = "use $tarball";
+    # Use with version doesnt work here, because of weird version numbers
+    $check .= " $version" unless $tarball =~ /^(Math::BaseCnv|XML::Tidy)$/;
+  
+    TestUtils::test_command({ cmd => "/bin/su - $site -c 'perl -e \"$check;\"'" });
 }
 
 ##################################################

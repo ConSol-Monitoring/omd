@@ -189,7 +189,22 @@ MODULES = ExtUtils-MakeMaker-6.56.tar.gz \
           HTML-Lint-2.06.tar.gz \
           String-CRC32-1.4.tar.gz \
           Gearman-1.11.tar.gz \
-          Crypt-Rijndael-1.09.tar.gz
+          Crypt-Rijndael-1.09.tar.gz \
+	  Test-Harness-3.23.tar.gz \
+	  Compress-Raw-Bzip2-2.034.tar.gz \
+	  File-Path-2.08.tar.gz \
+	  File-Temp-0.22.tar.gz \
+	  Time-Local-1.2000.tar.gz \
+	  Archive-Zip-1.30.tar.gz \
+	  Class-MethodMaker-2.18.tar.gz \
+	  Term-ProgressBar-2.09.tar.gz \
+	  XML-LibXML-1.70.tar.gz \
+	  Math-BigInt-1.993.tar.gz \
+	  Memoize-1.02.tar.gz \
+	  Math-BaseCnv-1.6.A6FGHKE.tgz \
+	  XML-XPath-1.13.tar.gz \
+	  XML-Tidy-1.10.B52FpLx.tgz 
+ 
 
 build:
 	mkdir -p $(TMPDIST)

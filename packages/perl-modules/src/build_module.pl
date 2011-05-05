@@ -49,7 +49,7 @@ sub install_module {
     printf("%-55s", $file);
 
     my $module = $file;
-    $module =~ m/^(.*)\-([0-9\.]+)\.tar\.gz/;
+    $module =~ m/^(.*)\-([0-9\.\w]+)(\.tar\.gz|\.tgz)/;
     my($modname, $modvers) = ($1, $2);
     $modname =~ s/\-/::/g;
 
@@ -85,7 +85,7 @@ sub install_module {
 
     my $core   = OMDHelper::is_core_module($modname);
     $core      =~ s/_\d+$//g if defined $core;
-    if($FORCE ne "testonly" and $core >= $modvers) {
+    if($FORCE ne "testonly" and ($core && $core >= $modvers)) {
         print "skipped core module $core\n";
         return(1);
     }
@@ -94,15 +94,21 @@ sub install_module {
 
     # ExtUtils::Install is not detected correctly, because the file is part of another package
     if( $modname eq "ExtUtils::Install" or $FORCE eq "testonly" ) {
-        # complete test in testmode
-        $result=`$PERL -MData::Dumper -e "$pre_check use $modname $modvers; print Dumper \\%INC" 2>&1`;
-        $rc=$?;
-        if($rc == 0 and !$core) {
-          $modfile =~ s/^inc\///g;
-          $modfile =~ s/\.pm$//g;
-          `echo "$result" | grep /dist/lib/perl5/ | grep $modfile > /dev/null 2>&1`;
-          $rc=$?;
-        }
+	my $check = "$modname";
+	if ($modname !~ /^(Math::BaseCnv|XML::Tidy)$/) {
+	    # Dump version number of this module makes test to fail always, so we ommit
+	    # ther version number in the test for these cases.
+	    $check .= " $modvers";
+	}
+	# complete test in testmode
+	$result=`$PERL -MData::Dumper -e "$pre_check use $check; print Dumper \\%INC" 2>&1`;
+	$rc=$?;
+	if($rc == 0 and !$core) {
+	    $modfile =~ s/^inc\///g;
+		$modfile =~ s/\.pm$//g;
+	    `echo "$result" | grep /dist/lib/perl5/ | grep $modfile > /dev/null 2>&1`;
+	    $rc=$?;
+	}	
     } else {
         # fast test otherwise
         my @test = glob("../dist/lib/perl5/$modfile ../dist/lib/perl5/".$Config{'archname'}."/$modfile");
@@ -132,7 +138,7 @@ sub install_module {
     }
 
     my $dir = $module;
-    $dir    =~ s/\.tar\.gz//g;
+    $dir    =~ s/(\.tar\.gz|\.tgz)//g;
     `tar zxf $module`;
     chdir($dir);
     print "installing... ";
