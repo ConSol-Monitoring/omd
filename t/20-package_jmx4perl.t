@@ -32,12 +32,12 @@ for my $test (@{$tests}) {
 }
 
 # Test download and management of Jolokia agent
-TestUtils::test_command({cmd => "/bin/su - $site -c 'jolokia'",  like => '/Saved/');
-TestUtils::test_command({cmd => "/bin/su - $site -c 'jolokia jolokia.war'",  like => '/Type.*war/');
-TestUtils::test_command({cmd => "/bin/su - $site -c 'jolokia repack --security jolokia.war'",  like => '/Added security/');
-TestUtils::test_command({cmd => "/bin/su - $site -c 'jolokia jolokia.war'",  like => '/Authentication\*enabled/');
+#TestUtils::test_command({cmd => "/bin/su - $site -c 'jolokia'",  like => '/Saved/'});
+#TestUtils::test_command({cmd => "/bin/su - $site -c 'jolokia jolokia.war'",  like => '/Type.*war/'});
+#TestUtils::test_command({cmd => "/bin/su - $site -c 'jolokia repack --security jolokia.war'",  like => '/Added security/'});
+#TestUtils::test_command({cmd => "/bin/su - $site -c 'jolokia jolokia.war'",  like => '/Authentication\*enabled/'});
 # Clean up
-`/bin/su - $site -c 'rm jolokia.war'`
+#`/bin/su - $site -c 'rm jolokia.war'`;
 
 ##################################################
 # cleanup test site

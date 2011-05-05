@@ -29,6 +29,9 @@ install:
 	rsync -a $(DIR)/blib/lib/ $(DESTDIR)$(OMD_ROOT)/lib/perl5/lib/perl5
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/man/man1
 	rsync -a $(DIR)/blib/bindoc/ $(DESTDIR)$(OMD_ROOT)/share/man/man1
+	test -d $(DESTDIR)$(OMD_ROOT)/share/doc/jmx4perl || \
+	        mkdir -p $(DESTDIR)$(OMD_ROOT)/share/doc/jmx4perl
+	install -m 644 README $(DESTDIR)$(OMD_ROOT)/share/doc/jmx4perl
 
 skel:
 
