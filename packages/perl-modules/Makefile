@@ -203,7 +203,8 @@ MODULES = ExtUtils-MakeMaker-6.56.tar.gz \
 	  Memoize-1.02.tar.gz \
 	  Math-BaseCnv-1.6.A6FGHKE.tgz \
 	  XML-XPath-1.13.tar.gz \
-	  XML-Tidy-1.10.B52FpLx.tgz 
+	  XML-Tidy-1.10.B52FpLx.tgz \
+	  Crypt-Blowfish_PP-1.12.tar.gz 
  
 
 build:
