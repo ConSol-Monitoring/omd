@@ -12,7 +12,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 563 );
+plan( tests => 599 );
 
 ##################################################
 # create our test site
@@ -36,9 +36,8 @@ for my $tarball (glob("packages/perl-modules/src/*.gz")) {
     $tarball =~ s/^.*\///gmx;
     $tarball =~ s/\-([0-9\.]+)(\.[\w\d]*)*\.tar\.gz//gmx;
     my $version = $1;
-    print STDERR $version,"\n":
+
     $tarball =~ s/\-/::/gmx;
-    my $check = "use $tarball $version";
     if($tarball eq 'Scalar::List::Utils')            { $tarball = 'List::Util::XS'; }
     elsif($tarball eq 'libwww::perl')                { $tarball = 'LWP'; }
     elsif($tarball eq 'Module::Install')             { $tarball = 'inc::Module::Install'; }
@@ -51,6 +50,7 @@ for my $tarball (glob("packages/perl-modules/src/*.gz")) {
     elsif($tarball eq 'Package::DeprecationManager') { $version .= ' -deprecations => { blah => foo }'; }
     elsif($tarball eq 'DBD::Oracle')                 { next; }
     elsif($tarball eq 'Test::NoWarnings')            { next; }
+
     my $check = "use $tarball";
     # Use with version doesnt work here, because of weird version numbers
     $check .= " $version" unless $tarball =~ /^(Math::BaseCnv|XML::Tidy)$/;
