@@ -164,10 +164,6 @@ def user_confirms(title, message, relpath, yes_choice, yes_text, no_choice, no_t
         else:
             return choice == yes_choice
 
-def ask_user(title, message, yes_choice, yes_text, no_choice, no_text):
-    return yes_choice == \
-        ask_user_choices(title, message, [ (yes_choice, yes_text), (no_choice, no_text) ])
-
 
 def wrap_text(text, width):
     def fillup(line, width):
@@ -724,7 +720,7 @@ def instantiate_skel(path):
 
 
 def patch_template_file(src, dst, old, new):
-    # Create patch from old instanciated skeleton file to new one
+    # Create patch from old instantiated skeleton file to new one
     content = file(src).read()
     for site in [ old, new ]:
         replacements = {
@@ -733,19 +729,89 @@ def patch_template_file(src, dst, old, new):
         }
         file("%s.skel.%s" % (dst, site), "w").write(replace_tags(content, replacements))
 
-    # Now create patch from old to new and immediately apply on
+    # If old and new skeleton file are identical, then do nothing
+    old_orig_path = "%s.skel.%s" % (dst, old) 
+    new_orig_path = "%s.skel.%s" % (dst, new) 
+    if file(old_orig_path).read() == file(new_orig_path).read():
+        os.remove(old_orig_path)
+        os.remove(new_orig_path)
+        return
+
+    # Now create a patch from old to new and immediately apply on
     # existing - possibly user modified - file.
-    if 0 == os.system("diff -u %s.skel.%s %s.skel.%s | PATH=/omd/versions/default/bin:$PATH patch --force --backup --forward --silent %s" %
-            (dst, old, dst, new, dst)):
-        # remove unnecessary files
-        try:
-            os.remove(dst + ".skel." + old)
-            os.remove(dst + ".skel." + new)
-            os.remove(dst + ".orig")
-        except:
-            pass
+    
+    if 0 == os.system("diff -u %s %s | patch --force --backup --forward --silent %s" %
+            (old_orig_path, new_orig_path, dst)):
+        sys.stdout.write(good + " Converted      %s\n" % src)
     else:
-        sys.stdout.write("%s: Cannot update due to your changes. Please check.\n" % dst)
+        # Make conflict resolution interactive - similar to omd update
+        options = [
+            ( "diff",      "Show conversion patch, that I've tried to apply" ),
+            ( "you",       "Show your changes compared with the original default version" ),
+            ( "edit",      "Edit half-converted file (watch out for >>>> and <<<<)" ),
+            ( "try again", "Edit your original file and try again"),
+            ( "keep",      "Keep half-converted version of the file" ),
+            ( "restore",   "Restore your original version of the file" ),
+            ( "install",   "Install the default version of the file" ),
+            ( "brute",     "Simply replace /%s/ with /%s/ in that file" % (old, new)),
+            ( "shell",     "Open a shell for looking around" ),
+            ( "abort",     "Stop here and abort!" ),
+        ]
+
+        while True:
+            choice = ask_user_choices("Conflicts in " + src + "!", "I've tried to merge your changes with the renaming of %s into %s.\n"
+               "Unfortunately there are conflicts with your changes. \n"
+               "You have the following options: " %
+                    ( old, new ), options)
+            if choice == "abort":
+                bail_out("Renaming aborted.")
+            elif choice == "keep":
+                break
+            elif choice == "edit":
+                os.system("%s '%s'" % (get_editor(), dst))
+            elif choice == "diff":
+                os.system("diff -u %s %s" % (old_orig_path, new_orig_path))
+            elif choice == "brute":
+                os.system("sed 's@/%s/@/%s/@g' %s.orig > %s" % (old, new, dst, dst))
+                changed = len([ l for l in os.popen("diff %s.orig %s" % (dst, dst)).readlines()
+                  if l.startswith(">") ])
+                if changed == 0:
+                    sys.stdout.write("Found no matching line.\n")
+                else:
+                    sys.stdout.write("Did brute-force replace, changed %s%d%s lines:\n" % 
+                      (tty_bold, changed, tty_normal))
+                    os.system("diff -u %s.orig %s" % (dst, dst))
+                    break
+            elif choice == "you":
+                os.system("pwd ; diff -u %s %s.orig" % (old_orig_path, dst))
+            elif choice == "restore":
+                os.rename(dst + ".orig", dst)
+                sys.stdout.write("Restored your version.\n")
+                break
+            elif choice == "install":
+                os.rename(new_orig_path, dst)
+                sys.stdout.write("Installed default file (with site name %s).\n" % new)
+                break
+            elif choice == "shell":
+                relname = src.split("/")[-1]
+                sys.stdout.write(" %-35s the half-converted file\n" % (relname,))
+                sys.stdout.write(" %-35s your original version\n" % (relname + ".orig"))
+                sys.stdout.write(" %-35s the failed parts of the patch\n" % (relname + ".rej"))
+                sys.stdout.write(" %-35s default version with the old site name\n" % (relname + ".skel.%s" % old))
+                sys.stdout.write(" %-35s default version with the new site name\n" % (relname + ".skel.%s" % new))
+
+                sys.stdout.write("\n Starting BASH. Type CTRL-D to continue.\n\n")
+                thedir = "/".join(dst.split("/")[:-1])
+                os.system("cd '%s' ; bash -i" % thedir)
+
+    # remove unnecessary files
+    try:
+        os.remove(dst + ".skel." + old)
+        os.remove(dst + ".skel." + new)
+        os.remove(dst + ".orig")
+        os.remove(dst + ".rej")
+    except:
+        pass
 
 def get_editor():
     editor = getenv("VISUAL", getenv("EDITOR", "/usr/bin/vi"))
@@ -836,7 +902,7 @@ def merge_update_file(relpath, old_version, new_version):
                 ( old_version, new_version, relpath ), options)
         if choice == "abort":
             bail_out("Update aborted.")
-        if choice == "keep":
+        elif choice == "keep":
             break
         elif choice == "edit":
             os.system("%s '%s'" % (editor, user_path))
