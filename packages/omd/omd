@@ -740,8 +740,8 @@ def patch_template_file(src, dst, old, new):
     # Now create a patch from old to new and immediately apply on
     # existing - possibly user modified - file.
     
-    if 0 == os.system("diff -u %s %s | patch --force --backup --forward --silent %s" %
-            (old_orig_path, new_orig_path, dst)):
+    if 0 == os.system("diff -u %s %s | %s/bin/patch --force --backup --forward --silent %s" %
+            (old_orig_path, new_orig_path, site_dir(new), dst)):
         sys.stdout.write(good + " Converted      %s\n" % src)
     else:
         # Make conflict resolution interactive - similar to omd update
@@ -1999,11 +1999,11 @@ def main_mv_or_cp(what, args, options={}):
         os.system("rsync -arx %s '%s/' '%s/'" % 
                 (addopts, site_dir(g_sitename), site_dir(new)))
 
-    # Change config files from old to new site (see rename_site())
-    patch_skeleton_files(g_sitename, new)
-
     # give new user all files
     chown_tree(site_dir(new), new)
+
+    # Change config files from old to new site (see rename_site())
+    patch_skeleton_files(g_sitename, new)
 
     # In case of mv now delete old user
     if what == "mv":
