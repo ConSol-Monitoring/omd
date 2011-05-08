@@ -12,8 +12,6 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 599 );
-
 ##################################################
 # create our test site
 my $omd_bin = TestUtils::get_omd_bin();
@@ -72,3 +70,5 @@ SKIP: {
 ##################################################
 # cleanup test site
 TestUtils::remove_test_site($site);
+
+done_testing();
