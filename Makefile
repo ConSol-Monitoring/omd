@@ -30,6 +30,10 @@ PACKAGES=perl-modules \
          mod-gearman \
          patch
 
+# If you just want to test package building, you can reduce the
+# number of packages to just "omd" - to speed up your tests.
+# PACKAGES="omd"
+
 # This file is kept by 'make config' and also may override
 # the list of packages
 -include .config
@@ -233,7 +237,7 @@ deb-changelog: deb-environment
 	# this is a hack!
 	rm -f debian/changelog
 	dch --create --package omd-$(OMD_VERSION) \
-	    --newversion $(DISTRO_CODE)1 "`cat debian/changelog.tmpl`"
+	    --newversion 0.$(DISTRO_CODE) "`cat debian/changelog.tmpl`"
 	dch --release "releasing ...."
 
 deb: deb-changelog
