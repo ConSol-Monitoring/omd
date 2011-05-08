@@ -8,6 +8,7 @@ CONFIGUREOPTS = \
     --prefix=$(OMD_ROOT) \
 	--disable-ruby \
 	--disable-python \
+	--disable-libwrap \
 	--with-perl-options=""
 
 build:
