@@ -23,6 +23,9 @@ if(!defined $ENV{'PERL5LIB'} or $ENV{'PERL5LIB'} eq "") {
     exit 1;
 }
 
+# catalyst needs this on old perl versions
+$ENV{'CATALYST_DEVEL_NO_510_CHECK'} = 1;
+
 my $x = 1;
 my $max = scalar @ARGV;
 for my $mod (@ARGV) {
@@ -143,18 +146,22 @@ sub install_module {
     chdir($dir);
     print "installing... ";
 
+    my $makefile_opts = '';
+    if($ENV{DISTRO_INFO} eq 'SLES 11' and $modname eq 'XML::LibXML') {
+        $makefile_opts = 'FORCE=1';
+    }
+
     eval {
         local $SIG{ALRM} = sub { die "timeout on: $module\n" };
         alarm(300); # single module should not take longer than 5minutes
         if( -f "Build.PL" ) {
             `$PERL Build.PL >> $LOG 2>&1 && ./Build >> $LOG 2>&1 && ./Build install >> $LOG 2>&1`;
-            if($? != 0 ) { print "error: rc $?\n"; print `cat $LOG`, "\n"; return(0); }
+            if($? != 0 ) { die("error: rc $?\n".`cat $LOG`."\n"); }
         } elsif( -f "Makefile.PL" ) {
-            `echo "\n\n\n" | $PERL Makefile.PL >> $LOG 2>&1 && make -j 5 >> $LOG 2>&1 && make install >> $LOG 2>&1`;
-            if($? != 0 ) { print "error: rc $?\n"; print `cat $LOG`, "\n"; return(0); }
+            `echo "\n\n\n" | $PERL Makefile.PL $makefile_opts >> $LOG 2>&1 && make -j 5 >> $LOG 2>&1 && make install >> $LOG 2>&1`;
+            if($? != 0 ) { die("error: rc $?\n".`cat $LOG`."\n"); }
         } else {
-            print "error: no Build.PL or Makefile.PL found in $module!\n";
-            return(0);
+            die("error: no Build.PL or Makefile.PL found in $module!\n");
         }
         alarm(0);
     };

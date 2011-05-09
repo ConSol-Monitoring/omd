@@ -210,7 +210,7 @@ MODULES = ExtUtils-MakeMaker-6.56.tar.gz \
 build:
 	mkdir -p $(TMPDIST)
 	echo "install --install_base $(TMPDIST)" > $(TMPDIST)/.modulebuildrc
-	cd src && PERL_MM_OPT=INSTALL_BASE=$(TMPDIST) MODULEBUILDRC=$(TMPDIST)/.modulebuildrc PERL5LIB=$(TMPDIST)/lib/perl5:$(TMPDIST)/lib/perl5/$(PERLARCH) ./build_module.pl $(PERL) $(MODULES)
+	cd src && PERL_MM_OPT=INSTALL_BASE=$(TMPDIST) MODULEBUILDRC=$(TMPDIST)/.modulebuildrc PERL5LIB=$(TMPDIST)/lib/perl5:$(TMPDIST)/lib/perl5/$(PERLARCH) DISTRO_INFO="$(DISTRO_INFO)" ./build_module.pl $(PERL) $(MODULES)
 	rm -rf src/inc
 	cd $(TMPDIST)/lib/perl5/ && rm -f utils.pm && ln -s ../../../nagios/plugins/utils.pm .
 	mkdir -p $(TMPDIST)/lib/perl5/CPAN
