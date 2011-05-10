@@ -433,6 +433,19 @@ def switch_to_site_user():
     os.setgroups([group_id('omd')])
     os.setuid(uid)
 
+def switch_temp_to_user(user):
+    p = pwd.getpwnam(user)
+    uid = p.pw_uid
+    gid = p.pw_gid
+    os.chdir(p.pw_dir)
+    os.setegid(gid)
+    os.seteuid(uid)
+
+def switch_back_to_root():
+    os.setgid(0)
+    os.setuid(0)
+
+
 # Starts a subprocess to execute a python function as other user
 # without switching the user for the whole main process
 #
@@ -678,6 +691,11 @@ def stop_site(sitename):
 # Change site specific information in files originally create from
 # skeleton files. Skip files below tmp/
 def patch_skeleton_files(old, new):
+    # Temporarily change to the new site user/group so that
+    # files created will be owned by the new user and not
+    # by root
+    switch_temp_to_user(new)
+
     skelroot = "/omd/versions/%s/skel" % OMD_VERSION
     os.chdir(skelroot)  # make relative paths
     for dirpath, dirnames, filenames in os.walk("."):
@@ -697,6 +715,9 @@ def patch_skeleton_files(old, new):
                     sys.stderr.write("Error patching template file '%s': %s\n" %
                             (dst, e))
 
+    # Become root again
+    switch_back_to_root()
+
 
 
 def chown_tree(dir, user):
@@ -706,6 +727,7 @@ def chown_tree(dir, user):
     for dirpath, dirnames, filenames in os.walk(dir):
         for entry in dirnames + filenames:
             os.lchown(dirpath + "/" + entry, uid, gid)
+
 
 def instantiate_skel(path):
     try:
@@ -802,7 +824,7 @@ def patch_template_file(src, dst, old, new):
 
                 sys.stdout.write("\n Starting BASH. Type CTRL-D to continue.\n\n")
                 thedir = "/".join(dst.split("/")[:-1])
-                os.system("cd '%s' ; bash -i" % thedir)
+                os.system("su - %s -c 'cd %s ; bash -i'" % (new, thedir))
 
     # remove unnecessary files
     try:
@@ -1478,7 +1500,11 @@ def call_hook(hookname, args):
 def call_all_hooks(command):
     hook_dir = g_sitedir + "/lib/omd/hooks"
     for hookname in os.listdir(hook_dir):
-        os.system("%s/%s '%s'" % (hook_dir, hookname, command))
+        commandline = '%s/%s "%s"' % (hook_dir, hookname, command)
+        if os.getuid() == 0:
+            os.system("su - %s -c '%s'" % (g_sitename, commandline))
+        else:
+            os.system(commandline)
 
 def config_load_hook(hookname):
     hook = { "name" : hookname }
@@ -1571,7 +1597,10 @@ def config_set_value(hookname, value):
 
     # Call hook with 'set'. If it outputs something, that will
     # be our new value (i.e. hook disagrees with the new setting!)
-    answer = os.popen("%s/lib/omd/hooks/%s set '%s'" % (g_sitedir, hookname, value)).read()
+    commandline = "%s/lib/omd/hooks/%s set '%s'" % (g_sitedir, hookname, value) 
+    if os.getuid() == 0:
+        commandline = 'su - %s -c "%s"' % (g_sitename, commandline)
+    answer = os.popen(commandline).read()
     if len(answer) > 0:
         value = answer.strip()
 
@@ -1883,12 +1912,15 @@ def main_create(args, options={}):
     # Create skeleton files of non-tmp directories
     create_skeleton_files(g_sitename, '.')
 
+    # Change ownership of all files and dirs to site user
+    chown_tree(sitedir, g_sitename)
+
     # Create site.conf with default values
     config_load_hooks()
     config_set_all() # execute 'set' functions with default values
     config_save()
 
-    # Change ownership of all files and dirs to site user
+    # Change the few files that config save as created as root
     chown_tree(sitedir, g_sitename)
 
     # Create include-hook for Apache and reload apache
@@ -1953,7 +1985,7 @@ def main_mv_or_cp(what, args, options={}):
     sitename_must_be_valid(new)
 
     old = g_sitename
-    if site_is_running(old):
+    if not site_is_stopped(old):
         bail_out("Cannot %s site '%s' while it is running." % (action, old))
 
     if what == "mv":
@@ -2026,6 +2058,7 @@ def main_mv_or_cp(what, args, options={}):
     # Make apache aware of new site
     create_apache_hook(new)
     restart_apache()
+
 
 
 def diff_list(from_skelroot, g_sitedir, from_version, relbase, bare):
