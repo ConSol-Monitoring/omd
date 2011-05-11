@@ -51,10 +51,10 @@ export PYTHONPATH
 build:
 	test -f ${SHINKEN_FILE} || wget $(SHINKEN_URL)
 	tar xzf $(SHINKEN_FILE)
-	#set -e ; for p in patches/*.dif ; do \
-	#    echo "applying $$p..." ; \
-	#    ( cd $(SHINKEN) ; patch -p1 -b ) < $$p ; \
-	#done
+	set -e ; for p in patches/*.dif ; do \
+	    echo "applying $$p..." ; \
+	    ( cd $(SHINKEN) ; patch -p1 -b ) < $$p ; \
+	done
 	test -f $(PYRO_FILE) || wget $(PYRO_URL)
 	tar xzf $(PYRO_FILE)
 	test -f $(MP_FILE) || wget $(MP_URL)
