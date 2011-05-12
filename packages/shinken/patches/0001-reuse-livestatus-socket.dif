@@ -1,0 +1,11 @@
+diff -Naur shinken-0.6.orig/shinken/modules/livestatus_broker/livestatus_broker.py shinken-0.6/shinken/modules/livestatus_broker/livestatus_broker.py
+--- shinken-0.6.orig/shinken/modules/livestatus_broker/livestatus_broker.py	2011-05-03 10:07:33.000000000 +0200
++++ shinken-0.6/shinken/modules/livestatus_broker/livestatus_broker.py	2011-05-11 17:05:51.000000000 +0200
+@@ -750,6 +750,7 @@
+         if self.port:
+             server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+             server.setblocking(0)
++            server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+             server.bind((self.host, self.port))
+             server.listen(backlog)
+             self.listeners.append(server)
