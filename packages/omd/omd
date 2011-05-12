@@ -691,11 +691,6 @@ def stop_site(sitename):
 # Change site specific information in files originally create from
 # skeleton files. Skip files below tmp/
 def patch_skeleton_files(old, new):
-    # Temporarily change to the new site user/group so that
-    # files created will be owned by the new user and not
-    # by root
-    switch_temp_to_user(new)
-
     skelroot = "/omd/versions/%s/skel" % OMD_VERSION
     os.chdir(skelroot)  # make relative paths
     for dirpath, dirnames, filenames in os.walk("."):
@@ -715,10 +710,6 @@ def patch_skeleton_files(old, new):
                     sys.stderr.write("Error patching template file '%s': %s\n" %
                             (dst, e))
 
-    # Become root again
-    switch_back_to_root()
-
-
 
 def chown_tree(dir, user):
     uid = pwd.getpwnam(user).pw_uid
@@ -727,6 +718,17 @@ def chown_tree(dir, user):
     for dirpath, dirnames, filenames in os.walk(dir):
         for entry in dirnames + filenames:
             os.lchown(dirpath + "/" + entry, uid, gid)
+
+
+def try_chown(filename, user):
+    if os.path.exists(filename):
+        try:
+            uid = pwd.getpwnam(user).pw_uid
+            gid = pwd.getpwnam(user).pw_gid
+            os.chown(filename, uid, gid)
+        except Exception, e:
+            sys.stderr.write("Cannot chown %s to %s: %s\n" % (filename, user, e))
+            pass
 
 
 def instantiate_skel(path):
@@ -749,7 +751,9 @@ def patch_template_file(src, dst, old, new):
             "###SITE###" : site,
             "###ROOT###" : site_dir(site),
         }
-        file("%s.skel.%s" % (dst, site), "w").write(replace_tags(content, replacements))
+        filename = "%s.skel.%s" % (dst, site)
+        file(filename, "w").write(replace_tags(content, replacements))
+        try_chown(filename, new)
 
     # If old and new skeleton file are identical, then do nothing
     old_orig_path = "%s.skel.%s" % (dst, old) 
@@ -762,8 +766,12 @@ def patch_template_file(src, dst, old, new):
     # Now create a patch from old to new and immediately apply on
     # existing - possibly user modified - file.
     
-    if 0 == os.system("diff -u %s %s | %s/bin/patch --force --backup --forward --silent %s" %
-            (old_orig_path, new_orig_path, site_dir(new), dst)):
+    result = os.system("diff -u %s %s | %s/bin/patch --force --backup --forward --silent %s" %
+            (old_orig_path, new_orig_path, site_dir(new), dst))
+    try_chown(dst, new)
+    try_chown(dst + ".rej", new) 
+    try_chown(dst + ".orig", new)
+    if result == 0:
         sys.stdout.write(good + " Converted      %s\n" % src)
     else:
         # Make conflict resolution interactive - similar to omd update
