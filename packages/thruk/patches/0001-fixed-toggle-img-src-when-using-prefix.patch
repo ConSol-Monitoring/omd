@@ -1,0 +1,32 @@
+From 52e61cf1bcd68ec3cb65ad3b7185c42524652ad6 Mon Sep 17 00:00:00 2001
+From: Sven Nierlein <sven@nierlein.de>
+Date: Thu, 19 May 2011 21:55:09 +0200
+Subject: [PATCH] fixed toggle img src when using prefix
+
+
+Signed-off-by: Sven Nierlein <sven@nierlein.de>
+---
+ root/thruk/javascript/thruk.js |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/root/thruk/javascript/thruk.js b/root/thruk/javascript/thruk.js
+index 1a113a8..7505cf5 100644
+--- a/root/thruk/javascript/thruk.js
++++ b/root/thruk/javascript/thruk.js
+@@ -1634,11 +1634,11 @@ function toggleTopPane() {
+   if(toggleElement('top_pane')) {
+     additionalParams.set('hidetop', 0);
+     formInput.value = 0;
+-    document.getElementById('btn_toggle_top_pane').src = "/thruk/themes/" + theme + "/images/icon_minimize.gif";
++    document.getElementById('btn_toggle_top_pane').src = url_prefix + "thruk/themes/" + theme + "/images/icon_minimize.gif";
+   } else {
+     additionalParams.set('hidetop', 1);
+     formInput.value = 1;
+-    document.getElementById('btn_toggle_top_pane').src = "/thruk/themes/" + theme + "/images/icon_maximize.gif";
++    document.getElementById('btn_toggle_top_pane').src = url_prefix + "/thruk/themes/" + theme + "/images/icon_maximize.gif";
+   }
+ }
+ 
+-- 
+1.7.0.4
+
