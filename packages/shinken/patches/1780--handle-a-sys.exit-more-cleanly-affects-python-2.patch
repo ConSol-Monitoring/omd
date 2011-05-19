@@ -1,0 +1,27 @@
+From 00bc226eddde3fdcb4e5be756531b133fba35f80 Mon Sep 17 00:00:00 2001
+From: Gerhard Lausser <gerhard.lausser@consol.de>
+Date: Thu, 19 May 2011 16:01:33 +0200
+Subject: [PATCH] *handle a sys.exit() more cleanly (affects python 2.4) when calling the arbiter with -v
+
+---
+ shinken/daemons/arbiterdaemon.py |    4 ++++
+ 1 files changed, 4 insertions(+), 0 deletions(-)
+
+diff --git a/shinken/daemons/arbiterdaemon.py b/shinken/daemons/arbiterdaemon.py
+index 2806eb7..710e739 100644
+--- a/shinken/daemons/arbiterdaemon.py
++++ b/shinken/daemons/arbiterdaemon.py
+@@ -418,6 +418,10 @@ class Arbiter(Daemon):
+ 
+             ## And go for the main loop
+             self.do_mainloop()
++        except SystemExit, exp:
++            # With a 2.4 interpreter the sys.exit() in load_config_file
++            # ends up here and must be handled.
++            sys.exit(exp.code)
+         except Exception, exp:
+             logger.log("CRITICAL ERROR : I got an non recovarable error. I must exit")
+             logger.log("You can log a bug ticket at https://sourceforge.net/apps/trac/shinken/newticket for geting help")
+-- 
+1.5.5.6
+
