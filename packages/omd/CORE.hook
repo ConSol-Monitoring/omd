@@ -15,7 +15,7 @@ case "$1" in
     ;;
     choices)
             echo "nagios: Nagios"
-            echo "shinken: Shinken (experimental)"
+            echo "shinken: Shinken"
             echo "none: No monitoring core"
     ;;
     set)
