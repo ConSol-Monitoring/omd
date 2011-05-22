@@ -21,6 +21,8 @@ case "$1" in
         if [ "$2" = "on" ]; then
             mkdir -p $OMD_ROOT/etc/nagios/nagios.d
             ln -sfn ../../mod-gearman/nagios.cfg $OMD_ROOT/etc/nagios/nagios.d/mod-gearman.cfg
+        else
+            rm -f $OMD_ROOT/etc/nagios/nagios.d/mod-gearman.cfg
         fi
     ;;
 esac
