@@ -27,7 +27,7 @@
 import sys, os, shutil, pwd, grp, re, time, pprint, tty, termios
 from subprocess import *
 
-OMD_VERSION = "0.48"
+OMD_VERSION = "0.49"
 
 # colored output, if stdout is a tty
 on_tty = sys.stdout.isatty()

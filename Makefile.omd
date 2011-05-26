@@ -1,7 +1,7 @@
 # General settings included by all packages
 
-OMD_VERSION        = 0.48
-OMD_SERIAL         = 23
+OMD_VERSION        = 0.49
+OMD_SERIAL         = 24
 OMD_BASE           = /omd
 OMD_PHYSICAL_BASE  = /opt/omd
 OMD_ROOT           = $(OMD_BASE)/versions/$(OMD_VERSION)
