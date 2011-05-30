@@ -800,7 +800,7 @@ def patch_template_file(src, dst, old, new):
             elif choice == "edit":
                 os.system("%s '%s'" % (get_editor(), dst))
             elif choice == "diff":
-                os.system("diff -u %s %s" % (old_orig_path, new_orig_path))
+                os.system("diff -u %s %s%s" % (old_orig_path, new_orig_path, pipe_pager()))
             elif choice == "brute":
                 os.system("sed 's@/%s/@/%s/@g' %s.orig > %s" % (old, new, dst, dst))
                 changed = len([ l for l in os.popen("diff %s.orig %s" % (dst, dst)).readlines()
@@ -813,7 +813,7 @@ def patch_template_file(src, dst, old, new):
                     os.system("diff -u %s.orig %s" % (dst, dst))
                     break
             elif choice == "you":
-                os.system("pwd ; diff -u %s %s.orig" % (old_orig_path, dst))
+                os.system("pwd ; diff -u %s %s.orig%s" % (old_orig_path, dst, pipe_pager()))
             elif choice == "restore":
                 os.rename(dst + ".orig", dst)
                 sys.stdout.write("Restored your version.\n")
@@ -848,6 +848,16 @@ def get_editor():
     if not os.path.exists(editor):
         editor = 'vi'
     return editor
+
+# return "| $PAGER", if a pager is available
+def pipe_pager():
+    pager = getenv("PAGER")
+    if not pager and os.path.exists("/usr/bin/less"):
+        pager = "less -F"
+    if pager:
+        return "| %s" % pager
+    else:
+        return ""
 
 # Try to merge changes from old->new version and
 # old->user version
@@ -937,11 +947,11 @@ def merge_update_file(relpath, old_version, new_version):
         elif choice == "edit":
             os.system("%s '%s'" % (editor, user_path))
         elif choice == "diff":
-            os.system("diff -u %s.orig %s-%s" % (user_path, user_path, new_version))
+            os.system("diff -u %s.orig %s-%s%s" % (user_path, user_path, new_version, pipe_pager()))
         elif choice == "you":
-            os.system("diff -u %s-%s %s.orig" % (user_path, old_version, user_path))
+            os.system("diff -u %s-%s %s.orig%s" % (user_path, old_version, user_path, pipe_pager()))
         elif choice == "new":
-            os.system("diff -u %s-%s %s-%s" % (user_path, old_version, user_path, new_version))
+            os.system("diff -u %s-%s %s-%s%s" % (user_path, old_version, user_path, new_version, pipe_pager()))
         elif choice == "missing":
             if os.path.exists(reject_file):
                 sys.stdout.write(tty_bgblue + tty_white + file(reject_file).read() + tty_normal)
