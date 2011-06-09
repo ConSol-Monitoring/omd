@@ -56,6 +56,14 @@ Show a list of all installed versions of OMD. The option \fB-b\fP or \fB--bare\f
 makes the output leave out a hint to the default version and easier parseable by
 scripts.
 .TP
+.B omd setversion [VERSION]
+Sets the default OMD version to be used for new sites. Can be called with a target
+version as optional argument or without argument to get a menu of available versions displayed.
+
+This mainly updates the symlink \fB/omd/versions/default\fP. On debian based distributions
+it calls update-alternatives to change the default versions. In this case there is a special
+option \fBauto\fP available to let update-alternatives choose the default OMD version.
+.TP
 .B omd setup                       
 Prepare operating system for OMD. This includes installing all software
 packages from your linux distribution that the components of OMD need

@@ -1840,9 +1840,12 @@ def main_uninstall(args, options={}):
 
 def main_setversion(args, options={}):
     if len(args) == 0:
+        versions = [ (v, "Version %s" % v) for v in omd_versions() if not v == default_version() ]
+        if use_update_alternatives():
+            versions = [ ('auto', 'Auto (Update-Alternatives)') ] + versions
         ok, version = dialog_menu("Choose new default",
                 "Please choose the version to make the new default",
-                [ (v, "Version %s" % v) for v in omd_versions() if not v == default_version() ],
+                versions,
                 None,
                 "Make default",
                 "Cancel")
@@ -1851,14 +1854,26 @@ def main_setversion(args, options={}):
     else:
         version = args[0]
 
-    if not version in omd_versions():
+    if version != 'auto' and not version in omd_versions():
         bail_out("The given version does not exist.")
     if version == default_version():
         bail_out("The given version is already default.")
 
-    if os.path.exists("/omd/versions/default"):
-        os.remove("/omd/versions/default")
-    os.symlink("/omd/versions/%s" % version, "/omd/versions/default")
+    # Special handling for debian based distros which use update-alternatives
+    # to control the path to the omd binary, manpage and so on
+    if use_update_alternatives():
+        if version == 'auto':
+            os.system("update-alternatives --auto omd")
+        else:
+            os.system("update-alternatives --set omd /omd/versions/%s" % version)
+    else:
+        if os.path.exists("/omd/versions/default"):
+            os.remove("/omd/versions/default")
+        os.symlink("/omd/versions/%s" % version, "/omd/versions/default")
+
+
+def use_update_alternatives():
+    return os.path.exists("/var/lib/dpkg/alternatives/omd")
 
 
 def main_version(args, options={}):
