@@ -206,19 +206,24 @@ Setting and querying variables in batch mode can be done with
 .br
 \fBomd config [SITE] get VARIABLE\fP
 .TP
-.B omd diff [RELBASE] [-b, --bare]
-Shows the differences of files in the current site compared to the files delivered
-with the omd version used by the current site.
+.B omd diff [-v] [RELBASE] [-b, --bare]
+Shows the differences of files in the current site compared to the files
+delivered with the omd version used by the current site.
 
 Without the optional RELBASE argument it lists changes in ALL files of the
-site. The RELBASE argument may contain a relative path to the sites root directory
-to filter the scope of the diff.
+site. The RELBASE argument may contain a relative path to the sites root
+directory to filter the scope of the diff.
+It is also possible to give a file/link as RELBASE path. In this case only the
+information for this file are shown.
 
 The command lists files which meet at least one criteria: modified content, changed
 types, modified permissions, modified owner, deleted files.
 
 If you specify the option \fB-b\fP or \fB--bare\fP, then the output leaves out things
 to make the output more human readable, so it is better parseable by scripts.
+
+This command also handles the global option \fB-v\fP or \fB--verbose\fP. It shows the
+changes in detail.
 .SH SEE ALSO
 .BR http://www.omdistro.org
 .br
