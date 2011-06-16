@@ -2120,6 +2120,16 @@ def diff_list(from_skelroot, g_sitedir, from_version, relbase, bare):
             else:
                 sys.stdout.write(color + " %s %s\n" % (long_out, f))
 
+            # Show a little more details in verbose mode
+            if opt_verbose:
+                arrow = tty_magenta + '->' + tty_normal
+                if 'c' in status:
+                    os.system("pwd ; diff -u %s %s" % (source_file, target_file))
+                elif status == 'p':
+                    sys.stdout.write("    %s %s %s\n" % (source_perm, arrow, target_perm))
+                elif 't' in status:
+                    sys.stdout.write("    %s %s %s\n" % (source_type, arrow, target_type))
+
         if not target_type:
             print_status(good, fn, 'd', 'Deleted')
             return
@@ -2134,12 +2144,15 @@ def diff_list(from_skelroot, g_sitedir, from_version, relbase, bare):
             print_status(good, fn, 'c', 'Changed content')
 
         if source_perm != target_perm:
-            print_status(warn, fn, 'c', 'Changed permissions')
+            print_status(warn, fn, 'p', 'Changed permissions')
 
     read_skel_permissions()
     old_perms = load_skel_permissions(from_version)
 
-    walk_skel(from_skelroot, print_diff, (from_skelroot, g_sitedir, from_version, old_perms), relbase = relbase)
+    if not os.path.isdir(relbase):
+        print_diff(relbase, from_skelroot, g_sitedir, from_version, old_perms)
+    else:
+        walk_skel(from_skelroot, print_diff, (from_skelroot, g_sitedir, from_version, old_perms), relbase = relbase)
 
 
 def main_diff(args, options={}):
@@ -2147,14 +2160,6 @@ def main_diff(args, options={}):
     from_skelroot = "/omd/versions/%s/skel" % from_version
 
     relbase = len(args) > 0 and args[0].rstrip('/') or '.'
-
-    path = from_skelroot + '/' + relbase
-    if not os.path.isdir(path):
-        bail_out("The given path %s is no directory" % path)
-
-    # First implementation: Outputs only a list of changed/deleted files compared
-    # to the current version. With dir/file name given the diff could show more details
-    # like te file contents and so on
     diff_list(from_skelroot, g_sitedir, from_version, relbase, "bare" in options)
 
 
