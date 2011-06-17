@@ -4,6 +4,7 @@ include Makefile.omd
 # variale, e.g. make PACKAGES='nagios rrdtool' pack
 PACKAGES=perl-modules \
          apache-omd \
+         mod_python \
          check_logfiles \
          check_mk \
          check_multi \
