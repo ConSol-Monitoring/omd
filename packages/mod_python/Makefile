@@ -20,15 +20,16 @@ install:
 	# Use 'make install' of mod_python into a temporary file.
 	# mod_python does not honor --prefix, so we move the stuff over...
 	make DESTDIR=$$(pwd)/tmp.root -C $(DIR) install
-	# Fix case where not usr/local but usr is used (lenny)
-	if [ ! -e tmp.root/usr/local ] ; then \
-	    ln -s . tmp.root/usr/local ; \
-	fi
+
+        # Installation directories vary much
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/apache/modules
-	install -m 644 tmp.root/usr/lib*/*/modules/mod_python.so $(DESTDIR)$(OMD_ROOT)/lib/apache/modules
+        MP=$$(find tmp.root -name mod_python.so) ; \
+	install -m 644 $$MP $(DESTDIR)$(OMD_ROOT)/lib/apache/modules
+
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/python/mod_python
-	install tmp.root/usr/local/lib*/*/*packages/mod_python/* $(DESTDIR)$(OMD_ROOT)/lib/python/mod_python
-	install -m 644 tmp.root/usr/local/lib*/python*/*packages/mod_python-3.3.1.egg-info $(DESTDIR)$(OMD_ROOT)/lib/python
+	PYDIR=$$(find tmp.root -name "*egg*" | sed 's@/mod_python.*@@') ; \
+        install $$PYDIR/mod_python/* $(DESTDIR)$(OMD_ROOT)/lib/python/mod_python ; \
+	install -m 644 $$PYDIR/*egg* $(DESTDIR)$(OMD_ROOT)/lib/python
 	rm -rf tmp.root
 
 skel:
