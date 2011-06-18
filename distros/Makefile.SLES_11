@@ -24,6 +24,7 @@ BUILD_PACKAGES += patch
 BUILD_PACKAGES += python
 BUILD_PACKAGES += python-devel
 BUILD_PACKAGES += readline-devel
+BUILD_PACKAGES += apache2-devel
 OS_PACKAGES     =
 OS_PACKAGES    += apache2
 OS_PACKAGES    += apache2-mod_fcgid
