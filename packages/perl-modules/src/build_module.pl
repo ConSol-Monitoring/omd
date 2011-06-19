@@ -66,6 +66,7 @@ sub install_module {
     if( $modname eq "TermReadKey" )                { $modname   = "Term::ReadKey"; }
     if( $modname eq "Gearman" )                    { $modname   = "Gearman::Client"; }
     if( $modname eq "IO::Compress" )               { $modname   = "IO::Compress::Base"; }
+
     if( $modname eq "Term::ReadLine::Gnu" )        { $pre_check = "use Term::ReadLine;"; }
     if( $modname eq "DBD::Oracle") {
         if(defined $ENV{'ORACLE_HOME'}) {
@@ -97,21 +98,21 @@ sub install_module {
 
     # ExtUtils::Install is not detected correctly, because the file is part of another package
     if( $modname eq "ExtUtils::Install" or $FORCE eq "testonly" ) {
-	my $check = "$modname";
-	if ($modname !~ /^(Math::BaseCnv|XML::Tidy)$/) {
-	    # Dump version number of this module makes test to fail always, so we ommit
-	    # ther version number in the test for these cases.
-	    $check .= " $modvers";
-	}
-	# complete test in testmode
-	$result=`$PERL -MData::Dumper -e "$pre_check use $check; print Dumper \\%INC" 2>&1`;
-	$rc=$?;
-	if($rc == 0 and !$core) {
-	    $modfile =~ s/^inc\///g;
-		$modfile =~ s/\.pm$//g;
-	    `echo "$result" | grep /dist/lib/perl5/ | grep $modfile > /dev/null 2>&1`;
-	    $rc=$?;
-	}	
+        my $check = "$modname";
+        if ($modname !~ /^(Math::BaseCnv|XML::Tidy)$/) {
+            # Dump version number of this module makes test to fail always, so we ommit
+            # ther version number in the test for these cases.
+            $check .= " $modvers";
+        }
+        # complete test in testmode
+        $result = `$PERL -MData::Dumper -e "$pre_check use $check; print Dumper \\%INC" 2>&1`;
+        $rc=$?;
+        if($rc == 0 and !$core) {
+            $modfile =~ s/^inc\///g;
+            $modfile =~ s/\.pm$//g;
+            `echo "$result" | grep /dist/lib/perl5/ | grep $modfile > /dev/null 2>&1`;
+            $rc=$?;
+        }
     } else {
         # fast test otherwise
         my @test = glob("../dist/lib/perl5/$modfile ../dist/lib/perl5/".$Config{'archname'}."/$modfile");
@@ -140,8 +141,9 @@ sub install_module {
         return(1);
     }
 
-    my $dir = $module;
-    $dir    =~ s/(\.tar\.gz|\.tgz)//g;
+    my $start = time();
+    my $dir   = $module;
+    $dir      =~ s/(\.tar\.gz|\.tgz)//g;
     `tar zxf $module`;
     chdir($dir);
     print "installing... ";
@@ -158,11 +160,17 @@ sub install_module {
             `$PERL Build.PL >> $LOG 2>&1 && ./Build >> $LOG 2>&1 && ./Build install >> $LOG 2>&1`;
             if($? != 0 ) { die("error: rc $?\n".`cat $LOG`."\n"); }
         } elsif( -f "Makefile.PL" ) {
+            `sed -i -e 's/auto_install;//g' Makefile.PL`;
             `echo "\n\n\n" | $PERL Makefile.PL $makefile_opts >> $LOG 2>&1 && make -j 5 >> $LOG 2>&1 && make install >> $LOG 2>&1`;
             if($? != 0 ) { die("error: rc $?\n".`cat $LOG`."\n"); }
         } else {
             die("error: no Build.PL or Makefile.PL found in $module!\n");
         }
+        `grep '^==> Auto-install the' $LOG >/dev/null 2>&1 | grep -v optional`;
+        if($? == 0 ) { die("dependency error: rc $?\n".`cat $LOG`."\n"); }
+        print `grep 'Warning: prerequisite' $LOG | grep -v Test::`;
+        #`grep 'Warning: prerequisite' $LOG >/dev/null 2>&1`;
+        #if($? == 0 ) { die("dependency error: rc $?\n".`cat $LOG`."\n"); }
         alarm(0);
     };
     if($@) {
@@ -172,6 +180,6 @@ sub install_module {
 
     chdir("..");
     `rm -rf $dir`;
-    print "ok\n";
+    my $end = time();
+    print "ok (".($end - $start)."s)\n";
 }
-

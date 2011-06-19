@@ -45,6 +45,7 @@ for my $tarball (glob("packages/perl-modules/src/*.gz")) {
     elsif($tarball eq 'IO::Compress')                { $tarball = 'IO::Compress::Base'; }
     elsif($tarball eq 'Gearman')                     { $tarball = 'Gearman::Client'; }
     elsif($tarball eq 'Term::ReadLine::Gnu')         { $tarball = 'Term::ReadLine; use Term::ReadLine::Gnu'; }
+    elsif($tarball eq 'PathTools')                   { $tarball = 'File::Spec'; }
     elsif($tarball eq 'Package::DeprecationManager') { $version .= ' -deprecations => { blah => foo }'; }
     elsif($tarball eq 'DBD::Oracle')                 { next; }
     elsif($tarball eq 'Test::NoWarnings')            { next; }

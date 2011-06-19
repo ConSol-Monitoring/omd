@@ -3,7 +3,6 @@
 use warnings;
 use strict;
 use lib '/omd/versions/default/lib/perl5/lib/perl5';
-use YAML;
 use Data::Dumper;
 use lib 'src';
 use OMDHelper;
@@ -11,102 +10,20 @@ use OMDHelper;
 ####################################
 # download modules
 chdir("src");
-our @downloaded;
+my $downloaded;
 for my $module (@ARGV) {
     $module =~ s/\//::/g;
     $module =~ s/\.pm$//g;
     print $module." is a core module\n" if OMDHelper::is_core_module($module);
-    download_module($module);
+    $downloaded = OMDHelper::download_module($module);
 }
 # print result of all downloaded files
-if(scalar @downloaded > 0) {
+if(scalar @{$downloaded} > 0) {
     print "\n";
     print "please add the following tarballs to the Makefile:\n";
-    print join("\n", @downloaded);
+    print join("\n", @{$downloaded});
     print "\n";
 } else {
     print "no new packages downloaded\n";
-}
-
-####################################
-# download a module
-# needs a module name like: IO::All
-sub download_module {
-    my $mod = shift;
-    my $ver = shift || 0;
-
-    our %already_downloaded;
-    return if defined $already_downloaded{$mod.$ver};
-    $already_downloaded{$mod.$ver} = 1;
-
-    # we dont need core modules or perl dependency
-    return if $mod eq 'perl';
-
-    my $urlpath;
-    my $out = OMDHelper::cmd("wget -O - 'http://search.cpan.org/perldoc?".$mod."'");
-    if($out =~ m/href="(\/CPAN\/authors\/id\/.*?\/.*?(\.tar\.gz|\.tgz))">/) {
-        $urlpath = $1;
-    }
-    else {
-        print "got no url:\n";
-        print $out;
-        exit;
-    }
-    return if defined $already_downloaded{$urlpath};
-    my $tarball=$urlpath; $tarball =~ s/^.*\///g;
-    my $modbasename=$tarball; $modbasename =~ s/\-[0-9\.\w]*(\.tar\.gz|\.tgz)//g;
-    my @curfile = glob("$modbasename*");
-
-    # check if we have the right version
-    my $download = 1;
-    for my $file (@curfile) {
-        if($tarball =~ m/\-([0-9\.]*)(\.[\w\d]+)*(\.tar\.gz|\.tgz)/) {
-            my $fver = $1;
-            if($fver >= $ver) {
-                $download = 0;
-            }
-        }
-    }
-
-    if($urlpath =~ m/perl\-[\d\.]+\.tar\.gz/) {
-        # dont download perl
-    }
-    elsif( $download ) {
-        OMDHelper::cmd('wget -q "http://search.cpan.org'.$urlpath.'"');
-        $already_downloaded{$urlpath} = 1;
-        get_deps($tarball);
-        push @downloaded, $tarball;
-        print "downloaded $tarball\n";
-    } else {
-        print "$modbasename already downloaded\n";
-        get_deps($curfile[0]);
-    }
-    return;
-}
-
-####################################
-# get all dependencies for a tarball
-# needs a filename like: Storable-2.21.tar.gz
-sub get_deps {
-    my $file = shift;
-    our %already_checked;
-    return if defined $already_checked{$file};
-    $already_checked{$file} = 1;
-    print " -> checking dependecies for: $file\n";
-    OMDHelper::cmd("tar zxf $file");
-    my $dir = $file;
-    $dir =~  s/(\.tar\.gz|\.tgz)//g;
-    my $meta;
-    if(-s "$dir/META.yml") {
-        $meta = YAML::LoadFile("$dir/META.yml");
-    }
-    OMDHelper::cmd("rm -fr $dir");
-    return unless defined $meta->{requires};
-    for my $dep (keys %{$meta->{requires}}) {
-        next if $dep eq 'perl';
-        my $depv =$meta->{requires}->{$dep};
-        print "   -> $dep ($depv)\n";
-        download_module($dep, $depv);
-    }
 }
 
