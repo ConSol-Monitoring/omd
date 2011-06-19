@@ -20,15 +20,15 @@ install:
 	# Use 'make install' of mod_python into a temporary file.
 	# mod_python does not honor --prefix, so we move the stuff over...
 	make DESTDIR=$$(pwd)/tmp.root -C $(DIR) install
-
-        # Installation directories vary much
+	
+	# Installation directories vary much
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/apache/modules
-        MP=$$(find tmp.root -name mod_python.so) ; \
+	MP=$$(find tmp.root -name mod_python.so) ; \
 	install -m 644 $$MP $(DESTDIR)$(OMD_ROOT)/lib/apache/modules
-
+	
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/python/mod_python
 	PYDIR=$$(find tmp.root -name "*egg*" | sed 's@/mod_python.*@@') ; \
-        install $$PYDIR/mod_python/* $(DESTDIR)$(OMD_ROOT)/lib/python/mod_python ; \
+	install $$PYDIR/mod_python/* $(DESTDIR)$(OMD_ROOT)/lib/python/mod_python ; \
 	install -m 644 $$PYDIR/*egg* $(DESTDIR)$(OMD_ROOT)/lib/python
 	rm -rf tmp.root
 
