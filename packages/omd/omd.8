@@ -92,7 +92,7 @@ Show a list of all sites and the version of OMD each site uses. If you specify
 the option \fB-b\fP or \fB--bare\fP, then the output leaves out hints to the
 versions, so it is better parseable by scripts.
 .TP
-.B omd create     SITE             
+.B omd create [OPTIONS] SITE             
 Create a new site. The name of the site must be at most 16 characters
 long and consist only of letters, digits and underscores. It must not
 begin with a digit. 
@@ -106,15 +106,27 @@ You need root permissions for creating a new site.
 
 After creating a new site you can do a \fBsu - \fPSITE and start
 the site with \fBomd start\fP.
+
+The following options can be used:
+
+\fB-u UID\fP Force a specific user id for the new user
+
+\fB-g GID\fP Force a specific group id for the group of the new user
 .TP
 .B omd rm         SITE             
 Remove a site and all of its data. This includes deleting the
 directory \fB/omd/sites/\fPSITE and removing the system user
 and group of that site. This - of course - needs root permissions.
 .TP
-.B omd mv         SITE NEWNAME     
+.B omd mv [OPTIONS] SITE NEWNAME     
 Rename a site. The site must be stopped. the NEWNAME must be a valid
 site name as described in "omd create". Root permissions are needed.
+
+The following options can be used:
+
+\fB-u UID\fP Force a specific user id for the new user
+
+\fB-g GID\fP Force a specific group id for the group of the new user
 .TP
 .B omd cp [OPTIONS] SITE NEWNAME     
 Make a copy of a site. A new site with the name NEWSITE will be created
