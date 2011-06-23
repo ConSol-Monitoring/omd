@@ -18,6 +18,7 @@ case "$1" in
     set)
         if [ "$2" = "on" -o "$CONFIG_MOD_GEARMAN" = "on" ]; then
             # generate random key
+            mkdir -p $OMD_ROOT/etc/mod-gearman
             KEYSTORE="$OMD_ROOT/etc/mod-gearman/secret.key"
             if [ ! -s $KEYSTORE ]; then
                 key=`head -n 20 /dev/urandom | tr -d -c "[:alnum:]"`

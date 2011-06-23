@@ -24,16 +24,22 @@ case "$1" in
            mkdir -p $OMD_ROOT/etc/nagios/nagios.d
            ln -sfn ../../pnp4nagios/nagios_npcdmod.cfg $OMD_ROOT/etc/nagios/nagios.d/pnp4nagios.cfg
            ln -sfn ../../pnp4nagios/apache.conf $OMD_ROOT/etc/apache/conf.d/pnp4nagios.conf
-           sed -i -e 's/^perfdata=.*$/perfdata=no/' $OMD_ROOT/etc/mod-gearman/perfdata.conf
+           if [ -s $OMD_ROOT/etc/mod-gearman/perfdata.conf ]; then
+               sed -i -e 's/^perfdata=.*$/perfdata=no/' $OMD_ROOT/etc/mod-gearman/perfdata.conf
+           fi
        elif [ "$2" == "gearman" ]
        then
            ln -sfn ../../pnp4nagios/nagios_gearman.cfg $OMD_ROOT/etc/nagios/nagios.d/pnp4nagios.cfg
            ln -sfn ../../pnp4nagios/apache.conf $OMD_ROOT/etc/apache/conf.d/pnp4nagios.conf
-           sed -i -e 's/^perfdata=.*$/perfdata=yes/' $OMD_ROOT/etc/mod-gearman/perfdata.conf
+           if [ -s $OMD_ROOT/etc/mod-gearman/perfdata.conf ]; then
+               sed -i -e 's/^perfdata=.*$/perfdata=yes/' $OMD_ROOT/etc/mod-gearman/perfdata.conf
+           fi
        else
            rm -f $OMD_ROOT/etc/nagios/nagios.d/pnp4nagios.cfg
            rm -f $OMD_ROOT/etc/apache/conf.d/pnp4nagios.conf
-           sed -i -e 's/^perfdata=.*$/perfdata=no/' $OMD_ROOT/etc/mod-gearman/perfdata.conf
+           if [ -s $OMD_ROOT/etc/mod-gearman/perfdata.conf ]; then
+               sed -i -e 's/^perfdata=.*$/perfdata=no/' $OMD_ROOT/etc/mod-gearman/perfdata.conf
+           fi
        fi
    ;;
 
