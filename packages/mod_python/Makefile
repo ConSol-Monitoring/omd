@@ -14,6 +14,7 @@ build:
 	    ( cd $(DIR) ; patch -p1 -b ) < $$p ; \
 	done
 	cd $(DIR) ; ./configure $(CONFIGUREOPTS) 
+	echo '#define OMD_VERSION "$(OMD_VERSION)"' > $(DIR)/src/omd_version.h
 	$(MAKE) -C $(DIR) all
 
 install:
