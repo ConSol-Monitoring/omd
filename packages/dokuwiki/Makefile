@@ -1,8 +1,8 @@
 include ../../Makefile.omd
 
 NAME = dokuwiki
-VERSION = 2010-11-07
-DIR = $(NAME)-2010-11-07
+VERSION = 2011-05-25a
+DIR = $(NAME)-2011-05-25a
 
 .PHONY: skel
 
@@ -10,6 +10,7 @@ build:
 	tar xzf $(NAME)-$(VERSION).tgz
 	tar xzf template-arctic.tgz -C $(DIR)/lib/tpl/
 	tar xzf plugin-include.tgz -C $(DIR)/lib/plugins/
+	tar xf formular.tar -C $(DIR)/lib/plugins/
 
 	for p in patches/*.patch ; do \
 		echo "applying $$p..." ; \
