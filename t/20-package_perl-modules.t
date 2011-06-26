@@ -49,6 +49,7 @@ for my $tarball (glob("packages/perl-modules/src/*.gz")) {
     elsif($tarball eq 'Package::DeprecationManager') { $version .= ' -deprecations => { blah => foo }'; }
     elsif($tarball eq 'DBD::Oracle')                 { next; }
     elsif($tarball eq 'Test::NoWarnings')            { next; }
+    elsif($tarball eq 'UNIVERSAL::isa')              { next; }
 
     my $check = "use $tarball";
     # Use with version doesnt work here, because of weird version numbers
