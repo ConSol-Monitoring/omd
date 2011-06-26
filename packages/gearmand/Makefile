@@ -1,16 +1,21 @@
 include ../../Makefile.omd
 
 NAME     = gearmand
-VERSION  = 0.14
+VERSION  = 0.23
 DIR      = gearmand-$(VERSION)
 
 .PHONY: skel
 
 build:
-	test -f gearmand-${VERSION}.tar.gz || wget "http://launchpad.net/gearmand/trunk/0.14/+download/gearmand-0.14.tar.gz"
+	test -f gearmand-${VERSION}.tar.gz || wget "http://launchpad.net/gearmand/trunk/${VERSION}/+download/gearmand-${VERSION}.tar.gz"
 	tar xzf gearmand-$(VERSION).tar.gz
-	cd $(DIR) && ./configure --prefix=$(OMD_ROOT)
-	cd $(DIR) && $(MAKE)
+	sed -i -e 's/boost_version_req=1.39.0/boost_version_req=1.34.0/g' gearmand-$(VERSION)/configure
+	cd $(DIR) && \
+	export LIBRARY_PATH=/usr/lib64/boost141:/usr/lib/boost141 && \
+	export LD_LIBRARY_PATH=/usr/lib64/boost141:/usr/lib/boost141 && \
+	export CPATH=/usr/include/boost141 && \
+	./configure --prefix=$(OMD_ROOT) && \
+	$(MAKE) 
 
 install:
 	$(MAKE) DESTDIR=$(DESTDIR) -C $(DIR) install
