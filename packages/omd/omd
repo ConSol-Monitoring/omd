@@ -1878,10 +1878,17 @@ def use_update_alternatives():
 
 
 def main_version(args, options={}):
-    if "bare" in options:
-        sys.stdout.write(g_info["OMD_VERSION"] + "\n")
+    if len(args) > 0:
+        site = args[0]
+        if not site_exists(site):
+            bail_out("No such site: %s" % site)
+        version = site_version(site)
     else:
-        sys.stdout.write("OMD - Open Monitoring Distribution Version %s\n" % g_info["OMD_VERSION"])
+        version = g_info["OMD_VERSION"]
+    if "bare" in options:
+        sys.stdout.write(version + "\n")
+    else:
+        sys.stdout.write("OMD - Open Monitoring Distribution Version %s\n" % version)
 
 
 def main_versions(args, options={}):
@@ -2364,7 +2371,7 @@ commands = [
     "Sets the default version of OMD which will be used by new sites",
     ""),
 
-  ( "version",   False, 0, 0, False, "",        main_version,
+  ( "version",   False, 0, 0, False, "[SITE]",        main_version,
     [("bare", "b", False)],
     "Show version of OMD",
     ""),
