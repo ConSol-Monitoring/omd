@@ -47,9 +47,11 @@ sites within OMD - the open monitoring distribution.
 .B omd help
 Show short summary of available commands.
 .TP
-.B omd version
+.B omd version [--bare, -b]
 Show the default version of you OMD installation. OMD supports
 multiple versions to be installed in parallel.
+The option \fB-b\fP or \fB--bare\fP reduces the output to the plain
+version number (for easier parsing in scripts).
 .TP
 .B omd versions [--bare, -b]
 Show a list of all installed versions of OMD. The option \fB-b\fP or \fB--bare\fP

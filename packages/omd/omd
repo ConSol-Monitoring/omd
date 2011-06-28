@@ -1878,7 +1878,10 @@ def use_update_alternatives():
 
 
 def main_version(args, options={}):
-    sys.stdout.write("OMD - Open Monitoring Distribution Version %s\n" % g_info["OMD_VERSION"])
+    if "bare" in options:
+        sys.stdout.write(g_info["OMD_VERSION"] + "\n")
+    else:
+        sys.stdout.write("OMD - Open Monitoring Distribution Version %s\n" % g_info["OMD_VERSION"])
 
 
 def main_versions(args, options={}):
@@ -2362,7 +2365,7 @@ commands = [
     ""),
 
   ( "version",   False, 0, 0, False, "",        main_version,
-    [],
+    [("bare", "b", False)],
     "Show version of OMD",
     ""),
 
