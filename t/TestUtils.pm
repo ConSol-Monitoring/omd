@@ -258,7 +258,9 @@ sub test_url {
     }
 
     # check for missing images / css or js
-    if($page->{'content_type'} =~ 'text\/html') {
+    if($page->{'content_type'} =~ 'text\/html'
+       and (!defined $test->{'skip_html_links'} or $test->{'skip_html_links'} == 0)
+      ) {
         my @matches = $page->{'content'} =~ m/(src|href)=['|"](.+?)['|"]/gi;
         my $links_to_check;
         my $x=0;
@@ -294,8 +296,10 @@ sub test_url {
             } else {
                 $errors++;
                 diag("got status ".$req->{'code'}." for url: '$test_url'");
+                diag(Dumper($req));
                 my $tmp_test = { 'url' => $test_url };
                 _diag_request($tmp_test, $req);
+                TestUtils::bail_out_clean("error in url '$test_url' linked from '".$test->{'url'}."'");
             }
         }
         is( $errors, 0, 'All stylesheets, images and javascript exist' );
@@ -408,23 +412,23 @@ sub wait_for_content {
     my $req;
     my $x = 0;
     while ($x < $timeout) {
-    	$req = _request($test);
-	if($req->{'code'} == 200) {
-		#diag("code:$req->{code} url:$test->{url} auth:$test->{auth}");
-		my $errors=0;
-		foreach my $pattern (@{$test->{'like'}}) {
-			if ($req->{'content'}!~/$pattern/) {
-				#diag("errors:$errors pattern:$pattern");
-				$errors++;
-			}
-		}
-		if ($errors == 0) {
-            		pass(sprintf "content: [ %s ] appeared after $x seconds", join(',',@{$test->{'like'}}));
-			return 1;
-		}
-	} else {
-		diag("Error searching for web content:\ncode:$req->{code}\nurl:$test->{url}\nauth:$test->{auth}\ncontent:$req->{content}");
-	}
+        $req = _request($test);
+        if($req->{'code'} == 200) {
+            #diag("code:$req->{code} url:$test->{url} auth:$test->{auth}");
+            my $errors=0;
+            for my $pattern (@{$test->{'like'}}) {
+                if ($req->{'content'}!~/$pattern/) {
+                    #diag("errors:$errors pattern:$pattern");
+                    $errors++;
+                }
+            }
+            if ($errors == 0) {
+                pass(sprintf "content: [ %s ] appeared after $x seconds", join(',',@{$test->{'like'}}));
+                return 1;
+            }
+        } else {
+            diag("Error searching for web content:\ncode:$req->{code}\nurl:$test->{url}\nauth:$test->{auth}\ncontent:$req->{content}");
+        }
         $x++;
         sleep(1);
     }
@@ -504,7 +508,7 @@ sub _request {
     }
 
     my $ua = LWP::UserAgent->new;
-    $ua->timeout(10);
+    $ua->timeout(30);
     $ua->env_proxy;
     $ua->cookie_jar({ file => $cookie_jar });
 
@@ -683,9 +687,9 @@ sub _tail_apache_logs {
     _tail("global apache logs:", glob('/var/log/httpd*/error*log'));
     return;
 }
- 
+
 ##################################################
- 
+
 END {
     if(defined $omd_symlink_created and $omd_symlink_created == 1) {
         unlink('/omd');
