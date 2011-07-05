@@ -12,7 +12,8 @@ use Cwd;
 use Test::More;
 use Data::Dumper;
 use LWP::UserAgent;
-use File::Temp qw/ :POSIX /;
+use HTTP::Cookies::Netscape;
+use File::Temp qw/ tempfile /;
 use Test::Cmd;
 
 if($> != 0) {
@@ -198,11 +199,11 @@ sub remove_test_site {
 
   needs test hash
   {
-    url            => url to request
-    auth           => authentication (realm:user:pass)
-    code           => expected response code
-    like           => (list of) regular expressions which have to match content
-    unlike         => (list of) regular expressions which must not match content
+    url              => url to request
+    auth             => authentication (realm:user:pass)
+    code             => expected response code
+    like             => (list of) regular expressions which have to match content
+    unlike           => (list of) regular expressions which must not match content
     skip_html_lint   => flag to disable the html lint checking
     skip_link_check  => (list of) regular expressions to skip the link checks for
   }
@@ -503,14 +504,19 @@ sub _request {
     my $return = {};
     our $cookie_jar;
 
-    if(!defined $cookie_jar or !-f $cookie_jar) {
-        $cookie_jar = tmpnam();
+    if(!defined $cookie_jar) {
+        my($fh, $cookie_file) = tempfile(undef, UNLINK => 1);
+        unlink ($cookie_file);
+        $cookie_jar = HTTP::Cookies::Netscape->new(
+                                       file     => $cookie_file,
+                                       autosave => 1,
+                                       );
     }
 
     my $ua = LWP::UserAgent->new;
     $ua->timeout(30);
     $ua->env_proxy;
-    $ua->cookie_jar({ file => $cookie_jar });
+    $ua->cookie_jar($cookie_jar);
 
     if(defined $data->{'auth'}) {
         $data->{'url'} =~ m/(http|https):\/\/(.*?)(\/|:\d+)/;
