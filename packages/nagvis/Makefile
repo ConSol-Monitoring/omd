@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 NAME = nagvis
-#VERSION = 1.5.9
+#VERSION = 1.6b2
 VERSION = 1.6-nightly
 DIR = $(NAME)-$(VERSION)
 
@@ -27,15 +27,17 @@ install:
 	
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/skel/var/nagvis/profiles
 	
-	# Move userfiles to skel to allow site specific modifications
-	#mkdir -p $(DESTDIR)$(OMD_ROOT)/skel/var/nagvis
-	#mv $(DESTDIR)$(OMD_ROOT)/share/nagvis/htdocs/userfiles $(DESTDIR)$(OMD_ROOT)/skel/var/nagvis/userfiles
-	
 	# Move package documentations to have these files in the binary packages
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/doc/$(NAME)
 	for file in LICENCE README ; do \
 	  mv $(DESTDIR)$(OMD_ROOT)/share/nagvis/$$file $(DESTDIR)$(OMD_ROOT)/share/doc/$(NAME); \
 	done
+	
+	# Move demo config files
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/skel/etc/nagvis/automaps
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/skel/etc/nagvis/maps
+	mv $(DESTDIR)$(OMD_ROOT)/share/nagvis/etc/automaps/*.cfg $(DESTDIR)$(OMD_ROOT)/skel/etc/nagvis/automaps
+	mv $(DESTDIR)$(OMD_ROOT)/share/nagvis/etc/maps/*.cfg $(DESTDIR)$(OMD_ROOT)/skel/etc/nagvis/maps
 	
 	# Delete files/directories we do not want to pack
 	rm -rf $(DESTDIR)$(OMD_ROOT)/share/nagvis/var
