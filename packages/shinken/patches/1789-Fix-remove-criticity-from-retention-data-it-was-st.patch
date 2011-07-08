@@ -1,0 +1,39 @@
+From f80d7acf832dc4471ffc0cad09ad515d114da542 Mon Sep 17 00:00:00 2001
+From: naparuba <naparuba@users.sourceforge.net>
+Date: Fri, 20 May 2011 16:20:37 +0200
+Subject: [PATCH] Fix: remove criticity from retention data, it was stupid to put it in it.
+
+---
+ shinken/objects/host.py    |    2 +-
+ shinken/objects/service.py |    2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/shinken/objects/host.py b/shinken/objects/host.py
+index c135854..86bb7c9 100644
+--- a/shinken/objects/host.py
++++ b/shinken/objects/host.py
+@@ -123,7 +123,7 @@ class Host(SchedulingItem):
+         'maintenance_period':   StringProp(default='', fill_brok=['full_status']),
+ 
+         # Criticity value
+-        'criticity':            IntegerProp(default='2', fill_brok=['full_status'], retention=True),
++        'criticity':            IntegerProp(default='2', fill_brok=['full_status']),
+     })
+ 
+     # properties set only for running purpose
+diff --git a/shinken/objects/service.py b/shinken/objects/service.py
+index e86e14b..0b83667 100644
+--- a/shinken/objects/service.py
++++ b/shinken/objects/service.py
+@@ -121,7 +121,7 @@ class Service(SchedulingItem):
+         'default_value':           StringProp(default=''),
+ 
+         # Criticity value
+-        'criticity':               IntegerProp(default='2', fill_brok=['full_status'], retention=True),
++        'criticity':               IntegerProp(default='2', fill_brok=['full_status']),
+     })
+ 
+     # properties used in the running state
+-- 
+1.5.5.6
+

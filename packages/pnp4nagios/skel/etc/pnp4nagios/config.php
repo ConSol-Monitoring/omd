@@ -35,6 +35,11 @@ $conf['rrdtool'] = "###ROOT###/bin/rrdtool";
 $conf['graph_width'] = "500";
 $conf['graph_height'] = "100";
 #
+# RRDTool image size of graphs in zoom window
+#
+$conf['zgraph_width'] = "500";
+$conf['zgraph_height'] = "100";
+#
 # RRDTool image size of PDFs
 #
 $conf['pdf_width'] = "675";

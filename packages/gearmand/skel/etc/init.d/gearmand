@@ -19,7 +19,7 @@ fi
 
 NAME=gearmand
 DAEMON="###ROOT###/version/sbin/gearmand"
-OPTIONS="-d -j 0"
+OPTIONS="--daemon --job-retries=0"
 PORT=`echo $CONFIG_GEARMAND_PORT | awk -F: {'print $2'}`
 LISTEN=`echo $CONFIG_GEARMAND_PORT | awk -F: {'print $1'}`
 if [ -z "$LISTEN" ]; then
@@ -38,10 +38,12 @@ done
 
 # check libevent version
 # io threads are only supported in lib event >= 1.4
+NUMTHREADS=0
 LIBEVENTVERSION=`/sbin/ldconfig -p 2>&1 | grep libevent- | tail -n 1 | sed -e 's/.*libevent\-\(.*\)\.so.*/\1/g' -e 's/[^0-9\.]//g'`
 if [ ! -z "$LIBEVENTVERSION" ]; then
-  [ `echo "$LIBEVENTVERSION $LIBEVENTMINVERSION" | awk '{if ($1 >= $2) print 1}'` ] && OPTIONS="$OPTIONS -t 10"
+  [ `echo "$LIBEVENTVERSION $LIBEVENTMINVERSION" | awk '{if ($1 >= $2) print 1}'` ] && NUMTHREADS=10
 fi
+OPTIONS="$OPTIONS --threads=$NUMTHREADS"
 
 # create state dir
 mkdir -p $(dirname $LOGFILE)
@@ -96,7 +98,7 @@ case "$1" in
             exit 1;
         fi
 
-        CMD="$DAEMON -p $PORT -P $PIDFILE $OPTIONS --log-file=$LOGFILE -v -v --listen=$LISTEN"
+        CMD="$DAEMON --port=$PORT --pid-file=$PIDFILE $OPTIONS --log-file=$LOGFILE --verbose=2 --listen=$LISTEN"
         if [ "$WHO" = "root" ]; then
             # try to exec commands as user
             su - $USER -c /bin/true
@@ -152,11 +154,9 @@ case "$1" in
         printf '%s' "Reloading $NAME configuration files..."
         pid=$( cat $PIDFILE 2>/dev/null )
         if [ -n "$pid" ]; then
-            kill -HUP "$pid"
-            echo "OK"
-            exit 0;
+            $0 stop && sleep 1 && $0 start
+            exit $?
         else
-            echo ""
             echo "$NAME is not running"
             exit 1;
         fi

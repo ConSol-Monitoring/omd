@@ -106,7 +106,7 @@ case "$1" in
         get_status;
         exit $?;
 		;;
-    restart)
+    restart|reload)
         $0 stop && sleep 1 && $0 start
         exit $?
         ;;

@@ -19,8 +19,14 @@ case "$1" in
     set)
         # this just enables/disables the gearman settings tree
         if [ "$2" = "on" ]; then
+            if [ ! -d $OMD_ROOT/etc/mod-gearman/. ]; then
+                echo "ERROR: make sure $OMD_ROOT/etc/mod-gearman exists! (Should have been shipped with OMD)"
+                exit 1
+            fi
             mkdir -p $OMD_ROOT/etc/nagios/nagios.d
             ln -sfn ../../mod-gearman/nagios.cfg $OMD_ROOT/etc/nagios/nagios.d/mod-gearman.cfg
+        else
+            rm -f $OMD_ROOT/etc/nagios/nagios.d/mod-gearman.cfg
         fi
     ;;
 esac

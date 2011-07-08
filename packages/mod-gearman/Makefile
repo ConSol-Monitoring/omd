@@ -1,7 +1,8 @@
 include ../../Makefile.omd
 
 NAME     = mod_gearman
-VERSION  = 1.0.4
+VERSION  = 1.0.7
+GEARMAND = 0.23
 DIR      = mod_gearman-$(VERSION)
 
 .PHONY: skel
@@ -9,11 +10,15 @@ DIR      = mod_gearman-$(VERSION)
 build:
 	test -f mod_gearman-${VERSION}.tar.gz || wget "http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-$(VERSION).tar.gz"
 	tar xzf mod_gearman-$(VERSION).tar.gz
+	#for p in patches/*.patch ; do \
+	#    echo "applying $$p..." ; \
+	#    ( cd $(DIR) ; patch -p1 -b ) < $$p ; \
+	#done
 	cd $(DIR) && \
-    export LIBRARY_PATH=$(shell pwd)/../gearmand/gearmand-0.14/libgearman/.libs && \
-    export LD_LIBRARY_PATH=$(shell pwd)/../gearmand/gearmand-0.14/libgearman/.libs && \
+    export LIBRARY_PATH=$(shell pwd)/../gearmand/gearmand-${GEARMAND}/libgearman/.libs && \
+    export LD_LIBRARY_PATH=$(shell pwd)/../gearmand/gearmand-${GEARMAND}/libgearman/.libs && \
     ./configure --prefix=$(OMD_ROOT) && \
-	$(MAKE) -j 1
+    $(MAKE) -j 1
 
 install:
 	$(MAKE) DESTDIR=$(DESTDIR) -C $(DIR) -j 1 install

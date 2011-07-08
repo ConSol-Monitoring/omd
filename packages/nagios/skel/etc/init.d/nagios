@@ -48,7 +48,7 @@ USR=###SITE###
 GRP=###SITE###
 
 # OMD: create configuration file out of fragments
-case "$1" in start|restart|reload|checkconfig)
+case "$1" in start|restart|reload|checkconfig|check)
     merge-nagios-config \
        ###ROOT###/etc/nagios/nagios.d/* \
        ###ROOT###/etc/nagios/nagios.cfg \

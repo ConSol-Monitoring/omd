@@ -3,7 +3,7 @@ include ../../Makefile.omd
 .PHONY: skel
 
 NAME = pnp4nagios
-VERSION = 0.6.12
+VERSION = 0.6.13
 DIR = $(NAME)-$(VERSION)
 
 # Configure options for PNP4Nagios. Since we want to compile
@@ -58,7 +58,6 @@ install:
 
 	# TODO: Add config file option
 	rm $(DESTDIR)$(OMD_ROOT)/lib/pnp4nagios/verify_pnp_config.pl
-	rm $(DESTDIR)$(OMD_ROOT)/lib/pnp4nagios/rrd_convert.pl
 
 
 

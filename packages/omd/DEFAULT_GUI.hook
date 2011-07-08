@@ -19,6 +19,13 @@ case "$1" in
             echo "nagvis: NagVis - The visualisation addon for Nagios"
             echo "none: No default webinterface"
     ;;
+    set)
+            # This is some sort of hack. The problem here:
+            # The NAGVIS_URL hook depends on this hooks value but is not
+            # executed when this hook is changed. It would be better to
+            # solve this in a more general way in omd.
+            omd config set NAGVIS_URLS $2 >/dev/null 2>&1
+    ;;
     depends)
         [ "$CONFIG_APACHE_MODE" != none ]
     ;;

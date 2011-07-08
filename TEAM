@@ -26,6 +26,7 @@ Pakete:
   Perl                         - Sven Nierlein
   Thruk                        - Sven Nierlein
   check_oracle/mysql/logfiles  - Gerhard Lausser
+  Jmx4Perl                     - Roland Huss
   Nagios (plus Patches)        - 
   Nagios Plugins               - 
 
