@@ -21,7 +21,8 @@ then
     eval $(egrep -v '^[[:space:]]*(#|$)' < ~/etc/environment | sed 's/^/export /')
 fi
 
-# Only load bashrc when in a bash shell
-if [ "$BASH" -a -s ~/.bashrc ]; then
+# Only load bashrc when in a bash shell and not loaded yet.
+# The load once is ensured by the variable $BASHRC.
+if [ "$BASH" -a -s ~/.bashrc -a -z "$BASHRC" ]; then
     . ~/.bashrc
 fi
