@@ -11,4 +11,4 @@ exec ###PHP_FCGI_BIN### \
     -d upload_tmp_dir=###ROOT###/tmp/php/upload \
     -d soap.wsdl_cache_dir=###ROOT###/tmp/php/wsdl-cache \
     -d safe_mode='Off' \
-    -d mysql.default.socket=###ROOT###/tmp/run/mysqld/mysqld.sock
+    -d mysql.default_socket=###ROOT###/tmp/run/mysqld/mysqld.sock
