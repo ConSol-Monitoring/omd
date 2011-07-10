@@ -32,8 +32,14 @@ case "$1" in
     ;;
     set)
         GUI=$2
-        if [ "$2" == "auto" ] && [ "$CONFIG_DEFAULT_GUI" != "welcome" ] && [ "$CONFIG_DEFAULT_GUI" != "nagvis" ]; then
+        if [ "$2" == "auto" ]; then
             GUI=$CONFIG_DEFAULT_GUI
+        fi
+
+        # Fallback to classic Nagios GUI when auto mode and unhandled GUIs selected
+        # (welcome/nagvis GUIs are catched in DEFAULT_GUI hook)
+        if [ "$GUI" == "none" ]; then
+            GUI=nagios
         fi
         
         if [ "$GUI" == "check_mk" ]; then

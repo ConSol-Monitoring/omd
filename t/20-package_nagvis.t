@@ -19,8 +19,7 @@ plan( tests => 257 );
 my $omd_bin = TestUtils::get_omd_bin();
 my $site    = TestUtils::create_test_site() or TestUtils::bail_out_clean("no further testing without site");
 my $auth    = 'OMD Monitoring Site '.$site.':omdadmin:omd';
-# Create code to find this out
-my $version = '1.6b2';
+my $version = site_nagvis_version($site);
 
 #TestUtils::test_command({ cmd => "/d1/nagvis/mache" });
 
@@ -320,4 +319,29 @@ sub site_mtime {
     my $site = shift;
     my $path = shift;
     return (stat '/omd/sites/'.$site.'/'.$path)[9];
+}
+
+=head2 site_nagvis_version
+
+    Returns version string for the sites NagVis version. It takes the
+    local/ path installations into account.
+
+=cut
+sub site_nagvis_version {
+    my $site = shift;
+    my $version = '';
+    my $path;
+    if(-e '/omd/sites/' . $site .  '/local/share/nagvis/htdocs/server/core/defines/global.php') {
+        $path = '/omd/sites/' . $site .  '/local/share/nagvis/htdocs/server/core/defines/global.php';
+    } else {
+        $path = '/omd/sites/' . $site .  '/share/nagvis/htdocs/server/core/defines/global.php';
+    }
+    open FILE, $path or die("Could not open file.");
+    foreach my $line (<FILE>) {
+        if($line =~ m/^define\('CONST_VERSION', '([^']*)'/) {
+            $version = $1;
+        }
+    }
+    close(FILE);
+    return $version;
 }

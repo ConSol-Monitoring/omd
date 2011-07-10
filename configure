@@ -16,6 +16,11 @@ then
     exit 1
 fi
 
+if ! which make >/dev/null 2>&1; then
+    echo "Please install \"make\" before executing this script."
+    exit 1
+fi
+
 BUILD_PACS=$( make -f echo.mk FILE=$M VAR=BUILD_PACKAGES )
 PACKAGER=$( make -f echo.mk FILE=$M VAR=PACKAGE_INSTALL )
 BECOME_ROOT=$( make -f echo.mk FILE=$M VAR=BECOME_ROOT )
