@@ -33,6 +33,10 @@ then
     VERSION=$(cat /etc/redhat-release)
     if [ "${VERSION:0:6}" = CentOS ]
     then
+        if [ "${VERSION:0:24}" = "CentOS Linux release 6.0" ]; then
+            echo "CENTOS${SEP}6.0"
+            exit 0
+        fi
         REL=${VERSION#* }
         REL=${REL#* }
         REL=${REL%% *}

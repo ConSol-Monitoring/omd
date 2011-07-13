@@ -135,7 +135,6 @@ MODULES = ExtUtils-MakeMaker-6.56.tar.gz \
           Devel-Caller-2.05.tar.gz \
           MooseX-SemiAffordanceAccessor-0.09.tar.gz \
           MooseX-Params-Validate-0.16.tar.gz \
-          PadWalker-1.92.tar.gz \
           File-ChangeNotify-0.20.tar.gz \
           File-ShareDir-1.03.tar.gz \
           Crypt-RC4-2.02.tar.gz \
@@ -226,7 +225,7 @@ MODULES = ExtUtils-MakeMaker-6.56.tar.gz \
 build:
 	mkdir -p $(TMPDIST)
 	echo "install --install_base $(TMPDIST)" > $(TMPDIST)/.modulebuildrc
-	cd src && PERL_MM_OPT=INSTALL_BASE=$(TMPDIST) MODULEBUILDRC=$(TMPDIST)/.modulebuildrc PERL5LIB=$(TMPDIST)/lib/perl5:$(TMPDIST)/lib/perl5/$(PERLARCH) DISTRO_INFO="$(DISTRO_INFO)" ./build_module.pl $(PERL) $(MODULES)
+	cd src && CATALYST_DEVEL_NO_510_CHECK=1 PERL_MM_OPT=INSTALL_BASE=$(TMPDIST) MODULEBUILDRC=$(TMPDIST)/.modulebuildrc PERL5LIB=$(TMPDIST)/lib/perl5:$(TMPDIST)/lib/perl5/$(PERLARCH) DISTRO_INFO="$(DISTRO_INFO)" ./build_module.pl $(PERL) $(MODULES)
 	rm -rf src/inc
 	cd $(TMPDIST)/lib/perl5/ && rm -f utils.pm && ln -s ../../../nagios/plugins/utils.pm .
 	mkdir -p $(TMPDIST)/lib/perl5/CPAN

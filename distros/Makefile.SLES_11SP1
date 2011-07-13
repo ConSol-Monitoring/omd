@@ -1,5 +1,6 @@
 DISTRO_CODE     = sles11sp1
 BUILD_PACKAGES  =
+BUILD_PACKAGES += boost-devel
 BUILD_PACKAGES += cairo-devel
 BUILD_PACKAGES += freetype2-devel
 BUILD_PACKAGES += gcc
@@ -33,6 +34,7 @@ OS_PACKAGES    += curl
 OS_PACKAGES    += dialog
 OS_PACKAGES    += fping
 OS_PACKAGES    += graphviz
+OS_PACKAGES    += libboost_program_options1_36_0
 OS_PACKAGES    += libpng12-0
 OS_PACKAGES    += libevent-1_4-2
 OS_PACKAGES    += libltdl7
