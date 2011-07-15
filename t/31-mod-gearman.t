@@ -13,7 +13,14 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 66 );
+plan( tests => 72 );
+
+##################################################
+# get version strings
+chomp(my $modgearman_version = qx(grep "^VERSION " packages/mod-gearman/Makefile | awk '{ print \$3 }'));
+chomp(my $libgearman_version = qx(grep "^VERSION " packages/gearmand/Makefile | awk '{ print \$3 }'));
+isnt($modgearman_version, '', "got modgearman_version") or BAIL_OUT("need mod-gearman version");
+isnt($libgearman_version, '', "got libgearman_version") or BAIL_OUT("need lib-gearman version");;
 
 ##################################################
 # create our test site
@@ -22,7 +29,7 @@ my $site    = TestUtils::create_test_site() or TestUtils::bail_out_clean("no fur
 my $host    = "omd-".$site;
 my $service = "Dummy+Service";
 
-
+##################################################
 # decrease status update interval
 TestUtils::test_command({ cmd => "/usr/bin/env sed -i -e 's/^status_update_interval=30/status_update_interval=3/g' /opt/omd/sites/$site/etc/nagios/nagios.d/tuning.cfg" });
 
@@ -43,6 +50,7 @@ for my $test (@{$preps}) {
 # execute some checks
 my $tests = [
   { cmd => "/bin/grep 'Event broker module.*mod_gearman.o.*initialized successfully' /omd/sites/$site/var/log/nagios.log", like => '/successfully/' },
+  { cmd => "/bin/grep 'mod_gearman: initialized version ".$modgearman_version." \(libgearman ".$libgearman_version."\)' /omd/sites/$site/var/log/nagios.log", like => '/initialized/' },
   { cmd => "/bin/su - $site -c 'bin/send_gearman --server=localhost:4730 --keyfile=etc/mod-gearman/secret.key --host=$host --message=test'" },
   { cmd => "/bin/su - $site -c 'bin/send_gearman --server=localhost:4730 --keyfile=etc/mod-gearman/secret.key --host=$host --service=$service --message=test'" },
   { cmd => "/bin/grep -i 'mod_gearman: ERROR' /omd/sites/$site/var/log/nagios.log", 'exit' => 1, like => '/^\s*$/' },
