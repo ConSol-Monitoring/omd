@@ -51,7 +51,7 @@ GRP=###SITE###
 # OMD: create configuration file out of fragments
 case "$1" in start|restart|reload|checkconfig|check)
     merge-icinga-config \
-       ###ROOT###/etc/nagios/nagios.d/* \
+       ###ROOT###/etc/icinga/icinga.d/* \
        ###ROOT###/etc/icinga/icinga.cfg \
        > $CFG_FILE || rm -f $CFG_FILE 
 esac
