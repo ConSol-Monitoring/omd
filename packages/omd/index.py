@@ -103,8 +103,6 @@ def page_welcome(req):
 
     for id, title, desc in [ ('nagios', 'Classic Nagios GUI',
                               'The classic nagios GUI is based on CGIs.'),
-                             ('icinga', 'Classic Icinga GUI',
-                              'The classic icinga GUI is based on CGIs.'),
                              ('check_mk', 'Check_MK Multisite',
                               'Multisite is a fast, flexibile webinterface for '
                               'Nagios.<br />It uses MKLivestatus to connect to Nagios.'),
