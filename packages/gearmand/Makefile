@@ -4,6 +4,14 @@ NAME     = gearmand
 VERSION  = 0.23
 DIR      = gearmand-$(VERSION)
 
+CONFIGUREOPTS = \
+    --disable-libmemcached \
+    --disable-libdrizzle \
+    --disable-libpq \
+    --disable-libsqlite3 \
+    --disable-libtokyocabinet \
+    --prefix=$(OMD_ROOT)
+
 .PHONY: skel
 
 build:
@@ -14,7 +22,7 @@ build:
 	export LIBRARY_PATH=/usr/lib64/boost141:/usr/lib/boost141 && \
 	export LD_LIBRARY_PATH=/usr/lib64/boost141:/usr/lib/boost141 && \
 	export CPATH=/usr/include/boost141 && \
-	./configure --prefix=$(OMD_ROOT) && \
+	./configure $(CONFIGUREOPTS) && \
 	$(MAKE) 
 
 install:

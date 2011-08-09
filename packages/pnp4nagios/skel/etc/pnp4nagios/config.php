@@ -216,4 +216,9 @@ $conf['template_dirs'][] = '###ROOT###/share/pnp4nagios/htdocs/templates.dist';
 #
 $conf['special_template_dir'] = '###ROOT###/etc/pnp4nagios/templates.special';
 
+#
+# Regex to detect mobile devices
+# This regex is evaluated against the USER_AGENT String
+#
+$conf['mobile_devices'] = 'iPhone|iPod|iPad|android';
 ?>
