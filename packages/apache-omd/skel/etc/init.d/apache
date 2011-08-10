@@ -32,7 +32,7 @@ pidof_apache() {
     # It might happen that there is no pidfile but a process is running
     # As fallback check the process table for apache with PPID=1 and
     # running as this user
-    PID=$(pgrep -u pos -P 1 -f $APACHE_BIN)
+    PID=$(pgrep -u $OMD_SITE -P 1 -f $APACHE_BIN)
     if [ -n "$PID" ]; then
         echo $PID
         return 0
