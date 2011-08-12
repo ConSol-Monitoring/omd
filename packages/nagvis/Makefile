@@ -17,7 +17,6 @@ install:
 	 -g $$(id -gn) \
 	 -w $(DESTDIR)$(OMD_ROOT)/etc/apache \
 	 -W /WILL_BE_REPLACED/nagvis \
-	 -B $(DESTDIR)$(OMD_ROOT)/bin/nagios \
 	 -b $(DESTDIR)/usr/bin \
 	 -p $(DESTDIR)$(OMD_ROOT)/share/nagvis
 	
