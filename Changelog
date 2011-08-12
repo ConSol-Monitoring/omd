@@ -1,0 +1,29 @@
+This file documents the revision history for the Open Monitoring Distribution
+
+0.50     ...
+          - updated to Thruk 1.0.6
+          - updated to Mod-Gearman 1.0.8
+          - updated to Gearman 0.23
+          - updated to Webinject 1.68
+          - OMD
+            - fixed problem with mod_proxy sending duplicate pages
+
+0.48     Sun May 22
+
+          - updated to Check_MK 1.1.10p3
+          - updated to Shinken 0.6.4
+          - updated to Thruk 1.0.4
+          - added Mod-Gearman 1.0.5
+          - added Gearmand 0.14
+          - updated Webinject 1.67
+          - updated to NagVis 1.5.9
+          - updated to PNP4Nagios 0.6.13
+          - added check_multi v439* (2011-02-19)
+          - OMD
+            - Added @omd setversion@ command to change the default version of OMD
+            - Improved merge handling during @omd update@
+            - @omd cp@ now supports --no-rrds and --no-logs. Also -N/--no-past which combines these options. Please read the updated man page for details.
+            - Fixed bug while removing sites
+            - Added @omd diff@ command to show added/deleted/changed files compared to a clean site.
+            - Restructured hooks
+            - added option --bare to @omd status@
