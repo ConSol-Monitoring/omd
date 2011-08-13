@@ -36,9 +36,9 @@ Index of patches
 
 0009:
     When someone executes the init script with the stop action and the
-		pid file can not be found it is a good sign that nagios is not running
-		anymore. So don't terminate the script with exit code 1. Using exit
-		code 0 insted.
+    pid file can not be found it is a good sign that nagios is not running
+    anymore. So don't terminate the script with exit code 1. Using exit
+    code 0 insted.
 
 0010:
     This patches fixed the problem to jump back to the start page
@@ -56,4 +56,4 @@ Index of patches
 
 0014:
     Hopefully the last patch to the nagios init script. It prevents starting
-		nagios a second time when already running.
+    nagios a second time when already running.
