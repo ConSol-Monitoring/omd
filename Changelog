@@ -2,6 +2,10 @@ This file documents the revision history for the Open Monitoring Distribution
 
 0.50     ...
           - Check_MK: fix problem with playing sounds
+          - Nagios:
+            - added patch to remove host alias from state retention.
+              Changes of the alias in your configuration will now be
+              effective.
           - updated to check_oracle_health 1.7.0
           - updated to check_mysql_health 2.1.6
           - updated to Thruk 1.0.9

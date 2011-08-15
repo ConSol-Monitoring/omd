@@ -57,3 +57,17 @@ Index of patches
 0014:
     Hopefully the last patch to the nagios init script. It prevents starting
     nagios a second time when already running.
+
+0015:
+    Something with authorization of hostgroup commands. Please add documentation
+    here...
+
+0016:
+    This fixes a nastiness with the host aliases: Nagios saves the host aliases
+    in the state retention file. That means, that no change of a host's alias
+    in the object configuration file will ever get effective (unless you delete
+    the retention file). This patch remove the host alias (and also the display_name)
+    from the state retention and makes Nagios behave just as everybody around
+    seems to expect.
+    be changed in the configuration
+
