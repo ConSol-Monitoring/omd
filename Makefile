@@ -219,6 +219,9 @@ rpm:
 	test -d .git && $(MAKE) $(SOURCE_TGZ) || $(MAKE) $(SOURCE_TGZ)-snap
 	mkdir -p $(RPM_TOPDIR)/{SOURCES,BUILD,RPMS,SRPMS,SPECS}
 	cp $(SOURCE_TGZ) $(RPM_TOPDIR)/SOURCES
+	# NO_BRP_STALE_LINK_ERROR ignores errors when symlinking from skel to
+	# share,lib,bin because the link has a invalid target until the site is created
+	NO_BRP_STALE_LINK_ERROR="yes" \
 	rpmbuild -ba --define "_topdir $(RPM_TOPDIR)" \
 	     --buildroot=$$(pwd)/rpm.buildroot omd.spec
 	mv -v $(RPM_TOPDIR)/RPMS/*/*.rpm .
