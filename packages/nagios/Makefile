@@ -52,3 +52,16 @@ install:
   
 clean:
 	rm -rf $(DIR)
+
+testpatches:
+	@rm -rf $(DIR)
+	@tar xzf $(DIR).tar.gz
+	@set -e ; for p in patches/*.dif ; do \
+	    rm -rf $(DIR).orig; \
+	    cp -rp $(DIR) $(DIR).orig; \
+	    ( cd $(DIR) ; patch -sNt -p1 -r - ) < $$p > /dev/null; \
+	    find $(DIR) -name \*.orig -exec rm {} \;; \
+	    [ $$(diff -wr $(DIR).orig/. $(DIR)/. | wc -l) = 0 ] && echo "-> patch $$p did not change anything (already applied or broken)" || echo -n ""; \
+	done
+	@rm -rf $(DIR).orig
+	@echo "all patches tested"

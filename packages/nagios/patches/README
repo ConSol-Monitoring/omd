@@ -59,8 +59,8 @@ Index of patches
     nagios a second time when already running.
 
 0015:
-    Something with authorization of hostgroup commands. Please add documentation
-    here...
+    Fixes unauthorized host/servicegroup commands. (Will be obsolete with
+    Nagios 3.3.1)
 
 0016:
     This fixes a nastiness with the host aliases: Nagios saves the host aliases
