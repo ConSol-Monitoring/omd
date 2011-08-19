@@ -36,6 +36,7 @@ OS_PACKAGES      += php-pdo
 OS_PACKAGES      += php-gd
 OS_PACKAGES      += readline
 OS_PACKAGES      += rsync
+OS_PACKAGES      += xinetd
 USERADD_OPTIONS   = -M
 ADD_USER_TO_GROUP = gpasswd -a %(user)s %(group)s
 PACKAGE_INSTALL   = yum -y makecache ; yum -y install
