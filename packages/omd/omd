@@ -2103,6 +2103,9 @@ def main_mv_or_cp(what, args, options={}):
     create_apache_hook(new)
     restart_apache()
 
+    # Mount and create contents of tmpfs.
+    create_tmpfs(g_sitename)
+
 
 
 def diff_list(from_skelroot, g_sitedir, from_version, relbase, bare):
