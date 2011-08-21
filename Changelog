@@ -15,7 +15,8 @@ This file documents the revision history for the Open Monitoring Distribution
           - updated to PNP4Nagios 0.6.14
           - OMD
             - fixed problem with mod_proxy sending duplicate pages
-	    - mod_fcgid: Increased file upload limit from 128kb to 3MB
+            - fixed problem with mount on redhat/centos 6.0 (fixes #195)
+          - mod_fcgid: Increased file upload limit from 128kb to 3MB
 
 0.48     Sun May 22
 

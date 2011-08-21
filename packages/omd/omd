@@ -558,7 +558,7 @@ def create_tmpfs(sitename):
     sys.stdout.flush()
     if not os.path.exists(tmp):
         os.mkdir(tmp)
-    if 0 != os.system("mount '%s'" % tmp):
+    if 0 != os.system("mount %s '%s'" % (g_info["MOUNT_OPTIONS"], tmp) ):
         sys.stdout.write(tty_error + "\n")
         return
     create_skeleton_files(sitename, "tmp")

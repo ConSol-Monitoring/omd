@@ -72,3 +72,4 @@ APACHE_ENMOD      = a2enmod %s
 PHP_FCGI_BIN	  = /usr/bin/php5-cgi
 BECOME_ROOT       = su -c
 ARCH              = $(shell dpkg --print-architecture)
+MOUNT_OPTIONS     =
