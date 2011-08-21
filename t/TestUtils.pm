@@ -531,6 +531,7 @@ sub _request {
 
     my $response = $ua->get($data->{'url'});
 
+    $return->{'response'}     = $response;
     $return->{'code'}         = $response->code;
     $return->{'content'}      = $response->decoded_content;
     $return->{'content_type'} = $response->header('Content-Type');
@@ -658,7 +659,9 @@ sub _diag_request {
        or $page->{'content'} =~ m/Internal Server Error/) {
         _tail("apache logs:", "/omd/sites/$site/var/log/apache/error_log");
         _tail_apache_logs();
+        _tail("thruk logs:", "/omd/sites/$site/var/log/thruk.log") if $test->{'url'} =~ m/\/thruk\//;
     }
+    diag(Dumper($page->{'response'}));
     return;
 }
 
