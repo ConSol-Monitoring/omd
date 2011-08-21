@@ -39,6 +39,7 @@ OS_PACKAGES      += libgd2-xpm
 OS_PACKAGES      += libltdl3
 OS_PACKAGES      += libnet-snmp-perl
 OS_PACKAGES      += libpango1.0-0
+OS_PACKAGES      += libperl5.10
 OS_PACKAGES      += libreadline5
 OS_PACKAGES      += libsnmp-perl
 OS_PACKAGES      += libuuid1
