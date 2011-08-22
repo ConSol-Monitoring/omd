@@ -9,13 +9,16 @@ This file documents the revision history for the Open Monitoring Distribution
           - updated to check_oracle_health 1.7.0
           - updated to check_mysql_health 2.1.6
           - updated to Thruk 1.0.9
-          - updated to Mod-Gearman 1.0.8
+          - updated to Mod-Gearman 1.0.9
           - updated to Gearman 0.23
           - updated to Webinject 1.68
           - updated to PNP4Nagios 0.6.14
           - OMD
+            - fix 'omd start core' (did simply nothing)
+            - added missing libperl dependency (fixes #217)
             - fixed problem with mod_proxy sending duplicate pages
-	    - mod_fcgid: Increased file upload limit from 128kb to 3MB
+            - fixed problem with mount on redhat/centos 6.0 (fixes #195)
+          - mod_fcgid: Increased file upload limit from 128kb to 3MB
 
 0.48     Sun May 22
 

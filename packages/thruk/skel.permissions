@@ -1,3 +1,4 @@
 var/log/thruk.log 0664
 etc/thruk/fcgid_env.sh 0755
 tmp/thruk 0775
+var/thruk 0775

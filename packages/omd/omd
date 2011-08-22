@@ -558,7 +558,7 @@ def create_tmpfs(sitename):
     sys.stdout.flush()
     if not os.path.exists(tmp):
         os.mkdir(tmp)
-    if 0 != os.system("mount '%s'" % tmp):
+    if 0 != os.system("mount %s '%s'" % (g_info["MOUNT_OPTIONS"], tmp) ):
         sys.stdout.write(tty_error + "\n")
         return
     create_skeleton_files(sitename, "tmp")
@@ -1346,6 +1346,10 @@ def init_scripts(sitename):
     except:
         return rc_dir, []
 
+def call_init_script(scriptpath, command):
+    return os.system("%s %s" % (scriptpath, command)) >> 8 in [ 0, 5 ]
+
+
 def call_init_scripts(sitename, command, daemon = None):
     # Restart: Do not restart each service after another,
     # but first do stop all, then start all again! This
@@ -1358,17 +1362,21 @@ def call_init_scripts(sitename, command, daemon = None):
     # OMD guarantees OMD_ROOT to be the current directory
     os.chdir(site_dir(sitename))
 
-    # Call stop scripts in reverse order. If daemon is set,
-    # then only that start script will be affected
-    rc_dir, scripts = init_scripts(sitename)
-    if command == "stop":
-        scripts.reverse()
-    ok = True
-    for script in scripts:
-        if daemon and script.split("-", 1)[-1] != daemon:
-            continue
-        if not os.system("%s/%s %s" % (rc_dir, script, command)) >> 8 in [ 0, 5 ]:
-            ok = False
+    if daemon:
+        ok = call_init_script("%s/etc/init.d/%s" % (g_sitedir, daemon), command)
+
+    else:
+        # Call stop scripts in reverse order. If daemon is set,
+        # then only that start script will be affected
+        rc_dir, scripts = init_scripts(sitename)
+        if command == "stop":
+            scripts.reverse()
+        ok = True
+
+        for script in scripts:
+            if not call_init_script("%s/%s" % (rc_dir, script), command):
+                ok = False
+
     if ok:
          return 0
     else:
@@ -2102,6 +2110,9 @@ def main_mv_or_cp(what, args, options={}):
     # Make apache aware of new site
     create_apache_hook(new)
     restart_apache()
+
+    # Mount and create contents of tmpfs.
+    create_tmpfs(g_sitename)
 
 
 
