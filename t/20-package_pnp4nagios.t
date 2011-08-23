@@ -36,7 +36,6 @@ for my $cfg (qw/pages-static-ok.cfg pages-static-err.cfg pages-regex-ok.cfg page
 }
 
 ##################################################
-  { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -H localhost -a omdadmin:omd -u \"/$site/pnp4nagios/mobile/pages\" -e 200'", like => '/HTTP OK:/' },
 # then execute some checks
 my $tests = [
   { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -H localhost -u /$site/pnp4nagios -e 401'",                           like => '/HTTP OK:/' },
