@@ -21,7 +21,9 @@ my $site    = TestUtils::create_test_site() or TestUtils::bail_out_clean("no fur
 my $auth    = 'OMD Monitoring Site '.$site.':omdadmin:omd';
 
 # Developer test: Install NagVis into local hierarchy
-#TestUtils::test_command({ cmd => "/d1/nagvis/.f12 testsite" });
+if($ENV{NAGVIS_DEVEL}) {
+    TestUtils::test_command({ cmd => "/d1/nagvis/.f12 testsite" });
+}
 
 my $version = site_nagvis_version($site);
 
