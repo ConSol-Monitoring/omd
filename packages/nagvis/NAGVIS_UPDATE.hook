@@ -21,20 +21,20 @@ fi
 case "$1" in
     refresh)
         # Copy while excluding standard NagVis files
-        rsync -av -f "- images/maps/*demo*.png" \
-                  -f "- images/iconsets/20x20.gif" \
-                  -f "- images/iconsets/error.png" \
-                  -f "- images/iconsets/configerror_*.png" \
-                  -f "- images/iconsets/demo_*.png" \
-                  -f "- images/iconsets/std_*.png" \
-                  -f "- images/templates/default*" \
-                  -f "- images/shapes/demo*.png" \
-                  -f "- templates/default.*" \
-                  -f "- gadgets/gadgets_core.php" \
-                  -f "- gadgets/std_*.php" \
-                  -f "- sounds/std_*.mp3" \
-                     $OMD_ROOT/var/nagvis/userfiles/ \
-                     $OMD_ROOT/local/share/nagvis/htdocs/userfiles
+        rsync -a -f "- images/maps/*demo*.png" \
+                 -f "- images/iconsets/20x20.gif" \
+                 -f "- images/iconsets/error.png" \
+                 -f "- images/iconsets/configerror_*.png" \
+                 -f "- images/iconsets/demo_*.png" \
+                 -f "- images/iconsets/std_*.png" \
+                 -f "- images/templates/default*" \
+                 -f "- images/shapes/demo*.png" \
+                 -f "- templates/default.*" \
+                 -f "- gadgets/gadgets_core.php" \
+                 -f "- gadgets/std_*.php" \
+                 -f "- sounds/std_*.mp3" \
+                 $OMD_ROOT/var/nagvis/userfiles/ \
+                 $OMD_ROOT/local/share/nagvis/htdocs/userfiles
         touch $OMD_ROOT/var/nagvis/userfiles/.copied
     ;;
 esac
