@@ -129,7 +129,7 @@ sub test_command {
 
     # exit code?
     $test->{'exit'} = 0 unless exists $test->{'exit'};
-    if(defined $test->{'exit'}) {
+    if(defined $test->{'exit'} and $test->{'exit'} != -1) {
         ok($rc == $test->{'exit'}, "exit code: ".$rc." == ".$test->{'exit'}) or do { _diag_cmd($test, $t); $return = 0 };
     }
 

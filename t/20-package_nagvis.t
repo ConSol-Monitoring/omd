@@ -19,14 +19,17 @@ plan( tests => 309 );
 my $omd_bin = TestUtils::get_omd_bin();
 my $site    = TestUtils::create_test_site() or TestUtils::bail_out_clean("no further testing without site");
 my $auth    = 'OMD Monitoring Site '.$site.':omdadmin:omd';
+
+# Developer test: Install NagVis into local hierarchy
+#TestUtils::test_command({ cmd => "/d1/nagvis/.f12 testsite" });
+
 my $version = site_nagvis_version($site);
-
-#TestUtils::test_command({ cmd => "/d1/nagvis/mache" });
-
 
 ##################################################
 # Check NAGVIS_URLS switcher
-#
+
+# Ensure the site is stopped, but don't care about the exit code here!
+TestUtils::test_command({ cmd => $omd_bin." stop $site", exit => -1 });
 
 TestUtils::test_command({ cmd => $omd_bin." config $site set NAGVIS_URLS auto" });
 TestUtils::test_command({ cmd => $omd_bin." config $site set DEFAULT_GUI welcome" });
