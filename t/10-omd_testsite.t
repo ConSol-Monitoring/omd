@@ -12,7 +12,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 113 );
+plan( tests => 154 );
 
 my $omd_bin = TestUtils::get_omd_bin();
 
@@ -67,6 +67,20 @@ my $tests = [
   { cmd => "/usr/bin/id -g $site3",      like => '/7022/' },
   { cmd => $omd_bin." rm $site",         like => '/Restarting Apache...\s*OK/', stdin => "yes\n" },
   { cmd => $omd_bin." rm $site3",        like => '/Restarting Apache...\s*OK/', stdin => "yes\n" },
+
+  # --reuse
+  { cmd => $omd_bin." create $site", like => '/Successfully created site '.$site.'./' },
+  { cmd => $omd_bin." rm --reuse $site", stdin => "yes\n", 'exit' => undef, errlike => undef },
+  { cmd => "/usr/bin/id -u $site",       like => '/\d+/' },
+  { cmd => "/usr/bin/id -g $site",       like => '/\d+/' },
+  { cmd => $omd_bin." create $site2",    like => '/Successfully created site '.$site2.'./' },
+  { cmd => $omd_bin." mv --reuse $site2 $site", like => '/Moving site '.$site2.' to '.$site.'.../' },
+  { cmd => "/usr/bin/id -u $site2",      like => '/\d+/' },
+  { cmd => "/usr/bin/id -g $site2",      like => '/\d+/' },
+  { cmd => $omd_bin." cp --reuse $site $site2",  like => '/Copying site '.$site.' to '.$site2.'.../', 
+                                         errlike => '/Apache port \d+ is in use\. I\'ve choosen \d+ instead\./' },
+  { cmd => $omd_bin." rm $site",         like => '/Restarting Apache...\s*OK/', stdin => "yes\n" },
+  { cmd => $omd_bin." rm $site2",        like => '/Restarting Apache...\s*OK/', stdin => "yes\n" },
 ];
 
 # run tests

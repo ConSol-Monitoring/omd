@@ -14,6 +14,7 @@ This file documents the revision history for the Open Monitoring Distribution
           - updated to Webinject 1.68
           - updated to PNP4Nagios 0.6.14
           - OMD
+            - added 'reuse' option
             - fix 'omd start core' (did simply nothing)
             - added missing libperl dependency (fixes #217)
             - fixed problem with mod_proxy sending duplicate pages

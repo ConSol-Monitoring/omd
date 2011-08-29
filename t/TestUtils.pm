@@ -8,6 +8,7 @@ package TestUtils;
 
 use warnings;
 use strict;
+use Carp;
 use Cwd;
 use Test::More;
 use Data::Dumper;
@@ -448,7 +449,7 @@ sub wait_for_content {
 sub bail_out_clean {
     my $msg = shift;
 
-    diag("cleaning up before bailout");
+    carp("cleaning up before bailout");
 
     my $omd_bin = get_omd_bin();
     for my $site (qw/testsite testsite2 testsite3/) {
