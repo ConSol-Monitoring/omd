@@ -16,6 +16,7 @@ PACKAGES=perl-modules \
          jmx4perl \
          mk-livestatus \
          mysql-omd \
+         icinga \
          nagios \
          nagios-plugins \
          nagvis \
