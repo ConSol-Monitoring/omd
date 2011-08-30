@@ -75,3 +75,4 @@ APACHE_FCGID_MODULE = ../apache2/mod_fcgid.so
 PHP_FCGI_BIN      = /usr/bin/php-cgi
 APACHE_ENMOD      = a2enmod %s
 BECOME_ROOT       = su -c
+MOUNT_OPTIONS     =

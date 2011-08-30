@@ -36,9 +36,9 @@ Index of patches
 
 0009:
     When someone executes the init script with the stop action and the
-		pid file can not be found it is a good sign that nagios is not running
-		anymore. So don't terminate the script with exit code 1. Using exit
-		code 0 insted.
+    pid file can not be found it is a good sign that nagios is not running
+    anymore. So don't terminate the script with exit code 1. Using exit
+    code 0 insted.
 
 0010:
     This patches fixed the problem to jump back to the start page
@@ -56,4 +56,18 @@ Index of patches
 
 0014:
     Hopefully the last patch to the nagios init script. It prevents starting
-		nagios a second time when already running.
+    nagios a second time when already running.
+
+0015:
+    Fixes unauthorized host/servicegroup commands. (Will be obsolete with
+    Nagios 3.3.1)
+
+0016:
+    This fixes a nastiness with the host aliases: Nagios saves the host aliases
+    in the state retention file. That means, that no change of a host's alias
+    in the object configuration file will ever get effective (unless you delete
+    the retention file). This patch remove the host alias (and also the display_name)
+    from the state retention and makes Nagios behave just as everybody around
+    seems to expect.
+    be changed in the configuration
+

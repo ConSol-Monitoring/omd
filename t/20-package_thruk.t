@@ -3,6 +3,7 @@
 use warnings;
 use strict;
 use Test::More;
+use Data::Dumper;
 
 BEGIN {
     use lib('t');
@@ -12,7 +13,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 976 );
+plan( tests => 980 );
 
 ##################################################
 # create our test site
@@ -136,6 +137,10 @@ for my $core (qw/nagios shinken/) {
     for my $url ( @{$urls} ) {
         TestUtils::test_url($url);
     }
+
+    my $log = "/omd/sites/$site/var/log/thruk.log";
+    is(-f $log, 1, "log exists");
+    is(-s $log, 0, "log is empty") or diag(Dumper(`cat $log`));
 }
 
 ##################################################

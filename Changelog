@@ -1,0 +1,42 @@
+This file documents the revision history for the Open Monitoring Distribution
+
+0.50     ...
+          - Check_MK: fix problem with playing sounds
+          - Nagios:
+            - added patch to remove host alias from state retention.
+              Changes of the alias in your configuration will now be
+              effective.
+          - updated to check_oracle_health 1.7.0
+          - updated to check_mysql_health 2.1.6
+          - updated to Thruk 1.1.0
+          - updated to Mod-Gearman 1.0.10
+          - updated to Gearman 0.23
+          - updated to Webinject 1.68
+          - updated to PNP4Nagios 0.6.14
+          - OMD
+            - added 'reuse' option
+            - fix 'omd start core' (did simply nothing)
+            - added missing libperl dependency (fixes #217)
+            - fixed problem with mod_proxy sending duplicate pages
+            - fixed problem with mount on redhat/centos 6.0 (fixes #195)
+          - mod_fcgid: Increased file upload limit from 128kb to 3MB
+
+0.48     Sun May 22
+
+          - updated to Check_MK 1.1.10p3
+          - updated to Shinken 0.6.4
+          - updated to Thruk 1.0.4
+          - added Mod-Gearman 1.0.5
+          - added Gearmand 0.14
+          - updated Webinject 1.67
+          - updated to NagVis 1.5.9
+          - updated to PNP4Nagios 0.6.13
+          - added check_multi v439* (2011-02-19)
+          - OMD
+            - Added @omd setversion@ command to change the default version of OMD
+            - Improved merge handling during @omd update@
+            - @omd cp@ now supports --no-rrds and --no-logs. Also -N/--no-past which combines these options. Please read the updated man page for details.
+            - Fixed bug while removing sites
+            - Added @omd diff@ command to show added/deleted/changed files compared to a clean site.
+            - Restructured hooks
+            - added option --bare to @omd status@

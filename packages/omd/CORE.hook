@@ -15,7 +15,6 @@ case "$1" in
     ;;
     choices)
             echo "nagios: Nagios"
-            echo "icinga: Icinga (experimental)"
             echo "shinken: Shinken"
             echo "none: No monitoring core"
     ;;
@@ -24,35 +23,25 @@ case "$1" in
         if [ "$2" != "nagios" ]
         then
             rm -f $OMD_ROOT/etc/apache/conf.d/nagios.conf
-            rm -f $OMD_ROOT/etc/apache/conf.d/icinga.conf
         fi
         if [ "$2" != "shinken" ]
         then
             rm -f $OMD_ROOT/shinken
             rm -f $OMD_ROOT/etc/apache/conf.d/nagios.conf
-            rm -f $OMD_ROOT/etc/apache/conf.d/icinga.conf
         fi
         rm -f $OMD_ROOT/etc/init.d/core
         # now setup the new selection
         if [ "$2" == "nagios" ]
         then
             ln -sfn ../../nagios/apache.conf $OMD_ROOT/etc/apache/conf.d/nagios.conf 
-            ln -sfn ../../icinga/apache.conf $OMD_ROOT/etc/apache/conf.d/icinga.conf 
             ln -sfn nagios $OMD_ROOT/etc/init.d/core
-        elif [ "$2" == "icinga" ]
-        then
-            ln -sfn ../../nagios/apache.conf $OMD_ROOT/etc/apache/conf.d/nagios.conf 
-            ln -sfn ../../icinga/apache.conf $OMD_ROOT/etc/apache/conf.d/icinga.conf 
-            ln -sfn icinga $OMD_ROOT/etc/init.d/core
         elif [ "$2" == "shinken" ]
         then
             # Thruk is the default interface, but classic is possible
-            ln -sfn ../../shinken/apache.conf $OMD_ROOT/etc/apache/conf.d/nagios.conf
-            ln -sfn ../../icinga/apache.conf $OMD_ROOT/etc/apache/conf.d/icinga.conf 
+            ln -sfn ../../shinken/apache.conf $OMD_ROOT/etc/apache/conf.d/nagios.conf 
             ln -sfn shinken $OMD_ROOT/etc/init.d/core
         else
             rm -f $OMD_ROOT/etc/apache/conf.d/nagios.conf
-            rm -f $OMD_ROOT/etc/apache/conf.d/icinga.conf
         fi
     ;;
 esac

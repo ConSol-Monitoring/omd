@@ -13,7 +13,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 76 );
+plan( tests => 100 );
 
 ##################################################
 # create our test site
@@ -46,12 +46,18 @@ my $tests = [
   { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -H localhost -a omdadmin:omd -u \"/$site/pnp4nagios/image?host=omd-$site&srv=Dummy+Service\" -e 200'", like => '/HTTP OK:/' },
   { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -H localhost -a omdadmin:omd -u \"/$site/pnp4nagios/json?host=omd-$site\" -e 200'", like => '/HTTP OK:/' },
   { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -H localhost -a omdadmin:omd -u \"/$site/pnp4nagios/json?host=omd-$site&srv=Dummy+Service\" -e 200'", like => '/HTTP OK:/' },
-  { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -H localhost -a omdadmin:omd -t20 -u \"/$site/pnp4nagios/pdf?host=omd-$site&srv=Dummy+Service\" -e 200'", like => '/HTTP OK:/' },
+  { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -H localhost -a omdadmin:omd -u \"/$site/pnp4nagios/mobile\" -e 200'", like => '/HTTP OK:/' },
+  { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -H localhost -a omdadmin:omd -u \"/$site/pnp4nagios/mobile/overview\" -e 200'", like => '/HTTP OK:/' },
+  { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -H localhost -a omdadmin:omd -u \"/$site/pnp4nagios/mobile/search\" -e 200'", like => '/HTTP OK:/' },
+  { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -H localhost -a omdadmin:omd -u \"/$site/pnp4nagios/mobile/pages\" -e 200'", like => '/HTTP OK:/' },
+  { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -H localhost -a omdadmin:omd -u \"/$site/pnp4nagios/mobile/host/omd-$site\" -e 200'", like => '/HTTP OK:/' },
+  { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -H localhost -a omdadmin:omd -u \"/$site/pnp4nagios/mobile/host/omd-$site/Dummy+Service\" -e 200'", like => '/HTTP OK:/' },
+  { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -H localhost -a omdadmin:omd -u \"/$site/pnp4nagios/pdf?host=omd-$site&srv=Dummy+Service\" -e 200'", like => '/HTTP OK:/' },
   #### pages ####
-  { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -H localhost -a omdadmin:omd -t20 -u /$site/pnp4nagios/page?page=pages-static-ok -e 200'", like => '/HTTP OK:/' },
-  { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -H localhost -a omdadmin:omd -t20 -u /$site/pnp4nagios/page?page=pages-regex-ok -e 200'", like => '/HTTP OK:/' },
-  { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -H localhost -a omdadmin:omd -t20 -vvv -u /$site/pnp4nagios/page?page=pages-static-err -e 200'", like => '/ERROR:/' },
-  { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -H localhost -a omdadmin:omd -t20 -vvv -u /$site/pnp4nagios/page?page=pages-regex-err -e 200'", like => '/ERROR:/' },
+  { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -H localhost -a omdadmin:omd -u /$site/pnp4nagios/page?page=pages-static-ok -e 200'", like => '/HTTP OK:/' },
+  { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -H localhost -a omdadmin:omd -u /$site/pnp4nagios/page?page=pages-regex-ok -e 200'", like => '/HTTP OK:/' },
+  { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -H localhost -a omdadmin:omd -vvv -u /$site/pnp4nagios/page?page=pages-static-err -e 200'", like => '/ERROR:/' },
+  { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -H localhost -a omdadmin:omd -vvv -u /$site/pnp4nagios/page?page=pages-regex-err -e 200'", like => '/ERROR:/' },
   { cmd => $omd_bin." stop $site" },
 ];
 for my $test (@{$tests}) {
