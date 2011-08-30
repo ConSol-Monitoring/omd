@@ -12,7 +12,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 309 );
+plan( tests => 321 );
 
 ##################################################
 # create our test site
@@ -286,6 +286,17 @@ TestUtils::test_url(
     api_url_list({ url  => '/nagvis/server/core/ajax_handler.php?mod=AutoMap&act=getObjectStates&show=__automap&ty=state&i[]=0&t[]=host&n1[]=localhost&n2[]=&childLayers=2',
                    like => [ '/"state":"/', ]})
 );
+  
+
+###############################################################################
+# Test user config
+###############################################################################
+# Language switch
+TestUtils::test_url(url({ url  => "/nagvis/frontend/nagvis-js/index.php?lang=de_DE",
+                          like => '/Sprache w&auml;hlen/'}));
+
+# Check profile file
+site_match_file($site, 'var/nagvis/profiles/omdadmin.profile', '/"language":"de_DE"/');
 
 ##################################################
 # cleanup test site
@@ -356,6 +367,29 @@ sub site_mtime {
     my $site = shift;
     my $path = shift;
     return (stat '/omd/sites/'.$site.'/'.$path)[9];
+}
+
+=head2 site_match_file
+
+    Checks if the specified pattern can be found in the given file.
+    The path is given as relative path to the sites base directory.
+    This function returns 1 if the pattern could be found or 0 if
+    there was no match in the file.
+
+=cut
+sub site_match_file {
+    my $site    = shift;
+    my $fpath   = shift;
+    my $pattern = shift;
+    my $path    = '/omd/sites/' . $site . '/' . $fpath;
+
+    diag('Checking file contents of '.$path);
+
+    open FILE, '<'.$path or fail("Could not open file.");
+    my $content = do { local $/; <FILE> };
+    close(FILE);
+
+    like($content, $pattern, "content like ".$pattern) or diag('Contents: '.$content);
 }
 
 =head2 site_nagvis_version
