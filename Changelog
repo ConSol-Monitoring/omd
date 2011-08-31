@@ -19,6 +19,7 @@ This file documents the revision history for the Open Monitoring Distribution
             - added missing libperl dependency (fixes #217)
             - fixed problem with mod_proxy sending duplicate pages
             - fixed problem with mount on redhat/centos 6.0 (fixes #195)
+            - Fixed problem when doing 'omd restart' without mounted tmpfs
           - mod_fcgid: Increased file upload limit from 128kb to 3MB
 
 0.48     Sun May 22

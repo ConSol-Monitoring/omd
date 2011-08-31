@@ -1818,7 +1818,7 @@ def config_configure_hook(hookname):
         config_reload_hooks()
 
 def init_action(command, args, options):
-    if command == "start":
+    if command in [ "start", "restart" ]:
         create_tmpfs(g_sitename)
 
     if len(args) > 0:
