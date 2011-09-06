@@ -466,6 +466,9 @@ def user_verify(name):
     if not os.path.exists(site_dir(name)):
         bail_out(tty_error + ": home directory for user %s (%s) does not exist" % ( name, site_dir(name) ) )
 
+    if os.path.exists(site_dir(name) + "/version"):
+        bail_out(tty_error + ": home directory for user %s (%s) must be empty" % ( name, site_dir(name) ) )
+
     if not file_owner_verify(site_dir(name), user.pw_uid, user.pw_gid):
         bail_out(tty_error + ": home directory (%s) is not owned by user %s" % ( site_dir(name), name ) )
 
@@ -2134,6 +2137,7 @@ def main_mv_or_cp(what, args, options={}):
         reuse = True
         if not user_verify(new):
             bail_out("Error verifying site user.")
+        fstab_verify(g_sitename)
 
     sitename_must_be_valid(new, reuse)
 
@@ -2213,7 +2217,8 @@ def main_mv_or_cp(what, args, options={}):
     refresh_hooks()
 
     # Entry for tmps in /etc/fstab
-    add_to_fstab(new)
+    if not reuse:
+        add_to_fstab(new)
 
     # Make apache aware of new site
     create_apache_hook(new)
