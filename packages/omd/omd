@@ -2137,7 +2137,7 @@ def main_mv_or_cp(what, args, options={}):
         reuse = True
         if not user_verify(new):
             bail_out("Error verifying site user.")
-        fstab_verify(g_sitename)
+        fstab_verify(new)
 
     sitename_must_be_valid(new, reuse)
 
