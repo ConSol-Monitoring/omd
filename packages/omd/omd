@@ -2147,7 +2147,8 @@ def main_mv_or_cp(what, args, options={}):
 
     if what == "mv":
         unmount_tmpfs(old)
-        remove_from_fstab(old)
+        if not reuse:
+            remove_from_fstab(old)
 
     sys.stdout.write("%sing site %s to %s..." % (what == "mv" and "Mov" or "Copy", old, new))
     sys.stdout.flush()
