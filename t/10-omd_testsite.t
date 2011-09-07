@@ -12,7 +12,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 157 );
+plan( tests => 159 );
 
 my $omd_bin = TestUtils::get_omd_bin();
 
@@ -70,7 +70,7 @@ my $tests = [
 
   # --reuse
   { cmd => $omd_bin." create $site", like => '/Successfully created site '.$site.'./' },
-  { cmd => $omd_bin." rm --reuse $site", stdin => "yes\n", 'exit' => undef, errlike => undef },
+  { cmd => $omd_bin." rm --reuse $site", stdin => "yes\n" },
   { cmd => "/usr/bin/id -u $site",       like => '/\d+/' },
   { cmd => "/usr/bin/id -g $site",       like => '/\d+/' },
   { cmd => $omd_bin." create $site2",    like => '/Successfully created site '.$site2.'./' },
