@@ -19,8 +19,7 @@ install:
 	install -m 755 omd.init $(DESTDIR)$(OMD_ROOT)/share/omd/omd.init
 	install -m 644 apache.conf $(DESTDIR)$(OMD_ROOT)/share/omd/apache.conf
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/doc/$(NAME)
-	install -m 644 README COPYING AUTHORS TEAM $(DESTDIR)$(OMD_ROOT)/share/doc/$(NAME)
-	install -m 644 Changelog $(DESTDIR)$(OMD_ROOT)/share/doc/$(NAME)/CHANGELOG
+	install -m 644 COPYING AUTHORS $(DESTDIR)$(OMD_ROOT)/share/doc/$(NAME)
 
 skel:
 
