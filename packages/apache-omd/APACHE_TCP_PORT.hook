@@ -73,7 +73,9 @@ EOF
   <Location /$OMD_SITE>
     # Setting "retry=0" to prevent 60 second caching of problem states e.g. when
     # the site apache is down and someone tries to access the page.
-    ProxyPass http://$CONFIG_APACHE_TCP_ADDR:$PORT/$OMD_SITE retry=0
+    # "disablereuse=On" prevents the apache from keeping the connection which leads to
+    # wrong devlivered pages sometimes
+    ProxyPass http://$CONFIG_APACHE_TCP_ADDR:$PORT/$OMD_SITE retry=0 disablereuse=On
     ProxyPassReverse http://$CONFIG_APACHE_TCP_ADDR:$PORT/$OMD_SITE
   </Location>
 </IfModule>

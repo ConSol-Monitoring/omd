@@ -8,6 +8,7 @@ package TestUtils;
 
 use warnings;
 use strict;
+use Carp;
 use Cwd;
 use Test::More;
 use Data::Dumper;
@@ -448,7 +449,7 @@ sub wait_for_content {
 sub bail_out_clean {
     my $msg = shift;
 
-    diag("cleaning up before bailout");
+    carp("cleaning up before bailout");
 
     my $omd_bin = get_omd_bin();
     for my $site (qw/testsite testsite2 testsite3/) {
@@ -475,6 +476,8 @@ sub _diag_lint_errors_and_remove_some_exceptions {
             "<IMG SRC=[^>]*>\ tag\ has\ no\ HEIGHT\ and\ WIDTH\ attributes\.",
             "<IMG SRC=[^>]*>\ does\ not\ have\ ALT\ text\ defined",
             "<input>\ is\ not\ a\ container\ \-\-\ <\/input>\ is\ not\ allowed",
+            "Unknown attribute \"start\" for tag <div>",
+            "Unknown attribute \"end\" for tag <div>",
         ) {
             next LINT_ERROR if($err_str =~ m/$exclude_pattern/i);
         }
@@ -529,6 +532,7 @@ sub _request {
 
     my $response = $ua->get($data->{'url'});
 
+    $return->{'response'}     = $response;
     $return->{'code'}         = $response->code;
     $return->{'content'}      = $response->decoded_content;
     $return->{'content_type'} = $response->header('Content-Type');
@@ -656,7 +660,9 @@ sub _diag_request {
        or $page->{'content'} =~ m/Internal Server Error/) {
         _tail("apache logs:", "/omd/sites/$site/var/log/apache/error_log");
         _tail_apache_logs();
+        _tail("thruk logs:", "/omd/sites/$site/var/log/thruk.log") if $test->{'url'} =~ m/\/thruk\//;
     }
+    diag(Dumper($page->{'response'}));
     return;
 }
 

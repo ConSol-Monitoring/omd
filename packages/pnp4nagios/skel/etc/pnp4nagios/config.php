@@ -40,6 +40,12 @@ $conf['graph_height'] = "100";
 $conf['zgraph_width'] = "500";
 $conf['zgraph_height'] = "100";
 #
+# Right zoom box offset.
+# rrdtool 1.3.x = 30px 
+# rrdtool 1.4.x = 22px
+#
+$conf['right_zoom_offset'] = 22;
+#
 # RRDTool image size of PDFs
 #
 $conf['pdf_width'] = "675";
@@ -216,4 +222,9 @@ $conf['template_dirs'][] = '###ROOT###/share/pnp4nagios/htdocs/templates.dist';
 #
 $conf['special_template_dir'] = '###ROOT###/etc/pnp4nagios/templates.special';
 
+#
+# Regex to detect mobile devices
+# This regex is evaluated against the USER_AGENT String
+#
+$conf['mobile_devices'] = 'iPhone|iPod|iPad|android';
 ?>

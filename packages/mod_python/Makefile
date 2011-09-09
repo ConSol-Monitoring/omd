@@ -29,7 +29,7 @@ install:
 	
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/python/mod_python
 	PYDIR=$$(find tmp.root -name "*egg*" | sed 's@/mod_python.*@@') ; \
-	if [ -z "$$PYDIR"] ; then PYDIR=$$(find tmp.root/ -name __init__.py | sed 's@/mod_python/__init__.*@@') ; fi ; \
+	if [ -z "$$PYDIR" ] ; then PYDIR=$$(find tmp.root/ -name __init__.py | sed 's@/mod_python/__init__.*@@') ; fi ; \
 	install $$PYDIR/mod_python/* $(DESTDIR)$(OMD_ROOT)/lib/python/mod_python ; \
 	if [ -e $$PYDIR/*egg* ] ; then install -m 644 $$PYDIR/*egg* $(DESTDIR)$(OMD_ROOT)/lib/python ; fi
 	rm -rf tmp.root

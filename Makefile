@@ -180,10 +180,6 @@ install-global:
 	install -m 644 distros/Makefile.$(DISTRO_NAME)_$(DISTRO_VERSION) $(DESTDIR)$(OMD_ROOT)/share/omd/distro.info
 	echo -e "OMD_VERSION = $(OMD_VERSION)\nOMD_PHYSICAL_BASE = $(OMD_PHYSICAL_BASE)" > $(DESTDIR)$(OMD_ROOT)/share/omd/omd.info
 
-	# README files and license information
-	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/doc
-	install -m 644 README COPYING TEAM $(DESTDIR)$(OMD_ROOT)/share/doc
-
 # Create source tarball. This currently only works in a checked out GIT 
 # repository.
 $(SOURCE_TGZ) dist:
@@ -219,6 +215,9 @@ rpm:
 	test -d .git && $(MAKE) $(SOURCE_TGZ) || $(MAKE) $(SOURCE_TGZ)-snap
 	mkdir -p $(RPM_TOPDIR)/{SOURCES,BUILD,RPMS,SRPMS,SPECS}
 	cp $(SOURCE_TGZ) $(RPM_TOPDIR)/SOURCES
+	# NO_BRP_STALE_LINK_ERROR ignores errors when symlinking from skel to
+	# share,lib,bin because the link has a invalid target until the site is created
+	NO_BRP_STALE_LINK_ERROR="yes" \
 	rpmbuild -ba --define "_topdir $(RPM_TOPDIR)" \
 	     --buildroot=$$(pwd)/rpm.buildroot omd.spec
 	mv -v $(RPM_TOPDIR)/RPMS/*/*.rpm .

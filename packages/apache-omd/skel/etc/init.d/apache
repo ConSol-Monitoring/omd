@@ -24,9 +24,18 @@ pidof_apache() {
   # print it and return 0.
   if [ -e "$PID_FILE" ]; then
     PID=$(cat "$PID_FILE")
-    if ps $PID >/dev/null 2>&1; then
+    if kill -0 $PID >/dev/null 2>&1; then
       echo $PID
       return 0
+    fi
+  else
+    # It might happen that there is no pidfile but a process is running
+    # As fallback check the process table for apache with PPID=1 and
+    # running as this user
+    PID=$(pgrep -u $OMD_SITE -P 1 -f $APACHE_BIN)
+    if [ -n "$PID" ]; then
+        echo $PID
+        return 0
     fi
   fi
   return 1
@@ -34,10 +43,9 @@ pidof_apache() {
 
 apache_wait_stop() {
   # running ?
-  pidtmp=$(pidof_apache) || true
-  if kill -0 "${pidtmp:-}" 2> /dev/null; then
-    pid=$pidtmp
-    $APACHE_BIN -f "$CONFIG_FILE" -k stop
+  pid=$(pidof_apache) || true
+  if [ -n "${pid:-}" ]; then
+    kill ${pid:-}
   else
     echo -n '(not running)...'
     return 0
