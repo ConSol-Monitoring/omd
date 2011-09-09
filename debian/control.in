@@ -1,7 +1,7 @@
 Source: omd-###OMD_VERSION###
 Section: admin
 Priority: optional
-Maintainer: <debian@omdistro.org>
+Maintainer: OMD-Team <debian@omdistro.org>
 Build-Depends:@dpatch,@debhelper@(>=@7),@###BUILD_PACKAGES###
 Standards-Version: 3.8.3
 Homepage: http://www.omdistro.org
