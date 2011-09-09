@@ -183,6 +183,7 @@ install-global:
 	# README files and license information
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/doc
 	install -m 644 README COPYING TEAM $(DESTDIR)$(OMD_ROOT)/share/doc
+	install -m 644 Changelog $(DESTDIR)$(OMD_ROOT)/share/doc/CHANGELOG
 
 # Create source tarball. This currently only works in a checked out GIT 
 # repository.
