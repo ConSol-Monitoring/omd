@@ -3,7 +3,7 @@ include ../../Makefile.omd
 .PHONY: skel
 
 NAME = pnp4nagios
-VERSION = 0.6.14
+VERSION = 0.6.15
 DIR = $(NAME)-$(VERSION)
 
 # Configure options for PNP4Nagios. Since we want to compile
@@ -55,11 +55,6 @@ install:
 	mkdir -p skel/var/pnp4nagios/log
 	mkdir -p skel/var/pnp4nagios/spool
 	mkdir -p skel/tmp/pnp4nagios/run
-
-	# TODO: Add config file option
-	rm $(DESTDIR)$(OMD_ROOT)/lib/pnp4nagios/verify_pnp_config.pl
-
-
 
 clean:
 	rm -rf $(DIR)
