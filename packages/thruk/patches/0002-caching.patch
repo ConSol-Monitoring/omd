@@ -1,0 +1,10 @@
+--- Thruk-1.1.1/lib/Thruk.pm.orig	2011-09-15 11:20:45.000000000 +0200
++++ Thruk-1.1.1/lib/Thruk.pm	2011-09-15 11:20:54.000000000 +0200
+@@ -33,7 +33,6 @@
+                 Authentication
+                 Authorization::ThrukRoles
+                 CustomErrorMessage
+-                Static::Simple
+                 Redirect
+                 Cache
+                 Thruk::RemoveNastyCharsFromHttpParam

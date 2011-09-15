@@ -8,7 +8,7 @@ This file documents the revision history for the Open Monitoring Distribution
               effective.
           - updated to check_oracle_health 1.7.0
           - updated to check_mysql_health 2.1.6
-          - updated to Thruk 1.1.0
+          - updated to Thruk 1.1.1
           - updated to Mod-Gearman 1.0.10
           - updated to Gearman 0.23
           - updated to Webinject 1.68
