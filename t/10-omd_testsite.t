@@ -12,7 +12,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 154 );
+plan( tests => 159 );
 
 my $omd_bin = TestUtils::get_omd_bin();
 
@@ -70,7 +70,7 @@ my $tests = [
 
   # --reuse
   { cmd => $omd_bin." create $site", like => '/Successfully created site '.$site.'./' },
-  { cmd => $omd_bin." rm --reuse $site", stdin => "yes\n", 'exit' => undef, errlike => undef },
+  { cmd => $omd_bin." rm --reuse $site", stdin => "yes\n" },
   { cmd => "/usr/bin/id -u $site",       like => '/\d+/' },
   { cmd => "/usr/bin/id -g $site",       like => '/\d+/' },
   { cmd => $omd_bin." create $site2",    like => '/Successfully created site '.$site2.'./' },
@@ -79,6 +79,7 @@ my $tests = [
   { cmd => "/usr/bin/id -g $site2",      like => '/\d+/' },
   { cmd => $omd_bin." cp --reuse $site $site2",  like => '/Copying site '.$site.' to '.$site2.'.../', 
                                          errlike => '/Apache port \d+ is in use\. I\'ve choosen \d+ instead\./' },
+  { cmd => $omd_bin." cp --reuse $site $site2", errlike => '/must be empty/', exit => 1 },
   { cmd => $omd_bin." rm $site",         like => '/Restarting Apache...\s*OK/', stdin => "yes\n" },
   { cmd => $omd_bin." rm $site2",        like => '/Restarting Apache...\s*OK/', stdin => "yes\n" },
 ];

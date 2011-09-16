@@ -466,8 +466,11 @@ def user_verify(name):
     if not os.path.exists(site_dir(name)):
         bail_out(tty_error + ": home directory for user %s (%s) does not exist" % ( name, site_dir(name) ) )
 
+    if os.path.exists(site_dir(name) + "/version"):
+        bail_out(tty_error + ": home directory for user %s (%s) must be empty" % ( name, site_dir(name) ) )
+
     if not file_owner_verify(site_dir(name), user.pw_uid, user.pw_gid):
-        bail_out(tty_error + ": home directory (%s) is not owned by user %s" % ( site_dir(name), name ) )
+        bail_out(tty_error + ": home directory (%s) is not owned by user %s and group %s" % ( site_dir(name), name, name ) )
 
     group = group_by_id(user.pw_gid)
     if group == None or group.gr_name != name:
@@ -1818,7 +1821,7 @@ def config_configure_hook(hookname):
         config_reload_hooks()
 
 def init_action(command, args, options):
-    if command == "start":
+    if command in [ "start", "restart" ]:
         create_tmpfs(g_sitename)
 
     if len(args) > 0:
@@ -2134,6 +2137,7 @@ def main_mv_or_cp(what, args, options={}):
         reuse = True
         if not user_verify(new):
             bail_out("Error verifying site user.")
+        fstab_verify(new)
 
     sitename_must_be_valid(new, reuse)
 
@@ -2143,7 +2147,8 @@ def main_mv_or_cp(what, args, options={}):
 
     if what == "mv":
         unmount_tmpfs(old)
-        remove_from_fstab(old)
+        if not reuse:
+            remove_from_fstab(old)
 
     sys.stdout.write("%sing site %s to %s..." % (what == "mv" and "Mov" or "Copy", old, new))
     sys.stdout.flush()
@@ -2213,7 +2218,8 @@ def main_mv_or_cp(what, args, options={}):
     refresh_hooks()
 
     # Entry for tmps in /etc/fstab
-    add_to_fstab(new)
+    if not reuse:
+        add_to_fstab(new)
 
     # Make apache aware of new site
     create_apache_hook(new)
