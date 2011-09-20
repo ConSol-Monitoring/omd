@@ -77,6 +77,7 @@ build:
 		echo we need to remove the shinken webui; \
 		( cd $(SHINKEN) ; patch -p1 -b ) < patches/0001-remove-webui.patch; \
 	fi
+	( cd $(SHINKEN) ; patch -p1 -b ) < patches/0002-umask000-for-livestatus-socket.patch
 
 
 install:
