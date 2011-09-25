@@ -1,6 +1,6 @@
 This file documents the revision history for the Open Monitoring Distribution
 
-0.50     ...
+0.50     Sep 20 2011
           - Check_MK: fix problem with playing sounds
           - Nagios:
             - added patch to remove host alias from state retention.
@@ -8,11 +8,11 @@ This file documents the revision history for the Open Monitoring Distribution
               effective.
           - updated to check_oracle_health 1.7.0
           - updated to check_mysql_health 2.1.6
-          - updated to Thruk 1.1.0
+          - updated to Thruk 1.1.1
           - updated to Mod-Gearman 1.0.10
           - updated to Gearman 0.23
           - updated to Webinject 1.68
-          - updated to PNP4Nagios 0.6.14
+          - updated to PNP4Nagios 0.6.15
           - OMD
             - added 'reuse' option
             - fix 'omd start core' (did simply nothing)
@@ -23,9 +23,9 @@ This file documents the revision history for the Open Monitoring Distribution
           - Debian Package:
             - Added the mandatory maintainer name
           - mod_fcgid: Increased file upload limit from 128kb to 3MB
-	  - npcd: Changed init script to find running processes with lost pidfile
+          - npcd: Changed init script to find running processes with lost pidfile
 
-0.48     Sun May 22
+0.48     May 22 2011
 
           - updated to Check_MK 1.1.10p3
           - updated to Shinken 0.6.4

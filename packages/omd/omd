@@ -27,7 +27,7 @@
 import sys, os, shutil, pwd, grp, re, time, pprint, tty, termios
 from subprocess import *
 
-OMD_VERSION = "0.49"
+OMD_VERSION = "0.50"
 
 # colored output, if stdout is a tty
 on_tty = sys.stdout.isatty()
@@ -470,7 +470,7 @@ def user_verify(name):
         bail_out(tty_error + ": home directory for user %s (%s) must be empty" % ( name, site_dir(name) ) )
 
     if not file_owner_verify(site_dir(name), user.pw_uid, user.pw_gid):
-        bail_out(tty_error + ": home directory (%s) is not owned by user %s" % ( site_dir(name), name ) )
+        bail_out(tty_error + ": home directory (%s) is not owned by user %s and group %s" % ( site_dir(name), name, name ) )
 
     group = group_by_id(user.pw_gid)
     if group == None or group.gr_name != name:

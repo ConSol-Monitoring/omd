@@ -1,0 +1,11 @@
+diff -Naur shinken-0.6.99.orig/shinken/modules/livestatus_broker/livestatus_broker.py shinken-0.6.99/shinken/modules/livestatus_broker/livestatus_broker.py
+--- shinken-0.6.99.orig/shinken/modules/livestatus_broker/livestatus_broker.py	2011-09-20 02:54:10.000000000 +0200
++++ shinken-0.6.99/shinken/modules/livestatus_broker/livestatus_broker.py	2011-09-20 02:54:36.000000000 +0200
+@@ -820,6 +820,7 @@
+         if self.socket:
+             if os.path.exists(self.socket):
+                 os.remove(self.socket)
++            os.umask(0)
+             sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+             sock.setblocking(0)
+             sock.bind(self.socket)

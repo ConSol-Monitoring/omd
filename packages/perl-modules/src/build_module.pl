@@ -70,8 +70,9 @@ sub install_module {
     if( $modname eq "Term::ReadLine::Gnu" )        { $pre_check = "use Term::ReadLine;"; }
     if( $modname eq "DBD::Oracle") {
         if(defined $ENV{'ORACLE_HOME'}) {
-            if(-f $ENV{'ORACLE_HOME'}."/libclntsh.so") {
-                $ENV{'LD_LIBRARY_PATH'} = $ENV{'ORACLE_HOME'};
+            if(-f $ENV{'ORACLE_HOME'}."/lib/libclntsh.so") {
+                $ENV{'LD_LIBRARY_PATH'} = $ENV{'ORACLE_HOME'}."/lib";
+                $ENV{'PATH'}            = $ENV{'PATH'}.":".$ENV{'ORACLE_HOME'}."/bin";
             } else {
                 print "skipped\n";
                 return(1);

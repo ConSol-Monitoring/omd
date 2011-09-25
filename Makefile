@@ -180,6 +180,11 @@ install-global:
 	install -m 644 distros/Makefile.$(DISTRO_NAME)_$(DISTRO_VERSION) $(DESTDIR)$(OMD_ROOT)/share/omd/distro.info
 	echo -e "OMD_VERSION = $(OMD_VERSION)\nOMD_PHYSICAL_BASE = $(OMD_PHYSICAL_BASE)" > $(DESTDIR)$(OMD_ROOT)/share/omd/omd.info
 
+	# README files and license information
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/doc
+	install -m 644 README COPYING TEAM $(DESTDIR)$(OMD_ROOT)/share/doc
+	install -m 644 Changelog $(DESTDIR)$(OMD_ROOT)/share/doc/CHANGELOG
+
 # Create source tarball. This currently only works in a checked out GIT 
 # repository.
 $(SOURCE_TGZ) dist:
