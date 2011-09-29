@@ -1,9 +1,9 @@
 include ../../Makefile.omd
 
 
-SHINKEN=shinken-0.5.1
+SHINKEN=shinken-0.6.99
 SHINKEN_FILE=$(SHINKEN).tar.gz
-SHINKEN_URL=http://sourceforge.net/projects/shinken/files/$(SHINKEN_FILE)
+SHINKEN_URL=http://shinken-monitoring.org/pub/$(SHINKEN).tar.gz
 #
 # Python Remote Objects
 PYRO=Pyro-3.11
@@ -51,10 +51,10 @@ export PYTHONPATH
 build:
 	test -f ${SHINKEN_FILE} || wget $(SHINKEN_URL)
 	tar xzf $(SHINKEN_FILE)
-	set -e ; for p in patches/*.dif ; do \
-	    echo "applying $$p..." ; \
-	    ( cd $(SHINKEN) ; patch -p1 -b ) < $$p ; \
-	done
+	#set -e ; for p in patches/*.patch ; do \
+	#    echo "applying $$p..." ; \
+	#    ( cd $(SHINKEN) ; patch -p1 -b ) < $$p ; \
+	#done
 	test -f $(PYRO_FILE) || wget $(PYRO_URL)
 	tar xzf $(PYRO_FILE)
 	test -f $(MP_FILE) || wget $(MP_URL)
@@ -67,6 +67,17 @@ build:
 	tar xzf $(CTYPES_FILE)
 	#test -f $(SQLITE_FILE) || wget $(SQLITE_URL)
 	#tar xzf $(SQLITE_FILE)
+	if [ $(DISTRO_NAME) = "CENTOS" ] && [ \
+		$(DISTRO_VERSION) = "5.4" -o \
+		$(DISTRO_VERSION) = "5.5" -o \
+		$(DISTRO_VERSION) = "5.6" -o\
+		$(DISTRO_VERSION) = "5.7" ]; then \
+		echo it is a centos 5; \
+		echo which has python 2.4; \
+		echo we need to remove the shinken webui; \
+		( cd $(SHINKEN) ; patch -p1 -b ) < patches/0001-remove-webui.patch; \
+	fi
+	( cd $(SHINKEN) ; patch -p1 -b ) < patches/0002-umask000-for-livestatus-socket.patch
 
 
 install:
@@ -94,10 +105,15 @@ installshinken:
 	install -m 755 $(SHINKEN)/bin/shinken-scheduler $(DESTDIR)$(OMD_ROOT)/bin
 	install -m 755 $(SHINKEN)/bin/shinken-poller $(DESTDIR)$(OMD_ROOT)/bin
 	install -m 755 $(SHINKEN)/bin/shinken-reactionner $(DESTDIR)$(OMD_ROOT)/bin
+	install -m 755 $(SHINKEN)/bin/shinken-admin $(DESTDIR)$(OMD_ROOT)/bin
+	install -m 755 $(SHINKEN)/bin/shinken-receiver $(DESTDIR)$(OMD_ROOT)/bin
 
 	# shinken py-files
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/shinken
 	cp -r $(SHINKEN)/shinken $(DESTDIR)$(OMD_ROOT)/lib/shinken
+
+	install -m 755 $(SHINKEN)/bin/shinken-discovery $(DESTDIR)$(OMD_ROOT)/bin
+	cp -r $(SHINKEN)/libexec $(DESTDIR)$(OMD_ROOT)/lib/shinken
 
 	install -m 755 merge-shinken-config $(DESTDIR)$(OMD_ROOT)/bin
 	install -m 755 merge-shinken-specific-config $(DESTDIR)$(OMD_ROOT)/bin

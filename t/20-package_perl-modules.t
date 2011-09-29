@@ -12,8 +12,6 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 554 );
-
 ##################################################
 # create our test site
 my $omd_bin = TestUtils::get_omd_bin();
@@ -34,8 +32,9 @@ TestUtils::test_command({ cmd => "/bin/su - $site -c 'perl -e \"use RRDs 1.4004;
 ##################################################
 for my $tarball (glob("packages/perl-modules/src/*.gz")) {
     $tarball =~ s/^.*\///gmx;
-    $tarball =~ s/\-([0-9\.]+)\.tar\.gz//gmx;
+    $tarball =~ s/\-([0-9\.]+)(\.[\w\d]*)*\.tar\.gz//gmx;
     my $version = $1;
+
     $tarball =~ s/\-/::/gmx;
     if($tarball eq 'Scalar::List::Utils')            { $tarball = 'List::Util::XS'; }
     elsif($tarball eq 'libwww::perl')                { $tarball = 'LWP'; }
@@ -44,11 +43,19 @@ for my $tarball (glob("packages/perl-modules/src/*.gz")) {
     elsif($tarball eq 'IO::stringy')                 { $tarball = 'IO::Scalar'; }
     elsif($tarball eq 'TermReadKey')                 { $tarball = 'Term::ReadKey'; }
     elsif($tarball eq 'IO::Compress')                { $tarball = 'IO::Compress::Base'; }
-    elsif($tarball eq 'Term::ReadLine::Gnu')         { $tarball = 'Term::ReadLine; use '; }
+    elsif($tarball eq 'Gearman')                     { $tarball = 'Gearman::Client'; }
+    elsif($tarball eq 'Term::ReadLine::Gnu')         { $tarball = 'Term::ReadLine; use Term::ReadLine::Gnu'; }
+    elsif($tarball eq 'PathTools')                   { $tarball = 'File::Spec'; }
     elsif($tarball eq 'Package::DeprecationManager') { $version .= ' -deprecations => { blah => foo }'; }
     elsif($tarball eq 'DBD::Oracle')                 { next; }
     elsif($tarball eq 'Test::NoWarnings')            { next; }
-    TestUtils::test_command({ cmd => "/bin/su - $site -c 'perl -e \"use $tarball $version;\"'" });
+    elsif($tarball eq 'UNIVERSAL::isa')              { next; }
+
+    my $check = "use $tarball";
+    # Use with version doesnt work here, because of weird version numbers
+    $check .= " $version" unless $tarball =~ /^(Math::BaseCnv|XML::Tidy)$/;
+  
+    TestUtils::test_command({ cmd => "/bin/su - $site -c 'perl -e \"$check;\"'" });
 }
 
 ##################################################
@@ -65,3 +72,5 @@ SKIP: {
 ##################################################
 # cleanup test site
 TestUtils::remove_test_site($site);
+
+done_testing();

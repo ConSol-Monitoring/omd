@@ -2,7 +2,7 @@ include ../../Makefile.omd
 
 SHELL = /bin/bash
 NAME = check_mk
-VERSION = 1.1.10b1
+VERSION = 1.1.10p3
 DIR = $(NAME)-$(VERSION)
 
 .PHONY: skel
@@ -77,7 +77,7 @@ upstream:
 	tar xzf check_mk-$(VERSION).tar.gz --to-stdout check_mk-$(VERSION)/doc.tar.gz | \
           tar xzf - --to-stdout check_mk_templates.cfg | \
           sed -e 's-@CHECK_ICMP@-###ROOT###/lib/nagios/plugins/check_icmp-g' \
-              -e 's-@BINDIR@-###ROOT###/bin-g' \
+              -e 's-@BINDIR@/--g' \
               -e 's-@VARDIR@-###ROOT###/var/check_mk-g' \
               -e 's-@PNPURL@-/###SITE###/pnp4nagios/-g' \
               -e 's-@CGIURL@-/###SITE###/nagios/cgi\-bin-g' > \

@@ -1,13 +1,11 @@
 #!/bin/bash
+
+# Alias: Initialize site crontab via etc/init.d/crontab
+# Menu: Basic
+# Description: 
+#  Merge all files in etc/cron.d and initialize a site specific crontab.
+
 case "$1" in
-    alias)
-        echo "Initialize site crontab via etc/init.d/crontab"
-    ;;
-    description)
-        cat <<EOF
-Merge all files in etc/cron.d and initialize a site specific crontab.
-EOF
-        ;;
     default)
         echo "on"
     ;;

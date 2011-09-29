@@ -8,11 +8,13 @@ package TestUtils;
 
 use warnings;
 use strict;
+use Carp;
 use Cwd;
 use Test::More;
 use Data::Dumper;
 use LWP::UserAgent;
-use File::Temp qw/ :POSIX /;
+use HTTP::Cookies::Netscape;
+use File::Temp qw/ tempfile /;
 use Test::Cmd;
 
 if($> != 0) {
@@ -128,7 +130,7 @@ sub test_command {
 
     # exit code?
     $test->{'exit'} = 0 unless exists $test->{'exit'};
-    if(defined $test->{'exit'}) {
+    if(defined $test->{'exit'} and $test->{'exit'} != -1) {
         ok($rc == $test->{'exit'}, "exit code: ".$rc." == ".$test->{'exit'}) or do { _diag_cmd($test, $t); $return = 0 };
     }
 
@@ -168,9 +170,11 @@ sub test_command {
 
 =cut
 sub create_test_site {
-    my $site = "testsite"; # TODO: make uniq name
-    test_command({ cmd => TestUtils::get_omd_bin()." create $site" });
-    return $site;
+    my $site = "testsite";
+    if(test_command({ cmd => TestUtils::get_omd_bin()." create $site" })) {
+        return $site;
+    }
+    return;
 }
 
 
@@ -196,11 +200,11 @@ sub remove_test_site {
 
   needs test hash
   {
-    url            => url to request
-    auth           => authentication (realm:user:pass)
-    code           => expected response code
-    like           => (list of) regular expressions which have to match content
-    unlike         => (list of) regular expressions which must not match content
+    url              => url to request
+    auth             => authentication (realm:user:pass)
+    code             => expected response code
+    like             => (list of) regular expressions which have to match content
+    unlike           => (list of) regular expressions which must not match content
     skip_html_lint   => flag to disable the html lint checking
     skip_link_check  => (list of) regular expressions to skip the link checks for
   }
@@ -256,7 +260,9 @@ sub test_url {
     }
 
     # check for missing images / css or js
-    if($page->{'content_type'} =~ 'text\/html') {
+    if($page->{'content_type'} =~ 'text\/html'
+       and (!defined $test->{'skip_html_links'} or $test->{'skip_html_links'} == 0)
+      ) {
         my @matches = $page->{'content'} =~ m/(src|href)=['|"](.+?)['|"]/gi;
         my $links_to_check;
         my $x=0;
@@ -267,6 +273,7 @@ sub test_url {
             next if $match =~ m/^mailto:/;
             next if $match =~ m/^#/;
             next if $match =~ m/^javascript:/;
+            next if $match =~ m/internal&srv=runtime/;
             if(defined $test->{'skip_link_check'}) {
                 my $skip = 0;
                 for my $expr (ref $test->{'skip_link_check'} eq 'ARRAY' ? @{$test->{'skip_link_check'}} : $test->{'skip_link_check'} ) {
@@ -291,8 +298,10 @@ sub test_url {
             } else {
                 $errors++;
                 diag("got status ".$req->{'code'}." for url: '$test_url'");
+                diag(Dumper($req));
                 my $tmp_test = { 'url' => $test_url };
                 _diag_request($tmp_test, $req);
+                TestUtils::bail_out_clean("error in url '$test_url' linked from '".$test->{'url'}."'");
             }
         }
         is( $errors, 0, 'All stylesheets, images and javascript exist' );
@@ -405,23 +414,23 @@ sub wait_for_content {
     my $req;
     my $x = 0;
     while ($x < $timeout) {
-    	$req = _request($test);
-	if($req->{'code'} == 200) {
-		#diag("code:$req->{code} url:$test->{url} auth:$test->{auth}");
-		my $errors=0;
-		foreach my $pattern (@{$test->{'like'}}) {
-			if ($req->{'content'}!~/$pattern/) {
-				#diag("errors:$errors pattern:$pattern");
-				$errors++;
-			}
-		}
-		if ($errors == 0) {
-            		pass(sprintf "content: [ %s ] appeared after $x seconds", join(',',@{$test->{'like'}}));
-			return 1;
-		}
-	} else {
-		diag("Error searching for web content:\ncode:$req->{code}\nurl:$test->{url}\nauth:$test->{auth}\ncontent:$req->{content}");
-	}
+        $req = _request($test);
+        if($req->{'code'} == 200) {
+            #diag("code:$req->{code} url:$test->{url} auth:$test->{auth}");
+            my $errors=0;
+            for my $pattern (@{$test->{'like'}}) {
+                if ($req->{'content'}!~/$pattern/) {
+                    #diag("errors:$errors pattern:$pattern");
+                    $errors++;
+                }
+            }
+            if ($errors == 0) {
+                pass(sprintf "content: [ %s ] appeared after $x seconds", join(',',@{$test->{'like'}}));
+                return 1;
+            }
+        } else {
+            diag("Error searching for web content:\ncode:$req->{code}\nurl:$test->{url}\nauth:$test->{auth}\ncontent:$req->{content}");
+        }
         $x++;
         sleep(1);
     }
@@ -440,7 +449,7 @@ sub wait_for_content {
 sub bail_out_clean {
     my $msg = shift;
 
-    diag("cleaning up before bailout");
+    carp("cleaning up before bailout");
 
     my $omd_bin = get_omd_bin();
     for my $site (qw/testsite testsite2 testsite3/) {
@@ -467,6 +476,8 @@ sub _diag_lint_errors_and_remove_some_exceptions {
             "<IMG SRC=[^>]*>\ tag\ has\ no\ HEIGHT\ and\ WIDTH\ attributes\.",
             "<IMG SRC=[^>]*>\ does\ not\ have\ ALT\ text\ defined",
             "<input>\ is\ not\ a\ container\ \-\-\ <\/input>\ is\ not\ allowed",
+            "Unknown attribute \"start\" for tag <div>",
+            "Unknown attribute \"end\" for tag <div>",
         ) {
             next LINT_ERROR if($err_str =~ m/$exclude_pattern/i);
         }
@@ -496,14 +507,19 @@ sub _request {
     my $return = {};
     our $cookie_jar;
 
-    if(!defined $cookie_jar or !-f $cookie_jar) {
-        $cookie_jar = tmpnam();
+    if(!defined $cookie_jar) {
+        my($fh, $cookie_file) = tempfile(undef, UNLINK => 1);
+        unlink ($cookie_file);
+        $cookie_jar = HTTP::Cookies::Netscape->new(
+                                       file     => $cookie_file,
+                                       autosave => 1,
+                                       );
     }
 
     my $ua = LWP::UserAgent->new;
-    $ua->timeout(10);
+    $ua->timeout(30);
     $ua->env_proxy;
-    $ua->cookie_jar({ file => $cookie_jar });
+    $ua->cookie_jar($cookie_jar);
 
     if(defined $data->{'auth'}) {
         $data->{'url'} =~ m/(http|https):\/\/(.*?)(\/|:\d+)/;
@@ -516,6 +532,7 @@ sub _request {
 
     my $response = $ua->get($data->{'url'});
 
+    $return->{'response'}     = $response;
     $return->{'code'}         = $response->code;
     $return->{'content'}      = $response->decoded_content;
     $return->{'content_type'} = $response->header('Content-Type');
@@ -587,6 +604,7 @@ sub _get_url {
 sub _clean_stderr {
     my $text = shift || '';
     $text =~ s/[\w\-]+: Could not reliably determine the server's fully qualified domain name, using .*? for ServerName//g;
+    $text =~ s/\[warn\] module \w+ is already loaded, skipping//g;
     $text =~ s/Syntax OK//g;
     $text =~ s/no crontab for \w+//g;
     return $text;
@@ -642,7 +660,9 @@ sub _diag_request {
        or $page->{'content'} =~ m/Internal Server Error/) {
         _tail("apache logs:", "/omd/sites/$site/var/log/apache/error_log");
         _tail_apache_logs();
+        _tail("thruk logs:", "/omd/sites/$site/var/log/thruk.log") if $test->{'url'} =~ m/\/thruk\//;
     }
+    diag(Dumper($page->{'response'}));
     return;
 }
 
@@ -679,9 +699,9 @@ sub _tail_apache_logs {
     _tail("global apache logs:", glob('/var/log/httpd*/error*log'));
     return;
 }
- 
+
 ##################################################
- 
+
 END {
     if(defined $omd_symlink_created and $omd_symlink_created == 1) {
         unlink('/omd');

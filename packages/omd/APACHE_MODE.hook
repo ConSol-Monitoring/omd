@@ -1,0 +1,37 @@
+#!/bin/bash
+
+# Alias: Webserver mode to use
+# Menu: Web GUI
+# Description: 
+#  Here you can choose the mode to run your webserver with. The value "own"
+#  will start an individual Apache process for this site, running as site
+#  user. No root priviledges are required to administer it. The main 
+#  Apache redirects request for this site to it via mod_proxy. 
+#  
+#  The value "shared" will not start an own Apache process but will configure
+#  the system wide Apache to be used.
+#  
+#  The value "none" will not start a webserver nor create a configuration
+#  for the global Apache.
+
+case "$1" in
+    default)
+            if [ ! -z "$CONFIG_WEBSERVER" ]; then echo "$CONFIG_WEBSERVER"; else  echo "own"; fi
+    ;;
+    choices)
+            echo "own: Run an own webserver process for this instance"
+            echo "shared: Use the systems webserver process directly"
+            echo "none: Do not run or configure a webserver"
+    ;;
+    set)
+        if [ "$2" == "own" ]; then
+            ln -sfn apache-own.conf $OMD_ROOT/etc/apache/mode.conf 
+        elif [ "$2" == "shared" ]; then
+            ln -sfn apache-shared.conf $OMD_ROOT/etc/apache/mode.conf 
+        elif [ "$2" == "none" ] ; then
+            rm -f $OMD_ROOT/etc/apache/mode.conf
+            : > $OMD_ROOT/etc/apache/mode.conf
+        fi
+    ;;
+esac
+

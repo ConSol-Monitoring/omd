@@ -13,13 +13,13 @@
 
 # Check if Mod-Gearman is enabled in OMD. If not terminate.
 . etc/omd/site.conf
-if [ "$CONFIG_DISTRIBUTED_MONITORING" != "mod-gearman" -o "$CONFIG_GEARMAND" != "on" ] ; then
+if [ "$CONFIG_MOD_GEARMAN" != "on" -o "$CONFIG_GEARMAND" != "on" ] ; then
     exit 5
 fi
 
 NAME=gearmand
 DAEMON="###ROOT###/version/sbin/gearmand"
-OPTIONS="-d -j 0"
+OPTIONS="--daemon --job-retries=0"
 PORT=`echo $CONFIG_GEARMAND_PORT | awk -F: {'print $2'}`
 LISTEN=`echo $CONFIG_GEARMAND_PORT | awk -F: {'print $1'}`
 if [ -z "$LISTEN" ]; then
@@ -28,7 +28,7 @@ fi
 PIDFILE=###ROOT###/tmp/run/gearmand.pid
 LOGFILE=###ROOT###/var/log/gearman/gearmand.log
 USER=###SITE###
-GRACEFUL_SHUTDOWN_TIME=30
+GRACEFUL_SHUTDOWN_TIME=10
 LIBEVENTMINVERSION=1.4
 for f in $( which netcat nc 2>/dev/null ) ; do
   if [ -x "$f" ]; then
@@ -38,10 +38,12 @@ done
 
 # check libevent version
 # io threads are only supported in lib event >= 1.4
+NUMTHREADS=0
 LIBEVENTVERSION=`/sbin/ldconfig -p 2>&1 | grep libevent- | tail -n 1 | sed -e 's/.*libevent\-\(.*\)\.so.*/\1/g' -e 's/[^0-9\.]//g'`
 if [ ! -z "$LIBEVENTVERSION" ]; then
-  [ `echo "$LIBEVENTVERSION $LIBEVENTMINVERSION" | awk '{if ($1 >= $2) print 1}'` ] && OPTIONS="$OPTIONS -t 10"
+  [ `echo "$LIBEVENTVERSION $LIBEVENTMINVERSION" | awk '{if ($1 >= $2) print 1}'` ] && NUMTHREADS=10
 fi
+OPTIONS="$OPTIONS --threads=$NUMTHREADS"
 
 # create state dir
 mkdir -p $(dirname $LOGFILE)
@@ -96,7 +98,7 @@ case "$1" in
             exit 1;
         fi
 
-        CMD="$DAEMON -p $PORT -P $PIDFILE $OPTIONS --log-file=$LOGFILE -v -v --listen=$LISTEN"
+        CMD="$DAEMON --port=$PORT --pid-file=$PIDFILE $OPTIONS --log-file=$LOGFILE --verbose=2 --listen=$LISTEN"
         if [ "$WHO" = "root" ]; then
             # try to exec commands as user
             su - $USER -c /bin/true
@@ -152,11 +154,9 @@ case "$1" in
         printf '%s' "Reloading $NAME configuration files..."
         pid=$( cat $PIDFILE 2>/dev/null )
         if [ -n "$pid" ]; then
-            kill -HUP "$pid"
-            echo "OK"
-            exit 0;
+            $0 stop && sleep 1 && $0 start
+            exit $?
         else
-            echo ""
             echo "$NAME is not running"
             exit 1;
         fi

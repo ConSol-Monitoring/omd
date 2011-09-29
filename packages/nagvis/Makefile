@@ -1,8 +1,8 @@
 include ../../Makefile.omd
 
 NAME = nagvis
-VERSION = 1.5.8
-#VERSION = 1.5-nightly
+VERSION = 1.6rc1
+#VERSION = 1.6-nightly
 DIR = $(NAME)-$(VERSION)
 
 .PHONY: skel
@@ -17,18 +17,14 @@ install:
 	 -g $$(id -gn) \
 	 -w $(DESTDIR)$(OMD_ROOT)/etc/apache \
 	 -W /WILL_BE_REPLACED/nagvis \
-	 -B $(DESTDIR)$(OMD_ROOT)/bin/nagios \
 	 -b $(DESTDIR)/usr/bin \
 	 -p $(DESTDIR)$(OMD_ROOT)/share/nagvis
 	
-	# And last but not least relocate the NagVis shared directory to have the same path
-	# as all the other packages
+	# Relocate the NagVis shared directory to have the same path as all the other packages
 	test -d $(DESTDIR)$(OMD_ROOT)/share/nagvis/share && \
 	  mv $(DESTDIR)$(OMD_ROOT)/share/nagvis/share $(DESTDIR)$(OMD_ROOT)/share/nagvis/htdocs
 	
-	# Move userfiles to skel to allow site specific modifications
-	mkdir -p $(DESTDIR)$(OMD_ROOT)/skel/var/nagvis
-	mv $(DESTDIR)$(OMD_ROOT)/share/nagvis/htdocs/userfiles $(DESTDIR)$(OMD_ROOT)/skel/var/nagvis/userfiles
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/skel/var/nagvis/profiles
 	
 	# Move package documentations to have these files in the binary packages
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/doc/$(NAME)
@@ -36,9 +32,31 @@ install:
 	  mv $(DESTDIR)$(OMD_ROOT)/share/nagvis/$$file $(DESTDIR)$(OMD_ROOT)/share/doc/$(NAME); \
 	done
 	
+	# Move demo config files
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/skel/etc/nagvis/automaps
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/skel/etc/nagvis/maps
+	mv $(DESTDIR)$(OMD_ROOT)/share/nagvis/etc/automaps/*.cfg $(DESTDIR)$(OMD_ROOT)/skel/etc/nagvis/automaps
+	mv $(DESTDIR)$(OMD_ROOT)/share/nagvis/etc/maps/*.cfg $(DESTDIR)$(OMD_ROOT)/skel/etc/nagvis/maps
+	
 	# Delete files/directories we do not want to pack
 	rm -rf $(DESTDIR)$(OMD_ROOT)/share/nagvis/var
 	rm -rf $(DESTDIR)$(OMD_ROOT)/share/nagvis/etc
+	
+	# Update from NagVis 1.5 -> 1.6 in OMD handling needs to be handled here
+	# The var/userfiles directory is not part of 1.6 anymore. But if the packe
+	# would not contain var/nagvis/userfiles directories the "omd update" would remove
+	# the directory tree, even if there are some custom files in it. This looks
+	# like a bug in OMD. But to have a quick solution we simply create the empty
+	# directory structure here for some versions. Can be removed someday...
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/skel/var/nagvis/userfiles/gadgets
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/skel/var/nagvis/userfiles/images/gadgets
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/skel/var/nagvis/userfiles/images/shapes
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/skel/var/nagvis/userfiles/images/iconsets
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/skel/var/nagvis/userfiles/images/maps
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/skel/var/nagvis/userfiles/images/templates
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/skel/var/nagvis/userfiles/styles
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/skel/var/nagvis/userfiles/sounds
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/skel/var/nagvis/userfiles/templates
 
 
 clean:

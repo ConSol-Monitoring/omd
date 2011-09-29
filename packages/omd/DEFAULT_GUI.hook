@@ -1,0 +1,37 @@
+#!/bin/bash
+
+# Alias: Default web GUI
+# Menu: Web GUI
+# Description: 
+#  Here you can choose your default webinterface to use. You can run several Nagios GUIs at
+#  the same time but only one GUI can be your default. The default GUI is opened when
+#  someone opens your site in a browser without a specific URL. 
+
+case "$1" in
+    default)
+            if [ ! -z "$CONFIG_WEB" ]; then echo "$CONFIG_WEB"; else  echo "welcome"; fi
+    ;;
+    choices)
+            echo "welcome: Welcome page which lists all available GUIs"
+            echo "nagios: Classic Nagios webinterface"
+            echo "check_mk: The Check_MK's Multisite GUI"
+            echo "thruk: Thruk Monitoring Webinterface"
+            echo "nagvis: NagVis - The visualisation addon for Nagios"
+            echo "none: No default webinterface"
+    ;;
+    set)
+            # This is some sort of hack. The problem here:
+            # The NAGVIS_URL hook depends on this hooks value but is not
+            # executed when this hook is changed. It would be better to
+            # solve this in a more general way in omd.
+            if [ "$2" == "welcome" -o "$2" == "nagvis" ]; then
+                omd config set NAGVIS_URLS nagios >/dev/null 2>&1
+            else
+                omd config set NAGVIS_URLS $2 >/dev/null 2>&1
+            fi
+    ;;
+    depends)
+        [ "$CONFIG_APACHE_MODE" != none ]
+    ;;
+esac
+

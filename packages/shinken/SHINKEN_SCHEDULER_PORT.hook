@@ -1,15 +1,12 @@
 #!/bin/bash
 
+# Alias: TCP port the Shinken scheduler listens on
+# Menu: Basic
+# Description: 
+#  If you configured Shinken as the monitoring core, this is the
+#  listening port of the scheduler .
+
 case "$1" in
-    alias)
-        echo "TCP port the Shinken scheduler listens on"
-    ;;
-    description)
-        cat << EOF
-If you configured Shinken as the monitoring core, this is the
-listening port of the scheduler .
-EOF
-    ;;
     default)
         echo "7768"
     ;;

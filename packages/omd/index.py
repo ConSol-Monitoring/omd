@@ -135,7 +135,7 @@ def page_welcome(req):
 and execute the commands:</p>
 <pre>omd stop
 omd config</pre>
-Then browse to the &quot;WEB&quot; entry in the list and hit enter. Select
+Then browse to &quot;Web Gui -&gt; DEFAULT_GUI&quot; entry in the list and hit enter. Select
 the default GUI and quit all dialogs. After that start your site again by
 executing:
 <pre>
@@ -154,7 +154,7 @@ target="_blank">omdistro.org</a>
 def handler(req):
     sitename = site_name(req)
     config   = config_load(sitename)
-    gui      = 'WEB' in config and config['WEB'] or 'nagios'
+    gui      = 'DEFAULT_GUI' in config and config['DEFAULT_GUI'] or 'nagios'
 
     if gui == 'welcome':
         page_welcome(req)

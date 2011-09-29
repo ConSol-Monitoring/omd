@@ -1,15 +1,12 @@
 #!/bin/bash
 
+# Alias: TCP port number for MK Livestatus
+# Menu: Distributed Monitoring
+# Description: 
+#  If Livestatus is configured to listen on a TCP port, you
+#  can configure that port here.
+
 case "$1" in
-    alias)
-        echo "TCP port number for MK Livestatus"
-    ;;
-    description)
-        cat << EOF
-If Livestatus is configured to listen on a TCP port, you
-can configure that port here.
-EOF
-    ;;
     default)
         echo "6557"
     ;;

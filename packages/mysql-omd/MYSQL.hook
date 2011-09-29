@@ -1,15 +1,12 @@
 #!/bin/bash
 
+# Alias: Start site-local MySQL Daemon
+# Menu: Addons
+# Description: 
+#  If you want to use addons based on MySQL, then you can activate
+#  this option and a site specific MySQL daemon will be started.
+
 case "$1" in
-    alias)
-        echo "Start MySQL Daemon"
-    ;;
-    description)
-        cat << EOF
-If you want to use addons based on MySQL, please activate
-this option and a site specific MySQL daemon will be started.
-EOF
-    ;;
     default)
         echo "off"
     ;;

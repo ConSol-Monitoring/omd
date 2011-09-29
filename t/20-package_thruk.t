@@ -3,6 +3,7 @@
 use warnings;
 use strict;
 use Test::More;
+use Data::Dumper;
 
 BEGIN {
     use lib('t');
@@ -12,7 +13,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 944 );
+plan( tests => 980 );
 
 ##################################################
 # create our test site
@@ -26,7 +27,7 @@ my $service = "Dummy+Service";
 TestUtils::test_command({ cmd => "/usr/bin/env sed -i -e 's/^perfdata_file_processing_interval = 15/perfdata_file_processing_interval = 2/g' -e 's/^sleep_time = 15/sleep_time = 2/g' /opt/omd/sites/$site/etc/pnp4nagios/npcd.cfg" });
 
 # set thruk as default
-TestUtils::test_command({ cmd => $omd_bin." config $site set WEB thruk" });
+TestUtils::test_command({ cmd => $omd_bin." config $site set DEFAULT_GUI thruk" });
 TestUtils::test_command({ cmd => $omd_bin." start $site" });
 
 ##################################################
@@ -42,7 +43,7 @@ my $urls = [
 # static html pages
   { url => "",                       like => '/<title>Thruk<\/title>/' },
   { url => "/thruk/index.html",      like => '/<title>Thruk<\/title>/' },
-  { url => "/thruk/docs/index.html", like => '/<title>Thruk Documentation<\/title>/' },
+  { url => "/thruk/docs/index.html", like => '/<title>Documentation<\/title>/' },
   { url => "/thruk/main.html",       like => '/<title>Thruk Monitoring Webinterface<\/title>/' },
   { url => "/thruk/side.html",       like => '/<title>Thruk<\/title>/' },
 
@@ -87,6 +88,9 @@ my $urls = [
 # trends
   { url => '/thruk/cgi-bin/trends.cgi?host='.$host.'&t1=1264820912&t2=1265425712&includesoftstates=no&assumestateretention=yes&assumeinitialstates=yes&assumestatesduringnotrunning=yes&initialassumedhoststate=0&backtrack=4', 'like'  => '/Host and Service State Trends/' },
   { url => '/thruk/cgi-bin/trends.cgi?host='.$host.'&service='.$service.'&t1=1264820912&t2=1265425712&includesoftstates=no&assumestateretention=yes&assumeinitialstates=yes&assumestatesduringnotrunning=yes&initialassumedservicestate=0&backtrack=4', 'like' => '/Host and Service State Trends/' },
+
+# statusmap
+  { url => '/thruk/cgi-bin/statusmap.cgi?host=all', like => '/Network Map For All Hosts/' },
 ];
 
 # complete the url
@@ -119,7 +123,7 @@ for my $core (qw/nagios shinken/) {
     ##################################################
     # switch webserver to shared mode
     TestUtils::test_command({ cmd => $omd_bin." stop $site" });
-    TestUtils::test_command({ cmd => $omd_bin." config $site set WEBSERVER shared" });
+    TestUtils::test_command({ cmd => $omd_bin." config $site set APACHE_MODE shared" });
     TestUtils::test_command({ cmd => TestUtils::config('APACHE_INIT')." restart" });
     TestUtils::test_command({ cmd => $omd_bin." start $site" });
 
@@ -133,6 +137,10 @@ for my $core (qw/nagios shinken/) {
     for my $url ( @{$urls} ) {
         TestUtils::test_url($url);
     }
+
+    my $log = "/omd/sites/$site/var/log/thruk.log";
+    is(-f $log, 1, "log exists");
+    is(-s $log, 0, "log is empty") or diag(Dumper(`cat $log`));
 }
 
 ##################################################

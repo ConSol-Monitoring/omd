@@ -1,17 +1,15 @@
 #!/bin/bash
+
+# Alias: Use Dokuwiki for user management
+# Menu: Web GUI
+# Description: 
+#  Dokuwiki - on OMD available on the URL /$OMD_SITE/wiki - is not only 
+#  a useful Wiki, but also implements a user management.
+#  If you enable this option, you will have Nagios, NagVis, Multisite and
+#  other web applications access the user database of Dokuwiki for authentication.
+#  Otherwise users are managed via the file ~/etc/passwd.
+
 case "$1" in
-        alias)
-                echo "Use Dokuwiki for user management"
-        ;;
-        description)
-                cat << EOF
-Dokuwiki - on OMD available on the URL /$OMD_SITE/wiki - is not only 
-a useful Wiki, but also implements a user management.
-If you enable this option, you will have Nagios, NagVis, Multisite and
-other web applications access the user database of Dokuwiki for authentication.
-Otherwise users are managed via the file ~/etc/passwd.
-EOF
-   ;;
    default)
        echo "off"
    ;;

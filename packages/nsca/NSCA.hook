@@ -1,15 +1,12 @@
 #!/bin/bash
 
+# Alias: Make NSCA accessable via TCP
+# Menu: Distributed Monitoring
+# Description: 
+#  This option is used to make NSCA reachable via TCP on a port configurable with
+#  NSCA_TCP_PORT.
+
 case "$1" in
-    alias)
-        echo "Make nsca accessable via TCP"
-    ;;
-    description)
-        cat << EOF
-This option is used to make NSCA reachable via TCP on a port configurable with
-NSCA_TCP_PORT.
-EOF
-    ;;
     default)
         echo "off"
     ;;

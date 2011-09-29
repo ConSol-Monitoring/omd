@@ -1,15 +1,12 @@
 #!/bin/bash
 
+# Alias: TCP port the Shinken broker listens on
+# Menu: Basic
+# Description:
+#  If you configured Shinken as the monitoring core, this is the
+#  listening port of the broker .
+
 case "$1" in
-    alias)
-        echo "TCP port the Shinken broker listens on"
-    ;;
-    description)
-        cat << EOF
-If you configured Shinken as the monitoring core, this is the
-listening port of the broker .
-EOF
-    ;;
     default)
         echo "7772"
     ;;

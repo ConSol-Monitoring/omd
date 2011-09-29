@@ -47,14 +47,26 @@ sites within OMD - the open monitoring distribution.
 .B omd help
 Show short summary of available commands.
 .TP
-.B omd version
-Show the default version of you OMD installation. OMD supports
+.B omd version [--bare, -b] [SITE]
+Show the default version of your OMD installation. OMD supports
 multiple versions to be installed in parallel.
+The option \fB-b\fP or \fB--bare\fP reduces the output to the plain
+version number (for easier parsing in scripts). If you specify the name
+of a site then that site's version is being displayed instead of the
+default version.
 .TP
 .B omd versions [--bare, -b]
 Show a list of all installed versions of OMD. The option \fB-b\fP or \fB--bare\fP
 makes the output leave out a hint to the default version and easier parseable by
 scripts.
+.TP
+.B omd setversion [VERSION]
+Sets the default OMD version to be used for new sites. Can be called with a target
+version as optional argument or without argument to get a menu of available versions displayed.
+
+This mainly updates the symlink \fB/omd/versions/default\fP. On debian based distributions
+it calls update-alternatives to change the default versions. In this case there is a special
+option \fBauto\fP available to let update-alternatives choose the default OMD version.
 .TP
 .B omd setup                       
 Prepare operating system for OMD. This includes installing all software
@@ -84,7 +96,7 @@ Show a list of all sites and the version of OMD each site uses. If you specify
 the option \fB-b\fP or \fB--bare\fP, then the output leaves out hints to the
 versions, so it is better parseable by scripts.
 .TP
-.B omd create     SITE             
+.B omd create [OPTIONS] SITE             
 Create a new site. The name of the site must be at most 16 characters
 long and consist only of letters, digits and underscores. It must not
 begin with a digit. 
@@ -98,15 +110,27 @@ You need root permissions for creating a new site.
 
 After creating a new site you can do a \fBsu - \fPSITE and start
 the site with \fBomd start\fP.
+
+The following options can be used:
+
+\fB-u UID\fP Force a specific user id for the new user
+
+\fB-g GID\fP Force a specific group id for the group of the new user
 .TP
 .B omd rm         SITE             
 Remove a site and all of its data. This includes deleting the
 directory \fB/omd/sites/\fPSITE and removing the system user
 and group of that site. This - of course - needs root permissions.
 .TP
-.B omd mv         SITE NEWNAME     
+.B omd mv [OPTIONS] SITE NEWNAME     
 Rename a site. The site must be stopped. the NEWNAME must be a valid
 site name as described in "omd create". Root permissions are needed.
+
+The following options can be used:
+
+\fB-u UID\fP Force a specific user id for the new user
+
+\fB-g GID\fP Force a specific group id for the group of the new user
 .TP
 .B omd cp [OPTIONS] SITE NEWNAME     
 Make a copy of a site. A new site with the name NEWSITE will be created
@@ -163,9 +187,19 @@ Reload services of site(s). That is the same as calling all of the sites
 init scripts with the option \fBreload\fP. Refer to \fBomd start\fP for
 how to specify sites.
 .TP
-.B omd status     [SITE] [SERVICE]
+.B omd status     [SITE] [SERVICE] [-b,--bare] [--auto]
 Show status of site(s). Refer to \fBomd start\fP for
 how to specify sites.
+
+If this is called for one specific site, then the exit code is as follows:
+\fB0\fP if the site is running, \fB1\fP if the site is stopped and \fB2\fP
+if the site is partially running (some services running, some stopped).
+
+The option \fB-b\fP or \fB--bare\fP produces a machine-readable output
+format.
+
+If you add the option \fB--auto\fP then only the status of those sites will
+be displayed, that are set to {AUTOSTART} = {on}.
 .TP
 .B omd config     [SITE] [set|show] [VARIABLE] [VALUE]
 This command is used to view and change the configuration of a site. Each
@@ -188,19 +222,24 @@ Setting and querying variables in batch mode can be done with
 .br
 \fBomd config [SITE] get VARIABLE\fP
 .TP
-.B omd diff [RELBASE] [-b, --bare]
-Shows the differences of files in the current site compared to the files delivered
-with the omd version used by the current site.
+.B omd [-v] diff [RELBASE] [-b, --bare]
+Shows the differences of files in the current site compared to the files
+delivered with the omd version used by the current site.
 
 Without the optional RELBASE argument it lists changes in ALL files of the
-site. The RELBASE argument may contain a relative path to the sites root directory
-to filter the scope of the diff.
+site. The RELBASE argument may contain a relative path to the sites root
+directory to filter the scope of the diff.
+It is also possible to give a file/link as RELBASE path. In this case only the
+information for this file are shown.
 
 The command lists files which meet at least one criteria: modified content, changed
 types, modified permissions, modified owner, deleted files.
 
 If you specify the option \fB-b\fP or \fB--bare\fP, then the output leaves out things
 to make the output more human readable, so it is better parseable by scripts.
+
+This command also handles the global option \fB-v\fP or \fB--verbose\fP. It shows the
+changes in detail.
 .SH SEE ALSO
 .BR http://www.omdistro.org
 .br

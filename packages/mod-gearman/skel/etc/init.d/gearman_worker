@@ -12,8 +12,10 @@
 ### END INIT INFO
 
 # Check if Mod-Gearman is enabled in OMD. If not terminate.
-. etc/omd/site.conf
-if [ "$CONFIG_DISTRIBUTED_MONITORING" != "mod-gearman" -o "$CONFIG_GEARMAN_WORKER" != "on" ] ; then
+cd ###ROOT###
+. ###ROOT###/.profile
+. ###ROOT###/etc/omd/site.conf
+if [ "$CONFIG_MOD_GEARMAN" != "on" -o "$CONFIG_GEARMAN_WORKER" != "on" ] ; then
     exit 5
 fi
 

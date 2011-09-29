@@ -1,4 +1,5 @@
 
+
    OMD - the Open Monitoring Distribution
       <http://omdistro.org/>
 
@@ -23,17 +24,23 @@ OMD is no new Linux distribution. It is a collection of different software
 packages round about Nagios:
 
   * nagios
-  * nagvis
-  * pnp4nagios
-  * rrdtool
+  * NagVis
+  * PNP4Nagios
+  * rrdtool including rrdcached
   * nagios-plugins
   * Check_MK
+  * Check_MK Multisite
   * MK Livestatus
   * dokuwiki
-  * nsca
+  * NSCA
   * check_nrpe
   * Thruk
   * check_oracle_health
+  * check_mysql_health
+  * check_multi
+  * check_webinject
+  * Shinken (still experimental)
+  * MOD Gearman
   * jmx4perl
   * others...
 

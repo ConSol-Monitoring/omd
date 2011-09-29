@@ -76,7 +76,7 @@ install:
 	install -m 755 $(SRCDIR)/plugins/check_multi $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins
 
 	#--- readme
-	test -d $(DESTDIR)$(OMD_ROOT)/share/doc/plugins || \
+	test -d $(DESTDIR)$(OMD_ROOT)/share/doc/check_multi || \
 		mkdir -p $(DESTDIR)$(OMD_ROOT)/share/doc/check_multi
 	install -m 644 $(SRCDIR)/README $(DESTDIR)$(OMD_ROOT)/share/doc/check_multi
 

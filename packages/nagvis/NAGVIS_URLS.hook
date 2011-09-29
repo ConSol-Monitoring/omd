@@ -1,0 +1,123 @@
+#!/bin/bash
+
+# Alias: NagVis linked Web GUI
+# Menu: Addons
+# Description: 
+#  When clicking on NagVis map icons the user is redirected to another
+#  Web-GUI. By default this is the classic Nagios webinterface. With
+#  this switch the targeted Web-GUI can be changed.
+
+# Makes it possible to switch all the links from NagVis 
+# to the default Web GUI to the choosen GUI or a defined
+# other one.
+#
+# Idea: Default mode is "auto". In this mode the HOOK
+# checks the current configuration for the default
+# web gui and sets the NagVis links to point to it.
+# It is also possible to force the other Web GUIs instead
+# of "auto".
+# Another option is "none". In this case OMD configures
+# nothing and NagVis uses the hard coded optionsa
+
+case "$1" in
+    default)
+        echo "auto"
+    ;;
+    choices)
+        echo "auto: Use the default Web-GUI"
+        echo "nagios: Classic Nagios webinterface"
+        echo "check_mk: The Check_MK's Multisite GUI"
+        echo "thruk: Thruk Monitoring Webinterface"
+        echo "none: disable"
+    ;;
+    set)
+        GUI=$2
+        if [ "$2" == "auto" ]; then
+            GUI=$CONFIG_DEFAULT_GUI
+        fi
+
+        # Fallback to classic Nagios GUI when auto mode and unhandled GUIs selected
+        # (welcome/nagvis GUIs are catched in DEFAULT_GUI hook)
+        if [ "$GUI" == "none" ]; then
+            GUI=nagios
+        fi
+        
+        if [ "$GUI" == "check_mk" ]; then
+            HTMLCGI="/$OMD_SITE/check_mk"
+            HOSTURL="[htmlcgi]/view.py?view_name=host&site=&host=[host_name]"
+            SERVICEURL="[htmlcgi]/view.py?view_name=service&site=&host=[host_name]&service=[service_description]"
+            HOSTGROUPURL="[htmlcgi]/view.py?view_name=hostgroup&site=&hostgroup=[hostgroup_name]"
+            SERVICEGROUPURL="[htmlcgi]/view.py?view_name=servicegroup&site=&servicegroup=[servicegroup_name]"
+        else
+            HTMLCGI="/$OMD_SITE/$GUI/cgi-bin"
+            HOSTURL="[htmlcgi]/status.cgi?host=[host_name]"
+            HOSTGROUPURL="[htmlcgi]/status.cgi?hostgroup=[hostgroup_name]"
+            SERVICEURL="[htmlcgi]/extinfo.cgi?type=2&host=[host_name]&service=[service_description]"
+            SERVICEGROUPURL="[htmlcgi]/status.cgi?servicegroup=[servicegroup_name]&style=detail"
+        fi
+        
+        # Now update the NagVis configuration. It needs to be written to the [defaults] section in nagvis.ini.php.
+        # Following cases:
+        # - Commented out nagios urls
+        # - Uncommented nagios urls
+        # - Custom urls commented out and not commented out
+        # - Not present options
+        # - And also not present sections
+        #
+        # Second part: Replace or add the htmlcgi value in [paths]
+        python <<EOF
+cfg = file('$OMD_ROOT/etc/nagvis/nagvis.ini.php').readlines()
+todo = [ 'host', 'hostgroup', 'service', 'servicegroup', 'htmlcgi' ]
+urls = {
+    'host':         "$HOSTURL",
+    'hostgroup':    "$HOSTGROUPURL",
+    'service':      "$SERVICEURL",
+    'servicegroup': "$SERVICEGROUPURL",
+}
+inDefaults = False
+inPaths  = False
+for num, l in enumerate(cfg):
+    l = l.strip()
+    if l == '[defaults]':
+        inDefaults = True
+    elif l == '[paths]':
+        inPaths = True
+    elif not l or l[0] == '[' and l[-1] == ']':
+        # Other sections terminate the paths,defaults sections
+
+        # Need to add attributes which have not been replaced?
+        if inPaths and 'htmlcgi' in todo:                    
+            cfg.insert(num, 'htmlcgi="$HTMLCGI"\n')
+            if 'htmlcgi' in todo:
+                todo.remove('htmlcgi')
+        elif inDefaults:
+            for ty in [ 'host', 'hostgroup', 'service', 'servicegroup' ]:
+                if ty in todo:
+                    cfg.insert(num, '%surl="%s"\n' % (ty, urls[ty]))
+                    if ty in todo:
+                        todo.remove(ty)
+
+        inDefaults = False
+        inPaths  = False
+    elif inDefaults:
+        for ty in [ 'host', 'hostgroup', 'service', 'servicegroup' ]:
+            if '%surl=' % ty in l:
+                cfg[num] = '%surl="%s"\n' % (ty, urls[ty])
+                if ty in todo:
+                    todo.remove(ty)
+    elif inPaths:
+        if 'htmlcgi=' in l:
+            cfg[num] = 'htmlcgi="$HTMLCGI"\n'
+            if 'htmlcgi' in todo:
+                todo.remove('htmlcgi')
+
+# Section was missing
+if 'htmlcgi' in todo:
+    cfg += [ '\n', '[paths]\n', 'htmlcgi="$HTMLCGI"\n' ]
+
+file('$OMD_ROOT/etc/nagvis/nagvis.ini.php', 'w').write(''.join(cfg))
+EOF
+        
+    ;;
+
+esac
