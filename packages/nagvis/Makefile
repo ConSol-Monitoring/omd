@@ -41,6 +41,22 @@ install:
 	# Delete files/directories we do not want to pack
 	rm -rf $(DESTDIR)$(OMD_ROOT)/share/nagvis/var
 	rm -rf $(DESTDIR)$(OMD_ROOT)/share/nagvis/etc
+	
+	# Update from NagVis 1.5 -> 1.6 in OMD handling needs to be handled here
+	# The var/userfiles directory is not part of 1.6 anymore. But if the packe
+	# would not contain var/nagvis/userfiles directories the "omd update" would remove
+	# the directory tree, even if there are some custom files in it. This looks
+	# like a bug in OMD. But to have a quick solution we simply create the empty
+	# directory structure here for some versions. Can be removed someday...
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/skel/var/nagvis/userfiles/gadgets
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/skel/var/nagvis/userfiles/images/gadgets
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/skel/var/nagvis/userfiles/images/shapes
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/skel/var/nagvis/userfiles/images/iconsets
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/skel/var/nagvis/userfiles/images/maps
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/skel/var/nagvis/userfiles/images/templates
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/skel/var/nagvis/userfiles/styles
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/skel/var/nagvis/userfiles/sounds
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/skel/var/nagvis/userfiles/templates
 
 
 clean:
