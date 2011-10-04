@@ -240,6 +240,11 @@ to make the output more human readable, so it is better parseable by scripts.
 
 This command also handles the global option \fB-v\fP or \fB--verbose\fP. It shows the
 changes in detail.
+.TP
+.B omd umount [SITE]
+Unmounts the ramdisk filesystem (tmpfs) of the given or all sites if no SITE option given.
+
+The ramdisk can only be unmounted when a site is stopped.
 .SH SEE ALSO
 .BR http://www.omdistro.org
 .br

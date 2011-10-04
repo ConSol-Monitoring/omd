@@ -9,6 +9,8 @@ This file documents the revision history for the Open Monitoring Distribution
 	    old directory. If everything works as expeced after update and you
 	    don't plan to downgrade again you can savely remove the directory
 	    var/nagvis/userfiles from your site.
+          - OMD
+            - Added 'umount' option to unmount the ramdisk of a site
 
 0.50     Sep 20 2011
           - Check_MK: fix problem with playing sounds
