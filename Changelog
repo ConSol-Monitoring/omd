@@ -1,6 +1,18 @@
 This file documents the revision history for the Open Monitoring Distribution
 
-0.50     ...
+0.52
+
+          - Updated to NagVis 1.6rc1
+	    Notes: The userfiles directory has been moved from var/nagvis/userfiles
+	    to local/share/nagvis/htdocs/userfiles. The side individual files
+	    shal be copied during update. The old files are left untouched in the
+	    old directory. If everything works as expeced after update and you
+	    don't plan to downgrade again you can savely remove the directory
+	    var/nagvis/userfiles from your site.
+          - OMD
+            - Added 'umount' option to unmount the ramdisk of a site
+
+0.50     Sep 20 2011
           - Check_MK: fix problem with playing sounds
           - Nagios:
             - added patch to remove host alias from state retention.
@@ -23,9 +35,9 @@ This file documents the revision history for the Open Monitoring Distribution
           - Debian Package:
             - Added the mandatory maintainer name
           - mod_fcgid: Increased file upload limit from 128kb to 3MB
-	  - npcd: Changed init script to find running processes with lost pidfile
+          - npcd: Changed init script to find running processes with lost pidfile
 
-0.48     Sun May 22
+0.48     May 22 2011
 
           - updated to Check_MK 1.1.10p3
           - updated to Shinken 0.6.4

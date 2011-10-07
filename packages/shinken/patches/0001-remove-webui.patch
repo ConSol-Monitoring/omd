@@ -1,0 +1,1146 @@
+diff -Naur shinken-0.6.99.orig/shinken/modules/passwd_ui.py shinken-0.6.99/shinken/modules/passwd_ui.py
+--- shinken-0.6.99.orig/shinken/modules/passwd_ui.py	2011-09-18 21:30:04.000000000 +0200
++++ shinken-0.6.99/shinken/modules/passwd_ui.py	1970-01-01 01:00:00.000000000 +0100
+@@ -1,97 +0,0 @@
+-#!/usr/bin/python
+-#Copyright (C) 2009 Gabes Jean, naparuba@gmail.com
+-#
+-#This file is part of Shinken.
+-#
+-#Shinken is free software: you can redistribute it and/or modify
+-#it under the terms of the GNU Affero General Public License as published by
+-#the Free Software Foundation, either version 3 of the License, or
+-#(at your option) any later version.
+-#
+-#Shinken is distributed in the hope that it will be useful,
+-#but WITHOUT ANY WARRANTY; without even the implied warranty of
+-#MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+-#GNU Affero General Public License for more details.
+-#
+-#You should have received a copy of the GNU Affero General Public License
+-#along with Shinken.  If not, see <http://www.gnu.org/licenses/>.
+-
+-
+-"""
+-This class is for looking in a apache passwd file
+-for auth
+-"""
+-
+-import os
+-import crypt
+-
+-from shinken.basemodule import BaseModule
+-
+-print "Loaded Apache/Passwd module"
+-
+-properties = {
+-    'daemons' : ['webui'],
+-    'type' : 'passwd_webui'
+-    }
+-
+-
+-#called by the plugin manager
+-def get_instance(plugin):
+-    print "Get an Apache/Passwd UI module for plugin %s" % plugin.get_name()
+-    
+-    instance = Passwd_Webui(plugin)
+-    return instance
+-
+-
+-class Passwd_Webui(BaseModule):
+-    def __init__(self, modconf):
+-        BaseModule.__init__(self, modconf)
+-        self.passwd = modconf.passwd
+-
+-
+-    # Try to connect if we got true parameter
+-    def init(self):
+-        print "Trying to initalize the Apache/Passwd file"
+-        
+-
+-    # To load the webui application
+-    def load(self, app):
+-        self.app = app
+-
+-
+-    def check_auth(self, user, password):
+-        try:
+-            f = open(self.passwd, 'r')
+-            for line in f.readlines():
+-                line = line.strip()
+-                # By pass bad lines
+-                if not ':' in line:
+-                    continue
+-                if line.startswith('#'):
+-                    continue
+-                elts = line.split(':')
+-                name = elts[0]
+-                hash = elts[1]
+-                salt = hash[:2]
+-                print "PASSWD:", name, hash, salt
+-                # If we match the user, look at the crypt
+-                if name == user:
+-                    compute_hash = crypt.crypt(password, salt)
+-                    print "Computed hash", compute_hash
+-                    if compute_hash == hash:
+-                        print "PASSWD : it's good!"
+-                        return True
+-                else:
+-                    print "PASSWD: bad user", name, user
+-        except Exception, exp:
+-            print "Checking auth in passwd %s failed : %s " % (self.passwd, exp)
+-            return False
+-        finally:
+-            try:
+-                f.close()
+-            except:
+-                pass
+-
+-        # At the end, we are not happy, so we return False
+-        print "PASSWD: return false"
+-        return False
+diff -Naur shinken-0.6.99.orig/shinken/modules/webui_broker/datamanager.py shinken-0.6.99/shinken/modules/webui_broker/datamanager.py
+--- shinken-0.6.99.orig/shinken/modules/webui_broker/datamanager.py	2011-09-18 21:30:04.000000000 +0200
++++ shinken-0.6.99/shinken/modules/webui_broker/datamanager.py	1970-01-01 01:00:00.000000000 +0100
+@@ -1,132 +0,0 @@
+-#!/usr/bin/env python
+-#Copyright (C) 2009-2010 :
+-#    Gabes Jean, naparuba@gmail.com
+-#    Gerhard Lausser, Gerhard.Lausser@consol.de
+-#    Gregory Starck, g.starck@gmail.com
+-#    Hartmut Goebel, h.goebel@goebel-consult.de
+-#
+-#This file is part of Shinken.
+-#
+-#Shinken is free software: you can redistribute it and/or modify
+-#it under the terms of the GNU Affero General Public License as published by
+-#the Free Software Foundation, either version 3 of the License, or
+-#(at your option) any later version.
+-#
+-#Shinken is distributed in the hope that it will be useful,
+-#but WITHOUT ANY WARRANTY; without even the implied warranty of
+-#MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+-#GNU Affero General Public License for more details.
+-#
+-#You should have received a copy of the GNU Affero General Public License
+-#along with Shinken.  If not, see <http://www.gnu.org/licenses/>.
+-
+-
+-from helper import hst_srv_sort
+-
+-
+-class DataManager(object):
+-    def __init__(self):
+-        self.rg = None
+-
+-    def load(self, rg):
+-        self.rg = rg
+-
+-    def get_host(self, hname):
+-        return self.rg.hosts.find_by_name(hname)
+-
+-    def get_service(self, hname, sdesc):
+-        return self.rg.services.find_srv_by_name_and_hostname(hname, sdesc)
+-
+-
+-    def get_contact(self, name):
+-        return self.rg.contacts.find_by_name(name)
+-
+-    def get_contacts(self):
+-        return self.rg.contacts
+-    
+-
+-    def get_hosts(self):
+-        return self.rg.hosts
+-
+-    def get_services(self):
+-        return self.rg.services
+-
+-    
+-    def get_important_impacts(self):
+-        res = []
+-        for s in self.rg.services:
+-            if s.is_impact and s.state not in ['OK', 'PENDING']:
+-                if s.business_impact > 2:
+-                    res.append(s)
+-        for h in self.rg.hosts:
+-            if h.is_impact and h.state not in ['UP', 'PENDING']:
+-                if h.business_impact > 2:
+-                    res.append(h)
+-        return res
+-
+-
+-    # Returns all problems
+-    def get_all_problems(self):
+-        res = []
+-        res.extend([s for s in self.rg.services if s.state not in ['OK', 'PENDING'] and not s.is_impact and not s.problem_has_been_acknowledged and not s.host.problem_has_been_acknowledged])
+-        res.extend([h for h in self.rg.hosts if h.state not in ['UP', 'PENDING'] and not h.is_impact and not h.problem_has_been_acknowledged])
+-        res.sort(hst_srv_sort)
+-        return res
+-
+-
+-    def get_important_elements(self):
+-        res = []
+-        # We want REALLY important things, so business_impact > 2, but not just IT elments that are
+-        # root problems, so we look only for config defined my_own_business_impact value too
+-        res.extend([s for s in self.rg.services if (s.business_impact > 2 and not 0 <= s.my_own_business_impact <= 2) ])
+-        res.extend([h for h in self.rg.hosts if (h.business_impact > 2 and not 0 <= h.my_own_business_impact <= 2)] )
+-        print "DUMP IMPORTANT"
+-        for i in res:
+-            print i.get_full_name(), i.business_impact, i.my_own_business_impact
+-        return res
+-
+-
+-    # For all business impacting elements, and give the worse state
+-    # if warning or critical
+-    def get_overall_state(self):
+-        h_states = [h.state_id for h in self.rg.hosts if h.business_impact > 2 and h.is_impact and h.state_id in [1, 2]]
+-        s_states = [s.state_id for s in self.rg.services if  s.business_impact > 2 and s.is_impact and s.state_id in [1, 2]]
+-        print "get_overall_state:: hosts and services business problems", h_states, s_states
+-        if len(h_states) == 0:
+-            h_state = 0
+-        else:
+-            h_state = max(h_states)
+-        if len(s_states) == 0:
+-            s_state = 0
+-        else:
+-            s_state = max(s_states)
+-        # Ok, now return the max of hosts and services states
+-        return max(h_state, s_state)
+-
+-    # Return a tree of {'elt' : Host, 'fathers' : [{}, {}]}
+-    def get_business_parents(self, obj, levels=3):
+-        res = {'node' : obj, 'fathers' : []}
+-#        if levels == 0 :
+-#            return res
+-
+-        for i in obj.parent_dependencies:
+-            # We want to get the levels deep for all elements, but
+-            # go as far as we should for bad elements
+-            if levels != 0 or i.state_id != 0:
+-                par_elts = self.get_business_parents(i, levels=levels - 1)
+-                res['fathers'].append(par_elts)
+-
+-        print "get_business_parents::Give elements", res
+-        return res
+-
+-
+-    # Ok, we do not have true root problems, but we can try to guess isn't it?
+-    #We can just guess for services with the same services of this host in fact
+-    def guess_root_problems(self, obj):
+-        if obj.__class__.my_type != 'service':
+-            return []
+-        r = [s for s in obj.host.services if s.state_id != 0 and s != obj]
+-        return r
+-        
+-
+-datamgr = DataManager()
+diff -Naur shinken-0.6.99.orig/shinken/modules/webui_broker/helper.py shinken-0.6.99/shinken/modules/webui_broker/helper.py
+--- shinken-0.6.99.orig/shinken/modules/webui_broker/helper.py	2011-09-18 21:30:04.000000000 +0200
++++ shinken-0.6.99/shinken/modules/webui_broker/helper.py	1970-01-01 01:00:00.000000000 +0100
+@@ -1,478 +0,0 @@
+-#!/usr/bin/env python
+-# -*- coding: utf-8 -*-
+-#Copyright (C) 2009-2010 :
+-#    Gabes Jean, naparuba@gmail.com
+-#    Gerhard Lausser, Gerhard.Lausser@consol.de
+-#    Gregory Starck, g.starck@gmail.com
+-#    Hartmut Goebel, h.goebel@goebel-consult.de
+-#
+-#This file is part of Shinken.
+-#
+-#Shinken is free software: you can redistribute it and/or modify
+-#it under the terms of the GNU Affero General Public License as published by
+-#the Free Software Foundation, either version 3 of the License, or
+-#(at your option) any later version.
+-#
+-#Shinken is distributed in the hope that it will be useful,
+-#but WITHOUT ANY WARRANTY; without even the implied warranty of
+-#MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+-#GNU Affero General Public License for more details.
+-#
+-#You should have received a copy of the GNU Affero General Public License
+-#along with Shinken.  If not, see <http://www.gnu.org/licenses/>.
+-
+-import time
+-import copy
+-import math
+-try:
+-    import json
+-except ImportError:
+-    # For old Python version, load
+-    # simple json (it can be hard json?! It's 2 functions guy!)
+-    try:
+-        import simplejson as json
+-    except ImportError:
+-        print "Error : you need the json or simplejson module"
+-        raise
+-
+-
+-
+-# Sort hosts and services by impact, states and co
+-def hst_srv_sort(s1, s2):
+-    if s1.business_impact > s2.business_impact:
+-        return -1
+-    if s2.business_impact > s1.business_impact:
+-        return 1
+-
+-    # Ok, we compute a importance value so
+-    # For host, the order is UP, UNREACH, DOWN
+-    # For service : OK, UNKNOWN, WARNING, CRIT
+-    # And DOWN is before CRITICAL (potential more impact)
+-    tab = {'host' : { 0 : 0, 1: 4, 2 : 1},
+-           'service' : {0 : 0, 1 : 2, 2 : 3, 3 : 1}
+-           }
+-    state1 = tab[s1.__class__.my_type].get(s1.state_id ,0)
+-    state2 = tab[s2.__class__.my_type].get(s2.state_id ,0)
+-    # ok, here, same business_impact
+-    # Compare warn and crit state
+-    if state1 > state2:
+-        return -1
+-    if state2 > state1:
+-        return 1
+-    
+-    # Ok, so by name...
+-    return s1.get_full_name() > s2.get_full_name()
+-
+-
+-
+-class Helper(object):
+-    def __init__(self):
+-        pass
+-
+-    def gogo(self):
+-        return 'HELLO'
+-
+-
+-    def act_inactive(self, b):
+-        if b:
+-            return 'Active'
+-        else:
+-            return 'Inactive'
+-
+-    def yes_no(self, b):
+-        if b:
+-            return 'Yes'
+-        else:
+-            return 'No'
+-
+-    def print_float(self, f):
+-        return '%.2f' % f
+-
+-    def ena_disa(self, b):
+-        if b:
+-            return 'Enabled'
+-        else:
+-            return 'Disabled'
+-
+-    # For a unix time return something like
+-    # Tue Aug 16 13:56:08 2011
+-    def print_date(self, t):
+-        if t == 0 or t == None:
+-            return 'N/A'
+-        return time.asctime(time.localtime(t))
+-
+-
+-    # For a time, print something like
+-    # 10m 37s  (just duration = True)
+-    # N/A if got bogus number (like 1970 or None)
+-    # 1h 30m 22s ago (if t < now)
+-    # Now (if t == now)
+-    # in 1h 30m 22s
+-    # Or in 1h 30m (no sec, if we ask only_x_elements=2, 0 means all)
+-    def print_duration(self, t, just_duration=False, x_elts=0):
+-        if t == 0 or t == None:
+-            return 'N/A'
+-        #print "T", t
+-        # Get the difference between now and the time of the user
+-        seconds = int(time.time()) - int(t)
+-        
+-        # If it's now, say it :)
+-        if seconds == 0:
+-            return 'Now'
+-
+-        in_future = False
+-
+-        # Remember if it's in the future or not
+-        if seconds < 0:
+-            in_future = True
+-        
+-        # Now manage all case like in the past
+-        seconds = abs(seconds)
+-        #print "In future?", in_future
+-
+-        #print "sec", seconds
+-        seconds = long(round(seconds))
+-        #print "Sec2", seconds
+-        minutes, seconds = divmod(seconds, 60)
+-        hours, minutes = divmod(minutes, 60)
+-        days, hours = divmod(hours, 24)
+-        weeks, days = divmod(days, 7)
+-        months, weeks = divmod(weeks, 4)
+-        years, months = divmod(months, 12)
+- 
+-        minutes = long(minutes)
+-        hours = long(hours)
+-        days = long(days)
+-        weeks = long(weeks)
+-        months = long(months)
+-        years = long(years)
+- 
+-        duration = []
+-        if years > 0:
+-            duration.append('%dy' % years)
+-        else:
+-            if months > 0:
+-                duration.append('%dM' % months)
+-            if weeks > 0:
+-                duration.append('%dw' % weeks)
+-            if days > 0:
+-                duration.append('%dd' % days)
+-            if hours > 0:
+-                duration.append('%dh' % hours)
+-            if minutes > 0:
+-                duration.append('%dm' % minutes)
+-            if seconds > 0:
+-                duration.append('%ds' % seconds)
+-
+-        #print "Duration", duration
+-        # Now filter the number of printed elements if ask
+-        if x_elts >= 1:
+-            duration = duration[:x_elts]
+-
+-        # Maybe the user just want the duration
+-        if just_duration:
+-            return ' '.join(duration)
+-
+-        # Now manage the future or not print
+-        if in_future:
+-            return 'in '+' '.join(duration)
+-        else: # past :)
+-            return ' '.join(duration) + ' ago'
+-
+-
+-    # Need to create a X level higer and lower to teh element
+-    def create_json_dep_graph(self, elt, levels=3):
+-        t0 = time.time()
+-        # First we need ALL elements
+-        all_elts = self.get_all_linked_elts(elt, levels=levels)
+-        print "We got all our elements"
+-        dicts = []
+-        for i in all_elts:
+-            print "Elt", i.get_dbg_name()
+-            d = self.get_dep_graph_struct(i)
+-            dicts.append(d)
+-        j = json.dumps(dicts)
+-        print "Create json", j
+-        print "create_json_dep_graph::Json creation time", time.time() - t0
+-        return j
+-
+-    # Return something like:
+-    #{
+-    #                  "id": "localhost",
+-    #                  "name": "localhost",
+-    #                  "data": {"$color":"red", "$dim": 5*2, "some other key": "some other value"},
+-    #                  "adjacencies": [{
+-    #                          "nodeTo": "main router",
+-    #                          "data": {
+-    #                              "$type":"arrow",
+-    #                              "$color":"gray",
+-    #                              "weight": 3,
+-    #                              "$direction": ["localhost", "main router"],
+-    #                          }
+-    #                      }
+-    #                      ]
+-    #              }
+-    # But as a python dict
+-    def get_dep_graph_struct(self, elt, levels=3):
+-        t = elt.__class__.my_type
+-        # We set the values for webui/plugins/depgraph/htdocs/js/eltdeps.js
+-        # so a node with important data for rendering
+-        # type = custom, business_impact and img_src.
+-        d = {'id' : elt.get_dbg_name(), 'name' : elt.get_dbg_name(),
+-             'data' : {'$type' : 'custom',
+-                       'business_impact' : elt.business_impact,
+-                       'img_src' : self.get_icon_state(elt)
+-                       },
+-             'adjacencies' : []
+-             }
+-
+-        # Set the right info panel
+-        d['data']['infos'] = r'''%s <h2 class="%s"><img style="width : 64px; height:64px" src="%s"/> %s: %s</h2>
+-		       <p>since %s</p>
+-		       <div style="float:right;"> <a href="%s">%s</a></div>'''  % (
+-            '<img src="/static/images/star.png">' * (elt.business_impact - 2),
+-            elt.state.lower(), self.get_icon_state(elt), elt.state, elt.get_full_name(),
+-            self.print_duration(elt.last_state_change, just_duration=True, x_elts=2),
+-            self.get_link_dest(elt), self.get_button('Go to details', img='/static/images/search.png'))
+-        
+-     
+-
+-        # Now put in adj our parents
+-        for p in elt.parent_dependencies:
+-            pd = {'nodeTo' : p.get_dbg_name(),
+-                  'data' : {"$type":"line", "$direction": [elt.get_dbg_name(), p.get_dbg_name()]}}
+-
+-            # Naive way of looking at impact
+-            if elt.state_id != 0 and p.state_id != 0:
+-                pd['data']["$color"] = 'Tomato'
+-            # If OK, show host->service as a green link
+-            elif elt.__class__.my_type != p.__class__.my_type:
+-                 pd['data']["$color"] = 'PaleGreen'
+-            d['adjacencies'].append(pd)
+-
+-        # The sons case is now useful, it will be done by our sons
+-        # that will link us
+-        return d
+-        
+-
+-    # Return all linked elements of this elt, and 2 level
+-    # higer and lower :)
+-    def get_all_linked_elts(self, elt, levels=3):
+-        if levels == 0 :
+-            return set()
+-
+-        my = set()
+-        for i in elt.child_dependencies:
+-            my.add(i)
+-            child_elts = self.get_all_linked_elts(i, levels=levels - 1)
+-            for c in child_elts:
+-                my.add(c)
+-        for i in elt.parent_dependencies:
+-            my.add(i)
+-            par_elts = self.get_all_linked_elts(i, levels=levels - 1)
+-            for c in par_elts:
+-                my.add(c)
+-            
+-        print "get_all_linked_elts::Give elements", my
+-        return my
+-
+-
+-    # Return a button with text, image, id and class (if need)
+-    def get_button(self, text, img=None, id=None, cls=None):
+-        s = '<div class="buttons">\n'
+-        if cls and not id:
+-            s += '<button class="%s">\n' % cls
+-        elif id and not cls:
+-            s += '<button id="%s">\n' % id
+-        elif id and cls:
+-            s += '<button class="%s" id="%s">\n' % (cls, id)
+-        else:
+-            s += '<button>\n'
+-        if img:
+-            s += '<img src="%s" alt=""/>\n' % img
+-        s += "%s" % text
+-        s+= ''' </button>
+-            </div>\n'''
+-        return s
+-
+-
+-    # For and host, return the services sorted by business
+-    # impact, then state, then desc
+-    def get_host_services_sorted(self, host):
+-        t = copy.copy(host.services)
+-        t.sort(hst_srv_sort)
+-        return t
+-
+-
+-    def get_input_bool(self, b, id=None):
+-        id_s = ''
+-        if id:
+-            id_s = 'id="%s"' % id
+-        if b:
+-            return """<input type="checkbox" checked="checked" %s/>\n""" % id_s
+-        else:
+-            return """<input type="checkbox" %s />\n""" % id_s
+-
+-
+-    def print_business_rules(self, tree, level=0):
+-        print "Should print tree", tree
+-        node = tree['node']
+-        name = node.get_full_name()
+-        fathers = tree['fathers']
+-        s = ''
+-        # Do not print the node if it's the root one, we already know its state!
+-        if level != 0:
+-            s += "%s is %s since %s\n" % (self.get_link(node), node.state, self.print_duration(node.last_state_change, just_duration=True))
+-
+-        # If we got no parents, no need to print the expand icon
+-        if len(fathers) > 0:
+-            # We look ifthe below tree is goodor not
+-            tree_is_good = (node.state_id == 0)
+-            
+-            # If the tree is good, we will use an expand image
+-            # and hide the tree
+-            if tree_is_good:
+-                display = 'none'
+-                img = 'expand.png'
+-            else: # we will already show the tree, and use a reduce image
+-                display = 'block'
+-                img = 'reduce.png'
+-
+-            # If we are the root, we already got this
+-            if level != 0:
+-                s += """<a id="togglelink-%s" href="javascript:toggleBusinessElt('%s')"><img id="business-parents-img-%s" src="/static/images/%s"> </a> \n""" % (name, name, name, img)
+-                
+-            s += """<ul id="business-parents-%s" style="display: %s; ">""" % (name, display)
+-        
+-            for n in fathers:
+-                sub_node = n['node']
+-                sub_s = self.print_business_rules(n, level=level+1)
+-                s += '<li class="%s">%s</li>' % (self.get_small_icon_state(sub_node), sub_s)
+-            s += "</ul>"
+-        print "Returing s:", s
+-        return s
+-
+-
+-    # Get the small state for host/service icons
+-    def get_small_icon_state(self, obj):
+-        if obj.state == 'PENDING':
+-            return 'unknown'
+-        if obj.state == 'OK':
+-            return 'ok'
+-        if obj.state == 'UP':
+-            return 'up'
+-        # Outch, not a good state...
+-        if obj.problem_has_been_acknowledged:
+-            return 'ack'
+-        if obj.in_scheduled_downtime:
+-            return 'downtime'
+-        if obj.is_flapping:
+-            return 'flapping'
+-        #Ok, no excuse, it's a true error...
+-        return obj.state.lower()
+-
+-
+-    # For an object, give it's business impact as text 
+-    # and stars if need
+-    def get_business_impact_text(self, obj):
+-        txts = {0 : 'None', 1 : 'Low', 2: 'Normal',
+-                3 : 'High', 4 : 'Very important', 5 : 'Top for business'}
+-        nb_stars = max(0, obj.business_impact - 2)
+-        stars = '<img src="/static/images/star.png">\n' * nb_stars
+-        
+-        res = "%s %s" % (txts.get(obj.business_impact, 'Unknown'), stars)
+-        return res
+-            
+-
+-    # We will outpout as a ul/li list the impacts of this 
+-    def got_impacts_list_as_li(self, obj):
+-        impacts = obj.impacts
+-        r = '<ul>\n'
+-        for i in impacts:
+-            r += '<li>%s</li>\n' % i.get_full_name()
+-        r += '</ul>\n'
+-        return r
+-
+-    # Return the impacts as a business sorted list
+-    def get_impacts_sorted(self, obj):
+-        t = copy.copy(obj.impacts)
+-        t.sort(hst_srv_sort)
+-        return t
+-
+-
+-    def get_link(self, obj, short=False):
+-        if obj.__class__.my_type == 'service':
+-            if short:
+-                name = obj.get_name()
+-            else:
+-                name = obj.get_full_name()
+-            return '<a href="/service/%s"> %s </a>' % (obj.get_full_name(), name)
+-        # if not service, host
+-        return '<a href="/host/%s"> %s </a>' % (obj.get_full_name(), obj.get_full_name())
+-    
+-    #Give only the /service/blabla or /hsot blabla string, like for buttons inclusion
+-    def get_link_dest(self, obj):
+-        return "/%s/%s" % (obj.__class__.my_type, obj.get_full_name())
+-
+-    # For an host, give it's own link, for a servie, give the link of its host
+-    def get_host_link(self, obj):
+-        if obj.__class__.my_type == 'service':
+-            return self.get_link(obj.host)
+-        return self.get_link(obj)
+-
+-    # For an object, return the path of the icons
+-    def get_icon_state(self, obj):
+-        ico = self.get_small_icon_state(obj)
+-        if obj.icon_set != '':
+-            return '/static/images/sets/%s/state_%s.png' % (obj.icon_set, ico)
+-        else:
+-            return '/static/images/state_%s.png' % ico
+-        
+-
+-
+-
+-    # Get 
+-    def get_navi(self, total, pos, step=30):
+-        step = float(step)
+-        nb_pages = math.ceil(total / step)
+-        current_page = int(pos / step)
+-        
+-        step = int(step)
+-
+-        res = []
+-
+-        if nb_pages == 0 or nb_pages == 1:
+-            return None
+-
+-        if current_page >= 2:
+-            # Name, start, end, is_current
+-            res.append(('« First', 0, step, False))
+-            res.append(('...', None, None, False))
+-            
+-
+-        print "Range,", current_page - 1, current_page + 1
+-        for i in xrange(current_page - 1, current_page + 2):
+-            if i < 0:
+-                continue
+-            print "Doing PAGE", i
+-            is_current = (i == current_page)
+-            start = int(i*step)
+-            end = int((i+1) * step)
+-            res.append(('%d' % (i+1), start, end, is_current))
+-
+-        if current_page < nb_pages - 2:
+-            start = int((nb_pages - 1)*step)
+-            end = int(nb_pages*step)
+-            res.append(('...', None, None, False))
+-            res.append(('Last »', start, end, False))
+-
+-        print "Total :", total, "pos", pos, "step", step
+-        print "nb pages", nb_pages, "current_page", current_page
+-    
+-        print "Res", res
+-
+-        return res
+-
+-    
+-
+-helper = Helper()
+diff -Naur shinken-0.6.99.orig/shinken/modules/webui_broker/__init__.py shinken-0.6.99/shinken/modules/webui_broker/__init__.py
+--- shinken-0.6.99.orig/shinken/modules/webui_broker/__init__.py	2011-09-18 21:30:04.000000000 +0200
++++ shinken-0.6.99/shinken/modules/webui_broker/__init__.py	1970-01-01 01:00:00.000000000 +0100
+@@ -1,40 +0,0 @@
+-#!/usr/bin/python
+-#Copyright (C) 2009 Gabes Jean, naparuba@gmail.com
+-#
+-#This file is part of Shinken.
+-#
+-#Shinken is free software: you can redistribute it and/or modify
+-#it under the terms of the GNU Affero General Public License as published by
+-#the Free Software Foundation, either version 3 of the License, or
+-#(at your option) any later version.
+-#
+-#Shinken is distributed in the hope that it will be useful,
+-#but WITHOUT ANY WARRANTY; without even the implied warranty of
+-#MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+-#GNU Affero General Public License for more details.
+-#
+-#You should have received a copy of the GNU Affero General Public License
+-#along with Shinken.  If not, see <http://www.gnu.org/licenses/>.
+-
+-
+-properties = {
+-    'daemons' : ['broker'],
+-    'type' : 'webui',
+-    'phases' : ['running'],
+-    'external' : True,
+-    }
+-
+-
+-# called by the plugin manager to get an instance
+-def get_instance(plugin):
+-    print "Get a WebUI instancefor plugin %s" % plugin.get_name()
+-
+-    #First try to import
+-    try:
+-        from webui_broker import Webui_broker
+-    except ImportError , exp:
+-        print "Warning : the plugin type %s is unavalable : %s" % ('webui', exp)
+-        return None
+-
+-    instance = Webui_broker(plugin)
+-    return instance
+diff -Naur shinken-0.6.99.orig/shinken/modules/webui_broker/webui_broker.py shinken-0.6.99/shinken/modules/webui_broker/webui_broker.py
+--- shinken-0.6.99.orig/shinken/modules/webui_broker/webui_broker.py	2011-09-18 21:30:04.000000000 +0200
++++ shinken-0.6.99/shinken/modules/webui_broker/webui_broker.py	1970-01-01 01:00:00.000000000 +0100
+@@ -1,379 +0,0 @@
+-#!/usr/bin/env python
+-#Copyright (C) 2009-2010 :
+-#    Gabes Jean, naparuba@gmail.com
+-#    Gerhard Lausser, Gerhard.Lausser@consol.de
+-#    Gregory Starck, g.starck@gmail.com
+-#    Hartmut Goebel, h.goebel@goebel-consult.de
+-#
+-#This file is part of Shinken.
+-#
+-#Shinken is free software: you can redistribute it and/or modify
+-#it under the terms of the GNU Affero General Public License as published by
+-#the Free Software Foundation, either version 3 of the License, or
+-#(at your option) any later version.
+-#
+-#Shinken is distributed in the hope that it will be useful,
+-#but WITHOUT ANY WARRANTY; without even the implied warranty of
+-#MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+-#GNU Affero General Public License for more details.
+-#
+-#You should have received a copy of the GNU Affero General Public License
+-#along with Shinken.  If not, see <http://www.gnu.org/licenses/>.
+-
+-
+-"""
+-This Class is a plugin for the Shinken Broker. It is in charge
+-to get brok and recreate real objects, and propose a Web intnerface :)
+-"""
+-
+-import traceback
+-import sys
+-import os
+-import time
+-import traceback
+-import select
+-import threading
+-import base64
+-import cPickle
+-
+-from shinken.basemodule import BaseModule
+-from shinken.message import Message
+-from shinken.webui.bottle import Bottle, run, static_file, view, route, request, response
+-from shinken.misc.regenerator import Regenerator
+-from shinken.log import logger
+-from shinken.modulesmanager import ModulesManager
+-from shinken.daemon import Daemon
+-
+-#Local import
+-from datamanager import datamgr
+-from helper import helper
+-
+-# Debug
+-import shinken.webui.bottle as bottle
+-bottle.debug(True)
+-
+-#Import bottle lib to make bottle happy
+-bottle_dir = os.path.abspath(os.path.dirname(bottle.__file__))
+-sys.path.insert(0, bottle_dir)
+-
+-
+-bottle.TEMPLATE_PATH.append(os.path.join(bottle_dir, 'views'))
+-bottle.TEMPLATE_PATH.append(bottle_dir)
+-
+-
+-
+-#Class for the Merlindb Broker
+-#Get broks and puts them in merlin database
+-class Webui_broker(BaseModule, Daemon):
+-    def __init__(self, modconf):
+-        BaseModule.__init__(self, modconf)
+-
+-        self.plugins = []
+-
+-        self.port = int(getattr(modconf, 'port', '7767'))
+-        self.host = getattr(modconf, 'host', '0.0.0.0')
+-        self.auth_secret = getattr(modconf, 'auth_secret').encode('utf8', 'replace')
+-        self.http_backend = getattr(modconf, 'http_backend', 'wsgiref')
+-        # Load the photo dir and make it a absolute path
+-        self.photo_dir = getattr(modconf, 'photo_dir', 'photos')
+-        self.photo_dir = os.path.abspath(self.photo_dir)
+-        print "Webui : using the backend", self.http_backend
+-
+-        self.rg = Regenerator()
+-        self.datamgr = datamgr
+-        datamgr.load(self.rg)
+-        self.helper = helper
+-        self.request = request
+-        self.response = response
+-
+-        # Daemon like init
+-        self.debug_output = []
+-        self.modules_manager = ModulesManager('webui', self.find_modules_path(), [])
+-        # We can now output some previouly silented debug ouput
+-        for s in self.debug_output:
+-            print s
+-        del self.debug_output
+-
+-        self.log = logger
+-        self.check_photo_dir()
+-        
+-
+-    # We check if the photo directory exists. If not, try to create it
+-    def check_photo_dir(self):
+-        print "Checking photo path", self.photo_dir
+-        if not os.path.exists(self.photo_dir):
+-            print "Truing to create photo dir", self.photo_dir
+-            try:
+-                os.mkdir(self.photo_dir)
+-            except Exception, exp:
+-                print "Photo dir creation failed", exp
+-                
+-        
+-
+-    # Called by Broker so we can do init stuff
+-    # TODO : add conf param to get pass with init
+-    # Conf from arbiter!
+-    def init(self):
+-        print "Init of the Webui '%s'" % self.name
+-        self.modules_manager.set_modules(self.modules)
+-        self.do_load_modules()
+-        for inst in self.modules_manager.instances:
+-            f = getattr(inst, 'load', None)
+-            if f and callable(f):
+-                f(self)
+-
+-
+-
+-    def main(self):
+-        try:
+-            #import cProfile
+-            #cProfile.runctx('''self.do_main()''', globals(), locals(),'/tmp/livestatus.profile')
+-            self.do_main()
+-        except Exception, exp:            
+-            msg = Message(id=0, type='ICrash', data={'name' : self.get_name(), 'exception' : exp, 'trace' : traceback.format_exc()})
+-            self.from_q.put(msg)
+-            # wait 2 sec so we know that the broker got our message, and die
+-            time.sleep(2)
+-            raise
+-
+-
+-    # A plugin send us en external command. We just put it
+-    # in the good queue
+-    def push_external_command(self, e):
+-        print "WebUI: got an external command", e.__dict__
+-        self.from_q.put(e)
+-        
+-
+-    # Real main function
+-    def do_main(self):
+-        #I register my exit function
+-        self.set_exit_handler()
+-        print "Go run"
+-
+-        self.global_lock = threading.RLock()
+-        self.data_thread = None
+-
+-        # Check if the view dir really exist
+-        if not os.path.exists(bottle.TEMPLATE_PATH[0]):
+-            logger.log('ERROR : the view path do not exist at %s' % bottle.TEMPLATE_PATH)
+-            sys.exit(2)
+-
+-        self.load_plugins()
+-
+-        # Declare the whole app static files AFTER the plugin ones
+-        self.declare_common_static()
+-        
+-        
+-        
+-
+-        # Launch the data thread"
+-        self.data_thread = threading.Thread(None, self.manage_brok_thread, 'datathread')
+-        self.data_thread.start()
+-        # TODO : look for alive and killing
+-
+-        # Ok, you want to know why we are using a data thread instead of
+-        # just call for a select with q._reader, the underliying file 
+-        # handle of the Queue()? That's just because under Windows, select
+-        # only manage winsock (so network) file descriptor! What a shame!
+-        print "Starting WebUI application"
+-        srv = run(host=self.host, port=self.port, server=self.http_backend)
+-
+-        # ^ IMPORTANT ^
+-        # We are not managing the lock at this
+-        # level because we got 2 types of requests:
+-        # static images/css/js : no need for lock
+-        # pages : need it. So it's managed at a
+-        # function wrapper at loading pass
+-
+-
+-                    
+-    # It's the thread function that will get broks
+-    # and update data. Will lock the whole thing
+-    # while updating
+-    def manage_brok_thread(self):
+-        print "Data thread started"
+-        while True:
+-           b = self.to_q.get()
+-           #print "Got a brok"
+-           # For updating, we cannot do it while
+-           # answer queries, so lock it
+-           self.global_lock.acquire()
+-           try:
+-               #print "Got data lock, manage brok"
+-               self.rg.manage_brok(b)
+-               for mod in self.modules_manager.get_internal_instances():
+-                   try:
+-                       mod.manage_brok(b)
+-                   except Exception , exp:
+-                       print exp.__dict__
+-                       logger.log("[%s] Warning : The mod %s raise an exception: %s, I'm tagging it to restart later" % (self.name, mod.get_name(),str(exp)))
+-                       logger.log("[%s] Exception type : %s" % (self.name, type(exp)))
+-                       logger.log("Back trace of this kill: %s" % (traceback.format_exc()))
+-                       self.modules_manager.set_to_restart(mod)
+-           finally:
+-               #print "Release data lock"
+-               self.global_lock.release()
+-
+-
+-    # Here we will load all plugins (pages) under the webui/plugins
+-    # directory. Each one can have a page, views and htdocs dir that we must
+-    # route correctly
+-    def load_plugins(self):
+-        from shinken.webui import plugins
+-        plugin_dir = os.path.abspath(os.path.dirname(plugins.__file__))
+-        print "Loading plugin directory : %s" % plugin_dir
+-        
+-        # Load plugin directories
+-        plugin_dirs = [ fname for fname in os.listdir(plugin_dir)
+-                        if os.path.isdir(os.path.join(plugin_dir, fname)) ]
+-
+-        print "Plugin dirs", plugin_dirs
+-        sys.path.append(plugin_dir)
+-        # We try to import them, but we keep only the one of
+-        # our type
+-        for fdir in plugin_dirs:
+-            print "Try to load", fdir
+-            mod_path = 'shinken.webui.plugins.%s.%s' % (fdir, fdir)
+-            try:
+-                m = __import__(mod_path, fromlist=[mod_path])
+-                m_dir = os.path.abspath(os.path.dirname(m.__file__))
+-                sys.path.append(m_dir)
+-
+-                print "Loaded module m", m
+-                print m.__file__
+-                pages = m.pages
+-                print "Try to load pages", pages
+-                for (f, entry) in pages.items():
+-                    routes = entry.get('routes', None)
+-                    v = entry.get('view', None)
+-                    static = entry.get('static', False)
+-
+-                    # IMPORTANT : apply VIEW BEFORE route!
+-                    if v:
+-                        print "Link function", f, "and view", v
+-                        f = view(v)(f)
+-
+-                    # Maybe there is no route to link, so pass
+-                    if routes:
+-                        for r in routes:
+-                            method = entry.get('method', 'GET')
+-                            print "link function", f, "and route", r, "method", method
+-                            
+-                            # Ok, we will just use the lock for all
+-                            # plugin page, but not for static objects
+-                            # so we set the lock at the function level.
+-                            lock_version = self.lockable_function(f)
+-                            f = route(r, callback=lock_version, method=method)
+-                            
+-                    # If the plugin declare a static entry, register it
+-                    # and remeber : really static! because there is no lock
+-                    # for them!
+-                    if static:
+-                        self.add_static(fdir, m_dir)
+-
+-                # And we add the views dir of this plugin in our TEMPLATE
+-                # PATH
+-                bottle.TEMPLATE_PATH.append(os.path.join(m_dir, 'views'))
+-
+-                # And finally register me so the pages can get data and other
+-                # useful stuff
+-                m.app = self
+-                        
+-                        
+-            except Exception, exp:
+-                logger.log("Warning in loading plugins : %s" % exp)
+-
+-
+-
+-    def add_static(self, fdir, m_dir):
+-        static_route = '/static/'+fdir+'/:path#.+#'
+-        print "Declaring static route", static_route
+-        def plugin_static(path):
+-            print "Ask %s and give %s" % (path, os.path.join(m_dir, 'htdocs'))
+-            return static_file(path, root=os.path.join(m_dir, 'htdocs'))
+-        route(static_route, callback=plugin_static)
+-
+-
+-    # We want a lock manager version of the plugin fucntions
+-    def lockable_function(self, f):
+-        print "We create a lock verion of", f
+-        def lock_version(**args):
+-            t = time.time()
+-            print "Got HTTP lock for f", f
+-            self.global_lock.acquire()
+-            try:
+-                return f(**args)
+-            finally:
+-                print "Release HTTP lock for f", f
+-                print "in", time.time() - t
+-                self.global_lock.release()
+-        print "The lock version is", lock_version
+-        return lock_version
+-
+-
+-    def declare_common_static(self):
+-        @route('/static/photos/:path#.+#')
+-        def give_photo(path):
+-            # If the file really exist, give it. If not, give a dummy image.
+-            if os.path.exists(os.path.join(self.photo_dir, path+'.jpg')):
+-                return static_file(path+'.jpg', root=self.photo_dir)
+-            else:
+-                return static_file('images/user.png', root=os.path.join(bottle_dir, 'htdocs'))
+-
+-        # Route static files css files
+-        @route('/static/:path#.+#')
+-        def server_static(path):
+-            return static_file(path, root=os.path.join(bottle_dir, 'htdocs'))
+-
+-        # And add teh favicon ico too
+-        @route('/favicon.ico')
+-        def give_favicon():
+-            return static_file('favicon.ico', root=os.path.join(bottle_dir, 'htdocs', 'images'))
+-
+-
+-
+-
+-
+-    def check_auth(self, user, password):
+-        print "Checking auth of", user, password
+-        c = self.datamgr.get_contact(user)
+-        print "Got", c
+-        if not c:
+-            print "Warning: You need to have a contact having the same name as your user %s" % user
+-        
+-        # TODO : do not forgot the False when release!
+-        is_ok = False#(c is not None)#False
+-        
+-        for mod in self.modules_manager.get_internal_instances():
+-            try:
+-                f = getattr(mod, 'check_auth', None)
+-                print "Get check_auth", f, "from", mod.get_name()
+-                if f and callable(f):
+-                    r = f(user, password)
+-                    if r:
+-                        is_ok = True
+-                        # No need for other modules
+-                        break
+-            except Exception , exp:
+-                print exp.__dict__
+-                logger.log("[%s] Warning : The mod %s raise an exception: %s, I'm tagging it to restart later" % (self.name, mod.get_name(),str(exp)))
+-                logger.log("[%s] Exception type : %s" % (self.name, type(exp)))
+-                logger.log("Back trace of this kill: %s" % (traceback.format_exc()))
+-                self.modules_manager.set_to_restart(mod)        
+-
+-        # Ok if we got a real contact, and if a module auth it
+-        return (is_ok and c is not None)
+-
+-        
+-
+-    def get_user_auth(self):
+-        # First we look for the user sid
+-        # so we bail out if it's a false one
+-        user_name = self.request.get_cookie("user", secret=self.auth_secret)
+-
+-        # If we cannot check the cookie, bailout
+-        if not user_name:
+-            return None
+-
+-        c = self.datamgr.get_contact(user_name)
+-        return c

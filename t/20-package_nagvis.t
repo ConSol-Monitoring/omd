@@ -12,16 +12,51 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 232 );
+plan( tests => 321 );
 
 ##################################################
 # create our test site
 my $omd_bin = TestUtils::get_omd_bin();
 my $site    = TestUtils::create_test_site() or TestUtils::bail_out_clean("no further testing without site");
 my $auth    = 'OMD Monitoring Site '.$site.':omdadmin:omd';
+
+# Developer test: Install NagVis into local hierarchy
+if($ENV{NAGVIS_DEVEL}) {
+    TestUtils::test_command({ cmd => "/d1/nagvis/.f12 testsite" });
+}
+
 my $version = site_nagvis_version($site);
 
-#TestUtils::test_command({ cmd => "/d1/nagvis/mache" });
+##################################################
+# Check NAGVIS_URLS switcher
+
+# Ensure the site is stopped, but don't care about the exit code here!
+TestUtils::test_command({ cmd => $omd_bin." stop $site", exit => -1 });
+
+TestUtils::test_command({ cmd => $omd_bin." config $site set NAGVIS_URLS auto" });
+TestUtils::test_command({ cmd => $omd_bin." config $site set DEFAULT_GUI welcome" });
+# Now grep nagvis.ini.php for lines matching
+# a) hosturl="[htmlcgi]/status.cgi?host=[host_name]"
+# b) htmlcgi="/nv/nagios/cgi-bin"
+TestUtils::test_command({ cmd  => "/bin/su - $site -c 'cat etc/nagvis/nagvis.ini.php'",
+                          like => [ '/hosturl="\[htmlcgi\]\/status.cgi\?host=\[host_name\]"/',
+                                    '/htmlcgi="\/'.$site.'\/nagios\/cgi-bin"/' ] }),
+
+TestUtils::test_command({ cmd => $omd_bin." config $site set DEFAULT_GUI nagios" });
+TestUtils::test_command({ cmd  => "/bin/su - $site -c 'cat etc/nagvis/nagvis.ini.php'",
+                          like => [ '/hosturl="\[htmlcgi\]\/status.cgi\?host=\[host_name\]"/',
+                                    '/htmlcgi="\/'.$site.'\/nagios\/cgi-bin"/' ] }),
+
+TestUtils::test_command({ cmd => $omd_bin." config $site set DEFAULT_GUI thruk" });
+TestUtils::test_command({ cmd  => "/bin/su - $site -c 'cat etc/nagvis/nagvis.ini.php'",
+                          like => [ '/hosturl="\[htmlcgi\]\/status.cgi\?host=\[host_name\]"/',
+                                    '/htmlcgi="\/'.$site.'\/thruk\/cgi-bin"/' ] }),
+
+TestUtils::test_command({ cmd => $omd_bin." config $site set DEFAULT_GUI check_mk" });
+TestUtils::test_command({ cmd  => "/bin/su - $site -c 'cat etc/nagvis/nagvis.ini.php'",
+                          like => [ '/hosturl="\[htmlcgi\]\/view\.py\?view_name=host&site=&host=\[host_name\]"/',
+                                    '/htmlcgi="\/'.$site.'\/check_mk"/' ] }),
+
 
 ##################################################
 # Prepare the site for testing...
@@ -37,9 +72,23 @@ my $tests = [
       like => '/HTTP OK:/' },
     { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -t 30 -H localhost -a omdadmin:omd -u /$site/nagvis -e 301'",
       like => '/HTTP OK:/' },
-    { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -t 30 -H localhost -a omdadmin:omd -u /$site/nagvis/ -e 302'",
+    { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -t 30 -H localhost -a omdadmin:omd -u /$site/nagvis/ -e 301'",
       like => '/HTTP OK:/' },
     { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -t 30 -H localhost -a omdadmin:omd -u /$site/nagvis/frontend/nagvis-js/index.php -e 302'",
+      like => '/HTTP OK:/' },
+    { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -t 30 -H localhost -a omdadmin:omd -u /$site/nagvis/frontend -e 301'",
+      like => '/HTTP OK:/' },
+    { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -t 30 -H localhost -a omdadmin:omd -u /$site/nagvis/frontend/ -e 301'",
+      like => '/HTTP OK:/' },
+    { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -t 30 -H localhost -a omdadmin:omd -u /$site/nagvis/frontend/wui -e 301'",
+      like => '/HTTP OK:/' },
+    { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -t 30 -H localhost -a omdadmin:omd -u /$site/nagvis/frontend/wui/ -e 301'",
+      like => '/HTTP OK:/' },
+    { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -t 30 -H localhost -a omdadmin:omd -u /$site/nagvis/frontend/wui/index.php -e 301'",
+      like => '/HTTP OK:/' },
+    { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -t 30 -H localhost -a omdadmin:omd -u /$site/nagvis/index.php -e 301'",
+      like => '/HTTP OK:/' },
+    { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -t 30 -H localhost -a omdadmin:omd -u /$site/nagvis/config.php -e 302'",
       like => '/HTTP OK:/' },
 ];
 
@@ -53,38 +102,43 @@ for my $test (@{$tests}) {
 my $urls = [
     # OMD welcome page in NagVis mode
     url({ url => "", like => '/<title>NagVis '.$version.'<\/title>/' }),
-
+  
     # default pages
     url({ url  => "/nagvis/frontend/nagvis-js/index.php",
           like => '/<title>NagVis '.$version.'<\/title>/' }),
-    url({ url  => "/nagvis/frontend/wui/index.php",
-          like => [ '/<title>NagVis '.$version.' &rsaquo; WUI<\/title>/',
-                    '/Welcome to the NagVis WUI/' ], 'skip_html_lint' => 1 }),
-    url({ url  => "/nagvis/frontend/nagvis-js/index.php?mod=Info",
+    url({ url  => "/nagvis/frontend/nagvis-js/index.php?mod=Info&lang=en_US",
           like => '/NagVis Support Information<\/title>/' }),
     url({ url  => "/nagvis/frontend/nagvis-js/index.php?mod=Map&act=view&show=demo",
           like => '/, \'demo\'/', 'skip_html_lint' => 1 }),
-    url({ url  => "/nagvis/frontend/wui/index.php?mod=Map&act=edit&show=demo",
-          like => [ '/WUI<\/title>/', '/var mapname = \'demo\';/' ], 'skip_html_lint' => 1 }),
-
+  
     # Old redirects to maps
     url({ url  => "/nagvis/index.php?map=demo",
           like => '/, \'demo\'/', 'skip_html_lint' => 1 }),
     url({ url  => "/nagvis/config.php?map=demo",
-          like => [ '/WUI<\/title>/', '/var mapname = \'demo\';/' ], 'skip_html_lint' => 1 }),
-
+          like => '/, \'demo\'/', 'skip_html_lint' => 1 }),
+  
     # Ajax fetched dialogs
     # FIXME: only valid when not using trusted auth:
     #api_url({ url  => '/nagvis/server/core/ajax_handler.php?mod=ChangePassword&act=view',
     #          like => [ '/{"code":"/', '/changePasswordForm/' ]}),
-    api_url({ url  => '/nagvis/server/core/ajax_handler.php?mod=UserMgmt&act=view',
+    api_url({ url  => '/nagvis/server/core/ajax_handler.php?mod=UserMgmt&act=view&lang=en_US',
               like => [ '/Create User/', '/"code":"/' ]}),
-    api_url({ url  => '/nagvis/server/core/ajax_handler.php?mod=RoleMgmt&act=view',
+    api_url({ url  => '/nagvis/server/core/ajax_handler.php?mod=RoleMgmt&act=view&lang=en_US',
               like => [ '/Create Role/', '/"code":"/' ]}),
-
+  
     # Language switch
     url({ url  => "/nagvis/frontend/nagvis-js/index.php?lang=de_DE",
           like => '/Sprache w&auml;hlen/'}),
+  
+    # Language switch back
+    url({ url  => "/nagvis/frontend/nagvis-js/index.php?lang=en_US",
+          like => '/Choose Language/'}),
+  
+    # Documentations
+    url({ url  => "/nagvis/docs/de_DE/index.html",
+          like => '/NagVis (.*) Dokumentation/'}),
+    url({ url  => "/nagvis/docs/en_US/index.html",
+          like => '/NagVis (.*) Documentation/'}),
 ];
 
 # perform tests
@@ -132,25 +186,18 @@ TestUtils::test_url(
               like => '/^{"mainCfg":'.site_mtime($site, 'etc/nagvis/nagvis.ini.php').',"__automap":'.site_touch($site, 'etc/nagvis/automaps/__automap.cfg').'}$/' })
 );
 
-# /nagvis/server/core/ajax_handler.php?mod=General&act=getStateProperties
-# {"UNREACHABLE":{"normal":"9","ack":"5","ack_bgcolor":"","downtime":"5","downtime_bgcolor":"","bgcolor":"#F1811B","color":"#F1811B","sound":"std_unreachable.mp3"},"DOWN":{"normal":"8","ack":"5","ack_bgcolor":"","downtime":"5","downtime_bgcolor":"","bgcolor":"#FF0000","color":"#FF0000","sound":"std_down.mp3"},"CRITICAL":{"normal":"7","ack":"5","ack_bgcolor":"","downtime":"5","downtime_bgcolor":"","bgcolor":"#FF0000","color":"#FF0000","sound":"std_critical.mp3"},"WARNING":{"normal":"6","ack":"4","ack_bgcolor":"","downtime":"4","downtime_bgcolor":"","bgcolor":"#FFFF00","color":"#FFFF00","sound":"std_warning.mp3"},"UNKNOWN":{"normal":"3","ack":"2","ack_bgcolor":"","downtime":"2","downtime_bgcolor":"","bgcolor":"#FFCC66","color":"#FFCC66","sound":""},"ERROR":{"normal":"3","ack":"2","ack_bgcolor":"","downtime":"2","downtime_bgcolor":"","bgcolor":"#0000FF","color":"#0000FF","sound":""},"UP":{"normal":"1","downtime":"1","bgcolor":"#00FF00","color":"#00FF00","sound":""},"OK":{"normal":"1","downtime":"1","bgcolor":"#00FF00","color":"#00FF00","sound":""},"PENDING":{"normal":"0","downtime":"0","bgcolor":"#C0C0C0","color":"#C0C0C0","sound":""}}
-TestUtils::test_url(
-    api_url({ url  => '/nagvis/server/core/ajax_handler.php?mod=General&act=getStateProperties',
-              like => [ '/"UNREACHABLE"/', '/"UNKNOWN"/' ]})
-);
-
 # /nagvis/server/core/ajax_handler.php?mod=General&act=getHoverTemplate&name[]=default
 # [{"name":"default","code":"<...>"}]
 TestUtils::test_url(
     api_url_list({ url  => '/nagvis/server/core/ajax_handler.php?mod=General&act=getHoverTemplate&name[]=default',
-                   like => [ '/"name":"default","code":/' ]})
+                   like => [ '/"name":"default","css_file":/' ]})
 );
 
 # /nagvis/server/core/ajax_handler.php?mod=General&act=getContextTemplate&name[]=default
 # [{"name":"default","code":"<...>"}]
 TestUtils::test_url(
     api_url_list({ url  => '/nagvis/server/core/ajax_handler.php?mod=General&act=getContextTemplate&name[]=default',
-                   like => [ '/"name":"default","code":/' ]})
+                   like => [ '/"name":"default","css_file":/' ]})
 );
 
 # /nagvis/server/core/ajax_handler.php?mod=Map&act=getMapProperties&show=demo
@@ -170,8 +217,12 @@ TestUtils::test_url(
 # /nagvis/server/core/ajax_handler.php?mod=Map&act=getObjectStates&show=demo&ty=state&i[]=2&t[]=host&n1[]=host-down-hard&n2[]=
 # FIXME: Add sepecial tests for object states here using the test backend
 TestUtils::test_url(
-    api_url_list({ url  => '/nagvis/server/core/ajax_handler.php?mod=Map&act=getObjectStates&show=demo&ty=state&i[]=1&t[]=host&n1[]=localhost',
+    api_url_list({ url  => '/nagvis/server/core/ajax_handler.php?mod=Map&act=getObjectStates&show=demo&ty=state&i[]=1dd76b',
                    like => [ '/{"state":/' ]})
+);
+TestUtils::test_url(
+  api_url_list({ url  => '/nagvis/server/core/ajax_handler.php?mod=Map&act=getObjectStates&show=demo&ty=state&i[]=1dd76x',
+                 like => [ '/\[\]/' ]})
 );
 
 ###############################################################################
@@ -203,9 +254,15 @@ TestUtils::test_url(
 );
 
 # /nagvis/server/core/ajax_handler.php?mod=General&act=getObjectStates&ty=state&i[]=automap-0&t[]=automap&n1[]=__automap&n2[]=
+# http://127.0.0.1/nagvis/server/core/ajax_handler.php?mod=Overview&act=getObjectStates&ty=state&i[]=automap-__automap&_t=1298764833000
 TestUtils::test_url(
-    api_url_list({ url  => '/nagvis/server/core/ajax_handler.php?mod=General&act=getObjectStates&ty=state&i[]=automap-0&t[]=automap&n1[]=__automap',
+    api_url_list({ url  => '/nagvis/server/core/ajax_handler.php?mod=Overview&act=getObjectStates&ty=state&i[]=automap-__automap',
                    like => [ '/"state":"/', ]})
+);
+
+TestUtils::test_url(
+  api_url_list({ url  => '/nagvis/server/core/ajax_handler.php?mod=Overview&act=getObjectStates&ty=state&i[]=automap-notexisting',
+                 like => [ '/"state":"ERROR/', '/Map configuration file does not exist/' ]})
 );
 
 ###############################################################################
@@ -229,6 +286,17 @@ TestUtils::test_url(
     api_url_list({ url  => '/nagvis/server/core/ajax_handler.php?mod=AutoMap&act=getObjectStates&show=__automap&ty=state&i[]=0&t[]=host&n1[]=localhost&n2[]=&childLayers=2',
                    like => [ '/"state":"/', ]})
 );
+  
+
+###############################################################################
+# Test user config
+###############################################################################
+# Language switch
+TestUtils::test_url(url({ url  => "/nagvis/frontend/nagvis-js/index.php?lang=de_DE",
+                          like => '/Sprache w&auml;hlen/'}));
+
+# Check profile file
+site_match_file($site, 'var/nagvis/profiles/omdadmin.profile', '/"language":"de_DE"/');
 
 ##################################################
 # cleanup test site
@@ -244,7 +312,7 @@ sub url {
     $url->{'url'} = "http://localhost/".$site.$url->{'url'};
     $url->{'auth'}   = $auth;
     $url->{'unlike'} = [ '/internal server error/' ];
-    $url->{'skip_link_check'} = "lang="; 
+    $url->{'skip_link_check'} = [ 'lang=' ];
     return $url;
 }
 sub api_url {
@@ -299,6 +367,29 @@ sub site_mtime {
     my $site = shift;
     my $path = shift;
     return (stat '/omd/sites/'.$site.'/'.$path)[9];
+}
+
+=head2 site_match_file
+
+    Checks if the specified pattern can be found in the given file.
+    The path is given as relative path to the sites base directory.
+    This function returns 1 if the pattern could be found or 0 if
+    there was no match in the file.
+
+=cut
+sub site_match_file {
+    my $site    = shift;
+    my $fpath   = shift;
+    my $pattern = shift;
+    my $path    = '/omd/sites/' . $site . '/' . $fpath;
+
+    diag('Checking file contents of '.$path);
+
+    open FILE, '<'.$path or fail("Could not open file.");
+    my $content = do { local $/; <FILE> };
+    close(FILE);
+
+    like($content, $pattern, "content like ".$pattern) or diag('Contents: '.$content);
 }
 
 =head2 site_nagvis_version
