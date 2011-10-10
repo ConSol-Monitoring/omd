@@ -758,7 +758,7 @@ def reload_apache():
     show_success(os.system("%s reload" % g_info["APACHE_CTL"]))
 
 def restart_apache():
-    if os.system("/etc/init.d/apache2 status >/dev/null 2>&1") >> 8 == 0:
+    if os.system("%s status >/dev/null 2>&1" % g_info["APACHE_INIT"]) >> 8 == 0:
         sys.stdout.write("Restarting Apache...")
         sys.stdout.flush()
         show_success(os.system("%s restart >/dev/null" % g_info["APACHE_INIT"]))
