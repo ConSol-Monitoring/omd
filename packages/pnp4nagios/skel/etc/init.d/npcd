@@ -45,7 +45,7 @@ printstatus_npcd(){
     if status_npcd $1 $2; then
         echo "$servicename (pid $NpcdPID) is running..."
         exit 0
-    elif test $? == 2; then
+    elif test $? = 2; then
         echo "$servicename is not running but subsystem locked"
         exit 2
     else
@@ -61,20 +61,25 @@ killproc_npcd (){
 
 
 pid_npcd (){
-    if test ! -f $NpcdRunFile; then
-        # It might happen that there is no pidfile but a process is running
-        # As fallback check the process table for a process with PPID=1 and
-        # running as this user
-        PID=$(pgrep -u $OMD_SITE -P 1 -f $NpcdBin)
-        if [ -n "$PID" ]; then
-            NpcdPID=$PID
+    if [ -f "$NpcdRunFile" ]; then
+        # Handle stale pidfiles
+        TMPPID=`head -n 1 $NpcdRunFile`
+        if ps -p $TMPPID >/dev/null 2>&1; then
+            NpcdPID=$TMPPID
             return 0
-        else
-            return 1
         fi
     fi
-    NpcdPID=`head -n 1 $NpcdRunFile`
-    return 0
+
+    # It might happen that there is no pidfile or a stale pidfile but
+    # a process is running
+    # As fallback check the process table for a process with PPID=1 and
+    # running as this user
+    PID=$(pgrep -u $OMD_SITE -P 1 -f $NpcdBin)
+    if [ -n "$PID" ]; then
+        NpcdPID=$PID
+        return 0
+    fi
+    return 1
 }
 
 

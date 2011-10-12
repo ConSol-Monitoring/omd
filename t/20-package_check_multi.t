@@ -163,7 +163,7 @@ for my $core (qw/nagios shinken/) {
 		60
 	);
 
-	TestUtils::wait_for_file("/omd/sites/$site/var/pnp4nagios/perfdata/omd-$site/Dummy_Service.rrd", 60);
+	TestUtils::wait_for_file("/omd/sites/$site/var/pnp4nagios/perfdata/omd-$site/Dummy_Service_omd-dummy.rrd", 60);
 	TestUtils::wait_for_file("/omd/sites/$site/tmp/run/live", 60) or TestUtils::bail_out_clean("No need to test $package without livestatus connection");
 	TestUtils::wait_for_file("/omd/sites/$site/tmp/nagios/status.dat", 60) or TestUtils::bail_out_clean("No need to test $package without existing status.dat");
 

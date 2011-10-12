@@ -12,6 +12,8 @@ This file documents the revision history for the Open Monitoring Distribution
           - OMD
             - Added 'umount' option to unmount the ramdisk of a site
           - updated to jmx4perl 1.00
+	  - pnp4nagios
+	    - npcd: Now detecting and handling stale pidfiles in init script
 
 0.50     Sep 20 2011
           - Check_MK: fix problem with playing sounds
