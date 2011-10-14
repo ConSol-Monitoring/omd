@@ -95,6 +95,13 @@ install:
 	fi
 	#$(MAKE) installsqlite
 	rm -rf $(TMP_DISTU)
+	# cleanup the tmp directory
+	for tmpfile in $(DESTDIR)$(OMD_ROOT)/tmp/easy_install* ; do \
+		rm -f $$tmpfile ; \
+	done
+	for tmpfile in $(DESTDIR)$(OMD_ROOT)/tmp/pyro-* ; do \
+		rm -f $$tmpfile ; \
+	done
 
 
 installshinken:

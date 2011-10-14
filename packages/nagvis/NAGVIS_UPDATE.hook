@@ -1,0 +1,42 @@
+#!/bin/bash
+# This hook is meant to help the user to update their OMD instances running
+# NagVis 1.5 to NagVis 1.6. The main reason for this hook is the change of
+# the var/nagvis/userfiles directory to share/nagvis/htdocs/userfiles for
+# delivered files and local/share/nagvis/htdocs/userfiles for individual
+# files.
+# It is not simply copying the contents of the old directory to the new
+# directory. During update only the customized files must be moved. Otherwise
+# the files in the local path would override the ones in the default path.
+#
+# The easiest solution for this is to create a hook which runs once for each
+# instance. Since we can not easily provide a hook for downgrading, we only
+# handle the upgrade from 1.5 to 1.6x and leave the old files where they are.
+
+# Skip this when already copied once
+if [ ! -d $OMD_ROOT/var/nagvis/userfiles ] \
+   || [ -e $OMD_ROOT/var/nagvis/userfiles/.copied ]; then
+    exit 0
+fi
+
+case "$1" in
+    refresh)
+        # Copy while excluding standard NagVis files
+        rsync -a -f "- images/maps/*demo*.png" \
+                 -f "- images/iconsets/20x20.gif" \
+                 -f "- images/iconsets/error.png" \
+                 -f "- images/iconsets/configerror_*.png" \
+                 -f "- images/iconsets/demo_*.png" \
+                 -f "- images/iconsets/std_*.png" \
+                 -f "- images/templates/default*" \
+                 -f "- images/shapes/demo*.png" \
+                 -f "- templates/default.*" \
+                 -f "- gadgets/gadgets_core.php" \
+                 -f "- gadgets/std_*.php" \
+                 -f "- sounds/std_*.mp3" \
+                 $OMD_ROOT/var/nagvis/userfiles/ \
+                 $OMD_ROOT/local/share/nagvis/htdocs/userfiles
+        touch $OMD_ROOT/var/nagvis/userfiles/.copied
+    ;;
+esac
+
+exit 0
