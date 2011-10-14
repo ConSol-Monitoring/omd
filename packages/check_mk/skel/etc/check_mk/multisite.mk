@@ -150,33 +150,22 @@ show_livestatus_errors = True
 #                             
 # Check_MK's Web Administration Tool
 
-# Declare files in conf.d/ to be editable with WATO. Please make
-# sure, that those files exist and are writable by Apache, e.g.:
-# touch /etc/check_mk/conf.d/network.mk
-# chgrp www /etc/check_mk/conf.d/network.mk
-# chmod 664 /etc/check_mk/conf.d/network.mk
-# 
-# config_files = [
-#   ("network.mk",    "Network, Infrastructure", [ "admin", "user" ] ),
-#   ("datacenter.mk", "Servers in Datacenter",   [ "admin" ]),
-# ]
-
 # Host tags to be used in WATO
-# host_tags = [
-#  ( "Operating System", [
-#       ( "lnx", "Linux", [ 'tcp' ]),
-#       ( "win", "Windows", [ 'tcp', 'snmp' ]),
-#       ( "net", "Network device", [ 'snmp' ]),
-#       ( "ping", "Other PING-only device", ),
-#    ]),
-#  ( "Productivity", [
-#       ( "prod", "Production System" ),
-#       ( "test", "Test System" ),
-#    ]),
-#  ( "Bulkwalk (SNMP v2c)", [
-#       ( None,   "simple walk (SNMP v1)"),
-#       ( "bulk", "Bulkwalk (SNMP v2c)" ),
-#    ]),
-# 
-# ]
+#host_tags = [
+# ( "os", "Operating System", [
+#      ( "lnx", "Linux", [ 'tcp' ]),
+#      ( "win", "Windows", [ 'tcp', 'snmp' ]),
+#      ( "net", "Network device", [ 'snmp' ]),
+#      ( "ping", "Other PING-only device", ),
+#   ]),
+# ( "prod", "Productivity", [
+#      ( "prod", "Production System" ),
+#      ( "test", "Test System" ),
+#   ]),
+# ( "bulk", "Bulkwalk (SNMP v2c)", [
+#      ( None,   "simple walk (SNMP v1)"),
+#      ( "bulk", "Bulkwalk (SNMP v2c)" ),
+#   ]),
+#
+#]
 

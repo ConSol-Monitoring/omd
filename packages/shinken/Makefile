@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 
-SHINKEN=shinken-0.6.99
+SHINKEN=shinken-0.8
 SHINKEN_FILE=$(SHINKEN).tar.gz
 SHINKEN_URL=http://shinken-monitoring.org/pub/$(SHINKEN).tar.gz
 #
@@ -77,7 +77,6 @@ build:
 		echo we need to remove the shinken webui; \
 		( cd $(SHINKEN) ; patch -p1 -b ) < patches/0001-remove-webui.patch; \
 	fi
-	( cd $(SHINKEN) ; patch -p1 -b ) < patches/0002-umask000-for-livestatus-socket.patch
 
 
 install:
@@ -95,6 +94,13 @@ install:
 	fi
 	#$(MAKE) installsqlite
 	rm -rf $(TMP_DISTU)
+	# cleanup the tmp directory
+	for tmpfile in $(DESTDIR)$(OMD_ROOT)/tmp/easy_install* ; do \
+		rm -f $$tmpfile ; \
+	done
+	for tmpfile in $(DESTDIR)$(OMD_ROOT)/tmp/pyro-* ; do \
+		rm -f $$tmpfile ; \
+	done
 
 
 installshinken:

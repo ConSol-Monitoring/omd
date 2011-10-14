@@ -12,13 +12,16 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 321 );
+plan( tests => 324 );
 
 ##################################################
 # create our test site
 my $omd_bin = TestUtils::get_omd_bin();
 my $site    = TestUtils::create_test_site() or TestUtils::bail_out_clean("no further testing without site");
 my $auth    = 'OMD Monitoring Site '.$site.':omdadmin:omd';
+
+# create test host/service
+TestUtils::prepare_obj_config('t/data/omd/testconf1', '/omd/sites/'.$site.'/etc/nagios/conf.d', $site);
 
 # Developer test: Install NagVis into local hierarchy
 if($ENV{NAGVIS_DEVEL}) {

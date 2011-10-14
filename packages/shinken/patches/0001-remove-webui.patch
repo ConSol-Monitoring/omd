@@ -1,6 +1,6 @@
-diff -Naur shinken-0.6.99.orig/shinken/modules/passwd_ui.py shinken-0.6.99/shinken/modules/passwd_ui.py
---- shinken-0.6.99.orig/shinken/modules/passwd_ui.py	2011-09-18 21:30:04.000000000 +0200
-+++ shinken-0.6.99/shinken/modules/passwd_ui.py	1970-01-01 01:00:00.000000000 +0100
+diff -Naur shinken-0.8.orig/shinken/modules/passwd_ui.py shinken-0.8/shinken/modules/passwd_ui.py
+--- shinken-0.8.orig/shinken/modules/passwd_ui.py	2011-10-17 09:55:53.000000000 +0200
++++ shinken-0.8/shinken/modules/passwd_ui.py	1970-01-01 01:00:00.000000000 +0100
 @@ -1,97 +0,0 @@
 -#!/usr/bin/python
 -#Copyright (C) 2009 Gabes Jean, naparuba@gmail.com
@@ -99,10 +99,10 @@ diff -Naur shinken-0.6.99.orig/shinken/modules/passwd_ui.py shinken-0.6.99/shink
 -        # At the end, we are not happy, so we return False
 -        print "PASSWD: return false"
 -        return False
-diff -Naur shinken-0.6.99.orig/shinken/modules/webui_broker/datamanager.py shinken-0.6.99/shinken/modules/webui_broker/datamanager.py
---- shinken-0.6.99.orig/shinken/modules/webui_broker/datamanager.py	2011-09-18 21:30:04.000000000 +0200
-+++ shinken-0.6.99/shinken/modules/webui_broker/datamanager.py	1970-01-01 01:00:00.000000000 +0100
-@@ -1,132 +0,0 @@
+diff -Naur shinken-0.8.orig/shinken/modules/webui_broker/datamanager.py shinken-0.8/shinken/modules/webui_broker/datamanager.py
+--- shinken-0.8.orig/shinken/modules/webui_broker/datamanager.py	2011-10-17 09:55:53.000000000 +0200
++++ shinken-0.8/shinken/modules/webui_broker/datamanager.py	1970-01-01 01:00:00.000000000 +0100
+@@ -1,202 +0,0 @@
 -#!/usr/bin/env python
 -#Copyright (C) 2009-2010 :
 -#    Gabes Jean, naparuba@gmail.com
@@ -142,6 +142,13 @@ diff -Naur shinken-0.6.99.orig/shinken/modules/webui_broker/datamanager.py shink
 -    def get_service(self, hname, sdesc):
 -        return self.rg.services.find_srv_by_name_and_hostname(hname, sdesc)
 -
+-    def get_all_hosts_and_services(self):
+-        all = []
+-        all.extend(self.rg.hosts)
+-        all.extend(self.rg.services)
+-        all.sort(hst_srv_sort)
+-        return all
+-
 -
 -    def get_contact(self, name):
 -        return self.rg.contacts.find_by_name(name)
@@ -156,6 +163,25 @@ diff -Naur shinken-0.6.99.orig/shinken/modules/webui_broker/datamanager.py shink
 -    def get_services(self):
 -        return self.rg.services
 -
+-    def get_schedulers(self):
+-        return self.rg.schedulers
+-
+-    def get_pollers(self):
+-        return self.rg.pollers
+-
+-    def get_brokers(self):
+-        return self.rg.brokers
+-
+-    def get_receivers(self):
+-        return self.rg.receivers
+-
+-    def get_reactionners(self):
+-        return self.rg.reactionners
+-
+-    def get_program_start(self):
+-        for c in self.rg.configs.values():
+-            return c.program_start
+-        return None
 -    
 -    def get_important_impacts(self):
 -        res = []
@@ -177,6 +203,50 @@ diff -Naur shinken-0.6.99.orig/shinken/modules/webui_broker/datamanager.py shink
 -        res.extend([h for h in self.rg.hosts if h.state not in ['UP', 'PENDING'] and not h.is_impact and not h.problem_has_been_acknowledged])
 -        res.sort(hst_srv_sort)
 -        return res
+-
+-    # Return all non managed impacts
+-    def get_all_impacts(self):
+-        res = []
+-        for s in self.rg.services:
+-            if s.is_impact and s.state not in ['OK', 'PENDING']:
+-                # If s is acked, pass
+-                if s.problem_has_been_acknowledged:
+-                    continue
+-                # We search for impacts that were NOT currently managed
+-                if len([p for p in s.source_problems if not p.problem_has_been_acknowledged]) > 0:
+-                    res.append(s)
+-        for h in self.rg.hosts:
+-            if h.is_impact and h.state not in ['UP', 'PENDING']:
+-                # If h is acked, pass
+-                if h.problem_has_been_acknowledged:
+-                    continue
+-                # We search for impacts that were NOT currently managed
+-                if len([p for p in h.source_problems if not p.problem_has_been_acknowledged]) > 0:
+-                    res.append(h)
+-        return res
+-
+-
+-
+-    # Return the number of problems
+-    def get_nb_problems(self):
+-        return len(self.get_all_problems())
+-
+-    # Get the number of all problems, enven the ack ones
+-    def get_nb_all_problems(self):
+-        res = []
+-        res.extend([s for s in self.rg.services if s.state not in ['OK', 'PENDING'] and not s.is_impact])
+-        res.extend([h for h in self.rg.hosts if h.state not in ['UP', 'PENDING'] and not h.is_impact])
+-        return len(res)
+-
+-
+-    # Return the number of impacts
+-    def get_nb_impacts(self):
+-        return len(self.get_all_impacts())
+-        
+-
+-    def get_nb_elements(self):
+-        return len(self.rg.services) + len(self.rg.hosts)
+-
 -
 -
 -    def get_important_elements(self):
@@ -235,10 +305,10 @@ diff -Naur shinken-0.6.99.orig/shinken/modules/webui_broker/datamanager.py shink
 -        
 -
 -datamgr = DataManager()
-diff -Naur shinken-0.6.99.orig/shinken/modules/webui_broker/helper.py shinken-0.6.99/shinken/modules/webui_broker/helper.py
---- shinken-0.6.99.orig/shinken/modules/webui_broker/helper.py	2011-09-18 21:30:04.000000000 +0200
-+++ shinken-0.6.99/shinken/modules/webui_broker/helper.py	1970-01-01 01:00:00.000000000 +0100
-@@ -1,478 +0,0 @@
+diff -Naur shinken-0.8.orig/shinken/modules/webui_broker/helper.py shinken-0.8/shinken/modules/webui_broker/helper.py
+--- shinken-0.8.orig/shinken/modules/webui_broker/helper.py	2011-10-17 09:55:53.000000000 +0200
++++ shinken-0.8/shinken/modules/webui_broker/helper.py	1970-01-01 01:00:00.000000000 +0100
+@@ -1,505 +0,0 @@
 -#!/usr/bin/env python
 -# -*- coding: utf-8 -*-
 -#Copyright (C) 2009-2010 :
@@ -421,7 +491,7 @@ diff -Naur shinken-0.6.99.orig/shinken/modules/webui_broker/helper.py shinken-0.
 -            return ' '.join(duration) + ' ago'
 -
 -
--    # Need to create a X level higer and lower to teh element
+-    # Need to create a X level higer and lower to the element
 -    def create_json_dep_graph(self, elt, levels=3):
 -        t0 = time.time()
 -        # First we need ALL elements
@@ -462,7 +532,7 @@ diff -Naur shinken-0.6.99.orig/shinken/modules/webui_broker/helper.py shinken-0.
 -        d = {'id' : elt.get_dbg_name(), 'name' : elt.get_dbg_name(),
 -             'data' : {'$type' : 'custom',
 -                       'business_impact' : elt.business_impact,
--                       'img_src' : self.get_icon_state(elt)
+-                       'img_src' : self.get_icon_state(elt),
 -                       },
 -             'adjacencies' : []
 -             }
@@ -471,11 +541,25 @@ diff -Naur shinken-0.6.99.orig/shinken/modules/webui_broker/helper.py shinken-0.
 -        d['data']['infos'] = r'''%s <h2 class="%s"><img style="width : 64px; height:64px" src="%s"/> %s: %s</h2>
 -		       <p>since %s</p>
 -		       <div style="float:right;"> <a href="%s">%s</a></div>'''  % (
--            '<img src="/static/images/star.png">' * (elt.business_impact - 2),
+-            '<img src="/static/images/star.png" alt="star">' * (elt.business_impact - 2),
 -            elt.state.lower(), self.get_icon_state(elt), elt.state, elt.get_full_name(),
 -            self.print_duration(elt.last_state_change, just_duration=True, x_elts=2),
 -            self.get_link_dest(elt), self.get_button('Go to details', img='/static/images/search.png'))
--        
+-                       
+-
+-        d['data']['elt_type'] = elt.__class__.my_type
+-        d['data']['is_problem'] = elt.is_problem
+-        d['data']['state_id'] = elt.state_id
+-
+-        print "ELT:%s is %s" % (elt.get_full_name(), elt.state)
+-        if elt.state in ['OK', 'UP', 'PENDING']:
+-            d['data']['circle'] = 'none'
+-        elif elt.state in ['DOWN', 'CRITICAL']:
+-            d['data']['circle'] = 'red'
+-        elif elt.state in ['WARNING', 'UNREACHABLE']:
+-            d['data']['circle'] = 'orange'
+-        else:
+-            d['data']['circle'] = 'none'
 -     
 -
 -        # Now put in adj our parents
@@ -567,7 +651,7 @@ diff -Naur shinken-0.6.99.orig/shinken/modules/webui_broker/helper.py shinken-0.
 -
 -        # If we got no parents, no need to print the expand icon
 -        if len(fathers) > 0:
--            # We look ifthe below tree is goodor not
+-            # We look if the below tree is goodor not
 -            tree_is_good = (node.state_id == 0)
 -            
 -            # If the tree is good, we will use an expand image
@@ -581,7 +665,7 @@ diff -Naur shinken-0.6.99.orig/shinken/modules/webui_broker/helper.py shinken-0.
 -
 -            # If we are the root, we already got this
 -            if level != 0:
--                s += """<a id="togglelink-%s" href="javascript:toggleBusinessElt('%s')"><img id="business-parents-img-%s" src="/static/images/%s"> </a> \n""" % (name, name, name, img)
+-                s += """<a id="togglelink-%s" href="javascript:toggleBusinessElt('%s')"><img id="business-parents-img-%s" src="/static/images/%s" alt=""> </a> \n""" % (name, name, name, img)
 -                
 -            s += """<ul id="business-parents-%s" style="display: %s; ">""" % (name, display)
 -        
@@ -595,22 +679,34 @@ diff -Naur shinken-0.6.99.orig/shinken/modules/webui_broker/helper.py shinken-0.
 -
 -
 -    # Get the small state for host/service icons
+-    # and satellites ones
 -    def get_small_icon_state(self, obj):
--        if obj.state == 'PENDING':
--            return 'unknown'
--        if obj.state == 'OK':
+-        if obj.__class__.my_type in ['service', 'host' ]:
+-            if obj.state == 'PENDING':
+-                return 'unknown'
+-            if obj.state == 'OK':
+-                return 'ok'
+-            if obj.state == 'UP':
+-                return 'up'
+-            # Outch, not a good state...
+-            if obj.problem_has_been_acknowledged:
+-                return 'ack'
+-            if obj.in_scheduled_downtime:
+-                return 'downtime'
+-            if obj.is_flapping:
+-                return 'flapping'
+-            #Ok, no excuse, it's a true error...
+-            return obj.state.lower()
+-        # Maybe it's a satellite
+-        if obj.__class__.my_type in ['scheduler', 'poller', 
+-                                     'reactionner', 'broker',
+-                                     'receiver']:
+-            if not obj.alive:
+-                return 'critical'
+-            if not obj.reachable:
+-                return 'warning'
 -            return 'ok'
--        if obj.state == 'UP':
--            return 'up'
--        # Outch, not a good state...
--        if obj.problem_has_been_acknowledged:
--            return 'ack'
--        if obj.in_scheduled_downtime:
--            return 'downtime'
--        if obj.is_flapping:
--            return 'flapping'
--        #Ok, no excuse, it's a true error...
--        return obj.state.lower()
+-        return 'unknown'
 -
 -
 -    # For an object, give it's business impact as text 
@@ -619,7 +715,7 @@ diff -Naur shinken-0.6.99.orig/shinken/modules/webui_broker/helper.py shinken-0.
 -        txts = {0 : 'None', 1 : 'Low', 2: 'Normal',
 -                3 : 'High', 4 : 'Very important', 5 : 'Top for business'}
 -        nb_stars = max(0, obj.business_impact - 2)
--        stars = '<img src="/static/images/star.png">\n' * nb_stars
+-        stars = '<img src="/static/images/star.png" alt="star">\n' * nb_stars
 -        
 -        res = "%s %s" % (txts.get(obj.business_impact, 'Unknown'), stars)
 -        return res
@@ -661,10 +757,11 @@ diff -Naur shinken-0.6.99.orig/shinken/modules/webui_broker/helper.py shinken-0.
 -            return self.get_link(obj.host)
 -        return self.get_link(obj)
 -
+-
 -    # For an object, return the path of the icons
 -    def get_icon_state(self, obj):
 -        ico = self.get_small_icon_state(obj)
--        if obj.icon_set != '':
+-        if getattr(obj, 'icon_set', '') != '':
 -            return '/static/images/sets/%s/state_%s.png' % (obj.icon_set, ico)
 -        else:
 -            return '/static/images/state_%s.png' % ico
@@ -717,9 +814,9 @@ diff -Naur shinken-0.6.99.orig/shinken/modules/webui_broker/helper.py shinken-0.
 -    
 -
 -helper = Helper()
-diff -Naur shinken-0.6.99.orig/shinken/modules/webui_broker/__init__.py shinken-0.6.99/shinken/modules/webui_broker/__init__.py
---- shinken-0.6.99.orig/shinken/modules/webui_broker/__init__.py	2011-09-18 21:30:04.000000000 +0200
-+++ shinken-0.6.99/shinken/modules/webui_broker/__init__.py	1970-01-01 01:00:00.000000000 +0100
+diff -Naur shinken-0.8.orig/shinken/modules/webui_broker/__init__.py shinken-0.8/shinken/modules/webui_broker/__init__.py
+--- shinken-0.8.orig/shinken/modules/webui_broker/__init__.py	2011-10-17 09:55:53.000000000 +0200
++++ shinken-0.8/shinken/modules/webui_broker/__init__.py	1970-01-01 01:00:00.000000000 +0100
 @@ -1,40 +0,0 @@
 -#!/usr/bin/python
 -#Copyright (C) 2009 Gabes Jean, naparuba@gmail.com
@@ -761,10 +858,10 @@ diff -Naur shinken-0.6.99.orig/shinken/modules/webui_broker/__init__.py shinken-
 -
 -    instance = Webui_broker(plugin)
 -    return instance
-diff -Naur shinken-0.6.99.orig/shinken/modules/webui_broker/webui_broker.py shinken-0.6.99/shinken/modules/webui_broker/webui_broker.py
---- shinken-0.6.99.orig/shinken/modules/webui_broker/webui_broker.py	2011-09-18 21:30:04.000000000 +0200
-+++ shinken-0.6.99/shinken/modules/webui_broker/webui_broker.py	1970-01-01 01:00:00.000000000 +0100
-@@ -1,379 +0,0 @@
+diff -Naur shinken-0.8.orig/shinken/modules/webui_broker/webui_broker.py shinken-0.8/shinken/modules/webui_broker/webui_broker.py
+--- shinken-0.8.orig/shinken/modules/webui_broker/webui_broker.py	2011-10-17 09:55:53.000000000 +0200
++++ shinken-0.8/shinken/modules/webui_broker/webui_broker.py	1970-01-01 01:00:00.000000000 +0100
+@@ -1,390 +0,0 @@
 -#!/usr/bin/env python
 -#Copyright (C) 2009-2010 :
 -#    Gabes Jean, naparuba@gmail.com
@@ -840,29 +937,16 @@ diff -Naur shinken-0.6.99.orig/shinken/modules/webui_broker/webui_broker.py shin
 -        self.port = int(getattr(modconf, 'port', '7767'))
 -        self.host = getattr(modconf, 'host', '0.0.0.0')
 -        self.auth_secret = getattr(modconf, 'auth_secret').encode('utf8', 'replace')
--        self.http_backend = getattr(modconf, 'http_backend', 'wsgiref')
+-        self.http_backend = getattr(modconf, 'http_backend', 'auto')
+-        self.login_text = getattr(modconf, 'login_text', None)
+-
 -        # Load the photo dir and make it a absolute path
 -        self.photo_dir = getattr(modconf, 'photo_dir', 'photos')
 -        self.photo_dir = os.path.abspath(self.photo_dir)
 -        print "Webui : using the backend", self.http_backend
 -
--        self.rg = Regenerator()
--        self.datamgr = datamgr
--        datamgr.load(self.rg)
--        self.helper = helper
--        self.request = request
--        self.response = response
 -
--        # Daemon like init
--        self.debug_output = []
--        self.modules_manager = ModulesManager('webui', self.find_modules_path(), [])
--        # We can now output some previouly silented debug ouput
--        for s in self.debug_output:
--            print s
--        del self.debug_output
 -
--        self.log = logger
--        self.check_photo_dir()
 -        
 -
 -    # We check if the photo directory exists. If not, try to create it
@@ -882,16 +966,40 @@ diff -Naur shinken-0.6.99.orig/shinken/modules/webui_broker/webui_broker.py shin
 -    # Conf from arbiter!
 -    def init(self):
 -        print "Init of the Webui '%s'" % self.name
+-
+-
+-
+-
+-
+-    def main(self):
+-        self.log = logger
+-        self.log.load_obj(self)
+-        
+-        # Daemon like init
+-        self.debug_output = []
+-        self.modules_manager = ModulesManager('webui', self.find_modules_path(), [])
 -        self.modules_manager.set_modules(self.modules)
+-        # We can now output some previouly silented debug ouput
 -        self.do_load_modules()
 -        for inst in self.modules_manager.instances:
 -            f = getattr(inst, 'load', None)
 -            if f and callable(f):
 -                f(self)
+-                
+-        
+-        for s in self.debug_output:
+-            print s
+-        del self.debug_output
 -
+-        self.log = logger
+-        self.check_photo_dir()
+-        self.rg = Regenerator()
+-        self.datamgr = datamgr
+-        datamgr.load(self.rg)
+-        self.helper = helper
 -
--
--    def main(self):
+-        self.request = request
+-        self.response = response
 -        try:
 -            #import cProfile
 -            #cProfile.runctx('''self.do_main()''', globals(), locals(),'/tmp/livestatus.profile')
@@ -1092,7 +1200,7 @@ diff -Naur shinken-0.6.99.orig/shinken/modules/webui_broker/webui_broker.py shin
 -        def server_static(path):
 -            return static_file(path, root=os.path.join(bottle_dir, 'htdocs'))
 -
--        # And add teh favicon ico too
+-        # And add the favicon ico too
 -        @route('/favicon.ico')
 -        def give_favicon():
 -            return static_file('favicon.ico', root=os.path.join(bottle_dir, 'htdocs', 'images'))

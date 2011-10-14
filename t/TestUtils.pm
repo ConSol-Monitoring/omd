@@ -15,6 +15,8 @@ use Data::Dumper;
 use LWP::UserAgent;
 use HTTP::Cookies::Netscape;
 use File::Temp qw/ tempfile /;
+use File::Copy qw/ cp /;
+use File::Basename;
 use Test::Cmd;
 
 if($> != 0) {
@@ -436,6 +438,31 @@ sub wait_for_content {
     }
     fail(sprintf "content: [ %s ] did not appear within $x seconds", join(',',@{$test->{'like'}}));
     return 0;
+}
+
+
+##################################################
+
+=head2 prepare_obj_config
+
+  prepare test object config
+
+=cut
+sub prepare_obj_config {
+    my $src  = shift;
+    my $dst  = shift;
+    my $site = shift;
+
+    my $files = join(" ", (ref $src eq 'ARRAY' ? @{$src} : $src));
+    for my $file (`find $files -type f`) {
+        chomp($file);
+        my $dstfile = $dst;
+        if(-d $dst) { $dstfile = $dst.'/'.basename($file); }
+        cp($file, $dstfile) or die("copy $file $dstfile failed: $!");
+        test_command({ cmd => "/usr/bin/env sed -i $dstfile -e 's/###SITE###/".$site."/' -e 's|###ROOT###|/omd/sites/".$site."|'" }) if defined $site;
+    }
+
+    return;
 }
 
 

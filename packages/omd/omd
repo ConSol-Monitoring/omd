@@ -27,7 +27,7 @@
 import sys, os, shutil, pwd, grp, re, time, pprint, tty, termios
 from subprocess import *
 
-OMD_VERSION = "0.50"
+OMD_VERSION = "0.51"
 
 # colored output, if stdout is a tty
 on_tty = sys.stdout.isatty()
@@ -641,17 +641,27 @@ def create_tmpfs(sitename):
     chown_tree(tmp, sitename)
     ok()
 
-def unmount_tmpfs(sitename):
+def unmount_tmpfs(sitename, output = True):
     if tmpfs_mounted(sitename):
-        sys.stdout.write("Unmounting temporary filesystem...")
+        if output:
+            sys.stdout.write("Unmounting temporary filesystem...")
+
         for t in range(0, 10):
             if 0 == os.system("umount '%s'" % tmp_dir(sitename)):
                 ok()
-                return
-            sys.stdout.write(".")
-            sys.stdout.flush()
+                return True
+
+            if output:
+                sys.stdout.write(".")
+                sys.stdout.flush()
             time.sleep(1)
-        bail_out(tty_error + ": Cannot unmount tmp filesystem.")
+
+        if output:
+            bail_out(tty_error + ": Cannot unmount tmp filesystem.")
+        else:
+            return False
+
+    return True
 
 def add_to_fstab(sitename):
     # tmpfs                   /opt/omd/sites/b01/tmp  tmpfs   user,uid=b01,gid=b01 0 0
@@ -748,7 +758,7 @@ def reload_apache():
     show_success(os.system("%s reload" % g_info["APACHE_CTL"]))
 
 def restart_apache():
-    if os.system("/etc/init.d/apache2 status >/dev/null 2>&1") >> 8 == 0:
+    if os.system("%s status >/dev/null 2>&1" % g_info["APACHE_INIT"]) >> 8 == 0:
         sys.stdout.write("Restarting Apache...")
         sys.stdout.flush()
         show_success(os.system("%s restart >/dev/null" % g_info["APACHE_INIT"]))
@@ -2408,6 +2418,36 @@ def main_update(args, options={}):
     # Let hooks do their work and update configuration
     refresh_hooks()
 
+def main_umount(args, options = {}):
+    global g_sitename
+    global g_sitedir
+
+    only_version = options.get("version")
+
+    # if no site is selected, all sites are affected
+    if not g_sitename:
+        exit_status = 0
+        for site in all_sites():
+            if only_version and site_version(site) != only_version:
+                continue
+
+            if site_is_running(site):
+                sys.stderr.write("Cannot unmount tmpfs of site '%s' while it is running.\n" % site)
+                continue
+
+            sys.stdout.write("%sUnmounting tmpfs of site %s%s..." % (tty_bold, site, tty_normal))
+	    sys.stdout.flush()
+
+            if not unmount_tmpfs(site, False):
+                sys.stdout.write(tty_error + "\n")
+                exit_status = 1
+            else:
+                sys.stdout.write(tty_ok + "\n")
+    else:
+        if site_is_running(g_sitename):
+            bail_out("Cannot unmount tmpfs of site '%s' while it is running." % g_sitename)
+        unmount_tmpfs(g_sitename)
+    sys.exit(0)
 
 
 def main_init_action(command, args, options={}):
@@ -2603,6 +2643,11 @@ commands = [
   ( "su",     True, 1, 1, False, "", main_su,
     [ ],
     "Run a shell as a site-user",
+    ""),
+
+  ( "umount",      False, 2, 1, False, "", main_umount,
+    [ ( "version", "V", True ) ],
+    "Umount ramdisk volumes of site(s)",
     ""),
 
 ]

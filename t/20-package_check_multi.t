@@ -12,7 +12,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 224 );
+plan( tests => 227 );
 
 # create our test site
 my $omd_bin = TestUtils::get_omd_bin();
@@ -20,6 +20,9 @@ my $site    = TestUtils::create_test_site() or BAIL_OUT("no further testing with
 my $package = "check_multi";
 my $host    = "omd-$package";
 my $auth    = 'OMD Monitoring Site '.$site.':omdadmin:omd';
+
+# create test host/service
+TestUtils::prepare_obj_config('t/data/omd/testconf1', '/omd/sites/'.$site.'/etc/nagios/conf.d', $site);
 
 # prepare check_multi test environment (from skel/etc/check_multi/test)
 TestUtils::test_command({ cmd => $omd_bin." config $site set DEFAULT_GUI welcome" });
@@ -163,7 +166,7 @@ for my $core (qw/nagios shinken/) {
 		60
 	);
 
-	TestUtils::wait_for_file("/omd/sites/$site/var/pnp4nagios/perfdata/omd-$site/Dummy_Service.rrd", 60);
+	TestUtils::wait_for_file("/omd/sites/$site/var/pnp4nagios/perfdata/omd-$site/Dummy_Service_omd-dummy.rrd", 60);
 	TestUtils::wait_for_file("/omd/sites/$site/tmp/run/live", 60) or TestUtils::bail_out_clean("No need to test $package without livestatus connection");
 	TestUtils::wait_for_file("/omd/sites/$site/tmp/nagios/status.dat", 60) or TestUtils::bail_out_clean("No need to test $package without existing status.dat");
 
