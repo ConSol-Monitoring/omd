@@ -12,7 +12,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 224 );
+plan( tests => 227 );
 
 # create our test site
 my $omd_bin = TestUtils::get_omd_bin();
@@ -20,6 +20,9 @@ my $site    = TestUtils::create_test_site() or BAIL_OUT("no further testing with
 my $package = "check_multi";
 my $host    = "omd-$package";
 my $auth    = 'OMD Monitoring Site '.$site.':omdadmin:omd';
+
+# create test host/service
+TestUtils::prepare_obj_config('t/data/omd/testconf1', '/omd/sites/'.$site.'/etc/nagios/conf.d', $site);
 
 # prepare check_multi test environment (from skel/etc/check_multi/test)
 TestUtils::test_command({ cmd => $omd_bin." config $site set DEFAULT_GUI welcome" });

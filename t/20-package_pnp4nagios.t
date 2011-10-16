@@ -13,12 +13,15 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 100 );
+plan( tests => 103 );
 
 ##################################################
 # create our test site
 my $omd_bin = TestUtils::get_omd_bin();
 my $site    = TestUtils::create_test_site() or TestUtils::bail_out_clean("no further testing without site");
+
+# create test host/service
+TestUtils::prepare_obj_config('t/data/omd/testconf1', '/omd/sites/'.$site.'/etc/nagios/conf.d', $site);
 
 # decrease pnp interval
 TestUtils::test_command({ cmd => "/usr/bin/env sed -i -e 's/^perfdata_file_processing_interval = 15/perfdata_file_processing_interval = 2/g' -e 's/^sleep_time = 15/sleep_time = 2/g' /opt/omd/sites/$site/etc/pnp4nagios/npcd.cfg" });
