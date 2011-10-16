@@ -2,6 +2,8 @@ This file documents the revision history for the Open Monitoring Distribution
 
 0.52
 
+          - Switch Check_MK to version 1.1.12 (Please refer to the migration notes
+            of Check_MK on http://mathias-kettner.de/checkmk_migration_notes.html!)
           - Get rid of dummy host in a plain fresh OMD site
           - Updated to NagVis 1.6rc2
               Notes: The userfiles directory has been moved from var/nagvis/userfiles
