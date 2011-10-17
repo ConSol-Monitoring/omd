@@ -65,27 +65,10 @@ OPTIONS="-ud"
 # 
 # It returns 1 when no process can be found and echos the PID while
 # returning 0 when a process can be found.
-nagios_proc() {
-    PROC=$(ps -u $USR --ppid 1 -o pid,ppid,cmd \
-             | grep "$BIN $OPTIONS $CFG_FILE" 2>&1 | grep ' 1 ' | grep -v grep)
-    PID=$(echo "$PROC" | sed 's/^ *//g' | cut -d' ' -f1)
-    if [ "$PID" != "" ]; then
-        echo "$PID"
-        return 0
-    else
-        return 1
-    fi
+pidof_nagios() {
+    pgrep -u $OMD_SITE -o -P 1 -fx "$BIN $OPTIONS $CFG_FILE" 2>/dev/null
 }
 
-# First try to use the process list to gather a nagios process,
-# when no process is found via ps take a look at the lock file
-#
-# It returns 1 when no process can be found and echos the PID while
-# returning 0 when a process can be found.
-pidof_nagios() {
-    nagios_proc
-    return $?
-}
 
 verify_config() {
     if [ "$1" != "quiet" ]; then
@@ -115,38 +98,34 @@ prep_start() {
 }
 
 nagios_wait_stop() {
-    pid=$(pidof_nagios) || true
-    if ! kill -0 "${pid:-}" >/dev/null 2>&1; then
-        echo -n 'Not running. '
+    pid=$(pidof_nagios) || {  
+        echo -n 'not running...' 
         return 0
-    fi
+    }
 
     # wait until really stopped.
     # it might happen that nagios has a subprocess which
     # is left running and becomes ppid 1 after killing the
     # main nagios process. So fetch the process id again
     # multiple times to fetch new processes until all are gone.
-    if [ -n "${pid:-}" ]; then
-        I=0
-        while kill -0 ${pid:-} >/dev/null 2>&1; do
-            # Send single kill per process
-            kill $pid
-            while kill -0 ${pid:-} >/dev/null 2>&1;  do
-                if [ $I = '60' ]; then
-                    return 1
-                else
-                    echo -n "."
-                    I=$(($I+1))
-                    sleep 1
-                fi
-            done
-            # Is there another proc with ppid 1?
-            pid=$(pidof_nagios | head -n1) || true
+    I=0
+    while kill -0 $pid >/dev/null 2>&1; do
+        # Send single kill per process
+        kill $pid
+        while kill -0 $pid  >/dev/null 2>&1;  do
+            if [ $I = '60' ]; then
+                return 1
+            else
+                echo -n "."
+                I=$(($I+1))
+                sleep 1
+            fi
         done
-    fi
+        # Is there another proc with ppid 1?
+        pid=$(pidof_nagios) || break
+    done
     
-    [ -f "$PID_FILE" ] && rm -f "$PID_FILE"
-    return 0
+    rm -f "$PID_FILE"
 }
 
 nagios_wait_start() {
@@ -163,8 +142,6 @@ nagios_wait_start() {
             sleep 1
         fi
     done
-  
-    return 0
 }
 
 if [ ! -f $BIN ]; then
@@ -216,12 +193,11 @@ case "$1" in
         exit 0
     ;;
     status)
-        PID=$(pidof_nagios 2>&1) || true
-        if kill -0 "${PID:-}" >/dev/null 2>&1; then
-            echo "Running ($PID)."
-            exit 0
+        if pid=$(pidof_nagios 2>&1)
+ 	then
+	    echo "Running ($pid)."
         else
-            echo 'Not running. '
+            echo 'Not running.'
             exit 1
         fi
     ;;
@@ -247,13 +223,13 @@ case "$1" in
         fi
         
         # Execute a start when nagios is not running
-        if ! pidof_nagios >/dev/null 2>&1; then
+        if ! pid=$(pidof_nagios) 2>&1; then
             $0 start
             exit $?
         fi
 
-        echo -n "Reloading nagios configuration (PID: $PID)... "
-        if kill -HUP ${PID:-} >/dev/null 2>&1; then
+        echo -n "Reloading nagios configuration (PID: $pid)... "
+        if kill -HUP $pid >/dev/null 2>&1; then
             echo 'OK'
             exit 0
         else

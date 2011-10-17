@@ -19,6 +19,7 @@ This file documents the revision history for the Open Monitoring Distribution
             - npcd: Now detecting and handling stale pidfiles in init script
           - updated to Mod-Gearman 1.1.0
           - Support Ubuntu 11.10 (Oneiric)
+          - Cleanup up startscript of nagios
 
 0.50     Sep 20 2011
           - Check_MK: fix problem with playing sounds
