@@ -11,6 +11,7 @@ This file documents the revision history for the Open Monitoring Distribution
               var/nagvis/userfiles from your site.
           - OMD
             - Added 'umount' option to unmount the ramdisk of a site
+            - Handling comments and empty lines in .info files correcty 
           - updated to jmx4perl 1.00
           - pnp4nagios
             - npcd: Now detecting and handling stale pidfiles in init script

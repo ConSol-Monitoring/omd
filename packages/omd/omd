@@ -273,6 +273,9 @@ def read_info():
     for f in os.listdir(info_dir):
         if f.endswith(".info"):
             for line in file(info_dir + "/" + f):
+                # Skip comment and empty lines
+                if line.startswith('#') or line.strip() == '':
+                    continue
                 var, value = line.split('=')
                 value = value.strip()
                 if var.endswith("+"):
