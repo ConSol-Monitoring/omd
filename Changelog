@@ -2,6 +2,9 @@ This file documents the revision history for the Open Monitoring Distribution
 
 0.52
 
+          - Switch Check_MK to version 1.1.12 (Please refer to the migration notes
+            of Check_MK on http://mathias-kettner.de/checkmk_migration_notes.html!)
+          - Get rid of dummy host in a plain fresh OMD site
           - Updated to NagVis 1.6rc2
               Notes: The userfiles directory has been moved from var/nagvis/userfiles
               to local/share/nagvis/htdocs/userfiles. The side individual files
@@ -16,6 +19,9 @@ This file documents the revision history for the Open Monitoring Distribution
           - pnp4nagios
             - npcd: Now detecting and handling stale pidfiles in init script
           - updated to Mod-Gearman 1.1.0
+          - Support Ubuntu 11.10 (Oneiric)
+          - Cleanup up startscript of nagios
+          - New handler for Apache error messages (shows end of logfile)
 
 0.50     Sep 20 2011
           - Check_MK: fix problem with playing sounds

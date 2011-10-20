@@ -13,7 +13,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 72 );
+plan( tests => 75 );
 
 ##################################################
 # get version strings
@@ -28,6 +28,9 @@ my $omd_bin = TestUtils::get_omd_bin();
 my $site    = TestUtils::create_test_site() or TestUtils::bail_out_clean("no further testing without site");
 my $host    = "omd-".$site;
 my $service = "Dummy+Service";
+
+# create test host/service
+TestUtils::prepare_obj_config('t/data/omd/testconf1', '/omd/sites/'.$site.'/etc/nagios/conf.d', $site);
 
 ##################################################
 # decrease status update interval
