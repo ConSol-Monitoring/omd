@@ -76,11 +76,11 @@ upstream:
 	# check_mk_templates.cfg -> enter correct URLs and paths
 	tar xzf check_mk-$(VERSION).tar.gz --to-stdout check_mk-$(VERSION)/doc.tar.gz | \
           tar xzf - --to-stdout check_mk_templates.cfg | \
-          sed -e 's-@CHECK_ICMP@-###ROOT###/lib/nagios/plugins/check_icmp-g' \
+          sed -e 's-@CHECK_ICMP@-$USER4$/lib/nagios/plugins/check_icmp-g' \
               -e 's-@BINDIR@/--g' \
-              -e 's-@VARDIR@-###ROOT###/var/check_mk-g' \
-              -e 's-@PNPURL@-/###SITE###/pnp4nagios/-g' \
-              -e 's-@CGIURL@-/###SITE###/nagios/cgi\-bin-g' > \
+              -e 's-@VARDIR@-$USER4$/var/check_mk-g' \
+              -e 's-@PNPURL@-/$USER3$/pnp4nagios/-g' \
+              -e 's-@CGIURL@-/$USER3$/nagios/cgi\-bin-g' > \
           skel/etc/nagios/conf.d/check_mk_templates.cfg
 
 	# multisite.mk - replace nagiosadmin with omadmin
