@@ -163,6 +163,9 @@ def handler(req):
     config   = config_load(sitename)
     gui      = 'DEFAULT_GUI' in config and config['DEFAULT_GUI'] or 'nagios'
 
+    # Load mod_python env into regular environment
+    os.environ.update(req.subprocess_env)
+
     if gui == 'welcome':
         page_welcome(req)
     else:
@@ -171,11 +174,18 @@ def handler(req):
 
     return apache.OK
 
+def omd_mode(req):
+    if os.environ.get('OMD_SITE', '') == pwd.getpwuid(os.getuid())[0]:
+        return 'own'
+    else:
+        return 'shared'
+
 def show_apache_log(req):
-    logfile = file("/omd/sites/%s/var/log/apache/error_log" % site_name(req))
-    lines = logfile.readlines()
-    if len(lines) > 30:
-        lines = lines[-30:]
+    if omd_mode(req) == 'own':
+        log_path = '/omd/sites/%s/var/log/apache/error_log' % site_name(req)
+    else:
+        log_path = None
+
     req.write("<html><head><style>\n")
     req.write("b.date { color: #888; font-weight: normal; }\n")
     req.write("b.level.error { color: #f00; }\n")
@@ -185,21 +195,31 @@ def show_apache_log(req):
     req.write("b.msg.warn { background-color: #ffc; color: #880; }\n")
     req.write("b.msg { font-weight: normal; }\n")
     req.write("b.msg b.line { background-color: #fdd; color: black; }\n")
-    
+
     req.write("</style><body>\n")
     req.write("<h1>Internal Server Error</h1>")
-    req.write("<p>An internal error occurred. Details can be found in the Apache error log (~/var/log/apache/error_log). ")
-    req.write("Here are the last couple of lines from that log file:</p>")
-    req.write("<pre class=errorlog>\n")
-    for line in lines:
-        parts = line.split(']', 2)
-        if len(parts) < 3:
-            parts += [ "" ] * (3 - len(parts))
-        date = parts[0].lstrip('[').strip()
-        level = parts[1].strip().lstrip('[')
-        message = parts[2].strip()
-        message = re.sub("line ([0-9]+)", "line <b class=line>\\1</b>", message)
-        req.write("<b class=date>%s</b> <b class=\"level %s\">%s</b> <b class=\"msg %s\">%s</b>\n" % 
-                  (date, level, "%-7s" % level, level, message))
-    req.write("</pre>\n</body></html>\n")
+    req.write("<p>An internal error occurred. Details can be found in the Apache error log")
+    if not log_path:
+        req.write(".")
+    else:
+        logfile = file(log_path)
+        lines = logfile.readlines()
+        if len(lines) > 30:
+            lines = lines[-30:]
+
+        req.write(" (%s)" % log_path)
+        req.write("Here are the last couple of lines from that log file:</p>")
+        req.write("<pre class=errorlog>\n")
+        for line in lines:
+            parts = line.split(']', 2)
+            if len(parts) < 3:
+                parts += [ "" ] * (3 - len(parts))
+            date = parts[0].lstrip('[').strip()
+            level = parts[1].strip().lstrip('[')
+            message = parts[2].strip()
+            message = re.sub("line ([0-9]+)", "line <b class=line>\\1</b>", message)
+            req.write("<b class=date>%s</b> <b class=\"level %s\">%s</b> <b class=\"msg %s\">%s</b>\n" % 
+                      (date, level, "%-7s" % level, level, message))
+        req.write("</pre>\n")
+    req.write("</body></html>\n")
 
