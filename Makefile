@@ -1,5 +1,4 @@
 SHELL = /bin/bash
-include Makefile.omd
 # You can select a subset of the packages by overriding this
 # variale, e.g. make PACKAGES='nagios rrdtool' pack
 PACKAGES=perl-modules \
@@ -16,6 +15,7 @@ PACKAGES=perl-modules \
          jmx4perl \
          mk-livestatus \
          mysql-omd \
+         icinga \
          nagios \
          nagios-plugins \
          nagvis \
@@ -30,6 +30,8 @@ PACKAGES=perl-modules \
          gearmand \
          mod-gearman \
          patch
+
+include Makefile.omd
 
 # If you just want to test package building, you can reduce the
 # number of packages to just "omd" - to speed up your tests.

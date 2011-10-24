@@ -15,4 +15,5 @@ tmp/nagvis                                              775
 tmp/nagvis/share                                        775 
 tmp/nagvis/tmpl/compile                                 775 
 tmp/nagvis/tmpl/cache                                   775
+var/nagvis/profiles                                     775
 

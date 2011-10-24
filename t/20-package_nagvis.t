@@ -12,7 +12,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 324 );
+plan( tests => 322 );
 
 ##################################################
 # create our test site
@@ -280,7 +280,7 @@ TestUtils::test_url(
 # /nagvis/server/core/ajax_handler.php?mod=AutoMap&act=getAutomapObjects&show=__automap&childLayers=2
 TestUtils::test_url(
     api_url_list({ url  => '/nagvis/server/core/ajax_handler.php?mod=AutoMap&act=getAutomapObjects&show=__automap&childLayers=2',
-                   like => [ '/"alias":"Default Automap"/', ]})
+                   like => [ '/"type":"map"/', '/"name":"__automap"/' ]})
 );
 
 # /nagvis/server/core/ajax_handler.php?mod=AutoMap&act=getObjectStates&show=__automap&ty=state&i[]=0&t[]=host&n1[]=localhost&n2[]=&childLayers=2

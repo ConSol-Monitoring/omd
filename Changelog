@@ -4,16 +4,22 @@ This file documents the revision history for the Open Monitoring Distribution
 
           - Switch Check_MK to version 1.1.12 (Please refer to the migration notes
             of Check_MK on http://mathias-kettner.de/checkmk_migration_notes.html!)
+          - FIX: WATO - Fixed permissions on conf.d directory for shared apache mode
+          - FIX: Fixed permissions for PHP temp files in shared mode
           - Get rid of dummy host in a plain fresh OMD site
-          - Updated to NagVis 1.6rc2
+          - NagVis
+            - Updated to NagVis 1.6rc3
               Notes: The userfiles directory has been moved from var/nagvis/userfiles
               to local/share/nagvis/htdocs/userfiles. The side individual files
               shal be copied during update. The old files are left untouched in the
               old directory. If everything works as expeced after update and you
               don't plan to downgrade again you can savely remove the directory
-              var/nagvis/userfiles from your site.
+              var/nagvis/userfiles from your site
+            - local/ hierarchie can now handle .php files
           - OMD
             - Added 'umount' option to unmount the ramdisk of a site
+            - Handling comments and empty lines in .info files correcty 
+            - Made 'setversion' work on broken links
           - updated to jmx4perl 1.00
           - pnp4nagios
             - npcd: Now detecting and handling stale pidfiles in init script
