@@ -21,8 +21,6 @@ def config_load(sitename):
     return conf
 
 def page_welcome(req):
-    req.content_type = "text/html; charset=UTF-8"
-    req.header_sent  = False
     req.headers_out.add("Cache-Control", "max-age=7200, public");
     req.write("""
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Frameset//EN"
@@ -149,10 +147,21 @@ target="_blank">omdistro.org</a>
 </body>
 </html>""")
 
+def load_process_env(req):
+    """
+    Load process env into regular python environment
+    Be aware of eventual lists as values
+    """
+    for k, v in dict(req.subprocess_env).iteritems():
+        if type(v) == list:
+            v = v[-1]
+        os.environ[k] = v
+
 def handler(req):
     req.content_type = "text/html; charset=UTF-8"
     req.header_sent = False
     req.myfile = req.uri.split("/")[-1][:-3]
+
     if req.myfile == "error":
         try:
             show_apache_log(req)
@@ -165,8 +174,7 @@ def handler(req):
     config   = config_load(sitename)
     gui      = 'DEFAULT_GUI' in config and config['DEFAULT_GUI'] or 'nagios'
 
-    # Load mod_python env into regular environment
-    os.environ.update(req.subprocess_env)
+    load_process_env(req)
 
     if gui == 'welcome':
         page_welcome(req)
