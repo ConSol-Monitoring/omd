@@ -6,6 +6,11 @@ import os, pwd, re
 def site_name(req):
     return os.path.normpath(req.uri).split("/")[1]
 
+def get_version(sitename):
+    return [ l.split()[2] for l
+             in file("/omd/sites/%s/share/omd/omd.info" % sitename).readlines()
+             if l.startswith("OMD_VERSION") ][0]
+
 def config_load(sitename):
     confpath = "/omd/sites/%s/etc/omd/site.conf" % sitename
     if not os.path.exists(confpath):
@@ -43,12 +48,12 @@ def page_welcome(req):
       text-align:center;
   }
   div {
-      width:100%;
+      width:100%%;
       padding:0;
       margin:0;
   }
   div#body {
-      height:100%;
+      height:100%%;
       width:700px;
       margin:auto;
   }
@@ -62,7 +67,7 @@ def page_welcome(req):
       border:1px #DADADA solid;
       height:193px;
       display:block;
-      width:100%;
+      width:100%%;
       color:#484848;
       text-decoration:none;
       padding:10px;
@@ -80,6 +85,7 @@ def page_welcome(req):
       border:0;
       float: right;
       vertical-align:middle;
+      margin-left: 10px;
   }
   p.footer {
       text-align:center;
@@ -89,25 +95,38 @@ def page_welcome(req):
 <body>
 <div id="body">
 <h1>OMD - Open Monitoring Distribution</h1>
+<b>Version: %s</b>
 <p>This page gives you a central view on the available GUIs in OMD.
    Just have a look and feel free to choose your favorite GUI. At the
    bottom of this page you can find short instructions on how to change
    the default GUI of OMD.</p>
-    """)
+    """ % get_version(site_name(req)))
 
     for id, title, desc in [ ('nagios', 'Classic Nagios GUI',
-                              'The classic nagios GUI is based on CGIs.'),
-                             ('icinga', 'Classic Icinga GUI',
-                              'The classic icinga GUI is based on CGIs.'),
+                              'The classic Nagios GUI is based on CGI program written '
+                              'in C. It retrieves its status information from <tt>status.dat</tt>. '
+                              'This interface is not longer actively developed and does not perform '
+                              'well in large installations.'),
                              ('check_mk', 'Check_MK Multisite',
-                              'Multisite is a fast, flexibile webinterface for '
-                              'Nagios.<br />It uses MKLivestatus to connect to Nagios.'),
-                             ('thruk', '<p>Thruk Monitoring Webinterface',
+                              'Check_MK Multisite is a fast and flexibile status GUI written '
+                              'in Python. It supports user definable views and is able to '
+                              'display the status of several sites in one combined view. It '
+                              'uses MK Livestatus for getting the status data from the sites.'),
+                             ('thruk', 'Thruk Monitoring Webinterface',
                               'Thruk is a complete rework of the classic interface '
-                              'especially designed for large installations.</p>'),
+                              'in Perl. While maintainig the original look and feel it '
+                              'brings lots of improvements and new features. Just as Multisite '
+                              'it uses MK Livestatus as backend and supports the visualization '
+                              'of multiple sites.'),
+                             ('icinga', 'Classic Icinga GUI',
+                              'Icinga\'s "classical" GUI is a derivate of the classical Nagios GUI '
+                              'and has been directly evolved from the original '
+                              'CGI programs in C. It has its own look and feel and brings useful '
+                              'improvements. It is not bound to Icinga and can be used with the '
+                              'other monitoring cores as well.'),
                              ('nagvis', 'NagVis - The visualization addon',
                               '<p>NagVis is the leading visualization addon for Nagios.</p>'
-                              '<p>NagVis can be used to visualize Nagios Data, e.g.  '
+                              '<p>NagVis can be used to visualize Nagios status data, e.g.  '
                               'to display IT processes like a mail system or a '
                               'network infrastructure.</p>'),
                              ('pnp4nagios', 'PNP4Nagios',

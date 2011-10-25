@@ -1,0 +1,12 @@
+#!/bin/bash
+# Little install helper used during development and test
+sudo cp -v index.py /omd/versions/default/share/omd/htdocs/index.py 
+sudo cp -v img/* /omd/versions/default/share/omd/htdocs/img/
+
+OLD_VERSION=$(sed -rn < /omd/versions/default/bin/omd 's/^OMD_VERSION = "(.*)"$/\1/p')
+echo $OLD_VERSION
+
+
+echo "Keeping version number in /usr/bin/omd at $OLD_VERSION"
+sudo cp -v omd /omd/versions/default/bin/omd
+sudo sed -i "s/OMD_VERSION =.*/OMD_VERSION = "'"'"$OLD_VERSION"'"/' /omd/versions/default/bin/omd
