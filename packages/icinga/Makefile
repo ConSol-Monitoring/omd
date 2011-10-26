@@ -13,6 +13,8 @@ CONFIGUREOPTS = \
     --datarootdir=$(OMD_ROOT)/share/icinga/htdocs \
     --with-icinga-user=$$(id -un) \
     --with-icinga-group=$$(id -gn) \
+    --with-web-user=$(APACHE_USER) \
+    --with-web-group=$(APACHE_GROUP) \
     --with-perlcache \
     --enable-embedded-perl \
     --with-cgiurl="./cgi-bin" \
