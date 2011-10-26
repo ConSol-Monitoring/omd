@@ -5,6 +5,7 @@ This file documents the revision history for the Open Monitoring Distribution
           - Switch Check_MK to version 1.1.12 (Please refer to the migration notes
             of Check_MK on http://mathias-kettner.de/checkmk_migration_notes.html!)
           - FIX: WATO - Fixed permissions on conf.d directory for shared apache mode
+          - FIX: Fixed permissions for PHP temp files in shared mode
           - Get rid of dummy host in a plain fresh OMD site
           - NagVis
             - Updated to NagVis 1.6rc3
