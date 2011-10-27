@@ -509,8 +509,19 @@ def switch_to_site_user():
     gid = p.pw_gid
     os.chdir(p.pw_dir)
     os.setgid(gid)
-    os.setgroups([group_id('omd')])
+    # Darn. The site user might have been put into further groups. 
+    # This is e.g. needed if you want to access the livestatus socket
+    # from one site by another. We make use of the "id" command here.
+    # If you know something better, that does not rely on an external
+    # command (and that does not try to parse around /etc/group, of
+    # course), then please tell mk -> mk@mathias-kettner.de.
+
+    os.setgroups(groups_of(g_sitename))
     os.setuid(uid)
+
+def groups_of(username):
+    return map(int, os.popen("id -G '%s'" % username).read().split())
+
 
 def switch_temp_to_user(user):
     p = pwd.getpwnam(user)

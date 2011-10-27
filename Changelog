@@ -24,8 +24,10 @@ This file documents the revision history for the Open Monitoring Distribution
           - Support Ubuntu 11.10 (Oneiric)
           - Cleanup up startscript of nagios
           - New handler for Apache error messages (shows end of logfile)
-          - omd update: page diff through less -F -X (-X is new). This fixes
+          - FIX: omd update: page diff through less -F -X (-X is new). This fixes
             a problem where the diff is not visible on dumb terminals like PuTTY.
+          - FIX: omd: site processes where missing supplementary groups when starting
+            the site as root via 'omd start SITE'
 
 0.50     Sep 20 2011
           - Check_MK: fix problem with playing sounds
