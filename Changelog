@@ -28,6 +28,8 @@ This file documents the revision history for the Open Monitoring Distribution
             a problem where the diff is not visible on dumb terminals like PuTTY.
           - FIX: omd: site processes where missing supplementary groups when starting
             the site as root via 'omd start SITE'
+          - FIX: omd update handled most files twice (without need). This is
+            fixed now.
 
 0.50     Sep 20 2011
           - Check_MK: fix problem with playing sounds

@@ -2324,21 +2324,19 @@ def main_diff(args, options={}):
     diff_list(from_skelroot, g_sitedir, from_version, relbase, "bare" in options)
 
 
-def walk_skel(root, handler, args, compare_with = None, relbase = '.'):
-    """
-    Walks all files in the skeleton dir to execute a function for each file
-    The given handler is called with the provided args. Additionally the relative
-    path of the file to handle is handed over in the 'relpath' parameter.
+def walk_skel(root, handler, args, exclude_if_in = None, relbase = '.'):
+    # Walks all files in the skeleton dir to execute a function for each file
+    # The given handler is called with the provided args. Additionally the relative
+    # path of the file to handle is handed over in the 'relpath' parameter.
 
-    When called with a path in 'compare_with' the function only handles files which
-    were not handled before or exist in that dir.
+    # When called with a path in 'exclude_if_in' then paths existing relative to
+    # that are skipped. This is used for a second run during the update-process: to handle
+    # files that have vanished in the new version.
 
-    The option 'relbase' is optional. It can contain a relative path which can be used
-    as base for the walk instead of walking the whole tree.
+    # The option 'relbase' is optional. It can contain a relative path which can be used
+    # as base for the walk instead of walking the whole tree.
 
-    The function returns a set of already handled files.
-    """
-    handled_paths = set([])
+    # The function returns a set of already handled files.
     os.chdir(root)
     for dirpath, dirnames, filenames in os.walk(relbase):
         if dirpath.startswith("./"):
@@ -2350,19 +2348,15 @@ def walk_skel(root, handler, args, compare_with = None, relbase = '.'):
             path = dirpath + "/" + entry
             if path.startswith("./"):
                 path = path[2:]
-            if compare_with and path in handled_paths:
+
+            if exclude_if_in and os.path.exists(exclude_if_in + "/" + path):
                 continue
 
-            handled_paths.add(path)
-
-            if not compare_with or \
-               compare_with and not os.path.exists(compare_with + "/" + entry):
-                try:
-                    handler(path, *args)
-                except Exception, e:
-                    sys.stderr.write("Error updating %s/%s: %s\n" % (g_sitedir, path, e))
-                    raise
-    return handled_paths
+            try:
+                handler(path, *args)
+            except Exception, e:
+                sys.stderr.write("Error updating %s/%s: %s\n" % (g_sitedir, path, e))
+                raise
 
 
 def main_update(args, options={}):
@@ -2373,9 +2367,16 @@ def main_update(args, options={}):
     # from the new version after updating.
     unmount_tmpfs(g_sitename)
 
-    # Target version: ourselves
+    # Source version: the version of the site we deal with
     from_version = site_version(g_sitename)
+
+    # Target version: the version of the OMD binary
     to_version = OMD_VERSION
+
+    # source and target are identical if 'omd update' is called
+    # from within a site. In that case we make the user choose
+    # the target version explicitely and the re-exec the bin/omd
+    # of the target version he has choosen.
     if from_version == to_version:
         possible_versions = [ v for v in omd_versions() if v != from_version ]
         possible_versions.sort(reverse=True)
@@ -2394,7 +2395,10 @@ def main_update(args, options={}):
                 bail_out("Aborted.")
         exec_other_omd(to_version)
 
-    if not opt_force and not dialog_yesno("You are going to update the site %s from version %s to version %s. "
+    # This line is reached, if the version of the OMD binary (the target)
+    # is different from the current version of the site.
+    if not opt_force and not dialog_yesno(
+            "You are going to update the site %s from version %s to version %s. "
             "This will include updating all of you configuration files and merging "
             "changes in the default files with changes made by you. In case of conflicts "
             "your help will be needed." % (g_sitename, from_version, to_version),
@@ -2421,7 +2425,7 @@ def main_update(args, options={}):
     tmp = tmp_dir(g_sitename)
 
     # First walk through skeleton files of new version
-    handled_paths = walk_skel(to_skelroot, update_file, (from_version, to_version, g_sitedir, old_perms))
+    walk_skel(to_skelroot, update_file, (from_version, to_version, g_sitedir, old_perms))
 
     # Now handle files present in old but not in new skel files
     walk_skel(from_skelroot, update_file, (from_version, to_version, g_sitedir, old_perms), to_skelroot)
