@@ -944,7 +944,7 @@ def get_editor():
 def pipe_pager():
     pager = getenv("PAGER")
     if not pager and os.path.exists("/usr/bin/less"):
-        pager = "less -F"
+        pager = "less -F -X"
     if pager:
         return "| %s" % pager
     else:
