@@ -1951,8 +1951,10 @@ def main_uninstall(args, options={}):
 def main_setversion(args, options={}):
     if len(args) == 0:
         versions = [ (v, "Version %s" % v) for v in omd_versions() if not v == default_version() ]
+
         if use_update_alternatives():
             versions = [ ('auto', 'Auto (Update-Alternatives)') ] + versions
+
         ok, version = dialog_menu("Choose new default",
                 "Please choose the version to make the new default",
                 versions,
@@ -1977,7 +1979,7 @@ def main_setversion(args, options={}):
         else:
             os.system("update-alternatives --set omd /omd/versions/%s" % version)
     else:
-        if os.path.exists("/omd/versions/default"):
+        if os.path.islink("/omd/versions/default"):
             os.remove("/omd/versions/default")
         os.symlink("/omd/versions/%s" % version, "/omd/versions/default")
 
