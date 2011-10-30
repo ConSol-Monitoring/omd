@@ -2256,75 +2256,127 @@ def main_mv_or_cp(what, args, options={}):
     create_tmpfs(g_sitename)
 
 
-
-def diff_list(from_skelroot, g_sitedir, from_version, relbase, bare):
-    """ Outputs only a list of changed/deleted files compared to the current version."""
-    def print_diff(relpath, source_path, target_path, source_version, source_perms):
-        source_file = source_path + '/' + relpath
-        target_file = target_path + '/' + relpath
-
-        source_perm = get_skel_permissions(source_version, source_perms, relpath)
-        target_perm = get_file_permissions(target_file)
-
-        source_type = filetype(source_file)
-        target_type = filetype(target_file)
-
-        changed_type, changed_content, changed = file_status(source_file, target_file)
-
-        if not changed:
-            return
-
-        fn = tty_bold + tty_bgblue + tty_white + relpath + tty_normal
-        fn = tty_bold + relpath + tty_normal
-
-        def print_status(color, f, status, long_out):
-            if bare:
-                sys.stdout.write("%s %s\n" % (status, f))
-            else:
-                sys.stdout.write(color + " %s %s\n" % (long_out, f))
-
-            # Show a little more details in verbose mode
-            if opt_verbose:
-                arrow = tty_magenta + '->' + tty_normal
-                if 'c' in status:
-                    os.system("pwd ; diff -u %s %s" % (source_file, target_file))
-                elif status == 'p':
-                    sys.stdout.write("    %s %s %s\n" % (source_perm, arrow, target_perm))
-                elif 't' in status:
-                    sys.stdout.write("    %s %s %s\n" % (source_type, arrow, target_type))
-
-        if not target_type:
-            print_status(good, fn, 'd', 'Deleted')
-            return
-
-        elif changed_type and changed_content:
-            print_status(good, fn, 'tc', 'Changed type and content')
-
-        elif changed_type and not changed_content:
-            print_status(good, fn, 't', 'Changed type')
-
-        elif changed_content and not changed_type:
-            print_status(good, fn, 'c', 'Changed content')
-
-        if source_perm != target_perm:
-            print_status(warn, fn, 'p', 'Changed permissions')
-
-    read_skel_permissions()
-    old_perms = load_skel_permissions(from_version)
-
-    if not os.path.isdir(relbase):
-        print_diff(relbase, from_skelroot, g_sitedir, from_version, old_perms)
-    else:
-        walk_skel(from_skelroot, print_diff, (from_skelroot, g_sitedir, from_version, old_perms), relbase = relbase)
-
-
 def main_diff(args, options={}):
     from_version  = site_version(g_sitename)
     from_skelroot = "/omd/versions/%s/skel" % from_version
 
-    relbase = len(args) > 0 and args[0].rstrip('/') or '.'
-    diff_list(from_skelroot, g_sitedir, from_version, relbase, "bare" in options)
+    # If arguments are added and those arguments are directories,
+    # then we just output the general state of the file. If only
+    # one file is specified, we directly show the unified diff.
+    # This behaviour can also be forced by the OMD option -v.
 
+    if len(args) == 0:
+        args = ["."]
+    elif len(args) == 1 and os.path.isfile(args[0]):
+        global opt_verbose
+        opt_verbose = True
+
+    global bare
+    bare = "bare" in options # sorry for the global variable here
+
+    for arg in args:
+        diff_list(from_skelroot, g_sitedir, from_version, arg)
+
+
+
+def diff_list(from_skelroot, g_sitedir, from_version, orig_path):
+    # Compare a list of files/directories with the original state
+    # and output differences. If opt_verbose then we output the complete
+    # diff, otherwise just the state. Only files present in skel/ are
+    # handled at all.
+
+    read_skel_permissions()
+    old_perms = load_skel_permissions(from_version)
+
+    # Prepare paths:
+    # orig_path: this was specified by the user
+    # rel_path:  path relative to the site's dir
+    # abs_path:  absolute path
+
+    # Get absolute path to site dir. This can be (/opt/omd/sites/XXX)
+    # due to the symbolic link /omd
+    old_dir = os.getcwd()
+    os.chdir(g_sitedir)
+    abs_sitedir = os.getcwd()
+    os.chdir(old_dir)
+
+    # Create absolute paths first
+    abs_path = orig_path
+    if not abs_path.startswith("/"):
+        if abs_path == ".":
+            abs_path = ""
+        elif abs_path.startswith("./"):
+            abs_path = path[2:]
+        abs_path = os.getcwd() + "/" + abs_path
+    abs_path = abs_path.rstrip("/")
+
+    # Make sure that path does not lie outside the OMD site
+    if abs_path.startswith(g_sitedir):
+        rel_path = abs_path[len(g_sitedir) + 1:]
+    elif abs_path.startswith(abs_sitedir):
+        rel_path = abs_path[len(abs_sitedir) + 1:]
+    else:
+        bail_out("Omd diff only works for files in the site's directory.")
+
+    if not os.path.isdir(abs_path):
+        print_diff(rel_path, from_skelroot, g_sitedir, from_version, old_perms)
+    else:
+        walk_skel(from_skelroot, print_diff, (from_skelroot, g_sitedir, 
+                  from_version, old_perms), relbase = rel_path)
+
+
+def print_diff(rel_path, source_path, target_path, source_version, source_perms):
+    source_file = source_path + '/' + rel_path
+    target_file = target_path + '/' + rel_path
+
+    source_perm = get_skel_permissions(source_version, source_perms, rel_path)
+    target_perm = get_file_permissions(target_file)
+
+    source_type = filetype(source_file)
+    target_type = filetype(target_file)
+
+    changed_type, changed_content, changed = file_status(source_file, target_file)
+
+    if not changed:
+        return
+
+    fn = tty_bold + tty_bgblue + tty_white + rel_path + tty_normal
+    fn = tty_bold + rel_path + tty_normal
+
+    def print_status(color, f, status, long_out):
+        if bare:
+            sys.stdout.write("%s %s\n" % (status, f))
+        elif not opt_verbose:
+            sys.stdout.write(color + " %s %s\n" % (long_out, f))
+        else:
+            arrow = tty_magenta + '->' + tty_normal
+            if 'c' in status:
+                source_content = instantiate_skel(source_file)
+                if 0 == os.system("which colordiff > /dev/null 2>&1"):
+                    diff = "colordiff"
+                else:
+                    diff = "diff"
+                os.popen("bash -c \"%s -u <(cat) '%s'\"" % (diff, target_file), "w").write(source_content)
+            elif status == 'p':
+                sys.stdout.write("    %s %s %s\n" % (source_perm, arrow, target_perm))
+            elif 't' in status:
+                sys.stdout.write("    %s %s %s\n" % (source_type, arrow, target_type))
+
+    if not target_type:
+        print_status(good, fn, 'd', 'Deleted')
+        return
+
+    elif changed_type and changed_content:
+        print_status(good, fn, 'tc', 'Changed type and content')
+
+    elif changed_type and not changed_content:
+        print_status(good, fn, 't', 'Changed type')
+
+    elif changed_content and not changed_type:
+        print_status(good, fn, 'c', 'Changed content')
+
+    if source_perm != target_perm:
+        print_status(warn, fn, 'p', 'Changed permissions')
 
 def walk_skel(root, handler, args, exclude_if_in = None, relbase = '.'):
     # Walks all files in the skeleton dir to execute a function for each file
