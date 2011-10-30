@@ -79,8 +79,8 @@ upstream:
           sed -e 's-@CHECK_ICMP@-$$USER4$$/lib/nagios/plugins/check_icmp-g' \
               -e 's-@BINDIR@/--g' \
               -e 's-@VARDIR@-$$USER4$$/var/check_mk-g' \
-              -e 's-@PNPURL@-/$$USER3$$/pnp4nagios/-g' \
-              -e 's-@CGIURL@-/$$USER3$$/nagios/cgi\-bin-g' > \
+              -e 's-@PNPURL@-/###SITE###/pnp4nagios/-g' \
+              -e 's-@CGIURL@-/###SITE###/nagios/cgi\-bin-g' > \
           skel/etc/nagios/conf.d/check_mk_templates.cfg
 
 	# multisite.mk - replace nagiosadmin with omadmin
