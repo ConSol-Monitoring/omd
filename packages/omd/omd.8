@@ -164,11 +164,12 @@ is usually the version that was installed most lately. The sites configuration
 files will be updated as well. OMD tries hard to merge your changes with
 changes due to the new version but might need your help in doing so.
 .TP
-.B omd start      [SITE] [SERVICE]
+.B omd [-f, --force] start      [SITE] [SERVICE]
 Start a site, i.e. start all activated daemons and services of a site. 
 If you call this as root, you need to specify the site to
 be started. If you do not specify a site, then all sites with AUTOSTART=on
-will be started. If you call this as site user, no site must be specified.
+will be started, or all sites at all, if you specify \fB-f\fP or \fB--force\fP. 
+If you call this as site user, no site must be specified.
 The current site will be started.
 
 If you add the name of a service, e.g. \fBnagios\fP, then only that
@@ -179,10 +180,10 @@ be specified if also a site is specified.
 Stop a site. See \fBomd start\fP for details. This stops also sites where
 AUTOSTART=off.
 .TP
-.B omd restart    [SITE] [SERVICE]
-Restart site. See \fBomd start\fP for details.
+.B omd [-f, --force] restart    [SITE] [SERVICE]
+Restart site. See \fBcmd start\fP for details.
 .TP
-.B omd reload     [SITE] [SERVICE]
+.B omd [-f, --force] reload     [SITE] [SERVICE]
 Reload services of site(s). That is the same as calling all of the sites
 init scripts with the option \fBreload\fP. Refer to \fBomd start\fP for
 how to specify sites.

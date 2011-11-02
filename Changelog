@@ -36,6 +36,8 @@ This file documents the revision history for the Open Monitoring Distribution
           - FIX: omd diff now correctly handles relative paths. 
           - FIX: omd diff now correctly instantiates templates before showing
             diff in verboes mode
+          - omd: start, restart and reload now honor the option -f,--force: All
+            sites will then be affected, regardless of AUTOSTART
 
 0.50     Sep 20 2011
           - Check_MK: fix problem with playing sounds

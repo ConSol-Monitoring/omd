@@ -2543,7 +2543,7 @@ def main_init_action(command, args, options={}):
                 g_sitename = site
                 g_sitedir = site_dir(g_sitename)
                 config_load_hooks(True)
-                if g_hooks["AUTOSTART"]["value"] != "on":
+                if not opt_force and g_hooks["AUTOSTART"]["value"] != "on":
 		    if not bare:
 			sys.stdout.write("Ignoring site '%s': AUTOSTART != on\n" % site)
                     continue
