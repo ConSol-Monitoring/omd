@@ -1,0 +1,164 @@
+--- a/etc/thruk/thruk.conf	2011-11-19 17:25:51.000000000 +0100
++++ b/etc/thruk/thruk.conf	2011-11-19 17:40:18.924957040 +0100
+@@ -12,7 +12,7 @@
+ 
+ ######################################
+ # set the url prefix for all urls
+-url_prefix = /
++url_prefix = /###SITE###/
+ 
+ ######################################
+ # Changes the path to your logo images. Default is
+@@ -22,13 +22,13 @@
+ # Like usual, paths starting with a / will be absolute from your
+ # webserver root directory. Paths starting without a / will be relative
+ # to the cgi directory.
+-#logo_path_prefix = /icons/
++logo_path_prefix = /###SITE###/nagios/images/logos/
+ 
+ # location of your logos in your filesystem. This directory should be
+ # mapped to your 'logo_path_prefix' directory where 'logo_path_prefix' is
+ # the path relative to your webserver root directory and 'physical_logo_path' is
+ # the corresponding filesystem path.
+-#physical_logo_path = /usr/local/share/icons
++physical_logo_path = local/share/nagios/htdocs/images/logos
+ 
+ ######################################
+ # set the title prefix for all urls
+@@ -47,11 +47,11 @@
+ 
+ ######################################
+ # location of your cgi.cfg
+-cgi.cfg             = cgi.cfg
++cgi.cfg             = ###ROOT###/etc/nagios/cgi.cfg
+ 
+ ######################################
+ # use frames, can be useful for addons
+-use_frames          = 0
++use_frames          = 1
+ 
+ ######################################
+ # normally passive checks would be marked as disabled.
+@@ -113,35 +113,35 @@
+ 
+ ######################################
+ # temporary directory, used for template cache...
+-#tmp_path = /tmp
++tmp_path = ###ROOT###/tmp/thruk
+ 
+ ######################################
+ # var directory, used to store user settings
+-#var_path = ./var
++var_path = ###ROOT###/var/thruk
+ 
+ ######################################
+ # server side includes
+-#ssi_path = ssi/
++ssi_path = ###ROOT###/etc/thruk/ssi
+ 
+ ######################################
+ # path to your plugins
+ # see documentation for further steps if
+ # you change the plugin path
+-#plugin_path = plugins/
++plugin_path = ###ROOT###/etc/thruk
+ 
+ ######################################
+ # path to your themes
+ # see documentation for further steps if
+ # you change the themes path
+-#themes_path = themes/
++themes_path = ###ROOT###/etc/thruk
+ 
+ ######################################
+ # custom templates
+-#user_template_path = ./my_templates
++user_template_path = ###ROOT###/etc/thruk/templates
+ 
+ ######################################
+ # log4perl config
+-#log4perl_conf = ./log4perl.conf
++log4perl_conf = ###ROOT###/etc/thruk/log4perl.conf
+ 
+ ######################################
+ # use paged data instead of all data in one huge page
+@@ -198,7 +193,7 @@
+ # Instead of using a general resource_file, you could define one file
+ # per peer in your peer config.
+ #
+-#resource_file = path_to_your/resource.cfg
++resource_file = ###ROOT###/etc/nagios/resource.cfg
+ 
+ # show inline pnp graph if available
+ # if a service or host has a pnp4nagios action url set
+@@ -262,6 +257,7 @@
+ # check should be rescheduled instead of the passive check.
+ # Have a look at the documentation for a detailed description.
+ #command_reschedule_alias = servicename_or_commandname_pattern;agent_service_name
++command_reschedule_alias = ^check_mk\-(?!inventory);Check_MK
+ 
+ ######################################
+ # Time Format Settings
+@@ -328,37 +324,19 @@
+ ######################################
+ # Backend Configuration, enter your backends here
+ <Component Thruk::Backend>
+-#    <peer>
+-#        name   = Local Nagios
+-#        type   = livestatus
+-#        hidden = 1             # make this backend hidden by default
+-#        groups = admins        # make this backend only visible to the admin group
+-#        <options>
+-#            peer          = /tmp/livestatus.socket
+-#            resource_file = path_to_your/resource.cfg
+-#       </options>
+-#    </peer>
+-#    <peer>
+-#        name   = External Nagios
+-#        type   = livestatus
+-#        <options>
+-#            peer    = 172.16.0.1:9999
+-#       </options>
+-#    </peer>
+-#    <peer>
+-#        name   = External Icinga
+-#        type   = livestatus
+-#        <options>
+-#            peer    = 172.16.0.2:9999
+-#       </options>
+-#    </peer>
+-#    <peer>
+-#        name   = External Shinken
+-#        type   = livestatus
+-#        <options>
+-#            peer    = 127.0.0.01:50000
+-#       </options>
+-#    </peer>
++    <peer>
++        name  = ###SITE###
++        type  = livestatus
++        <options>
++            peer = ###ROOT###/tmp/run/live
++       </options>
++       <configtool>
++            core_conf      = ###ROOT###/tmp/nagios/nagios.cfg
++            obj_check_cmd  = ###ROOT###/etc/init.d/core check
++            obj_reload_cmd = ###ROOT###/etc/init.d/core reload
++            obj_readonly   = check_mk_objects\.cfg
++       </configtool>
++    </peer>
+ </Component>
+ 
+ 
+@@ -370,7 +348,8 @@
+ # authorized_for_configuration_information and authorized_for_system_commands
+ # will then have access to the config tool.
+ <Component Thruk::Plugin::ConfigTool>
+-    thruk    = ./thruk_local.conf
+-    cgi.cfg  = ./cgi.cfg
+-#    htpasswd = ./htpasswd
++    thruk    = ###ROOT###/etc/thruk/thruk_local.conf
++    cgi.cfg  = ###ROOT###/etc/nagios/cgi.cfg
++    htpasswd = ###ROOT###/etc/htpasswd
+ </Component>
++

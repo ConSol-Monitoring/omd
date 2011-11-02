@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 NAME     = Thruk
-VERSION  = 1.1.1
+VERSION  = 1.1.3
 DIR      = $(NAME)-$(VERSION)
 PERLARCH = $(shell $(PERL) -e 'use Config; print $$Config{archname}')
 
@@ -36,6 +36,11 @@ skel:
 	# set links for enabled themes
 	mkdir -p $(SKEL)/etc/thruk/themes-enabled
 	for link in `ls -1 $(DIR)/themes/themes-enabled/`; do cd $(SKEL)/etc/thruk/themes-enabled && ln -sfn ../../../share/thruk/themes/themes-available/$$link $$link; done
+	cp $(DIR)/thruk.conf $(SKEL)/etc/thruk/thruk.conf
+	for p in patches/*.skel_patch ; do \
+	    echo "applying $$p..." ; \
+	    ( cd $(SKEL) ; patch -p1 -b ) < $$p ; \
+	done
 
 clean:
 	rm -rf $(DIR)
