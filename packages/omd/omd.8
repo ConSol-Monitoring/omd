@@ -122,6 +122,28 @@ Remove a site and all of its data. This includes deleting the
 directory \fB/omd/sites/\fPSITE and removing the system user
 and group of that site. This - of course - needs root permissions.
 .TP
+.B omd disable SITE
+Disable a site. First the site will be stopped, if it is running.
+Then the tmpfs will be unmounted and the site will be made unknown
+to the global Apache server (by emptying the file /omd/apache/SITE.conf
+and restarting Apache). You cannot do any init-action like start and
+stop on a disabled site. Disabled sites will be skipped during
+system boot or a manual call to \fB/etc/init.d/omd\fP.
+
+Disabling a site brings OMD into a state where the sites home directory
+\fB/omd/sites/SITE\fP is not being used or referred to by any process
+or program. It can safely be unmounted. This is convenient in
+situations where the site is clustered and the site's home directory
+shall be moved to another cluster node.
+
+Disabling a site needs root permissions.
+
+.TP
+.B omd enable SITE
+Enables a formerly disabled site. The site is not started. This command
+needs root permissions.
+
+.TP
 .B omd mv [OPTIONS] SITE NEWNAME     
 Rename a site. The site must be stopped. the NEWNAME must be a valid
 site name as described in "omd create". Root permissions are needed.

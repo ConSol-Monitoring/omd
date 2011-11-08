@@ -1846,6 +1846,9 @@ def config_configure_hook(hookname):
         config_reload_hooks()
 
 def init_action(command, args, options):
+    if site_is_disabled(g_sitename):
+        bail_out("This site is disabled.")
+
     if command in [ "start", "restart" ]:
         create_tmpfs(g_sitename)
 
@@ -2024,11 +2027,15 @@ def main_sites(args, options={}):
         if "bare" in options:
             sys.stdout.write("%s\n" % site)
         else:
+            disabled = site_is_disabled(site)
             v = site_version(site)
+            sys.stdout.write("%s%-16s%s %s" % (disabled and 
+                   (tty_bold + tty_red) or "", site, tty_normal, v))
             if v == default_version():
-                sys.stdout.write("%-16s %s (default)\n" % (site, v))
-            else:
-                sys.stdout.write("%-16s %s\n" % (site, v))
+                sys.stdout.write(" (default)")
+            if disabled:
+                sys.stdout.write(" %sdisabled%s" % (tty_red + tty_bold, tty_normal))
+            sys.stdout.write("\n")
 
 # Bail out if name for new site is not valid (needed by create/mv/cp)
 def sitename_must_be_valid(name, reuse = False):
@@ -2067,27 +2074,28 @@ def main_create(args, options={}):
         os.chown(sitedir, pwd.getpwnam(g_sitename).pw_uid, group_id(g_sitename))
         add_to_fstab(g_sitename)
 
-    # Create symbolic link to version
-    create_version_symlink(g_sitename, OMD_VERSION)
+    def init_site():
+        # Create symbolic link to version
+        create_version_symlink(g_sitename, OMD_VERSION)
 
-    # Build up directory structure with symbolic links relative to
-    # the version link we just create
-    for d in [ 'bin', 'include', 'lib', 'share' ]:
-        os.symlink("version/" + d, sitedir + "/" + d)
+        # Build up directory structure with symbolic links relative to
+        # the version link we just create
+        for d in [ 'bin', 'include', 'lib', 'share' ]:
+            os.symlink("version/" + d, sitedir + "/" + d)
 
-    # Create skeleton files of non-tmp directories
-    create_skeleton_files(g_sitename, '.')
+        # Create skeleton files of non-tmp directories
+        create_skeleton_files(g_sitename, '.')
 
-    # Change ownership of all files and dirs to site user
-    chown_tree(sitedir, g_sitename)
+        # Change ownership of all files and dirs to site user
+        chown_tree(sitedir, g_sitename)
 
-    # Create site.conf with default values
-    config_load_hooks()
-    config_set_all() # execute 'set' functions with default values
-    config_save()
+        # Create site.conf with default values
+        config_load_hooks()
+        config_set_all() # execute 'set' functions with default values
+        config_save()
 
-    # Change the few files that config save as created as root
-    chown_tree(sitedir, g_sitename)
+        # Change the few files that config save as created as root
+        chown_tree(sitedir, g_sitename)
 
     # Create include-hook for Apache and reload apache
     create_apache_hook(g_sitename)
@@ -2149,6 +2157,33 @@ def main_rm(args, options={}):
     # remove include-hook for Apache and tell apache
     delete_apache_hook(g_sitename)
     restart_apache()
+
+
+def site_is_disabled(g_sitename):
+    apache_conf = "/omd/apache/%s.conf" % g_sitename
+    return os.stat(apache_conf).st_size == 0
+
+def main_disable(args, options):
+    if site_is_disabled(g_sitename):
+        sys.stderr.write("This site is already disabled.\n")
+        sys.exit(0)
+
+    stop_if_not_stopped(g_sitename) 
+    unmount_tmpfs(g_sitename)
+    sys.stdout.write("Disabling Apache configuration for this site...")
+    file("/omd/apache/%s.conf" % g_sitename, "w") # Create empty file
+    ok()
+    restart_apache()
+
+def main_enable(args, options):
+    if not site_is_disabled(g_sitename):
+        sys.stderr.write("This site is already enabled.\n")
+        sys.exit(0)
+    sys.stdout.write("Re-enabling Apache configuration for this site...")
+    create_apache_hook(g_sitename)
+    ok()
+    restart_apache()
+
 
 def main_mv_or_cp(what, args, options={}):
     action = what == "mv" and "rename" or "copy"
@@ -2535,6 +2570,10 @@ def main_init_action(command, args, options={}):
         for site in all_sites():
             if only_version and site_version(site) != only_version:
                 continue
+            # Skip disabled sites completely
+            if site_is_disabled(site):
+                continue
+
             # We need to do an os.system(), because each
             # site must be started with the account of the
             # site user. And after setuid() we cannot return.
@@ -2625,7 +2664,11 @@ commands = [
     ""),
 
   ( "create",    True,  1, 0, False, "",        main_create,
-    [ ( "uid", "u", True ), ( "gid", "g", True ), ( "reuse", None, False ) ],
+    [ ( "uid",     "u",  True ), 
+      ( "gid",     "g",  True ), 
+      ( "reuse",   None, False ), # do not create os user/group
+      ( "disabled" "d",  False ), # create site in disabled state and without home data
+    ],
     "Create a new site (-u UID, -g GID)",
 
     "This command performs the following actions on your system:\n"
@@ -2650,6 +2693,18 @@ commands = [
     "- Remove the system group <SITENAME>\n"
     "- Remove the site home directory\n"
     "- Restart the system wide apache daemon\n"),
+
+  ( "disable",   True,  1, 1, False, "", main_disable,
+    [],
+    "Disable a site (stop it, unmount tmpfs, remove Apache hook)",
+    "" ),
+
+  ( "enable",    True,  1, 1, False, "", main_enable,
+    [],
+    "Enable a site (reenable a formerly disabled site)",
+    "" ),
+
+
 
   ( "mv",        True,  1, 1, False, "NEWNAME", lambda args, opts: main_mv_or_cp("mv", args, opts),
     [ ( "uid", "u", True ), 
