@@ -22,6 +22,9 @@ This file documents the revision history for the Open Monitoring Distribution
             - Made 'setversion' work on broken links
             - New commands 'disable' and 'enable'. OMD does not depend on the
               home directories of disabled sites. This is useful in cluster environments.
+            - New option 'omd create --disabled' and 'omd init' which allows the creation
+              of a site with an empty home directory and afterwards population it. Again
+              this supports cluster environments.
           - updated to jmx4perl 1.00
           - pnp4nagios
             - npcd: Now detecting and handling stale pidfiles in init script

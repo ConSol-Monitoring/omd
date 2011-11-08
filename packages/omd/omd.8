@@ -117,6 +117,13 @@ The following options can be used:
 
 \fB-g GID\fP Force a specific group id for the group of the new user
 .TP
+.B omd init SITE
+Initializes a site that has been created with \fBomd create --disabled\fP.
+This includes populating the site's home directory with the default
+configuration files and enabling the site (see \fBomd disable\fP). Afterwards
+the site is in the same state as after an \fBomd create\fP without \fB--disabled\fP.
+
+.TP
 .B omd rm         SITE             
 Remove a site and all of its data. This includes deleting the
 directory \fB/omd/sites/\fPSITE and removing the system user
