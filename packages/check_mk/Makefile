@@ -2,7 +2,7 @@ include ../../Makefile.omd
 
 SHELL = /bin/bash
 NAME = check_mk
-VERSION = 1.1.12
+VERSION = 1.1.12p1
 DIR = $(NAME)-$(VERSION)
 
 .PHONY: skel
