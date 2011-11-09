@@ -2364,11 +2364,13 @@ def diff_list(from_skelroot, g_sitedir, from_version, orig_path):
     elif abs_path.startswith(abs_sitedir):
         rel_path = abs_path[len(abs_sitedir) + 1:]
     else:
-        bail_out("Omd diff only works for files in the site's directory.")
+        bail_out("Sorry, 'omd diff' only works for files in the site's directory.")
 
     if not os.path.isdir(abs_path):
         print_diff(rel_path, from_skelroot, g_sitedir, from_version, old_perms)
     else:
+        if not rel_path:
+            rel_path = "."
         walk_skel(from_skelroot, print_diff, (from_skelroot, g_sitedir, 
                   from_version, old_perms), relbase = rel_path)
 
