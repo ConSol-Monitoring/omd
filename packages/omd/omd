@@ -364,6 +364,13 @@ def site_is_stopped(sitename):
 def site_is_running(sitename):
     return check_status(sitename, False) == 0
 
+def site_is_empty(sitename):
+    sitedir = site_dir(sitename)
+    for entry in os.listdir(sitedir):
+        if entry not in [ '.', '..' ]:
+            return False
+    return True
+
 def groupdel(groupname):
     os.system("groupdel " + groupname)
 
@@ -755,7 +762,8 @@ def create_skeleton_file(skelbase, userbase, relpath, replacements):
 
 
 def create_apache_hook(sitename):
-    file("/omd/apache/%s.conf" % sitename, "w").write("Include %s/etc/apache/mode.conf\n" % site_dir(sitename))
+    file("/omd/apache/%s.conf" % sitename, "w")\
+        .write("Include %s/etc/apache/mode.conf\n" % site_dir(sitename))
 
 def delete_apache_hook(sitename):
     hook_path = "/omd/apache/%s.conf" % sitename
@@ -2022,19 +2030,22 @@ def omd_versions():
 
 def main_sites(args, options={}):
     if on_tty and not "bare" in options:
-        sys.stdout.write("SITE             VERSION\n")
+        sys.stdout.write("SITE             VERSION          COMMENTS\n")
     for site in all_sites():
+        tags = []
         if "bare" in options:
             sys.stdout.write("%s\n" % site)
         else:
             disabled = site_is_disabled(site)
             v = site_version(site)
-            sys.stdout.write("%s%-16s%s %s" % (disabled and 
-                   (tty_bold + tty_red) or "", site, tty_normal, v))
-            if v == default_version():
-                sys.stdout.write(" (default)")
+            if v == None:
+                v = "(none)"
+                tags.append("empty site dir")
+            elif v == default_version():
+                tags.append("default version")
             if disabled:
-                sys.stdout.write(" %sdisabled%s" % (tty_red + tty_bold, tty_normal))
+                tags.append(tty_bold + tty_red + "disabled" + tty_normal)
+            sys.stdout.write("%-16s %-16s %s " % (site, v, ", ".join(tags)))
             sys.stdout.write("\n")
 
 # Bail out if name for new site is not valid (needed by create/mv/cp)
@@ -2070,16 +2081,14 @@ def main_create(args, options={}):
     if reuse:
         fstab_verify(g_sitename)
     else:
-        os.makedirs(sitedir)
-        os.chown(sitedir, pwd.getpwnam(g_sitename).pw_uid, group_id(g_sitename))
+        create_site_dir(g_sitename)
         add_to_fstab(g_sitename)
 
-    if not "disabled" in options:
+    if not "no-init" in options:
         init_site()
         welcome_message()
 
     else:
-        file("/omd/apache/%s.conf" % g_sitename, "w") # Create empty file
         sys.stdout.write("Create new site %s in disabled state and with empty %s.\n" % (g_sitename, sitedir))
         sys.stdout.write("You can now mount a filesystem to %s.\n" % (sitedir))
         sys.stdout.write("Afterwards you can initialize the site with 'omd init'.\n")
@@ -2096,6 +2105,34 @@ def welcome_message():
     sys.stdout.write("\n")
 
 def main_init(args, options):
+    if not site_is_disabled(g_sitename):
+        bail_out("Cannot initialize site that is not disabled.\n" 
+                 "Please call 'omd disable %s' first." % g_sitename)
+
+    if not site_is_empty(g_sitename):
+        if not opt_force:
+            bail_out("The site's home directory is not empty. Please add use\n" 
+                     "'omd --force init %s' if you want to erase all data." % g_sitename)
+
+        sitedir = site_dir(g_sitename) 
+        # We must not delete the directory itself, just its contents.
+        # The directory might be a separate filesystem. This is not quite
+        # unlikely, since people using 'omd init' are doing this most times
+        # because they are working with clusters and separate filesystems for
+        # each site.
+        sys.stdout.write("Wiping the contents of %s..." % sitedir)
+        for entry in os.listdir(sitedir):
+            if entry not in [ '.', '..' ]:
+                path = sitedir + "/" + entry
+                if opt_verbose:
+                    sys.stdout.write("\n   deleting %s..." % path)
+                if os.path.islink(path) or not os.path.isdir(path):
+                    os.remove(path)
+                else:
+                    shutil.rmtree(sitedir + "/" + entry)
+        ok()
+
+
     # Do the things that have been ommited on omd create --disabled
     init_site()
     welcome_message()
@@ -2162,8 +2199,7 @@ def main_rm(args, options={}):
         ok()
 
     if reuse:
-        os.mkdir(site_dir(g_sitename))
-        os.chown(site_dir(g_sitename), user_id(g_sitename), group_id(g_sitename))
+        create_site_dir(g_sitename)
         os.mkdir(tmp_dir(g_sitename))
         os.chown(tmp_dir(g_sitename), user_id(g_sitename), group_id(g_sitename))
 
@@ -2171,10 +2207,13 @@ def main_rm(args, options={}):
     delete_apache_hook(g_sitename)
     restart_apache()
 
+def create_site_dir(sitename):
+    os.makedirs(site_dir(sitename))
+    os.chown(site_dir(sitename), user_id(sitename), group_id(sitename))
 
 def site_is_disabled(g_sitename):
     apache_conf = "/omd/apache/%s.conf" % g_sitename
-    return os.stat(apache_conf).st_size == 0
+    return not os.path.exists(apache_conf)
 
 def main_disable(args, options):
     if site_is_disabled(g_sitename):
@@ -2184,7 +2223,7 @@ def main_disable(args, options):
     stop_if_not_stopped(g_sitename) 
     unmount_tmpfs(g_sitename)
     sys.stdout.write("Disabling Apache configuration for this site...")
-    file("/omd/apache/%s.conf" % g_sitename, "w") # Create empty file
+    delete_apache_hook(g_sitename)
     ok()
     restart_apache()
 
@@ -2682,7 +2721,7 @@ commands = [
     [ ( "uid",      "u",  True ), 
       ( "gid",      "g",  True ), 
       ( "reuse",    None, False ), # do not create os user/group
-      ( "disabled", "d",  False ), # create site in disabled state and without home data
+      ( "no-init",  "n",  False ), # create site in disabled state and without home data
     ],
     "Create a new site (-u UID, -g GID)",
 
@@ -2948,7 +2987,9 @@ if g_sitename and site_must_exist and command != "update":
             sys.stdout.write("WARNING: This site has an empty home directory and is not\n"
                              "assigned to any OMD version. You are running version %s.\n" % OMD_VERSION)
         elif command != "init":
-            bail_out("This site has an empty home directory /omd/sites/%s." % g_sitename)
+            bail_out("This site has an empty home directory /omd/sites/%s.\n"
+                     "If you have created that site with 'omd create --no-init %s'\n"
+                     "then please first do an 'omd init %s'." % (3*(g_sitename,)))
     elif OMD_VERSION != v:
         exec_other_omd(v)
 

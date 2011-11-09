@@ -116,12 +116,16 @@ The following options can be used:
 \fB-u UID\fP Force a specific user id for the new user
 
 \fB-g GID\fP Force a specific group id for the group of the new user
+
+\fB--no-init\fP Omits the population of the site's home directory and the integration into 
+the system Apache (/omd/apache/SITE.conf will be empty). 
+
 .TP
 .B omd init SITE
-Initializes a site that has been created with \fBomd create --disabled\fP.
+Initializes a site that has been created with \fBomd create --no-init\fP.
 This includes populating the site's home directory with the default
 configuration files and enabling the site (see \fBomd disable\fP). Afterwards
-the site is in the same state as after an \fBomd create\fP without \fB--disabled\fP.
+the site is in the same state as after an \fBomd create\fP without \fB--no-init\fP.
 
 .TP
 .B omd rm         SITE             
