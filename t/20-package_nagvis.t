@@ -77,7 +77,7 @@ my $tests = [
       like => '/HTTP OK:/' },
     { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -t 30 -H localhost -a omdadmin:omd -u /$site/nagvis/ -e 301'",
       like => '/HTTP OK:/' },
-    { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -t 30 -H localhost -a omdadmin:omd -u /$site/nagvis/frontend/nagvis-js/index.php -e 302'",
+    { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -t 30 -H localhost -a omdadmin:omd -u /$site/nagvis/frontend/nagvis-js/index.php -e 301'",
       like => '/HTTP OK:/' },
     { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -t 30 -H localhost -a omdadmin:omd -u /$site/nagvis/frontend -e 301'",
       like => '/HTTP OK:/' },
@@ -91,7 +91,7 @@ my $tests = [
       like => '/HTTP OK:/' },
     { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -t 30 -H localhost -a omdadmin:omd -u /$site/nagvis/index.php -e 301'",
       like => '/HTTP OK:/' },
-    { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -t 30 -H localhost -a omdadmin:omd -u /$site/nagvis/config.php -e 302'",
+    { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -t 30 -H localhost -a omdadmin:omd -u /$site/nagvis/config.php -e 301'",
       like => '/HTTP OK:/' },
 ];
 
