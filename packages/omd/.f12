@@ -2,6 +2,9 @@
 # Little install helper used during development and test
 sudo cp -v index.py /omd/versions/default/share/omd/htdocs/index.py 
 sudo cp -v img/* /omd/versions/default/share/omd/htdocs/img/
+sudo rm -vf /omd/versions/default/share/man/man8/omd.8.gz
+sudo cp -v omd.8 /omd/versions/default/share/man/man8/omd.8
+sudo gzip /omd/versions/default/share/man/man8/omd.8
 
 OLD_VERSION=$(sed -rn < /omd/versions/default/bin/omd 's/^OMD_VERSION = "(.*)"$/\1/p')
 echo $OLD_VERSION
