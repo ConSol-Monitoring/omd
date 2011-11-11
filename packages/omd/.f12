@@ -1,6 +1,7 @@
 #!/bin/bash
 # Little install helper used during development and test
 sudo cp -v index.py /omd/versions/default/share/omd/htdocs/index.py 
+sudo cp -v logout.php /omd/versions/default/share/omd/htdocs/logout.php
 sudo cp -v img/* /omd/versions/default/share/omd/htdocs/img/
 sudo rm -vf /omd/versions/default/share/man/man8/omd.8.gz
 sudo cp -v omd.8 /omd/versions/default/share/man/man8/omd.8

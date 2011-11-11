@@ -11,6 +11,7 @@ install:
 	install -m 755 omd $(DESTDIR)$(OMD_ROOT)/bin
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/omd/htdocs
 	install -m 644 index.py $(DESTDIR)$(OMD_ROOT)/share/omd/htdocs
+	install -m 644 logout.php $(DESTDIR)$(OMD_ROOT)/share/omd/htdocs
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/omd/htdocs/img
 	install -m 644 img/* $(DESTDIR)$(OMD_ROOT)/share/omd/htdocs/img
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/man/man8
