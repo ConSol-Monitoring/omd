@@ -12,7 +12,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 322 );
+my $num_tests = 322;
 
 ##################################################
 # create our test site
@@ -25,8 +25,11 @@ TestUtils::prepare_obj_config('t/data/omd/testconf1', '/omd/sites/'.$site.'/etc/
 
 # Developer test: Install NagVis into local hierarchy
 if($ENV{NAGVIS_DEVEL}) {
+    $num_tests += 3;
     TestUtils::test_command({ cmd => "/d1/nagvis/.f12 testsite" });
 }
+
+plan(tests => $num_tests);
 
 my $version = site_nagvis_version($site);
 
@@ -77,7 +80,8 @@ my $tests = [
       like => '/HTTP OK:/' },
     { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -t 30 -H localhost -a omdadmin:omd -u /$site/nagvis/ -e 301'",
       like => '/HTTP OK:/' },
-    { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -t 30 -H localhost -a omdadmin:omd -u /$site/nagvis/frontend/nagvis-js/index.php -e 301'",
+    # Results in 302 when the transparent authentication cookie is being set
+    { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -t 30 -H localhost -a omdadmin:omd -u /$site/nagvis/frontend/nagvis-js/index.php -e 302'",
       like => '/HTTP OK:/' },
     { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -t 30 -H localhost -a omdadmin:omd -u /$site/nagvis/frontend -e 301'",
       like => '/HTTP OK:/' },
