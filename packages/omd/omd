@@ -682,8 +682,10 @@ def create_tmpfs(sitename):
 
 def unmount_tmpfs(sitename, output = True):
     # Clear directory hierarchy when not using a tmpfs
+    # During omd update TMPFS hook might not be set so assume
+    # that the hook is enabled by default.
     config_load_hooks()
-    if g_hooks["TMPFS"]["value"] != "on":
+    if g_hooks.get("TMPFS", {'value': 'on'})["value"] != "on":
         tmp = tmp_dir(sitename)
         if os.path.exists(tmp):
             if output:
