@@ -16,6 +16,7 @@ This file documents the revision history for the Open Monitoring Distribution
               don't plan to downgrade again you can savely remove the directory
               var/nagvis/userfiles from your site
             - local/ hierarchie can now handle .php files
+            - Moved nagvis-omd.ini.php to new conf.d/ directory
           - OMD
             - Added 'umount' option to unmount the ramdisk of a site
             - Added 'TMPFS' config option to be able to run omd without the tmpfs filesystem
