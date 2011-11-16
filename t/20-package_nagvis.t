@@ -365,13 +365,13 @@ sub api_url_list {
 
 sub get_maincfg_files {
     my $site = shift;
-    my @files = [];
+    my @files = ();
 
     # Get all nagvis config files
     opendir(my($dh), '/omd/sites/'.$site.'/etc/nagvis/conf.d') or die("Couldn't open dir conf.d dir: $!");
-    while(readdir($dh)) {
-        if($_ =~ m/.*\.ini\.php/g) {
-            push(@files, 'conf.d/' . $_);
+    while(my $file = readdir($dh)) {
+        if($file =~ m/.*\.ini\.php/g) {
+            push(@files, 'conf.d/' . $file);
         }
     }
     closedir($dh);
@@ -384,8 +384,8 @@ sub site_nagvis_maincfg_mtime {
     my $newest = 0;
     my $age;
 
-    foreach(get_maincfg_files($site)) {
-        $age = site_mtime($site, 'etc/nagvis/' . $_);
+    for my $file (get_maincfg_files($site)) {
+        $age = site_mtime($site, 'etc/nagvis/' . $file);
         $newest = ($age > $newest ? $age : $newest);
     }
     return $newest;
