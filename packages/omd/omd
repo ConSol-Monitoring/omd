@@ -645,24 +645,56 @@ def tmpfs_mounted(sitename):
     return False
 
 def create_tmpfs(sitename):
-    if tmpfs_mounted(sitename):
-        return
     if os.getuid() == 0:
         switch_to_site_user()
 
     tmp = tmp_dir(sitename)
-    sys.stdout.write("Creating temporary filesystem %s..." % tmp)
-    sys.stdout.flush()
-    if not os.path.exists(tmp):
-        os.mkdir(tmp)
-    if 0 != os.system("mount %s '%s'" % (g_info["MOUNT_OPTIONS"], tmp) ):
-        sys.stdout.write(tty_error + "\n")
-        return
+
+    # Only try to mount the tmpfs if it is enabled for this site
+    # When not using the tmpfs the tmp/ hierarchy needs to be
+    # to be populated like the tmpfs afterwards.
+    config_load_hooks()
+    if g_hooks["TMPFS"]["value"] == "on":
+        if tmpfs_mounted(sitename):
+            return
+
+        sys.stdout.write("Creating temporary filesystem %s..." % tmp)
+        sys.stdout.flush()
+        if not os.path.exists(tmp):
+            os.mkdir(tmp)
+        if 0 != os.system("mount %s '%s'" % (g_info["MOUNT_OPTIONS"], tmp) ):
+            sys.stdout.write(tty_error + "\n")
+            return
+    else:
+        # Skip initializing when either the tmp dir does not exist
+        # and the site is not totally stopped
+        if os.path.exists(tmp) and not site_is_stopped(sitename):
+            return
+
+        sys.stdout.write("Preparing tmp directory %s..." % tmp)
+        sys.stdout.flush()
+        if not os.path.exists(tmp):
+            os.mkdir(tmp)
+
     create_skeleton_files(sitename, "tmp")
     chown_tree(tmp, sitename)
     ok()
 
 def unmount_tmpfs(sitename, output = True):
+    # Clear directory hierarchy when not using a tmpfs
+    # During omd update TMPFS hook might not be set so assume
+    # that the hook is enabled by default.
+    config_load_hooks()
+    if g_hooks.get("TMPFS", {'value': 'on'})["value"] != "on":
+        tmp = tmp_dir(sitename)
+        if os.path.exists(tmp):
+            if output:
+                sys.stdout.write("Cleaning up temp filesystem...")
+                sys.stdout.flush()
+            delete_user_file(tmp)
+            ok()
+        return True
+
     if tmpfs_mounted(sitename):
         if output:
             sys.stdout.write("Unmounting temporary filesystem...")
@@ -2592,7 +2624,8 @@ def main_umount(args, options = {}):
             if only_version and site_version(site) != only_version:
                 continue
 
-            if site_is_running(site):
+            # Skip the site even when it is partly running
+            if not site_is_stopped(site):
                 sys.stderr.write("Cannot unmount tmpfs of site '%s' while it is running.\n" % site)
                 continue
 
@@ -2605,7 +2638,8 @@ def main_umount(args, options = {}):
             else:
                 sys.stdout.write(tty_ok + "\n")
     else:
-        if site_is_running(g_sitename):
+        # Skip the site even when it is partly running
+        if not site_is_stopped(g_sitename):
             bail_out("Cannot unmount tmpfs of site '%s' while it is running." % g_sitename)
         unmount_tmpfs(g_sitename)
     sys.exit(0)
