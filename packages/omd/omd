@@ -2535,8 +2535,8 @@ def walk_skel(root, handler, args, exclude_if_in = None, relbase = '.'):
 
 
 def main_update(args, options={}):
-    if site_is_running(g_sitename):
-        bail_out("Cannot update site '%s' while it is running." % g_sitename)
+    if not site_is_stopped(g_sitename):
+        bail_out("Please completely stop '%s' before updating it." % g_sitename)
 
     # Unmount tmp. We need to recreate the files and directories
     # from the new version after updating.
