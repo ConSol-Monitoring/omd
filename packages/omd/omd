@@ -364,6 +364,13 @@ def site_is_stopped(sitename):
 def site_is_running(sitename):
     return check_status(sitename, False) == 0
 
+def site_is_empty(sitename):
+    sitedir = site_dir(sitename)
+    for entry in os.listdir(sitedir):
+        if entry not in [ '.', '..' ]:
+            return False
+    return True
+
 def groupdel(groupname):
     os.system("groupdel " + groupname)
 
@@ -638,24 +645,56 @@ def tmpfs_mounted(sitename):
     return False
 
 def create_tmpfs(sitename):
-    if tmpfs_mounted(sitename):
-        return
     if os.getuid() == 0:
         switch_to_site_user()
 
     tmp = tmp_dir(sitename)
-    sys.stdout.write("Creating temporary filesystem %s..." % tmp)
-    sys.stdout.flush()
-    if not os.path.exists(tmp):
-        os.mkdir(tmp)
-    if 0 != os.system("mount %s '%s'" % (g_info["MOUNT_OPTIONS"], tmp) ):
-        sys.stdout.write(tty_error + "\n")
-        return
+
+    # Only try to mount the tmpfs if it is enabled for this site
+    # When not using the tmpfs the tmp/ hierarchy needs to be
+    # to be populated like the tmpfs afterwards.
+    config_load_hooks()
+    if g_hooks["TMPFS"]["value"] == "on":
+        if tmpfs_mounted(sitename):
+            return
+
+        sys.stdout.write("Creating temporary filesystem %s..." % tmp)
+        sys.stdout.flush()
+        if not os.path.exists(tmp):
+            os.mkdir(tmp)
+        if 0 != os.system("mount %s '%s'" % (g_info["MOUNT_OPTIONS"], tmp) ):
+            sys.stdout.write(tty_error + "\n")
+            return
+    else:
+        # Skip initializing when either the tmp dir does not exist
+        # and the site is not totally stopped
+        if os.path.exists(tmp) and not site_is_stopped(sitename):
+            return
+
+        sys.stdout.write("Preparing tmp directory %s..." % tmp)
+        sys.stdout.flush()
+        if not os.path.exists(tmp):
+            os.mkdir(tmp)
+
     create_skeleton_files(sitename, "tmp")
     chown_tree(tmp, sitename)
     ok()
 
 def unmount_tmpfs(sitename, output = True):
+    # Clear directory hierarchy when not using a tmpfs
+    # During omd update TMPFS hook might not be set so assume
+    # that the hook is enabled by default.
+    config_load_hooks()
+    if g_hooks.get("TMPFS", {'value': 'on'})["value"] != "on":
+        tmp = tmp_dir(sitename)
+        if os.path.exists(tmp):
+            if output:
+                sys.stdout.write("Cleaning up temp filesystem...")
+                sys.stdout.flush()
+            delete_user_file(tmp)
+            ok()
+        return True
+
     if tmpfs_mounted(sitename):
         if output:
             sys.stdout.write("Unmounting temporary filesystem...")
@@ -755,7 +794,8 @@ def create_skeleton_file(skelbase, userbase, relpath, replacements):
 
 
 def create_apache_hook(sitename):
-    file("/omd/apache/%s.conf" % sitename, "w").write("Include %s/etc/apache/mode.conf\n" % site_dir(sitename))
+    file("/omd/apache/%s.conf" % sitename, "w")\
+        .write("Include %s/etc/apache/mode.conf\n" % site_dir(sitename))
 
 def delete_apache_hook(sitename):
     hook_path = "/omd/apache/%s.conf" % sitename
@@ -1846,6 +1886,9 @@ def config_configure_hook(hookname):
         config_reload_hooks()
 
 def init_action(command, args, options):
+    if site_is_disabled(g_sitename):
+        bail_out("This site is disabled.")
+
     if command in [ "start", "restart" ]:
         create_tmpfs(g_sitename)
 
@@ -2019,16 +2062,23 @@ def omd_versions():
 
 def main_sites(args, options={}):
     if on_tty and not "bare" in options:
-        sys.stdout.write("SITE             VERSION\n")
+        sys.stdout.write("SITE             VERSION          COMMENTS\n")
     for site in all_sites():
+        tags = []
         if "bare" in options:
             sys.stdout.write("%s\n" % site)
         else:
+            disabled = site_is_disabled(site)
             v = site_version(site)
-            if v == default_version():
-                sys.stdout.write("%-16s %s (default)\n" % (site, v))
-            else:
-                sys.stdout.write("%-16s %s\n" % (site, v))
+            if v == None:
+                v = "(none)"
+                tags.append("empty site dir")
+            elif v == default_version():
+                tags.append("default version")
+            if disabled:
+                tags.append(tty_bold + tty_red + "disabled" + tty_normal)
+            sys.stdout.write("%-16s %-16s %s " % (site, v, ", ".join(tags)))
+            sys.stdout.write("\n")
 
 # Bail out if name for new site is not valid (needed by create/mv/cp)
 def sitename_must_be_valid(name, reuse = False):
@@ -2063,44 +2113,20 @@ def main_create(args, options={}):
     if reuse:
         fstab_verify(g_sitename)
     else:
-        os.makedirs(sitedir)
-        os.chown(sitedir, pwd.getpwnam(g_sitename).pw_uid, group_id(g_sitename))
+        create_site_dir(g_sitename)
         add_to_fstab(g_sitename)
 
-    # Create symbolic link to version
-    create_version_symlink(g_sitename, OMD_VERSION)
+    if not "no-init" in options:
+        init_site()
+        welcome_message()
 
-    # Build up directory structure with symbolic links relative to
-    # the version link we just create
-    for d in [ 'bin', 'include', 'lib', 'share' ]:
-        os.symlink("version/" + d, sitedir + "/" + d)
+    else:
+        sys.stdout.write("Create new site %s in disabled state and with empty %s.\n" % (g_sitename, sitedir))
+        sys.stdout.write("You can now mount a filesystem to %s.\n" % (sitedir))
+        sys.stdout.write("Afterwards you can initialize the site with 'omd init'.\n")
 
-    # Create skeleton files of non-tmp directories
-    create_skeleton_files(g_sitename, '.')
-
-    # Change ownership of all files and dirs to site user
-    chown_tree(sitedir, g_sitename)
-
-    # Create site.conf with default values
-    config_load_hooks()
-    config_set_all() # execute 'set' functions with default values
-    config_save()
-
-    # Change the few files that config save as created as root
-    chown_tree(sitedir, g_sitename)
-
-    # Create include-hook for Apache and reload apache
-    create_apache_hook(g_sitename)
-    sys.stdout.write("Created new site %s with version %s.\n" % (g_sitename, OMD_VERSION))
-    restart_apache()
-
-    # Mount and create contents of tmpfs. This must be done as normal
-    # user. We also could do this at 'omd start', but this might confuse
-    # users. They could create files below tmp which would be shadowed
-    # by the mount.
-    create_tmpfs(g_sitename)
-
-    sys.stdout.write("Successfully created site %s.\n\n" % g_sitename)
+def welcome_message():
+    sys.stdout.write("Created new site %s with version %s.\n\n" % (g_sitename, OMD_VERSION))
     sys.stdout.write("  The site can be started with %somd start %s%s.\n" %
             (tty_bold, g_sitename, tty_normal))
     sys.stdout.write("  The default web UI is available at %shttp://%s/%s/%s\n" %
@@ -2110,7 +2136,71 @@ def main_create(args, options={}):
             (tty_bold, g_sitename, tty_normal))
     sys.stdout.write("\n")
 
+def main_init(args, options):
+    if not site_is_disabled(g_sitename):
+        bail_out("Cannot initialize site that is not disabled.\n" 
+                 "Please call 'omd disable %s' first." % g_sitename)
 
+    if not site_is_empty(g_sitename):
+        if not opt_force:
+            bail_out("The site's home directory is not empty. Please add use\n" 
+                     "'omd --force init %s' if you want to erase all data." % g_sitename)
+
+        sitedir = site_dir(g_sitename) 
+        # We must not delete the directory itself, just its contents.
+        # The directory might be a separate filesystem. This is not quite
+        # unlikely, since people using 'omd init' are doing this most times
+        # because they are working with clusters and separate filesystems for
+        # each site.
+        sys.stdout.write("Wiping the contents of %s..." % sitedir)
+        for entry in os.listdir(sitedir):
+            if entry not in [ '.', '..' ]:
+                path = sitedir + "/" + entry
+                if opt_verbose:
+                    sys.stdout.write("\n   deleting %s..." % path)
+                if os.path.islink(path) or not os.path.isdir(path):
+                    os.remove(path)
+                else:
+                    shutil.rmtree(sitedir + "/" + entry)
+        ok()
+
+
+    # Do the things that have been ommited on omd create --disabled
+    init_site()
+    welcome_message()
+
+def init_site():
+    # Create symbolic link to version
+    create_version_symlink(g_sitename, OMD_VERSION)
+
+    # Build up directory structure with symbolic links relative to
+    # the version link we just create
+    for d in [ 'bin', 'include', 'lib', 'share' ]:
+        os.symlink("version/" + d, g_sitedir + "/" + d)
+
+    # Create skeleton files of non-tmp directories
+    create_skeleton_files(g_sitename, '.')
+
+    # Change ownership of all files and dirs to site user
+    chown_tree(g_sitedir, g_sitename)
+
+    # Create site.conf with default values
+    config_load_hooks()
+    config_set_all() # execute 'set' functions with default values
+    config_save()
+
+    # Change the few files that config save as created as root
+    chown_tree(g_sitedir, g_sitename)
+
+    # Create include-hook for Apache and reload apache
+    create_apache_hook(g_sitename)
+    restart_apache()
+
+    # Mount and create contents of tmpfs. This must be done as normal
+    # user. We also could do this at 'omd start', but this might confuse
+    # users. They could create files below tmp which would be shadowed
+    # by the mount.
+    create_tmpfs(g_sitename)
 
 def main_rm(args, options={}):
     # omd rm is called as root but the init scripts need to be called as
@@ -2141,14 +2231,43 @@ def main_rm(args, options={}):
         ok()
 
     if reuse:
-        os.mkdir(site_dir(g_sitename))
-        os.chown(site_dir(g_sitename), user_id(g_sitename), group_id(g_sitename))
+        create_site_dir(g_sitename)
         os.mkdir(tmp_dir(g_sitename))
         os.chown(tmp_dir(g_sitename), user_id(g_sitename), group_id(g_sitename))
 
     # remove include-hook for Apache and tell apache
     delete_apache_hook(g_sitename)
     restart_apache()
+
+def create_site_dir(sitename):
+    os.makedirs(site_dir(sitename))
+    os.chown(site_dir(sitename), user_id(sitename), group_id(sitename))
+
+def site_is_disabled(g_sitename):
+    apache_conf = "/omd/apache/%s.conf" % g_sitename
+    return not os.path.exists(apache_conf)
+
+def main_disable(args, options):
+    if site_is_disabled(g_sitename):
+        sys.stderr.write("This site is already disabled.\n")
+        sys.exit(0)
+
+    stop_if_not_stopped(g_sitename) 
+    unmount_tmpfs(g_sitename)
+    sys.stdout.write("Disabling Apache configuration for this site...")
+    delete_apache_hook(g_sitename)
+    ok()
+    restart_apache()
+
+def main_enable(args, options):
+    if not site_is_disabled(g_sitename):
+        sys.stderr.write("This site is already enabled.\n")
+        sys.exit(0)
+    sys.stdout.write("Re-enabling Apache configuration for this site...")
+    create_apache_hook(g_sitename)
+    ok()
+    restart_apache()
+
 
 def main_mv_or_cp(what, args, options={}):
     action = what == "mv" and "rename" or "copy"
@@ -2316,11 +2435,13 @@ def diff_list(from_skelroot, g_sitedir, from_version, orig_path):
     elif abs_path.startswith(abs_sitedir):
         rel_path = abs_path[len(abs_sitedir) + 1:]
     else:
-        bail_out("Omd diff only works for files in the site's directory.")
+        bail_out("Sorry, 'omd diff' only works for files in the site's directory.")
 
     if not os.path.isdir(abs_path):
         print_diff(rel_path, from_skelroot, g_sitedir, from_version, old_perms)
     else:
+        if not rel_path:
+            rel_path = "."
         walk_skel(from_skelroot, print_diff, (from_skelroot, g_sitedir, 
                   from_version, old_perms), relbase = rel_path)
 
@@ -2414,8 +2535,8 @@ def walk_skel(root, handler, args, exclude_if_in = None, relbase = '.'):
 
 
 def main_update(args, options={}):
-    if site_is_running(g_sitename):
-        bail_out("Cannot update site '%s' while it is running." % g_sitename)
+    if not site_is_stopped(g_sitename):
+        bail_out("Please completely stop '%s' before updating it." % g_sitename)
 
     # Unmount tmp. We need to recreate the files and directories
     # from the new version after updating.
@@ -2503,7 +2624,8 @@ def main_umount(args, options = {}):
             if only_version and site_version(site) != only_version:
                 continue
 
-            if site_is_running(site):
+            # Skip the site even when it is partly running
+            if not site_is_stopped(site):
                 sys.stderr.write("Cannot unmount tmpfs of site '%s' while it is running.\n" % site)
                 continue
 
@@ -2516,7 +2638,8 @@ def main_umount(args, options = {}):
             else:
                 sys.stdout.write(tty_ok + "\n")
     else:
-        if site_is_running(g_sitename):
+        # Skip the site even when it is partly running
+        if not site_is_stopped(g_sitename):
             bail_out("Cannot unmount tmpfs of site '%s' while it is running." % g_sitename)
         unmount_tmpfs(g_sitename)
     sys.exit(0)
@@ -2535,6 +2658,10 @@ def main_init_action(command, args, options={}):
         for site in all_sites():
             if only_version and site_version(site) != only_version:
                 continue
+            # Skip disabled sites completely
+            if site_is_disabled(site):
+                continue
+
             # We need to do an os.system(), because each
             # site must be started with the account of the
             # site user. And after setuid() we cannot return.
@@ -2543,7 +2670,7 @@ def main_init_action(command, args, options={}):
                 g_sitename = site
                 g_sitedir = site_dir(g_sitename)
                 config_load_hooks(True)
-                if g_hooks["AUTOSTART"]["value"] != "on":
+                if not opt_force and g_hooks["AUTOSTART"]["value"] != "on":
 		    if not bare:
 			sys.stdout.write("Ignoring site '%s': AUTOSTART != on\n" % site)
                     continue
@@ -2625,7 +2752,11 @@ commands = [
     ""),
 
   ( "create",    True,  1, 0, False, "",        main_create,
-    [ ( "uid", "u", True ), ( "gid", "g", True ), ( "reuse", None, False ) ],
+    [ ( "uid",      "u",  True ), 
+      ( "gid",      "g",  True ), 
+      ( "reuse",    None, False ), # do not create os user/group
+      ( "no-init",  "n",  False ), # create site in disabled state and without home data
+    ],
     "Create a new site (-u UID, -g GID)",
 
     "This command performs the following actions on your system:\n"
@@ -2634,6 +2765,10 @@ commands = [
     "- Create and populate the site home directory\n"
     "- Restart the system wide apache daemon\n"
     "- Add tmpfs for the site to fstab and mount it"),
+
+  ( "init",      True,  1, 1, False, "",       main_init,
+    [],
+    "Populate site directory with default files and enable the site", ""),
 
   ( "rm",        True,  1, 1, True, "",        main_rm,
     [ ( "reuse", None, False ) ],
@@ -2650,6 +2785,18 @@ commands = [
     "- Remove the system group <SITENAME>\n"
     "- Remove the site home directory\n"
     "- Restart the system wide apache daemon\n"),
+
+  ( "disable",   True,  1, 1, False, "", main_disable,
+    [],
+    "Disable a site (stop it, unmount tmpfs, remove Apache hook)",
+    "" ),
+
+  ( "enable",    True,  1, 1, False, "", main_enable,
+    [],
+    "Enable a site (reenable a formerly disabled site)",
+    "" ),
+
+
 
   ( "mv",        True,  1, 1, False, "NEWNAME", lambda args, opts: main_mv_or_cp("mv", args, opts),
     [ ( "uid", "u", True ), 
@@ -2728,6 +2875,7 @@ def handle_global_option(opt, orig):
     global opt_verbose
     global opt_force
     global opt_interactive
+
     def opt_arg():
         global main_args
         if len(main_args) < 1:
@@ -2868,7 +3016,15 @@ if g_sitename != None and site_must_exist and not site_exists(g_sitename):
 # That command must be run in the target version
 if g_sitename and site_must_exist and command != "update":
     v = site_version(g_sitename)
-    if OMD_VERSION != v:
+    if v == None: # Site has no homedirectory
+        if command == "rm":
+            sys.stdout.write("WARNING: This site has an empty home directory and is not\n"
+                             "assigned to any OMD version. You are running version %s.\n" % OMD_VERSION)
+        elif command != "init":
+            bail_out("This site has an empty home directory /omd/sites/%s.\n"
+                     "If you have created that site with 'omd create --no-init %s'\n"
+                     "then please first do an 'omd init %s'." % (3*(g_sitename,)))
+    elif OMD_VERSION != v:
         exec_other_omd(v)
 
 

@@ -12,7 +12,12 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 322 );
+my $num_tests = 331;
+if($ENV{NAGVIS_DEVEL}) {
+    $num_tests += 3;
+}
+
+plan(tests => $num_tests);
 
 ##################################################
 # create our test site
@@ -31,6 +36,18 @@ if($ENV{NAGVIS_DEVEL}) {
 my $version = site_nagvis_version($site);
 
 ##################################################
+# Check installation paths
+site_thing_exists($site, 'etc/nagvis/maps');
+site_thing_exists($site, 'etc/nagvis/automaps');
+site_thing_exists($site, 'etc/nagvis/conf.d');
+site_thing_exists($site, 'etc/nagvis/conf.d/omd.ini.php');
+site_thing_exists($site, 'etc/nagvis/conf.d/urls.ini.php');
+site_thing_exists($site, 'etc/nagvis/nagvis.ini.php');
+site_thing_exists($site, 'share/nagvis/htdocs');
+site_thing_exists($site, 'share/nagvis/htdocs');
+site_thing_exists($site, 'local/share/nagvis/htdocs');
+
+##################################################
 # Check NAGVIS_URLS switcher
 
 # Ensure the site is stopped, but don't care about the exit code here!
@@ -38,25 +55,25 @@ TestUtils::test_command({ cmd => $omd_bin." stop $site", exit => -1 });
 
 TestUtils::test_command({ cmd => $omd_bin." config $site set NAGVIS_URLS auto" });
 TestUtils::test_command({ cmd => $omd_bin." config $site set DEFAULT_GUI welcome" });
-# Now grep nagvis.ini.php for lines matching
+# Now grep conf.d/urls.ini.php for lines matching
 # a) hosturl="[htmlcgi]/status.cgi?host=[host_name]"
 # b) htmlcgi="/nv/nagios/cgi-bin"
-TestUtils::test_command({ cmd  => "/bin/su - $site -c 'cat etc/nagvis/nagvis.ini.php'",
+TestUtils::test_command({ cmd  => "/bin/su - $site -c 'cat etc/nagvis/conf.d/urls.ini.php'",
                           like => [ '/hosturl="\[htmlcgi\]\/status.cgi\?host=\[host_name\]"/',
                                     '/htmlcgi="\/'.$site.'\/nagios\/cgi-bin"/' ] }),
 
 TestUtils::test_command({ cmd => $omd_bin." config $site set DEFAULT_GUI nagios" });
-TestUtils::test_command({ cmd  => "/bin/su - $site -c 'cat etc/nagvis/nagvis.ini.php'",
+TestUtils::test_command({ cmd  => "/bin/su - $site -c 'cat etc/nagvis/conf.d/urls.ini.php'",
                           like => [ '/hosturl="\[htmlcgi\]\/status.cgi\?host=\[host_name\]"/',
                                     '/htmlcgi="\/'.$site.'\/nagios\/cgi-bin"/' ] }),
 
 TestUtils::test_command({ cmd => $omd_bin." config $site set DEFAULT_GUI thruk" });
-TestUtils::test_command({ cmd  => "/bin/su - $site -c 'cat etc/nagvis/nagvis.ini.php'",
+TestUtils::test_command({ cmd  => "/bin/su - $site -c 'cat etc/nagvis/conf.d/urls.ini.php'",
                           like => [ '/hosturl="\[htmlcgi\]\/status.cgi\?host=\[host_name\]"/',
                                     '/htmlcgi="\/'.$site.'\/thruk\/cgi-bin"/' ] }),
 
 TestUtils::test_command({ cmd => $omd_bin." config $site set DEFAULT_GUI check_mk" });
-TestUtils::test_command({ cmd  => "/bin/su - $site -c 'cat etc/nagvis/nagvis.ini.php'",
+TestUtils::test_command({ cmd  => "/bin/su - $site -c 'cat etc/nagvis/conf.d/urls.ini.php'",
                           like => [ '/hosturl="\[htmlcgi\]\/view\.py\?view_name=host&site=&host=\[host_name\]"/',
                                     '/htmlcgi="\/'.$site.'\/check_mk"/' ] }),
 
@@ -77,6 +94,7 @@ my $tests = [
       like => '/HTTP OK:/' },
     { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -t 30 -H localhost -a omdadmin:omd -u /$site/nagvis/ -e 301'",
       like => '/HTTP OK:/' },
+    # Results in 302 when the transparent authentication cookie is being set
     { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -t 30 -H localhost -a omdadmin:omd -u /$site/nagvis/frontend/nagvis-js/index.php -e 302'",
       like => '/HTTP OK:/' },
     { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -t 30 -H localhost -a omdadmin:omd -u /$site/nagvis/frontend -e 301'",
@@ -91,7 +109,7 @@ my $tests = [
       like => '/HTTP OK:/' },
     { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -t 30 -H localhost -a omdadmin:omd -u /$site/nagvis/index.php -e 301'",
       like => '/HTTP OK:/' },
-    { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -t 30 -H localhost -a omdadmin:omd -u /$site/nagvis/config.php -e 302'",
+    { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -t 30 -H localhost -a omdadmin:omd -u /$site/nagvis/config.php -e 301'",
       like => '/HTTP OK:/' },
 ];
 
@@ -161,7 +179,7 @@ for my $url ( @{$urls} ) {
 # 4. Do the same with an automap config file
 TestUtils::test_url(
     api_url({ url  => '/nagvis/server/core/ajax_handler.php?mod=General&act=getCfgFileAges&f[]=mainCfg',
-              like => '/^{"mainCfg":'.site_mtime($site, 'etc/nagvis/nagvis.ini.php').'}$/' })
+              like => '/^{"mainCfg":'.site_nagvis_maincfg_mtime($site).'}$/' })
 );
 
 TestUtils::test_url(
@@ -171,22 +189,22 @@ TestUtils::test_url(
 
 TestUtils::test_url(
     api_url({ url  => '/nagvis/server/core/ajax_handler.php?mod=General&act=getCfgFileAges&f[]=mainCfg&m[]=demo',
-              like => '/^{"mainCfg":'.site_mtime($site, 'etc/nagvis/nagvis.ini.php').',"demo":'.site_mtime($site, 'etc/nagvis/maps/demo.cfg').'}$/' })
+              like => '/^{"mainCfg":'.site_nagvis_maincfg_mtime($site).',"demo":'.site_mtime($site, 'etc/nagvis/maps/demo.cfg').'}$/' })
 );
 
 TestUtils::test_url(
     api_url({ url  => '/nagvis/server/core/ajax_handler.php?mod=General&act=getCfgFileAges&f[]=mainCfg&m[]=demo',
-              like => '/^{"mainCfg":'.site_mtime($site, 'etc/nagvis/nagvis.ini.php').',"demo":'.site_touch($site, 'etc/nagvis/maps/demo.cfg').'}$/' })
+              like => '/^{"mainCfg":'.site_nagvis_maincfg_mtime($site).',"demo":'.site_touch($site, 'etc/nagvis/maps/demo.cfg').'}$/' })
 );
 
 TestUtils::test_url(
     api_url({ url  => '/nagvis/server/core/ajax_handler.php?mod=General&act=getCfgFileAges&f[]=mainCfg&am[]=__automap',
-              like => '/^{"mainCfg":'.site_mtime($site, 'etc/nagvis/nagvis.ini.php').',"__automap":'.site_mtime($site, 'etc/nagvis/automaps/__automap.cfg').'}$/' })
+              like => '/^{"mainCfg":'.site_nagvis_maincfg_mtime($site).',"__automap":'.site_mtime($site, 'etc/nagvis/automaps/__automap.cfg').'}$/' })
 );
 
 TestUtils::test_url(
     api_url({ url  => '/nagvis/server/core/ajax_handler.php?mod=General&act=getCfgFileAges&f[]=mainCfg&am[]=__automap',
-              like => '/^{"mainCfg":'.site_mtime($site, 'etc/nagvis/nagvis.ini.php').',"__automap":'.site_touch($site, 'etc/nagvis/automaps/__automap.cfg').'}$/' })
+              like => '/^{"mainCfg":'.site_nagvis_maincfg_mtime($site).',"__automap":'.site_touch($site, 'etc/nagvis/automaps/__automap.cfg').'}$/' })
 );
 
 # /nagvis/server/core/ajax_handler.php?mod=General&act=getHoverTemplate&name[]=default
@@ -318,6 +336,7 @@ sub url {
     $url->{'skip_link_check'} = [ 'lang=' ];
     return $url;
 }
+
 sub api_url {
     my $url = url(shift);
     my $obj_match = shift;
@@ -339,8 +358,37 @@ sub api_url {
     }
     return $url;
 }
+
 sub api_url_list {
     return api_url(shift, '/^\[.*\]$/')
+}
+
+sub get_maincfg_files {
+    my $site = shift;
+    my @files = ();
+
+    # Get all nagvis config files
+    opendir(my($dh), '/omd/sites/'.$site.'/etc/nagvis/conf.d') or die("Couldn't open dir conf.d dir: $!");
+    while(my $file = readdir($dh)) {
+        if($file =~ m/.*\.ini\.php/g) {
+            push(@files, 'conf.d/' . $file);
+        }
+    }
+    closedir($dh);
+    push(@files, 'nagvis.ini.php');
+    return @files;
+}
+
+sub site_nagvis_maincfg_mtime {
+    my $site = shift;
+    my $newest = 0;
+    my $age;
+
+    for my $file (get_maincfg_files($site)) {
+        $age = site_mtime($site, 'etc/nagvis/' . $file);
+        $newest = ($age > $newest ? $age : $newest);
+    }
+    return $newest;
 }
 
 =head2 site_touch
@@ -357,7 +405,6 @@ sub site_touch {
     utime $now, $now, '/omd/sites/'.$site.'/'.$path;
     return $now;
 }
-
 
 =head2 site_mtime
 
@@ -393,6 +440,22 @@ sub site_match_file {
     close(FILE);
 
     like($content, $pattern, "content like ".$pattern) or diag('Contents: '.$content);
+}
+
+=head2 site_thing_exists
+
+    Checks if the specified directory/link/file exists. Fails if
+    the thing does not exist.
+
+=cut
+sub site_thing_exists {
+    my $site    = shift;
+    my $fpath   = shift;
+    my $path    = '/omd/sites/' . $site . '/' . $fpath;
+
+    #diag('Checking file exists '.$path);
+    #TestUtils::test_command({ cmd => "[ -f '.$path.' ]" });
+    ok(-e $path, 'Checking file exists '.$path) or diag('File does not exist!');
 }
 
 =head2 site_nagvis_version
