@@ -3,7 +3,7 @@ include ../../Makefile.omd
 .PHONY: skel
 
 NAME     = check_multi
-VERSION  = 5e73151
+VERSION  = 3e5b2e7
 SRCDIR   = $(NAME)-$(VERSION)
 ROOTDIR  = \\\$$ENV{OMD_ROOT}
 SITE     = \\\$$ENV{OMD_SITE}
@@ -16,6 +16,7 @@ CONFIGUREOPTS = \
 	--libexecdir="$(ROOTDIR)/lib/nagios/plugins" \
 	--prefix="$(ROOTDIR)" \
 	--with-action_mouseover=1 \
+	--with-add_tag_to_list_entries=0 \
 	--with-cancel_before_global_timeout=0 \
 	--with-checkresults_dir="$(ROOTDIR)/tmp/nagios/checkresults" \
 	--with-child_interval=0.0 \
@@ -23,6 +24,7 @@ CONFIGUREOPTS = \
 	--with-client_perl="/usr/bin/perl" \
 	--with-cmdfile_update_interval=86400 \
 	--with-collapse=1 \
+	--with-complain_unknown_macros=1 \
 	--with-config_dir="$(ROOTDIR)/etc/$(NAME)" \
 	--with-cumulate_ignore_zero=1 \
 	--with-empty_output_is_unknown=1 \
