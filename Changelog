@@ -47,6 +47,7 @@ This file documents the revision history for the Open Monitoring Distribution
           - Support Ubuntu 11.10 (Oneiric)
           - Cleanup up startscript of nagios
           - New handler for Apache error messages (shows end of logfile)
+          - Ship own version of mailx alias nail as bin/mail
 
 0.50     Sep 20 2011
           - Check_MK: fix problem with playing sounds
