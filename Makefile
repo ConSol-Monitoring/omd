@@ -29,7 +29,8 @@ PACKAGES=perl-modules \
          maintenance \
          gearmand \
          mod-gearman \
-         patch
+         patch \
+         nail
 
 include Makefile.omd
 
