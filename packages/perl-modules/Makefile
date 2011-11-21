@@ -130,7 +130,7 @@ MODULES = ExtUtils-MakeMaker-6.56.tar.gz \
           Object-Signature-1.07.tar.gz \
           Set-Object-1.28.tar.gz \
           UNIVERSAL-isa-1.20110614.tar.gz \
-          Log-Log4perl-1.33.tar.gz \
+          Log-Log4perl-1.34.tar.gz \
           PadWalker-1.92.tar.gz \
           Devel-Caller-2.05.tar.gz \
           MooseX-SemiAffordanceAccessor-0.09.tar.gz \
@@ -214,7 +214,6 @@ MODULES = ExtUtils-MakeMaker-6.56.tar.gz \
           Catalyst-Plugin-Compress-0.005.tar.gz \
           Catalyst-Plugin-Unicode-Encoding-1.1.tar.gz \
           Catalyst-Plugin-Cache-0.10.tar.gz \
-          Catalyst-Log-Log4perl-1.04.tar.gz \
           Catalyst-Devel-1.33.tar.gz \
           FCGI-0.73.tar.gz \
           FCGI-ProcManager-0.19.tar.gz \
