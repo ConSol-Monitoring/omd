@@ -1,6 +1,6 @@
-diff -Naur shinken-0.8.3.orig/shinken/modules/passwd_ui.py shinken-0.8.3/shinken/modules/passwd_ui.py
---- shinken-0.8.3.orig/shinken/modules/passwd_ui.py	2011-11-21 12:53:11.000000000 +0100
-+++ shinken-0.8.3/shinken/modules/passwd_ui.py	1970-01-01 01:00:00.000000000 +0100
+diff -Naur shinken-0.8.4.orig/shinken/modules/passwd_ui.py shinken-0.8.4/shinken/modules/passwd_ui.py
+--- shinken-0.8.4.orig/shinken/modules/passwd_ui.py	2011-11-21 12:53:11.000000000 +0100
++++ shinken-0.8.4/shinken/modules/passwd_ui.py	1970-01-01 01:00:00.000000000 +0100
 @@ -1,97 +0,0 @@
 -#!/usr/bin/python
 -#Copyright (C) 2009 Gabes Jean, naparuba@gmail.com
@@ -99,9 +99,9 @@ diff -Naur shinken-0.8.3.orig/shinken/modules/passwd_ui.py shinken-0.8.3/shinken
 -        # At the end, we are not happy, so we return False
 -        print "PASSWD: return false"
 -        return False
-diff -Naur shinken-0.8.3.orig/shinken/modules/webui_broker/datamanager.py shinken-0.8.3/shinken/modules/webui_broker/datamanager.py
---- shinken-0.8.3.orig/shinken/modules/webui_broker/datamanager.py	2011-11-21 12:53:11.000000000 +0100
-+++ shinken-0.8.3/shinken/modules/webui_broker/datamanager.py	1970-01-01 01:00:00.000000000 +0100
+diff -Naur shinken-0.8.4.orig/shinken/modules/webui_broker/datamanager.py shinken-0.8.4/shinken/modules/webui_broker/datamanager.py
+--- shinken-0.8.4.orig/shinken/modules/webui_broker/datamanager.py	2011-11-21 12:53:11.000000000 +0100
++++ shinken-0.8.4/shinken/modules/webui_broker/datamanager.py	1970-01-01 01:00:00.000000000 +0100
 @@ -1,208 +0,0 @@
 -#!/usr/bin/env python
 -#Copyright (C) 2009-2010 :
@@ -311,9 +311,9 @@ diff -Naur shinken-0.8.3.orig/shinken/modules/webui_broker/datamanager.py shinke
 -        
 -
 -datamgr = DataManager()
-diff -Naur shinken-0.8.3.orig/shinken/modules/webui_broker/helper.py shinken-0.8.3/shinken/modules/webui_broker/helper.py
---- shinken-0.8.3.orig/shinken/modules/webui_broker/helper.py	2011-11-21 12:53:11.000000000 +0100
-+++ shinken-0.8.3/shinken/modules/webui_broker/helper.py	1970-01-01 01:00:00.000000000 +0100
+diff -Naur shinken-0.8.4.orig/shinken/modules/webui_broker/helper.py shinken-0.8.4/shinken/modules/webui_broker/helper.py
+--- shinken-0.8.4.orig/shinken/modules/webui_broker/helper.py	2011-11-21 12:53:11.000000000 +0100
++++ shinken-0.8.4/shinken/modules/webui_broker/helper.py	1970-01-01 01:00:00.000000000 +0100
 @@ -1,558 +0,0 @@
 -#!/usr/bin/env python
 -# -*- coding: utf-8 -*-
@@ -873,9 +873,9 @@ diff -Naur shinken-0.8.3.orig/shinken/modules/webui_broker/helper.py shinken-0.8
 -    
 -
 -helper = Helper()
-diff -Naur shinken-0.8.3.orig/shinken/modules/webui_broker/__init__.py shinken-0.8.3/shinken/modules/webui_broker/__init__.py
---- shinken-0.8.3.orig/shinken/modules/webui_broker/__init__.py	2011-11-21 12:53:11.000000000 +0100
-+++ shinken-0.8.3/shinken/modules/webui_broker/__init__.py	1970-01-01 01:00:00.000000000 +0100
+diff -Naur shinken-0.8.4.orig/shinken/modules/webui_broker/__init__.py shinken-0.8.4/shinken/modules/webui_broker/__init__.py
+--- shinken-0.8.4.orig/shinken/modules/webui_broker/__init__.py	2011-11-21 12:53:11.000000000 +0100
++++ shinken-0.8.4/shinken/modules/webui_broker/__init__.py	1970-01-01 01:00:00.000000000 +0100
 @@ -1,40 +0,0 @@
 -#!/usr/bin/python
 -#Copyright (C) 2009 Gabes Jean, naparuba@gmail.com
@@ -917,9 +917,9 @@ diff -Naur shinken-0.8.3.orig/shinken/modules/webui_broker/__init__.py shinken-0
 -
 -    instance = Webui_broker(plugin)
 -    return instance
-diff -Naur shinken-0.8.3.orig/shinken/modules/webui_broker/perfdata_guess.py shinken-0.8.3/shinken/modules/webui_broker/perfdata_guess.py
---- shinken-0.8.3.orig/shinken/modules/webui_broker/perfdata_guess.py	2011-11-21 12:53:11.000000000 +0100
-+++ shinken-0.8.3/shinken/modules/webui_broker/perfdata_guess.py	1970-01-01 01:00:00.000000000 +0100
+diff -Naur shinken-0.8.4.orig/shinken/modules/webui_broker/perfdata_guess.py shinken-0.8.4/shinken/modules/webui_broker/perfdata_guess.py
+--- shinken-0.8.4.orig/shinken/modules/webui_broker/perfdata_guess.py	2011-11-21 12:53:11.000000000 +0100
++++ shinken-0.8.4/shinken/modules/webui_broker/perfdata_guess.py	1970-01-01 01:00:00.000000000 +0100
 @@ -1,254 +0,0 @@
 -#!/usr/bin/env python
 -# -*- coding: utf-8 -*-
@@ -1175,9 +1175,9 @@ diff -Naur shinken-0.8.3.orig/shinken/modules/webui_broker/perfdata_guess.py shi
 -    r = min(r, 100)
 -
 -    return r
-diff -Naur shinken-0.8.3.orig/shinken/modules/webui_broker/webui_broker.py shinken-0.8.3/shinken/modules/webui_broker/webui_broker.py
---- shinken-0.8.3.orig/shinken/modules/webui_broker/webui_broker.py	2011-11-21 12:53:11.000000000 +0100
-+++ shinken-0.8.3/shinken/modules/webui_broker/webui_broker.py	1970-01-01 01:00:00.000000000 +0100
+diff -Naur shinken-0.8.4.orig/shinken/modules/webui_broker/webui_broker.py shinken-0.8.4/shinken/modules/webui_broker/webui_broker.py
+--- shinken-0.8.4.orig/shinken/modules/webui_broker/webui_broker.py	2011-11-21 12:53:11.000000000 +0100
++++ shinken-0.8.4/shinken/modules/webui_broker/webui_broker.py	1970-01-01 01:00:00.000000000 +0100
 @@ -1,482 +0,0 @@
 -#!/usr/bin/env python
 -#Copyright (C) 2009-2010 :
