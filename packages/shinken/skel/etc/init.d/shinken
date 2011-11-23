@@ -166,16 +166,9 @@ EOTXT
        > $TARGET_ETC/shinken-specific.cfg || rm -f $TARGET_ETC/shinken-specific.cfg
 
     #
-    # Step 4
-    # copy etc/shinken/shinken-ini.d/*.ini to tmp/shinken
-    # modify the ini-files in tmp/shinken
-    #
-    cp $SOURCE_ETC/shinken-ini.d/*.ini $TARGET_ETC
-    sed -ri 's/^([[:space:]]*port[[:space:]]*=[[:space:]]*)([0-9]+)/\1'${SHINKEN_SCHEDULERD_PORT##*:}'/' $TARGET_ETC/schedulerd.ini
-    sed -ri 's/^([[:space:]]*port[[:space:]]*=[[:space:]]*)([0-9]+)/\1'${SHINKEN_POLLERD_PORT##*:}'/' $TARGET_ETC/pollerd.ini
-    sed -ri 's/^([[:space:]]*port[[:space:]]*=[[:space:]]*)([0-9]+)/\1'${SHINKEN_REACTIONNERD_PORT##*:}'/' $TARGET_ETC/reactionnerd.ini
-    sed -ri 's/^([[:space:]]*port[[:space:]]*=[[:space:]]*)([0-9]+)/\1'${SHINKEN_BROKERD_PORT##*:}'/' $TARGET_ETC/brokerd.ini
-    
+    # Step 4.1
+    # modify the port-variables needed for the daemon-ini-files
+    # remove daemons from AVAILABLE_MODULES if set to none
     if [ "${SHINKEN_SCHEDULERD_PORT##*:}" = "${SHINKEN_SCHEDULERD_PORT%%:*}" ]; then
       SHINKEN_SCHEDULERD_PORT="0.0.0.0:$SHINKEN_SCHEDULERD_PORT"
     elif [ "${SHINKEN_SCHEDULERD_PORT%%:*}" = "localhost" ]; then
@@ -204,7 +197,24 @@ EOTXT
     elif [ "${SHINKEN_BROKERD_PORT}" = "none" ]; then
       AVAIL_MODULES=echo ${AVAIL_MODULES/broker/}
     fi
+    if [ "${SHINKEN_ARBITERD_PORT##*:}" = "${SHINKEN_ARBITERD_PORT%%:*}" ]; then
+      SHINKEN_ARBITERD_PORT="0.0.0.0:$SHINKEN_ARBITERD_PORT"
+    elif [ "${SHINKEN_ARBITERD_PORT%%:*}" = "localhost" ]; then
+      SHINKEN_ARBITERD_PORT=${SHINKEN_ARBITERD_PORT/localhost/127.0.0.1}
+    elif [ "${SHINKEN_ARBITERD_PORT}" = "none" ]; then
+      AVAIL_MODULES=echo ${AVAIL_MODULES/arbiter/}
+    fi
 
+    #
+    # Step 4.2
+    # copy etc/shinken/shinken-ini.d/*.ini to tmp/shinken
+    # modify the ini-files in tmp/shinken
+    #
+    cp $SOURCE_ETC/shinken-ini.d/*.ini $TARGET_ETC
+    sed -ri 's/^([[:space:]]*port[[:space:]]*=[[:space:]]*)([0-9]+)/\1'${SHINKEN_SCHEDULERD_PORT##*:}'/' $TARGET_ETC/schedulerd.ini
+    sed -ri 's/^([[:space:]]*port[[:space:]]*=[[:space:]]*)([0-9]+)/\1'${SHINKEN_POLLERD_PORT##*:}'/' $TARGET_ETC/pollerd.ini
+    sed -ri 's/^([[:space:]]*port[[:space:]]*=[[:space:]]*)([0-9]+)/\1'${SHINKEN_REACTIONNERD_PORT##*:}'/' $TARGET_ETC/reactionnerd.ini
+    sed -ri 's/^([[:space:]]*port[[:space:]]*=[[:space:]]*)([0-9]+)/\1'${SHINKEN_BROKERD_PORT##*:}'/' $TARGET_ETC/brokerd.ini
     sed -ri 's/^([[:space:]]*host[[:space:]]*=[[:space:]]*)(.+)/\1'${SHINKEN_SCHEDULER_PORT%%:*}'/' $TARGET_ETC/schedulerd.ini
     sed -ri 's/^([[:space:]]*host[[:space:]]*=[[:space:]]*)(.+)/\1'${SHINKEN_POLLER_PORT%%:*}'/' $TARGET_ETC/pollerd.ini
     sed -ri 's/^([[:space:]]*host[[:space:]]*=[[:space:]]*)(.+)/\1'${SHINKEN_REACTIONNER_PORT%%:*}'/' $TARGET_ETC/reactionnerd.ini
