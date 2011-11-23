@@ -169,40 +169,40 @@ EOTXT
     # Step 4.1
     # modify the port-variables needed for the daemon-ini-files
     # remove daemons from AVAILABLE_MODULES if set to none
-    if [ "${SHINKEN_SCHEDULERD_PORT##*:}" = "${SHINKEN_SCHEDULERD_PORT%%:*}" ]; then
+    if [ "${SHINKEN_SCHEDULERD_PORT}" = "none" ]; then
+      AVAIL_MODULES=${AVAIL_MODULES/scheduler/}
+    elif [ "${SHINKEN_SCHEDULERD_PORT##*:}" = "${SHINKEN_SCHEDULERD_PORT%%:*}" ]; then
       SHINKEN_SCHEDULERD_PORT="0.0.0.0:$SHINKEN_SCHEDULERD_PORT"
     elif [ "${SHINKEN_SCHEDULERD_PORT%%:*}" = "localhost" ]; then
       SHINKEN_SCHEDULERD_PORT=${SHINKEN_SCHEDULERD_PORT/localhost/127.0.0.1}
-    elif [ "${SHINKEN_SCHEDULERD_PORT}" = "none" ]; then
-      AVAIL_MODULES=echo ${AVAIL_MODULES/scheduler/}
     fi
-    if [ "${SHINKEN_SCHEDULERD_PORT##*:}" = "${SHINKEN_SCHEDULERD_PORT%%:*}" ]; then
+    if [ "${SHINKEN_POLLERD_PORT}" = "none" ]; then
+      AVAIL_MODULES=${AVAIL_MODULES/poller/}
+    elif [ "${SHINKEN_POLLERD_PORT##*:}" = "${SHINKEN_POLLERD_PORT%%:*}" ]; then
       SHINKEN_POLLERD_PORT="0.0.0.0:$SHINKEN_POLLERD_PORT"
     elif [ "${SHINKEN_POLLERD_PORT%%:*}" = "localhost" ]; then
       SHINKEN_POLLERD_PORT=${SHINKEN_POLLERD_PORT/localhost/127.0.0.1}
-    elif [ "${SHINKEN_POLLERD_PORT}" = "none" ]; then
-      AVAIL_MODULES=echo ${AVAIL_MODULES/poller/}
     fi
-    if [ "${SHINKEN_REACTIONNERD_PORT##*:}" = "${SHINKEN_REACTIONNERD_PORT%%:*}" ]; then
+    if [ "${SHINKEN_REACTIONNERD_PORT}" = "none" ]; then
+      AVAIL_MODULES=${AVAIL_MODULES/reactionner/}
+    elif [ "${SHINKEN_REACTIONNERD_PORT##*:}" = "${SHINKEN_REACTIONNERD_PORT%%:*}" ]; then
       SHINKEN_REACTIONNERD_PORT="0.0.0.0:$SHINKEN_REACTIONNERD_PORT"
     elif [ "${SHINKEN_REACTIONNERD_PORT%%:*}" = "localhost" ]; then
       SHINKEN_REACTIONNERD_PORT=${SHINKEN_REACTIONNERD_PORT/localhost/127.0.0.1}
-    elif [ "${SHINKEN_REACTIONNERD_PORT}" = "none" ]; then
-      AVAIL_MODULES=echo ${AVAIL_MODULES/reactionner/}
     fi
-    if [ "${SHINKEN_BROKERD_PORT##*:}" = "${SHINKEN_BROKERD_PORT%%:*}" ]; then
+    if [ "${SHINKEN_BROKERD_PORT}" = "none" ]; then
+      AVAIL_MODULES=${AVAIL_MODULES/broker/}
+    elif [ "${SHINKEN_BROKERD_PORT##*:}" = "${SHINKEN_BROKERD_PORT%%:*}" ]; then
       SHINKEN_BROKERD_PORT="0.0.0.0:$SHINKEN_BROKERD_PORT"
     elif [ "${SHINKEN_BROKERD_PORT%%:*}" = "localhost" ]; then
       SHINKEN_BROKERD_PORT=${SHINKEN_BROKERD_PORT/localhost/127.0.0.1}
-    elif [ "${SHINKEN_BROKERD_PORT}" = "none" ]; then
-      AVAIL_MODULES=echo ${AVAIL_MODULES/broker/}
-    fi
-    if [ "${SHINKEN_ARBITERD_PORT##*:}" = "${SHINKEN_ARBITERD_PORT%%:*}" ]; then
+    fi 
+    if [ "${SHINKEN_ARBITERD_PORT}" = "none" ]; then
+      AVAIL_MODULES=${AVAIL_MODULES/arbiter/}
+    elif [ "${SHINKEN_ARBITERD_PORT##*:}" = "${SHINKEN_ARBITERD_PORT%%:*}" ]; then
       SHINKEN_ARBITERD_PORT="0.0.0.0:$SHINKEN_ARBITERD_PORT"
     elif [ "${SHINKEN_ARBITERD_PORT%%:*}" = "localhost" ]; then
       SHINKEN_ARBITERD_PORT=${SHINKEN_ARBITERD_PORT/localhost/127.0.0.1}
-    elif [ "${SHINKEN_ARBITERD_PORT}" = "none" ]; then
-      AVAIL_MODULES=echo ${AVAIL_MODULES/arbiter/}
     fi
 
     #
