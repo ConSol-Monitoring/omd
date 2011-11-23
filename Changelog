@@ -43,9 +43,13 @@ This file documents the revision history for the Open Monitoring Distribution
           - pnp4nagios
             - npcd: Now detecting and handling stale pidfiles in init script
           - updated to Mod-Gearman 1.1.1
+          - updated to Thruk 1.1.3
+          - updated to pnp4nagios 0.6.16 
           - Support Ubuntu 11.10 (Oneiric)
           - Cleanup up startscript of nagios
           - New handler for Apache error messages (shows end of logfile)
+          - Ship own version of mailx alias nail as bin/mail
+          - Allow line continuation in nagios config with BACKSLASH LF
 
 0.50     Sep 20 2011
           - Check_MK: fix problem with playing sounds

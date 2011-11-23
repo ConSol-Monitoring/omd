@@ -21,10 +21,16 @@ sys.stdout.write("""#
 
 for fn in sys.argv[1:]:
     lineno = 0
+    contline = ""
     for line in file(fn):
 	lineno += 1
 	ls = line.strip()
 	if ls == "" or ls.startswith("#"):
 	    continue
+	if ls[-1] == '\\':
+            contline += ls[:-1] + " "
+            continue
+
 	sys.stdout.write("# %s:%d\n" % (fn, lineno))
-	sys.stdout.write(line)
+	sys.stdout.write(contline + line)
+        contline = ""
