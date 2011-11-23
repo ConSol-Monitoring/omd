@@ -166,10 +166,14 @@ EOTXT
     # modify the ini-files in tmp/shinken
     #
     cp $SOURCE_ETC/shinken-ini.d/*.ini $TARGET_ETC
-    sed -ri 's/^([[:space:]]*port[[:space:]]*=[[:space:]]*)([0-9]+)/\1'${SHINKEN_SCHEDULER_PORT}'/' $TARGET_ETC/schedulerd.ini
-    sed -ri 's/^([[:space:]]*port[[:space:]]*=[[:space:]]*)([0-9]+)/\1'${SHINKEN_POLLER_PORT}'/' $TARGET_ETC/pollerd.ini
-    sed -ri 's/^([[:space:]]*port[[:space:]]*=[[:space:]]*)([0-9]+)/\1'${SHINKEN_REACTIONNER_PORT}'/' $TARGET_ETC/reactionnerd.ini
-    sed -ri 's/^([[:space:]]*port[[:space:]]*=[[:space:]]*)([0-9]+)/\1'${SHINKEN_BROKER_PORT}'/' $TARGET_ETC/brokerd.ini
+    sed -ri 's/^([[:space:]]*port[[:space:]]*=[[:space:]]*)([0-9]+)/\1'${SHINKEN_SCHEDULER_PORT##*:}'/' $TARGET_ETC/schedulerd.ini
+    sed -ri 's/^([[:space:]]*port[[:space:]]*=[[:space:]]*)([0-9]+)/\1'${SHINKEN_POLLER_PORT##*:}'/' $TARGET_ETC/pollerd.ini
+    sed -ri 's/^([[:space:]]*port[[:space:]]*=[[:space:]]*)([0-9]+)/\1'${SHINKEN_REACTIONNER_PORT##*:}'/' $TARGET_ETC/reactionnerd.ini
+    sed -ri 's/^([[:space:]]*port[[:space:]]*=[[:space:]]*)([0-9]+)/\1'${SHINKEN_BROKER_PORT##*:}'/' $TARGET_ETC/brokerd.ini
+    sed -ri 's/^([[:space:]]*host[[:space:]]*=[[:space:]]*)([0-9]+)/\1'${SHINKEN_SCHEDULER_PORT%%:*}'/' $TARGET_ETC/schedulerd.ini
+    sed -ri 's/^([[:space:]]*host[[:space:]]*=[[:space:]]*)([0-9]+)/\1'${SHINKEN_POLLER_PORT%%:*}'/' $TARGET_ETC/pollerd.ini
+    sed -ri 's/^([[:space:]]*host[[:space:]]*=[[:space:]]*)([0-9]+)/\1'${SHINKEN_REACTIONNER_PORT%%:*}'/' $TARGET_ETC/reactionnerd.ini
+    sed -ri 's/^([[:space:]]*host[[:space:]]*=[[:space:]]*)([0-9]+)/\1'${SHINKEN_BROKER_PORT%%:*}'/' $TARGET_ETC/brokerd.ini
 
     #
     # Force creation of a run-directory for the pid-files
