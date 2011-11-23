@@ -60,6 +60,11 @@ fi
 if [ "${SHINKEN_BROKER_PORT##*:}" = "${SHINKEN_BROKER_PORT%%:*}" ]; then
   SHINKEN_BROKER_PORT="localhost:$SHINKEN_BROKER_PORT"
 fi
+SHINKEN_ARBITERD_PORT=${CONFIG_SHINKEN_ARBITER_PORT}
+SHINKEN_SCHEDULERD_PORT=${CONFIG_SHINKEN_SCHEDULER_PORT}
+SHINKEN_POLLERD_PORT=${CONFIG_SHINKEN_POLLER_PORT}
+SHINKEN_REACTIONNERD_PORT=${CONFIG_SHINKEN_REACTIONNER_PORT}
+SHINKEN_BROKERD_PORT=${CONFIG_SHINKEN_BROKER_PORT}
 WEB=${CONFIG_DEFAULT_GUI:=nagios}
 LIVESTATUS_TCP=${CONFIG_LIVESTATUS_TCP:=off}
 LIVESTATUS_TCP_PORT=${CONFIG_LIVESTATUS_TCP_PORT:=6557}
@@ -166,14 +171,44 @@ EOTXT
     # modify the ini-files in tmp/shinken
     #
     cp $SOURCE_ETC/shinken-ini.d/*.ini $TARGET_ETC
-    sed -ri 's/^([[:space:]]*port[[:space:]]*=[[:space:]]*)([0-9]+)/\1'${SHINKEN_SCHEDULER_PORT##*:}'/' $TARGET_ETC/schedulerd.ini
-    sed -ri 's/^([[:space:]]*port[[:space:]]*=[[:space:]]*)([0-9]+)/\1'${SHINKEN_POLLER_PORT##*:}'/' $TARGET_ETC/pollerd.ini
-    sed -ri 's/^([[:space:]]*port[[:space:]]*=[[:space:]]*)([0-9]+)/\1'${SHINKEN_REACTIONNER_PORT##*:}'/' $TARGET_ETC/reactionnerd.ini
-    sed -ri 's/^([[:space:]]*port[[:space:]]*=[[:space:]]*)([0-9]+)/\1'${SHINKEN_BROKER_PORT##*:}'/' $TARGET_ETC/brokerd.ini
-    sed -ri 's/^([[:space:]]*host[[:space:]]*=[[:space:]]*)([0-9]+)/\1'${SHINKEN_SCHEDULER_PORT%%:*}'/' $TARGET_ETC/schedulerd.ini
-    sed -ri 's/^([[:space:]]*host[[:space:]]*=[[:space:]]*)([0-9]+)/\1'${SHINKEN_POLLER_PORT%%:*}'/' $TARGET_ETC/pollerd.ini
-    sed -ri 's/^([[:space:]]*host[[:space:]]*=[[:space:]]*)([0-9]+)/\1'${SHINKEN_REACTIONNER_PORT%%:*}'/' $TARGET_ETC/reactionnerd.ini
-    sed -ri 's/^([[:space:]]*host[[:space:]]*=[[:space:]]*)([0-9]+)/\1'${SHINKEN_BROKER_PORT%%:*}'/' $TARGET_ETC/brokerd.ini
+    sed -ri 's/^([[:space:]]*port[[:space:]]*=[[:space:]]*)([0-9]+)/\1'${SHINKEN_SCHEDULERD_PORT##*:}'/' $TARGET_ETC/schedulerd.ini
+    sed -ri 's/^([[:space:]]*port[[:space:]]*=[[:space:]]*)([0-9]+)/\1'${SHINKEN_POLLERD_PORT##*:}'/' $TARGET_ETC/pollerd.ini
+    sed -ri 's/^([[:space:]]*port[[:space:]]*=[[:space:]]*)([0-9]+)/\1'${SHINKEN_REACTIONNERD_PORT##*:}'/' $TARGET_ETC/reactionnerd.ini
+    sed -ri 's/^([[:space:]]*port[[:space:]]*=[[:space:]]*)([0-9]+)/\1'${SHINKEN_BROKERD_PORT##*:}'/' $TARGET_ETC/brokerd.ini
+    
+    if [ "${SHINKEN_SCHEDULERD_PORT##*:}" = "${SHINKEN_SCHEDULERD_PORT%%:*}" ]; then
+      SHINKEN_SCHEDULERD_PORT="0.0.0.0:$SHINKEN_SCHEDULERD_PORT"
+    elif [ "${SHINKEN_SCHEDULERD_PORT%%:*}" = "localhost" ]; then
+      SHINKEN_SCHEDULERD_PORT=${SHINKEN_SCHEDULERD_PORT/localhost/127.0.0.1}
+    elif [ "${SHINKEN_SCHEDULERD_PORT}" = "none" ]; then
+      AVAIL_MODULES=echo ${AVAIL_MODULES/scheduler/}
+    fi
+    if [ "${SHINKEN_SCHEDULERD_PORT##*:}" = "${SHINKEN_SCHEDULERD_PORT%%:*}" ]; then
+      SHINKEN_POLLERD_PORT="0.0.0.0:$SHINKEN_POLLERD_PORT"
+    elif [ "${SHINKEN_POLLERD_PORT%%:*}" = "localhost" ]; then
+      SHINKEN_POLLERD_PORT=${SHINKEN_POLLERD_PORT/localhost/127.0.0.1}
+    elif [ "${SHINKEN_POLLERD_PORT}" = "none" ]; then
+      AVAIL_MODULES=echo ${AVAIL_MODULES/poller/}
+    fi
+    if [ "${SHINKEN_REACTIONNERD_PORT##*:}" = "${SHINKEN_REACTIONNERD_PORT%%:*}" ]; then
+      SHINKEN_REACTIONNERD_PORT="0.0.0.0:$SHINKEN_REACTIONNERD_PORT"
+    elif [ "${SHINKEN_REACTIONNERD_PORT%%:*}" = "localhost" ]; then
+      SHINKEN_REACTIONNERD_PORT=${SHINKEN_REACTIONNERD_PORT/localhost/127.0.0.1}
+    elif [ "${SHINKEN_REACTIONNERD_PORT}" = "none" ]; then
+      AVAIL_MODULES=echo ${AVAIL_MODULES/reactionner/}
+    fi
+    if [ "${SHINKEN_BROKERD_PORT##*:}" = "${SHINKEN_BROKERD_PORT%%:*}" ]; then
+      SHINKEN_BROKERD_PORT="0.0.0.0:$SHINKEN_BROKERD_PORT"
+    elif [ "${SHINKEN_BROKERD_PORT%%:*}" = "localhost" ]; then
+      SHINKEN_BROKERD_PORT=${SHINKEN_BROKERD_PORT/localhost/127.0.0.1}
+    elif [ "${SHINKEN_BROKERD_PORT}" = "none" ]; then
+      AVAIL_MODULES=echo ${AVAIL_MODULES/broker/}
+    fi
+
+    sed -ri 's/^([[:space:]]*host[[:space:]]*=[[:space:]]*)(.+)/\1'${SHINKEN_SCHEDULER_PORT%%:*}'/' $TARGET_ETC/schedulerd.ini
+    sed -ri 's/^([[:space:]]*host[[:space:]]*=[[:space:]]*)(.+)/\1'${SHINKEN_POLLER_PORT%%:*}'/' $TARGET_ETC/pollerd.ini
+    sed -ri 's/^([[:space:]]*host[[:space:]]*=[[:space:]]*)(.+)/\1'${SHINKEN_REACTIONNER_PORT%%:*}'/' $TARGET_ETC/reactionnerd.ini
+    sed -ri 's/^([[:space:]]*host[[:space:]]*=[[:space:]]*)(.+)/\1'${SHINKEN_BROKER_PORT%%:*}'/' $TARGET_ETC/brokerd.ini
 
     #
     # Force creation of a run-directory for the pid-files
