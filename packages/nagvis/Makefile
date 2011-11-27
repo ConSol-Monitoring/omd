@@ -36,12 +36,12 @@ install:
 	# installed by the installer.
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/skel/etc/nagvis
 	cp $(DIR)/etc/nagvis.ini.php-sample $(DESTDIR)$(OMD_ROOT)/skel/etc/nagvis/nagvis.ini.php
-	# Create the conf.d directory
-	mkdir -p $(DESTDIR)$(OMD_ROOT)/skel/etc/nagvis/conf.d
 	
 	# Move demo config files
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/skel/etc/nagvis/conf.d
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/skel/etc/nagvis/automaps
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/skel/etc/nagvis/maps
+	mv $(DESTDIR)$(OMD_ROOT)/share/nagvis/etc/conf.d/*.ini.php $(DESTDIR)$(OMD_ROOT)/skel/etc/nagvis/conf.d
 	mv $(DESTDIR)$(OMD_ROOT)/share/nagvis/etc/automaps/*.cfg $(DESTDIR)$(OMD_ROOT)/skel/etc/nagvis/automaps
 	mv $(DESTDIR)$(OMD_ROOT)/share/nagvis/etc/maps/*.cfg $(DESTDIR)$(OMD_ROOT)/skel/etc/nagvis/maps
 	
