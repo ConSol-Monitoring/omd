@@ -218,8 +218,7 @@ MODULES = ExtUtils-MakeMaker-6.56.tar.gz \
           FCGI-0.73.tar.gz \
           FCGI-ProcManager-0.19.tar.gz \
           FCGI-ProcManager-MaxRequests-0.02.tar.gz \
-          Catalyst-Plugin-Redirect-0.02.tar.gz \
-          String-Strip-1.01.tar.gz
+          Catalyst-Plugin-Redirect-0.02.tar.gz
 
 
 build:

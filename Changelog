@@ -35,16 +35,16 @@ This file documents the revision history for the Open Monitoring Distribution
               the site as root via 'omd start SITE'
             - FIX: omd update handled most files twice (without need). This is
               fixed now.
-            - FIX: omd diff now correctly handles relative paths. 
+            - FIX: omd diff now correctly handles relative paths.
             - FIX: omd diff now correctly instantiates templates before showing
               diff in verboes mode
             - FIX: omd umount skips unmounting on partly running sites
-          - updated to jmx4perl 1.00
+          - updated to jmx4perl 1.04
           - pnp4nagios
             - npcd: Now detecting and handling stale pidfiles in init script
           - updated to Mod-Gearman 1.1.1
-          - updated to Thruk 1.1.3
-          - updated to pnp4nagios 0.6.16 
+          - updated to Thruk 1.1.4
+          - updated to pnp4nagios 0.6.16
           - Support Ubuntu 11.10 (Oneiric)
           - Cleanup up startscript of nagios
           - New handler for Apache error messages (shows end of logfile)
