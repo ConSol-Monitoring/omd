@@ -12,7 +12,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-my $num_tests = 431;
+my $num_tests = 449;
 if($ENV{NAGVIS_DEVEL}) {
     $num_tests += 3;
 }
@@ -282,7 +282,7 @@ $auth = '';
 
 TestUtils::test_url(
     url({ url  => '/nagvis/frontend/nagvis-js/index.php',
-          like => [ '/form name="loginform"/', '/name="username"/', '/name="password"/' ]})
+          like => [ '/form name="loginform"/', '/name="_username"/', '/name="_password"/' ]})
 );
 
 TestUtils::test_url(
@@ -293,16 +293,31 @@ TestUtils::test_url(
 diag('Test an invalid login');
 TestUtils::test_url(
     url({ url  => '/nagvis/frontend/nagvis-js/index.php',
-          post => {username => 'omdadmin', password => 'XXX', submit => 'Login'},
-          like => [ '/form name="loginform"/', '/name="username"/', '/name="password"/' ]})
+          post => { _username => 'omdadmin', _password => 'XXX', submit => 'Login' },
+          like => [ '/form name="loginform"/', '/name="_username"/',
+                    '/name="_password"/', '/Authentication failed/' ]})
 );
 
 diag('Test logging in using the login dialog');
 TestUtils::test_url(
     url({ url  => '/nagvis/frontend/nagvis-js/index.php',
-          post => { username => 'omdadmin', password => 'omd', submit => 'Login' },
-          like => [ '/<!-- Start header menu -->/' ]})
+          post => { _username => 'omdadmin', _password => 'omd', submit => 'Login' },
+          like => [ '/<!-- Start header menu -->/', '/Logged in: omdadmin/' ]})
 );
+
+diag('Test logging in using _GET vars');
+TestUtils::test_url(
+    url({ url  => '/nagvis/frontend/nagvis-js/index.php?_username=omdadmin&_password=omd',
+          like => [ '/<!-- Start header menu -->/', '/Logged in: omdadmin/' ]})
+);
+
+diag('Test logging in at ajax API using _GET vars');
+TestUtils::test_url(
+    url({ url  => '/nagvis/server/core/ajax_handler.php?mod=General&act=getCfgFileAges&f[]=mainCfg'
+                 .'&_username=omdadmin&_password=omd',
+          like => [ '/^{"mainCfg":/' ]})
+);
+
 
 # Disable dialog auth to use the environment auth for further testing
 $auth = $orig_auth;
@@ -462,7 +477,7 @@ site_match_file($site, 'var/nagvis/profiles/omdadmin.profile', '/"language":"de_
 
 ##################################################
 # cleanup test site
-#TestUtils::remove_test_site($site);
+TestUtils::remove_test_site($site);
 
 
 ##################################################
