@@ -39,7 +39,7 @@ This file documents the revision history for the Open Monitoring Distribution
             - FIX: omd diff now correctly instantiates templates before showing
               diff in verboes mode
             - FIX: omd umount skips unmounting on partly running sites
-          - updated to jmx4perl 1.00
+          - updated to jmx4perl 1.04
           - pnp4nagios
             - npcd: Now detecting and handling stale pidfiles in init script
           - updated to Mod-Gearman 1.1.1
