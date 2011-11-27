@@ -557,7 +557,12 @@ sub _request {
         $ua->credentials($netloc.":".$port, $realm, $user, $pass);
     }
 
-    my $response = $ua->get($data->{'url'});
+    my $response;
+    if(defined $data->{'post'}) {
+        $response = $ua->post($data->{'url'}, $data->{'post'});
+    } else {
+        $response = $ua->get($data->{'url'});
+    }
 
     $return->{'response'}     = $response;
     $return->{'code'}         = $response->code;
