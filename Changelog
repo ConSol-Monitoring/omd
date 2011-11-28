@@ -50,6 +50,7 @@ This file documents the revision history for the Open Monitoring Distribution
           - New handler for Apache error messages (shows end of logfile)
           - Ship own version of mailx alias nail as bin/mail
           - Allow line continuation in nagios config with BACKSLASH LF
+          - Nagios: Skip emacs backup files while loading files from nagios.d directory
 
 0.50     Sep 20 2011
           - Check_MK: fix problem with playing sounds

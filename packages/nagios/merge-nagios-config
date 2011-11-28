@@ -8,6 +8,8 @@ sys.stdout.write("""#
 """)
 
 for fn in sys.argv[1:]:
+    if fn.endswith('~'):
+        continue
     sys.stdout.write("# %s\n" % fn)
 
 sys.stdout.write("""#
@@ -20,6 +22,8 @@ sys.stdout.write("""#
 """)
 
 for fn in sys.argv[1:]:
+    if fn.endswith('~'):
+        continue
     lineno = 0
     contline = ""
     for line in file(fn):
