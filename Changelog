@@ -45,6 +45,7 @@ This file documents the revision history for the Open Monitoring Distribution
           - updated to Mod-Gearman 1.1.1
           - updated to Thruk 1.1.4
           - updated to pnp4nagios 0.6.16
+          - updated to Icinga 1.6.0
           - Support Ubuntu 11.10 (Oneiric)
           - Cleanup up startscript of nagios
           - New handler for Apache error messages (shows end of logfile)
