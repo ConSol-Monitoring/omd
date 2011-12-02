@@ -43,7 +43,7 @@ This file documents the revision history for the Open Monitoring Distribution
           - pnp4nagios
             - npcd: Now detecting and handling stale pidfiles in init script
           - updated to Mod-Gearman 1.1.1
-          - updated to Thruk 1.1.4
+          - updated to Thruk 1.1.5
           - updated to pnp4nagios 0.6.16
           - updated to Icinga 1.6.1
           - Support Ubuntu 11.10 (Oneiric)
