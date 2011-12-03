@@ -553,13 +553,13 @@ sub site_nagvis_maincfg_mtime {
 }
 
 sub site_remove_file {
-    unlink '/omd/sites/'.shift.'/'.shift;
+    unlink '/omd/sites/'.shift(@_).'/'.shift(@_);
 }
 
 sub site_write_file {
-    my $path = '/omd/sites/'.shift.'/'.shift;
+    my $path = '/omd/sites/'.shift(@_).'/'.shift(@_);
     open(FILE, '>'.$path) or fail("Could not open file ".$path.".");
-    print FILE shift;
+    print FILE shift(@_);
     close(FILE);
 }
 

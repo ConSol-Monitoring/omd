@@ -1,5 +1,5 @@
---- a/etc/thruk/thruk.conf	2011-11-19 17:25:51.000000000 +0100
-+++ b/etc/thruk/thruk.conf	2011-11-19 17:40:18.924957040 +0100
+--- a/etc/thruk/thruk.conf	2011-12-03 00:42:00.301709582 +0100
++++ b/etc/thruk/thruk.conf	2011-12-03 00:43:53.444300841 +0100
 @@ -12,7 +12,7 @@
  
  ######################################
@@ -82,7 +82,7 @@
  
  ######################################
  # use paged data instead of all data in one huge page
-@@ -198,7 +193,7 @@
+@@ -198,7 +198,7 @@
  # Instead of using a general resource_file, you could define one file
  # per peer in your peer config.
  #
@@ -91,7 +91,7 @@
  
  # show inline pnp graph if available
  # if a service or host has a pnp4nagios action url set
-@@ -262,6 +257,7 @@
+@@ -262,6 +262,7 @@
  # check should be rescheduled instead of the passive check.
  # Have a look at the documentation for a detailed description.
  #command_reschedule_alias = servicename_or_commandname_pattern;agent_service_name
@@ -99,7 +99,7 @@
  
  ######################################
  # Time Format Settings
-@@ -328,37 +324,19 @@
+@@ -328,42 +329,19 @@
  ######################################
  # Backend Configuration, enter your backends here
  <Component Thruk::Backend>
@@ -112,6 +112,11 @@
 -#            peer          = /tmp/livestatus.socket
 -#            resource_file = path_to_your/resource.cfg
 -#       </options>
+-#       <configtool>
+-#            core_conf      = /etc/nagios/nagios.cfg
+-#            obj_check_cmd  = /etc/init.d/nagios checkconfig
+-#            obj_reload_cmd = /etc/init.d/nagios reload
+-#       </configtool>
 -#    </peer>
 -#    <peer>
 -#        name   = External Nagios
@@ -150,10 +155,10 @@
  </Component>
  
  
-@@ -370,7 +348,8 @@
- # authorized_for_configuration_information and authorized_for_system_commands
- # will then have access to the config tool.
+@@ -377,7 +355,7 @@
  <Component Thruk::Plugin::ConfigTool>
+     show_plugin_syntax_helper = 1
+ 
 -    thruk    = ./thruk_local.conf
 -    cgi.cfg  = ./cgi.cfg
 -#    htpasswd = ./htpasswd
@@ -161,4 +166,3 @@
 +    cgi.cfg  = ###ROOT###/etc/nagios/cgi.cfg
 +    htpasswd = ###ROOT###/etc/htpasswd
  </Component>
-+
