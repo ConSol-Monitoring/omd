@@ -8,7 +8,7 @@ This file documents the revision history for the Open Monitoring Distribution
           - FIX: Fixed permissions for PHP temp files in shared mode
           - Get rid of dummy host in a plain fresh OMD site
           - NagVis
-            - Updated to NagVis 1.6rc3
+            - Updated to NagVis 1.6
               Notes: The userfiles directory has been moved from var/nagvis/userfiles
               to local/share/nagvis/htdocs/userfiles. The side individual files
               shal be copied during update. The old files are left untouched in the
