@@ -52,6 +52,7 @@ This file documents the revision history for the Open Monitoring Distribution
           - Ship own version of mailx alias nail as bin/mail
           - Allow line continuation in nagios config with BACKSLASH LF
           - Nagios: Skip emacs backup files while loading files from nagios.d directory
+          - Increased php memory limit on CentOS platforms to 64 MB
 
 0.50     Sep 20 2011
           - Check_MK: fix problem with playing sounds
