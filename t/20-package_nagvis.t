@@ -174,7 +174,12 @@ for my $url ( @{$urls} ) {
 # Environment auth tests
 
 # Create user "omduser" in omd site
-TestUtils::test_command({ cmd  => "/bin/su - $site -c 'htpasswd -b /omd/sites/$site/etc/htpasswd omduser test 2>/dev/null'"});
+# SLES11 does not have a "htpasswd" binary. Use the available htpasswd2 binary in that case.
+my $htpasswd = "htpasswd";
+if(system("which $htpasswd >/dev/null 2>&1") != 0) {
+    $htpasswd = "htpasswd2";
+}
+TestUtils::test_command({ cmd  => "/bin/su - $site -c '$htpasswd -b /omd/sites/$site/etc/htpasswd omduser test 2>/dev/null'"});
 
 # Now try to auth with that user (environment auth)
 $auth = 'OMD Monitoring Site '.$site.':omduser:test';
