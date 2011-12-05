@@ -2,9 +2,9 @@
 
 # Alias: Mod-Gearman NEB Module
 # Menu: Distributed Monitoring
-# Description: 
-#  The Mod-Gearman NEB Module is the server part running in the nagios core. Make
-#  sure you have at least one gearmand job server and one worker running.
+# Description:
+#  The Mod-Gearman NEB Module is the server part running in the nagios/icinga
+#  core. Make sure you have at least one gearmand job server and one worker running.
 
 case "$1" in
     default)
@@ -17,6 +17,7 @@ case "$1" in
     set)
         if [ "$2" = "off" -o "$CONFIG_MOD_GEARMAN" != "on" ]; then
             rm -f $OMD_ROOT/etc/nagios/nagios.d/mod-gearman.cfg
+            rm -f $OMD_ROOT/etc/icinga/icinga.d/mod-gearman.cfg
         elif [ "$2" = "on" ]; then
             # generate random key
             KEYSTORE="$OMD_ROOT/etc/mod-gearman/secret.key"
@@ -26,6 +27,8 @@ case "$1" in
             fi
             mkdir -p $OMD_ROOT/etc/nagios/nagios.d
             ln -sfn ../../mod-gearman/nagios.cfg $OMD_ROOT/etc/nagios/nagios.d/mod-gearman.cfg
+            mkdir -p $OMD_ROOT/etc/icinga/icinga.d
+            ln -sfn ../../mod-gearman/nagios.cfg $OMD_ROOT/etc/icinga/icinga.d/mod-gearman.cfg
         fi
     ;;
     depends)
