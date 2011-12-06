@@ -42,6 +42,7 @@ SHINKEN_SCHEDULER_PORT=${CONFIG_SHINKEN_SCHEDULER_PORT:=localhost:7768}
 SHINKEN_POLLER_PORT=${CONFIG_SHINKEN_POLLER_PORT:=localhost:7771}
 SHINKEN_REACTIONNER_PORT=${CONFIG_SHINKEN_REACTIONNER_PORT:=localhost:7769}
 SHINKEN_BROKER_PORT=${CONFIG_SHINKEN_BROKER_PORT:=localhost:7772}
+SHINKEN_WEBUI_TCP_PORT=${CONFIG_SHINKEN_WEBUI_TCP_PORT:=localhost:7767}
 #
 # If it is just the port number, force localhost to be the address
 #
@@ -60,11 +61,15 @@ fi
 if [ "${SHINKEN_BROKER_PORT##*:}" = "${SHINKEN_BROKER_PORT%%:*}" ]; then
   SHINKEN_BROKER_PORT="localhost:$SHINKEN_BROKER_PORT"
 fi
+if [ "${SHINKEN_WEBUI_TCP_PORT##*:}" = "${SHINKEN_WEBUI_TCP_PORT%%:*}" ]; then
+  SHINKEN_WEBUI_TCP_PORT="localhost:$SHINKEN_WEBUI_TCP_PORT"
+fi
 SHINKEN_ARBITERD_PORT=${CONFIG_SHINKEN_ARBITER_PORT}
 SHINKEN_SCHEDULERD_PORT=${CONFIG_SHINKEN_SCHEDULER_PORT}
 SHINKEN_POLLERD_PORT=${CONFIG_SHINKEN_POLLER_PORT}
 SHINKEN_REACTIONNERD_PORT=${CONFIG_SHINKEN_REACTIONNER_PORT}
 SHINKEN_BROKERD_PORT=${CONFIG_SHINKEN_BROKER_PORT}
+SHINKEN_WEBUI_TCP_PORT=${CONFIG_SHINKEN_WEBUI_TCP_PORT}
 WEB=${CONFIG_DEFAULT_GUI:=nagios}
 LIVESTATUS_TCP=${CONFIG_LIVESTATUS_TCP:=off}
 LIVESTATUS_TCP_PORT=${CONFIG_LIVESTATUS_TCP_PORT:=6557}
@@ -146,6 +151,12 @@ EOTXT
     #
     if [ "$PNP4NAGIOS" = "on" ]; then
       sed -ri 's/^([[:space:]]*modules[[:space:]]*)(.+)/\1\2,NPCD/' $TARGET_ETC/shinken-specific.d/broker.cfg
+    fi
+    #
+    if [ "$SHINKEN_WEBUI_TCP_PORT" != "none" ]; then
+      sed -ri 's/^([[:space:]]*modules[[:space:]]*)(.+)/\1\2,WebUI/' $TARGET_ETC/shinken-specific.d/broker.cfg
+      sed -ri 's/^([[:space:]]*host[[:space:]]*)(.+)/\1'0.0.0.0'/' $TARGET_ETC/shinken-specific.d/module_webui.cfg
+      sed -ri 's/^([[:space:]]*port[[:space:]]*)([0-9]+)/\1'${SHINKEN_WEBUI_TCP_PORT}'/' $TARGET_ETC/shinken-specific.d/module_webui.cfg
     fi
     #
     # Add the nsca module to the arbiter

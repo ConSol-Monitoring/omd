@@ -124,6 +124,12 @@ def page_welcome(req):
                               'CGI programs in C. It has its own look and feel and brings useful '
                               'improvements. It is not bound to Icinga and can be used with the '
                               'other monitoring cores as well.'),
+                             ('shinken', 'Shinken WebUI',
+                              'Shinken enhances the ok/non-ok concept of Nagios by adding '
+                              'root problems and impacts. Monitored objects also can get a rank '
+                              'identifying their importance to the business.'
+                              'The Shinken WebUI was designed to visualize these new concepts '
+                              'and can not be used with the other monitoring cores.'),
                              ('nagvis', 'NagVis - The visualization addon',
                               '<p>NagVis is the leading visualization addon for Nagios.</p>'
                               '<p>NagVis can be used to visualize Nagios status data, e.g.  '
