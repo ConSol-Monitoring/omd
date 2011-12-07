@@ -13,7 +13,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 154 );
+plan( tests => 160 );
 
 ##################################################
 # get version strings
@@ -30,6 +30,9 @@ for my $core (qw/nagios icinga/) {
     my $site    = TestUtils::create_test_site() or TestUtils::bail_out_clean("no further testing without site");
     my $host    = "omd-".$site;
     my $service = "Dummy+Service";
+
+    # make tests more reliable
+    TestUtils::test_command({ cmd => "/usr/bin/env sed -i -e 's/^idle-timeout=10/idle-timeout=300/g' /opt/omd/sites/$site/etc/mod-gearman/worker.cfg" });
 
     # create test host/service
     TestUtils::prepare_obj_config('t/data/omd/testconf1', '/omd/sites/'.$site.'/etc/nagios/conf.d', $site);
