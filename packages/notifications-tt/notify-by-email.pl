@@ -44,6 +44,7 @@ sub process_template {
 		$data .= "$_";
 	}
 	close FILE;
+	map($macro{$_} =~ s/\\n/\n/gmx, keys %macro);
 	my $template = Template->new({PRE_CHOMP => 1, POST_CHOMP => 0});
 	$template->process(\$data, \%macro, \$output);
 	print $output if $verbose;
