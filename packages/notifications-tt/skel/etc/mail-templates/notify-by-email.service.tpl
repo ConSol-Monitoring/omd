@@ -24,3 +24,7 @@ TO: [% CONTACTEMAIL %]
 - Comment:     [% ACKCOMMENT %]
 [% END %]
 ----------------------------------
+[% IF NOTIFICATIONCOMMENT %]
+- Comment:     [% NOTIFICATIONCOMMENT %]
+----------------------------------
+[% END %]
