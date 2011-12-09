@@ -128,7 +128,7 @@ configuration files and enabling the site (see \fBomd disable\fP). Afterwards
 the site is in the same state as after an \fBomd create\fP without \fB--no-init\fP.
 
 .TP
-.B omd rm         SITE             
+.B omd [-f, --force] rm         SITE             
 Remove a site and all of its data. This includes deleting the
 directory \fB/omd/sites/\fPSITE and removing the system user
 and group of that site. This - of course - needs root permissions.
@@ -254,7 +254,7 @@ Setting and querying variables in batch mode can be done with
 
 \fBomd config [SITE] set VARIABLE VALUE\fP
 .br
-\fBomd config [SITE] get VARIABLE\fP
+\fBomd config [SITE] show VARIABLE\fP
 .TP
 .B omd [-v] diff [RELBASE] [-b, --bare]
 Shows the differences of files in the current site compared to the files
