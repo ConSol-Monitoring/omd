@@ -12,7 +12,7 @@ build:
 	    echo "applying $$p..." ; \
 	    ( cd $(DIR) ; patch -p1 -b ) < $$p ; \
 	done
-	cd $(DIR) && $(MAKE) -j 4
+	cd $(DIR) && $(MAKE) -j 1
 
 install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/bin

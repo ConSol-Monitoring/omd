@@ -2,11 +2,11 @@
 
 # Alias: Mod-Gearman
 # Menu: Distributed Monitoring
-# Description: 
-#  Here you can enable/disable distributed features based on Gearman. 
-#  Using Mod-Gearman will reduce the latency and load caused by check execution - 
-#  even when used on the same host - because the Mod-Gearman worker 
-#  is smaller and more efficient in the creation of processes than Nagios.  
+# Description:
+#  Here you can enable/disable distributed features based on Gearman.
+#  Using Mod-Gearman will reduce the latency and load caused by check execution -
+#  even when used on the same host - because the Mod-Gearman worker
+#  is smaller and more efficient in the creation of processes than Nagios.
 
 case "$1" in
     default)
@@ -25,8 +25,11 @@ case "$1" in
             fi
             mkdir -p $OMD_ROOT/etc/nagios/nagios.d
             ln -sfn ../../mod-gearman/nagios.cfg $OMD_ROOT/etc/nagios/nagios.d/mod-gearman.cfg
+            mkdir -p $OMD_ROOT/etc/icinga/icinga.d
+            ln -sfn ../../mod-gearman/nagios.cfg $OMD_ROOT/etc/icinga/icinga.d/mod-gearman.cfg
         else
             rm -f $OMD_ROOT/etc/nagios/nagios.d/mod-gearman.cfg
+            rm -f $OMD_ROOT/etc/icinga/icinga.d/mod-gearman.cfg
         fi
     ;;
 esac

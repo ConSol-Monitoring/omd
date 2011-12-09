@@ -28,7 +28,7 @@ case "$1" in
         fi
         if [ "$2" != "shinken" ]
         then
-            rm -f $OMD_ROOT/shinken
+            rm -f $OMD_ROOT/etc/apache/conf.d/shinken.conf
             rm -f $OMD_ROOT/etc/apache/conf.d/nagios.conf
             rm -f $OMD_ROOT/etc/apache/conf.d/icinga.conf
         fi
@@ -47,12 +47,14 @@ case "$1" in
         elif [ "$2" == "shinken" ]
         then
             # Thruk is the default interface, but classic is possible
-            ln -sfn ../../shinken/apache.conf $OMD_ROOT/etc/apache/conf.d/nagios.conf
+            ln -sfn ../../nagios/apache.conf $OMD_ROOT/etc/apache/conf.d/nagios.conf
             ln -sfn ../../icinga/apache.conf $OMD_ROOT/etc/apache/conf.d/icinga.conf 
+            ln -sfn ../../shinken/apache.conf $OMD_ROOT/etc/apache/conf.d/shinken.conf
             ln -sfn shinken $OMD_ROOT/etc/init.d/core
         else
             rm -f $OMD_ROOT/etc/apache/conf.d/nagios.conf
             rm -f $OMD_ROOT/etc/apache/conf.d/icinga.conf
+            rm -f $OMD_ROOT/etc/apache/conf.d/shinken.conf
         fi
     ;;
 esac

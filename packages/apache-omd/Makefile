@@ -43,7 +43,7 @@ install: $(APACHE_MODULES_INSTALL)
 skel:
 	if [ $(CENTOS_WORKAROUND) -eq 1 ]; then \
 		cp /etc/php.ini $(SKEL)/etc/apache/php.ini; \
-		echo -e "\n\n; OMD OMD OMD OMD OMD OMD\n\n[Session]\nsession.save_path=###ROOT###/tmp/php/session\nupload_tmp_dir=###ROOT###/tmp/php/upload\nsoap.wsdl_cache_dir=###ROOT###/tmp/php/wsdl-cache\n" >> $(SKEL)/etc/apache/php.ini; \
+		echo -e "\n\n; OMD OMD OMD OMD OMD OMD\n\nmemory_limit=64M\n\n[Session]\nsession.save_path=###ROOT###/tmp/php/session\nupload_tmp_dir=###ROOT###/tmp/php/upload\nsoap.wsdl_cache_dir=###ROOT###/tmp/php/wsdl-cache\n" >> $(SKEL)/etc/apache/php.ini; \
 	fi
 
 	# Replace macros

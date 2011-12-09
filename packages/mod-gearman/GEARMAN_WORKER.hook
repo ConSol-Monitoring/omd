@@ -2,7 +2,7 @@
 
 # Alias: Mod-Gearman Worker
 # Menu: Distributed Monitoring
-# Description: 
+# Description:
 #  You need at least one Worker to make distributed monitoring with
 #  Mod-Gearman work. The worker does not have to be on the same host
 #  like nagios. You can add more worker to spread the load even

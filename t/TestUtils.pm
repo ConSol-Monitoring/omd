@@ -265,7 +265,9 @@ sub test_url {
     if($page->{'content_type'} =~ 'text\/html'
        and (!defined $test->{'skip_html_links'} or $test->{'skip_html_links'} == 0)
       ) {
-        my @matches = $page->{'content'} =~ m/(src|href)=['|"](.+?)['|"]/gi;
+        my $content = $page->{'content'};
+        $content =~ s/<\!\-\-.*?\-\->//gsmx;
+        my @matches = $content =~ m/(src|href)=['|"](.+?)['|"]/gi;
         my $links_to_check;
         my $x=0;
         for my $match (@matches) {
@@ -295,6 +297,15 @@ sub test_url {
             next if defined $already_checked->{$test_url};
             #diag("checking link: ".$test_url);
             my $req = _request({url => $test_url, auth => $test->{'auth'}});
+            if($req->{'response'}->is_redirect) {
+                my $redirects = 0;
+                while(my $location = $req->{'response'}->{'_headers'}->{'location'}) {
+                    if($location !~ m/^(http|\/)/gmx) { $location = _relative_url($location, $req->{'response'}->base()->as_string()); }
+                    $req= _request($location);
+                    $redirects++;
+                    last if $redirects > 10;
+                }
+            }
             if($req->{'code'} == 200) {
                 $already_checked->{$test_url} = 1;
             } else {
@@ -557,7 +568,12 @@ sub _request {
         $ua->credentials($netloc.":".$port, $realm, $user, $pass);
     }
 
-    my $response = $ua->get($data->{'url'});
+    my $response;
+    if(defined $data->{'post'}) {
+        $response = $ua->post($data->{'url'}, $data->{'post'});
+    } else {
+        $response = $ua->get($data->{'url'});
+    }
 
     $return->{'response'}     = $response;
     $return->{'code'}         = $response->code;

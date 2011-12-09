@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 NAME     = Thruk
-VERSION  = 1.1.3
+VERSION  = 1.1.5
 DIR      = $(NAME)-$(VERSION)
 PERLARCH = $(shell $(PERL) -e 'use Config; print $$Config{archname}')
 
@@ -14,7 +14,8 @@ build:
 	    echo "applying $$p..." ; \
 	    ( cd $(DIR) ; patch -p1 -b ) < $$p ; \
 	done
-	export PERL5LIB=$$(pwd)/../perl-modules/dist/lib/perl5:$$(pwd)/../perl-modules/dist/lib/perl5/$(PERLARCH); cd $(DIR) ; echo "" | $(PERL) Makefile.PL
+	export PERL5LIB=$$(pwd)/../perl-modules/dist/lib/perl5:$$(pwd)/../perl-modules/dist/lib/perl5/$(PERLARCH); cd $(DIR) ; echo "" | $(PERL) Makefile.PL && make distclean
+	find $(DIR) -name \*.orig -exec rm {} \;
 
 
 install:
@@ -41,6 +42,7 @@ skel:
 	    echo "applying $$p..." ; \
 	    ( cd $(SKEL) ; patch -p1 -b ) < $$p ; \
 	done
+	find $(SKEL) -name \*.orig -exec rm {} \;
 
 clean:
 	rm -rf $(DIR)

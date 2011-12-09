@@ -60,7 +60,7 @@ function kill_procs() {
         done
         ps -p $pid > /dev/null 2>&1;
         if [ $? -ne 0 ]; then
-            echo "done"
+            echo "OK"
             exit 0;
         else
             echo "failed"
