@@ -91,7 +91,7 @@
  
  # show inline pnp graph if available
  # if a service or host has a pnp4nagios action url set
-@@ -262,6 +262,7 @@
+@@ -263,6 +263,7 @@
  # check should be rescheduled instead of the passive check.
  # Have a look at the documentation for a detailed description.
  #command_reschedule_alias = servicename_or_commandname_pattern;agent_service_name
@@ -99,7 +99,7 @@
  
  ######################################
  # Time Format Settings
-@@ -328,42 +329,19 @@
+@@ -334,42 +335,19 @@
  ######################################
  # Backend Configuration, enter your backends here
  <Component Thruk::Backend>
@@ -155,7 +155,7 @@
  </Component>
  
  
-@@ -377,7 +355,7 @@
+@@ -383,7 +361,7 @@
  <Component Thruk::Plugin::ConfigTool>
      show_plugin_syntax_helper = 1
  
