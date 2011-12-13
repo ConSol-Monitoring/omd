@@ -2,7 +2,7 @@ This file documents the revision history for the Open Monitoring Distribution
 
 0.52
 
-          - Switch Check_MK to version 1.1.12p2 (Please refer to the migration notes
+          - Switch Check_MK to version 1.1.12p4 (Please refer to the migration notes
             of Check_MK on http://mathias-kettner.de/checkmk_migration_notes.html!)
           - FIX: WATO - Fixed permissions on conf.d directory for shared apache mode
           - FIX: Fixed permissions for PHP temp files in shared mode
