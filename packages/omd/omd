@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import sys, os, shutil, pwd, grp, re, time, pprint, tty, termios
+import sys, os, shutil, pwd, grp, re, time, pprint, tty, termios, traceback
 from subprocess import *
 
 OMD_VERSION = "0.51"
@@ -2530,8 +2530,12 @@ def walk_skel(root, handler, args, exclude_if_in = None, relbase = '.'):
             try:
                 handler(path, *args)
             except Exception, e:
-                sys.stderr.write("Error updating %s/%s: %s\n" % (g_sitedir, path, e))
-                raise
+                sys.stderr.write(error * 40 + "\n")
+                sys.stderr.write(error + " Exception      %s\n" % (path))
+                sys.stderr.write(error + " " + traceback.format_exc().replace('\n', "\n" + error + " ") + "\n")
+                sys.stderr.write(error * 40 + "\n")
+                #sys.stderr.write("Error updating %s/%s: %s\n" % (g_sitedir, path, e))
+                #raise
 
 
 def main_update(args, options={}):
