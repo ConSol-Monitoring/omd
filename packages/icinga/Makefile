@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 NAME = icinga
-VERSION = 1.5.1
+VERSION = 1.6.1
 DIR = $(NAME)-$(VERSION)
 
 # Configure options for Icinga. Since we want to compile
@@ -22,8 +22,17 @@ CONFIGUREOPTS = \
 
 build:
 	tar xzf $(DIR).tar.gz
+
+#	set -e ; for p in patches/*.dif ; do \
+#	        echo "applying $$p..." ; \
+#		( cd $(DIR) ; patch -p1 -b ) < $$p ; \
+#       done
+
 	cd $(DIR) ; ./configure $(CONFIGUREOPTS)
 	$(MAKE) -C $(DIR) all
+
+
+	$(MAKE) -C $(DIR)/module/idoutils/src idomod.o
 
 
 install:
@@ -32,6 +41,7 @@ install:
 
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/icinga
 	install -m 664 $(DIR)/p1.pl $(DESTDIR)$(OMD_ROOT)/lib/icinga
+	install -m 664 $(DIR)/module/idoutils/src/idomod.o $(DESTDIR)$(OMD_ROOT)/lib/icinga
 
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/icinga/htdocs/ssi
 	install -m 755 ssi-wrapper.pl $(DESTDIR)$(OMD_ROOT)/share/icinga/htdocs/ssi

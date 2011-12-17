@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 NAME     = Thruk
-VERSION  = 1.1.1
+VERSION  = 1.1.7
 DIR      = $(NAME)-$(VERSION)
 PERLARCH = $(shell $(PERL) -e 'use Config; print $$Config{archname}')
 
@@ -14,7 +14,8 @@ build:
 	    echo "applying $$p..." ; \
 	    ( cd $(DIR) ; patch -p1 -b ) < $$p ; \
 	done
-	export PERL5LIB=$$(pwd)/../perl-modules/dist/lib/perl5:$$(pwd)/../perl-modules/dist/lib/perl5/$(PERLARCH); cd $(DIR) ; echo "" | $(PERL) Makefile.PL
+	export PERL5LIB=$$(pwd)/../perl-modules/dist/lib/perl5:$$(pwd)/../perl-modules/dist/lib/perl5/$(PERLARCH); cd $(DIR) ; echo "" | $(PERL) Makefile.PL && make distclean
+	find $(DIR) -name \*.orig -exec rm {} \;
 
 
 install:
@@ -36,6 +37,12 @@ skel:
 	# set links for enabled themes
 	mkdir -p $(SKEL)/etc/thruk/themes-enabled
 	for link in `ls -1 $(DIR)/themes/themes-enabled/`; do cd $(SKEL)/etc/thruk/themes-enabled && ln -sfn ../../../share/thruk/themes/themes-available/$$link $$link; done
+	cp $(DIR)/thruk.conf $(SKEL)/etc/thruk/thruk.conf
+	for p in patches/*.skel_patch ; do \
+	    echo "applying $$p..." ; \
+	    ( cd $(SKEL) ; patch -p1 -b ) < $$p ; \
+	done
+	find $(SKEL) -name \*.orig -exec rm {} \;
 
 clean:
 	rm -rf $(DIR)

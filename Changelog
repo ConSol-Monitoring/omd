@@ -2,13 +2,13 @@ This file documents the revision history for the Open Monitoring Distribution
 
 0.52
 
-          - Switch Check_MK to version 1.1.12 (Please refer to the migration notes
+          - Switch Check_MK to version 1.1.12p4 (Please refer to the migration notes
             of Check_MK on http://mathias-kettner.de/checkmk_migration_notes.html!)
           - FIX: WATO - Fixed permissions on conf.d directory for shared apache mode
           - FIX: Fixed permissions for PHP temp files in shared mode
           - Get rid of dummy host in a plain fresh OMD site
           - NagVis
-            - Updated to NagVis 1.6rc3
+            - Updated to NagVis 1.6
               Notes: The userfiles directory has been moved from var/nagvis/userfiles
               to local/share/nagvis/htdocs/userfiles. The side individual files
               shal be copied during update. The old files are left untouched in the
@@ -16,17 +16,43 @@ This file documents the revision history for the Open Monitoring Distribution
               don't plan to downgrade again you can savely remove the directory
               var/nagvis/userfiles from your site
             - local/ hierarchie can now handle .php files
+            - Moved nagvis-omd.ini.php to new conf.d/ directory
           - OMD
             - Added 'umount' option to unmount the ramdisk of a site
+            - Added 'TMPFS' config option to be able to run omd without the tmpfs filesystem
             - Handling comments and empty lines in .info files correcty 
             - Made 'setversion' work on broken links
-          - updated to jmx4perl 1.00
+            - New commands 'disable' and 'enable'. OMD does not depend on the
+              home directories of disabled sites. This is useful in cluster environments.
+            - New option 'omd create --disabled' and 'omd init' which allows the creation
+              of a site with an empty home directory and afterwards population it. Again
+              this supports cluster environments.
+            - start, restart and reload now honor the option -f,--force: All
+              sites will then be affected, regardless of AUTOSTART
+            - FIX: omd update: page diff through less -F -X (-X is new). This fixes
+              a problem where the diff is not visible on dumb terminals like PuTTY.
+            - FIX: omd: site processes where missing supplementary groups when starting
+              the site as root via 'omd start SITE'
+            - FIX: omd update handled most files twice (without need). This is
+              fixed now.
+            - FIX: omd diff now correctly handles relative paths.
+            - FIX: omd diff now correctly instantiates templates before showing
+              diff in verboes mode
+            - FIX: omd umount skips unmounting on partly running sites
+          - updated to jmx4perl 1.04
           - pnp4nagios
             - npcd: Now detecting and handling stale pidfiles in init script
-          - updated to Mod-Gearman 1.1.0
+          - updated to Mod-Gearman 1.1.1
+          - updated to Thruk 1.1.7
+          - updated to pnp4nagios 0.6.16
+          - updated to Icinga 1.6.1
           - Support Ubuntu 11.10 (Oneiric)
           - Cleanup up startscript of nagios
           - New handler for Apache error messages (shows end of logfile)
+          - Ship own version of mailx alias nail as bin/mail
+          - Allow line continuation in nagios config with BACKSLASH LF
+          - Nagios: Skip emacs backup files while loading files from nagios.d directory
+          - Increased php memory limit on CentOS platforms to 64 MB
 
 0.50     Sep 20 2011
           - Check_MK: fix problem with playing sounds

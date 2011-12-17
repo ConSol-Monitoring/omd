@@ -1,0 +1,78 @@
+#!/bin/bash
+
+# Alias: TCP port number for Apache
+# Menu: Web GUI
+# Description: 
+#  Configure the TCP port used for the Shinken WebUI
+#  process of this site. This option is only useful if 
+#  the CORE is set to "shinken" and WEBSERVER is set to "own".
+#  
+#  After changing this variable, the site-wide Apache webserver
+#  must be restarted.
+
+
+port_is_used ()
+{
+    local PORT=$1
+    ls /omd/sites/*/etc/omd/site.conf >/dev/null 2>&1 || return 1
+    for conf in /omd/sites/*/etc/omd/site.conf
+    do
+        [ $conf != /omd/sites/$OMD_SITE/etc/omd/site.conf ] || continue
+        if grep -qx "CONFIG_SHINKEN_WEBUI_TCP_PORT='$PORT'" < $conf > /dev/null 2>&1 ; then
+            return 0
+        fi
+    done
+    return 1
+}
+
+
+next_free_hook ()
+{
+    local PORT=$1
+    while port_is_used $PORT
+    do
+        PORT=$((PORT + 1))
+    done
+    echo "$PORT"
+}
+
+
+case "$1" in
+    default)
+        # Scan for a free port number by looking at the
+        # configuration of the other sites...
+        PORT=$(next_free_hook 57767)
+        echo "$PORT"
+    ;;
+    choices)
+        echo "(none)|([1-9][0-9]{0,5})|([a-zA-Z0-9\.\-]*:[1-9][0-9]{0,5})"
+    ;;
+    set)
+        if [ "$2" = "none" ]; then
+            echo 0
+        else
+            PORT=$(next_free_hook $2)
+            if [ "$PORT" != "$2" ] ; then
+                echo "WebUI port $2 is in use. I've choosen $PORT instead." >&2
+                echo "$PORT"
+            fi
+            cat <<EOF > $OMD_ROOT/etc/shinken/apache.conf
+# This file is managed by 'omd config set SHINKEN_WEBUI_TCP_PORT'.
+# Better do not edit manually
+<IfModule mod_alias.c>
+  <Location /$OMD_SITE/shinken>
+    RewriteEngine On
+    RewriteCond %{ENV:REDIRECT_STATUS} !=501
+    RewriteCond $OMD_ROOT/lib/shinken/shinken/modules/webui_broker/__init__.py -f
+    RewriteRule ^/(.*) http://%{HTTP_HOST}:$PORT [last,redirect=301]
+    RewriteRule .* http://127.0.0.1/mi/gibts/ned [last,redirect=501]
+    ErrorDocument 501 "<h1>OMD: Shinken WebUI not available</h1>You are using a distribution where the Shinken WebUI feature has been deactivated because the built-in Python interpreter is too old.<br>In order to be correctly displayed with Internet Explorer, this message must be longer than 512 bytes. <br><br>Mir san vom Woid dahoam, des kennt a jeda glei,<br>wenns von de Berge hallt, dann samma mir dabei.<br>Und wenn as Stutzerl knallt, dann samma mir um d'Weg,<br> Mir san vom Woid dahoam, da Woid is sche.<br>Mir san af Straubing zua als lust'ge Bauernknecht,<br>Weil mir uns eib&uuml;lt ham, des war fir uns des recht.<br>Uns hods ned g'folln do draussd, ham miassn glei hoamgeh,<br>Mir san vom Woid dahoam, da Woid is sche."
+  </Location>
+</IfModule>
+EOF
+        fi
+    ;;
+    depends)
+        [ "$CONFIG_CORE" = shinken ]
+    ;;
+esac

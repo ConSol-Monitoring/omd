@@ -1,0 +1,32 @@
+--- nail-11.25/makeconfig.orig	2011-11-21 12:11:40.956958655 +0100
++++ nail-11.25/makeconfig	2011-11-21 12:15:50.981269020 +0100
+@@ -319,7 +319,7 @@
+ link_check 'for Network Security Services (NSS)' '#define USE_SSL
+ #define USE_NSS' '-lsmime3 -lnss3 -lssl3 -lnspr4 -lplc4' <<\! || \
+ 		link_check 'for sufficiently recent OpenSSL' '#define USE_SSL
+-#define USE_OPENSSL' '-lssl -lcrypto' <<\%
++#define USE_OPENSSL' '-lDESTROYssl -lcrypto' <<\%
+ #include <nss.h>
+ #include <ssl.h>
+ #include <prinit.h>
+@@ -364,16 +364,16 @@
+ }
+ !
+ 
+-<$tmp2.c link_check 'for GSSAPI in libgss' '#define USE_GSSAPI' '-lgss' ||
++<$tmp2.c link_check 'for GSSAPI in libgss' '#define DONT_USE_GSSAPI' '-lgss' ||
+ 	<$tmp2.c link_check 'for GSSAPI in libgssapi_krb5' \
+-			'#define USE_GSSAPI' '-lgssapi_krb5' ||
++			'#define DONT_USE_GSSAPI' '-lgssapi_krb5' ||
+ 		link_check 'for GSSAPI in libgssapi_krb5, old-style' \
+-				'#define USE_GSSAPI
++				'#define DONT_USE_GSSAPI
+ #define GSSAPI_OLD_STYLE' '-lgssapi_krb5' <<\! || \
+ 			link_check 'for GSSAPI in libgssapi' \
+ 				'#define USE_GSSAPI
+ #define	GSSAPI_REG_INCLUDE' '-lgssapi' <<\%
+-#include <gssapi/gssapi.h>
++#include <gssapi/gssapiDESTROY.h>
+ #include <gssapi/gssapi_generic.h>
+ 
+ int main(void)

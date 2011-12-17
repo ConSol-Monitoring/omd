@@ -47,6 +47,11 @@ STATUS_DAT=###ROOT###/tmp/nagios/status.dat
 USR=###SITE###
 GRP=###SITE###
 
+# Make sure that check plugins do not run localized.
+# check_icmp outputs performance data with german
+# comma instead of dot and makes it unparsable.
+unset LANG
+
 # OMD: create configuration file out of fragments
 case "$1" in start|restart|reload|checkconfig|check)
     merge-nagios-config \

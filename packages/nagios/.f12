@@ -1,0 +1,2 @@
+#!/bin/bash
+sudo install -v -m 755 merge-nagios-config /omd/versions/default/bin/merge-nagios-config 

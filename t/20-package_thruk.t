@@ -13,7 +13,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 983 );
+plan( tests => 2010 );
 
 ##################################################
 # create our test site
@@ -94,6 +94,20 @@ my $urls = [
 
 # statusmap
   { url => '/thruk/cgi-bin/statusmap.cgi?host=all', like => '/Network Map For All Hosts/' },
+
+# minemap
+  { url => '/thruk/cgi-bin/minemap.cgi', like => '/Mine Map/' },
+
+# conf tool
+  { url => '/thruk/cgi-bin/conf.cgi', like => '/Config Tool/' },
+  { url => '/thruk/cgi-bin/conf.cgi?sub=thruk', like => [ '/Config Tool/', '/title_prefix/', '/use_wait_feature/'] },
+  { url => '/thruk/cgi-bin/conf.cgi?sub=cgi', like => [ '/Config Tool/', '/show_context_help/', '/use_pending_states/' ] },
+  { url => '/thruk/cgi-bin/conf.cgi?sub=users', like => [ '/Config Tool/', '/select user to change/' ] },
+  { url => '/thruk/cgi-bin/conf.cgi?sub=users&action=change&data.username=omdadmin', like => [ '/Config Tool/', '/remove password/', '/authorized_for_all_services/' ] },
+  { url => '/thruk/cgi-bin/conf.cgi?sub=objects', like => [ '/Config Tool/', '/select host to change/' ] },
+  { url => '/thruk/cgi-bin/conf.cgi?sub=objects&apply=yes', like => [ '/Config Tool/', '/There are no pending changes to commit/' ] },
+  { url => '/thruk/cgi-bin/conf.cgi?sub=objects&type=host&data.name=generic-host', like => [ '/Config Tool/', '/Template:\s+generic\-host/', '/templates.cfg/' ], skip_html_links => 1 },
+  { url => '/thruk/cgi-bin/conf.cgi?sub=objects&action=browser', like => [ '/Config Tool/', '/commands.cfg/' ] },
 ];
 
 # complete the url
@@ -103,13 +117,14 @@ for my $url ( @{$urls} ) {
     $url->{'unlike'} = [ '/internal server error/', '/"\/thruk\//', '/\'\/thruk\//' ];
 }
 
-for my $core (qw/nagios shinken/) {
+for my $core (qw/nagios shinken icinga/) {
     ##################################################
     # run our tests
     TestUtils::test_command({ cmd => $omd_bin." stop $site" });
     TestUtils::test_command({ cmd => $omd_bin." config $site set CORE $core" });
     TestUtils::test_command({ cmd => $omd_bin." start $site" })   or TestUtils::bail_out_clean("No need to test Thruk without proper startup");
     TestUtils::wait_for_file("/omd/sites/$site/tmp/run/live", 60) or TestUtils::bail_out_clean("No need to test Thruk without livestatus connection");
+    unlink('var/thruk/obj_retention.dat');
 
     TestUtils::test_command({ cmd => "/bin/su - $site -c './lib/nagios/plugins/check_http -H localhost -a omdadmin:omd -u /$site/nagios/cgi-bin/cmd.cgi -e 200 -P \"cmd_typ=7&cmd_mod=2&host=omd-$site&service=Dummy+Service&start_time=2010-11-06+09%3A46%3A02&force_check=on&btnSubmit=Commit\" -r \"Your command request was successfully submitted\"'", like => '/HTTP OK:/' });
     TestUtils::wait_for_file("/omd/sites/$site/var/pnp4nagios/perfdata/omd-$site/Dummy_Service_omd-dummy.rrd", 60) or TestUtils::bail_out_clean("No need to test Thruk without working pnp");;

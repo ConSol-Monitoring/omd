@@ -1,8 +1,8 @@
 include ../../Makefile.omd
 
 NAME = nagvis
-#VERSION = 1.6rc3
-VERSION = 1.6-nightly
+VERSION = 1.6
+#VERSION = 1.6-nightly
 DIR = $(NAME)-$(VERSION)
 
 .PHONY: skel
@@ -10,6 +10,7 @@ DIR = $(NAME)-$(VERSION)
 build:
 	tar xzf $(DIR).tar.gz
 	patch $(DIR)/share/server/core/defines/global.php global.php.patch
+	rm $(DIR)/share/server/core/defines/global.php.orig || true
 
 install:
 	cd $(DIR) ; ./install.sh -q -F -c y -a n \
@@ -32,9 +33,16 @@ install:
 	  mv $(DESTDIR)$(OMD_ROOT)/share/nagvis/$$file $(DESTDIR)$(OMD_ROOT)/share/doc/$(NAME); \
 	done
 	
+	# Take the sample main configuration file from source package and overwrite the one 
+	# installed by the installer.
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/skel/etc/nagvis
+	cp $(DIR)/etc/nagvis.ini.php-sample $(DESTDIR)$(OMD_ROOT)/skel/etc/nagvis/nagvis.ini.php
+	
 	# Move demo config files
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/skel/etc/nagvis/conf.d
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/skel/etc/nagvis/automaps
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/skel/etc/nagvis/maps
+	mv $(DESTDIR)$(OMD_ROOT)/share/nagvis/etc/conf.d/*.ini.php $(DESTDIR)$(OMD_ROOT)/skel/etc/nagvis/conf.d
 	mv $(DESTDIR)$(OMD_ROOT)/share/nagvis/etc/automaps/*.cfg $(DESTDIR)$(OMD_ROOT)/skel/etc/nagvis/automaps
 	mv $(DESTDIR)$(OMD_ROOT)/share/nagvis/etc/maps/*.cfg $(DESTDIR)$(OMD_ROOT)/skel/etc/nagvis/maps
 	
