@@ -9,7 +9,6 @@ etc/nagvis/automaps/__automap.cfg                       664
 etc/nagvis/nagvis.ini.php                               664 
 etc/nagvis/conf.d                                       775
 etc/nagvis/conf.d/omd.ini.php                           664 
-etc/nagvis/auth.db                                      664 
 local/share/nagvis/htdocs/userfiles/images/maps         775 
 local/share/nagvis/htdocs/userfiles/images/shapes       775 
 tmp/nagvis                                              775 
