@@ -20,7 +20,7 @@ case "$1" in
    set)
        if [ "$2" == "on" ]
        then
-         if [ ! -h ${OMD_ROOT}/etc/htpasswd ]
+         if [ ! -h ${OMD_ROOT}/etc/htpasswd ] || [ ! $(readlink ${OMD_ROOT}/etc/htpasswd) = "dokuwiki/users.auth.php" ]
          then
            mv ${OMD_ROOT}/etc/htpasswd ${OMD_ROOT}/etc/htpasswd.omd
            ln -s dokuwiki/users.auth.php ${OMD_ROOT}/etc/htpasswd
@@ -28,7 +28,8 @@ case "$1" in
            ln -sf dokuwiki/users.auth.php ${OMD_ROOT}/etc/htpasswd
          fi
        else
-         if [ -h ${OMD_ROOT}/etc/htpasswd ]
+         # Prevent destroying links showing anywhere else
+         if [ -h ${OMD_ROOT}/etc/htpasswd ] && [ $(readlink ${OMD_ROOT}/etc/htpasswd) = "dokuwiki/users.auth.php" ]
          then
            ln -sf htpasswd.omd ${OMD_ROOT}/etc/htpasswd
          fi
