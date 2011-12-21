@@ -1,3 +1,13 @@
-These patches are taken with thanks from the FEDORA mod_python
+0004:
+    Prepend /omd/versions/X/lib/python to Python path
+
+0005:
+    Handle the case during stopping of Apache where SIGTERM is
+    received while Python is currently running. Normally mod_python
+    will be caught be the signal and end in a deadlock. The patch
+    ignores the signal until the Python interpreter has exited and
+    simply exit the process afterwards.
+
+The other patches are taken with thanks from the FEDORA mod_python
 package and fix compile problems and RedHat 6.1 (and probably
 other distros as well).
