@@ -55,7 +55,7 @@ apache_wait_stop() {
   if [ -n "${pid:-}" ]; then
     i=0
     while kill -0 "${pid:-}" 2> /dev/null;  do
-      if [ $i = '60' ]; then
+      if [ $i = '120' ]; then
         kill_stale_php_cgis
         return 1
       else
