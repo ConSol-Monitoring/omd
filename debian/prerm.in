@@ -19,7 +19,23 @@ set -e
 OMD="omd-###OMD_VERSION###"
 
 case "$1" in
-    upgrade|remove|deconfigure)
+    remove)
+      # Make sure no sites use that version
+      for link in /omd/sites/*/version
+      do
+          target=$(readlink $link 2>/dev/null) || continue
+          version=${target##*/}
+          if [ "$version" = "###OMD_VERSION###" ]
+          then
+              site=${link#/omd/sites/}
+              site=${site%/version}
+              echo "Site $site is still using this version!" >&2
+              exit 1
+          fi
+      done
+    ;;
+
+    upgrade|deconfigure)
     ;;
 
     failed-upgrade)
