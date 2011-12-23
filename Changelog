@@ -1,6 +1,7 @@
 This file documents the revision history for the Open Monitoring Distribution
 0.54
           - mod_python: Fix "omd stop apache", which was sometimes timing out
+          - NagVis: Updated to NagVis 1.6.2
 
 0.52
 
