@@ -1,6 +1,9 @@
 This file documents the revision history for the Open Monitoring Distribution
 0.54
+          - omd:
+	    - FIX: Fixed "omd umount" command when running without specific site
           - mod_python: Fix "omd stop apache", which was sometimes timing out
+          - NagVis: Updated to NagVis 1.6.2
 
 0.52     Dec 22 2011
           - Switch Check_MK to version 1.1.12p6 (Please refer to the migration notes

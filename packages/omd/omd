@@ -692,7 +692,8 @@ def unmount_tmpfs(sitename, output = True):
                 sys.stdout.write("Cleaning up temp filesystem...")
                 sys.stdout.flush()
             delete_user_file(tmp)
-            ok()
+            if output:
+                ok()
         return True
 
     if tmpfs_mounted(sitename):
@@ -701,7 +702,8 @@ def unmount_tmpfs(sitename, output = True):
 
         for t in range(0, 10):
             if 0 == os.system("umount '%s'" % tmp_dir(sitename)):
-                ok()
+                if output:
+                    ok()
                 return True
 
             if output:
@@ -2625,6 +2627,10 @@ def main_umount(args, options = {}):
     if not g_sitename:
         exit_status = 0
         for site in all_sites():
+            # Set global vars for the current site
+            g_sitename = site
+            g_sitedir = site_dir(g_sitename)
+
             if only_version and site_version(site) != only_version:
                 continue
 

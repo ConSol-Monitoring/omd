@@ -2,6 +2,7 @@ DISTRO_CODE       = squeeze
 BUILD_PACKAGES    =
 BUILD_PACKAGES   += build-essential
 BUILD_PACKAGES   += dpatch
+BUILD_PACKAGES   += fping
 BUILD_PACKAGES   += git-buildpackage
 BUILD_PACKAGES   += libboost-all-dev
 BUILD_PACKAGES   += libcairo2-dev
