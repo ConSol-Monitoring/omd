@@ -6,6 +6,7 @@
 check_mk_version            = '1.1.12p6'
 default_config_dir          = '###ROOT###/etc/check_mk'
 check_mk_configdir          = '###ROOT###/etc/check_mk/conf.d'
+share_dir                   = '###ROOT###/share/check_mk'
 checks_dir                  = '###ROOT###/share/check_mk/checks'
 check_manpages_dir          = '###ROOT###/share/doc/check_mk/checks'
 modules_dir                 = '###ROOT###/share/check_mk/modules'
