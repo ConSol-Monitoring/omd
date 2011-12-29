@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 NAME     = mod_gearman
-VERSION  = 1.1.1
+VERSION  = 1.2.0
 GEARMAND = $(shell grep "^VERSION " ../gearmand/Makefile | awk '{ print $$3 }')
 DIR      = mod_gearman-$(VERSION)
 
@@ -15,10 +15,10 @@ build:
 	#    ( cd $(DIR) ; patch -p1 -b ) < $$p ; \
 	#done
 	cd $(DIR) && \
-    export LIBRARY_PATH=$(shell pwd)/../gearmand/gearmand-${GEARMAND}/libgearman/.libs && \
-    export LD_LIBRARY_PATH=$(shell pwd)/../gearmand/gearmand-${GEARMAND}/libgearman/.libs && \
-    ./configure --prefix=$(OMD_ROOT) && \
-    $(MAKE) -j 1
+	export LIBRARY_PATH=$(shell pwd)/../gearmand/gearmand-${GEARMAND}/libgearman/.libs && \
+	export LD_LIBRARY_PATH=$(shell pwd)/../gearmand/gearmand-${GEARMAND}/libgearman/.libs && \
+	./configure --prefix=$(OMD_ROOT) --enable-embedded-perl && \
+	$(MAKE) -j 1
 
 install:
 	$(MAKE) DESTDIR=$(DESTDIR) -C $(DIR) -j 1 install
@@ -28,12 +28,28 @@ install:
 	rm -rf $(DESTDIR)$(OMD_ROOT)/etc/mod-gearman
 	rm -rf $(DESTDIR)$(OMD_ROOT)/etc/init.d/gearmand
 	rm -rf $(DESTDIR)$(OMD_ROOT)/etc/init.d/mod_gearman_worker
+	rm -rf $(DESTDIR)$(OMD_ROOT)/share/mod_gearman/*.conf
 	rmdir $(DESTDIR)$(OMD_ROOT)/etc/init.d
+	rm -f $(DESTDIR)$(OMD_ROOT)/etc/mod_gearman_neb.conf
+	rm -f $(DESTDIR)$(OMD_ROOT)/etc/mod_gearman_worker.conf
+	rm -f $(DESTDIR)$(OMD_ROOT)/lib/mod_gearman/mod_gearman.so
 	rmdir $(DESTDIR)$(OMD_ROOT)/etc
 	rm -rf $(DESTDIR)$(OMD_ROOT)/var/mod_gearman
+	rm -rf $(DESTDIR)$(OMD_ROOT)/var/log
 	rmdir $(DESTDIR)$(OMD_ROOT)/var
 
 skel:
+	mkdir -p $(SKEL)/etc/mod-gearman
+	cp $(DIR)/etc/mod_gearman_neb.conf.in    $(SKEL)/etc/mod-gearman/server.cfg
+	cp $(DIR)/etc/mod_gearman_worker.conf.in $(SKEL)/etc/mod-gearman/worker.cfg
+	for p in patches/*.skel_patch ; do \
+	    echo "applying $$p..." ; \
+	    ( cd $(SKEL) ; patch -p1 ) < $$p ; \
+	done
+	mkdir -p $(SKEL)/var
+	cd $(SKEL)/var && ln -s gearman mod_gearman
+
+
 
 clean:
 	rm -rf $(DIR)

@@ -4,6 +4,7 @@ use warnings;
 use strict;
 use Test::More;
 use Sys::Hostname;
+use Template::Plugin::Date;
 
 BEGIN {
     use lib('t');
@@ -13,7 +14,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 160 );
+plan( tests => 192 );
 
 ##################################################
 # get version strings
@@ -32,7 +33,12 @@ for my $core (qw/nagios icinga/) {
     my $service = "Dummy+Service";
 
     # make tests more reliable
-    TestUtils::test_command({ cmd => "/usr/bin/env sed -i -e 's/^idle-timeout=10/idle-timeout=300/g' /opt/omd/sites/$site/etc/mod-gearman/worker.cfg" });
+    TestUtils::test_command({ cmd => "/usr/bin/env sed -i -e 's/^idle-timeout=30/idle-timeout=300/g' /opt/omd/sites/$site/etc/mod-gearman/worker.cfg" });
+    TestUtils::file_contains({file => "/opt/omd/sites/$site/etc/mod-gearman/worker.cfg", like => ['/^idle\-timeout=300/mx'] });
+
+    # increase worker loglevel
+    TestUtils::test_command({ cmd => "/usr/bin/env sed -i -e 's/^debug=0/debug=2/g' /opt/omd/sites/$site/etc/mod-gearman/worker.cfg" });
+    TestUtils::file_contains({file => "/opt/omd/sites/$site/etc/mod-gearman/worker.cfg", like => ['/^debug=2/mx'] });
 
     # create test host/service
     TestUtils::prepare_obj_config('t/data/omd/testconf1', '/omd/sites/'.$site.'/etc/nagios/conf.d', $site);
@@ -43,13 +49,19 @@ for my $core (qw/nagios icinga/) {
 
     ##################################################
     # prepare site
+    my $tpd  = Template::Plugin::Date->new();
+    my $now  = $tpd->format(time(), '%Y-%m-%d %H:%M:%S');
+    $now     =~ s/\ /+/gmx;
+    $now     =~ s/:/%3A/gmx;
+diag($now);
     my $preps = [
       { cmd => $omd_bin." config $site set CORE $core" },
       { cmd => $omd_bin." config $site set MOD_GEARMAN on" },
       { cmd => "/usr/bin/test -s /omd/sites/$site/etc/mod-gearman/secret.key", "exit" => 0 },
       { cmd => $omd_bin." start $site", like => [ '/gearmand\.\.\.OK/', '/gearman_worker\.\.\.OK/'], sleep => 1 },
       { cmd => $omd_bin." status $site", like => [ '/gearmand:\s+running/', '/gearman_worker:\s*running/'] },
-      { cmd => "/bin/su - $site -c './lib/nagios/plugins/check_http -H localhost -a omdadmin:omd -u /$site/nagios/cgi-bin/cmd.cgi -e 200 -P \"cmd_typ=7&cmd_mod=2&host=omd-$site&service=Dummy+Service&start_time=2010-11-06+09%3A46%3A02&force_check=on&btnSubmit=Commit\" -r \"Your command request was successfully submitted\"'", like => '/HTTP OK:/' },
+      { cmd => "/bin/su - $site -c './lib/nagios/plugins/check_http -H localhost -a omdadmin:omd -u /$site/nagios/cgi-bin/cmd.cgi -e 200 -P \"cmd_typ=7&cmd_mod=2&host=omd-$site&service=Dummy+Service&start_time=$now&force_check=on&btnSubmit=Commit\" -r \"Your command request was successfully submitted\"'", like => '/HTTP OK:/' },
+      { cmd => "/bin/su - $site -c './lib/nagios/plugins/check_http -H localhost -a omdadmin:omd -u /$site/nagios/cgi-bin/cmd.cgi -e 200 -P \"cmd_typ=7&cmd_mod=2&host=omd-$site&service=perl+test&start_time=$now&force_check=on&btnSubmit=Commit\" -r \"Your command request was successfully submitted\"'", like => '/HTTP OK:/' },
     ];
     for my $test (@{$preps}) {
         TestUtils::test_command($test) or TestUtils::bail_out_clean("no further testing without proper preparation");
@@ -88,6 +100,8 @@ for my $core (qw/nagios icinga/) {
     my $worker = 0;
     if( $test->{'stdout'} =~ m/worker=(\d+)/ ) { $worker = $1 }
     ok($worker >= 3, "worker number >= 3: $worker") or diag($test->{'stdout'});
+
+    TestUtils::file_contains({file => "/opt/omd/sites/$site/var/log/gearman/worker.log", like => ['/Using Embedded Perl interpreter for: .*check_webinject/', '/Embedded Perl successfully compiled/', '/^output=.*find\ any\ test/mx'], unlike => ['/\[ERROR\]/'] });
 
     ##################################################
     # cleanup test site
