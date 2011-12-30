@@ -3,7 +3,6 @@
 . "###ROOT###/.profile"
 
 export PHP_FCGI_MAX_REQUESTS=1000
-export PHP_FCGI_CHILDREN=8
 
 # Replace with the path to your FastCGI-enabled PHP executable
 exec ###PHP_FCGI_BIN### \
