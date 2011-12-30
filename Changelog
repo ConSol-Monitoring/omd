@@ -2,7 +2,9 @@ This file documents the revision history for the Open Monitoring Distribution
 0.54
           - omd:
 	    - FIX: Fixed "omd umount" command when running without specific site
-          - mod_python: Fix "omd stop apache", which was sometimes timing out
+          - mod_python:
+	    - Fix "omd stop apache", which was sometimes timing out
+	    - Fix several DeprecationWarning messages when using python 2.6
           - NagVis: Updated to NagVis 1.6.2
 
 0.52     Dec 22 2011
