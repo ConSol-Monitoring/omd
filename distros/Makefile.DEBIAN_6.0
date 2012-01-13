@@ -44,6 +44,7 @@ OS_PACKAGES      += libperl5.10
 OS_PACKAGES      += libreadline6
 OS_PACKAGES      += libsnmp-perl
 OS_PACKAGES      += libuuid1
+OS_PACKAGES      += libpython2.6
 OS_PACKAGES      += mysql-server
 OS_PACKAGES      += patch
 OS_PACKAGES      += php5
