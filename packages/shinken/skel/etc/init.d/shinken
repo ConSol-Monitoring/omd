@@ -260,6 +260,25 @@ EOTXT
 	check_external_commands=1
 	log_file=$VAR/nagios/nagios.log
 EOTXT
+    ;;
+stop|status)
+    # only update the AVAIL_MODULES list
+    if [ "${SHINKEN_SCHEDULERD_PORT}" = "none" ]; then
+      AVAIL_MODULES=${AVAIL_MODULES/scheduler/} 
+    fi
+    if [ "${SHINKEN_POLLERD_PORT}" = "none" ]; then
+      AVAIL_MODULES=${AVAIL_MODULES/poller/}
+    fi
+    if [ "${SHINKEN_REACTIONNERD_PORT}" = "none" ]; then
+      AVAIL_MODULES=${AVAIL_MODULES/reactionner/}
+    fi
+    if [ "${SHINKEN_BROKERD_PORT}" = "none" ]; then
+      AVAIL_MODULES=${AVAIL_MODULES/broker/}
+    fi 
+    if [ "${SHINKEN_ARBITERD_PORT}" = "none" ]; then
+      AVAIL_MODULES=${AVAIL_MODULES/arbiter/}
+    fi
+    ;; 
 esac
 
 usage() {
