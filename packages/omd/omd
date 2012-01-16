@@ -680,10 +680,12 @@ def create_tmpfs(sitename):
     chown_tree(tmp, sitename)
     ok()
 
-def unmount_tmpfs(sitename, output = True):
+def unmount_tmpfs(sitename, output = True, kill = False):
     # Clear directory hierarchy when not using a tmpfs
     # During omd update TMPFS hook might not be set so assume
     # that the hook is enabled by default.
+    # If kill is True, then we do an fuser -k on the tmp
+    # directory first.
     config_load_hooks()
     if g_hooks.get("TMPFS", {'value': 'on'})["value"] != "on":
         tmp = tmp_dir(sitename)
@@ -706,8 +708,13 @@ def unmount_tmpfs(sitename, output = True):
                     ok()
                 return True
 
+            if kill:
+                if output:
+                    sys.stdout.write("Killing processes still using '%s'\n" % tmp_dir(sitename))
+                os.system("fuser --silent -k '%s'" % tmp_dir(sitename))
+
             if output:
-                sys.stdout.write(".")
+                sys.stdout.write(kill and "K" or ".")
                 sys.stdout.flush()
             time.sleep(1)
 
@@ -2212,13 +2219,12 @@ def main_rm(args, options={}):
     #execute_as_user(stop_site, (g_sitename, ))
     os.system('omd stop %s' % g_sitename)
 
-    reuse = False
-    if "reuse" in options:
-        reuse = True
+    reuse = "reuse" in options
+    kill = "kill" in options
 
-    if user_logged_in(g_sitename):
+    if not kill and user_logged_in(g_sitename):
         bail_out("User '%s' still logged in or running processes." % g_sitename)
-    unmount_tmpfs(g_sitename)
+    unmount_tmpfs(g_sitename, kill=kill)
 
     if not reuse:
         remove_from_fstab(g_sitename)
@@ -2255,7 +2261,7 @@ def main_disable(args, options):
         sys.exit(0)
 
     stop_if_not_stopped(g_sitename) 
-    unmount_tmpfs(g_sitename)
+    unmount_tmpfs(g_sitename, kill = "kill" in options)
     sys.stdout.write("Disabling Apache configuration for this site...")
     delete_apache_hook(g_sitename)
     ok()
@@ -2294,7 +2300,7 @@ def main_mv_or_cp(what, args, options={}):
         bail_out("Cannot %s site '%s' while it is running." % (action, old))
 
     if what == "mv":
-        unmount_tmpfs(old)
+        unmount_tmpfs(old, kill = "kill" in options)
         if not reuse:
             remove_from_fstab(old)
 
@@ -2642,7 +2648,7 @@ def main_umount(args, options = {}):
             sys.stdout.write("%sUnmounting tmpfs of site %s%s..." % (tty_bold, site, tty_normal))
 	    sys.stdout.flush()
 
-            if not unmount_tmpfs(site, False):
+            if not unmount_tmpfs(site, False, kill="kill" in options):
                 sys.stdout.write(tty_error + "\n")
                 exit_status = 1
             else:
@@ -2651,7 +2657,7 @@ def main_umount(args, options = {}):
         # Skip the site even when it is partly running
         if not site_is_stopped(g_sitename):
             bail_out("Cannot unmount tmpfs of site '%s' while it is running." % g_sitename)
-        unmount_tmpfs(g_sitename)
+        unmount_tmpfs(g_sitename, kill="kill" in options)
     sys.exit(0)
 
 
@@ -2781,7 +2787,8 @@ commands = [
     "Populate site directory with default files and enable the site", ""),
 
   ( "rm",        True,  1, 1, True, "",        main_rm,
-    [ ( "reuse", None, False ) ],
+    [ ( "reuse", None, False ),
+      ( "kill", None, False )],
     "Remove a site (and its data)",
 
     "PLEASE NOTE: This action removes all configuration files\n"
@@ -2797,7 +2804,7 @@ commands = [
     "- Restart the system wide apache daemon\n"),
 
   ( "disable",   True,  1, 1, False, "", main_disable,
-    [],
+    [( "kill", None, False )],
     "Disable a site (stop it, unmount tmpfs, remove Apache hook)",
     "" ),
 
@@ -2875,7 +2882,8 @@ commands = [
     ""),
 
   ( "umount",      False, 2, 1, False, "", main_umount,
-    [ ( "version", "V", True ) ],
+    [ ( "version", "V", True ),
+      ( "kill", None, False ) ],
     "Umount ramdisk volumes of site(s)",
     ""),
 
