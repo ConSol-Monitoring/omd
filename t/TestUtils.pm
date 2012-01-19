@@ -164,6 +164,65 @@ sub test_command {
     return $return;
 }
 
+
+##################################################
+
+=head2 file_contains
+
+  verify contents of a file
+
+  needs test hash
+  {
+    file    => file to check
+    like    => (list of) regular expressions which have to match
+    unlike  => (list of) regular expressions which must not match stderr
+  }
+
+=cut
+sub file_contains {
+    my $test    = shift;
+    my $failed  = 0;
+    my $content = "";
+
+    my @like = ();
+    if(defined $test->{'like'}) {
+        @like   = ref $test->{'like'}   eq 'ARRAY' ? @{$test->{'like'}}   : $test->{'like'};
+    }
+    my @unlike = ();
+    if(defined $test->{'unlike'}) {
+        @unlike = ref $test->{'unlike'} eq 'ARRAY' ? @{$test->{'unlike'}} : $test->{'unlike'};
+    }
+
+    ok(-r $test->{'file'}, $test->{'file'}." does exist");
+
+    SKIP: {
+        skip 'file missing', (scalar @like + scalar @unlike) unless -r $test->{'file'};
+
+        local $/ = undef;
+        open my $fh, $test->{'file'} or die "Couldn't open file ".$test->{'file'}.": $!";
+        binmode $fh;
+        $content = <$fh>;
+
+        # matches?
+        if(defined $test->{'like'}) {
+            for my $expr (@like) {
+                like($content, $expr, "content like ".$expr) or $failed++;
+            }
+        }
+
+        # don't matches
+        if(defined $test->{'unlike'}) {
+            for my $expr (@unlike) {
+                unlike($content, $expr, "output unlike ".$expr) or $failed++;
+            }
+        }
+    };
+
+    return 1 unless $failed;
+    return 0;
+}
+
+
 ##################################################
 
 =head2 create_test_site

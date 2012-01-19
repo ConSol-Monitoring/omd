@@ -128,12 +128,17 @@ configuration files and enabling the site (see \fBomd disable\fP). Afterwards
 the site is in the same state as after an \fBomd create\fP without \fB--no-init\fP.
 
 .TP
-.B omd [-f, --force] rm         SITE             
+.B omd [-f, --force] [--kill] rm         SITE             
 Remove a site and all of its data. This includes deleting the
 directory \fB/omd/sites/\fPSITE and removing the system user
 and group of that site. This - of course - needs root permissions.
+
+The option \fB--kill\fP will automatically kill all processes that
+use the temporary filesystem of the site before unmounting it.
+Otherwise the unmount and the removal of the site will fail.
+
 .TP
-.B omd disable SITE
+.B omd disable [--kill] SITE
 Disable a site. First the site will be stopped, if it is running.
 Then the tmpfs will be unmounted and the site will be made unknown
 to the global Apache server (by emptying the file /omd/apache/SITE.conf
@@ -146,6 +151,11 @@ Disabling a site brings OMD into a state where the sites home directory
 or program. It can safely be unmounted. This is convenient in
 situations where the site is clustered and the site's home directory
 shall be moved to another cluster node.
+
+Since unmounting the tmpfs will only be possible if no process
+is using it, you can specify \fB--kill\fP to automatically kill
+all such processes before the unmount. This is especially useful if
+omd disable is used in cluster-failover scripts.
 
 Disabling a site needs root permissions.
 
@@ -275,10 +285,14 @@ to make the output more human readable, so it is better parseable by scripts.
 This command also handles the global option \fB-v\fP or \fB--verbose\fP. It shows the
 changes in detail.
 .TP
-.B omd umount [SITE]
+.B omd umount [--kill] [SITE]
 Unmounts the ramdisk filesystem (tmpfs) of the given or all sites if no SITE option given.
 
-The ramdisk can only be unmounted when a site is stopped.
+The ramdisk can only be unmounted when a site is stopped and no processes are currently
+using it (have a directory in it as current directory are have an open file in it).
+If you specify \fB--kill\FP, then omd will kill processes using the filesystem using
+\fBfuser -k\fP.
+
 .SH SEE ALSO
 .BR http://www.omdistro.org
 .br
