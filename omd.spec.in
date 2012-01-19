@@ -62,6 +62,7 @@ fi
 # not want to make it implicitely active again.
 if [ ! -e /omd/versions/default ] ; then
     echo "Activating init script /etc/init.d/omd"
+    chkconfig --add omd
     chkconfig omd on
 fi
 
@@ -88,6 +89,7 @@ then
 fi
 
 # Make sure, global apache startscript is activated
+chkconfig --add @APACHE_NAME@
 chkconfig @APACHE_NAME@ on
 
 %preun
