@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 NAME     = check_webinject
-VERSION  = 1.71
+VERSION  = 1.72
 DIR      = Webinject-$(VERSION)
 PERLARCH = $(shell $(PERL) -e 'use Config; print $$Config{archname}')
 
