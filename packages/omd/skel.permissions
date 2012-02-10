@@ -1,1 +1,2 @@
 etc/init.d/xinetd 755
+etc/htpasswd 664
