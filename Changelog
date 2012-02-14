@@ -8,6 +8,7 @@ This file documents the revision history for the Open Monitoring Distribution
             - Fix "omd stop apache", which was sometimes timing out
             - Fix several DeprecationWarning messages when using python 2.6
           - NagVis: Updated to NagVis 1.6.2
+          - Thruk: Update to 1.18
           - Webinject: Update to 1.72
           - Mod-Gearman: Updated to version 1.2.2
           - Debian 6.0: Added missing dependency for mod_python (libpython2.6)
