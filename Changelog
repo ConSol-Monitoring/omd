@@ -8,10 +8,12 @@ This file documents the revision history for the Open Monitoring Distribution
             - Fix "omd stop apache", which was sometimes timing out
             - Fix several DeprecationWarning messages when using python 2.6
           - NagVis: Updated to NagVis 1.6.2
+          - Thruk: Update to 1.18
           - Webinject: Update to 1.72
           - Mod-Gearman: Updated to version 1.2.2
           - Debian 6.0: Added missing dependency for mod_python (libpython2.6)
           - RPMs: Added "chkconfig --add <s>" commands before "chkconfig <s> on" commands
+          - Making etc/htpasswd file writeable by the site group
 
 0.52     Dec 22 2011
           - Switch Check_MK to version 1.1.12p6 (Please refer to the migration notes

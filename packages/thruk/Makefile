@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 NAME     = Thruk
-VERSION  = 1.1.7
+VERSION  = 1.18
 DIR      = $(NAME)-$(VERSION)
 PERLARCH = $(shell $(PERL) -e 'use Config; print $$Config{archname}')
 
@@ -9,7 +9,7 @@ PERLARCH = $(shell $(PERL) -e 'use Config; print $$Config{archname}')
 
 build:
 	rm -rf $(DIR)
-	tar xzf $(DIR)-src.tar.gz
+	tar xzf $(DIR).tar.gz
 	for p in patches/*.patch ; do \
 	    echo "applying $$p..." ; \
 	    ( cd $(DIR) ; patch -p1 -b ) < $$p ; \

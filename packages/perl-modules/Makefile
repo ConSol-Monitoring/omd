@@ -155,7 +155,7 @@ MODULES = ExtUtils-MakeMaker-6.56.tar.gz \
           Tree-Simple-VisitorFactory-0.10.tar.gz \
           Monitoring-Livestatus-0.74.tar.gz \
           Monitoring-Livestatus-Class-0.03.tar.gz \
-          Monitoring-Availability-0.20.tar.gz \
+          Monitoring-Availability-0.24.tar.gz \
           YAML-Syck-1.17.tar.gz \
           Math-Calc-Units-1.07.tar.gz \
           Config-Tiny-2.14.tar.gz \
