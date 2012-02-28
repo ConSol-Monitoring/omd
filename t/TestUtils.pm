@@ -414,15 +414,18 @@ sub read_config {
     open(my $fh, '<', $conf_file) or carp("cannot open $conf_file: $!");
     while(<$fh>) {
         my $line = $_;
+        chomp($line);
+        next if $line =~ m/^\s*#/;
+        $line =~ s/\s*#.*$//;
         my $append = 0;
-        my($key,$value) = split/\s+\+=\s+/,$line,2;
+        my($key,$value) = split/\s+\+=\s*/,$line,2;
         if(defined $value) {
             $append = 1;
         } else {
-            ($key,$value) = split/\s+=\s+/,$line,2;
+            ($key,$value) = split/\s+=\s*/,$line,2;
         }
         $key   =~ s/^\s+//;
-        $value =~ s/\s+$//;
+        $value =~ s/\s+$// if defined $value;
         if($append) {
             $config->{$key} .= " ".$value;
         } else {
