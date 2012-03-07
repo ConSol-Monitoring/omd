@@ -1,0 +1,13 @@
+--- a/script/thruk_fastcgi.pl	2012-03-05 12:03:43.000000000 +0100
++++ b/script/thruk_fastcgi.pl	2012-03-05 17:37:56.548029668 +0100
+@@ -3,6 +3,10 @@
+ use strict;
+ use warnings;
+ 
++BEGIN {
++    use lib $ENV{'OMD_ROOT'}.'/share/thruk/lib';
++};
++
+ use Catalyst::ScriptRunner;
+ $ENV{'THRUK_SRC'} = 'FastCGI';
+ Catalyst::ScriptRunner->run('Thruk', 'FastCGI');

@@ -1,0 +1,14 @@
+--- a/script/thruk	2012-03-05 12:03:43.000000000 +0100
++++ b/script/thruk	2012-03-05 17:33:15.793210254 +0100
+@@ -3,6 +3,11 @@
+ use strict;
+ use warnings;
+ 
++BEGIN {
++    use lib $ENV{'OMD_ROOT'}.'/share/thruk/lib';
++    $ENV{'CATALYST_CONFIG'} = $ENV{'OMD_ROOT'}.'/etc/thruk';
++};
++
+ use Thruk::Utils::CLI;
+ my $cli = Thruk::Utils::CLI->new();
+ exit $cli->_run();

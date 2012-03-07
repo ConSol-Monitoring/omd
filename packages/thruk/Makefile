@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 NAME     = Thruk
-VERSION  = 1.18
+VERSION  = 1.22
 DIR      = $(NAME)-$(VERSION)
 PERLARCH = $(shell $(PERL) -e 'use Config; print $$Config{archname}')
 
@@ -12,20 +12,25 @@ build:
 	tar xzf $(DIR).tar.gz
 	for p in patches/*.patch ; do \
 	    echo "applying $$p..." ; \
-	    ( cd $(DIR) ; patch -p1 -b ) < $$p ; \
+	    ( cd $(DIR) ; patch -p1 ) < $$p ; \
 	done
-	export PERL5LIB=$$(pwd)/../perl-modules/dist/lib/perl5:$$(pwd)/../perl-modules/dist/lib/perl5/$(PERLARCH); cd $(DIR) ; echo "" | $(PERL) Makefile.PL && make distclean
+	export PERL5LIB=$(P5TMPDIST)/dest/lib/perl5; \
+	    cd $(DIR) ; echo "" | $(PERL) Makefile.PL && make distclean
 	find $(DIR) -name \*.orig -exec rm {} \;
 
 
 install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/bin
 	rm -rf $(DESTDIR)$(OMD_ROOT)/share/thruk
+	cp -rp $(DIR)/script/thruk $(DESTDIR)$(OMD_ROOT)/bin/thruk
 	cp -rp $(DIR) $(DESTDIR)$(OMD_ROOT)/share/thruk
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/skel/etc/thruk
 	rm -rf $(DESTDIR)$(OMD_ROOT)/share/thruk/plugins-enabled
 	rm -rf $(DESTDIR)$(OMD_ROOT)/share/thruk/themes-enabled
 	rm -rf $(DESTDIR)$(OMD_ROOT)/share/thruk/t
+	mv $(DESTDIR)$(OMD_ROOT)/share/thruk/script/thruk $(DESTDIR)$(OMD_ROOT)/bin/thruk
+	chmod 755 $(DESTDIR)$(OMD_ROOT)/bin/thruk
 
 skel:
 	# logfile has to be group writeable for shared apache
