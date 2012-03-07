@@ -12,8 +12,9 @@ build:
 #	    echo "applying $$p..." ; \
 #	    ( cd $(DIR) ; patch -p1 -b ) < $$p ; \
 #	done
-	export PERL5LIB=$$(pwd)/../perl-modules/dist/lib/perl5:$$(pwd)/../perl-modules/dist/lib/perl5/$(PERLARCH); cd $(DIR) && $(PERL) Build.PL < /dev/null >build.log 2>&1 
-	cd $(DIR) && ./Build 
+	export PERL5LIB=$(P5TMPDIST)/dest/lib/perl5; \
+	    cd $(DIR) && $(PERL) Build.PL < /dev/null >build.log 2>&1
+	cd $(DIR) && ./Build
 
 install:
 	rm -rf $(DESTDIR)$(OMD_ROOT)/skel/etc/jmx4perl

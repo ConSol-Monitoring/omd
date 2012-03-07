@@ -308,6 +308,9 @@ sub test_url {
                 if($use_html_lint == 0) {
                     skip "no HTML::Lint installed", 2;
                 }
+                if($page->{'content'} =~ /^\[.*\]$/mx) {
+                    skip "no lint check for json data", 2;
+                }
                 my $lint = new HTML::Lint;
                 isa_ok( $lint, "HTML::Lint" );
 
@@ -578,6 +581,7 @@ sub _diag_lint_errors_and_remove_some_exceptions {
             "<input>\ is\ not\ a\ container\ \-\-\ <\/input>\ is\ not\ allowed",
             "Unknown attribute \"start\" for tag <div>",
             "Unknown attribute \"end\" for tag <div>",
+            "for tag <meta>",
         ) {
             next LINT_ERROR if($err_str =~ m/$exclude_pattern/i);
         }

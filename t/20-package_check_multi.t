@@ -12,7 +12,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 227 );
+plan( tests => 237 );
 
 # create our test site
 my $omd_bin = TestUtils::get_omd_bin();
@@ -50,6 +50,9 @@ my $urls = [
 			'/system.*\d+ plugins checked/ms',
 		],
 		skip_html_lint=>1,
+	},
+	{
+		url => '/thruk/side.html', # startup fcgi daemon
 	},
 	{
 		url => '/thruk/cgi-bin/status.cgi?host=all',

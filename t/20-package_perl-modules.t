@@ -10,6 +10,7 @@ BEGIN {
     import TestUtils;
     use FindBin;
     use lib "$FindBin::Bin/lib/lib/perl5";
+    use BuildHelper;
 }
 
 ##################################################
@@ -30,31 +31,23 @@ for my $test (@{$tests}) {
 TestUtils::test_command({ cmd => "/bin/su - $site -c 'perl -e \"use RRDs 1.4004;\"'" });
 
 ##################################################
-for my $tarball (glob("packages/perl-modules/src/*.gz")) {
-    $tarball =~ s/^.*\///gmx;
-    $tarball =~ s/\-([0-9\.]+)(\.[\w\d]*)*\.tar\.gz//gmx;
-    my $version = $1;
+for my $tarball (glob("packages/perl-modules/src/*.gz packages/perl-modules/src/*.zip")) {
+    $tarball =~ s/^.*\///mx;
+    my($mod, $version) = BuildHelper::file_to_module($tarball);
+    $mod =~ s/\.pm$//mx;
 
-    $tarball =~ s/\-/::/gmx;
-    if($tarball eq 'Scalar::List::Utils')            { $tarball = 'List::Util::XS'; }
-    elsif($tarball eq 'libwww::perl')                { $tarball = 'LWP'; }
-    elsif($tarball eq 'Module::Install')             { $tarball = 'inc::Module::Install'; }
-    elsif($tarball eq 'Template::Toolkit')           { $tarball = 'Template'; }
-    elsif($tarball eq 'IO::stringy')                 { $tarball = 'IO::Scalar'; }
-    elsif($tarball eq 'TermReadKey')                 { $tarball = 'Term::ReadKey'; }
-    elsif($tarball eq 'IO::Compress')                { $tarball = 'IO::Compress::Base'; }
-    elsif($tarball eq 'Gearman')                     { $tarball = 'Gearman::Client'; }
-    elsif($tarball eq 'Term::ReadLine::Gnu')         { $tarball = 'Term::ReadLine; use Term::ReadLine::Gnu'; }
-    elsif($tarball eq 'PathTools')                   { $tarball = 'File::Spec'; }
-    elsif($tarball eq 'Package::DeprecationManager') { $version .= ' -deprecations => { blah => foo }'; }
-    elsif($tarball eq 'DBD::Oracle')                 { next; }
-    elsif($tarball eq 'Test::NoWarnings')            { next; }
-    elsif($tarball eq 'UNIVERSAL::isa')              { next; }
+    if($mod eq 'Package::DeprecationManager') { $version .= ' -deprecations => { blah => foo }'; }
+    if($mod eq 'Filter::exec')                { $version .= " 'test'"; }
+    if($mod eq 'Term::ReadLine::Gnu')         { $mod      = 'Term::ReadLine; use Term::ReadLine::Gnu' }
+    if($mod eq 'Module::Install')             { $mod = 'inc::'.$mod; }
+    if($mod eq 'File::ChangeNotify')          { next; }
+    if($mod eq 'UNIVERSAL::isa')              { next; }
+    if($mod eq 'DBD::Oracle')                 { next; }
 
-    my $check = "use $tarball";
+    my $check = "use $mod";
     # Use with version doesnt work here, because of weird version numbers
-    $check .= " $version" unless $tarball =~ /^(Math::BaseCnv|XML::Tidy)$/;
-  
+    $check .= " $version" unless $mod =~ /^(Math::BaseCnv|XML::Tidy)$/;
+
     TestUtils::test_command({ cmd => "/bin/su - $site -c 'perl -e \"$check;\"'" });
 }
 

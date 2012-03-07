@@ -3,13 +3,13 @@ include ../../Makefile.omd
 NAME     = check_webinject
 VERSION  = 1.72
 DIR      = Webinject-$(VERSION)
-PERLARCH = $(shell $(PERL) -e 'use Config; print $$Config{archname}')
 
 .PHONY: skel
 
 build:
 	tar xzf $(DIR).tar.gz
-	export PERL5LIB=$$(pwd)/../perl-modules/dist/lib/perl5:$$(pwd)/../perl-modules/dist/lib/perl5/$(PERLARCH); cd $(DIR) && echo "" | $(PERL) Makefile.PL
+	export PERL5LIB=$(P5TMPDIST)/dest/lib/perl5; \
+	    cd $(DIR) && echo "" | $(PERL) Makefile.PL
 	cd $(DIR) && $(MAKE) check_webinject
 
 install:
