@@ -1,0 +1,71 @@
+--- a/Makefile.in	2011-11-03 17:20:48.000000000 +0100
++++ b/Makefile.in	2012-02-29 22:56:52.222258561 +0100
+@@ -348,37 +348,37 @@
+ target_triplet = @target@
+ bin_PROGRAMS = bin/gearman$(EXEEXT) bin/gearadmin$(EXEEXT)
+ sbin_PROGRAMS = gearmand/gearmand$(EXEEXT)
+-check_PROGRAMS = libtest/unittest$(EXEEXT) libtest/skiptest$(EXEEXT) \
+-	tests/killall$(EXEEXT) tests/cycle$(EXEEXT) \
+-	tests/client_test$(EXEEXT) tests/cli$(EXEEXT) \
+-	tests/gearmand$(EXEEXT) tests/internals_test$(EXEEXT) \
+-	tests/round_robin_test$(EXEEXT) tests/worker_test$(EXEEXT) \
+-	tests/cpp_test$(EXEEXT) tests/c_test$(EXEEXT) \
+-	tests/burnin_test$(EXEEXT) tests/drizzle_test$(EXEEXT) \
+-	tests/memcached_test$(EXEEXT) tests/sqlite_test$(EXEEXT) \
+-	tests/tokyocabinet_test$(EXEEXT)
+-noinst_PROGRAMS = libtest/unittest$(EXEEXT) libtest/skiptest$(EXEEXT) \
+-	libtest/wait$(EXEEXT) benchmark/blobslap_client$(EXEEXT) \
+-	benchmark/blobslap_worker$(EXEEXT) \
+-	examples/echo_client$(EXEEXT) examples/echo_worker$(EXEEXT) \
+-	examples/reverse_client$(EXEEXT) \
+-	examples/reverse_client_bg$(EXEEXT) \
+-	examples/reverse_client_epoch$(EXEEXT) \
+-	examples/reverse_client_cb$(EXEEXT) \
+-	examples/reverse_worker$(EXEEXT) examples/wc_worker$(EXEEXT) \
+-	tests/killall$(EXEEXT) tests/cycle$(EXEEXT) \
+-	tests/client_test$(EXEEXT) tests/cli$(EXEEXT) \
+-	tests/gearmand$(EXEEXT) tests/blobslap_client$(EXEEXT) \
+-	tests/internals_test$(EXEEXT) tests/round_robin_test$(EXEEXT) \
+-	tests/worker_test$(EXEEXT) $(am__EXEEXT_1) \
+-	tests/cpp_test$(EXEEXT) tests/c_test$(EXEEXT) \
+-	tests/burnin_test$(EXEEXT) tests/drizzle_test$(EXEEXT) \
+-	tests/memcached_test$(EXEEXT) tests/sqlite_test$(EXEEXT) \
+-	tests/tokyocabinet_test$(EXEEXT) \
+-	docs/libgearman/examples/gearman_client_do_background_example$(EXEEXT) \
+-	docs/libgearman/examples/gearman_client_do_example$(EXEEXT) \
+-	docs/libgearman/examples/gearman_execute_example$(EXEEXT) \
+-	docs/libgearman/examples/gearman_execute_partition$(EXEEXT)
++#check_PROGRAMS = libtest/unittest$(EXEEXT) libtest/skiptest$(EXEEXT) \
++#	tests/killall$(EXEEXT) tests/cycle$(EXEEXT) \
++#	tests/client_test$(EXEEXT) tests/cli$(EXEEXT) \
++#	tests/gearmand$(EXEEXT) tests/internals_test$(EXEEXT) \
++#	tests/round_robin_test$(EXEEXT) tests/worker_test$(EXEEXT) \
++#	tests/cpp_test$(EXEEXT) tests/c_test$(EXEEXT) \
++#	tests/burnin_test$(EXEEXT) tests/drizzle_test$(EXEEXT) \
++#	tests/memcached_test$(EXEEXT) tests/sqlite_test$(EXEEXT) \
++#	tests/tokyocabinet_test$(EXEEXT)
++#noinst_PROGRAMS = libtest/unittest$(EXEEXT) libtest/skiptest$(EXEEXT) \
++#	libtest/wait$(EXEEXT) benchmark/blobslap_client$(EXEEXT) \
++#	benchmark/blobslap_worker$(EXEEXT) \
++#	examples/echo_client$(EXEEXT) examples/echo_worker$(EXEEXT) \
++#	examples/reverse_client$(EXEEXT) \
++#	examples/reverse_client_bg$(EXEEXT) \
++#	examples/reverse_client_epoch$(EXEEXT) \
++#	examples/reverse_client_cb$(EXEEXT) \
++#	examples/reverse_worker$(EXEEXT) examples/wc_worker$(EXEEXT) \
++#	tests/killall$(EXEEXT) tests/cycle$(EXEEXT) \
++#	tests/client_test$(EXEEXT) tests/cli$(EXEEXT) \
++#	tests/gearmand$(EXEEXT) tests/blobslap_client$(EXEEXT) \
++#	tests/internals_test$(EXEEXT) tests/round_robin_test$(EXEEXT) \
++#	tests/worker_test$(EXEEXT) $(am__EXEEXT_1) \
++#	tests/cpp_test$(EXEEXT) tests/c_test$(EXEEXT) \
++#	tests/burnin_test$(EXEEXT) tests/drizzle_test$(EXEEXT) \
++#	tests/memcached_test$(EXEEXT) tests/sqlite_test$(EXEEXT) \
++#	tests/tokyocabinet_test$(EXEEXT) \
++#	docs/libgearman/examples/gearman_client_do_background_example$(EXEEXT) \
++#	docs/libgearman/examples/gearman_client_do_example$(EXEEXT) \
++#	docs/libgearman/examples/gearman_execute_example$(EXEEXT) \
++#	docs/libgearman/examples/gearman_execute_partition$(EXEEXT)
+ DIST_COMMON = README $(am__configure_deps) $(nobase_include_HEADERS) \
+ 	$(noinst_HEADERS) $(srcdir)/Makefile.am $(srcdir)/Makefile.in \
+ 	$(srcdir)/benchmark/include.am $(srcdir)/bin/include.am \
