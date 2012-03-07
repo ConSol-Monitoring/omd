@@ -1,22 +1,52 @@
-#!/usr/bin/env perl
+#!/usr/bin/perl
 
 use warnings;
 use strict;
-use lib '/omd/versions/default/lib/perl5/lib/perl5';
+use lib 'lib';
 use Data::Dumper;
-use lib 'src';
-use OMDHelper;
+use BuildHelper;
+use YAML;
+use JSON::XS;
+
+BEGIN {
+    undef $ENV{'PERL5LIB'};
+    undef $ENV{'PERL_MB_OPT'};
+    undef $ENV{'PERL_LOCAL_LIB_ROOT'};
+    undef $ENV{'PERL_MM_OPT'};
+};
+
+####################################
+# gather list
+my $modules = [];
+for my $module (@ARGV) {
+    if(-d $module) {
+        my $meta = BuildHelper::get_meta_for_dir($module);
+        my $deps = BuildHelper::get_deps_from_meta($meta);
+        push @{$modules}, keys %{$deps};
+    }
+    elsif(-f $module) {
+        my $dir  = BuildHelper::unpack($module);
+        my $meta = BuildHelper::get_meta_for_dir($dir);
+        my $deps = BuildHelper::get_deps_from_meta($meta);
+        push @{$modules}, keys %{$deps};
+    } else {
+        push @{$modules}, $module;
+    }
+}
 
 ####################################
 # download modules
-chdir("src");
 my $downloaded;
-for my $module (@ARGV) {
+chdir('src') or die("cannot change dir 'src': $!");
+for my $module (@{$modules}) {
     $module =~ s/\//::/g;
+    $module =~ s/\-/::/g;
     $module =~ s/\.pm$//g;
-    print $module." is a core module\n" if OMDHelper::is_core_module($module);
-    $downloaded = OMDHelper::download_module($module);
+    print $module." is a core module\n" if BuildHelper::is_core_module($module);
+    $downloaded = BuildHelper::download_module($module);
 }
+chdir('..') or die("cannot change dir '..': $!");
+
 # print result of all downloaded files
 if(scalar @{$downloaded} > 0) {
     print "\n";
@@ -26,4 +56,3 @@ if(scalar @{$downloaded} > 0) {
 } else {
     print "no new packages downloaded\n";
 }
-

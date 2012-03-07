@@ -1,10 +1,12 @@
-#!/usr/bin/env perl
+#!/usr/bin/perl
 
 use warnings;
 use strict;
 use Data::Dumper;
-use lib 'src';
-use OMDHelper;
+use lib 'lib';
+use BuildHelper;
+use YAML;
+use JSON;
 $Data::Dumper::Sortkeys = 1;
 
 chdir("src");
@@ -28,18 +30,6 @@ my $more_modules = {
 };
 
 ####################################
-# search orphaned tarballs
-my $orphaned = 0;
-for my $tarball (@tarballs) {
-    `grep $tarball ../Makefile > /dev/null 2>&1`;
-    if($? != 0) {
-        print "orphaned tarball: $tarball\n";
-        $orphaned++;
-    }
-}
-exit if $orphaned;
-
-####################################
 # get module dependencies
 my $deps;
 if(-s $cache) {
@@ -50,7 +40,7 @@ if(-s $cache) {
 } else {
     # add dependencies from packages and modules
     for my $tarball (@tarballs, @packages) {
-        $deps = OMDHelper::get_deps($tarball);
+        $deps = BuildHelper::get_deps($tarball);
     }
 
     # save deps cache
@@ -70,7 +60,7 @@ sub find_ophaned_deps {
 
     my $modules = {};
     for my $tarball (@tarballs) {
-        my($module,$version) = OMDHelper::file_to_module($tarball);
+        my($module,$version) = BuildHelper::file_to_module($tarball);
         next if defined $deps->{$module};
         next if defined $more_modules->{$module};
         $modules->{$module} = $version;

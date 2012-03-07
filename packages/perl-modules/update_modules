@@ -1,0 +1,30 @@
+#!/usr/bin/perl
+
+use warnings;
+use strict;
+use Data::Dumper;
+use lib 'lib';
+use BuildHelper;
+
+my @modules;
+chdir('src') or die("cannot change into src dir: $!");
+if(scalar @ARGV == 0) {
+    @modules = glob('*');
+} else {
+    @modules = @ARGV;
+}
+
+for my $file (@modules) {
+    printf "%-55s", $file;
+
+    my($modname,$modversion) = BuildHelper::file_to_module($file);
+    my $urlpath = BuildHelper::get_url_for_module($modname);
+    my $tarball = $urlpath; $tarball =~ s/^.*\///g;
+    my($newname,$newversion) = BuildHelper::file_to_module($tarball);
+
+    if(-f $tarball) {
+        print "no update available\n";
+    } else {
+        print "update available: $newversion\n";
+    }
+}

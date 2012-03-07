@@ -1,0 +1,11 @@
+#!/bin/bash
+
+echo "checking for duplicate entries..."
+sort Makefile | uniq -d | grep -v '^\s*$'
+
+echo "checking for unused files..."
+for file in $(cd src && ls -1 *.gz *.tgz *.zip 2>/dev/null); do
+    if [ $(grep -c "$file" Makefile) = 0 ]; then
+        echo "$file is not used anymore"
+    fi
+done
