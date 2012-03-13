@@ -37,6 +37,7 @@ case "$1" in
         echo -n "Starting $NAME..."
         mkdir -p ###ROOT###/tmp/run
         mkdir -p ###ROOT###/var/log/gearman
+        cd ###ROOT###/var/log && ln -s gearman mod-gearman
         CMD="$DAEMON -d --config=$CONFIG --pidfile=$PIDFILE"
         if [ "$USERID" -eq 0 ]; then
             su -s $SHELL - $USER -c  "$CMD"
