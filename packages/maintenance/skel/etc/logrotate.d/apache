@@ -7,6 +7,6 @@
 	create 640 ###SITE### ###SITE### 
 	sharedscripts
 	postrotate
-		###ROOT###/bin/omd restart apache
+		###ROOT###/etc/init.d/apache reload
 	endscript
 }
