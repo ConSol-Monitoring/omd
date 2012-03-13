@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 
-SHINKEN=shinken-1.0rc1-f01fb82
+SHINKEN=shinken-1.0.1
 SHINKEN_FILE=$(SHINKEN).tar.gz
 SHINKEN_URL=http://shinken-monitoring.org/pub/$(SHINKEN).tar.gz
 #
