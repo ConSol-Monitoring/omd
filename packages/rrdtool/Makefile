@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 NAME = rrdtool
-VERSION = 1.4.5
+VERSION = 1.4.7
 DIR = $(NAME)-$(VERSION)
 
 CONFIGUREOPTS = \
