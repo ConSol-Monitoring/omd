@@ -9,6 +9,7 @@ This file documents the revision history for the Open Monitoring Distribution
             - Fix several DeprecationWarning messages when using python 2.6
           - NagVis: Updated to NagVis 1.6.2
           - Thruk: Update to 1.22
+          - RRDtool: Update to 1.4.7
           - Webinject: Update to 1.72
           - Mod-Gearman: Updated to version 1.2.4
           - Gearman: Updated to version 0.25
