@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 
-SHINKEN=shinken-1.0rc1-f01fb82
+SHINKEN=shinken-1.0.1
 SHINKEN_FILE=$(SHINKEN).tar.gz
 SHINKEN_URL=http://shinken-monitoring.org/pub/$(SHINKEN).tar.gz
 #
@@ -76,6 +76,7 @@ build:
 		echo which has python 2.4; \
 		echo we need to remove the shinken webui; \
 		( cd $(SHINKEN) ; patch -p1 -b ) < patches/0001-remove-webui.patch; \
+		( cd $(SHINKEN) ; patch -p1 -b ) < patches/0002-add-livestatus-host-eventhandler.patch; \
 	fi
 
 

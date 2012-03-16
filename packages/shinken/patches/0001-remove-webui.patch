@@ -1,6 +1,6 @@
-diff -Naur shinken-1.0rc1-f01fb82.orig/shinken/modules/active_directory_ui.py shinken-1.0rc1-f01fb82/shinken/modules/active_directory_ui.py
---- shinken-1.0rc1-f01fb82.orig/shinken/modules/active_directory_ui.py	2012-02-19 16:54:46.000000000 +0100
-+++ shinken-1.0rc1-f01fb82/shinken/modules/active_directory_ui.py	1970-01-01 01:00:00.000000000 +0100
+diff -Naur shinken-1.0.1.orig/shinken/modules/active_directory_ui.py shinken-1.0.1/shinken/modules/active_directory_ui.py
+--- shinken-1.0.1.orig/shinken/modules/active_directory_ui.py	2012-03-13 12:52:25.000000000 +0100
++++ shinken-1.0.1/shinken/modules/active_directory_ui.py	1970-01-01 01:00:00.000000000 +0100
 @@ -1,223 +0,0 @@
 -#!/usr/bin/python
 -#Copyright (C) 2009 Gabes Jean, naparuba@gmail.com
