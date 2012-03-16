@@ -273,16 +273,20 @@ def read_info():
     for f in os.listdir(info_dir):
         if f.endswith(".info"):
             for line in file(info_dir + "/" + f):
-                # Skip comment and empty lines
-                if line.startswith('#') or line.strip() == '':
-                    continue
-                var, value = line.split('=')
-                value = value.strip()
-                if var.endswith("+"):
-                    var = var[:-1] # remove +
-                    g_info[var.strip()] += " " + value
-                else:
-                    g_info[var.strip()] = value
+                try:
+                    line = line.strip()
+                    # Skip comment and empty lines
+                    if line.startswith('#') or line == '':
+                        continue
+                    var, value = line.split('=')
+                    value = value.strip()
+                    if var.endswith("+"):
+                        var = var[:-1] # remove +
+                        g_info[var.strip()] += " " + value
+                    else:
+                        g_info[var.strip()] = value
+                except Exception, e:
+                    bail_out('Unable to parse line "%s" in file "%s"' % (line, info_dir + "/" + f))
 
 def read_skel_permissions():
     global g_skel_permissions
