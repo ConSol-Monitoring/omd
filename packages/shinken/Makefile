@@ -35,6 +35,14 @@ SQLITE=pysqlite-2.6.0
 SQLITE_FILE=$(SQLITE).tar.gz
 SQLITE_URL=http://pysqlite.googlecode.com/files/$(SQLITE_FILE)
 #
+# MongoDB
+MONGODB=mongodb-linux-i686-static-2.0.3
+ifeq ($(shell uname -m),x86_64)
+  MONGODB=mongodb-linux-x86_64-static-legacy-2.0.3
+endif
+MONGODB_FILE=$(MONGODB).tgz
+MONGODB_URL=http://fastdl.mongodb.org/linux/$(MONGODB_FILE)
+#
 # This is where the python modules are going to be installed to
 LOCALPYTHONDIR=$(DESTDIR)$(OMD_ROOT)/lib/python
 
@@ -65,6 +73,8 @@ build:
 	tar xzf $(STOOLS_FILE)
 	test -f $(CTYPES_FILE) || wget $(CTYPES_URL)
 	tar xzf $(CTYPES_FILE)
+	test -f $(MONGODB_FILE) || wget $(MONGODB_URL)
+	tar xzf $(MONGODB_FILE)
 	#test -f $(SQLITE_FILE) || wget $(SQLITE_URL)
 	#tar xzf $(SQLITE_FILE)
 	if [ $(DISTRO_NAME) = "CENTOS" ] && [ \
@@ -89,6 +99,7 @@ install:
 	$(MAKE) installpyro
 	$(MAKE) installmp
 	$(MAKE) installjson
+	$(MAKE) installmongodb
 	echo "distro is " $(DISTRO_NAME)
 	if [ $(DISTRO_NAME) = "CENTOS" ]; then \
 		$(MAKE) installctypes; \
@@ -183,6 +194,11 @@ installctypes:
 		--install-scripts=$(DESTDIR)$(OMD_ROOT)/tmp \
 		--install-data=$(DESTDIR)$(OMD_ROOT)/tmp )
 
+installmongodb:
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/bin
+	for tmpfile in $(MONGODB)/bin/* ; do \
+		install -m 755 $$tmpfile $(DESTDIR)$(OMD_ROOT)/bin ; \
+	done
 
 
 clean:
@@ -193,3 +209,4 @@ clean:
 	rm -rf $(STOOLS)
 	rm -rf $(CTYPES)
 	rm -rf $(SQLITE)
+	rm -rf $(MONGODB)
