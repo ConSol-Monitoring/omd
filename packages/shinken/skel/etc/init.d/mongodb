@@ -69,7 +69,7 @@ OPTIONS="--quiet --config $CFG_FILE"
 # It returns 1 when no process can be found and echos the PID while
 # returning 0 when a process can be found.
 pidof_mongod() {
-    test -f $PID_FILE && cat $PID_FILE
+    pgrep -u $OMD_SITE -o -P 1 -fx "$BIN $OPTIONS" 2>/dev/null
 }
 
 verify_config() {
