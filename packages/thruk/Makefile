@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 NAME     = Thruk
-VERSION  = 1.22
+VERSION  = 1.24
 DIR      = $(NAME)-$(VERSION)
 PERLARCH = $(shell $(PERL) -e 'use Config; print $$Config{archname}')
 
@@ -34,7 +34,7 @@ install:
 
 skel:
 	# logfile has to be group writeable for shared apache
-	mkdir -p $(SKEL)/var/log
+	mkdir -p $(SKEL)/var/log $(SKEL)/var/thruk
 	touch $(SKEL)/var/log/thruk.log
 	mkdir -p $(SKEL)/etc/thruk/plugins-enabled
 	# set links for enabled plugins
