@@ -53,7 +53,7 @@ for my $core (qw/nagios icinga/) {
     my $now  = $tpd->format(time(), '%Y-%m-%d %H:%M:%S');
     $now     =~ s/\ /+/gmx;
     $now     =~ s/:/%3A/gmx;
-diag($now);
+
     my $preps = [
       { cmd => $omd_bin." config $site set CORE $core" },
       { cmd => $omd_bin." config $site set MOD_GEARMAN on" },
