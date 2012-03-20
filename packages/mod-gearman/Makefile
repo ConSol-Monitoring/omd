@@ -12,7 +12,7 @@ build:
 	tar xzf mod_gearman-$(VERSION).tar.gz
 	#for p in patches/*.patch ; do \
 	#    echo "applying $$p..." ; \
-	#    ( cd $(DIR) ; patch -p1 -b ) < $$p ; \
+	#    ( cd $(DIR) ; patch -p1 -b ) < $$p || exit 1; \
 	#done
 	cd $(DIR) && \
 	export LIBRARY_PATH=$(shell pwd)/../gearmand/gearmand-${GEARMAND}/libgearman/.libs && \
@@ -44,7 +44,7 @@ skel:
 	cp $(DIR)/etc/mod_gearman_worker.conf.in $(SKEL)/etc/mod-gearman/worker.cfg
 	for p in patches/*.skel_patch ; do \
 	    echo "applying $$p..." ; \
-	    ( cd $(SKEL) ; patch -p1 ) < $$p ; \
+	    ( cd $(SKEL) ; patch -p1 ) < $$p || exit 1; \
 	done
 	mkdir -p $(SKEL)/var
 	cd $(SKEL)/var && ln -s gearman mod_gearman
