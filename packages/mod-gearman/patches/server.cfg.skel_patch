@@ -36,7 +36,7 @@
 @@ -125,6 +124,6 @@
  # Performance data is just written to the gearman
  # queue.
- # Default no
+ # Default: no
 -perfdata=no
 +config=###ROOT###/etc/mod-gearman/perfdata.conf
  
