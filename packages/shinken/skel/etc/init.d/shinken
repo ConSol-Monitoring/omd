@@ -436,6 +436,10 @@ case "$CMD" in
     [ "$VERBOSE" != no ] && echo "Stopping $NAME..."
     do_stop
     ;;
+  reload)
+    [ "$VERBOSE" != no ] && echo "Reloading arbiter..."
+    $0 restart arbiter
+    ;;
   restart)
     [ "$VERBOSE" != no ] && echo "Restarting $NAME..."
     do_stop
