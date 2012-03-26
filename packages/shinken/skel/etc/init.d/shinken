@@ -452,7 +452,7 @@ case "$CMD" in
     do_check
     case "$?" in
         0) echo OK ;;
-        *) echo FAIL ;; # Failed config check
+        *) echo FAIL; exit 1;; # Failed config check
     esac
     ;;
   *)
