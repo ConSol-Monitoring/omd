@@ -60,10 +60,10 @@ fi
 # time an OMD package is being installed. The admin
 # might have deactivated the script himself and does
 # not want to make it implicitely active again.
+ACTIVATE_INIT=0
 if [ ! -e /omd/versions/default ] ; then
     echo "Activating init script /etc/init.d/omd"
-    chkconfig --add omd
-    chkconfig omd on
+    ACTIVATE_INIT=1
 fi
 
 echo "New default version is %{version}."
@@ -72,6 +72,13 @@ ln -sfn /omd/versions/default/bin/omd /usr/bin/omd
 ln -sfn /omd/versions/default/share/man/man8/omd.8.gz /usr/share/man/man8/omd.8.gz
 ln -sfn /omd/versions/default/share/omd/omd.init /etc/init.d/omd
 ln -sfn /omd/versions/default/share/omd/apache.conf @APACHE_CONFDIR@/zzz_omd.conf
+
+# If the init script has been marked as to be activated
+# really activate the init script now
+if [ $ACTIVATE_INIT -eq 1 ]; then
+    chkconfig --add omd
+    chkconfig omd on
+fi
 
 # SLES: make sure apache modules are activated
 if which a2enmod >/dev/null 2>&1
