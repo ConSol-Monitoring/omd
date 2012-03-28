@@ -1945,6 +1945,7 @@ def main_help(args=[], options={}):
         sys.stdout.write(" omd %-10s %-16s %s\n" % (command, synopsis, descr))
     sys.stdout.write("\nGeneral Options:\n"
                      " -V <version>                    set specific version, useful in combination with update/create\n"
+                     " omd COMMAND -h, --help          show available options of COMMAND\n"
                     )
 
 def main_setup(args, options={}):
@@ -2757,25 +2758,25 @@ commands = [
     ""),
 
   ( "version",   False, 0, 0, False, "[SITE]",        main_version,
-    [("bare", "b", False)],
+    [("bare", "b", False, "output plain text optimized for parsing")],
     "Show version of OMD",
     ""),
 
   ( "versions",  False, 0, 0, False, "",        main_versions,
-    [("bare", "b", False)],
+    [("bare", "b", False, "output plain text optimized for parsing")],
     "List installed OMD versions",
     ""),
 
   ( "sites",     False, 0, 0, False, "", main_sites,
-    [("bare", "b", False)],
+    [("bare", "b", False, "output plain text for easy parsing")],
     "Show list of sites",
     ""),
 
   ( "create",    True,  1, 0, False, "",        main_create,
-    [ ( "uid",      "u",  True ), 
-      ( "gid",      "g",  True ), 
-      ( "reuse",    None, False ), # do not create os user/group
-      ( "no-init",  "n",  False ), # create site in disabled state and without home data
+    [ ( "uid", "u", True, "create site user with UID ARG" ), 
+      ( "gid", "g", True, "create site group with GID ARG" ),
+      ( "reuse", None, False, "do not create a site user, reuse existing one" ),
+      ( "no-init",  "n",  False, "leave new site directory empty (a later omd init does this"),
     ],
     "Create a new site (-u UID, -g GID)",
 
@@ -2791,8 +2792,8 @@ commands = [
     "Populate site directory with default files and enable the site", ""),
 
   ( "rm",        True,  1, 1, True, "",        main_rm,
-    [ ( "reuse", None, False ),
-      ( "kill", None, False )],
+    [ ( "reuse", None, False, "assume --reuse on create, do not delete site user/group" ),
+      ( "kill", None, False, "kill processes of the site before deleting it" )],
     "Remove a site (and its data)",
 
     "PLEASE NOTE: This action removes all configuration files\n"
@@ -2808,7 +2809,7 @@ commands = [
     "- Restart the system wide apache daemon\n"),
 
   ( "disable",   True,  1, 1, False, "", main_disable,
-    [( "kill", None, False )],
+    [( "kill", None, False, "kill processes using tmpfs before unmounting it" )],
     "Disable a site (stop it, unmount tmpfs, remove Apache hook)",
     "" ),
 
@@ -2817,56 +2818,56 @@ commands = [
     "Enable a site (reenable a formerly disabled site)",
     "" ),
 
-
-
   ( "mv",        True,  1, 1, False, "NEWNAME", lambda args, opts: main_mv_or_cp("mv", args, opts),
-    [ ( "uid", "u", True ), 
-      ( "gid", "g", True ),
-      ( "reuse", None, False ),
+    [ ( "uid", "u", True, "create site user with UID ARG" ), 
+      ( "gid", "g", True, "create site group with GID ARG" ),
+      ( "reuse", None, False, "do not create a site user, reuse existing one" ),
+      ( "conflict", None, True, "non-interactive conflict resolution. ARG is overwrite, keepold, abort or ask"),
     ],
     "Rename a site",
     ""),
 
   ( "cp",        True,  1, 1, False, "NEWNAME", lambda args, opts: main_mv_or_cp("cp", args, opts),
-    [ ( "uid", "u", True ), 
-      ( "gid", "g", True ),
-      ( "reuse", None, False ),
-      ( "no-rrds", None, False ), # skip RRD files when copying site
-      ( "no-logs", None, False ), # skip Logfiles when copying site
-      ( "no-past", "N", False),   # skip RRDs and logfiles when copying site
+    [ ( "uid", "u", True, "create site user with UID ARG" ), 
+      ( "gid", "g", True, "create site group with GID ARG" ),
+      ( "reuse", None, False, "do not create a site user, reuse existing one" ),
+      ( "no-rrds", None, False, "do not copy RRD files (performance data"),
+      ( "no-logs", None, False, "do not copy log files"),
+      ( "no-past", "N", False,  "do not copy RRD file and log files"),
+      ( "conflict", None, True, "non-interactive conflict resolution. ARG is overwrite, keepold, abort or ask"),
     ],
     "Make a copy of a site",
     ""),
 
   ( "update",    False, 1, 1, False, "", main_update,
-    [],
+    [ ( "conflict", None, True, "non-interactive conflict resolution. ARG is overwrite, keepold, abort or ask") ],
     "Update site to other version of OMD",
     ""),
 
   ( "start",     False, 2, 1, False, "[SERVICE]", lambda args, opts: main_init_action("start", args, opts),
-    [ ( "version", "V", True ) ],
+    [ ( "version", "V", True, "only start services having version ARG" ) ],
     "Start services of one or all sites",
     ""),
 
   ( "stop",      False, 2, 1, False, "[SERVICE]", lambda args, opts: main_init_action("stop", args, opts),
-    [ ( "version", "V", True ) ],
+    [ ( "version", "V", True, "only stop sites having version ARG" ) ],
     "Stop services of site(s)",
     ""),
 
   ( "restart",   False, 2, 1, False, "[SERVICE]", lambda args, opts: main_init_action("restart", args, opts),
-    [ ( "version", "V", True ) ],
+    [ ( "version", "V", True, "only restart sites having version ARG" ) ],
     "Restart services of site(s)",
     ""),
 
   ( "reload",    False, 2, 1, False, "[SERVICE]", lambda args, opts: main_init_action("reload", args, opts),
-    [ ( "version", "V", True ) ],
+    [ ( "version", "V", True, "only reload sites having version ARG" ) ],
     "Reload services of site(s)",
     ""),
 
   ( "status",    False, 2, 1, False, "[SERVICE]", lambda args, opts: main_init_action("status", args, opts),
-    [ ( "version", "V", True ),
-      ( "auto", None, False), 
-      ( "bare", "b", False) ],
+    [ ( "version", "V", True, "show only sites having version ARG" ),
+      ( "auto", None, False, "show only sites with AUTOSTART = on"), 
+      ( "bare", "b", False, "output plain format optimized for parsing") ],
     "Show status of services of site(s)",
     ""),
 
@@ -2876,7 +2877,7 @@ commands = [
     ""),
 
   ( "diff",      False, 1, 1, False, "([RELBASE])", main_diff,
-    [("bare", "b", False)],
+    [("bare", "b", False, "output plain diff format, no beautifying" )],
     "Shows differences compared to the original version files",
     ""),
 
@@ -2886,8 +2887,8 @@ commands = [
     ""),
 
   ( "umount",      False, 2, 1, False, "", main_umount,
-    [ ( "version", "V", True ),
-      ( "kill", None, False ) ],
+    [ ( "version", "V", True, "unmount only sites with version ARG" ),
+      ( "kill", None, False, "kill processes using the tmpfs before unmounting it" ) ],
     "Umount ramdisk volumes of site(s)",
     ""),
 
@@ -2928,12 +2929,30 @@ def handle_global_option(opt, orig):
                  "Call omd help for available options." % orig)
 
 def parse_command_options(args, options_spec):
+    # Give a short overview over the command specific options
+    # when the user specifies --help:
+    if len(args) and args[0] in [ '-h', '--help' ]:
+        sys.stdout.write("Possible options for this command:\n")
+        for llong, sshort, needarg, help in options_spec:
+            args_text = "%s--%s" % (sshort and "-%s," % sshort or "", llong)
+            sys.stdout.write(" %-15s %3s  %s\n" %(args_text, needarg and "ARG" or "", help))
+        sys.exit(0)
+
     options = {}
+    
     while len(args) >= 1 and args[0][0] == '-':
         opt = args[0]
         args = args[1:]
         entries = []
         if opt.startswith("--"):
+            # Handle --foo=bar
+            if "=" in opt:
+                opt, optarg = opt.split("=", 1)
+                args = [ optarg ] + args
+                for e in options_spec:
+                    if e[0] == opt[2:] and not e[2]:
+                        bail_out("The option %s does not take an argument" % opt)
+
             for e in options_spec:
                 if e[0] == opt[2:]:
                     entries = [e]
@@ -2946,7 +2965,7 @@ def parse_command_options(args, options_spec):
         if len(entries) == 0:
             bail_out("Invalid option '%s'" % opt)
 
-        for llong, sshort, needs_arg in entries:
+        for llong, sshort, needs_arg, help in entries:
             arg = None
             if needs_arg:
                 if len(args) == 0:
@@ -2954,6 +2973,7 @@ def parse_command_options(args, options_spec):
                 arg = args[0]
                 args = args[1:]
             options[llong] = arg
+    print args, options
     return (args, options)
 
 
