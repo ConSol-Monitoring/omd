@@ -5,6 +5,7 @@ This file documents the revision history for the Open Monitoring Distribution
             - new option --kill for umount, rm and disable, that will kill
               processes using tmpfs before unmounting it
             - output argument help when calling omd COMMAND --help
+            - new option --conflict=HOW for non-interactive omd cp/mv/update.
           - mod_python:
             - Fix "omd stop apache", which was sometimes timing out
             - Fix several DeprecationWarning messages when using python 2.6

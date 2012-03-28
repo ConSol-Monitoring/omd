@@ -148,6 +148,14 @@ def dialog_message(text, buttonlabel="OK"):
     run_dialog(["--ok-label", buttonlabel, "--msgbox", text, "0", "0"])
 
 def user_confirms(title, message, relpath, yes_choice, yes_text, no_choice, no_text):
+    # Handle non-interactive mode
+    if opt_conflict == "abort":
+        bail_out("Update aborted.")
+    elif opt_conflict == "install":
+        return False
+    elif opt_conflict == "keepold":
+        return True
+
     user_path = g_sitedir + "/" + relpath
     options = [ (yes_choice, yes_text),
                 (no_choice,  no_text),
@@ -944,10 +952,17 @@ def patch_template_file(src, dst, old, new):
         ]
 
         while True:
-            choice = ask_user_choices("Conflicts in " + src + "!", "I've tried to merge your changes with the renaming of %s into %s.\n"
-               "Unfortunately there are conflicts with your changes. \n"
-               "You have the following options: " %
+            if opt_conflict in [ "abort", "install" ]:
+                choice = opt_conflict
+            elif opt_conflict == "keepold":
+                choice = "restore"
+            else:
+                choice = ask_user_choices("Conflicts in " + src + "!", 
+                   "I've tried to merge your changes with the renaming of %s into %s.\n"
+                   "Unfortunately there are conflicts with your changes. \n"
+                   "You have the following options: " %
                     ( old, new ), options)
+
             if choice == "abort":
                 bail_out("Renaming aborted.")
             elif choice == "keep":
@@ -1035,7 +1050,10 @@ def merge_update_file(relpath, old_version, new_version):
                     skel_content = file(p).read()
                     break
                 except:
-                    if not user_confirms("Skeleton file of version %s not readable" % version,
+                    # Do not ask the user in non-interactive mode.
+                    if opt_conflict in [ "abort", "install" ]:
+                        bail_out("Skeleton file '%s' of version %s not readable." % (p, version))
+                    elif opt_conflict == "keepold" or not user_confirms("Skeleton file of version %s not readable" % version,
                         "The file '%s' is not readable for the site user. "
                         "This is most probably due a bug in release 0.42. "
                         "You can either fix that problem by making the file "
@@ -1091,10 +1109,16 @@ def merge_update_file(relpath, old_version, new_version):
     ]
 
     while True:
-        choice = ask_user_choices("Conflicts in " + relpath + "!", "I've tried to merge the changes from version %s to %s into %s.\n"
-           "Unfortunately there are conflicts with your changes. \n"
-           "You have the following options: " %
-                ( old_version, new_version, relpath ), options)
+        if opt_conflict in [ "install", "abort" ]:
+            choice = opt_conflict
+        elif opt_conflict == "keepold":
+            choice = "restore"
+        else:
+            choice = ask_user_choices("Conflicts in " + relpath + "!", "I've tried to merge the changes from version %s to %s into %s.\n"
+               "Unfortunately there are conflicts with your changes. \n"
+               "You have the following options: " %
+                    ( old_version, new_version, relpath ), options)
+
         if choice == "abort":
             bail_out("Update aborted.")
         elif choice == "keep":
@@ -2282,7 +2306,16 @@ def main_enable(args, options):
     restart_apache()
 
 
+def set_conflict_option(options):
+    global opt_conflict
+    opt_conflict = options.get("conflict", "ask")
+
+    if opt_conflict not in [ "ask", "install", "keepold", "abort" ]:
+        bail_out("Argument to --conflict must be one of ask, install, keepold and abort.")
+
+
 def main_mv_or_cp(what, args, options={}):
+    set_conflict_option(options)
     action = what == "mv" and "rename" or "copy"
 
     global g_sitename
@@ -2552,6 +2585,8 @@ def walk_skel(root, handler, args, exclude_if_in = None, relbase = '.'):
 
 
 def main_update(args, options={}):
+    set_conflict_option(options)
+
     if not site_is_stopped(g_sitename):
         bail_out("Please completely stop '%s' before updating it." % g_sitename)
 
@@ -2822,7 +2857,7 @@ commands = [
     [ ( "uid", "u", True, "create site user with UID ARG" ), 
       ( "gid", "g", True, "create site group with GID ARG" ),
       ( "reuse", None, False, "do not create a site user, reuse existing one" ),
-      ( "conflict", None, True, "non-interactive conflict resolution. ARG is overwrite, keepold, abort or ask"),
+      ( "conflict", None, True, "non-interactive conflict resolution. ARG is install, keepold, abort or ask"),
     ],
     "Rename a site",
     ""),
@@ -2834,13 +2869,13 @@ commands = [
       ( "no-rrds", None, False, "do not copy RRD files (performance data"),
       ( "no-logs", None, False, "do not copy log files"),
       ( "no-past", "N", False,  "do not copy RRD file and log files"),
-      ( "conflict", None, True, "non-interactive conflict resolution. ARG is overwrite, keepold, abort or ask"),
+      ( "conflict", None, True, "non-interactive conflict resolution. ARG is install, keepold, abort or ask"),
     ],
     "Make a copy of a site",
     ""),
 
   ( "update",    False, 1, 1, False, "", main_update,
-    [ ( "conflict", None, True, "non-interactive conflict resolution. ARG is overwrite, keepold, abort or ask") ],
+    [ ( "conflict", None, True, "non-interactive conflict resolution. ARG is install, keepold, abort or ask") ],
     "Update site to other version of OMD",
     ""),
 
@@ -2973,7 +3008,6 @@ def parse_command_options(args, options_spec):
                 arg = args[0]
                 args = args[1:]
             options[llong] = arg
-    print args, options
     return (args, options)
 
 

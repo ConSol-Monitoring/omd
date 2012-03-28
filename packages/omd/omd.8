@@ -174,6 +174,10 @@ The following options can be used:
 \fB-u UID\fP Force a specific user id for the new user
 
 \fB-g GID\fP Force a specific group id for the group of the new user
+
+\fB--conflict=HOW\fP non-interactively resolve merge conflicts. See
+section about \fBomd update\fP for details.
+
 .TP
 .B omd cp [OPTIONS] SITE NEWNAME     
 Make a copy of a site. A new site with the name NEWSITE will be created
@@ -200,12 +204,51 @@ The option \fB-N\fP or \fB--no-past\fP combines both \fB--no-rrds\fP and \fB--no
 This is very useful especially for copies that are created for testing
 purposes.
 
+\fB--conflict=HOW\fP non-interactively resolve merge conflicts. See
+section about \fBomd update\fP for details.
+
 .TP
-.B omd update     SITE             
-Update SITE to the current default version of OMD. The default version
-is usually the version that was installed most lately. The sites configuration
-files will be updated as well. OMD tries hard to merge your changes with
-changes due to the new version but might need your help in doing so.
+.B omd [-f, --force] [ -V VERSION ] update [ --conflict=HOW ] SITE             
+Update SITE to the current default version of OMD or to the version
+\fBVERSION\fP, if the option \fB-V\fP is specified.  The default version is
+usually the version that was installed most lately. It can be changed
+with \fBomd setversion\fP. 
+
+Those configuration files of the site that were initially created
+will be updated if the new version brings changes in these files. OMD tries hard to
+merge your changes with changes due to the new version but might need your
+help in doing so. If a merge conflict occurs, you will be asked for an
+interactive resolution. Note: OMD does \fBno\fP data migration in user-created
+configuration files!
+
+The option \fB-f/--force\fP will skip asking whether the user is sure to
+update. If you have more than two versions of omd installed, you should
+also specify \fB-V\fP if you want to avoid user interaction.
+
+With \fB--conflict\fP (in addition to \fB-f\fP and \fB-V\fP) you can make
+the whole update process non-interactive. There are four possible arguments
+to \fB--conflict\fP:
+
+.B --conflict=keepold
+Whenever your local changes cannot be merged with changes introduced by the
+target version in a file , i.e. when a merge conflict occurs, then keep the current contents
+and permissions of the file unchanged (this is the same as the option \fBr\fPestore
+in the merge dialog or \fBk\fPeep in the dialog for conflicts in permissions and file
+types).
+
+.B --conflict=install
+In case of a merge conflict install the default file of the target version and
+drop your changes.
+
+.B --conflict=abort
+In case of a merge conflict abort the update. Please note that currently there is
+no roll back (yet). Files already updated stay updated. The file that caused the
+conflict will contain merge indicators (>>>>>> and <<<<<<). The version will not
+be switched.
+
+.B --conflict=ask
+This is the default behaviour of interactive conflict resolution.
+
 .TP
 .B omd [-f, --force] start      [SITE] [SERVICE]
 Start a site, i.e. start all activated daemons and services of a site. 
