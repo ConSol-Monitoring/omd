@@ -8,7 +8,7 @@ This file documents the revision history for the Open Monitoring Distribution
             - Fix "omd stop apache", which was sometimes timing out
             - Fix several DeprecationWarning messages when using python 2.6
           - NagVis: Updated to NagVis 1.6.4
-          - Thruk: Update to 1.24
+          - Thruk: Update to 1.26
           - RRDtool: Update to 1.4.7
           - PNP4Nagios: Update to 0.6.17
           - Webinject: Update to 1.72
