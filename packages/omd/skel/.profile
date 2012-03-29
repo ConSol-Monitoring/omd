@@ -6,9 +6,7 @@ PATH=~/local/bin:~/bin:~/local/lib/perl5/bin:$PATH
 export LD_LIBRARY_PATH=$OMD_ROOT/local/lib:$OMD_ROOT/lib
 
 # enable local perl env
-perlarch=$(perl -e 'use Config; print $Config{archname}')
-export PERL5LIB="$OMD_ROOT/lib/perl5/lib/perl5/${perlarch}:$OMD_ROOT/lib/perl5/lib/perl5:$PERL5LIB"
-export PERL5LIB="$OMD_ROOT/local/lib/perl5/lib/perl5/${perlarch}:$OMD_ROOT/local/lib/perl5/lib/perl5:$PERL5LIB"
+export PERL5LIB="$OMD_ROOT/local/lib/perl5/lib/perl5:$OMD_ROOT/lib/perl5/lib/perl5:$PERL5LIB"
 export PATH="$OMD_ROOT/lib/perl5/bin:$PATH"
 export MODULEBUILDRC="$OMD_ROOT/.modulebuildrc"
 export PERL_MM_OPT=INSTALL_BASE="$OMD_ROOT/local/lib/perl5/"
@@ -17,7 +15,7 @@ export PYTHONPATH="$OMD_ROOT/lib/python:$OMD_ROOT/local/lib/python"
 export MAILRC="$OMD_ROOT/etc/mail.rc"
 
 
-if [ -f ~/etc/environment ] 
+if [ -f ~/etc/environment ]
 then
     eval $(egrep -v '^[[:space:]]*(#|$)' < ~/etc/environment | sed 's/^/export /')
 fi

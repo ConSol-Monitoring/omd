@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 NAME     = Thruk
-VERSION  = 1.22
+VERSION  = 1.24
 DIR      = $(NAME)-$(VERSION)
 PERLARCH = $(shell $(PERL) -e 'use Config; print $$Config{archname}')
 
@@ -12,7 +12,7 @@ build:
 	tar xzf $(DIR).tar.gz
 	for p in patches/*.patch ; do \
 	    echo "applying $$p..." ; \
-	    ( cd $(DIR) ; patch -p1 ) < $$p ; \
+	    ( cd $(DIR) ; patch -p1 ) < $$p || exit 1; \
 	done
 	export PERL5LIB=$(P5TMPDIST)/dest/lib/perl5; \
 	    cd $(DIR) ; echo "" | $(PERL) Makefile.PL && make distclean
@@ -34,7 +34,7 @@ install:
 
 skel:
 	# logfile has to be group writeable for shared apache
-	mkdir -p $(SKEL)/var/log
+	mkdir -p $(SKEL)/var/log $(SKEL)/var/thruk
 	touch $(SKEL)/var/log/thruk.log
 	mkdir -p $(SKEL)/etc/thruk/plugins-enabled
 	# set links for enabled plugins
@@ -45,7 +45,7 @@ skel:
 	cp $(DIR)/thruk.conf $(SKEL)/etc/thruk/thruk.conf
 	for p in patches/*.skel_patch ; do \
 	    echo "applying $$p..." ; \
-	    ( cd $(SKEL) ; patch -p1 -b ) < $$p ; \
+	    ( cd $(SKEL) ; patch -p1 -b ) < $$p || exit 1; \
 	done
 	find $(SKEL) -name \*.orig -exec rm {} \;
 

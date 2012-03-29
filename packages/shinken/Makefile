@@ -43,6 +43,11 @@ endif
 MONGODB_FILE=$(MONGODB).tgz
 MONGODB_URL=http://fastdl.mongodb.org/linux/$(MONGODB_FILE)
 #
+# Python bindings for MongoDB
+PYMONGO=pymongo-2.1.1
+PYMONGO_FILE=$(PYMONGO).tar.gz
+PYMONGO_URL=http://pypi.python.org/packages/source/p/pymongo/$(PYMONGO_FILE)
+#
 # This is where the python modules are going to be installed to
 LOCALPYTHONDIR=$(DESTDIR)$(OMD_ROOT)/lib/python
 
@@ -73,6 +78,8 @@ build:
 	tar xzf $(STOOLS_FILE)
 	test -f $(CTYPES_FILE) || wget $(CTYPES_URL)
 	tar xzf $(CTYPES_FILE)
+	test -f $(PYMONGO_FILE) || wget $(PYMONGO_URL)
+	tar xzf $(PYMONGO_FILE)
 	test -f $(MONGODB_FILE) || wget $(MONGODB_URL)
 	tar xzf $(MONGODB_FILE)
 	#test -f $(SQLITE_FILE) || wget $(SQLITE_URL)
@@ -99,6 +106,7 @@ install:
 	$(MAKE) installpyro
 	$(MAKE) installmp
 	$(MAKE) installjson
+	$(MAKE) installpymongo
 	$(MAKE) installmongodb
 	echo "distro is " $(DISTRO_NAME)
 	if [ $(DISTRO_NAME) = "CENTOS" ]; then \
@@ -194,6 +202,13 @@ installctypes:
 		--install-scripts=$(DESTDIR)$(OMD_ROOT)/tmp \
 		--install-data=$(DESTDIR)$(OMD_ROOT)/tmp )
 
+installpymongo:
+	( cd $(PYMONGO) ; python setup.py install \
+		--home=$(DESTDIR)$(OMD_ROOT) \
+		--install-platlib=$(LOCALPYTHONDIR) \
+		--install-scripts=$(DESTDIR)$(OMD_ROOT)/tmp \
+		--install-data=$(DESTDIR)$(OMD_ROOT)/tmp )
+
 installmongodb:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/bin
 	for tmpfile in $(MONGODB)/bin/* ; do \
@@ -209,4 +224,5 @@ clean:
 	rm -rf $(STOOLS)
 	rm -rf $(CTYPES)
 	rm -rf $(SQLITE)
+	rm -rf $(PYMONGO)
 	rm -rf $(MONGODB)
