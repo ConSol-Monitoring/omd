@@ -63,6 +63,10 @@ then
     then
         echo "SLES$SEP${VERSION}SP1"
         exit 0
+    elif [ "$VERSION" = 11 -a "$SP" = 2 ] 
+    then
+        echo "SLES$SEP${VERSION}SP2"
+        exit 0
     elif [ "$VERSION" = 11 ]
     then
         echo "SLES$SEP${VERSION}"
