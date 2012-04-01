@@ -46,6 +46,7 @@ skel:
 	    echo "applying $$p..." ; \
 	    ( cd $(SKEL) ; patch -p1 ) < $$p || exit 1; \
 	done
+	find $(SKEL)/etc/mod-gearman -name \*.orig -exec rm {} \;
 	mkdir -p $(SKEL)/var
 	cd $(SKEL)/var && ln -s gearman mod_gearman
 
