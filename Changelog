@@ -25,6 +25,9 @@ This file documents the revision history for the Open Monitoring Distribution
             - add MongoDB as backend for livestatus logs
           - Switch Check_MK to version 1.1.12p7
           - Support SLES11 SP2
+          - Dokuwiki
+            - Updated to Version 2012-01-25 Angua
+            - Template Vector now available
 
 0.52     Dec 22 2011
           - Switch Check_MK to version 1.1.12p6 (Please refer to the migration notes
