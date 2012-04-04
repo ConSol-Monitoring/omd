@@ -651,9 +651,12 @@ def tmpfs_mounted(sitename):
     # different from tmp_path. We just check the suffix therefore.
     path_suffix = "sites/%s/tmp" % sitename
     for line in file("/proc/mounts"):
-        device, mp, fstype, options, dump, fsck = line.split()
-        if mp.endswith(path_suffix) and fstype == 'tmpfs':
-            return True
+        try:
+            device, mp, fstype, options, dump, fsck = line.split()
+            if mp.endswith(path_suffix) and fstype == 'tmpfs':
+                return True
+        except:
+            continue
     return False
 
 def create_tmpfs(sitename):
