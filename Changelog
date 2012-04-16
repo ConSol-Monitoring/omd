@@ -1,4 +1,8 @@
 This file documents the revision history for the Open Monitoring Distribution
+0.56
+         - RPMS: Not checking for removed version during pkg release update
+                 (Does not mean omd version update.)
+
 0.54     Apr 02 2012
           - omd:
             - FIX: Fixed "omd umount" command when running without specific site
