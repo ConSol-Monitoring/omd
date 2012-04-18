@@ -31,6 +31,11 @@ case "$1" in
         echo "none: disable"
     ;;
     set)
+        # Skip this hook when NagVis configuration directory does not exist
+        if [ ! -d $OMD_ROOT/etc/nagvis ]; then
+            exit 0
+        fi
+
         CFG_FILE=$OMD_ROOT/etc/nagvis/conf.d/urls.ini.php
         GUI=$2
         if [ "$GUI" == "auto" ]; then
@@ -45,7 +50,7 @@ case "$1" in
         fi
 
         if [ ! -d $OMD_ROOT/etc/nagvis/conf.d ]; then
-            mkdir $OMD_ROOT/etc/nagvis/conf.d
+            mkdir -p $OMD_ROOT/etc/nagvis/conf.d
         fi
         
         if [ "$GUI" == "check_mk" ]; then
