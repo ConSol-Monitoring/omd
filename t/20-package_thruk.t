@@ -13,7 +13,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 2058 );
+plan( tests => 2082 );
 
 ##################################################
 # create our test site
@@ -42,7 +42,8 @@ my $tests = [
   { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -t 60 -H localhost -a omdadmin:omd -u /$site/thruk/ -e 200'",   like => '/HTTP OK:/' },
   { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -t 20 -H localhost -a omdadmin:omd -u \"/$site/thruk/cgi-bin/status.cgi?hostgroup=all&style=hostdetail\" -e 200 -r \"Host Status Details For All Host Groups\"'", like => '/HTTP OK:/' },
   { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -t 20 -H localhost -a omdadmin:omd -u \"/$site/thruk/cgi-bin/tac.cgi\" -e 200 -r \"Logged in as <i>omdadmin<\/i>\"'", like => '/HTTP OK:/' },
-  { cmd => "/bin/su - $site -c 'bin/thruk -l'", like => '/testsite/' },
+  { cmd => "/bin/su - $site -c 'bin/thruk -l'", like => "/$site/" },
+  { cmd => "/bin/su - $site -c 'bin/thruk -l --local'", like => "/$site/" },
 ];
 my $urls = [
 # static html pages

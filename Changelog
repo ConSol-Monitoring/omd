@@ -7,6 +7,7 @@ This file documents the revision history for the Open Monitoring Distribution
           - RPMS: Not checking for removed version during pkg release update
                  (Does not mean omd version update.)
           - Mod-Gearman: Updated to version 1.2.8
+          - Thruk: Update to 1.28
 
 0.54     Apr 02 2012
           - omd:
