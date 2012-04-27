@@ -708,7 +708,7 @@ def unmount_tmpfs(sitename, output = True, kill = False):
             if output:
                 sys.stdout.write("Cleaning up temp filesystem...")
                 sys.stdout.flush()
-            delete_user_file(tmp)
+            delete_directory_contents(tmp)
             if output:
                 ok()
         return True
@@ -790,6 +790,9 @@ def delete_user_file(user_path):
     else:
         os.remove(user_path)
 
+def delete_directory_contents(d):
+    for f in os.listdir(d):
+        delete_user_file(d + '/' + f)
 
 def create_skeleton_file(skelbase, userbase, relpath, replacements):
     skel_path = skelbase + "/" + relpath
