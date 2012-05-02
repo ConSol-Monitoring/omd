@@ -576,7 +576,7 @@ sub _diag_lint_errors_and_remove_some_exceptions {
     LINT_ERROR: for my $error ( $lint->errors ) {
         my $err_str = $error->as_string;
         for my $exclude_pattern (
-            "<IMG SRC=[^>]*>\ tag\ has\ no\ HEIGHT\ and\ WIDTH\ attributes\.",
+            "<IMG SRC=[^>]*>\ tag\ has\ no\ HEIGHT\ and\ WIDTH\ attributes",
             "<IMG SRC=[^>]*>\ does\ not\ have\ ALT\ text\ defined",
             "<input>\ is\ not\ a\ container\ \-\-\ <\/input>\ is\ not\ allowed",
             "Unknown attribute \"start\" for tag <div>",
