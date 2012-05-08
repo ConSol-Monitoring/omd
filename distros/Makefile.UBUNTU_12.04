@@ -27,6 +27,7 @@ BUILD_PACKAGES += uuid-dev
 BUILD_PACKAGES += snmp
 BUILD_PACKAGES += apache2-dev  # compiling mod_python
 BUILD_PACKAGES += apache2      # compiling mod_python
+BUILD_PACKAGES += libncurses5-dev # compiling mod-gearman
 OS_PACKAGES     =
 OS_PACKAGES    += curl
 OS_PACKAGES    += dialog
