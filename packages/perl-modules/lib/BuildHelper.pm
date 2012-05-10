@@ -97,8 +97,10 @@ sub download_deps {
 # download a module
 # needs a module name like: IO::All
 sub download_module {
-    my $mod = shift;
-    my $ver = shift || 0;
+    my $mod    = shift;
+    my $ver    = shift || 0;
+    my $no_dep = shift || 0;
+    my $quiet  = shift || 0;
 
     print "[INFO] download_module($mod, $ver)\n" if $verbose;
 
@@ -123,9 +125,9 @@ sub download_module {
     if( ! -f $tarball and !defined $already_downloaded{$urlpath}) {
         BuildHelper::cmd('wget --retry-connrefused -q "http://search.cpan.org'.$urlpath.'"');
         $already_downloaded{$urlpath} = 1;
-        BuildHelper::download_deps($tarball);
+        BuildHelper::download_deps($tarball) unless $no_dep == 1;
         push @downloaded, $tarball;
-        print "downloaded $tarball\n";
+        print "downloaded $tarball\n" unless $quiet;
     } else {
         if(!defined $deps_checked{$tarball}) {
             print "$tarball already downloaded\n";
@@ -137,6 +139,13 @@ sub download_module {
         }
     }
     return \@downloaded;
+}
+
+####################################
+sub download_src {
+    my $module = shift;
+    BuildHelper::cmd('wget --retry-connrefused -q "http://thruk.org/libs/src/'.$module.'"');
+    return;
 }
 
 ####################################
@@ -200,7 +209,10 @@ sub get_all_deps {
     our %deps_cache;
     our %deps_files;
     alarm(60);
-    my $data = lock_retrieve('.deps.cache') if -f '.deps.cache';
+    my $data;
+    if(-f '.deps.cache') {
+        $data = lock_retrieve('.deps.cache') or die("cannot read .deps.cache: $!");
+    }
     alarm(0);
     my $cwd = cwd();
     chdir("src") or die("cannot change to src dir");
@@ -316,13 +328,14 @@ sub get_url_for_module {
     our %url_cache;
     $mod = translate_module_name($mod);
     return $url_cache{$mod} if exists $url_cache{$mod};
-    my $out = BuildHelper::cmd("wget --retry-connrefused -O - 'http://search.cpan.org/perldoc?".$mod."'");
-    if($out =~ m/href="(\/CPAN\/authors\/id\/.*?\/.*?(\.tar\.gz|\.tgz|\.zip))">/) {
-        $url_cache{$mod} = $1;
-        return($1);
+    for my $url ('http://search.cpan.org/perldoc?'.$mod, 'http://search.cpan.org/dist/'.$mod) {
+        my $out = BuildHelper::cmd("wget --retry-connrefused -O - '".$url."'", 1);
+        if($out =~ m/href="(\/CPAN\/authors\/id\/.*?\/.*?(\.tar\.gz|\.tgz|\.zip))">/) {
+            $url_cache{$mod} = $1;
+            return($1);
+        }
     }
-    print "got no url:\n";
-    print $out;
+    print "cannot find $mod on cpan\n";
     exit;
 }
 
@@ -405,7 +418,7 @@ sub install_module {
     my $end = time();
     my $duration = $end - $start;
     print "ok (".$duration."s)\n";
-    my $grepv = "grep -v 'Test::' | grep -v 'Linux::Inotify2' | grep -v 'IO::KQueue'";
+    my $grepv = "grep -v 'Test::' | grep -v 'Linux::Inotify2' | grep -v 'IO::KQueue' | grep -v 'prerequisite Carp' | grep -v ExtUtils::Install";
     system("grep 'Warning: prerequisite' $LOG         | $grepv"); # or die('dependency error');
     system("grep 'is not installed' $LOG | grep ' ! ' | $grepv"); # or die('dependency error');
     system("grep 'is installed, but we need version' $LOG | grep ' ! ' | $grepv"); # or die('dependency error');
