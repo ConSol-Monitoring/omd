@@ -54,7 +54,7 @@ case "$1" in start|restart|reload|checkconfig|check)
     mkdir -p $(dirname $CFG_FILE) 
     merge-nagios-config \
         ###ROOT###/etc/mongodb/mongod.cfg \
-        # ###ROOT###/etc/mongodb/mongod.d/* \
+        ###ROOT###/etc/mongodb/mongod.d/* \
         > $CFG_FILE || rm -f $CFG_FILE
 esac
 
