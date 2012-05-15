@@ -83,7 +83,7 @@ MODULES = \
           Module-CoreList-2.65.tar.gz \
           Module-Find-0.10.tar.gz \
           Module-Load-0.22.tar.gz \
-          Monitoring-Availability-0.28.tar.gz \
+          Monitoring-Availability-0.37_2.tar.gz \
           NEXT-0.65.tar.gz \
           Net-HTTP-6.03.tar.gz \
           Net-Server-0.99.tar.gz \
@@ -259,7 +259,7 @@ MODULES = \
           Check-ISA-0.04.tar.gz \
           Class-C3-Adopt-NEXT-0.13.tar.gz \
           DateTime-Locale-0.45.tar.gz \
-          Devel-GlobalDestruction-0.04.tar.gz \
+          Devel-GlobalDestruction-0.05.tar.gz \
           Dist-CheckConflicts-0.02.tar.gz \
           Eval-Closure-0.08.tar.gz \
           Getopt-Long-Descriptive-0.091.tar.gz \
@@ -271,7 +271,7 @@ MODULES = \
           Class-Load-0.19.tar.gz \
           Class-Load-XS-0.04.tar.gz \
           DateTime-TimeZone-1.46.tar.gz \
-          Moose-2.0403.tar.gz \
+          Moose-2.0602.tar.gz \
           MooseX-Aliases-0.10.tar.gz \
           MooseX-AttributeHelpers-0.23.tar.gz \
           MooseX-Emulate-Class-Accessor-Fast-0.00903.tar.gz \
@@ -323,7 +323,14 @@ MODULES = \
           Catalyst-Plugin-Static-Simple-0.29.tar.gz \
           Catalyst-Devel-1.36.tar.gz \
           Email-Date-Format-1.002.tar.gz \
-          MIME-Lite-3.028.tar.gz
+          MIME-Lite-3.028.tar.gz \
+          Class-Method-Modifiers-1.09.tar.gz \
+          Data-Types-0.09.tar.gz \
+          boolean-0.28.tar.gz \
+          Any-Moose-0.18.tar.gz \
+          Tie-IxHash-1.22.tar.gz \
+          MongoDB-0.45.tar.gz
+
 
 
 build:

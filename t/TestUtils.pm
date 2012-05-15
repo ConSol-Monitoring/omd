@@ -788,7 +788,7 @@ sub _tail {
     return unless defined $file;
     diag($name);
     if(-f $file) {
-        diag(`tail -n20 $file`);
+        diag(`tail -n25 $file`);
     } else {
         diag("cannot read $file: $!");
     }

@@ -295,7 +295,7 @@ TestUtils::test_url(
           like => [ '/{"message":"You are not authenticated"/' ]})
 );
 
-diag('Test an invalid login');
+#diag('Test an invalid login');
 TestUtils::test_url(
     url({ url  => '/nagvis/frontend/nagvis-js/index.php',
           post => { _username => 'omdadmin', _password => 'XXX', submit => 'Login' },
@@ -303,20 +303,20 @@ TestUtils::test_url(
                     '/name="_password"/', '/Authentication failed/' ]})
 );
 
-diag('Test logging in using the login dialog');
+#diag('Test logging in using the login dialog');
 TestUtils::test_url(
     url({ url  => '/nagvis/frontend/nagvis-js/index.php',
           post => { _username => 'omdadmin', _password => 'omd', submit => 'Login' },
           like => [ '/<!-- Start header menu -->/', '/Logged in: omdadmin/' ]})
 );
 
-diag('Test logging in using _GET vars');
+#diag('Test logging in using _GET vars');
 TestUtils::test_url(
     url({ url  => '/nagvis/frontend/nagvis-js/index.php?_username=omdadmin&_password=omd',
           like => [ '/<!-- Start header menu -->/', '/Logged in: omdadmin/' ]})
 );
 
-diag('Test logging in at ajax API using _GET vars');
+#diag('Test logging in at ajax API using _GET vars');
 TestUtils::test_url(
     url({ url  => '/nagvis/server/core/ajax_handler.php?mod=General&act=getCfgFileAges&f[]=mainCfg'
                  .'&_username=omdadmin&_password=omd',
@@ -605,7 +605,7 @@ sub site_match_file {
     my $pattern = shift;
     my $path    = '/omd/sites/' . $site . '/' . $fpath;
 
-    diag('Checking file contents of '.$path);
+    #diag('Checking file contents of '.$path);
 
     open FILE, '<'.$path or fail("Could not open file.");
     my $content = do { local $/; <FILE> };
