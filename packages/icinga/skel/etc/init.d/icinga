@@ -180,6 +180,7 @@ case "$1" in start|restart|reload|checkconfig)
     fi
 esac
           
+init-hook $0 $1 pre
 case "$1" in
     start)
          echo -n "Starting icinga..."

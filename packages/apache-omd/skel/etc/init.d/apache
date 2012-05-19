@@ -112,6 +112,7 @@ kill_stale_php_cgis()
     done
 }
 
+init-hook $0 $1 pre
 case $1 in 
   start)
     echo -n "Starting dedicated Apache for site ###SITE###..."
