@@ -54,19 +54,19 @@ case "$1" in
             BIND_IP=127.0.0.1
         else
             BIND_IP=${SELECTED_PORT%%:*}
-            SELECTED_PORT=999
+            SELECTED_PORT=${SELECTED_PORT##*:}
         fi
         PORT=$(next_free_hook $SELECTED_PORT)
         if [ "$PORT" != "$SELECTED_PORT" ] ; then
             echo "MongoDB port $SELECTED_PORT is in use. I've choosen $PORT instead." >&2
             echo "$PORT"
         fi
-        cat <<EOF > $OMD_ROOT/etc/mongodb/port.conf
+        cat <<EOF > $OMD_ROOT/etc/mongodb/mongod.d/port.conf
 port = $PORT
 bind_ip = $BIND_IP
 EOF
     ;;
     depends)
-        [ "$MONGODB" = on ]
+        [ "$CONFIG_MONGODB" = on ]
     ;;
 esac
