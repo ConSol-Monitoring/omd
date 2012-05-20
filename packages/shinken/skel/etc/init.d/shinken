@@ -427,7 +427,7 @@ do_check() {
 #
 # check for our command
 #
-init-hook $0 $1 pre
+__init_hook $0 $1 pre
 case "$CMD" in
   start)
     [ "$VERBOSE" != no ] && echo "Starting $NAME..."

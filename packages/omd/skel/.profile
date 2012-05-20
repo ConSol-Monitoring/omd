@@ -26,7 +26,7 @@ if [ "$BASH" -a -s ~/.bashrc -a -z "$BASHRC" ]; then
     . ~/.bashrc
 fi
 
-function init-hook() {
+__init_hook() {
   # Takes 3 parameters
   # 1. Name of the init-script (can be the full path name, we will only use the file part)
   # 2. The command the init-script was called with (start, stop, reload,..)

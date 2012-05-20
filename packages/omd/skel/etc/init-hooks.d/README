@@ -1,1 +1,21 @@
-In this directory you can put blabla
+In this directory you can put your own custom scripts which extend the startstop-scripts in etc/init.d
+
+The init-hook-scripts are executed by the init-scripts before or after a certain operation. This is defined by following a naming scheme. 
+
+<name of the init-script>-<name of the operation>-<pre or post>
+
+Example:
+nagios-reload-pre will be executed when you run "etc/init.d/nagios reload" or "omd reload nagios" just before the actual reload.
+
+
+Real-live use case:
+Imagine your etc/nagios/conf.d/myconfig is the clone of a git repository. Whenever you reload Nagios, the init-hook-script will do a 
+cd etc/nagios/conf.d/myconfig
+git pull
+and update the config files from the central repository. Then the actual reload follows.
+
+Currently only the following scripts can be used, all others are ignored:
+nagios-*-pre
+shinken-*-pre
+icinga-*-pre
+apache-*-pre
