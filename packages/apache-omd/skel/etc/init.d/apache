@@ -119,9 +119,11 @@ case $1 in
   start)
     echo -n "Starting dedicated Apache for site ###SITE###..."
     if apache_wait_start; then
+      __init_hook $0 $1 post 0
       echo 'OK'
       exit 0
     else
+      __init_hook $0 $1 post 1
       echo 'ERROR'
       exit 1
     fi
@@ -129,9 +131,11 @@ case $1 in
   stop)
     echo -n "Stopping dedicated Apache for site ###SITE###..."
     if apache_wait_stop; then
+      __init_hook $0 $1 post 0
       echo 'OK'
       exit 0
     else
+      __init_hook $0 $1 post 1
       echo 'ERROR'
       exit 1
     fi

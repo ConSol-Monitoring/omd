@@ -32,5 +32,5 @@ __init_hook() {
   # 2. The command the init-script was called with (start, stop, reload,..)
   # 3. A fixed string, either "pre" os "post"
   hook=$(printf "###ROOT###/etc/init-hooks.d/%s-%s-%s" ${1##*/} $2 $3)
-  test -x $hook && $hook ${1##*/} $2 $3
+  test -x $hook && $hook ${1##*/} $2 $3 $4
 }
