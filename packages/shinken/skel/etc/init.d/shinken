@@ -169,6 +169,8 @@ EOTXT
     #fi
     if [ "$MONGODB" = "on" ]; then
       sed -ri 's/^([[:space:]]*modules[[:space:]]*)(.+)/\1mongologs/' $TARGET_ETC/shinken-specific.d/module_livestatus.cfg
+    else
+      sed -ri 's/^([[:space:]]*modules[[:space:]]*)(.+)/\1sqlitelogs/' $TARGET_ETC/shinken-specific.d/module_livestatus.cfg
     fi
 
     #
