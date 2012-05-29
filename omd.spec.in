@@ -100,19 +100,24 @@ chkconfig --add @APACHE_NAME@
 chkconfig @APACHE_NAME@ on
 
 %preun
-# Make sure no sites use that version
-for link in /omd/sites/*/version
-do
-    target=$(readlink $link 2>/dev/null) || continue
-    version=${target##*/}
-    if [ "$version" = %{version} ]
-    then
-        site=${link#/omd/sites/}
-        site=${site%/version}
-        echo "Site $site is still using this version!" >&2
-        exit 1
-    fi
-done
+# ON UNINSTALL: Make sure no sites use that version
+# Do not check this on new release of the same OMD version
+# (I know this has not happend yet in official releases, but might
+#  happen in future? At least I had such a case with my own builds now.)
+if [ $1 = 0 ] ; then
+    for link in /omd/sites/*/version
+    do
+        target=$(readlink $link 2>/dev/null) || continue
+        version=${target##*/}
+        if [ "$version" = %{version} ]
+        then
+            site=${link#/omd/sites/}
+            site=${site%/version}
+            echo "Site $site is still using this version!" >&2
+            exit 1
+        fi
+    done
+fi
      
 
 %postun

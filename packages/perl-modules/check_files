@@ -3,6 +3,11 @@
 echo "checking for duplicate entries..."
 sort Makefile | uniq -d | grep -v '^\s*$'
 
+echo "checking src dir..."
+for file in $(ls -1 src/ | sed 's/\-[0-9\-\.]*\.tar\.gz//g' | sort | uniq -d); do
+    echo "$file is listed twice in src/"
+done
+
 echo "checking for unused files..."
 for file in $(cd src && ls -1 *.gz *.tgz *.zip 2>/dev/null); do
     if [ $(grep -c "$file" Makefile) = 0 ]; then

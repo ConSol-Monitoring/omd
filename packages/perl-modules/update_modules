@@ -23,8 +23,15 @@ for my $file (@modules) {
     my($newname,$newversion) = BuildHelper::file_to_module($tarball);
 
     if(-f $tarball) {
-        print "no update available\n";
+        print "no updates\n";
     } else {
-        print "update available: $newversion\n";
+        print "updated: $newversion\n";
+        my $downloaded = BuildHelper::download_module($modname, 0, 1, 1);
+        if(scalar @{$downloaded} != 1) {
+            die("download failed: ".Dumper($downloaded));
+        }
+        my $new = shift @{$downloaded};
+        `sed -i ../Makefile -e 's|$file|$new|'`;
+        `rm $file`;
     }
 }

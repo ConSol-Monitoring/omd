@@ -2,7 +2,7 @@ include ../../Makefile.omd
 
 SHELL = /bin/bash
 NAME = check_mk
-VERSION = 1.1.12p7
+VERSION = 1.2.0b5
 DIR = $(NAME)-$(VERSION)
 
 .PHONY: skel
@@ -12,6 +12,7 @@ build:
 
 install:
 	export bindir='$(OMD_ROOT)/bin' ; \
+	export sharedir='$(OMD_ROOT)/share/check_mk' ; \
 	export checksdir='$(OMD_ROOT)/share/check_mk/checks' ; \
 	export modulesdir='$(OMD_ROOT)/share/check_mk/modules' ; \
 	export web_dir='$(OMD_ROOT)/share/check_mk/web' ; \
@@ -74,23 +75,34 @@ clean:
 upstream:
 	if [ ! -e check_mk-$(VERSION).tar.gz ] ; then rm -f check_mk-*.tar.gz ; wget http://mathias-kettner.de/download/check_mk-$(VERSION).tar.gz ; fi
 	# check_mk_templates.cfg -> enter correct URLs and paths
-	tar xzf check_mk-$(VERSION).tar.gz --to-stdout check_mk-$(VERSION)/doc.tar.gz | \
-          tar xzf - --to-stdout check_mk_templates.cfg | \
-          sed -e 's-@CHECK_ICMP@-$$USER4$$/lib/nagios/plugins/check_icmp-g' \
-              -e 's-@BINDIR@/--g' \
-              -e 's-@VARDIR@-$$USER4$$/var/check_mk-g' \
-              -e 's-@PNPURL@-/###SITE###/pnp4nagios/-g' \
-              -e 's-@CGIURL@-/###SITE###/nagios/cgi\-bin-g' > \
-          skel/etc/nagios/conf.d/check_mk_templates.cfg
-
+	if tar tvzf check_mk-$(VERSION).tar.gz | grep check_mk-$(VERSION)/share.tar.gz >/dev/null 2>&1; then \
+	    tar xzf check_mk-$(VERSION).tar.gz --to-stdout check_mk-$(VERSION)/share.tar.gz | \
+              tar xzf - --to-stdout check_mk_templates.cfg | \
+              sed -e 's-@CHECK_ICMP@-$$USER4$$/lib/nagios/plugins/check_icmp-g' \
+                  -e 's-@BINDIR@/--g' \
+                  -e 's-@VARDIR@-$$USER4$$/var/check_mk-g' \
+                  -e 's-@PNPURL@-/###SITE###/pnp4nagios/-g' \
+                  -e 's-@CGIURL@-/###SITE###/nagios/cgi\-bin-g' > \
+              skel/etc/nagios/conf.d/check_mk_templates.cfg ; \
+	else \
+	    tar xzf check_mk-$(VERSION).tar.gz --to-stdout check_mk-$(VERSION)/doc.tar.gz | \
+              tar xzf - --to-stdout check_mk_templates.cfg | \
+              sed -e 's-@CHECK_ICMP@-$$USER4$$/lib/nagios/plugins/check_icmp-g' \
+                  -e 's-@BINDIR@/--g' \
+                  -e 's-@VARDIR@-$$USER4$$/var/check_mk-g' \
+                  -e 's-@PNPURL@-/###SITE###/pnp4nagios/-g' \
+                  -e 's-@CGIURL@-/###SITE###/nagios/cgi\-bin-g' > \
+              skel/etc/nagios/conf.d/check_mk_templates.cfg ; \
+	fi
+	
 	# multisite.mk - replace nagiosadmin with omadmin
 	tar xzf check_mk-$(VERSION).tar.gz --to-stdout check_mk-$(VERSION)/conf.tar.gz | \
           tar xzf - --to-stdout multisite.mk-$(VERSION) | \
           sed -e 's/nagiosadmin/omdadmin/g' \
               -e 's@^nagvis_base_url.*@nagvis_base_url = "/###SITE###/nagvis"@' \
                > skel/etc/check_mk/multisite.mk
-
+	
 	# Add correct version number
 	sed -i "s/^check_mk_version.*/check_mk_version            = '$(VERSION)'/" skel/etc/check_mk/defaults
-
+	
 	git add check_mk-$(VERSION).tar.gz

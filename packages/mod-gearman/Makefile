@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 NAME     = mod_gearman
-VERSION  = 1.2.6
+VERSION  = 1.3.0
 GEARMAND = $(shell grep "^VERSION " ../gearmand/Makefile | awk '{ print $$3 }')
 DIR      = mod_gearman-$(VERSION)
 
@@ -15,9 +15,7 @@ build:
 	#    ( cd $(DIR) ; patch -p1 -b ) < $$p || exit 1; \
 	#done
 	cd $(DIR) && \
-	export LIBRARY_PATH=$(shell pwd)/../gearmand/gearmand-${GEARMAND}/libgearman/.libs && \
-	export LD_LIBRARY_PATH=$(shell pwd)/../gearmand/gearmand-${GEARMAND}/libgearman/.libs && \
-	./configure --prefix=$(OMD_ROOT) --enable-embedded-perl && \
+	./configure --prefix=$(OMD_ROOT) --enable-embedded-perl --with-gearman=$(shell pwd)/../gearmand/gearmand-${GEARMAND} && \
 	$(MAKE) -j 1
 
 install:

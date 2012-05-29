@@ -25,3 +25,12 @@ fi
 if [ "$BASH" -a -s ~/.bashrc -a -z "$BASHRC" ]; then
     . ~/.bashrc
 fi
+
+__init_hook() {
+  # Takes 3 parameters
+  # 1. Name of the init-script (can be the full path name, we will only use the file part)
+  # 2. The command the init-script was called with (start, stop, reload,..)
+  # 3. A fixed string, either "pre" os "post"
+  hook=$(printf "###ROOT###/etc/init-hooks.d/%s-%s-%s" ${1##*/} $2 $3)
+  test -x $hook && $hook ${1##*/} $2 $3 $4
+}

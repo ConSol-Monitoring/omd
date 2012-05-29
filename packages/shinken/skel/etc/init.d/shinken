@@ -93,7 +93,7 @@ AVAIL_MODULES="scheduler poller reactionner broker arbiter"
 #
 # OMD: create configuration file out of fragments
 #
-case "$1" in start|restart|reload|checkconfig)
+case "$1" in start|restart|reload|checkconfig|check)
     #
     # Step 1
     #   etc/shinken/shinken.d/*.cfg
@@ -110,7 +110,7 @@ case "$1" in start|restart|reload|checkconfig)
     # copy etc/shinken/shinken-specific.d to tmp/shinken/shinken-specific.d
     # modify the files in tmp/shinken/shinken-specific.d
     #
-    rm -rf $TARGET_ETC/shinken.specific.d
+    rm -rf $TARGET_ETC/shinken-specific.d
     cp -r $SOURCE_ETC/shinken-specific.d $TARGET_ETC
     cat <<EOTXT > $SOURCE_ETC/shinken-specific.d/README
 Do not edit the files in this directory. They were copied over from
@@ -169,6 +169,8 @@ EOTXT
     #fi
     if [ "$MONGODB" = "on" ]; then
       sed -ri 's/^([[:space:]]*modules[[:space:]]*)(.+)/\1mongologs/' $TARGET_ETC/shinken-specific.d/module_livestatus.cfg
+    else
+      sed -ri 's/^([[:space:]]*modules[[:space:]]*)(.+)/\1sqlitelogs/' $TARGET_ETC/shinken-specific.d/module_livestatus.cfg
     fi
 
     #
@@ -427,6 +429,7 @@ do_check() {
 #
 # check for our command
 #
+__init_hook $0 $1 pre
 case "$CMD" in
   start)
     [ "$VERBOSE" != no ] && echo "Starting $NAME..."

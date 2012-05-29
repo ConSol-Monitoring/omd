@@ -12,7 +12,7 @@ case "$1" in
        echo "localhost:4730"
    ;;
    choices)
-       echo "[a-zA-Z0-9\.\-]*:[1-9][0-9]{0,4}"
+       echo "[a-zA-Z0-9\.\-,:]*"
    ;;
    set)
         mkdir -p $OMD_ROOT/etc/mod-gearman

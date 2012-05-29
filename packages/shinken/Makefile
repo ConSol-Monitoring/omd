@@ -48,6 +48,11 @@ PYMONGO=pymongo-2.1.1
 PYMONGO_FILE=$(PYMONGO).tar.gz
 PYMONGO_URL=http://pypi.python.org/packages/source/p/pymongo/$(PYMONGO_FILE)
 #
+# Hashlib (for Python 2.4)
+HASHLIB=hashlib-20081119
+HASHLIB_FILE=$(HASHLIB).tar.gz
+HASHLIB_URL=http://code.krypto.org/python/hashlib/$(HASHLIB_FILE)
+#
 # This is where the python modules are going to be installed to
 LOCALPYTHONDIR=$(DESTDIR)$(OMD_ROOT)/lib/python
 
@@ -82,6 +87,8 @@ build:
 	tar xzf $(PYMONGO_FILE)
 	test -f $(MONGODB_FILE) || wget $(MONGODB_URL)
 	tar xzf $(MONGODB_FILE)
+	test -f $(HASHLIB_FILE) || wget $(HASHLIB_URL)
+	tar xzf $(HASHLIB_FILE)
 	#test -f $(SQLITE_FILE) || wget $(SQLITE_URL)
 	#tar xzf $(SQLITE_FILE)
 	if [ $(DISTRO_NAME) = "CENTOS" ] && [ \
@@ -111,6 +118,7 @@ install:
 	echo "distro is " $(DISTRO_NAME)
 	if [ $(DISTRO_NAME) = "CENTOS" ]; then \
 		$(MAKE) installctypes; \
+		$(MAKE) installhashlib; \
 	fi
 	#$(MAKE) installsqlite
 	rm -rf $(TMP_DISTU)
@@ -209,6 +217,13 @@ installpymongo:
 		--install-scripts=$(DESTDIR)$(OMD_ROOT)/tmp \
 		--install-data=$(DESTDIR)$(OMD_ROOT)/tmp )
 
+installhashlib:
+	( cd $(HASHLIB) ; python setup.py install \
+		--home=$(DESTDIR)$(OMD_ROOT) \
+		--install-platlib=$(LOCALPYTHONDIR) \
+		--install-scripts=$(DESTDIR)$(OMD_ROOT)/tmp \
+		--install-data=$(DESTDIR)$(OMD_ROOT)/tmp )
+
 installmongodb:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/bin
 	for tmpfile in $(MONGODB)/bin/* ; do \
@@ -226,3 +241,4 @@ clean:
 	rm -rf $(SQLITE)
 	rm -rf $(PYMONGO)
 	rm -rf $(MONGODB)
+	rm -rf $(HASHLIB)

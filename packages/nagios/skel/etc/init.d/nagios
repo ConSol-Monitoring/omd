@@ -160,7 +160,8 @@ case "$1" in start|restart|reload|checkconfig)
         exit 1
     fi
 esac
-          
+
+__init_hook $0 $1 pre
 case "$1" in
     start)
          echo -n "Starting nagios..."
