@@ -13,7 +13,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 2082 );
+plan( tests => 2526 );
 
 ##################################################
 # create our test site
@@ -33,6 +33,23 @@ TestUtils::test_command({ cmd => "/usr/bin/env sed -i -e 's/^perfdata_file_proce
 TestUtils::test_command({ cmd => $omd_bin." config $site set DEFAULT_GUI thruk" });
 TestUtils::test_command({ cmd => $omd_bin." start $site" });
 
+my $reports = [
+    {
+        'name'                  => 'Host',
+        'template'              => 'sla_host.tt',
+        'params.sla'            => 95,
+        'params.timeperiod'     => 'last12months',
+        'params.host'           => $host,
+        'params.breakdown'      => 'months',
+        'params.unavailable'    => [ 'down', 'unreachable' ],
+        'send_type_1'           => 'month',
+        'send_day_1'            => 1,
+        'week_day_1'            => '',
+        'send_hour_1'           => 0,
+        'send_minute_1'         => 0,
+    },
+];
+
 ##################################################
 # define some checks
 my $tests = [
@@ -42,9 +59,35 @@ my $tests = [
   { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -t 60 -H localhost -a omdadmin:omd -u /$site/thruk/ -e 200'",   like => '/HTTP OK:/' },
   { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -t 20 -H localhost -a omdadmin:omd -u \"/$site/thruk/cgi-bin/status.cgi?hostgroup=all&style=hostdetail\" -e 200 -r \"Host Status Details For All Host Groups\"'", like => '/HTTP OK:/' },
   { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -t 20 -H localhost -a omdadmin:omd -u \"/$site/thruk/cgi-bin/tac.cgi\" -e 200 -r \"Logged in as <i>omdadmin<\/i>\"'", like => '/HTTP OK:/' },
-  { cmd => "/bin/su - $site -c 'bin/thruk -l'", like => "/$site/" },
-  { cmd => "/bin/su - $site -c 'bin/thruk -l --local'", like => "/$site/" },
+  { cmd => "/bin/su - $site -c './bin/thruk -l'", like => "/$site/" },
+  { cmd => "/bin/su - $site -c './bin/thruk -l --local'", like => "/$site/" },
 ];
+
+my $own_tests = [
+  { cmd => "/bin/su - $site -c './etc/init.d/thruk restart'", like => '/\(\d+\)\ OK/' },
+];
+my $shared_tests = [
+  { cmd => "/bin/su - $site -c './etc/init.d/thruk restart'", like => '/only available for apaches/', exit => 1 },
+];
+
+for my $report (@{$reports}) {
+    my $args = [];
+    for my $key (keys %{$report}) {
+        for my $val (ref $report->{$key} eq 'ARRAY' ? @{$report->{$key}} : $report->{$key}) {
+            push @{$args}, $key.'='.$val;
+        }
+    }
+    push @{$tests}, (
+      { cmd => "/bin/su - $site -c './bin/thruk \"/thruk/cgi-bin/reports.cgi?action=save&report=9999&".join('&', @{$args})."\"'",
+               like => "/OK - report updated/" },
+      { cmd => "/bin/su - $site -c 'omd reload crontab'", like => [ '/OK/' ] },
+      { cmd => "/bin/su - $site -c '/usr/bin/crontab -l | grep -i thruk | grep -v cron.d'", like => [ '/9999/' ] },
+      { cmd => "/bin/su - $site -c './bin/thruk -a report=9999 --local'", like => [ '/%PDF\-1\.4/', '/%%EOF/' ] },
+      { cmd => "/bin/su - $site -c './bin/thruk \"/thruk/cgi-bin/reports.cgi?action=remove&report=9999\"'", like => '/OK - report removed/' },
+    );
+}
+
+
 my $urls = [
 # static html pages
   { url => "",                       like => '/<title>Thruk<\/title>/' },
@@ -111,6 +154,16 @@ my $urls = [
   { url => '/thruk/cgi-bin/conf.cgi?sub=objects&apply=yes', like => [ '/Config Tool/', '/There are no pending changes to commit/' ] },
   { url => '/thruk/cgi-bin/conf.cgi?sub=objects&type=host&data.name=generic-host', like => [ '/Config Tool/', '/Template:\s+generic\-host/', '/templates.cfg/' ], skip_html_links => 1 },
   { url => '/thruk/cgi-bin/conf.cgi?sub=objects&action=browser', like => [ '/Config Tool/', '/commands.cfg/' ] },
+
+# reporting
+  { url => '/thruk/cgi-bin/reports.cgi', like => '/Reporting/' },
+  { url => '/thruk/cgi-bin/reports.cgi?action=save&report=9999&name=Service%20SLA%20Report%20for%20'.$host.'%20-%20'.$service.'&template=sla_service.tt&params.sla=95&params.timeperiod=last12months&params.host='.$host.'&params.service='.$service.'&params.breakdown=months&params.unavailable=critical&params.unavailable=unknown', like => '/success_message/' },
+  { url => '/thruk/cgi-bin/reports.cgi?report=9999', like => [ '/%PDF-1.4/', '/%%EOF/' ] },
+  { url => '/thruk/cgi-bin/reports.cgi?action=remove&report=9999', like => '/report removed/' },
+
+# recurring downtimes
+  { url => '/thruk/cgi-bin/extinfo.cgi?type=6&recurring=save&old_host=&host='.$host.'&comment=automatic+downtime&send_type_1=month&send_day_1=1&week_day_1=&send_hour_1=0&send_minute_1=0&duration=120&childoptions=0', like => '/recurring downtime saved/' },
+  { url => '/thruk/cgi-bin/extinfo.cgi?type=6&recurring=remove&host='.$host, like => '/recurring downtime removed/' },
 ];
 
 # complete the url
@@ -125,6 +178,8 @@ for my $core (qw/nagios shinken icinga/) {
     # run our tests
     TestUtils::test_command({ cmd => $omd_bin." stop $site" });
     TestUtils::test_command({ cmd => $omd_bin." config $site set CORE $core" });
+    TestUtils::test_command({ cmd => $omd_bin." config $site set APACHE_MODE own" });
+    TestUtils::test_command({ cmd => TestUtils::config('APACHE_INIT')." restart" });
     TestUtils::test_command({ cmd => $omd_bin." start $site" })   or TestUtils::bail_out_clean("No need to test Thruk without proper startup");
     TestUtils::wait_for_file("/omd/sites/$site/tmp/run/live", 60) or TestUtils::bail_out_clean("No need to test Thruk without livestatus connection");
     unlink('var/thruk/obj_retention.dat');
@@ -133,6 +188,9 @@ for my $core (qw/nagios shinken icinga/) {
     TestUtils::wait_for_file("/omd/sites/$site/var/pnp4nagios/perfdata/omd-$site/Dummy_Service_omd-dummy.rrd", 60) or TestUtils::bail_out_clean("No need to test Thruk without working pnp");;
 
     for my $test (@{$tests}) {
+        TestUtils::test_command($test);
+    }
+    for my $test (@{$own_tests}) {
         TestUtils::test_command($test);
     }
     ##################################################
@@ -153,15 +211,22 @@ for my $core (qw/nagios shinken icinga/) {
     for my $test (@{$tests}) {
         TestUtils::test_command($test);
     }
+    for my $test (@{$shared_tests}) {
+        TestUtils::test_command($test);
+    }
     ##################################################
     # and request some pages
     for my $url ( @{$urls} ) {
         TestUtils::test_url($url);
     }
 
-    my $log = "/omd/sites/$site/var/log/thruk.log";
+    my $log  = "/omd/sites/$site/var/log/thruk.log";
+    my $tlog = '/tmp/thruk_test_error.log';
     is(-f $log, 1, "log exists");
-    is(-s $log, 0, "log is empty") or diag(Dumper(`cat $log`));
+    # grep out commands
+    `/bin/cat $log | /bin/grep -v 'cmd: COMMAND' > $tlog 2>&1`;
+    is(-s $tlog, 0, "log is empty") or diag(Dumper(`cat $log`));
+    unlink($tlog);
 }
 
 ##################################################

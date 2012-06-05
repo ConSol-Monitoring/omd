@@ -8,10 +8,10 @@ This file documents the revision history for the Open Monitoring Distribution
               for retry/accept/abort now)
           - RPMS: Not checking for removed version during pkg release update
                  (Does not mean omd version update.)
-          - Mod-Gearman: Updated to version 1.3.0
-          - Thruk: Update to 1.28
+          - Mod-Gearman: Updated to version 1.3.2
+          - Thruk: Update to 1.32
           - Icinga: Update to 1.7.0
-          - Check_MK: Added 1.2.0b5 release
+          - Check_MK: Added 1.2.0b6 release
           - Support Ubuntu 12.04 (Precise)
 
 0.54     Apr 02 2012
