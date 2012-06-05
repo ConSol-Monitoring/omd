@@ -2,7 +2,7 @@
 
 # Alias: Start site-local MongoDB Daemon
 # Menu: Addons
-# Description: 
+# Description:
 #  If you want to use addons based on MongoDB (like distributed
 #  log storage for Shinken), then you can activate
 #  this option and a site specific MongoDB daemon will be started.
@@ -15,6 +15,4 @@ case "$1" in
         echo "on: enable"
         echo "off: disable"
     ;;
-    depends)
-        [ "$CONFIG_CORE" = shinken ]
 esac
