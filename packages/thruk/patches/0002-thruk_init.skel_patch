@@ -1,0 +1,10 @@
+--- a/etc/init.d/thruk	2012-05-26 12:55:14.000000000 +0200
++++ b/etc/init.d/thruk	2012-05-26 12:57:38.597724820 +0200
+@@ -21,6 +21,7 @@
+ STARTURL="http://localhost/thruk/cgi-bin/remote.cgi"
+ WGET="/usr/bin/wget"
+ 
++. ###ROOT###/.profile
+ if [ ! -z $OMD_SITE ]; then
+     STARTURL="http://localhost/$OMD_SITE/thruk/cgi-bin/remote.cgi"
+     PIDFILE=$OMD_ROOT/tmp/thruk/thruk.pid
