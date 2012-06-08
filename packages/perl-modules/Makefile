@@ -253,7 +253,7 @@ MODULES = \
           Perl-Critic-Policy-Dynamic-NoIndirect-0.06.tar.gz \
           Sub-Exporter-0.982.tar.gz \
           Test-Perl-Critic-1.02.tar.gz \
-          XML-Tidy-1.12.B55J2qn.tgz \
+          XML-Twig-3.40.tar.gz \
           B-Hooks-EndOfScope-0.11.tar.gz \
           Catalyst-Plugin-CustomErrorMessage-0.06.tar.gz \
           Check-ISA-0.04.tar.gz \
