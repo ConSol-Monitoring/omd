@@ -6,7 +6,7 @@
 
 # Ubuntu is detected with /etc/lsb-release
 SEP=${1:- }
-if [ -e /etc/lsb-release ] 
+if [ -e /etc/lsb-release ]
 then
     . /etc/lsb-release
     if [ -n "$DISTRIB_ID" -a -n "$DISTRIB_RELEASE" ] ; then
@@ -21,6 +21,9 @@ then
     VERSION=$(cat /etc/debian_version)
     if [ "${VERSION:3:1}" = . ] ; then
         VERSION=${VERSION:0:3}
+    fi
+    if [ "${VERSION:0:6}" = "wheezy" ] ; then
+        VERSION="7.0"
     fi
     echo "DEBIAN$SEP$VERSION"
     exit 0
