@@ -9,14 +9,27 @@
 #  as Check_MK Multisite or Thruk which can connect to other monitoring
 #  sites via Livestatus.
 
+# Helper function that creates a symlink only if the
+# target of the link exists
+make_link ()
+{
+    if [ -e "$1" ] ; then
+        ln -sfn "$1" "$2"
+    fi
+}
+
 case "$1" in
     default)
-            echo "nagios"
+            if [ -e $OMD_ROOT/bin/nagios ] ; then echo "nagios" 
+            elif [ -e $OMD_ROOT/bin/icinga ] ; then echo "icinga" 
+            elif [ -e $OMD_ROOT/bin/shinken-arbiter ] ; then echo "shinken"
+            else echo "none"
+            fi
     ;;
     choices)
-            echo "nagios: Nagios"
-            echo "icinga: Icinga"
-            echo "shinken: Shinken"
+            [ ! -e $OMD_ROOT/bin/nagios ] || echo "nagios: Nagios"
+            [ ! -e $OMD_ROOT/bin/icinga ] || echo "icinga: Icinga"
+            [ ! -e $OMD_ROOT/bin/shinken-arbiter ] || echo "shinken: Shinken"
             echo "none: No monitoring core"
     ;;
     set)
@@ -36,21 +49,21 @@ case "$1" in
         # now setup the new selection
         if [ "$2" == "nagios" ]
         then
-            ln -sfn ../../nagios/apache.conf $OMD_ROOT/etc/apache/conf.d/nagios.conf 
-            ln -sfn ../../icinga/apache.conf $OMD_ROOT/etc/apache/conf.d/icinga.conf 
-            ln -sfn nagios $OMD_ROOT/etc/init.d/core
+            make_link ../../nagios/apache.conf $OMD_ROOT/etc/apache/conf.d/nagios.conf 
+            make_link ../../icinga/apache.conf $OMD_ROOT/etc/apache/conf.d/icinga.conf 
+            make_link nagios $OMD_ROOT/etc/init.d/core
         elif [ "$2" == "icinga" ]
         then
-            ln -sfn ../../nagios/apache.conf $OMD_ROOT/etc/apache/conf.d/nagios.conf 
-            ln -sfn ../../icinga/apache.conf $OMD_ROOT/etc/apache/conf.d/icinga.conf 
-            ln -sfn icinga $OMD_ROOT/etc/init.d/core
+            make_link ../../nagios/apache.conf $OMD_ROOT/etc/apache/conf.d/nagios.conf 
+            make_link ../../icinga/apache.conf $OMD_ROOT/etc/apache/conf.d/icinga.conf 
+            make_link icinga $OMD_ROOT/etc/init.d/core
         elif [ "$2" == "shinken" ]
         then
             # Thruk is the default interface, but classic is possible
-            ln -sfn ../../nagios/apache.conf $OMD_ROOT/etc/apache/conf.d/nagios.conf
-            ln -sfn ../../icinga/apache.conf $OMD_ROOT/etc/apache/conf.d/icinga.conf 
-            ln -sfn ../../shinken/apache.conf $OMD_ROOT/etc/apache/conf.d/shinken.conf
-            ln -sfn shinken $OMD_ROOT/etc/init.d/core
+            make_link ../../nagios/apache.conf $OMD_ROOT/etc/apache/conf.d/nagios.conf
+            make_link ../../icinga/apache.conf $OMD_ROOT/etc/apache/conf.d/icinga.conf 
+            make_link ../../shinken/apache.conf $OMD_ROOT/etc/apache/conf.d/shinken.conf
+            make_link shinken $OMD_ROOT/etc/init.d/core
         else
             rm -f $OMD_ROOT/etc/apache/conf.d/nagios.conf
             rm -f $OMD_ROOT/etc/apache/conf.d/icinga.conf

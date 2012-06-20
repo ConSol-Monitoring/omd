@@ -102,47 +102,57 @@ def page_welcome(req):
    the default GUI of OMD.</p>
     """ % get_version(site_name(req)))
 
-    for id, title, desc in [ ('nagios', 'Classic Nagios GUI',
+    for id, title, path, desc in [ ('nagios', 'Classic Nagios GUI', 
+                              'share/nagios/htdocs',
                               'The classic Nagios GUI is based on CGI program written '
                               'in C. It retrieves its status information from <tt>status.dat</tt>. '
                               'This interface is not longer actively developed and does not perform '
                               'well in large installations.'),
                              ('check_mk', 'Check_MK Multisite',
+                              'share/check_mk/web',
                               'Check_MK Multisite is a fast and flexibile status GUI written '
                               'in Python. It supports user definable views and is able to '
                               'display the status of several sites in one combined view. It '
                               'uses MK Livestatus for getting the status data from the sites.'),
                              ('thruk', 'Thruk Monitoring Webinterface',
+                              'share/thruk',
                               'Thruk is a complete rework of the classic interface '
                               'in Perl. While maintainig the original look and feel it '
                               'brings lots of improvements and new features. Just as Multisite '
                               'it uses MK Livestatus as backend and supports the visualization '
                               'of multiple sites.'),
                              ('icinga', 'Classic Icinga GUI',
+                              'share/icinga/htdocs',
                               'Icinga\'s "classical" GUI is a derivate of the classical Nagios GUI '
                               'and has been directly evolved from the original '
                               'CGI programs in C. It has its own look and feel and brings useful '
                               'improvements. It is not bound to Icinga and can be used with the '
                               'other monitoring cores as well.'),
                              ('shinken', 'Shinken WebUI',
+                              'share/lib/shinken',
                               'Shinken enhances the ok/non-ok concept of Nagios by adding '
                               'root problems and impacts. Monitored objects also can get a rank '
                               'identifying their importance to the business.'
                               'The Shinken WebUI was designed to visualize these new concepts '
                               'and can not be used with the other monitoring cores.'),
-                             ('nagvis', 'NagVis - The visualization addon',
+                             ('nagvis', 'NagVis - The visualization addon', 
+                              'share/nagvis/htdocs',
                               '<p>NagVis is the leading visualization addon for Nagios.</p>'
                               '<p>NagVis can be used to visualize Nagios status data, e.g.  '
                               'to display IT processes like a mail system or a '
                               'network infrastructure.</p>'),
                              ('pnp4nagios', 'PNP4Nagios',
+                              'share/pnp4nagios/htdocs',
                               'PNP is an addon to Nagios which analyzes performance data '
                               'provided by plugins and stores them automatically into '
                               'RRD-databases (Round Robin Databases, see RRDTool).'),
                              ('wiki', 'DokuWiki',
+                              'share/dokuwiki/htdocs',
                               'DokuWiki is a standards compliant, simple to use Wiki, '
                               'mainly aimed at creating documentation of any kind.') ]:
-        req.write("""
+
+        if os.path.exists("/omd/sites/%s/%s" % (site_name(req), path)):
+            req.write("""
 <a class="gui" href="../%s/">
 <img src="img/%s-small.png" title="%s" />
 <h2>%s</h2>
