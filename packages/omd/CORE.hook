@@ -13,7 +13,8 @@
 # target of the link exists
 make_link ()
 {
-    if [ -e "$1" ] ; then
+    rel_dir=${2%/*}
+    if [ -e "$rel_dir/$1" ] ; then
         ln -sfn "$1" "$2"
     fi
 }
