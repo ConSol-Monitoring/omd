@@ -33,6 +33,9 @@ if ( ! -e $template ){
 	print "Template \"$template\" not found\n";
 	exit 3;
 }
+
+extract_ascii($macro{'LONGHOSTOUTPUT'});
+extract_ascii($macro{'LONGSERVICEOUTPUT'});
 process_template();
 exit;
 
@@ -63,4 +66,15 @@ Usage:
 $0 --template=<path to template> -o <MACRO>=<VALUE> -o ....
 
 ";
+}
+
+sub extract_ascii {
+    my($text) = @_;
+    return unless defined $text;
+    $text =~ s/.*
+               ^ASCII_NOTIFICATION_START$
+               \s*(.*)
+               ASCII_NOTIFICATION_END$
+               .*/$1/msx;
+    return;
 }
