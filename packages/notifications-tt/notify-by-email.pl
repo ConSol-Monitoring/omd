@@ -69,12 +69,10 @@ $0 --template=<path to template> -o <MACRO>=<VALUE> -o ....
 }
 
 sub extract_ascii {
-    my($text) = @_;
-    return unless defined $text;
-    $text =~ s/.*
+    return unless defined $_[0];
+    $_[0] =~ s/.*
                ^ASCII_NOTIFICATION_START$
                \s*(.*)
                ASCII_NOTIFICATION_END$
                .*/$1/msx;
-    return;
 }
