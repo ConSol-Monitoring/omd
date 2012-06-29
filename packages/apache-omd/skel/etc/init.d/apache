@@ -115,7 +115,7 @@ kill_stale_php_cgis()
 }
 
 __init_hook $0 $1 pre
-case $1 in 
+case $1 in
   start)
     echo -n "Starting dedicated Apache for site ###SITE###..."
     if apache_wait_start; then
@@ -147,6 +147,7 @@ case $1 in
   reload)
     echo "Reloading dedicated Apache for site ###SITE###"
     $APACHE_BIN -f "$CONFIG_FILE" -k graceful
+    __init_hook $0 $1 post $?
   ;;
   status)
     PID=$(pidof_apache) || true

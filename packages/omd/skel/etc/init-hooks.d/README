@@ -28,3 +28,4 @@ icinga-*-pre
 apache-*-pre
 apache-start-post
 apache-stop-post
+apache-reload-post
