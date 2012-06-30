@@ -227,34 +227,4 @@ $conf['special_template_dir'] = '###ROOT###/etc/pnp4nagios/templates.special';
 # This regex is evaluated against the USER_AGENT String
 #
 $conf['mobile_devices'] = 'iPhone|iPod|iPad|android';
-
-#
-# additional colour schemes
-# values taken from www.colorbrewer2.org
-# for details on usage refer to the documentation of the helper functions 
-#
-$scheme['Reds']     = array ('#FEE0D2','#FCBBA1','#FC9272','#FB6A4A','#EF3B2C','#CB181D','#A50F15','#67000D');
-$scheme['Greens']   = array ('#E5F5E0','#C7E9C0','#A1D99B','#74C476','#41AB5D','#23AB45','#006D2C','#00441B');
-$scheme['Blues']    = array ('#DEEBF7','#C6DBEF','#9ECAE1','#6BAED6','#4292C6','#2171B5','#08519C','#08306B');
-$scheme['Oranges']  = array ('#FEE6CE','#FDD0A2','#FDAE6B','#FD8D3C','#F16913','#D94801','#A63603','#7F2704');
-$scheme['Purples']  = array ('#EFEDF5','#DADAEB','#BDBDDC','#9E9AC8','#807DBA','#6A51A3','#54278F','#3F007A');
-$scheme['RdPu']     = array ('#FDE0DD','#FCC5C0','#FA9FB5','#F768A1','#DD3497','#AE017E','#7A0177','#49006A');
-$scheme['Dark2']    = array ('#1B9E77','#D95F02','#7570B3','#E7298A','#66A61E','#E6ab02','#a6761d','#666666');
-$scheme['BrBG']     = array ('#543005','#8C510A','#BF812D','#DFC27D','#F6E8C3','#C7EAE5','#80CDC1','#35978F','#01665E','#003C30');
-$scheme['PiYG']     = array ('#8E0152','#C51B7D','#DE77AE','#F1B6DA','#FDE0EF','#E6F5D0','#B8E186','#7FBC41','#4D9221','#276419');
-$scheme['PRGn']     = array ('#40004B','#762A83','#9970AB','#C2A5CF','#E7D4E8','#D9F0D3','#A6DBA0','#5AAE61','#1B7837','#00441B');
-$scheme['PuOr']     = array ('#7F3B08','#B35806','#E08214','#FDB863','#FEE0B6','#D8DAEB','#B2ABD2','#8073AC','#542788','#2D004B');
-$scheme['RdBu']     = array ('#67001F','#B2182B','#D6604D','#F4A582','#FDDBC7','#D1E5F0','#92C5DE','#4393C3','#2166AC','#053061');
-$scheme['RdGy']     = array ('#67001F','#B2182B','#D6604D','#F4A582','#FDDBC7','#E0E0E0','#BABABA','#878787','#4D4D4D','#1A1A1A');
-$scheme['RdYlBu']   = array ('#A50026','#D73027','#F46D43','#FDAE61','#FEE090','#E0F3F8','#ABD9E9','#74ADD1','#4575B4','#313695');
-$scheme['RdYlGn']   = array ('#A50026','#D73027','#F46D43','#FDAE61','#FEE08B','#D9EF8B','#A6D96A','#66BD63','#1A9850','#006837');
-$scheme['Spectral'] = array ('#9E0142','#D53E4F','#F46D43','#FDAE61','#FEE08B','#E6F598','#ABDDA4','#66C2A5','#3288BD','#5E4FA2');
-$scheme['Paired']   = array ('#A6CEE3','#1F78B4','#B2DF8A','#33A02C','#FB9A99','#E31A1C','#FDBF6F','#FF7F00','#CAB2D6','#6A3D9A');
-$scheme['mixed1']   = array ('#8C510A','#2166ac','#BF812D','#4393c3','#DFC27D','#92c5de','#F6E8C3','#d1e5f0',
-                             '#fddbc7','#C7EAE5','#f4a582','#80CDC1','#d6604d','#35978F','#b2182b','#01665E');
-$scheme['mixed2']   = array ('#b2182b','#2166ac','#d6604d','#4393c3','#f4a582','#92c5de','#fddbc7','#d1e5f0',
-                             '#F6E8C3','#C7EAE5','#DFC27D','#80CDC1','#BF812D','#35978F','#8C510A','#01665E');
-$scheme['mixed3']   = array ('#67001F','#80CDC1','#B2182B','#35978F','#D6604D','#01665E','#F4A582','#003C30',
-                             '#FDDBC7','#92C5DE','#D1E5F0','#2166AC','#4393C3','#8C510A','#053061','#BF812D');
-
 ?>

@@ -3,7 +3,7 @@ include ../../Makefile.omd
 .PHONY: skel
 
 NAME = pnp4nagios
-VERSION = 0.6.18
+VERSION = 0.6.17
 DIR = $(NAME)-$(VERSION)
 
 # Configure options for PNP4Nagios. Since we want to compile
@@ -27,10 +27,10 @@ CONFIGUREOPTS = \
 
 build:
 	tar xzf $(DIR).tar.gz
-#	for p in patches/*.dif ; do \
-#		echo "applying $$p..." ; \
-#		( cd $(DIR) ; patch -p1 -b ) < $$p ; \
-#       done
+	#for p in patches/*.dif ; do \
+	#	echo "applying $$p..." ; \
+	#	( cd $(DIR) ; patch -p1 -b ) < $$p ; \
+        #done
 
 	cd $(DIR) ; ./configure $(CONFIGUREOPTS)
 	$(MAKE) -C $(DIR) all
