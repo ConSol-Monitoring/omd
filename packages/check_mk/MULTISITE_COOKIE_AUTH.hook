@@ -44,9 +44,10 @@ EOF
 // Using the multisite cookie based authentication when no
 // REMOTE_USER available.
 //
-\$conf['auth_multisite_enabled']  = TRUE;
-\$conf['auth_multisite_htpasswd'] = '/omd/sites/$OMD_SITE/etc/htpasswd';
-\$conf['auth_multisite_secret']   = '/omd/sites/$OMD_SITE/etc/auth.secret';
+\$conf['auth_multisite_enabled']    = TRUE;
+\$conf['auth_multisite_htpasswd']   = '/omd/sites/$OMD_SITE/etc/htpasswd';
+\$conf['auth_multisite_secret']     = '/omd/sites/$OMD_SITE/etc/auth.secret';
+\$conf['auth_multisite_login_url']  = '/$OMD_SITE/check_mk/login.py';
 ?>
 EOF
        else
