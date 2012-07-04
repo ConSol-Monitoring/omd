@@ -13,7 +13,7 @@ This file documents the revision history for the Open Monitoring Distribution
           - Nagios Plugins: Update to 1.4.16
           - PNP4Nagios: Update to 0.6.18
           - Icinga: Update to 1.7.1
-          - Check_MK: Added 1.2.0p1 release
+          - Check_MK: Added 1.2.0p2 release
           - Support Ubuntu 12.04 (Precise)
 
 0.54     Apr 02 2012
