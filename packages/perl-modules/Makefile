@@ -349,13 +349,14 @@ build:
 	    ./build_module.pl -p $(P5TMPDIST)/dest $(MODULES)
 	cd $(P5TMPDIST)/dest/lib/perl5/ && rm -f utils.pm && ln -s ../../../nagios/plugins/utils.pm .
 	mkdir -p $(P5TMPDIST)/dest/lib/perl5/CPAN
-	cp MyConfig.pm $(P5TMPDIST)/dest/lib/perl5/CPAN/MyConfig.pm
+	cp MyConfig.pm $(P5TMPDIST)/dest/lib/perl5/CPAN/MyConfig.skel
 
 install:
 	if [ -z $(DESTDIR) ]; then echo "cannot install without DESTDIR set!"; exit 1; fi
-	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/perl5
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/perl5 $(DESTDIR)$(OMD_ROOT)/bin
 	rsync -a $(P5TMPDIST)/dest/lib $(DESTDIR)$(OMD_ROOT)/lib/perl5/
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/local/lib/perl5
+	cp bin/cpan.wrapper $(DESTDIR)$(OMD_ROOT)/bin/cpan.wrapper
 
 skel:
 	echo "install  --install_base  ###ROOT###/local/lib/perl5" > $(SKEL)/.modulebuildrc
