@@ -5,6 +5,8 @@ include ../../Makefile.omd
 NAME = pnp4nagios
 VERSION = 0.6.18
 DIR = $(NAME)-$(VERSION)
+# Unset CONFIG_SITE
+CONFIG_SITE = ''
 
 # Configure options for PNP4Nagios. Since we want to compile
 # as non-root, we use our own user and group for compiling.
