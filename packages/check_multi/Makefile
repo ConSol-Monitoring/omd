@@ -3,7 +3,7 @@ include ../../Makefile.omd
 .PHONY: skel
 
 NAME     = check_multi
-VERSION  = 6b22e5f
+VERSION  = 0110cb1
 SRCDIR   = $(NAME)-$(VERSION)
 ROOTDIR  = \\\$$ENV{OMD_ROOT}
 SITE     = \\\$$ENV{OMD_SITE}
@@ -37,6 +37,7 @@ CONFIGUREOPTS = \
 	--with-feed_passive_dir_permissions=0750 \
 	--with-findbin=1 \
 	--with-file_extension="cmd" \
+	--with-html_ascii_notification=0 \
 	--with-ignore_missing_cmd_file=0 \
 	--with-illegal_chars="\r" \
 	--with-image_path="/$(SITE)/nagios/images" \
@@ -53,18 +54,24 @@ CONFIGUREOPTS = \
 	--with-objects_cache_delimiter="," \
 	--with-omd_environment=1 \
 	--with-parent_timeout=60 \
+	--with-perfdata_pass_through=0 \
 	--with-persistent=0 \
 	--with-plugin_path="$(ROOTDIR)/lib/nagios/plugins" \
+	--with-pnp_add2url="" \
 	--with-pnp_url="/$(SITE)/pnp4nagios" \
 	--with-pnp_version=0.6 \
 	--with-report=13 \
+	--with-report_inherit_mask=-1 \
 	--with-signal_rc=3 \
 	--with-snmp_community="public" \
 	--with-snmp_port=161 \
 	--with-status_dat="$(ROOTDIR)/tmp/nagios/status.dat" \
 	--with-style_plus_minus="" \
 	--with-tag_notes_link="" \
+	--with-target="_self" \
 	--with-tmp_dir="$(ROOTDIR)/tmp/check_multi" \
+	--with-tmp_dir_permissions=01777 \
+	--with-tmp_etc="$(ROOTDIR)/tmp/check_multi/etc" \
 
 build:
 	tar xzf $(NAME)-latest-$(VERSION).tar.gz
