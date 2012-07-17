@@ -356,7 +356,7 @@ install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/perl5 $(DESTDIR)$(OMD_ROOT)/bin
 	rsync -a $(P5TMPDIST)/dest/lib $(DESTDIR)$(OMD_ROOT)/lib/perl5/
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/local/lib/perl5
-	cp bin/cpan.wrapper $(DESTDIR)$(OMD_ROOT)/bin/cpan.wrapper
+	install -m 755 bin/cpan.wrapper $(DESTDIR)$(OMD_ROOT)/bin/cpan.wrapper
 
 skel:
 	echo "install  --install_base  ###ROOT###/local/lib/perl5" > $(SKEL)/.modulebuildrc
