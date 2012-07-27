@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 NAME     = mod_gearman
-VERSION  = 1.3.4
+VERSION  = 1.3.6
 GEARMAND = $(shell grep "^VERSION " ../gearmand/Makefile | awk '{ print $$3 }')
 DIR      = mod_gearman-$(VERSION)
 
@@ -45,8 +45,10 @@ skel:
 	    ( cd $(SKEL) ; patch -p1 ) < $$p || exit 1; \
 	done
 	find $(SKEL)/etc/mod-gearman -name \*.orig -exec rm {} \;
-	mkdir -p $(SKEL)/var
+	mkdir -p $(SKEL)/var/log/mod_gearman
 	cd $(SKEL)/var/log && ln -s gearman mod_gearman
+	touch $(SKEL)/var/log/mod_gearman/neb.log
+	touch $(SKEL)/var/log/mod_gearman/worker.log
 
 
 

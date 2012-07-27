@@ -78,23 +78,23 @@ for my $report (@{$reports}) {
         }
     }
     push @{$tests}, (
-      { cmd => "/bin/su - $site -c './bin/thruk \"/thruk/cgi-bin/reports.cgi?action=save&report=9999&".join('&', @{$args})."\"'",
+      { cmd => "/bin/su - $site -c './bin/thruk -A omdadmin \"/thruk/cgi-bin/reports.cgi?action=save&report=9999&".join('&', @{$args})."\"'",
                like => "/OK - report updated/" },
       { cmd => "/bin/su - $site -c 'omd reload crontab'", like => [ '/OK/' ] },
       { cmd => "/bin/su - $site -c '/usr/bin/crontab -l | grep -i thruk | grep -v cron.d'", like => [ '/9999/' ] },
       { cmd => "/bin/su - $site -c './bin/thruk -a report=9999 --local'", like => [ '/%PDF\-1\.4/', '/%%EOF/' ] },
-      { cmd => "/bin/su - $site -c './bin/thruk \"/thruk/cgi-bin/reports.cgi?action=remove&report=9999\"'", like => '/OK - report removed/' },
+      { cmd => "/bin/su - $site -c './bin/thruk -A omdadmin \"/thruk/cgi-bin/reports.cgi?action=remove&report=9999\"'", like => '/OK - report removed/' },
     );
 }
 
 
 my $urls = [
 # static html pages
+  { url => "/thruk/side.html",       like => '/<title>Thruk<\/title>/' },
   { url => "",                       like => '/<title>Thruk<\/title>/' },
   { url => "/thruk/index.html",      like => '/<title>Thruk<\/title>/' },
   { url => "/thruk/docs/index.html", like => '/<title>Documentation<\/title>/' },
   { url => "/thruk/main.html",       like => '/<title>Thruk Monitoring Webinterface<\/title>/' },
-  { url => "/thruk/side.html",       like => '/<title>Thruk<\/title>/' },
 
 # availability
   { url => '/thruk/cgi-bin/avail.cgi', 'like' => '/Availability Report/' },

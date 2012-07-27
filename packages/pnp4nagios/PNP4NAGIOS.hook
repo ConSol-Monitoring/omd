@@ -14,7 +14,8 @@ case "$1" in
        echo "on"
    ;;
    choices)
-       echo "on: enable"
+       echo "on: enable bulk mode with npcdmod and npcd"
+       echo "npcd: enable bulk mode with npcd"
        echo "gearman: enable gearman worker"
        echo "off: disable"
    ;;
@@ -44,6 +45,15 @@ case "$1" in
            if [ -s $OMD_ROOT/etc/mod-gearman/perfdata.conf ]; then
                sed -i -e 's/^perfdata=.*$/perfdata=yes/' $OMD_ROOT/etc/mod-gearman/perfdata.conf
            fi
+       elif [ "$2" == "npcd" ]
+       then
+           if [ -e $OMD_ROOT/etc/nagios/nagios.d ] ; then
+               ln -sfn ../../pnp4nagios/nagios_npcd.cfg $OMD_ROOT/etc/nagios/nagios.d/pnp4nagios.cfg
+           fi
+           if [ -e $OMD_ROOT/etc/icinga/icinga.d ] ; then
+               ln -sfn ../../pnp4nagios/nagios_npcd.cfg $OMD_ROOT/etc/icinga/icinga.d/pnp4nagios.cfg
+           fi 
+           ln -sfn ../../pnp4nagios/apache.conf $OMD_ROOT/etc/apache/conf.d/pnp4nagios.conf
        else
            rm -f $OMD_ROOT/etc/nagios/nagios.d/pnp4nagios.cfg
            rm -f $OMD_ROOT/etc/icinga/icinga.d/pnp4nagios.cfg

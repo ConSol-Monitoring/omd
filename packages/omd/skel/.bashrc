@@ -11,6 +11,7 @@ if [ -z $OMD_ROOT ]; then
     . ~/.profile
     cd ~
 fi
+alias cpan='cpan.wrapper'
 
 # pointless unless running interactively
 if [ "$PS1" ]; then

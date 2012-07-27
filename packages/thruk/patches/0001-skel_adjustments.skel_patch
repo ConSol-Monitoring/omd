@@ -1,6 +1,6 @@
---- a/etc/thruk/thruk.conf	2012-06-02 18:32:32.000000000 +0200
-+++ b/etc/thruk/thruk.conf	2012-06-03 00:14:10.065082960 +0200
-@@ -12,7 +12,7 @@
+--- a/etc/thruk/thruk.conf	2012-07-19 13:13:20.000000000 +0200
++++ b/etc/thruk/thruk.conf	2012-07-19 16:03:03.639789375 +0200
+@@ -13,7 +13,7 @@
  
  ######################################
  # set the url prefix for all urls
@@ -9,7 +9,7 @@
  
  ######################################
  # Changes the path to your logo images. Default is
-@@ -22,13 +22,13 @@
+@@ -23,13 +23,13 @@
  # Like usual, paths starting with a / will be absolute from your
  # webserver root directory. Paths starting without a / will be relative
  # to the cgi directory.
@@ -25,7 +25,7 @@
  
  ######################################
  # change path to your host / service action icons. You may use relative paths
-@@ -62,11 +62,11 @@
+@@ -63,11 +63,11 @@
  
  ######################################
  # location of your cgi.cfg
@@ -39,7 +39,7 @@
  
  ######################################
  # normally passive checks would be marked as disabled.
-@@ -133,35 +133,35 @@
+@@ -134,35 +134,35 @@
  
  ######################################
  # temporary directory, used for template cache...
@@ -82,7 +82,7 @@
  
  ######################################
  # use paged data instead of all data in one huge page
-@@ -221,7 +221,7 @@
+@@ -222,7 +222,7 @@
  # Instead of using a general resource_file, you could define one file
  # per peer in your peer config.
  #
@@ -91,7 +91,7 @@
  
  # show inline pnp graph if available
  # if a service or host has a pnp4nagios action url set
-@@ -292,6 +292,7 @@
+@@ -294,6 +294,7 @@
  # check should be rescheduled instead of the passive check.
  # Have a look at the documentation for a detailed description.
  #command_reschedule_alias = servicename_or_commandname_pattern;agent_service_name
@@ -99,7 +99,7 @@
  
  ######################################
  # Time Format Settings
-@@ -341,23 +342,23 @@
+@@ -343,23 +344,23 @@
  # Specifiy a file which is then completly under the control of Thruk.
  # It will be used to store cronjobs, ex. for reports. The file has to
  # be writable by Thruk.
@@ -128,7 +128,7 @@
  
  # execute regular scheduled reports with this nice level
  #report_nice_level = 5
-@@ -389,42 +390,19 @@
+@@ -401,42 +402,19 @@
  ######################################
  # Backend Configuration, enter your backends here
  <Component Thruk::Backend>
@@ -184,7 +184,7 @@
  </Component>
  
  
-@@ -438,7 +416,12 @@
+@@ -450,9 +428,9 @@
  <Component Thruk::Plugin::ConfigTool>
      show_plugin_syntax_helper = 1
  
@@ -195,8 +195,5 @@
 +    cgi.cfg  = ###ROOT###/etc/nagios/cgi.cfg
 +    htpasswd = ###ROOT###/etc/htpasswd
  </Component>
-+
-+######################################
-+# OMD Settings
-+# username used when cli tool used without -A
-+default_cli_user_name=omdadmin
+ 
+ ######################################

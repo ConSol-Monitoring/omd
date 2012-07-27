@@ -32,6 +32,8 @@ install:
 	$(MAKE) DESTDIR=$(DESTDIR) -C $(DIR) install
 
 skel:
+	mkdir -p $(SKEL)/var/log/gearman
+	touch $(SKEL)/var/log/gearman/gearman.log
 
 clean:
 	rm -rf $(DIR)
