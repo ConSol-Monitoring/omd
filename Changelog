@@ -15,6 +15,7 @@ This file documents the revision history for the Open Monitoring Distribution
           - Icinga: Update to 1.7.1
           - Check_MK: Added 1.2.0p1 release
           - Support Ubuntu 12.04 (Precise)
+          - set log_initial_states=1 per default
 
 0.54     Apr 02 2012
           - omd:
