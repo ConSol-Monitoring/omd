@@ -31,6 +31,8 @@ __init_hook() {
   # 1. Name of the init-script (can be the full path name, we will only use the file part)
   # 2. The command the init-script was called with (start, stop, reload,..)
   # 3. A fixed string, either "pre" os "post"
-  hook=$(printf "###ROOT###/etc/init-hooks.d/%s-%s-%s" ${1##*/} $2 $3)
-  test -x $hook && $hook ${1##*/} $2 $3 $4
+  # 4. return code of the command (optional, and only for post hooks)
+  if [ -h $1 ]; then file=$(readlink $1); else file=$1; fi
+  hook=$(printf "###ROOT###/etc/init-hooks.d/%s-%s-%s" ${file##*/} $2 $3)
+  test -x $hook && $hook ${file##*/} $2 $3 $4
 }
