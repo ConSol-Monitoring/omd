@@ -1,14 +1,14 @@
 include ../../Makefile.omd
 
 NAME = dokuwiki
-VERSION = 2012-01-25
-DIR = $(NAME)-2012-01-25
+VERSION = 2012-01-25b
+DIR = $(NAME)-2012-01-25b
 
 .PHONY: skel
 
 build:
 	tar xzf $(NAME)-$(VERSION).tgz
-	tar xzf template-arctic.tgz -C $(DIR)/lib/tpl/
+	tar xzf template-arctic-stable.tgz -C $(DIR)/lib/tpl/
 	tar xzf template-vector.tar.gz -C $(DIR)/lib/tpl/
 	tar xzf plugin-include.tgz -C $(DIR)/lib/plugins/
 	tar xf formular.tar -C $(DIR)/lib/plugins/

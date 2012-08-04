@@ -7,7 +7,7 @@
  *
  * This is a piece of PHP code so PHP syntax applies!
  *
- * For help with the configuration see http://www.splitbrain.org/dokuwiki/wiki:config
+ * For help with the configuration see http://www.dokuwiki.org/config
  */
 
 
@@ -18,8 +18,10 @@ $conf['dmode']       = 0755;              //set directory creation mode
 $conf['lang']        = 'en';              //your language
 $conf['basedir']     = '';                //absolute dir from serveroot - blank for autodetection
 $conf['baseurl']     = '';                //URL to server including protocol - blank for autodetect
+$conf['cookiedir']   = '';                //Cookie path. Leave blank for using baseurl.
 $conf['savedir']     = './data';          //where to store all the files
 $conf['allowdebug']  = 0;                 //allow debug output, enable if needed 0|1
+$conf['mediarevisions'] = 1;              //enable/disable media revisions
 
 /* Display Options */
 
@@ -89,6 +91,7 @@ $conf['usedraft']    = 1;                //automatically save a draft while edit
 $conf['sepchar']     = '_';              //word separator character in page names; may be a
                                          //  letter, a digit, '_', '-', or '.'.
 $conf['canonical']   = 0;                //Should all URLs use full canonical http://... style?
+$conf['fnencode']    = 'url';            //encode filenames (url|safe|utf-8)
 $conf['autoplural']  = 0;                //try (non)plural form of nonexisting files?
 $conf['compression'] = 'gz';             //compress old revisions: (0: off) ('gz': gnuzip) ('bz2': bzip)
                                          //  bz2 generates smaller files, but needs more cpu-power
@@ -98,12 +101,16 @@ $conf['fetchsize']   = 0;                //maximum size (bytes) fetch.php may do
 $conf['notify']      = '';               //send change info to this email (leave blank for nobody)
 $conf['registernotify'] = '';            //send info about newly registered users to this email (leave blank for nobody)
 $conf['mailfrom']    = '';               //use this email when sending mails
+$conf['mailprefix']  = '';               //use this as prefix of outgoing mails
 $conf['gzip_output'] = 0;                //use gzip content encodeing for the output xhtml (if allowed by browser)
 $conf['gdlib']       = 2;                //the GDlib version (0, 1 or 2) 2 tries to autodetect
 $conf['im_convert']  = '';               //path to ImageMagicks convert (will be used instead of GD)
 $conf['jpg_quality'] = '70';             //quality of compression when scaling jpg images (0-100)
 $conf['subscribers'] = 0;                //enable change notice subscription support
+$conf['subscribe_time'] = 24*60*60;      //Time after which digests / lists are sent (in sec, default 1 day)
+                                         //Should be smaller than the time specified in recent_days
 $conf['compress']    = 1;                //Strip whitespaces and comments from Styles and JavaScript? 1|0
+$conf['cssdatauri']  = 0;                //Maximum byte size of small images to embed into CSS, won't work on IE<8
 $conf['hidepages']   = '';               //Regexp for pages to be skipped from RSS, Search and Recent Changes
 $conf['send404']     = 0;                //Send a HTTP 404 status for non existing pages?
 $conf['sitemap']     = 0;                //Create a google sitemap? How often? In days.
@@ -118,7 +125,7 @@ $conf['rss_linkto'] = 'diff';            //what page RSS entries link to:
                                          //  'page'    - the revised page itself
                                          //  'rev'     - page showing all revisions
                                          //  'current' - most recent revision of page
-$conf['rss_content'] = 'abstract';       // what to put in the items by deafult?
+$conf['rss_content'] = 'abstract';       // what to put in the items by default?
                                          //  'abstract' - plain text, first paragraph or so
                                          //  'diff'     - plain text unified diff wrapped in <pre> tags
                                          //  'htmldiff' - diff as HTML table
@@ -139,11 +146,12 @@ $conf['target']['media']     = '';
 $conf['target']['windows']   = '';
 
 //Proxy setup - if your Server needs a proxy to access the web set these
-$conf['proxy']['host'] = '';
-$conf['proxy']['port'] = '';
-$conf['proxy']['user'] = '';
-$conf['proxy']['pass'] = '';
-$conf['proxy']['ssl']  = 0;
+$conf['proxy']['host']    = '';
+$conf['proxy']['port']    = '';
+$conf['proxy']['user']    = '';
+$conf['proxy']['pass']    = '';
+$conf['proxy']['ssl']     = 0;
+$conf['proxy']['except']  = '';
 
 /* Safemode Hack */
 
@@ -154,3 +162,4 @@ $conf['ftp']['user'] = 'user';
 $conf['ftp']['pass'] = 'password';
 $conf['ftp']['root'] = '/home/user/htdocs';
 
+$conf['readdircache'] = 0;               //time cache in second for the readdir opération, 0 to deactivate.

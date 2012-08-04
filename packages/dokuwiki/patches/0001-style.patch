@@ -1,17 +1,19 @@
-diff -ur dokuwiki-2009-12-25/lib/tpl/arctic/style.ini dokuwiki-2009-12-25.neu/lib/tpl/arctic/style.ini
---- dokuwiki-2009-12-25/lib/tpl/arctic/style.ini	2010-12-16 19:26:10.000000000 +0100
-+++ dokuwiki-2009-12-25.neu/lib/tpl/arctic/style.ini	2010-12-16 19:26:24.000000000 +0100
-@@ -28,10 +28,10 @@
+diff -ur dokuwiki-2012-01-25b/lib/tpl/arctic/style.ini.neu dokuwiki-2012-01-25b/lib/tpl/arctic/style.ini
+--- dokuwiki-2012-01-25b/lib/tpl/arctic/style.ini.neu   2012-08-04 15:30:05.000000000 +0200
++++ dokuwiki-2012-01-25b/lib/tpl/arctic/style.ini       2012-08-04 15:30:46.000000000 +0200
+@@ -36,11 +36,11 @@
  ; give your wiki a new look.
  [replacements]
  ; arctic template LAYOUT
 -__wiki_width__     = "84%"
 +__wiki_width__     = "99%"
+ __wiki_full_width__="100%"
  __header_height__  = "5em"
 -__body_margin__    = "1.5em"
 -__page_padding__   = "0.5em;"
 +__body_margin__    = "0.1em"
 +__page_padding__   = "0.1em;"
  __footer_padding__ = "2em"
- 
+
  ; arctic template FONT-SIZES AND FONT-COLORS
+
