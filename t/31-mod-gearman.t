@@ -88,8 +88,7 @@ for my $core (qw/nagios icinga/) {
         url => "http://localhost/$site/nagios/cgi-bin/status.cgi?host=$host&servicestatustypes=1&hoststatustypes=15",
         auth    => "OMD Monitoring Site $site:omdadmin:omd",
         like    => [ "0 Matching Service Entries Displayed" ],
-        },
-        60
+        }
     );
 
     # verify the jobs done

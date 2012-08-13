@@ -33,7 +33,7 @@ TestUtils::test_command({ cmd => "/bin/sed -i -e 's/sleep_time = 15/sleep_time =
 TestUtils::test_command({ cmd => "/bin/sed -i -e 's/log_external_commands=0/log_external_commands=1/' /omd/sites/$site/etc/shinken/shinken.d/logging.cfg" });
 TestUtils::test_command({ cmd => "/bin/echo 'max_service_check_spread=1' >> /omd/sites/$site/etc/shinken/shinken.d/tuning.cfg" });
 TestUtils::test_command({ cmd => $omd_bin." start $site" })   or TestUtils::bail_out_clean("No need to test $package without proper startup");
-TestUtils::wait_for_file("/omd/sites/$site/tmp/run/live", 60) or TestUtils::bail_out_clean("No need to test $package without livestatus connection");
+TestUtils::wait_for_file("/omd/sites/$site/tmp/run/live") or TestUtils::bail_out_clean("No need to test $package without livestatus connection");
 
 # check_multi's own tests
 #TestUtils::test_command({ cmd => "/bin/sh -c '(cd packages/check_multi/check_multi/plugins/t; make OMD_SITE=test OMD_ROOT=/tmp test-all test-extreme)'" });
@@ -146,7 +146,7 @@ for my $core (qw/nagios shinken/) {
 	TestUtils::test_command({ cmd => $omd_bin." stop $site" });
 	TestUtils::test_command({ cmd => $omd_bin." config $site set CORE $core" });
 	TestUtils::test_command({ cmd => $omd_bin." start $site" })         or TestUtils::bail_out_clean("No need to test $package without proper startup");
-    TestUtils::wait_for_file("/omd/sites/$site/tmp/run/nagios.cmd", 60) or TestUtils::bail_out_clean("No need to test $package without proper startup");;
+    TestUtils::wait_for_file("/omd/sites/$site/tmp/run/nagios.cmd") or TestUtils::bail_out_clean("No need to test $package without proper startup");;
 
 	#--- reschedule all checks and wait for result (note: shinken cmd.cgi is to be addressed via nagios CGIs)
 	#TestUtils::test_command({ cmd => "/bin/su - $site -c './lib/nagios/plugins/check_http -t 30 -H localhost -a omdadmin:omd -u /$site/nagios/cgi-bin/cmd.cgi -e 200 -P \"cmd_typ=17&host=$host&cmd_mod=2&start_time=2222-22-22:22%3A22%3A22&force_check=on&btnSubmit=Commit\" -r \"Your command request was successfully submitted\"'", like => '/HTTP OK:/' });
@@ -165,13 +165,12 @@ for my $core (qw/nagios shinken/) {
 			url	=> "http://localhost/$site/nagios/cgi-bin/status.cgi?host=$host&servicestatustypes=1&hoststatustypes=15", 
 			auth	=> "OMD Monitoring Site $site:omdadmin:omd",
 			like	=> [ "0 Matching Service Entries Displayed" ],
-		}, 
-		60
+		}
 	);
 
-	TestUtils::wait_for_file("/omd/sites/$site/var/pnp4nagios/perfdata/omd-$site/Dummy_Service_omd-dummy.rrd", 60);
-	TestUtils::wait_for_file("/omd/sites/$site/tmp/run/live", 60) or TestUtils::bail_out_clean("No need to test $package without livestatus connection");
-	TestUtils::wait_for_file("/omd/sites/$site/tmp/nagios/status.dat", 60) or TestUtils::bail_out_clean("No need to test $package without existing status.dat");
+	TestUtils::wait_for_file("/omd/sites/$site/var/pnp4nagios/perfdata/omd-$site/Dummy_Service_omd-dummy.rrd");
+	TestUtils::wait_for_file("/omd/sites/$site/tmp/run/live") or TestUtils::bail_out_clean("No need to test $package without livestatus connection");
+	TestUtils::wait_for_file("/omd/sites/$site/tmp/nagios/status.dat") or TestUtils::bail_out_clean("No need to test $package without existing status.dat");
 
 	for my $url ( @{$urls} ) {
 		TestUtils::test_url($url);

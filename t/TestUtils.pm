@@ -450,7 +450,7 @@ sub read_config {
 =cut
 sub wait_for_file {
     my $file    = shift;
-    my $timeout = shift || 60;
+    my $timeout = shift || 120;
 
     my $x = 0;
     if(-e $file) {
@@ -487,7 +487,7 @@ sub wait_for_file {
 =cut
 sub wait_for_content {
     my $test    = shift;
-    my $timeout = shift || 60;
+    my $timeout = shift || 120;
 
     my $req;
     my $x = 0;
