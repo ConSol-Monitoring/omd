@@ -9,7 +9,7 @@ This file documents the revision history for the Open Monitoring Distribution
           - RPMS: Not checking for removed version during pkg release update
                  (Does not mean omd version update.)
           - check_multi: updated to 0.26_538
-          - Mod-Gearman: Updated to version 1.3.6
+          - Mod-Gearman: Updated to version 1.3.8
           - Thruk: Update to 1.40
           - Nagios Plugins: Update to 1.4.16
           - PNP4Nagios: Update to 0.6.18
