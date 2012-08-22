@@ -96,6 +96,7 @@ verify_config() {
     if [ $? -eq 0 ]; then
         if [ "$1" != "quiet" ]; then
             echo "done."
+            echo "$RESULT" >&2
         fi
         return 0
     else
@@ -228,7 +229,7 @@ case "$1" in
         fi
     ;;
     restart)
-        if ! verify_config; then
+        if ! verify_config quiet; then
             exit 1
         fi
 
@@ -244,7 +245,7 @@ case "$1" in
     ;;
     
     reload|force-reload)
-        if ! verify_config; then
+        if ! verify_config quiet; then
             exit 1
         fi
         
