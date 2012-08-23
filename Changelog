@@ -10,7 +10,7 @@ This file documents the revision history for the Open Monitoring Distribution
                  (Does not mean omd version update.)
           - check_multi: updated to 0.26_538
           - Mod-Gearman: Updated to version 1.3.8
-          - Thruk: Update to 1.40
+          - Thruk: Update to 1.42
           - Nagios Plugins: Update to 1.4.16
           - PNP4Nagios: Update to 0.6.18
           - Icinga: Update to 1.7.1
