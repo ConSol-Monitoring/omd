@@ -23,10 +23,10 @@ CONFIGUREOPTS = \
 build:
 	tar xzf $(DIR).tar.gz
 
-#	set -e ; for p in patches/*.dif ; do \
-#	        echo "applying $$p..." ; \
-#		( cd $(DIR) ; patch -p1 -b ) < $$p ; \
-#       done
+	set -e ; for p in patches/*.dif ; do \
+	        echo "applying $$p..." ; \
+		( cd $(DIR) ; patch -p1 -b ) < $$p ; \
+        done
 
 	cd $(DIR) ; ./configure $(CONFIGUREOPTS)
 	$(MAKE) -C $(DIR) all
