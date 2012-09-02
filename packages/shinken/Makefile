@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 
-SHINKEN=shinken-1.0.1
+SHINKEN=shinken-1.2
 SHINKEN_FILE=$(SHINKEN).tar.gz
 SHINKEN_URL=http://shinken-monitoring.org/pub/$(SHINKEN).tar.gz
 #
@@ -101,7 +101,6 @@ build:
 		echo we need to remove the shinken webui; \
 		( cd $(SHINKEN) ; patch -p1 -b ) < patches/0001-remove-webui.patch; \
 	fi
-	( cd $(SHINKEN) ; patch -p1 -b ) < patches/0002-add-livestatus-host-eventhandler.patch; \
 
 
 install:
