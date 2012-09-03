@@ -95,11 +95,12 @@ build:
 		$(DISTRO_VERSION) = "5.4" -o \
 		$(DISTRO_VERSION) = "5.5" -o \
 		$(DISTRO_VERSION) = "5.6" -o\
-		$(DISTRO_VERSION) = "5.7" ]; then \
+		$(DISTRO_VERSION) = "5.7" -o \
+		$(DISTRO_VERSION) = "5.8" ]; then \
 		echo it is a centos 5; \
 		echo which has python 2.4; \
 		echo we need to remove the shinken webui; \
-		( cd $(SHINKEN) ; patch -p1 -b ) < patches/0001-remove-webui.patch; \
+		rm -f $(SHINKEN)/shinken/modules/active_directory_ui.py; \
 	fi
 
 
