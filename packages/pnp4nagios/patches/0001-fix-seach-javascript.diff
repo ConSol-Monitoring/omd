@@ -1,0 +1,14 @@
+diff --git a/share/pnp/application/views/search_box.php b/share/pnp/application/views/search_box.php
+index c3d5521..b15c212 100644
+--- a/share/pnp/application/views/search_box.php
++++ b/share/pnp/application/views/search_box.php
+@@ -4,7 +4,7 @@
+ jQuery(function() {
+     jQuery("#query").autocomplete({
+         source: "<?php echo url::base('true')?>/index.php/ajax/search",
+-        select: function(event, ui) { window.location = <?php echo url::base('true')?> + "graph?host=" + ui.item.value  }
++        select: function(event, ui) { window.location = "<?php echo url::base('true')?>" + "graph?host=" + ui.item.value  }
+     });
+ });
+ </script>
+
