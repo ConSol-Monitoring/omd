@@ -12,7 +12,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 237 );
+plan( tests => 135 );
 
 # create our test site
 my $omd_bin = TestUtils::get_omd_bin();
@@ -86,8 +86,8 @@ my $urls = [
 			'/npcd/',
 			'/var_diskspace/',
 			'/var_updated_recently/',
-			'/process_perfdata_timeout/',
-			'/error_in_npcd_log/',
+			#'/process_perfdata_timeout/',
+			#'/error_in_npcd_log/',
 		],
 	},
 	{
@@ -141,7 +141,7 @@ foreach my $url ( @{$urls} ) {
 	push @{$url->{'unlike'}}, '/internal server error/';
 }
 
-for my $core (qw/nagios shinken/) {
+for my $core (qw/nagios/) {
 	#--- perform proper initialization
 	TestUtils::test_command({ cmd => $omd_bin." stop $site" });
 	TestUtils::test_command({ cmd => $omd_bin." config $site set CORE $core" });
