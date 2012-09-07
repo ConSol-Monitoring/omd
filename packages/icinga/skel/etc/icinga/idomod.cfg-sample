@@ -8,7 +8,7 @@
 # instance of Icinga and is used to seperate data coming from multiple
 # instances.  Defaults to 'default' (without quotes).
 
-instance_name=
+instance_name=###SITE###
 
 
 
@@ -80,7 +80,7 @@ output_buffer_items=5000
 # Icinga (re)starts, the IDO NEB module will read the contents of this
 # file and send it to the IDO2DB daemon for processing.
 
-buffer_file=/usr/local/icinga/var/idomod.tmp
+buffer_file=###ROOT###/var/icinga/idomod.tmp
 
 
 
