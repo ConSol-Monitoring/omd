@@ -26,6 +26,9 @@ install:
 	   install -m 644 $(DIR)/$$file $(DESTDIR)$(OMD_ROOT)/share/doc/$(NAME); \
 	done
 
+	# link lib/nagios/plugins to lib/icinga/plugins
+	ln -s $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins $(DESTDIR)$(OMD_ROOT)/lib/icinga/plugins
+
 skel:
 
 clean:
