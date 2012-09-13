@@ -40,11 +40,11 @@ cd ###ROOT###
 [ "$CONFIG_CORE" = "icinga" ] || exit 5
 
 BIN=###ROOT###/bin/icinga
-CFG_FILE=###ROOT###/tmp/nagios/nagios.cfg
-STATUS_FILE=###ROOT###/tmp/nagios/status.dat
-CMD_FILE=###ROOT###/tmp/run/nagios.cmd
-PID_FILE=###ROOT###/tmp/lock/nagios.lock
-STATUS_DAT=###ROOT###/tmp/nagios/status.dat
+CFG_FILE=###ROOT###/tmp/icinga/icinga.cfg
+STATUS_FILE=###ROOT###/tmp/icinga/status.dat
+CMD_FILE=###ROOT###/tmp/run/icinga.cmd
+PID_FILE=###ROOT###/tmp/lock/icinga.lock
+STATUS_DAT=###ROOT###/tmp/icinga/status.dat
 USR=###SITE###
 GRP=###SITE###
 

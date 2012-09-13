@@ -41,11 +41,11 @@ for my $core (qw/nagios icinga/) {
     TestUtils::file_contains({file => "/opt/omd/sites/$site/etc/mod-gearman/worker.cfg", like => ['/^debug=2/mx'] });
 
     # create test host/service
-    TestUtils::prepare_obj_config('t/data/omd/testconf1', '/omd/sites/'.$site.'/etc/nagios/conf.d', $site);
+    TestUtils::prepare_obj_config('t/data/omd/testconf1', '/omd/sites/'.$site.'/etc/'.$core.'/conf.d', $site);
 
     ##################################################
     # decrease status update interval
-    TestUtils::test_command({ cmd => "/usr/bin/env sed -i -e 's/^status_update_interval=30/status_update_interval=3/g' /opt/omd/sites/$site/etc/nagios/nagios.d/tuning.cfg" });
+    TestUtils::test_command({ cmd => "/usr/bin/env sed -i -e 's/^status_update_interval=30/status_update_interval=3/g' /opt/omd/sites/$site/etc/$core/$core.d/tuning.cfg" });
 
     ##################################################
     # prepare site
@@ -60,8 +60,8 @@ for my $core (qw/nagios icinga/) {
       { cmd => "/usr/bin/test -s /omd/sites/$site/etc/mod-gearman/secret.key", "exit" => 0 },
       { cmd => $omd_bin." start $site", like => [ '/gearmand\.\.\.OK/', '/gearman_worker\.\.\.OK/'], sleep => 1 },
       { cmd => $omd_bin." status $site", like => [ '/gearmand:\s+running/', '/gearman_worker:\s*running/'] },
-      { cmd => "/bin/su - $site -c './lib/nagios/plugins/check_http -H localhost -a omdadmin:omd -u /$site/nagios/cgi-bin/cmd.cgi -e 200 -P \"cmd_typ=7&cmd_mod=2&host=omd-$site&service=Dummy+Service&start_time=$now&force_check=on&btnSubmit=Commit\" -r \"Your command request was successfully submitted\"'", like => '/HTTP OK:/' },
-      { cmd => "/bin/su - $site -c './lib/nagios/plugins/check_http -H localhost -a omdadmin:omd -u /$site/nagios/cgi-bin/cmd.cgi -e 200 -P \"cmd_typ=7&cmd_mod=2&host=omd-$site&service=perl+test&start_time=$now&force_check=on&btnSubmit=Commit\" -r \"Your command request was successfully submitted\"'", like => '/HTTP OK:/' },
+      { cmd => "/bin/su - $site -c './lib/nagios/plugins/check_http -H localhost -a omdadmin:omd -u /$site/$core/cgi-bin/cmd.cgi -e 200 -P \"cmd_typ=7&cmd_mod=2&host=omd-$site&service=Dummy+Service&start_time=$now&force_check=on&btnSubmit=Commit\" -r \"Your command request was successfully submitted\"'", like => '/HTTP OK:/' },
+      { cmd => "/bin/su - $site -c './lib/nagios/plugins/check_http -H localhost -a omdadmin:omd -u /$site/$core/cgi-bin/cmd.cgi -e 200 -P \"cmd_typ=7&cmd_mod=2&host=omd-$site&service=perl+test&start_time=$now&force_check=on&btnSubmit=Commit\" -r \"Your command request was successfully submitted\"'", like => '/HTTP OK:/' },
     ];
     for my $test (@{$preps}) {
         TestUtils::test_command($test) or TestUtils::bail_out_clean("no further testing without proper preparation");
@@ -70,14 +70,14 @@ for my $core (qw/nagios icinga/) {
     ##################################################
     # execute some checks
     my $tests = [
-      { cmd => "/bin/grep 'Event broker module.*mod_gearman.o.*initialized successfully' /omd/sites/$site/var/log/nagios.log", like => '/successfully/' },
-      { cmd => "/bin/grep 'mod_gearman: initialized version ".$modgearman_version." \(libgearman ".$libgearman_version."\)' /omd/sites/$site/var/log/nagios.log", like => '/initialized/' },
+      { cmd => "/bin/grep 'Event broker module.*mod_gearman.o.*initialized successfully' /omd/sites/$site/var/log/$core.log", like => '/successfully/' },
+      { cmd => "/bin/grep 'mod_gearman: initialized version ".$modgearman_version." \(libgearman ".$libgearman_version."\)' /omd/sites/$site/var/log/$core.log", like => '/initialized/' },
       { cmd => "/bin/su - $site -c 'bin/send_gearman --server=localhost:4730 --keyfile=etc/mod-gearman/secret.key --host=$host --message=test'" },
       { cmd => "/bin/su - $site -c 'bin/send_gearman --server=localhost:4730 --keyfile=etc/mod-gearman/secret.key --host=$host --service=$service --message=test'" },
-      { cmd => "/bin/grep -i 'mod_gearman: ERROR' /omd/sites/$site/var/log/nagios.log", 'exit' => 1, like => '/^\s*$/' },
-      { cmd => "/bin/grep -i 'mod_gearman: WARN' /omd/sites/$site/var/log/nagios.log", 'exit' => 1, like => '/^\s*$/' },
-      { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_gearman -H localhost:4730'", like => '/check_gearman OK/' },
-      { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_gearman -H localhost:4730 -q host'", like => '/check_gearman OK/' },
+      { cmd => "/bin/grep -i 'mod_gearman: ERROR' /omd/sites/$site/var/log/$core.log", 'exit' => 1, like => '/^\s*$/' },
+      { cmd => "/bin/grep -i 'mod_gearman: WARN' /omd/sites/$site/var/log/$core.log", 'exit' => 1, like => '/^\s*$/' },
+      { cmd => "/bin/su - $site -c 'lib/$core/plugins/check_gearman -H localhost:4730'", like => '/check_gearman OK/' },
+      { cmd => "/bin/su - $site -c 'lib/$core/plugins/check_gearman -H localhost:4730 -q host'", like => '/check_gearman OK/' },
     ];
     for my $test (@{$tests}) {
         TestUtils::test_command($test);
@@ -85,14 +85,14 @@ for my $core (qw/nagios icinga/) {
 
     #--- wait for all services being checked
     TestUtils::wait_for_content({
-        url => "http://localhost/$site/nagios/cgi-bin/status.cgi?host=$host&servicestatustypes=1&hoststatustypes=15",
+        url => "http://localhost/$site/$core/cgi-bin/status.cgi?host=$host&servicestatustypes=1&hoststatustypes=15",
         auth    => "OMD Monitoring Site $site:omdadmin:omd",
         like    => [ "0 Matching Service Entries Displayed" ],
         }
     );
 
     # verify the jobs done
-    my $test = { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_gearman -H localhost:4730 -q worker_".hostname." -t 10 -s check'", like => [ '/check_gearman OK/' ] };
+    my $test = { cmd => "/bin/su - $site -c 'lib/$core/plugins/check_gearman -H localhost:4730 -q worker_".hostname." -t 10 -s check'", like => [ '/check_gearman OK/' ] };
     TestUtils::test_command($test);
     chomp($test->{'stdout'});
     unlike($test->{'stdout'}, qr/jobs=0c/, "worker has jobs done: ".$test->{'stdout'});
