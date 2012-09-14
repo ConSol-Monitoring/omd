@@ -27,7 +27,7 @@ install:
 	done
 
 	# link lib/nagios/plugins to lib/icinga/plugins
-	ln -s $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins $(DESTDIR)$(OMD_ROOT)/lib/icinga/plugins
+	cd $(DESTDIR)$(OMD_ROOT)/lib/icinga && ln -s ../nagios/plugins plugins
 
 skel:
 
