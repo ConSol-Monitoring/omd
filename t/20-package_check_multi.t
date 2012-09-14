@@ -12,7 +12,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 135 );
+plan( tests => 137 );
 
 # create our test site
 my $omd_bin = TestUtils::get_omd_bin();
@@ -86,8 +86,8 @@ my $urls = [
 			'/npcd/',
 			'/var_diskspace/',
 			'/var_updated_recently/',
-			#'/process_perfdata_timeout/',
-			#'/error_in_npcd_log/',
+			'/process_perfdata_timeout/',
+			'/error_in_npcd_log/',
 		],
 	},
 	{
