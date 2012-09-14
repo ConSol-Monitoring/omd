@@ -69,7 +69,7 @@ case "$1" in
         elif [ "$2" == "shinken" ]
         then
             # Thruk is the default interface, but classic is possible
-            make_link ../../nagios/apache.conf $OMD_ROOT/etc/apache/conf.d/nagios.conf
+            make_link ../../shinken/apache-cgi.conf $OMD_ROOT/etc/apache/conf.d/nagios.conf
             make_link ../../icinga/apache.conf $OMD_ROOT/etc/apache/conf.d/icinga.conf 
             make_link ../../shinken/apache.conf $OMD_ROOT/etc/apache/conf.d/shinken.conf
             make_link shinken $OMD_ROOT/etc/init.d/core
