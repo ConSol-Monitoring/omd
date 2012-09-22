@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 NAME = nagvis
-VERSION = 1.6.5
+VERSION = 1.7.1
 DIR = $(NAME)-$(VERSION)
 
 .PHONY: skel
@@ -39,11 +39,11 @@ install:
 	
 	# Move demo config files
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/skel/etc/nagvis/conf.d
-	mkdir -p $(DESTDIR)$(OMD_ROOT)/skel/etc/nagvis/automaps
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/skel/etc/nagvis/maps
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/skel/etc/nagvis/geomap
 	mv $(DESTDIR)$(OMD_ROOT)/share/nagvis/etc/conf.d/*.ini.php $(DESTDIR)$(OMD_ROOT)/skel/etc/nagvis/conf.d
-	mv $(DESTDIR)$(OMD_ROOT)/share/nagvis/etc/automaps/*.cfg $(DESTDIR)$(OMD_ROOT)/skel/etc/nagvis/automaps
 	mv $(DESTDIR)$(OMD_ROOT)/share/nagvis/etc/maps/*.cfg $(DESTDIR)$(OMD_ROOT)/skel/etc/nagvis/maps
+	mv $(DESTDIR)$(OMD_ROOT)/share/nagvis/etc/geomap/demo-*.csv $(DESTDIR)$(OMD_ROOT)/skel/etc/nagvis/geomap
 	
 	# Delete files/directories we do not want to pack
 	rm -rf $(DESTDIR)$(OMD_ROOT)/share/nagvis/var
