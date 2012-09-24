@@ -12,7 +12,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-my $num_tests = 449;
+my $num_tests = 382;
 if($ENV{NAGVIS_DEVEL}) {
     $num_tests += 3;
 }
@@ -41,7 +41,7 @@ my $version = site_nagvis_version($site);
 ##################################################
 # Check installation paths
 site_thing_exists($site, 'etc/nagvis/maps');
-site_thing_exists($site, 'etc/nagvis/automaps');
+site_thing_exists($site, 'etc/nagvis/geomap');
 site_thing_exists($site, 'etc/nagvis/conf.d');
 site_thing_exists($site, 'etc/nagvis/conf.d/omd.ini.php');
 site_thing_exists($site, 'etc/nagvis/conf.d/urls.ini.php');
@@ -139,6 +139,8 @@ my $urls = [
     url({ url  => "/nagvis/index.php?map=demo-germany",
           like => '/, \'demo-germany\'/', 'skip_html_lint' => 1 }),
     url({ url  => "/nagvis/config.php?map=demo-germany",
+          like => '/, \'demo-germany\'/', 'skip_html_lint' => 1 }),
+    url({ url  => "/nagvis/index.php?rotation=demo",
           like => '/, \'demo-germany\'/', 'skip_html_lint' => 1 }),
   
     # Ajax fetched dialogs
@@ -290,8 +292,9 @@ TestUtils::test_url(
           like => [ '/form name="loginform"/', '/name="_username"/', '/name="_password"/' ]})
 );
 
+# perform a random request which sould not be allowed to be requested by non logged in users
 TestUtils::test_url(
-    url({ url  => '/nagvis/server/core/ajax_handler.php?mod=General&act=getCfgFileAges&f[]=mainCfg',
+    url({ url  => '/nagvis/server/core/ajax_handler.php?mod=General&act=getHoverTemplate&name[]=default',
           like => [ '/{"message":"You are not authenticated"/' ]})
 );
 
@@ -317,12 +320,12 @@ TestUtils::test_url(
 );
 
 #diag('Test logging in at ajax API using _GET vars');
+# Use random page to login by GET vars
 TestUtils::test_url(
-    url({ url  => '/nagvis/server/core/ajax_handler.php?mod=General&act=getCfgFileAges&f[]=mainCfg'
+    url({ url  => '/nagvis/server/core/ajax_handler.php?mod=General&act=getHoverTemplate&name[]=default'
                  .'&_username=omdadmin&_password=omd',
-          like => [ '/^{"mainCfg":/' ]})
+          like => [ '/"name":"default","css_file":/' ]})
 );
-
 
 # Disable dialog auth to use the environment auth for further testing
 $auth = $orig_auth;
@@ -332,43 +335,6 @@ TestUtils::test_command({ cmd => $omd_bin." restart $site apache" });
 
 ##################################################
 # AJAX API tests
-
-# /nagvis/server/core/ajax_handler.php?mod=General&act=getCfgFileAges&f[]=mainCfg
-# {"mainCfg":1296327919} => mtime of <site>/etc/nagvis/nagvis.ini.php
-#
-# 1. Test the file age returned by NagVis and compare it with the mtime fetched by this test
-# 2. Touch the file and check if the API returns the new age
-# 3. Do the same with a map config file
-# 4. Do the same with an automap config file
-TestUtils::test_url(
-    api_url({ url  => '/nagvis/server/core/ajax_handler.php?mod=General&act=getCfgFileAges&f[]=mainCfg',
-              like => '/^{"mainCfg":'.site_nagvis_maincfg_mtime($site).'}$/' })
-);
-
-TestUtils::test_url(
-    api_url({ url  => '/nagvis/server/core/ajax_handler.php?mod=General&act=getCfgFileAges&f[]=mainCfg',
-              like => '/^{"mainCfg":'.site_touch($site, 'etc/nagvis/nagvis.ini.php').'}$/' })
-);
-
-TestUtils::test_url(
-    api_url({ url  => '/nagvis/server/core/ajax_handler.php?mod=General&act=getCfgFileAges&f[]=mainCfg&m[]=demo-germany',
-              like => '/^{"mainCfg":'.site_nagvis_maincfg_mtime($site).',"demo-germany":'.site_mtime($site, 'etc/nagvis/maps/demo-germany.cfg').'}$/' })
-);
-
-TestUtils::test_url(
-    api_url({ url  => '/nagvis/server/core/ajax_handler.php?mod=General&act=getCfgFileAges&f[]=mainCfg&m[]=demo-germany',
-              like => '/^{"mainCfg":'.site_nagvis_maincfg_mtime($site).',"demo-germany":'.site_touch($site, 'etc/nagvis/maps/demo-germany.cfg').'}$/' })
-);
-
-TestUtils::test_url(
-    api_url({ url  => '/nagvis/server/core/ajax_handler.php?mod=General&act=getCfgFileAges&f[]=mainCfg&am[]=__automap',
-              like => '/^{"mainCfg":'.site_nagvis_maincfg_mtime($site).',"__automap":'.site_mtime($site, 'etc/nagvis/automaps/__automap.cfg').'}$/' })
-);
-
-TestUtils::test_url(
-    api_url({ url  => '/nagvis/server/core/ajax_handler.php?mod=General&act=getCfgFileAges&f[]=mainCfg&am[]=__automap',
-              like => '/^{"mainCfg":'.site_nagvis_maincfg_mtime($site).',"__automap":'.site_touch($site, 'etc/nagvis/automaps/__automap.cfg').'}$/' })
-);
 
 # /nagvis/server/core/ajax_handler.php?mod=General&act=getHoverTemplate&name[]=default
 # [{"name":"default","code":"<...>"}]
@@ -414,18 +380,12 @@ TestUtils::test_url(
 # {"cellsperrow":4,"showautomaps":1,"showmaps":1,"showgeomap":0,"showmapthumbs":0,"showrotations":1,"page_title":"NagVis 1.5.7","favicon_image":"\/nagvis\/frontend\/nagvis-js\/images\/internal\/favicon.png","background_color":"#ffffff","lang_mapIndex":"Map Index","lang_automapIndex":"Automap Index","lang_rotationPools":"Rotation Pools","event_log":0,"event_log_level":"info","event_log_height":100,"event_log_hidden":1}
 TestUtils::test_url(
     api_url({ url  => '/nagvis/server/core/ajax_handler.php?mod=Overview&act=getOverviewProperties',
-              like => [ '/"showautomaps":1,"showmaps":1,"showgeomap":0,"showmapthumbs":0,"showrotations":1/', ]})
+              like => [ '/"showmaps":1,"showgeomap":0,"showmapthumbs":0,"showrotations":1/', ]})
 );
 
 # /nagvis/server/core/ajax_handler.php?mod=Overview&act=getOverviewMaps
 TestUtils::test_url(
     api_url_list({ url  => '/nagvis/server/core/ajax_handler.php?mod=Overview&act=getOverviewMaps',
-                   like => [ '/"alias":/', ]})
-);
-
-# /nagvis/server/core/ajax_handler.php?mod=Overview&act=getOverviewAutomaps
-TestUtils::test_url(
-    api_url_list({ url  => '/nagvis/server/core/ajax_handler.php?mod=Overview&act=getOverviewAutomaps',
                    like => [ '/"alias":/', ]})
 );
 
@@ -444,31 +404,8 @@ TestUtils::test_url(
 
 TestUtils::test_url(
   api_url_list({ url  => '/nagvis/server/core/ajax_handler.php?mod=Overview&act=getObjectStates&ty=state&i[]=automap-notexisting',
-                 like => [ '/"state":"ERROR/', '/Map configuration file does not exist/' ]})
+                 like => [ '/"state":"ERROR/', '/Map Error: The path /' ]})
 );
-
-###############################################################################
-# AUTOMAP
-###############################################################################
-# /nagvis/server/core/ajax_handler.php?mod=AutoMap&act=getAutomapProperties&show=__automap&childLayers=2
-TestUtils::test_url(
-    api_url({ url  => '/nagvis/server/core/ajax_handler.php?mod=AutoMap&act=getAutomapProperties&show=__automap&childLayers=2',
-              like => [ '/"map_name":"__automap","alias":"Default Automap"/', ]})
-);
-
-# /nagvis/server/core/ajax_handler.php?mod=AutoMap&act=getAutomapObjects&show=__automap&childLayers=2
-TestUtils::test_url(
-    api_url_list({ url  => '/nagvis/server/core/ajax_handler.php?mod=AutoMap&act=getAutomapObjects&show=__automap&childLayers=2',
-                   like => [ '/"type":"map"/', '/"name":"__automap"/' ]})
-);
-
-# /nagvis/server/core/ajax_handler.php?mod=AutoMap&act=getObjectStates&show=__automap&ty=state&i[]=0&t[]=host&n1[]=localhost&n2[]=&childLayers=2
-# FIXME: Test the different automap params
-TestUtils::test_url(
-    api_url_list({ url  => '/nagvis/server/core/ajax_handler.php?mod=AutoMap&act=getObjectStates&show=__automap&ty=state&i[]=0&t[]=host&n1[]=localhost&n2[]=&childLayers=2',
-                   like => [ '/"state":"/', ]})
-);
-  
 
 ###############################################################################
 # Test user config

@@ -1,8 +1,8 @@
 #!/bin/bash
 if [ "$1" = "nightly" ]; then
-    VERSION=1.6-nightly
+    VERSION=1.7-nightly
     echo "Adding current nightly build..."
-    wget -O nagvis-$VERSION.tar.gz http://nagvis.org/share/nagvis-$VERSION.tar.gz
+    wget -O nagvis-$VERSION.tar.gz http://www.nagvis.org/share/nagvis-$VERSION.tar.gz
 else
     VERSION=$(wget -O - http://nagvis.org/stable_release.php 2>/dev/null)
     [ -z "$VERSION" ] && echo "ERROR: Got no version." && exit 1
