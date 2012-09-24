@@ -276,13 +276,23 @@ deb-snap: deb-environment
 	git checkout -- Makefile.omd packages/omd/omd
 
 # Only to be used for developement testing setup 
-setup: pack xzf
+setup: pack xzf alt
 
 # Only for development: install tarball below /
 xzf:
 	tar xzf $(BIN_TGZ) -C / # HACK: Add missing suid bits if compiled as non-root
 	chmod 4755 $(OMD_ROOT)/lib/nagios/plugins/check_{icmp,dhcp}
 	$(APACHE_CTL) -k graceful
+
+# On debian based systems register the alternative switches
+alt:
+	@if which update-alternatives >/dev/null 2>&1; then \
+	    update-alternatives --install /omd/versions/default \
+		omd /omd/versions/$(OMD_VERSION) $(OMD_SERIAL) \
+		--slave /usr/bin/omd omd.bin /omd/versions/$(OMD_VERSION)/bin/omd \
+		--slave /usr/share/man/man8/omd.8.gz omd.man8 \
+               /omd/versions/$(OMD_VERSION)/share/man/man8/omd.8.gz ; \
+	fi ;
 
 version:
 	@if [ -z "$(VERSION)" ] ; then \
