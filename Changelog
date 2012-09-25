@@ -1,6 +1,6 @@
 This file documents the revision history for the Open Monitoring Distribution
 
-0.56     not yet released
+0.56     Sep 25 2012
           - omd:
             - Fixed problem updating omd sites without tmpfs: Not removing
               whole tmp/ directory but only the contents
