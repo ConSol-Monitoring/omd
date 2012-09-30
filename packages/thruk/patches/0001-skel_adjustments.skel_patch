@@ -128,7 +128,18 @@
  
  # execute regular scheduled reports with this nice level
  #report_nice_level = 5
-@@ -401,42 +402,19 @@
+@@ -390,8 +391,8 @@
+ ######################################
+ # COOKIE AUTH
+ ######################################
+-cookie_auth_login_url             = thruk/cgi-bin/login.cgi
+-cookie_auth_restricted_url        = http://localhost/thruk/cgi-bin/restricted.cgi
++cookie_auth_login_url             = ###SITE###/thruk/cgi-bin/login.cgi
++cookie_auth_restricted_url        = http://localhost/###SITE###/thruk/cgi-bin/restricted.cgi
+ cookie_auth_session_timeout       = 86400
+ cookie_auth_session_cache_timeout = 5
+ 
+@@ -412,42 +413,19 @@
  ######################################
  # Backend Configuration, enter your backends here
  <Component Thruk::Backend>
@@ -184,7 +195,7 @@
  </Component>
  
  
-@@ -450,9 +428,9 @@
+@@ -461,9 +439,9 @@
  <Component Thruk::Plugin::ConfigTool>
      show_plugin_syntax_helper = 1
  
