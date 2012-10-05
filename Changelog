@@ -1,4 +1,6 @@
 This file documents the revision history for the Open Monitoring Distribution
+0.58:
+         - Check_MK/MK Livestatus: new version 1.2.0p3
 
 0.56     Sep 25 2012
           - omd:
