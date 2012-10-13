@@ -1,7 +1,8 @@
 include ../../Makefile.omd
 
 NAME     = jmx4perl
-VERSION  = 1.05
+VERSION  = 1.06
+JOLOKIA_VERSION = 1.0.5
 DIR      = $(NAME)-$(VERSION)
 
 .PHONY: skel
@@ -33,6 +34,11 @@ install:
 	test -d $(DESTDIR)$(OMD_ROOT)/share/doc/jmx4perl || \
 	        mkdir -p $(DESTDIR)$(OMD_ROOT)/share/doc/jmx4perl
 	install -m 644 README $(DESTDIR)$(OMD_ROOT)/share/doc/jmx4perl
+# Jolokia Agents
+	rm -rf $(DESTDIR)$(OMD_ROOT)/share/jmx4perl
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/jmx4perl/jolokia-$(JOLOKIA_VERSION)
+	rsync -a jolokia-agents/$(JOLOKIA_VERSION)/ $(DESTDIR)$(OMD_ROOT)/share/jmx4perl/jolokia-$(JOLOKIA_VERSION)/
+	chmod 644 $(DESTDIR)$(OMD_ROOT)/share/jmx4perl/jolokia-$(JOLOKIA_VERSION)/*
 
 skel:
 
