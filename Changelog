@@ -1,5 +1,8 @@
 This file documents the revision history for the Open Monitoring Distribution
 0.58:
+         - Thruk: Update to 1.52
+           - added cookie based login
+         - Apache: Enabling mod_status (if available) for 127.0.0.1 in own mode
          - Check_MK/MK Livestatus: new version 1.2.0p3
 
 0.56     Sep 25 2012
@@ -18,6 +21,8 @@ This file documents the revision history for the Open Monitoring Distribution
           - NagVis: Update to 1.7.1
           - Icinga: Update to 1.7.2
           - Check_MK: Added 1.2.0p2 release
+          - Shinken: Update to 1.2
+          - jmx4perl: Update 1.05
           - Support Ubuntu 12.04 (Precise)
           - set log_initial_states=1 per default
 

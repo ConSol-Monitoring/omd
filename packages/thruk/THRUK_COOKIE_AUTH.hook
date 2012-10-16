@@ -1,0 +1,44 @@
+#!/bin/bash
+
+# Alias: Use thruk cookie auth
+# Menu: Web GUI
+# Description:
+#  Thruk provides a cookie based authentication which can be
+#  used as alternative to the default basic authentication.
+#  The cookie authentication is done by Thruk but it
+#  covers all other addons as well.
+
+case "$1" in
+   default)
+       echo "off"
+   ;;
+   choices)
+       echo "on: use cookie authentication"
+       echo "off: use basic authentication"
+   ;;
+   set)
+       APACHE_CFG=${OMD_ROOT}/etc/apache/conf.d/thruk_cookie_auth.conf
+       if [ "$2" == "on" ]; then
+           cat > $APACHE_CFG <<EOF
+RewriteLock "\${OMD_ROOT}/var/thruk/apache_rewrite.lock"
+RewriteMap  users prg:\${OMD_ROOT}/share/thruk/script/thruk_auth
+
+# make all cookies accessible by the url
+RewriteCond %{REQUEST_URI}           !^/\${OMD_SITE}/thruk/cgi-bin/restricted.cgi
+RewriteRule ^/(.*)$                  /%{HTTP_COOKIE}/%{REMOTE_ADDR}/____/\$1 [C,NS]
+RewriteRule ^(.*)$                   \${users:\$1|/loginbad/}  [C,NS]
+RewriteRule ^/pass/(.*)$             /\$1 [NS,PT,L,E=!REMOTE_USER]
+RewriteRule ^/redirect/(.*)$         /\$1 [NS,L,R=302]
+RewriteRule ^/loginok/([^/]+)/(.*)$  /\$2 [NS,PT,L,E=REMOTE_USER:\$1]
+
+<LocationMatch ^/\${OMD_SITE}/(?!thruk/cgi-bin/restricted.cgi)>
+    Order allow,deny
+    Allow from all
+    Satisfy any
+</LocationMatch>
+EOF
+       else
+          rm -f $APACHE_CFG
+       fi
+   ;;
+esac
