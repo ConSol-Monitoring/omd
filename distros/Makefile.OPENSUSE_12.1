@@ -63,6 +63,7 @@ OS_PACKAGES    += samba-client
 OS_PACKAGES    += unzip
 OS_PACKAGES    += xinetd
 OS_PACKAGES    += xorg-x11-fonts
+OS_PACKAGES    += python
 USERADD_OPTIONS   = -M
 ADD_USER_TO_GROUP = groupmod -A %(user)s %(group)s
 PACKAGE_INSTALL   = zypper -n refresh ; zypper install -n 
