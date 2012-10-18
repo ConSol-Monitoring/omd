@@ -2,13 +2,16 @@
 if [ "$1" = "nightly" ]; then
     VERSION=1.7-nightly
     echo "Adding current nightly build..."
+    git rm nagvis-*.tar.gz
     wget -O nagvis-$VERSION.tar.gz http://www.nagvis.org/share/nagvis-$VERSION.tar.gz
 else
-    VERSION=$(wget -O - http://nagvis.org/stable_release.php 2>/dev/null)
+    VERSION=$(wget -O - http://www.nagvis.org/stable_release.php 2>/dev/null)
     [ -z "$VERSION" ] && echo "ERROR: Got no version." && exit 1
+    git rm nagvis-*.tar.gz
     echo "Adding current VERSION ($VERSION)..."
     wget -O nagvis-$VERSION.tar.gz https://sourceforge.net/projects/nagvis/files/NagVis%20${VERSION%.*}/nagvis-$VERSION.tar.gz/download 2>/dev/null
 fi
 
+git add nagvis-$VERSION.tar.gz
 sed -i "s/^VERSION = .*$/VERSION = $VERSION/g" Makefile
 exit 0
