@@ -14,7 +14,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 192 );
+plan( tests => 200 );
 
 ##################################################
 # get version strings
@@ -58,6 +58,7 @@ for my $core (qw/nagios icinga/) {
       { cmd => $omd_bin." config $site set CORE $core" },
       { cmd => $omd_bin." config $site set MOD_GEARMAN on" },
       { cmd => "/usr/bin/test -s /omd/sites/$site/etc/mod-gearman/secret.key", "exit" => 0 },
+      { cmd => "/bin/su - $site -c 'rm -f var/*/retention.dat'", like => '/^$/' },
       { cmd => $omd_bin." start $site", like => [ '/gearmand\.\.\.OK/', '/gearman_worker\.\.\.OK/'], sleep => 1 },
       { cmd => $omd_bin." status $site", like => [ '/gearmand:\s+running/', '/gearman_worker:\s*running/'] },
       { cmd => "/bin/su - $site -c './lib/nagios/plugins/check_http -H localhost -a omdadmin:omd -u /$site/$core/cgi-bin/cmd.cgi -e 200 -P \"cmd_typ=7&cmd_mod=2&host=omd-$site&service=Dummy+Service&start_time=$now&force_check=on&btnSubmit=Commit\" -r \"successfully submitted\"'", like => '/HTTP OK:/' },
@@ -87,7 +88,7 @@ for my $core (qw/nagios icinga/) {
     TestUtils::wait_for_content({
         url => "http://localhost/$site/$core/cgi-bin/status.cgi?host=$host&servicestatustypes=1&hoststatustypes=15",
         auth    => "OMD Monitoring Site $site:omdadmin:omd",
-        like    => [ "0 Matching Service Entries Displayed" ],
+        like    => [ "0 Matching Service" ],
         }
     );
 
