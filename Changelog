@@ -9,6 +9,7 @@ This file documents the revision history for the Open Monitoring Distribution
          - PNP4Nagios
             - Added INIT hooks to npcd and pnp_gearman_worker scripts
          - Support Ubuntu 12.10 (Quantal)
+         - Webinject: Update to 1.76
 
 0.56     Sep 25 2012
           - omd:
