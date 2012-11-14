@@ -2160,8 +2160,13 @@ def main_create(args, options={}):
         create_site_dir(g_sitename)
         add_to_fstab(g_sitename)
 
+    config_settings = {}
+    if "no-autostart" in options:
+        config_settings["AUTOSTART"] = "off"
+        sys.stdout.write("Going to set AUTOSTART to off.\n")
+
     if not "no-init" in options:
-        init_site()
+        init_site(config_settings)
         welcome_message()
 
     else:
@@ -2213,7 +2218,7 @@ def main_init(args, options):
     init_site()
     welcome_message()
 
-def init_site():
+def init_site(config_settings=None):
     # Create symbolic link to version
     create_version_symlink(g_sitename, OMD_VERSION)
 
@@ -2231,6 +2236,9 @@ def init_site():
     # Create site.conf with default values
     config_load_hooks()
     config_set_all() # execute 'set' functions with default values
+    if config_settings:
+        for hookname, value in config_settings.items():
+            config_set_value(hookname, value)
     config_save()
 
     # Change the few files that config save as created as root
@@ -2839,6 +2847,7 @@ commands = [
       ( "gid", "g", True, "create site group with GID ARG" ),
       ( "reuse", None, False, "do not create a site user, reuse existing one" ),
       ( "no-init",  "n",  False, "leave new site directory empty (a later omd init does this"),
+      ( "no-autostart", "A", False, "set AUTOSTART to off (useful for test sites)"), 
     ],
     "Create a new site (-u UID, -g GID)",
 
