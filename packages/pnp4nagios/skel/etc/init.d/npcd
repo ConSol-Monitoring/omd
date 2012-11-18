@@ -14,6 +14,10 @@
 #
 # File : npcd
 #
+
+cd ###ROOT###
+. ###ROOT###/.profile
+. ###ROOT###/etc/omd/site.conf
   
 servicename=npcd
 prefix=###ROOT###
@@ -110,8 +114,8 @@ if [ ! -f $NpcdCfgFile ]; then
 fi
           
 # See how we were called.
+__init_hook $0 $1 pre
 case "$1" in
-
     start)
         status_npcd
         if [ $? -eq 0 ]; then
@@ -124,6 +128,7 @@ case "$1" in
         $NpcdBin -d -f $NpcdCfgFile
         if [ -d $NpcdLockDir ]; then touch $NpcdLockDir/$NpcdLockFile; fi
         echo "OK"
+	__init_hook $0 $1 post
         exit 0
         ;;
 
@@ -138,31 +143,33 @@ case "$1" in
         pid_npcd
         killproc_npcd npcd
 
-         # now we have to wait for npcd to exit and remove its
-         # own NpcdRunFile, otherwise a following "start" could
-         # happen, and then the exiting npcd will remove the
-         # new NpcdRunFile, allowing multiple npcd daemons
-         # to (sooner or later) run - John Sellens
-        #echo -n 'Waiting for npcd to exit .'
-         for i in 1 2 3 4 5 6 7 8 9 10 ; do
+        # now we have to wait for npcd to exit and remove its
+        # own NpcdRunFile, otherwise a following "start" could
+        # happen, and then the exiting npcd will remove the
+        # new NpcdRunFile, allowing multiple npcd daemons
+        # to (sooner or later) run - John Sellens
+        # echo -n 'Waiting for npcd to exit .'
+        for i in 1 2 3 4 5 6 7 8 9 10 ; do
              if status_npcd > /dev/null; then
              echo -n '.'
              sleep 1
              else
              break
              fi
-         done
-         if status_npcd > /dev/null; then
+	done
+        if status_npcd > /dev/null; then
              echo ''
              echo 'Warning - $servicename did not exit in a timely manner'
-         else
+        else
              echo 'OK'
-         fi
+        fi
         rm -f $NpcdLockDir/$NpcdLockFile 
+	__init_hook $0 $1 post
+	exit 0
         ;;
 
-        status)
-            printstatus_npcd
+    status)
+        printstatus_npcd
         ;;
 
     restart|reload)
