@@ -13,7 +13,10 @@
 
 #### OMD ###
 # Check if Mod-Gearman is enabled in OMD. If not terminate.
-. etc/omd/site.conf
+cd ###ROOT###
+. ###ROOT###/.profile
+. ###ROOT###/etc/omd/site.conf
+
 if [ "$CONFIG_MOD_GEARMAN" != "on" -o "$CONFIG_PNP4NAGIOS" != "gearman" ] ; then
     exit 5
 fi
@@ -69,6 +72,7 @@ function kill_procs() {
     fi
 }
 
+__init_hook $0 $1 pre
 case "$1" in
     start)
         echo -n "Starting $NAME "
