@@ -8,6 +8,7 @@ This file documents the revision history for the Open Monitoring Distribution
          - NagVis: Update to 1.7.3
          - PNP4Nagios
             - Added INIT hooks to npcd and pnp_gearman_worker scripts
+         - Support Ubuntu 12.10 (Quantal)
 
 0.56     Sep 25 2012
           - omd:
