@@ -4,6 +4,7 @@ BUILD_PACKAGES   += boost-devel
 BUILD_PACKAGES   += cairo-devel
 BUILD_PACKAGES   += expat-devel
 BUILD_PACKAGES   += fping
+BUILD_PACKAGES   += bind-utils
 BUILD_PACKAGES   += gcc
 BUILD_PACKAGES   += gcc-c++
 BUILD_PACKAGES   += libevent-devel
