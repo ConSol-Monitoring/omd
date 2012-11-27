@@ -33,8 +33,9 @@ EOF
           cat > $NAGVIS_CFG <<EOF
 [global]
 logonmodule="LogonMultisite"
-logon_multisite_secret="/omd/sites/$OMD_SITE/etc/auth.secret"
 logon_multisite_htpasswd="/omd/sites/$OMD_SITE/etc/htpasswd"
+logon_multisite_secret="/omd/sites/$OMD_SITE/etc/auth.secret"
+logon_multisite_serials="/omd/sites/$OMD_SITE/etc/auth.serials"
 EOF
 
           cat > $PNP_CFG <<EOF
@@ -47,6 +48,7 @@ EOF
 \$conf['auth_multisite_enabled']    = TRUE;
 \$conf['auth_multisite_htpasswd']   = '/omd/sites/$OMD_SITE/etc/htpasswd';
 \$conf['auth_multisite_secret']     = '/omd/sites/$OMD_SITE/etc/auth.secret';
+\$conf['auth_multisite_serials']    = '/omd/sites/$OMD_SITE/etc/auth.serials';
 \$conf['auth_multisite_login_url']  = '/$OMD_SITE/check_mk/login.py';
 ?>
 EOF

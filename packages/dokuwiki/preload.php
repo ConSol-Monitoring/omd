@@ -6,6 +6,11 @@ if(substr($_SERVER["SCRIPT_FILENAME"], 0, 4) == '/omd') {
     define('DOKU_CONF', '/omd/sites/'.$site.'/etc/dokuwiki/');
     unset($site_parts);
     unset($site);
+} else {
+    $site=getenv('OMD_SITE');
+    define('DOKU_CONF', '/omd/sites/'.$site.'/etc/dokuwiki/');
+    define('DOKU_INC', '/omd/sites/'.$site.'/var/dokuwiki/data/');
+    unset($site);
 }
 
 $config_cascade = array(
