@@ -46,7 +46,6 @@ skel:
 	done
 	find $(SKEL)/etc/mod-gearman -name \*.orig -exec rm {} \;
 	mkdir -p $(SKEL)/var/log/mod_gearman
-	cd $(SKEL)/var/log && ln -s gearman mod_gearman
 	touch $(SKEL)/var/log/mod_gearman/neb.log
 	touch $(SKEL)/var/log/mod_gearman/worker.log
 
