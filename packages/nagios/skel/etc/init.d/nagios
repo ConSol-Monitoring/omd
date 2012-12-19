@@ -47,6 +47,13 @@ STATUS_DAT=###ROOT###/tmp/nagios/status.dat
 USR=###SITE###
 GRP=###SITE###
 
+# You can set the environment variable CORE_NOVERIFY=yes
+# in order to supress a verification of the nagios configuration
+# in case of start, restart or reload. This is in order to
+# avoid duplicate effort when being called by cmk -R or 
+# cmk -O.
+# export CORE_NOVERIFY=yes
+
 # Make sure that check plugins do not run localized.
 # check_icmp outputs performance data with german
 # comma instead of dot and makes it unparsable.
@@ -171,9 +178,7 @@ case "$1" in
              exit 1
          fi
 
-         if ! verify_config quiet; then
-             exit 1
-         fi
+         [ "$CORE_NOVERIFY" ] || verify_config quiet || exit 1
 
          if nagios_wait_start; then
              echo 'OK'
@@ -209,9 +214,7 @@ case "$1" in
         fi
     ;;
     restart)
-        if ! verify_config quiet; then
-            exit 1
-        fi
+        [ "$CORE_NOVERIFY" ] || verify_config quiet || exit 1
 
         $0 stop || (echo "Unable to stop nagios. Terminating..." && exit 1)
         echo -n "Starting nagios..."
@@ -225,9 +228,7 @@ case "$1" in
     ;;
     
     reload|force-reload)
-        if ! verify_config quiet; then
-            exit 1
-        fi
+        [ "$CORE_NOVERIFY" ] || verify_config quiet || exit 1
         
         # Execute a start when nagios is not running
         if ! pid=$(pidof_nagios) 2>&1; then
