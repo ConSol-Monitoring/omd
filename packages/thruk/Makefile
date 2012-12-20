@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 NAME     = Thruk
-VERSION  = 1.54
+VERSION  = 1.60
 DIR      = $(NAME)-$(VERSION)
 PERLARCH = $(shell $(PERL) -e 'use Config; print $$Config{archname}')
 
@@ -9,7 +9,7 @@ PERLARCH = $(shell $(PERL) -e 'use Config; print $$Config{archname}')
 
 build:
 	rm -rf $(DIR)
-	tar xzf $(DIR).tar.gz
+	tar xzf $(DIR)*.tar.gz
 	for p in patches/*.patch ; do \
 	    echo "applying $$p..." ; \
 	    ( cd $(DIR) ; patch -p1 ) < $$p || exit 1; \
@@ -22,6 +22,7 @@ install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/bin
 	rm -rf $(DESTDIR)$(OMD_ROOT)/share/thruk
 	cp -rp $(DIR)/script/thruk $(DESTDIR)$(OMD_ROOT)/bin/thruk
+	cp -rp $(DIR)/script/naglint $(DESTDIR)$(OMD_ROOT)/bin/naglint
 	cp -rp $(DIR) $(DESTDIR)$(OMD_ROOT)/share/thruk
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/skel/etc/thruk
 	rm -rf $(DESTDIR)$(OMD_ROOT)/share/thruk/plugins-enabled
@@ -29,6 +30,7 @@ install:
 	rm -rf $(DESTDIR)$(OMD_ROOT)/share/thruk/t
 	mv $(DESTDIR)$(OMD_ROOT)/share/thruk/script/thruk $(DESTDIR)$(OMD_ROOT)/bin/thruk
 	chmod 755 $(DESTDIR)$(OMD_ROOT)/bin/thruk
+	chmod 755 $(DESTDIR)$(OMD_ROOT)/bin/naglint
 
 skel:
 	# logfile has to be group writeable for shared apache

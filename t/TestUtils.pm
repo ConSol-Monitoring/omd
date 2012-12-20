@@ -582,6 +582,7 @@ sub _diag_lint_errors_and_remove_some_exceptions {
             "Unknown attribute \"start\" for tag <div>",
             "Unknown attribute \"end\" for tag <div>",
             "for tag <meta>",
+            "Unknown\ attribute\ \"placeholder\"\ for\ tag\ <input>",
         ) {
             next LINT_ERROR if($err_str =~ m/$exclude_pattern/i);
         }
