@@ -13,6 +13,7 @@ This file documents the revision history for the Open Monitoring Distribution
          - Support Ubuntu 12.10 (Quantal)
          - Webinject: Update to 1.76
          - NRPE: Update to 2.13
+         - check_multi: updated to 0.26_579
 
 
 0.56     Sep 25 2012
