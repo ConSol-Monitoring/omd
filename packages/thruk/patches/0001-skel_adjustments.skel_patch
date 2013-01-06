@@ -1,5 +1,5 @@
---- a/etc/thruk/thruk.conf	2012-12-09 11:26:18.000000000 +0100
-+++ b/etc/thruk/thruk.conf	2012-12-09 11:27:09.000000000 +0100
+--- a/etc/thruk/thruk.conf	2013-01-06 21:24:56.246229754 +0100
++++ b/etc/thruk/thruk.conf	2013-01-06 21:25:42.366250367 +0100
 @@ -13,7 +13,7 @@
  
  ######################################
@@ -103,7 +103,7 @@
  
  ######################################
  # Time Format Settings
-@@ -354,23 +355,23 @@
+@@ -344,23 +345,23 @@
  # Specifiy a file which is then completly under the control of Thruk.
  # It will be used to store cronjobs, ex. for reports. The file has to
  # be writable by Thruk.
@@ -130,19 +130,19 @@
 -#thruk_init = /etc/init.d/thruk
 +thruk_init = ###ROOT###/etc/init.d/thruk
  
- # execute regular scheduled reports with this nice level
- #report_nice_level = 5
-@@ -421,8 +422,8 @@
- ######################################
+ # Set first day of week. Used in reports.
+ # Sunday: 0
+@@ -406,8 +407,8 @@
  # COOKIE AUTH
- ######################################
+ # cookie auth requires additional webserver settings, see the documentation
+ # for detailed instructions.
 -cookie_auth_login_url             = thruk/cgi-bin/login.cgi
 -cookie_auth_restricted_url        = http://localhost/thruk/cgi-bin/restricted.cgi
 +cookie_auth_login_url             = ###SITE###/thruk/cgi-bin/login.cgi
 +cookie_auth_restricted_url        = http://localhost/###SITE###/thruk/cgi-bin/restricted.cgi
  cookie_auth_session_timeout       = 604800
  cookie_auth_session_cache_timeout = 5
- 
+ #cookie_auth_domain               = .domain.com
 @@ -449,42 +450,19 @@
  ######################################
  # Backend Configuration, enter your backends here
@@ -199,16 +199,25 @@
  </Component>
  
  
-@@ -498,9 +476,9 @@
+@@ -501,9 +479,9 @@
  <Component Thruk::Plugin::ConfigTool>
      show_plugin_syntax_helper = 1
  
 -    thruk    = ./thruk_local.conf
 -    cgi.cfg  = ./cgi.cfg
--#    htpasswd = ./htpasswd
+-    #htpasswd = ./htpasswd
 +    thruk    = ###ROOT###/etc/thruk/thruk_local.conf
 +    cgi.cfg  = ###ROOT###/etc/nagios/cgi.cfg
 +    htpasswd = ###ROOT###/etc/htpasswd
  </Component>
  
  ######################################
+@@ -527,7 +505,7 @@
+     #report_base_url=http://host.local/thruk/cgi-bin/
+ 
+     # wkhtmltopdf is used to convert html pages into pdf
+-    #wkhtmltopdf = /path/to/wkhtmltopdf
++    wkhtmltopdf = ###ROOT###/bin/wkhtmltopdf
+ 
+     # pnp export script is used to export pnp graphs into reports
+     #pnp_export = /path/to/pnp_export.sh

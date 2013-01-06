@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 NAME     = Thruk
-VERSION  = 1.60
+VERSION  = 1.62
 DIR      = $(NAME)-$(VERSION)
 PERLARCH = $(shell $(PERL) -e 'use Config; print $$Config{archname}')
 
@@ -31,6 +31,12 @@ install:
 	mv $(DESTDIR)$(OMD_ROOT)/share/thruk/script/thruk $(DESTDIR)$(OMD_ROOT)/bin/thruk
 	chmod 755 $(DESTDIR)$(OMD_ROOT)/bin/thruk
 	chmod 755 $(DESTDIR)$(OMD_ROOT)/bin/naglint
+	if [ `uname -m` = 'x86_64' ]; then \
+		cp -p wkhtmltopdf-amd64 $(DESTDIR)$(OMD_ROOT)/bin/wkhtmltopdf; \
+	else \
+		cp -p wkhtmltopdf-i386  $(DESTDIR)$(OMD_ROOT)/bin/wkhtmltopdf; \
+	fi
+
 
 skel:
 	# logfile has to be group writeable for shared apache
