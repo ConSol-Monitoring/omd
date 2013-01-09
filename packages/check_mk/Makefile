@@ -18,7 +18,7 @@ install:
 	export web_dir='$(OMD_ROOT)/share/check_mk/web' ; \
 	export mibsdir='$(OMD_ROOT)/share/snmp/mibs' ; \
 	export docdir='$(OMD_ROOT)/share/doc/check_mk' ; \
-	export checkmandir='$(OMD_ROOT)/share/doc/check_mk/checks' ; \
+	export checkmandir='$(OMD_ROOT)/share/check_mk/checkman' ; \
 	export agentsdir='$(OMD_ROOT)/share/check_mk/agents' ; \
 	export agentslibdir='/usr/lib/check_mk_agent' ; \
 	export nagios_binary='$(OMD_ROOT)/bin/nagios' ; \

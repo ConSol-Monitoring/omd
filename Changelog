@@ -5,7 +5,10 @@ This file documents the revision history for the Open Monitoring Distribution
          - Thruk: Update to 1.62
            - added cookie based login
          - Apache: Enabling mod_status (if available) for 127.0.0.1 in own mode
-         - Check_MK/MK Livestatus: new version 1.2.0p3
+         - Check_MK/MK Livestatus:
+	   - new version 1.2.0p3
+	   - Changed path for check manpages from share/doc/check_mk/checks
+	     to share/check_mk/checkman to match the local/ path
          - NagVis: Update to 1.7.4
          - omd: new option --no-autostart, -A for omd create (set AUTOSTART 
            to off right at creation, useful for test sites!)
