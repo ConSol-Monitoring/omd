@@ -18,6 +18,8 @@ This file documents the revision history for the Open Monitoring Distribution
          - Webinject: Update to 1.76
          - NRPE: Update to 2.13
          - check_multi: updated to 0.26_579
+         - mod_python: Fixed our sys.path patch not to destory the default
+           sys.path set during interpreter initialization
 
 
 0.56     Sep 25 2012

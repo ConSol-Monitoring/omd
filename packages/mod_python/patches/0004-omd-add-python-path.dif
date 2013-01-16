@@ -1,5 +1,5 @@
 --- mod_python-3.3.1/src/mod_python.c.orig	2006-11-09 07:21:23.000000000 +0100
-+++ mod_python-3.3.1/src/mod_python.c	2011-06-24 11:02:00.539831985 +0200
++++ mod_python-3.3.1/src/mod_python.c	2013-01-16 14:08:54.453232213 +0100
 @@ -26,6 +26,7 @@
   */
  
@@ -8,15 +8,23 @@
  
  /* Server object for main server as supplied to python_init(). */
  static server_rec *main_server = NULL;
-@@ -103,6 +104,11 @@
+@@ -103,6 +104,19 @@
       * >>> <initstring>
       * in the __main__ module to start up Python.
       */
-+    char *old_path = Py_GetPath();
-+    char *our_path = "/omd/versions/" OMD_VERSION "/lib/python";
-+    char new_path[4096];
-+    snprintf(new_path, sizeof(new_path), "%s:%s", our_path, old_path);
-+    PySys_SetPath(new_path);
++    
++    /*
++     * This has to be called before PyImport_ImportModule(MODULENAME) because
++     * this extends the python path with the path to the OMD related mod_python
++     * module. Without this patch there might occur several problem related to
++     * duplicate imports of modules where some modules are located in the local/
++     * hiearchy in OMD.
++     *
++     * FYI: MODULENAME is "mod_python.apache".
++     */
++    PyObject *sysPath = PySys_GetObject("path");
++    PyObject *path = PyString_FromString("/omd/versions/" OMD_VERSION "/lib/python");
++    int result = PyList_Insert(sysPath, 0, path);
  
      if (! ((m = PyImport_ImportModule(MODULENAME)))) {
          PyObject *path;
