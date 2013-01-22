@@ -19,7 +19,6 @@ This file documents the revision history for the Open Monitoring Distribution
           - NRPE: Update to 2.13
           - check_multi: updated to 0.26_579
           - Mod-Gearman: Updated to version 1.4.2
-          - check_multi: updated to 0.26_579
           - mod_python: Fixed our sys.path patch not to destory the default
             sys.path set during interpreter initialization
 
