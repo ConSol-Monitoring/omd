@@ -28,6 +28,16 @@ class auth_multisite extends auth_basic {
   function auth_basic() {
   }
 
+  private function loadAuthFile($path) {
+      $creds = array();
+      foreach(file($path) AS $line) {
+          if(strpos($line, ':') !== false) {
+              list($username, $secret) = explode(':', $line, 2);
+              $creds[$username] = rtrim($secret);
+          }
+      }
+      return $creds;
+  }
 
   function trustExternal($user,$pass,$sticky=false){
       global $conf;
@@ -47,8 +57,26 @@ class auth_multisite extends auth_basic {
         if(!isset($mk_users[$username])){
             continue;
         }
+        
+        if(file_exists($conf['multisite']['auth_serials']))
+            $authFile = 'serial';
+        elseif(file_exists($conf['multisite']['htpasswd']))
+            $authFile = 'htpasswd';
+        else
+            continue;
+        
+        if($authFile == 'htpasswd')
+            $users = $this->loadAuthFile($conf['multisite']['htpasswd']);
+        else
+            $users = $this->loadAuthFile($conf['multisite']['auth_serials']);
+
+        if(!isset($users[$username])) {
+            throw new Exception();
+        }
+        $user_secret = $users[$username];
+
         $secret = trim(file_get_contents($conf['multisite']['auth_secret']));
-        if(md5($username . $issueTime . $mk_users[$username]['password'] . $secret) == $cookieHash)
+        if(md5($username . $issueTime . $user_secret . $secret) == $cookieHash)
         {
             $USERINFO['name'] = $username;
             $USERINFO['grps'] = $mk_users[$username]['roles'];
