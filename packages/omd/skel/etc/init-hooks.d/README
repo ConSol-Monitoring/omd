@@ -23,8 +23,15 @@ Real-live use case:
 
 Currently only the following scripts can be used, all others are ignored:
 nagios-*-pre
+nagios-start-post
+nagios-stop-post
+
 shinken-*-pre
+
 icinga-*-pre
+icinga-start-post
+icinga-stop-post
+
 apache-*-pre
 apache-start-post
 apache-stop-post
