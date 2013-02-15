@@ -21,6 +21,7 @@ This file documents the revision history for the Open Monitoring Distribution
           - Mod-Gearman: Updated to version 1.4.2
           - mod_python: Fixed our sys.path patch not to destory the default
             sys.path set during interpreter initialization
+          - Dokuwiki: Now supporting the new multisite cookie format
 
 
 0.56     Sep 25 2012
