@@ -6,7 +6,7 @@ This file documents the revision history for the Open Monitoring Distribution
             - added cookie based login
           - Apache: Enabling mod_status (if available) for 127.0.0.1 in own mode
           - Check_MK/MK Livestatus:
-            - new version 1.2.2b2
+            - new version 1.2.2b3
             - integrated Event Console
             - Changed path for check manpages from share/doc/check_mk/checks
               to share/check_mk/checkman to match the local/ path
