@@ -7,11 +7,16 @@ use BuildHelper;
 my $verbose = 0;
 my $PERL    = "/usr/bin/perl";
 my $TARGET  = "/tmp/thruk_p5_dist";
+my $DISTRO  = "";
 if($ARGV[0] =~ m/perl$/) {
     $PERL = $ARGV[0]; shift @ARGV;
 }
 if($ARGV[0] eq '-v') {
     $verbose = 1; shift @ARGV;
+}
+if($ARGV[0] eq '-d') {
+    shift @ARGV;
+    $DISTRO = shift @ARGV;
 }
 if($ARGV[0] eq '-p') {
     shift @ARGV;
@@ -29,6 +34,7 @@ $ENV{'CATALYST_DEVEL_NO_510_CHECK'} = 1;
 my $x = 1;
 my $max = scalar @ARGV;
 for my $mod (@ARGV) {
+    next if $mod =~ m/curl/mxi and $DISTRO =~ m/^CENTOS\ 5/mxi;
     BuildHelper::install_module($mod, $TARGET, $PERL, $verbose, $x, $max) || exit 1;
     $x++;
 }

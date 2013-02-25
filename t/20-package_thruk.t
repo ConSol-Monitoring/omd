@@ -13,7 +13,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 2550 );
+plan( tests => 2598 );
 
 ##################################################
 # create our test site
@@ -161,6 +161,8 @@ my $urls = [
 # reporting
   { url => '/thruk/cgi-bin/reports2.cgi', like => '/Reporting/' },
   { url => '/thruk/cgi-bin/reports2.cgi?action=save&report=9999&name=Service%20SLA%20Report%20for%20'.$host.'%20-%20'.$service.'&template=sla_service.tt&params.sla=95&params.timeperiod=last12months&params.host='.$host.'&params.service='.$service.'&params.breakdown=months&params.unavailable=critical&params.unavailable=unknown&params.decimals=2&params.graph_min_sla=90', like => '/success_message/' },
+  { url => '/thruk/cgi-bin/reports2.cgi?report=9999&action=update' },
+  { url => '/thruk/cgi-bin/reports2.cgi', waitfor => 'reports2.cgi\?report=9999\&amp;refresh=0' },
   { url => '/thruk/cgi-bin/reports2.cgi?report=9999', like => [ '/%PDF-1.4/', '/%%EOF/' ] },
   { url => '/thruk/cgi-bin/reports2.cgi?action=remove&report=9999', like => '/report removed/' },
 

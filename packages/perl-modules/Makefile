@@ -2,6 +2,7 @@ include ../../Makefile.omd
 
 NAME     = perl-modules
 VERSION  = $(OMD_VERSION)
+DISTRO   = $(shell ../../distro)
 
 MODULES = \
           ExtUtils-MakeMaker-6.64.tar.gz \
@@ -330,7 +331,10 @@ MODULES = \
           Tie-IxHash-1.22.tar.gz \
           MongoDB-0.45.tar.gz \
           Sub-Exporter-Progressive-0.001001.tar.gz \
-          Safe-Isa-1.000002.tar.gz
+          Safe-Isa-1.000002.tar.gz \
+          ExtUtils-PkgConfig-1.14.tar.gz \
+          Net-Curl-0.25.tar.gz \
+          LWP-Protocol-Net-Curl-0.013.tar.gz
 
 
 
@@ -348,7 +352,7 @@ build:
 	    PERL_MM_OPT=INSTALL_BASE=$(P5TMPDIST)/dest \
 	    MODULEBUILDRC=$(P5TMPDIST)/dest/.modulebuildrc \
 	    PERL5LIB=$(P5TMPDIST)/dest/lib/perl5 \
-	    ./build_module.pl -p $(P5TMPDIST)/dest $(MODULES)
+	    ./build_module.pl -d "$(DISTRO)" -p $(P5TMPDIST)/dest $(MODULES)
 	cd $(P5TMPDIST)/dest/lib/perl5/ && rm -f utils.pm && ln -s ../../../nagios/plugins/utils.pm .
 	mkdir -p $(P5TMPDIST)/dest/lib/perl5/CPAN
 	cp MyConfig.pm $(P5TMPDIST)/dest/lib/perl5/CPAN/MyConfig.skel

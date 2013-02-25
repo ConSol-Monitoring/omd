@@ -21,7 +21,7 @@
  # the path relative to your webserver root directory and 'physical_logo_path' is
  # the corresponding filesystem path.
 -#physical_logo_path = /usr/local/share/icons
-+physical_logo_path = local/share/nagios/htdocs/images/logos
++physical_logo_path = ###ROOT###/local/share/nagios/htdocs/images/logos
  
  ######################################
  # change path to your host / service action icons. You may use relative paths
