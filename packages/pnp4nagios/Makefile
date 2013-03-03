@@ -3,7 +3,7 @@ include ../../Makefile.omd
 .PHONY: skel
 
 NAME = pnp4nagios
-VERSION = 0.6.19
+VERSION = 0.6.20
 DIR = $(NAME)-$(VERSION)
 # Unset CONFIG_SITE
 CONFIG_SITE = ''
@@ -29,10 +29,10 @@ CONFIGUREOPTS = \
 
 build:
 	tar xzf $(DIR).tar.gz
-	for p in patches/*.diff ; do \
-		echo "applying $$p..." ; \
-		( cd $(DIR) ; patch -p1 -b ) < $$p ; \
-        done
+#	for p in patches/*.diff ; do \
+#		echo "applying $$p..." ; \
+#		( cd $(DIR) ; patch -p1 -b ) < $$p ; \
+#       done
 
 	cd $(DIR) ; ./configure $(CONFIGUREOPTS)
 	$(MAKE) -C $(DIR) all
