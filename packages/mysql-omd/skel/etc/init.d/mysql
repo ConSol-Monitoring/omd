@@ -3,6 +3,7 @@
 cd ###ROOT###
 
 # Check if MySQL is enabled in OMD. If not terminate.
+. .profile
 . etc/omd/site.conf
 if [ "$CONFIG_MYSQL" != on ] ; then
     exit 5
