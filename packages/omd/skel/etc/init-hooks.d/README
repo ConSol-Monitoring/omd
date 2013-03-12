@@ -36,3 +36,8 @@ apache-*-pre
 apache-start-post
 apache-stop-post
 apache-reload-post
+
+mysql-*-pre
+mysql-start-post
+mysql-stop-post
+mysql-reload-post
