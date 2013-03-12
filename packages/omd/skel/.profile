@@ -26,13 +26,3 @@ if [ "$BASH" -a -s ~/.bashrc -a -z "$BASHRC" ]; then
     . ~/.bashrc
 fi
 
-__init_hook() {
-  # Takes 3 parameters
-  # 1. Name of the init-script (can be the full path name, we will only use the file part)
-  # 2. The command the init-script was called with (start, stop, reload,..)
-  # 3. A fixed string, either "pre" os "post"
-  # 4. return code of the command (optional, and only for post hooks)
-  if [ -h $1 ]; then file=$(readlink $1); else file=$1; fi
-  hook=$(printf "###ROOT###/etc/init-hooks.d/%s-%s-%s" ${file##*/} $2 $3)
-  test -x $hook && $hook ${file##*/} $2 $3 $4
-}

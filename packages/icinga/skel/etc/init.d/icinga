@@ -35,8 +35,8 @@
 #   the init script should execute a start instead
 
 cd ###ROOT###
-. ###ROOT###/.profile
-. ###ROOT###/etc/omd/site.conf
+. lib/omd/init_profile
+. etc/omd/site.conf
 [ "$CONFIG_CORE" = "icinga" ] || exit 5
 
 BIN=###ROOT###/bin/icinga

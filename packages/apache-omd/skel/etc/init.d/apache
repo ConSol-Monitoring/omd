@@ -1,8 +1,8 @@
 #!/bin/bash
 
 cd ###ROOT###
-. ###ROOT###/.profile
-. ###ROOT###/etc/omd/site.conf
+. lib/omd/init_profile
+. etc/omd/site.conf
 if [ "$CONFIG_APACHE_MODE" != own ] ; then
   exit 5
 fi
