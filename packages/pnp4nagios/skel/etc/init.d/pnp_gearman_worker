@@ -14,8 +14,8 @@
 #### OMD ###
 # Check if Mod-Gearman is enabled in OMD. If not terminate.
 cd ###ROOT###
-. ###ROOT###/.profile
-. ###ROOT###/etc/omd/site.conf
+. lib/omd/init_profile
+. etc/omd/site.conf
 
 if [ "$CONFIG_MOD_GEARMAN" != "on" -o "$CONFIG_PNP4NAGIOS" != "gearman" ] ; then
     exit 5
