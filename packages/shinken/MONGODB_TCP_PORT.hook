@@ -31,7 +31,7 @@ next_free_hook ()
     do
         PORT=$((PORT + 1))
     done
-    echo "$PORT"
+    echo "127.0.0.1:$PORT"
 }
 
 
@@ -57,7 +57,8 @@ case "$1" in
             SELECTED_PORT=${SELECTED_PORT##*:}
         fi
         PORT=$(next_free_hook $SELECTED_PORT)
-        if [ "$PORT" != "$SELECTED_PORT" ] ; then
+        CHECK_PORT=${PORT##*:}
+        if [ "$CHECK_PORT" != "$SELECTED_PORT" ] ; then
             echo "MongoDB port $SELECTED_PORT is in use. I've choosen $PORT instead." >&2
             echo "$PORT"
         fi

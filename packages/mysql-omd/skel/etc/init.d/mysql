@@ -3,6 +3,7 @@
 cd ###ROOT###
 
 # Check if MySQL is enabled in OMD. If not terminate.
+. lib/omd/init_profile
 . etc/omd/site.conf
 if [ "$CONFIG_MYSQL" != on ] ; then
     exit 5
@@ -43,7 +44,7 @@ mysql_wait_start() {
         i=0
         while mysqld_status check_dead nowarn;  do
             if [ $i = '10' ]; then
-		return 1
+                return 1
             else
                 echo -n "."
                 i=$(($i+1))
@@ -59,7 +60,7 @@ mysql_wait_stop() {
        echo -n 'Not running. '
        return 0
     fi
-  
+
     mysqladmin --defaults-file=$MYSQL_CNF shutdown
 
     # wait until really stopped
@@ -73,7 +74,7 @@ mysql_wait_stop() {
             sleep 1
        fi
     done
-    
+
     return 0
 }
 
@@ -89,25 +90,30 @@ check_install_db() {
     fi
 }
 
-case $1 in 
+__init_hook $0 $1 pre
+case $1 in
     start)
         echo -n "Starting MySQL... "
         check_install_db;
         if mysql_wait_start; then
             echo 'OK.'
+            __init_hook $0 $1 post 0
             exit 0
         else
             echo 'ERROR.'
+            __init_hook $0 $1 post 1
             exit 1
         fi
     ;;
-		stop)
+    stop)
         echo -n "Stopping MySQL... "
         if mysql_wait_stop; then
             echo 'OK.'
+            __init_hook $0 $1 post 0
             exit 0
         else
             echo 'ERROR.'
+            __init_hook $0 $1 post 1
             exit 1
         fi
     ;;

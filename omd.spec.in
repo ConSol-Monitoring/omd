@@ -48,6 +48,7 @@ rm -f $RPM_BUILD_ROOT/etc/init.d/omd
 /opt/omd
 %attr(4750,root,omd) /opt/omd/versions/%{version}/lib/nagios/plugins/check_icmp
 %attr(4750,root,omd) /opt/omd/versions/%{version}/lib/nagios/plugins/check_dhcp
+%attr(4750,root,omd) /opt/omd/versions/%{version}/bin/mkeventd_open514
 
 %pre
 groupadd -r omd 2>/dev/null || true

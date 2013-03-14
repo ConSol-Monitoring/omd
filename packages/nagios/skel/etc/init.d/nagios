@@ -34,8 +34,8 @@
 #   the init script should execute a start instead
 
 cd ###ROOT###
-. ###ROOT###/.profile
-. ###ROOT###/etc/omd/site.conf
+. lib/omd/init_profile
+. etc/omd/site.conf
 [ "$CONFIG_CORE" = "nagios" ] || exit 5
 
 BIN=###ROOT###/bin/nagios
@@ -182,9 +182,11 @@ case "$1" in
 
          if nagios_wait_start; then
              echo 'OK'
+             __init_hook $0 $1 post 0
              exit 0
          else
              echo 'ERROR'
+             __init_hook $0 $1 post 1
              exit 1
          fi
     ;;
@@ -192,9 +194,11 @@ case "$1" in
         echo -n "Stopping nagios..."
         if nagios_wait_stop; then
             echo 'OK'
+             __init_hook $0 $1 post 0
             exit 0
         else
             echo 'ERROR'
+             __init_hook $0 $1 post 1
             exit 1
         fi
     ;;
@@ -206,8 +210,8 @@ case "$1" in
     ;;
     status)
         if pid=$(pidof_nagios 2>&1)
- 	then
-	    echo "Running ($pid)."
+        then
+            echo "Running ($pid)."
         else
             echo 'Not running.'
             exit 1
