@@ -11,6 +11,7 @@
 ### END INIT INFO
 
 cd ###ROOT###
+. .profile
 . lib/omd/init_profile
 . etc/omd/site.conf
 [ "$CONFIG_CORE" = "shinken" ] || exit 5
