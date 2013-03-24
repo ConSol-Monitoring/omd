@@ -13,7 +13,7 @@ This file documents the revision history for the Open Monitoring Distribution
           - NagVis: Update to 1.7.5
           - omd: new option --no-autostart, -A for omd create (set AUTOSTART
                  to off right at creation, useful for test sites!)
-          - PNP4Nagios: Updated to version 0.6.20
+          - PNP4Nagios: Updated to version 0.6.21
              - Added INIT hooks to npcd and pnp_gearman_worker scripts
           - Support Ubuntu 12.10 (Quantal)
           - Webinject: Update to 1.76
