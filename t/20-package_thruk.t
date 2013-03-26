@@ -155,7 +155,7 @@ my $urls = [
   { url => '/thruk/cgi-bin/conf.cgi?sub=users&action=change&data.username=omdadmin', like => [ '/Config Tool/', '/remove password/', '/authorized_for_all_services/' ] },
   { url => '/thruk/cgi-bin/conf.cgi?sub=objects', like => [ '/Config Tool/', '/select host to change/' ] },
   { url => '/thruk/cgi-bin/conf.cgi?sub=objects&apply=yes', like => [ '/Config Tool/', '/There are no pending changes to commit/' ] },
-  { url => '/thruk/cgi-bin/conf.cgi?sub=objects&type=host&data.name=generic-host', like => [ '/Config Tool/', '/Template:&nbsp;generic\-host/', '/templates.cfg/' ], skip_html_links => 1 },
+  { url => '/thruk/cgi-bin/conf.cgi?sub=objects&type=host&data.name=generic-host', like => [ '/Config Tool/', '/Template:\s+generic\-host/', '/templates.cfg/' ], skip_html_links => 1 },
   { url => '/thruk/cgi-bin/conf.cgi?sub=objects&action=browser', like => [ '/Config Tool/', '/commands.cfg/' ] },
 
 # reporting
@@ -229,7 +229,7 @@ for my $core (qw/nagios shinken icinga/) {
     my $tlog = '/tmp/thruk_test_error.log';
     is(-f $log, 1, "log exists");
     # grep out commands
-    `/bin/cat $log | /bin/grep -v 'cmd: COMMAND' > $tlog 2>&1`;
+    `/bin/cat $log | /bin/grep -v 'cmd: COMMAND' | /bin/grep -v ' started ' | /bin/grep -v 'templates precompiled in' > $tlog 2>&1`;
     is(-s $tlog, 0, "log is empty") or diag(Dumper(`cat $log`));
     unlink($tlog);
 }
