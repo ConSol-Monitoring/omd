@@ -128,23 +128,15 @@ nagios_wait_stop() {
         kill $pid
         while kill -0 $pid  >/dev/null 2>&1;  do
             if [ $I = '60' ]; then
-                echo " Nagios still running.. sending SIGKILL"
+                echo -ne "\nsending SIGKILL"
                 kill -9 $pid
-                I=0
-                while kill -0 $pid  >/dev/null 2>&1;  do
-                    if [ $I = '10' ]; then
-                        return 1
-                    else
-                        echo -n "."
-                        I=$(($I+1))
-                        sleep 1
-                    fi
-                done
-            else
-                echo -n "."
-                I=$(($I+1))
-                sleep 1
+            elif [ $I = '70' ]; then
+                return 1 
             fi
+                
+            echo -n "."
+            I=$(($I+1))
+            sleep 1
         done
         # Is there another proc with ppid 1?
         pid=$(pidof_nagios) || break
