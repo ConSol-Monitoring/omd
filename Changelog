@@ -24,7 +24,8 @@ This file documents the revision history for the Open Monitoring Distribution
             sys.path set during interpreter initialization
           - Dokuwiki: Now supporting the new multisite cookie format
           - rrdtool: compile and install Python binding
-
+          - nagios: Changed init script to kill still running processes during 
+	            "stop" call after 60 seconds waiting
 
 0.56     Sep 25 2012
           - omd:

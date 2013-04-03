@@ -128,7 +128,18 @@ nagios_wait_stop() {
         kill $pid
         while kill -0 $pid  >/dev/null 2>&1;  do
             if [ $I = '60' ]; then
-                return 1
+                echo " Nagios still running.. sending SIGKILL"
+                kill -9 $pid
+                I=0
+                while kill -0 $pid  >/dev/null 2>&1;  do
+                    if [ $I = '10' ]; then
+                        return 1
+                    else
+                        echo -n "."
+                        I=$(($I+1))
+                        sleep 1
+                    fi
+                done
             else
                 echo -n "."
                 I=$(($I+1))
