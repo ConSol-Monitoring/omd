@@ -78,6 +78,7 @@ NSCA=${CONFIG_NSCA:=off}
 NSCA_TCP_PORT=${CONFIG_NSCA_TCP_PORT:=5667}
 PNP4NAGIOS=${CONFIG_PNP4NAGIOS:=on}
 MONGODB=${CONFIG_MONGODB:=off}
+MONGODB_TCP_PORT=${CONFIG_MONGODB_TCP_PORT:=27017}
 
 #
 # Pyro and multiprocessing have been installed locally
@@ -170,6 +171,12 @@ EOTXT
     #fi
     if [ "$MONGODB" = "on" ]; then
       sed -ri 's/^([[:space:]]*modules[[:space:]]*)(.+)/\1mongologs/' $TARGET_ETC/shinken-specific.d/module_livestatus.cfg
+      sed -ri 's/^([[:space:]]*mongodb_uri[[:space:]]*)(.+)/\1mongodb:\/\/MONGODB_TCP_PORT/' $TARGET_ETC/shinken-specific.d/module_livestatus.cfg
+      if [ "${MONGODB_TCP_PORT##*:}" = "${MONGODB_TCP_PORT%%:*}" ]; then
+        sed -ri "s/MONGODB_TCP_PORT/127.0.0.1:$MONGODB_TCP_PORT/" $TARGET_ETC/shinken-specific.d/module_livestatus.cfg
+      else
+        sed -ri "s/MONGODB_TCP_PORT/$MONGODB_TCP_PORT/" $TARGET_ETC/shinken-specific.d/module_livestatus.cfg
+      fi
     else
       sed -ri 's/^([[:space:]]*modules[[:space:]]*)(.+)/\1sqlitelogs/' $TARGET_ETC/shinken-specific.d/module_livestatus.cfg
     fi
