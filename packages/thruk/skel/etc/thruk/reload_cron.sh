@@ -7,4 +7,5 @@ if [ "$CONFIG_APACHE_MODE" = "shared" -a $(/usr/bin/id -un) != $OMD_SITE ]; then
     exit 0
 fi
 
-omd restart crontab
+$OMD_ROOT/etc/init.d/crontab status >/dev/null && $OMD_ROOT/etc/init.d/crontab restart
+exit 0
