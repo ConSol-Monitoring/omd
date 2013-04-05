@@ -2,6 +2,7 @@ SHELL = /bin/bash
 # You can select a subset of the packages by overriding this
 # variale, e.g. make PACKAGES='nagios rrdtool' pack
 PACKAGES=perl-modules \
+	 python-modules \
          apache-omd \
          mod_python \
          check_logfiles \
