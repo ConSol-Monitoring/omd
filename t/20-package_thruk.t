@@ -167,8 +167,8 @@ my $urls = [
   { url => '/thruk/cgi-bin/reports2.cgi?action=remove&report=9999', like => '/report removed/' },
 
 # recurring downtimes
-  { url => '/thruk/cgi-bin/extinfo.cgi?type=6&recurring=save&old_host=&host='.$host.'&comment=automatic+downtime&send_type_1=month&send_day_1=1&week_day_1=&send_hour_1=0&send_minute_1=0&duration=120&childoptions=0', like => '/recurring downtime saved/' },
-  { url => '/thruk/cgi-bin/extinfo.cgi?type=6&recurring=remove&host='.$host, like => '/recurring downtime removed/' },
+  { url => '/thruk/cgi-bin/extinfo.cgi?type=6&recurring=save&old_host=&host='.$host.'&comment=automatic+downtime&send_type_1=month&send_day_1=1&week_day_1=&send_hour_1=0&send_minute_1=0&duration=120&childoptions=0&nr=999', like => '/recurring downtime saved/' },
+  { url => '/thruk/cgi-bin/extinfo.cgi?type=6&recurring=remove&nr=999&host='.$host, like => '/recurring downtime removed/' },
 ];
 
 # complete the url
