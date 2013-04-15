@@ -1689,10 +1689,9 @@ def load_hook_dependencies():
             hook["active"] = False
         else:
             hook["active"] = True
-        
 
-def refresh_hooks():
-    config_load_hooks()
+def refresh_hooks(force_reload = False):
+    config_load_hooks(force_reload)
     config_set_all() # execute 'set' functions with current values
     call_all_hooks("refresh")
     config_save()
@@ -2696,7 +2695,9 @@ def main_update(args, options={}):
     create_version_symlink(g_sitename, to_version)
 
     # Let hooks do their work and update configuration
-    refresh_hooks()
+    # Ensure the hooks are reloaded prior to execution to be sure
+    # the hooks of the target version are executed
+    refresh_hooks(True)
 
 def main_umount(args, options = {}):
     global g_sitename

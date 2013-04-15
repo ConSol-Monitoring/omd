@@ -11,8 +11,10 @@ This file documents the revision history for the Open Monitoring Distribution
             - Changed path for check manpages from share/doc/check_mk/checks
               to share/check_mk/checkman to match the local/ path
           - NagVis: Update to 1.7.7
-          - omd: new option --no-autostart, -A for omd create (set AUTOSTART
-                 to off right at creation, useful for test sites!)
+          - omd:
+            - new option --no-autostart, -A for omd create (set AUTOSTART
+              to off right at creation, useful for test sites!)
+            - update: Ensure execution of the target versions hooks
           - PNP4Nagios: Updated to version 0.6.21
              - Added INIT hooks to npcd and pnp_gearman_worker scripts
           - Support Ubuntu 12.10 (Quantal)
