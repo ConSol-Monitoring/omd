@@ -90,6 +90,50 @@ opt_force = False
 
 g_hooks = None
 
+# Is used to duplicate output from stdout/stderr to a logfiles. This
+# is e.g. used during "omd update" to have a chance to analyze errors
+# during past updates
+class Log(object):
+    def __init__(self, fd, logfile):
+        self.log = open(logfile, 'a')
+        self.fd  = fd
+
+        if self.fd == 1:
+            self.orig  = sys.stdout
+            sys.stdout = self
+        else:
+            self.orig  = sys.stderr
+            sys.stderr = self
+
+        self.color_replace = re.compile("\033\[\d{1,2}m", re.UNICODE)
+
+    def __del__(self):
+        if self.fd == 1:
+            sys.stdout = self.orig
+        else:
+            sys.stderr = self.orig
+        self.log.close()
+
+    def write(self, data):
+        self.orig.write(data)
+        self.log.write(self.color_replace.sub('', data))
+
+    def flush(self):
+        self.log.flush()
+        self.orig.flush()
+
+g_stdout_log = None
+g_stderr_log = None
+def start_logging(logfile):
+    global g_stdout_log, g_stderr_log
+    g_stdout_log = Log(1, logfile)
+    g_stderr_log = Log(2, logfile)
+
+def stop_logging():
+    global g_stdout_log, g_stderr_log
+    g_stdout_log = None
+    g_stderr_log = None
+
 def show_success(exit_code):
     if exit_code == True or exit_code == 0:
         ok()
@@ -2666,8 +2710,10 @@ def main_update(args, options={}):
             "Update!", "Abort"):
         bail_out("Aborted.")
 
-    sys.stdout.write("Updating site '%s' from version %s to %s...\n\n" %
-            (g_sitename, from_version, to_version))
+    start_logging(g_sitedir + '/var/log/update.log')
+
+    sys.stdout.write("%s - Updating site '%s' from version %s to %s...\n\n" %
+            (time.strftime('%Y-%m-%d %H:%M:%S'), g_sitename, from_version, to_version))
 
     # Now apply changes of skeleton files. This can be done
     # in two ways:
@@ -2698,6 +2744,9 @@ def main_update(args, options={}):
     # Ensure the hooks are reloaded prior to execution to be sure
     # the hooks of the target version are executed
     refresh_hooks(True)
+
+    sys.stdout.write('Finished update.\n\n')
+    stop_logging()
 
 def main_umount(args, options = {}):
     global g_sitename

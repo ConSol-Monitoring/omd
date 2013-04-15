@@ -15,6 +15,7 @@ This file documents the revision history for the Open Monitoring Distribution
             - new option --no-autostart, -A for omd create (set AUTOSTART
               to off right at creation, useful for test sites!)
             - update: Ensure execution of the target versions hooks
+            - update: Added update log ~/var/log/update.log
           - PNP4Nagios: Updated to version 0.6.21
              - Added INIT hooks to npcd and pnp_gearman_worker scripts
           - Support Ubuntu 12.10 (Quantal)
