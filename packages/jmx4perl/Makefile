@@ -1,8 +1,8 @@
 include ../../Makefile.omd
 
 NAME     = jmx4perl
-VERSION  = 1.06
-JOLOKIA_VERSION = 1.0.5
+VERSION  = 1.07
+JOLOKIA_VERSION = 1.1.1
 DIR      = $(NAME)-$(VERSION)
 
 .PHONY: skel
