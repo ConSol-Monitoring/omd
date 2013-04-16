@@ -19,6 +19,7 @@ This file documents the revision history for the Open Monitoring Distribution
           - PNP4Nagios: Updated to version 0.6.21
              - Added INIT hooks to npcd and pnp_gearman_worker scripts
           - Support Ubuntu 12.10 (Quantal)
+          - Support Ubuntu 13.04 (Raising)
           - Webinject: Update to 1.76
           - NRPE: Update to 2.13
           - check_multi: updated to 0.26_581
