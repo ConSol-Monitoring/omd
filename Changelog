@@ -31,6 +31,8 @@ This file documents the revision history for the Open Monitoring Distribution
           - nagios: Changed init script to kill still running processes during 
 	            "stop" call after 60 seconds waiting
           - Added python module pysphere to make ESX monitoring easier
+          - Jmx4Perl: Update to 1.07 (Jolokia: 1.1.1)
+
 
 0.56     Sep 25 2012
           - omd:
