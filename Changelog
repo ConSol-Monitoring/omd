@@ -2,20 +2,24 @@ This file documents the revision history for the Open Monitoring Distribution
 
 0.58:
           - Icinga: Update to 1.8.4
-          - Thruk: Update to 1.64
+          - Thruk: Update to 1.68
             - added cookie based login
           - Apache: Enabling mod_status (if available) for 127.0.0.1 in own mode
           - Check_MK/MK Livestatus:
-            - new version 1.2.2b4
+            - new version 1.2.2
             - integrated Event Console
             - Changed path for check manpages from share/doc/check_mk/checks
               to share/check_mk/checkman to match the local/ path
-          - NagVis: Update to 1.7.5
-          - omd: new option --no-autostart, -A for omd create (set AUTOSTART
-                 to off right at creation, useful for test sites!)
-          - PNP4Nagios: Updated to version 0.6.20
+          - NagVis: Update to 1.7.7
+          - omd:
+            - new option --no-autostart, -A for omd create (set AUTOSTART
+              to off right at creation, useful for test sites!)
+            - update: Ensure execution of the target versions hooks
+            - update: Added update log ~/var/log/update.log
+          - PNP4Nagios: Updated to version 0.6.21
              - Added INIT hooks to npcd and pnp_gearman_worker scripts
           - Support Ubuntu 12.10 (Quantal)
+          - Support Ubuntu 13.04 (Raising)
           - Webinject: Update to 1.76
           - NRPE: Update to 2.13
           - check_multi: updated to 0.26_581
@@ -24,6 +28,10 @@ This file documents the revision history for the Open Monitoring Distribution
             sys.path set during interpreter initialization
           - Dokuwiki: Now supporting the new multisite cookie format
           - rrdtool: compile and install Python binding
+          - nagios: Changed init script to kill still running processes during 
+	            "stop" call after 60 seconds waiting
+          - Added python module pysphere to make ESX monitoring easier
+          - Jmx4Perl: Update to 1.07 (Jolokia: 1.1.1)
 
 
 0.56     Sep 25 2012

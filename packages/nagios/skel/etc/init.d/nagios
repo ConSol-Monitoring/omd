@@ -34,8 +34,9 @@
 #   the init script should execute a start instead
 
 cd ###ROOT###
-. ###ROOT###/.profile
-. ###ROOT###/etc/omd/site.conf
+. .profile
+. lib/omd/init_profile
+. etc/omd/site.conf
 [ "$CONFIG_CORE" = "nagios" ] || exit 5
 
 BIN=###ROOT###/bin/nagios
@@ -127,12 +128,15 @@ nagios_wait_stop() {
         kill $pid
         while kill -0 $pid  >/dev/null 2>&1;  do
             if [ $I = '60' ]; then
-                return 1
-            else
-                echo -n "."
-                I=$(($I+1))
-                sleep 1
+                echo -ne "\nsending SIGKILL"
+                kill -9 $pid
+            elif [ $I = '70' ]; then
+                return 1 
             fi
+                
+            echo -n "."
+            I=$(($I+1))
+            sleep 1
         done
         # Is there another proc with ppid 1?
         pid=$(pidof_nagios) || break

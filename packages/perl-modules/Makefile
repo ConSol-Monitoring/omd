@@ -115,6 +115,7 @@ MODULES = \
           Sub-Install-0.926.tar.gz \
           Sub-Name-0.05.tar.gz \
           Sys-Syslog-0.32.tar.gz \
+          Sys-SigAction-0.15.tar.gz \
           Task-Weaken-1.04.tar.gz \
           Template-Toolkit-2.24.tar.gz \
           Term-ReadLine-Gnu-1.20.tar.gz \
