@@ -29,6 +29,7 @@ BUILD_PACKAGES += python-devel
 BUILD_PACKAGES += readline-devel
 BUILD_PACKAGES += apache2-devel
 OS_PACKAGES     =
+OS_PACKAGES      += net-tools # traceroute is needed for Check_MK parent scan
 OS_PACKAGES    += apache2
 OS_PACKAGES    += apache2-mod_fcgid
 OS_PACKAGES    += bind-utils

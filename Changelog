@@ -20,6 +20,7 @@ This file documents the revision history for the Open Monitoring Distribution
           - PNP4Nagios: Updated to version 0.6.21
              - Added INIT hooks to npcd and pnp_gearman_worker scripts
           - Support Ubuntu 12.10 (Quantal)
+          - Support Ubuntu 13.04 (Raising)
           - Webinject: Update to 1.76
           - NRPE: Update to 2.13
           - check_multi: updated to 0.26_581
@@ -31,6 +32,8 @@ This file documents the revision history for the Open Monitoring Distribution
           - nagios: Changed init script to kill still running processes during 
 	            "stop" call after 60 seconds waiting
           - Added python module pysphere to make ESX monitoring easier
+          - Jmx4Perl: Update to 1.07 (Jolokia: 1.1.1)
+
 
 0.56     Sep 25 2012
           - omd:
