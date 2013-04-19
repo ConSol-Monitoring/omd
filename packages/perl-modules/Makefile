@@ -85,7 +85,7 @@ MODULES = \
           Module-Load-0.22.tar.gz \
           Monitoring-Availability-0.42.tar.gz \
           NEXT-0.65.tar.gz \
-          Net-HTTP-6.05.tar.gz \
+          Net-HTTP-6.06.tar.gz \
           Net-Server-2.007.tar.gz \
           OLE-Storage_Lite-0.19.tar.gz \
           PAR-Dist-0.49.tar.gz \
