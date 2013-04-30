@@ -31,6 +31,7 @@ BUILD_PACKAGES += apache2-threaded-dev  # compiling mod_python
 BUILD_PACKAGES += apache2      # compiling mod_python
 BUILD_PACKAGES += libncurses5-dev # compiling mod-gearman
 OS_PACKAGES     =
+OS_PACKAGES      += time # needed for mk-job
 OS_PACKAGES      += traceroute # needed for Check_MK parent scan
 OS_PACKAGES    += curl
 OS_PACKAGES    += dialog
