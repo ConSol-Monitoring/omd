@@ -164,7 +164,7 @@ for my $core (qw/nagios/) {
 		{ 
 			url	=> "http://localhost/$site/nagios/cgi-bin/status.cgi?host=$host&servicestatustypes=1&hoststatustypes=15", 
 			auth	=> "OMD Monitoring Site $site:omdadmin:omd",
-			like	=> [ "0 Matching Service Entries Displayed" ],
+			like	=> [ "0 of 0 Matching Services" ],
 		}
 	);
 

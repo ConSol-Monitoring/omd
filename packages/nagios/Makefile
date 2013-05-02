@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 NAME = nagios
-VERSION = 3.2.3
+VERSION = 3.5.0
 DIR = $(NAME)-$(VERSION)
 
 # Configure options for Nagios. Since we want to compile
@@ -10,25 +10,55 @@ DIR = $(NAME)-$(VERSION)
 CONFIGUREOPTS = \
     --sbindir=$(OMD_ROOT)/lib/nagios/cgi-bin \
     --bindir=$(OMD_ROOT)/bin \
-    --datarootdir=$(OMD_ROOT)/share/nagios/htdocs \
+    --datadir=$(OMD_ROOT)/share/nagios/htdocs \
     --with-nagios-user=$$(id -un) \
     --with-nagios-group=$$(id -gn) \
     --with-perlcache \
     --enable-embedded-perl \
 
 build:
+	$(MAKE) prep
+	$(MAKE) compile
+
+prep:
+	$(MAKE) unpack
+	$(MAKE) patch
+
+compile:
+	cd $(DIR) ; ./configure $(CONFIGUREOPTS)
+	$(MAKE) -C $(DIR) all
+
+unpack:
+	rm -rf $(DIR)
 	tar xzf $(DIR).tar.gz
+	mv nagios $(DIR)
+
+patch:
 	set -e ; for p in patches/*.dif ; do \
 	    echo "applying $$p..." ; \
 	    ( cd $(DIR) ; patch -p1 -b ) < $$p ; \
 	done
-	cd $(DIR) ; ./configure $(CONFIGUREOPTS)
-	$(MAKE) -C $(DIR) all
+
 
 
 install:
-	$(MAKE) DESTDIR=$(DESTDIR) -C $(DIR) install-base install-cgis install-html
+	$(MAKE) DESTDIR=$(DESTDIR) -C $(DIR) install-base install-cgis install-html install-classicui
 	rm -f $(DESTDIR)$(OMD_ROOT)/share/nagios/htdocs/config.php.inc
+
+        # Install Themes
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/nagios/htdocs/themes/classicui 
+	cp -a $(DESTDIR)$(OMD_ROOT)/share/nagios/htdocs/stylesheets $(DESTDIR)$(OMD_ROOT)/share/nagios/htdocs/themes/classicui/
+	cp -a $(DESTDIR)$(OMD_ROOT)/share/nagios/htdocs/images      $(DESTDIR)$(OMD_ROOT)/share/nagios/htdocs/themes/classicui/
+	$(MAKE) DESTDIR=$(DESTDIR) -C $(DIR) install-exfoliation
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/nagios/htdocs/themes/exfoliation 
+	cp -a $(DESTDIR)$(OMD_ROOT)/share/nagios/htdocs/stylesheets $(DESTDIR)$(OMD_ROOT)/share/nagios/htdocs/themes/exfoliation/
+	cp -a $(DESTDIR)$(OMD_ROOT)/share/nagios/htdocs/images      $(DESTDIR)$(OMD_ROOT)/share/nagios/htdocs/themes/exfoliation/
+        # remove original files
+	rm -rf $(DESTDIR)$(OMD_ROOT)/share/nagios/htdocs/stylesheets
+	rm -rf $(DESTDIR)$(OMD_ROOT)/share/nagios/htdocs/images
+	# Link ClassicUI
+	cd $(DESTDIR)$(OMD_ROOT)/share/nagios/htdocs; rm -rf styleshets; ln -sfn themes/classicui/stylesheets
+	cd $(DESTDIR)$(OMD_ROOT)/share/nagios/htdocs; rm -rf images; ln -sfn themes/classicui/images
 
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/nagios
 	install -m 664 $(DIR)/p1.pl $(DESTDIR)$(OMD_ROOT)/lib/nagios

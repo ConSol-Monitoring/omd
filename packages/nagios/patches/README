@@ -1,5 +1,13 @@
 Index of patches
 
+0001:
+    When loading a broker module, Nagios makes a temporary copy of the
+    module file, loads that with dl_open, and deletes it afterwards.
+    This shall save agains modifications caused by a user overwriting
+    the module with 'cp'. This patch removes that behaviour and loads
+    the module in the traditional way. This prevents problems with tmpfs
+    mounted as non-root (where Nagios places the module copy).
+
 0002:
     The file include/utils.inc.php includes config.inc.php by going up 
     one directory in the physical directory tree. This patch changes that
@@ -8,72 +16,24 @@ Index of patches
     is extracted from the script file name (supplied by Apache).
 
 0003:
+    Remove two RSS feeds (promotions) in the classic UI
+
+0004:
     The web frontend checks the original home page for updates. The check
     may be makes sense for folks who installed nagios by themselfs, but
     not within a distribution. This patch removes the update check from
     main.php
 
-0004:
-    When loading a broker module, Nagios makes a temporary copy of the
-    module file, loads that with dl_open, and deletes it afterwards.
-    This shall save agains modifications caused by a user overwriting
-    the module with 'cp'. This patch removes that behaviour and loads
-    the module in the traditional way. This prevents problems with tmpfs
-    mounted as non-root (where Nagios places the module copy).
-
-0006:
-    Adds OMD related config options and macros to the init script.
-
-0007:
-    The init script is showing full '-v' output on config error.
-
-0008:
-    When the Nagios process terminates for some reason and the lock-file
-    which contains the pid is not cleaned up the init script throws an
-    error message when executing 'etc/init.d/nagios stop'.
-    With this path the init script checks if the process is stil alive
-    before trying to kill it.
-
-0009:
-    When someone executes the init script with the stop action and the
-    pid file can not be found it is a good sign that nagios is not running
-    anymore. So don't terminate the script with exit code 1. Using exit
-    code 0 insted.
-
-0010:
-    This patches fixed the problem to jump back to the start page
-    whenever you press F5.
-
-0011:
-    This patches removes a useless loop in the status summary page.
-
-0012:
-    The patch merges the configuration files from nagios.d dir to nagios.cfg.
-    in the init script of nagios.
-
-0013:
-    This patch ensures a good OMD environment for the init script
-
-0014:
-    Hopefully the last patch to the nagios init script. It prevents starting
-    nagios a second time when already running.
-
-0015:
-    Fixes unauthorized host/servicegroup commands. (Will be obsolete with
-    Nagios 3.3.1)
-
-0016:
-    This fixes a nastiness with the host aliases: Nagios saves the host aliases
-    in the state retention file. That means, that no change of a host's alias
-    in the object configuration file will ever get effective (unless you delete
-    the retention file). This patch remove the host alias (and also the display_name)
-    from the state retention and makes Nagios behave just as everybody around
-    seems to expect.
-    be changed in the configuration
-
-0017:
+0005:
    This patch removes a check in the configuration validation that complains
    when there are no hosts or services. That way OMD does not need a dummy
    host anymore but can start plain without any host or service. The cgi-bins,
    Thruk and Multisite do not show any problems. Nor does the Nagios core.
 
+0006:
+    This patches fixed the problem to jump back to the start page
+    whenever you press F5.
+
+0007:
+   This patch rearranges the fields in the nagios struct schedule_downtime 
+   to be compatible again with the one livestatus is compiled with
