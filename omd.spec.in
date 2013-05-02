@@ -102,6 +102,10 @@ fi
 chkconfig --add @APACHE_NAME@
 chkconfig @APACHE_NAME@ on
 
+# ensure apache is running
+service @APACHE_NAME@ start >/dev/null 2>&1
+exit 0
+
 %preun
 # ON UNINSTALL: Make sure no sites use that version
 # Do not check this on new release of the same OMD version
@@ -121,7 +125,7 @@ if [ $1 = 0 ] ; then
         fi
     done
 fi
-     
+
 
 %postun
 rm -f /omd/versions/default
