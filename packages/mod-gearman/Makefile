@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 NAME     = mod_gearman
-VERSION  = 1.4.2
+VERSION  = 1.4.4
 GEARMAND = $(shell grep "^VERSION " ../gearmand/Makefile | awk '{ print $$3 }')
 DIR      = mod_gearman-$(VERSION)
 
@@ -28,9 +28,13 @@ install:
 	rm -rf $(DESTDIR)$(OMD_ROOT)/etc/init.d/mod_gearman_worker
 	rm -rf $(DESTDIR)$(OMD_ROOT)/share/mod_gearman/*.conf
 	rmdir $(DESTDIR)$(OMD_ROOT)/etc/init.d
-	rm -f $(DESTDIR)$(OMD_ROOT)/etc/mod_gearman_neb.conf
-	rm -f $(DESTDIR)$(OMD_ROOT)/etc/mod_gearman_worker.conf
+	rm -f $(DESTDIR)$(OMD_ROOT)/etc/mod_gearman/mod_gearman_neb.conf
+	rm -f $(DESTDIR)$(OMD_ROOT)/etc/mod_gearman/mod_gearman_worker.conf
+	rm -f $(DESTDIR)$(OMD_ROOT)/etc/logrotate.d/mod_gearman_worker
 	rm -f $(DESTDIR)$(OMD_ROOT)/lib/mod_gearman/mod_gearman.so
+	rmdir $(DESTDIR)$(OMD_ROOT)/etc/logrotate.d
+	rmdir $(DESTDIR)$(OMD_ROOT)/etc/mod_gearman
+	find $(DESTDIR)$(OMD_ROOT)/etc
 	rmdir $(DESTDIR)$(OMD_ROOT)/etc
 	rm -rf $(DESTDIR)$(OMD_ROOT)/var/mod_gearman
 	rm -rf $(DESTDIR)$(OMD_ROOT)/var/log
