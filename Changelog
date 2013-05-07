@@ -1,7 +1,7 @@
 This file documents the revision history for the Open Monitoring Distribution
 
 0.58:
-          - Icinga: Update to 1.8.4
+          - Icinga: Update to 1.9.0
           - Thruk: Update to 1.68
             - added cookie based login
           - Apache: Enabling mod_status (if available) for 127.0.0.1 in own mode

@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 NAME = icinga
-VERSION = 1.8.4
+VERSION = 1.9.0
 DIR = $(NAME)-$(VERSION)
 
 # Configure options for Icinga. Since we want to compile
@@ -19,6 +19,7 @@ CONFIGUREOPTS = \
     --enable-embedded-perl \
     --with-cgiurl="./cgi-bin" \
     --with-htmurl="." \
+    --enable-idoutils=no \
 
 build:
 	tar xzf $(DIR).tar.gz
