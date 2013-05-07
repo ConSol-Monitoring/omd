@@ -25,6 +25,9 @@ then
     if [ "${VERSION:0:6}" = "wheezy" ] ; then
         VERSION="7.0"
     fi
+    if [ "${VERSION:0:6}" = "jessie" ] ; then
+        VERSION="8.0"
+    fi
     echo "DEBIAN$SEP$VERSION"
     exit 0
 fi
