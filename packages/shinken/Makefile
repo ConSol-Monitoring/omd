@@ -226,9 +226,8 @@ installhashlib:
 
 installmongodb:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/bin
-	for tmpfile in $(MONGODB)/bin/* ; do \
-		install -m 755 $$tmpfile $(DESTDIR)$(OMD_ROOT)/bin ; \
-	done
+	install -m 755 $(MONGODB)/bin/mongod $(DESTDIR)$(OMD_ROOT)/bin
+	install -m 755 $(MONGODB)/bin/mongo  $(DESTDIR)$(OMD_ROOT)/bin
 
 
 clean:
