@@ -21,7 +21,7 @@ install:
 	    export PYTHONPATH=$$PYTHONPATH:$(DESTDIR)$(OMD_ROOT)/lib/python ; \
 	    for M in $(shell ls dest); do \
 		cd $$M ; \
-		python setup.py install --home=$(DESTDIR)$(OMD_ROOT) ; \
+		python setup.py install --home=$(DESTDIR)$(OMD_ROOT) --prefix='' ; \
 		cd .. ; \
 	    done
 
