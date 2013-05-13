@@ -22,6 +22,7 @@ install:
 	    for M in $(shell ls dest); do \
 		cd $$M ; \
 		python setup.py install --home=$(DESTDIR)$(OMD_ROOT) --prefix='' ; \
+		test "$(DESTDIR)$(OMD_ROOT)" != "" && test -d $(DESTDIR)$(OMD_ROOT)/lib64 && mv $(DESTDIR)$(OMD_ROOT)/lib64 $(DESTDIR)$(OMD_ROOT)/lib ; \
 		cd .. ; \
 	    done
 
