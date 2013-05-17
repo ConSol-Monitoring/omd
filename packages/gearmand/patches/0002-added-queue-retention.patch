@@ -115,7 +115,7 @@ diff -Nur a/libgearman-server/plugins/queue/retention/include.am b/libgearman-se
 diff -Nur a/libgearman-server/plugins/queue/retention/queue.cc b/libgearman-server/plugins/queue/retention/queue.cc
 --- a/libgearman-server/plugins/queue/retention/queue.cc	1970-01-01 01:00:00.000000000 +0100
 +++ b/libgearman-server/plugins/queue/retention/queue.cc	2013-05-14 13:09:45.801123926 +0200
-@@ -0,0 +1,236 @@
+@@ -0,0 +1,246 @@
 +/*  vim:expandtab:shiftwidth=2:tabstop=2:smarttab:
 + *
 + *  Gearmand client and server library.
@@ -235,11 +235,13 @@ diff -Nur a/libgearman-server/plugins/queue/retention/queue.cc b/libgearman-serv
 +  int when;
 +  int size;
 +  int jobs_read;
-+  char *data_line;
++  char line[2048];
 +  char *data;
 +  char *function;
 +  char *unique;
 +  char *prio_s;
++  char *data_dup;
++  char *line_start;
 +  FILE * fp;
 +  gearmand_job_priority_t priority= (gearmand_job_priority_t)0;
 +  gearmand_error_t ret = GEARMAN_SUCCESS;
@@ -254,22 +256,24 @@ diff -Nur a/libgearman-server/plugins/queue/retention/queue.cc b/libgearman-serv
 +
 +  gearmand_log_debug(GEARMAN_DEFAULT_LOG_PARAM, "reading retention file: %s", queue->retention_file.c_str());
 +
-+  data_line = (char*)malloc(1024);
-+  if(data_line == NULL){
-+    gearmand_perror("malloc failed");
-+    return GEARMAN_MEMORY_ALLOCATION_FAILURE;
-+  }
++  data = NULL;
 +  jobs_read = 0;
 +  while(!feof(fp)) {
-+    if(fgets(data_line, 1024, fp) == NULL)
++    if(fgets(line, 2048, fp) == NULL)
 +      break; // empty files
 +
-+    function = strsep( &data_line, ";" );
-+    unique   = strsep( &data_line, ";" );
-+    prio_s   = strsep( &data_line, ";" );
++    data_dup   = strdup(line);
++    line_start = data_dup;
++
++    function = strsep( &data_dup, ";" );
++    unique   = strsep( &data_dup, ";" );
++    prio_s   = strsep( &data_dup, ";" );
++    if(prio_s == NULL)
++        break;
 +    priority = (gearmand_job_priority_t) atoi(prio_s);
-+    when     = atoi(strsep( &data_line, ";" ));
-+    size     = atoi(strsep( &data_line, "\n" ));
++    when     = atoi(strsep( &data_dup, ";" ));
++    size     = atoi(strsep( &data_dup, "\n" ));
++
 +    data     = (char*)malloc(size+1);
 +    if (data == NULL){
 +      gearmand_perror("malloc failed");
@@ -286,9 +290,10 @@ diff -Nur a/libgearman-server/plugins/queue/retention/queue.cc b/libgearman-serv
 +      return ret;
 +
 +    jobs_read++;
++    free(line_start);
 +
 +    // complete rest of line till newline
-+    if(fgets(data_line, 1024, fp) == NULL)
++    if(fgets(line, 2048, fp) == NULL)
 +      break; // no more jobs
 +  }
 +
@@ -306,11 +311,11 @@ diff -Nur a/libgearman-server/plugins/queue/retention/queue.cc b/libgearman-serv
 +static gearmand_error_t __shutdown(gearman_server_st *server,
 +                                 void *context)
 +{
++  int jobs_written;
 +  FILE * fp;
 +  gearmand::plugins::queue::Retention *queue= (gearmand::plugins::queue::Retention *)context;
 +
 +  gearmand_debug(__func__);
-+  gearmand_log_info(GEARMAN_DEFAULT_LOG_PARAM, "writing retention file: %s for %i jobs", queue->retention_file.c_str(), server->job_count);
 +
 +  fp = fopen(queue->retention_file.c_str(), "w+");
 +  if(fp == NULL) {
@@ -318,6 +323,7 @@ diff -Nur a/libgearman-server/plugins/queue/retention/queue.cc b/libgearman-serv
 +    return GEARMAN_ERRNO;
 +  }
 +
++  jobs_written = 0;
 +  for (uint32_t key= 0; key < GEARMAND_JOB_HASH_SIZE; key++) {
 +    if(server->job_hash[key] != NULL) {
 +      gearman_server_job_st *server_job = server->job_hash[key];
@@ -328,6 +334,7 @@ diff -Nur a/libgearman-server/plugins/queue/retention/queue.cc b/libgearman-serv
 +                  server_job->when,
 +                  server_job->data_size,
 +                  server_job->data_size, (const char*)server_job->data);
++      jobs_written++;
 +      while (server_job->unique_next != NULL) {
 +        server_job = server_job->unique_next;
 +        fprintf(fp, "%s;%s;%i;%" PRId64 ";%i\n%.*s\n",
@@ -337,11 +344,14 @@ diff -Nur a/libgearman-server/plugins/queue/retention/queue.cc b/libgearman-serv
 +                    server_job->when,
 +                    server_job->data_size,
 +                    server_job->data_size, (const char*)server_job->data);
++        jobs_written++;
 +      }
 +    }
 +  }
 +
 +  fclose(fp);
++
++  gearmand_log_info(GEARMAN_DEFAULT_LOG_PARAM, "wrote %i jobs into retention file %s", jobs_written, queue->retention_file.c_str());
 +
 +  return GEARMAN_SUCCESS;
 +}
