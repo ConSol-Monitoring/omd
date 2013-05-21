@@ -35,6 +35,7 @@ This file documents the revision history for the Open Monitoring Distribution
                 "stop" call after 60 seconds waiting
           - Added python module pysphere to make ESX monitoring easier
           - Jmx4Perl: Update to 1.07 (Jolokia: 1.1.1)
+          - nsca: Cleaned up init script, better detection of stale pids / processes
 
 
 0.56     Sep 25 2012
