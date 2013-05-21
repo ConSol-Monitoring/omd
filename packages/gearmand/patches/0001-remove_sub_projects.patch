@@ -1,20 +1,25 @@
---- a/Makefile.in	2011-11-03 17:20:48.000000000 +0100
-+++ b/Makefile.in	2012-02-29 22:56:52.222258561 +0100
-@@ -348,37 +348,37 @@
+--- a/Makefile.in	2012-05-04 23:32:20.000000000 +0200
++++ b/Makefile.in	2013-05-14 10:47:02.378107367 +0200
+@@ -398,46 +410,46 @@
  target_triplet = @target@
  bin_PROGRAMS = bin/gearman$(EXEEXT) bin/gearadmin$(EXEEXT)
  sbin_PROGRAMS = gearmand/gearmand$(EXEEXT)
 -check_PROGRAMS = libtest/unittest$(EXEEXT) libtest/skiptest$(EXEEXT) \
--	tests/killall$(EXEEXT) tests/cycle$(EXEEXT) \
--	tests/client_test$(EXEEXT) tests/cli$(EXEEXT) \
--	tests/gearmand$(EXEEXT) tests/internals_test$(EXEEXT) \
--	tests/round_robin_test$(EXEEXT) tests/worker_test$(EXEEXT) \
+-	libgearman-1.0/t/c_test$(EXEEXT) \
+-	libgearman-1.0/t/cc_test$(EXEEXT) tests/cycle$(EXEEXT) \
+-	tests/cli$(EXEEXT) tests/gearmand$(EXEEXT) \
+-	tests/libgearman-1.0/client_test$(EXEEXT) \
+-	tests/libgearman-1.0/internals_test$(EXEEXT) \
+-	tests/libgearman-1.0/worker_test$(EXEEXT) \
+-	tests/round_robin_test$(EXEEXT) tests/stress_test$(EXEEXT) \
 -	tests/cpp_test$(EXEEXT) tests/c_test$(EXEEXT) \
--	tests/burnin_test$(EXEEXT) tests/drizzle_test$(EXEEXT) \
--	tests/memcached_test$(EXEEXT) tests/sqlite_test$(EXEEXT) \
--	tests/tokyocabinet_test$(EXEEXT)
+-	tests/ephemeral_test$(EXEEXT) tests/drizzle_test$(EXEEXT) \
+-	tests/memcached_test$(EXEEXT) tests/postgres_test$(EXEEXT) \
+-	tests/sqlite_test$(EXEEXT) tests/tokyocabinet_test$(EXEEXT) \
+-	tests/httpd_test$(EXEEXT)
 -noinst_PROGRAMS = libtest/unittest$(EXEEXT) libtest/skiptest$(EXEEXT) \
--	libtest/wait$(EXEEXT) benchmark/blobslap_client$(EXEEXT) \
+-	libtest/wait$(EXEEXT) libtest/abort$(EXEEXT) \
+-	benchmark/blobslap_client$(EXEEXT) \
 -	benchmark/blobslap_worker$(EXEEXT) \
 -	examples/echo_client$(EXEEXT) examples/echo_worker$(EXEEXT) \
 -	examples/reverse_client$(EXEEXT) \
@@ -22,30 +27,39 @@
 -	examples/reverse_client_epoch$(EXEEXT) \
 -	examples/reverse_client_cb$(EXEEXT) \
 -	examples/reverse_worker$(EXEEXT) examples/wc_worker$(EXEEXT) \
--	tests/killall$(EXEEXT) tests/cycle$(EXEEXT) \
--	tests/client_test$(EXEEXT) tests/cli$(EXEEXT) \
--	tests/gearmand$(EXEEXT) tests/blobslap_client$(EXEEXT) \
--	tests/internals_test$(EXEEXT) tests/round_robin_test$(EXEEXT) \
--	tests/worker_test$(EXEEXT) $(am__EXEEXT_1) \
+-	$(am__EXEEXT_1) libgearman-1.0/t/c_test$(EXEEXT) \
+-	libgearman-1.0/t/cc_test$(EXEEXT) tests/cycle$(EXEEXT) \
+-	tests/blobslap_client$(EXEEXT) tests/cli$(EXEEXT) \
+-	tests/gearmand$(EXEEXT) \
+-	tests/libgearman-1.0/client_test$(EXEEXT) \
+-	tests/libgearman-1.0/internals_test$(EXEEXT) \
+-	tests/libgearman-1.0/worker_test$(EXEEXT) \
+-	tests/round_robin_test$(EXEEXT) tests/stress_test$(EXEEXT) \
 -	tests/cpp_test$(EXEEXT) tests/c_test$(EXEEXT) \
--	tests/burnin_test$(EXEEXT) tests/drizzle_test$(EXEEXT) \
--	tests/memcached_test$(EXEEXT) tests/sqlite_test$(EXEEXT) \
--	tests/tokyocabinet_test$(EXEEXT) \
+-	tests/ephemeral_test$(EXEEXT) tests/drizzle_test$(EXEEXT) \
+-	tests/memcached_test$(EXEEXT) tests/postgres_test$(EXEEXT) \
+-	tests/sqlite_test$(EXEEXT) tests/tokyocabinet_test$(EXEEXT) \
+-	tests/redis_test$(EXEEXT) tests/httpd_test$(EXEEXT) \
 -	docs/libgearman/examples/gearman_client_do_background_example$(EXEEXT) \
 -	docs/libgearman/examples/gearman_client_do_example$(EXEEXT) \
 -	docs/libgearman/examples/gearman_execute_example$(EXEEXT) \
 -	docs/libgearman/examples/gearman_execute_partition$(EXEEXT)
 +#check_PROGRAMS = libtest/unittest$(EXEEXT) libtest/skiptest$(EXEEXT) \
-+#	tests/killall$(EXEEXT) tests/cycle$(EXEEXT) \
-+#	tests/client_test$(EXEEXT) tests/cli$(EXEEXT) \
-+#	tests/gearmand$(EXEEXT) tests/internals_test$(EXEEXT) \
-+#	tests/round_robin_test$(EXEEXT) tests/worker_test$(EXEEXT) \
++#	libgearman-1.0/t/c_test$(EXEEXT) \
++#	libgearman-1.0/t/cc_test$(EXEEXT) tests/cycle$(EXEEXT) \
++#	tests/cli$(EXEEXT) tests/gearmand$(EXEEXT) \
++#	tests/libgearman-1.0/client_test$(EXEEXT) \
++#	tests/libgearman-1.0/internals_test$(EXEEXT) \
++#	tests/libgearman-1.0/worker_test$(EXEEXT) \
++#	tests/round_robin_test$(EXEEXT) tests/stress_test$(EXEEXT) \
 +#	tests/cpp_test$(EXEEXT) tests/c_test$(EXEEXT) \
-+#	tests/burnin_test$(EXEEXT) tests/drizzle_test$(EXEEXT) \
-+#	tests/memcached_test$(EXEEXT) tests/sqlite_test$(EXEEXT) \
-+#	tests/tokyocabinet_test$(EXEEXT)
++#	tests/ephemeral_test$(EXEEXT) tests/drizzle_test$(EXEEXT) \
++#	tests/memcached_test$(EXEEXT) tests/postgres_test$(EXEEXT) \
++#	tests/sqlite_test$(EXEEXT) tests/tokyocabinet_test$(EXEEXT) \
++#	tests/httpd_test$(EXEEXT)
 +#noinst_PROGRAMS = libtest/unittest$(EXEEXT) libtest/skiptest$(EXEEXT) \
-+#	libtest/wait$(EXEEXT) benchmark/blobslap_client$(EXEEXT) \
++#	libtest/wait$(EXEEXT) libtest/abort$(EXEEXT) \
++#	benchmark/blobslap_client$(EXEEXT) \
 +#	benchmark/blobslap_worker$(EXEEXT) \
 +#	examples/echo_client$(EXEEXT) examples/echo_worker$(EXEEXT) \
 +#	examples/reverse_client$(EXEEXT) \
@@ -53,15 +67,19 @@
 +#	examples/reverse_client_epoch$(EXEEXT) \
 +#	examples/reverse_client_cb$(EXEEXT) \
 +#	examples/reverse_worker$(EXEEXT) examples/wc_worker$(EXEEXT) \
-+#	tests/killall$(EXEEXT) tests/cycle$(EXEEXT) \
-+#	tests/client_test$(EXEEXT) tests/cli$(EXEEXT) \
-+#	tests/gearmand$(EXEEXT) tests/blobslap_client$(EXEEXT) \
-+#	tests/internals_test$(EXEEXT) tests/round_robin_test$(EXEEXT) \
-+#	tests/worker_test$(EXEEXT) $(am__EXEEXT_1) \
++#	$(am__EXEEXT_1) libgearman-1.0/t/c_test$(EXEEXT) \
++#	libgearman-1.0/t/cc_test$(EXEEXT) tests/cycle$(EXEEXT) \
++#	tests/blobslap_client$(EXEEXT) tests/cli$(EXEEXT) \
++#	tests/gearmand$(EXEEXT) \
++#	tests/libgearman-1.0/client_test$(EXEEXT) \
++#	tests/libgearman-1.0/internals_test$(EXEEXT) \
++#	tests/libgearman-1.0/worker_test$(EXEEXT) \
++#	tests/round_robin_test$(EXEEXT) tests/stress_test$(EXEEXT) \
 +#	tests/cpp_test$(EXEEXT) tests/c_test$(EXEEXT) \
-+#	tests/burnin_test$(EXEEXT) tests/drizzle_test$(EXEEXT) \
-+#	tests/memcached_test$(EXEEXT) tests/sqlite_test$(EXEEXT) \
-+#	tests/tokyocabinet_test$(EXEEXT) \
++#	tests/ephemeral_test$(EXEEXT) tests/drizzle_test$(EXEEXT) \
++#	tests/memcached_test$(EXEEXT) tests/postgres_test$(EXEEXT) \
++#	tests/sqlite_test$(EXEEXT) tests/tokyocabinet_test$(EXEEXT) \
++#	tests/redis_test$(EXEEXT) tests/httpd_test$(EXEEXT) \
 +#	docs/libgearman/examples/gearman_client_do_background_example$(EXEEXT) \
 +#	docs/libgearman/examples/gearman_client_do_example$(EXEEXT) \
 +#	docs/libgearman/examples/gearman_execute_example$(EXEEXT) \

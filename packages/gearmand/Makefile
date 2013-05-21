@@ -1,14 +1,16 @@
 include ../../Makefile.omd
 
 NAME     = gearmand
-VERSION  = 0.25
+VERSION  = 0.33
 DIR      = gearmand-$(VERSION)
+SHELL    = /bin/bash
 
 CONFIGUREOPTS = \
     --disable-libmemcached \
     --disable-libdrizzle \
     --disable-libpq \
     --disable-libtokyocabinet \
+    --with-sqlite3=no \
     --prefix=$(OMD_ROOT)
 
 .PHONY: skel
@@ -21,12 +23,18 @@ build:
 	    ( cd $(DIR) ; patch -p1 -b ) < $$p ; \
 	done
 	sed -i -e 's/boost_version_req=1.39/boost_version_req=1.34/g' gearmand-$(VERSION)/configure
+	DISTRO_VERSION=$(DISTRO_VERSION); \
+	if [ "$(DISTRO_NAME)" = "CENTOS" -a "$${DISTRO_VERSION:0:1}" = "5" ]; then \
+		export CC='gcc44'; \
+		export CXX='g++44'; \
+	fi && \
 	cd $(DIR) && \
 	export LIBRARY_PATH=/usr/lib64/boost141:/usr/lib/boost141 && \
 	export LD_LIBRARY_PATH=/usr/lib64/boost141:/usr/lib/boost141 && \
+    export CFLAGS=-std=c99 && \
 	export CPATH=/usr/include/boost141 && \
 	./configure $(CONFIGUREOPTS) && \
-	$(MAKE) 
+	$(MAKE)
 
 install:
 	$(MAKE) DESTDIR=$(DESTDIR) -C $(DIR) install

@@ -2,7 +2,7 @@ This file documents the revision history for the Open Monitoring Distribution
 
 0.58:
           - Icinga: Update to 1.9.0
-          - Thruk: Update to 1.70
+          - Thruk: Update to 1.70-3
             - added cookie based login
           - Apache: Enabling mod_status (if available) for 127.0.0.1 in own mode
           - Check_MK/MK Livestatus:
@@ -27,6 +27,8 @@ This file documents the revision history for the Open Monitoring Distribution
           - NRPE: Update to 2.13
           - check_multi: updated to 0.26_581
           - Mod-Gearman: Updated to version 1.4.4
+          - Gearman: Updated to version 0.33
+            - added queue retention
           - mod_python: Fixed our sys.path patch not to destory the default
             sys.path set during interpreter initialization
           - Dokuwiki: Now supporting the new multisite cookie format

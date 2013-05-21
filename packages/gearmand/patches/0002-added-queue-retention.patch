@@ -1,0 +1,682 @@
+diff -Nur a/libgearman-server/constants.h b/libgearman-server/constants.h
+--- a/libgearman-server/constants.h	2012-05-04 05:51:48.000000000 +0200
++++ b/libgearman-server/constants.h	2013-05-14 13:07:37.421132652 +0200
+@@ -141,6 +141,9 @@
+                                                    gearman_queue_add_fn *add_fn,
+                                                    void *add_context);
+ 
++typedef gearmand_error_t (gearman_queue_shutdown_fn)(gearman_server_st *server,
++                                                   void *context);
++
+ typedef gearmand_error_t (gearmand_connection_add_fn)(gearman_server_con_st *con);
+ 
+ typedef void (gearman_log_server_fn)(const char *line, gearmand_verbose_t verbose,
+diff -Nur a/libgearman-server/gearmand.cc b/libgearman-server/gearmand.cc
+--- a/libgearman-server/gearmand.cc	2012-05-04 05:51:48.000000000 +0200
++++ b/libgearman-server/gearmand.cc	2013-05-14 13:07:37.421132652 +0200
+@@ -1071,6 +1071,10 @@
+   gearman_server_client_st *client;
+   gearman_server_worker_st *worker;
+ 
++  gearmand_debug("shutdown queue: begin");
++  gearman_server_queue_shutdown(server);
++  gearmand_debug("shutdown queue: end");
++
+   /* All threads should be cleaned up before calling this. */
+   assert(server->thread_list == NULL);
+ 
+diff -Nur a/libgearman-server/plugins/queue/drizzle/queue.cc b/libgearman-server/plugins/queue/drizzle/queue.cc
+--- a/libgearman-server/plugins/queue/drizzle/queue.cc	2012-05-04 05:51:48.000000000 +0200
++++ b/libgearman-server/plugins/queue/drizzle/queue.cc	2013-05-14 13:07:37.421132652 +0200
+@@ -458,7 +458,7 @@
+     drizzle_result_free(queue->result());
+   }
+ 
+-  gearman_server_set_queue(server, queue, _libdrizzle_add, _libdrizzle_flush, _libdrizzle_done, _libdrizzle_replay);
++  gearman_server_set_queue(server, queue, _libdrizzle_add, _libdrizzle_flush, _libdrizzle_done, _libdrizzle_replay, NULL);
+ 
+   return GEARMAN_SUCCESS;
+ }
+diff -Nur a/libgearman-server/plugins/queue/include.am b/libgearman-server/plugins/queue/include.am
+--- a/libgearman-server/plugins/queue/include.am	2012-05-04 05:51:48.000000000 +0200
++++ b/libgearman-server/plugins/queue/include.am	2013-05-14 13:07:37.421132652 +0200
+@@ -18,3 +18,4 @@
+ include libgearman-server/plugins/queue/sqlite/include.am
+ include libgearman-server/plugins/queue/tokyocabinet/include.am
+ include libgearman-server/plugins/queue/mysql/include.am
++include libgearman-server/plugins/queue/retention/include.am
+diff -Nur a/libgearman-server/plugins/queue/libmemcached/queue.cc b/libgearman-server/plugins/queue/libmemcached/queue.cc
+--- a/libgearman-server/plugins/queue/libmemcached/queue.cc	2012-05-04 05:51:48.000000000 +0200
++++ b/libgearman-server/plugins/queue/libmemcached/queue.cc	2013-05-14 13:07:37.421132652 +0200
+@@ -129,7 +129,7 @@
+   memcached_server_push(&queue->memc, servers);
+   memcached_server_list_free(servers);
+ 
+-  gearman_server_set_queue(server, queue, _libmemcached_add, _libmemcached_flush, _libmemcached_done, _libmemcached_replay);
++  gearman_server_set_queue(server, queue, _libmemcached_add, _libmemcached_flush, _libmemcached_done, _libmemcached_replay, NULL);
+ 
+   return GEARMAN_SUCCESS;
+ }
+diff -Nur a/libgearman-server/plugins/queue/mysql/queue.cc b/libgearman-server/plugins/queue/mysql/queue.cc
+--- a/libgearman-server/plugins/queue/mysql/queue.cc	2012-05-04 05:51:48.000000000 +0200
++++ b/libgearman-server/plugins/queue/mysql/queue.cc	2013-05-14 13:07:37.425110631 +0200
+@@ -168,7 +168,7 @@
+ 
+   gearmand_log_info(GEARMAN_DEFAULT_LOG_PARAM,"Initializing MySQL module");
+ 
+-  gearman_server_set_queue(server, queue, _mysql_queue_add, _mysql_queue_flush, _mysql_queue_done, _mysql_queue_replay);
++  gearman_server_set_queue(server, queue, _mysql_queue_add, _mysql_queue_flush, _mysql_queue_done, _mysql_queue_replay, NULL);
+ 
+   queue->con= mysql_init(queue->con);
+ 
+diff -Nur a/libgearman-server/plugins/queue/postgres/queue.cc b/libgearman-server/plugins/queue/postgres/queue.cc
+--- a/libgearman-server/plugins/queue/postgres/queue.cc	2012-05-04 05:51:48.000000000 +0200
++++ b/libgearman-server/plugins/queue/postgres/queue.cc	2013-05-14 13:07:37.425110631 +0200
+@@ -190,7 +190,7 @@
+ 
+   gearmand_info("Initializing libpq module");
+ 
+-  gearman_server_set_queue(server, queue, _libpq_add, _libpq_flush, _libpq_done, _libpq_replay);
++  gearman_server_set_queue(server, queue, _libpq_add, _libpq_flush, _libpq_done, _libpq_replay, NULL);
+ 
+   queue->con= PQconnectdb(queue->postgres_connect_string.c_str());
+ 
+diff -Nur a/libgearman-server/plugins/queue/redis/queue.cc b/libgearman-server/plugins/queue/redis/queue.cc
+--- a/libgearman-server/plugins/queue/redis/queue.cc	2012-05-04 05:51:48.000000000 +0200
++++ b/libgearman-server/plugins/queue/redis/queue.cc	2013-05-14 13:07:37.425110631 +0200
+@@ -84,7 +84,7 @@
+ 
+   gearmand_info("Initializing hiredis module");
+ 
+-  gearman_server_set_queue(&Gearmand()->server, this, _hiredis_add, _hiredis_flush, _hiredis_done, _hiredis_replay);   
++  gearman_server_set_queue(&Gearmand()->server, this, _hiredis_add, _hiredis_flush, _hiredis_done, _hiredis_replay, NULL);
+    
+   return GEARMAN_SUCCESS;
+ }
+diff -Nur a/libgearman-server/plugins/queue/retention/include.am b/libgearman-server/plugins/queue/retention/include.am
+--- a/libgearman-server/plugins/queue/retention/include.am	1970-01-01 01:00:00.000000000 +0100
++++ b/libgearman-server/plugins/queue/retention/include.am	2013-05-14 13:07:37.425110631 +0200
+@@ -0,0 +1,15 @@
++# vim:ft=automake
++# Gearman
++# Copyright (C) 2012 Data Differential, http://datadifferential.com/
++# Copyright (C) 2012 Sven Nierlein, sven@consol.de
++# All rights reserved.
++#
++# Use and distribution licensed under the BSD license.  See
++# the COPYING file in the parent directory for full text.
++#
++# All paths should be given relative to the root
++#
++
++noinst_HEADERS+= libgearman-server/plugins/queue/retention/queue.h
++
++libgearman_server_libgearman_server_la_SOURCES+= libgearman-server/plugins/queue/retention/queue.cc
+diff -Nur a/libgearman-server/plugins/queue/retention/queue.cc b/libgearman-server/plugins/queue/retention/queue.cc
+--- a/libgearman-server/plugins/queue/retention/queue.cc	1970-01-01 01:00:00.000000000 +0100
++++ b/libgearman-server/plugins/queue/retention/queue.cc	2013-05-14 13:09:45.801123926 +0200
+@@ -0,0 +1,246 @@
++/*  vim:expandtab:shiftwidth=2:tabstop=2:smarttab:
++ *
++ *  Gearmand client and server library.
++ *
++ *  Copyright (C) 2012 Data Differential, http://datadifferential.com/
++ *  Copyright (C) 2012 Sven Nierlein, sven@consol.de
++ *  All rights reserved.
++ *
++ */
++
++
++/**
++ * @file
++ * @brief Retention Queue Storage Definitions
++ */
++
++#include <config.h>
++#include <libgearman-server/common.h>
++
++#include <libgearman-server/plugins/queue/retention/queue.h>
++#include <libgearman-server/plugins/queue/base.h>
++
++#include <stdio.h>
++
++namespace gearmand { namespace plugins { namespace queue { class Retention; }}}
++
++#pragma GCC diagnostic ignored "-Wold-style-cast"
++static gearmand_error_t _initialize(gearman_server_st *server, gearmand::plugins::queue::Retention *queue);
++
++namespace gearmand {
++namespace plugins {
++namespace queue {
++
++class Retention : public gearmand::plugins::Queue {
++public:
++  Retention();
++  ~Retention();
++  gearmand_error_t initialize();
++  std::string retention_file;
++
++private:
++};
++
++Retention::Retention() :
++  Queue("retention")
++{
++    command_line_options().add_options()
++      ("retention-file", boost::program_options::value(&retention_file)->default_value("/tmp/retention.dat"), "retention file to save jobs on shutdown");
++}
++Retention::~Retention()
++{
++}
++
++gearmand_error_t Retention::initialize()
++{
++  return _initialize(&Gearmand()->server, this);
++}
++
++
++void initialize_retention()
++{
++  static Retention local_instance;
++}
++
++} // namespace queue
++} // namespace plugins
++} // namespace gearmand
++
++
++
++/**
++ * @addtogroup gearman_queue_retention_static Static retention Queue Storage Definitions
++ * @ingroup gearman_queue_retention
++ * @{
++ */
++
++/* Queue callback functions. */
++static gearmand_error_t __add(gearman_server_st *server __attribute__((unused)),
++                              void *context __attribute__((unused)),
++                              const char *unique __attribute__((unused)), size_t unique_size __attribute__((unused)),
++                              const char *function_name __attribute__((unused)),
++                              size_t function_name_size __attribute__((unused)),
++                              const void *data __attribute__((unused)), size_t data_size __attribute__((unused)),
++                              gearmand_job_priority_t priority __attribute__((unused)),
++                              int64_t when __attribute__((unused)))
++{
++  gearmand_debug(__func__);
++  return GEARMAN_SUCCESS;
++}
++
++
++static gearmand_error_t __flush(gearman_server_st *server __attribute__((unused)),
++                                void *context __attribute__((unused)))
++{
++  gearmand_debug(__func__);
++  return GEARMAN_SUCCESS;
++}
++
++static gearmand_error_t __done(gearman_server_st *server __attribute__((unused)),
++                               void *context __attribute__((unused)),
++                               const char *unique __attribute__((unused)),
++                               size_t unique_size __attribute__((unused)),
++                               const char *function_name __attribute__((unused)),
++                               size_t function_name_size __attribute__((unused)))
++{
++  gearmand_debug(__func__);
++  return GEARMAN_SUCCESS;
++}
++
++
++static gearmand_error_t __replay(gearman_server_st *server,
++                                 void *context,
++                                 gearman_queue_add_fn *add_fn,
++                                 void *add_context)
++{
++  int read;
++  int when;
++  int size;
++  int jobs_read;
++  char line[2048];
++  char *data;
++  char *function;
++  char *unique;
++  char *prio_s;
++  char *data_dup;
++  char *line_start;
++  FILE * fp;
++  gearmand_job_priority_t priority= (gearmand_job_priority_t)0;
++  gearmand_error_t ret = GEARMAN_SUCCESS;
++  gearmand::plugins::queue::Retention *queue= (gearmand::plugins::queue::Retention *)context;
++
++  gearmand_debug(__func__);
++  gearmand_log_debug(GEARMAN_DEFAULT_LOG_PARAM, "trying to open retention file: %s", queue->retention_file.c_str());
++
++  fp = fopen(queue->retention_file.c_str(), "r");
++  if(!fp)
++    return GEARMAN_SUCCESS;
++
++  gearmand_log_debug(GEARMAN_DEFAULT_LOG_PARAM, "reading retention file: %s", queue->retention_file.c_str());
++
++  data = NULL;
++  jobs_read = 0;
++  while(!feof(fp)) {
++    if(fgets(line, 2048, fp) == NULL)
++      break; // empty files
++
++    data_dup   = strdup(line);
++    line_start = data_dup;
++
++    function = strsep( &data_dup, ";" );
++    unique   = strsep( &data_dup, ";" );
++    prio_s   = strsep( &data_dup, ";" );
++    if(prio_s == NULL)
++        break;
++    priority = (gearmand_job_priority_t) atoi(prio_s);
++    when     = atoi(strsep( &data_dup, ";" ));
++    size     = atoi(strsep( &data_dup, "\n" ));
++
++    data     = (char*)malloc(size+1);
++    if (data == NULL){
++      gearmand_perror("malloc failed");
++      return GEARMAN_MEMORY_ALLOCATION_FAILURE;
++    }
++    read = fread(data, size, 1, fp);
++    ret= (*add_fn)(server, add_context,
++                   unique, (size_t) strlen(unique),
++                   function, (size_t) strlen(function),
++                   data, size,
++                   priority,
++                   when);
++    if (ret != GEARMAN_SUCCESS && ret != GEARMAN_JOB_EXISTS)
++      return ret;
++
++    jobs_read++;
++    free(line_start);
++
++    // complete rest of line till newline
++    if(fgets(line, 2048, fp) == NULL)
++      break; // no more jobs
++  }
++
++  fclose(fp);
++
++  // cleanup retention file
++  if(unlink(queue->retention_file.c_str()) == -1)
++    perror(queue->retention_file.c_str());
++
++  gearmand_log_info(GEARMAN_DEFAULT_LOG_PARAM, "read %d jobs from retention file: %s", jobs_read, queue->retention_file.c_str());
++
++  return GEARMAN_SUCCESS;
++}
++
++static gearmand_error_t __shutdown(gearman_server_st *server,
++                                 void *context)
++{
++  int jobs_written;
++  FILE * fp;
++  gearmand::plugins::queue::Retention *queue= (gearmand::plugins::queue::Retention *)context;
++
++  gearmand_debug(__func__);
++
++  fp = fopen(queue->retention_file.c_str(), "w+");
++  if(fp == NULL) {
++    gearmand_perror(queue->retention_file.c_str());
++    return GEARMAN_ERRNO;
++  }
++
++  jobs_written = 0;
++  for (uint32_t key= 0; key < GEARMAND_JOB_HASH_SIZE; key++) {
++    if(server->job_hash[key] != NULL) {
++      gearman_server_job_st *server_job = server->job_hash[key];
++      fprintf(fp, "%s;%s;%i;%" PRId64 ";%i\n%.*s\n",
++                  server_job->function->function_name,
++                  server_job->unique,
++                  (int)server_job->priority,
++                  server_job->when,
++                  server_job->data_size,
++                  server_job->data_size, (const char*)server_job->data);
++      jobs_written++;
++      while (server_job->unique_next != NULL) {
++        server_job = server_job->unique_next;
++        fprintf(fp, "%s;%s;%i;%" PRId64 ";%i\n%.*s\n",
++                    server_job->function->function_name,
++                    server_job->unique,
++                    (int)server_job->priority,
++                    server_job->when,
++                    server_job->data_size,
++                    server_job->data_size, (const char*)server_job->data);
++        jobs_written++;
++      }
++    }
++  }
++
++  fclose(fp);
++
++  gearmand_log_info(GEARMAN_DEFAULT_LOG_PARAM, "wrote %i jobs into retention file %s", jobs_written, queue->retention_file.c_str());
++
++  return GEARMAN_SUCCESS;
++}
++
++gearmand_error_t _initialize(gearman_server_st *server, gearmand::plugins::queue::Retention *queue)
++{
++  gearman_server_set_queue(server, queue, __add, __flush, __done, __replay, __shutdown);
++
++  return GEARMAN_SUCCESS;
++}
+diff -Nur a/libgearman-server/plugins/queue/retention/queue.h b/libgearman-server/plugins/queue/retention/queue.h
+--- a/libgearman-server/plugins/queue/retention/queue.h	1970-01-01 01:00:00.000000000 +0100
++++ b/libgearman-server/plugins/queue/retention/queue.h	2013-05-14 13:07:37.425110631 +0200
+@@ -0,0 +1,22 @@
++/*  vim:expandtab:shiftwidth=2:tabstop=2:smarttab:
++ *
++ *  Gearmand client and server library.
++ *
++ *  Copyright (C) 2012 Data Differential, http://datadifferential.com/
++ *  Copyright (C) 2012 Sven Nierlein, sven@consol.de
++ *  All rights reserved.
++ *
++ */
++
++#pragma once
++
++
++namespace gearmand {
++namespace plugins {
++namespace queue {
++
++void initialize_retention();
++
++} // namespace queue
++} // namespace plugin
++} // namespace gearmand
+diff -Nur a/libgearman-server/plugins/queue/sqlite/queue.cc b/libgearman-server/plugins/queue/sqlite/queue.cc
+--- a/libgearman-server/plugins/queue/sqlite/queue.cc	2012-05-04 05:51:48.000000000 +0200
++++ b/libgearman-server/plugins/queue/sqlite/queue.cc	2013-05-14 13:07:37.425110631 +0200
+@@ -279,7 +279,7 @@
+       queue->set_epoch_support(false);
+     }
+   }
+-  gearman_server_set_queue(server, queue, _sqlite_add, _sqlite_flush, _sqlite_done, _sqlite_replay);
++  gearman_server_set_queue(server, queue, _sqlite_add, _sqlite_flush, _sqlite_done, _sqlite_replay, NULL);
+ 
+   return GEARMAN_SUCCESS;
+ }
+diff -Nur a/libgearman-server/plugins/queue/tokyocabinet/queue.cc b/libgearman-server/plugins/queue/tokyocabinet/queue.cc
+--- a/libgearman-server/plugins/queue/tokyocabinet/queue.cc	2012-05-04 05:51:48.000000000 +0200
++++ b/libgearman-server/plugins/queue/tokyocabinet/queue.cc	2013-05-14 13:07:37.425110631 +0200
+@@ -157,7 +157,7 @@
+     }
+   }
+ 
+-  gearman_server_set_queue(server, queue, _libtokyocabinet_add, _libtokyocabinet_flush, _libtokyocabinet_done, _libtokyocabinet_replay);   
++  gearman_server_set_queue(server, queue, _libtokyocabinet_add, _libtokyocabinet_flush, _libtokyocabinet_done, _libtokyocabinet_replay, NULL);
+    
+   return GEARMAN_SUCCESS;
+ }
+diff -Nur a/libgearman-server/plugins/queue.h b/libgearman-server/plugins/queue.h
+--- a/libgearman-server/plugins/queue.h	2012-05-04 05:51:48.000000000 +0200
++++ b/libgearman-server/plugins/queue.h	2013-05-14 13:07:37.425110631 +0200
+@@ -50,3 +50,5 @@
+ #include <libgearman-server/plugins/queue/redis/queue.h>
+ 
+ #include <libgearman-server/plugins/queue/mysql/queue.h>
++
++#include <libgearman-server/plugins/queue/retention/queue.h>
+\ No newline at end of file
+diff -Nur a/libgearman-server/plugins.cc b/libgearman-server/plugins.cc
+--- a/libgearman-server/plugins.cc	2012-05-04 05:51:48.000000000 +0200
++++ b/libgearman-server/plugins.cc	2013-05-14 13:07:37.425110631 +0200
+@@ -68,6 +68,8 @@
+     queue::initialize_postgres();
+   }
+ 
++  queue::initialize_retention();
++
+ 
+ #ifdef HAVE_LIBHIREDIS
+   queue::initialize_redis();
+diff -Nur a/libgearman-server/server.c b/libgearman-server/server.c
+--- a/libgearman-server/server.c	2012-05-04 05:51:48.000000000 +0200
++++ b/libgearman-server/server.c	2013-05-14 13:07:37.425110631 +0200
+@@ -758,6 +758,24 @@
+   return ret;
+ }
+ 
++gearmand_error_t gearman_queue_shutdown(gearman_server_st *server)
++{
++  gearmand_error_t ret;
++
++  if(server->queue._shutdown_fn == NULL)
++    return GEARMAN_SUCCESS;
++
++  ret= (*(server->queue._shutdown_fn))(server, (void *)server->queue._context);
++
++  return ret;
++}
++
++gearmand_error_t gearman_server_queue_shutdown(gearman_server_st *server)
++{
++  gearmand_error_t ret= gearman_queue_shutdown(server);
++  return ret;
++}
++
+ void *gearman_server_queue_context(const gearman_server_st *server)
+ {
+   return (void *)server->queue._context;
+@@ -768,13 +786,15 @@
+                               gearman_queue_add_fn *add,
+                               gearman_queue_flush_fn *flush,
+                               gearman_queue_done_fn *done,
+-                              gearman_queue_replay_fn *replay)
++                              gearman_queue_replay_fn *replay,
++                              gearman_queue_shutdown_fn *shutdown)
+ {
+   server->queue._context= context;
+   server->queue._add_fn= add;
+   server->queue._flush_fn= flush;
+   server->queue._done_fn= done;
+   server->queue._replay_fn= replay;
++  server->queue._shutdown_fn= shutdown;
+ }
+ 
+ /*
+diff -Nur a/libgearman-server/server.h b/libgearman-server/server.h
+--- a/libgearman-server/server.h	2012-05-04 05:51:48.000000000 +0200
++++ b/libgearman-server/server.h	2013-05-14 13:07:37.425110631 +0200
+@@ -57,6 +57,16 @@
+ GEARMAN_API
+ gearmand_error_t gearman_server_queue_replay(gearman_server_st *server);
+ 
++ /**
++  * shutdown the persistent queue to save all remaining jobs.
++  * should only be run at shutdown.
++  * @param server Server structure previously initialized with
++  *        gearman_server_create.
++  * @return Standard gearman return value.
++  */
++GEARMAN_API
++gearmand_error_t gearman_server_queue_shutdown(gearman_server_st  *server);
++
+ /**
+  * Get persistent queue context.
+  */
+@@ -73,7 +83,8 @@
+                               gearman_queue_add_fn *add,
+                               gearman_queue_flush_fn *flush,
+                               gearman_queue_done_fn *done,
+-                              gearman_queue_replay_fn *replay);
++                              gearman_queue_replay_fn *replay,
++                              gearman_queue_shutdown_fn *shutdown);
+ 
+ /** @} */
+ 
+diff -Nur a/libgearman-server/struct/server.h b/libgearman-server/struct/server.h
+--- a/libgearman-server/struct/server.h	2012-05-04 05:51:48.000000000 +0200
++++ b/libgearman-server/struct/server.h	2013-05-14 13:07:37.425110631 +0200
+@@ -78,6 +78,7 @@
+     gearman_queue_flush_fn *_flush_fn;
+     gearman_queue_done_fn *_done_fn;
+     gearman_queue_replay_fn *_replay_fn;
++    gearman_queue_shutdown_fn *_shutdown_fn;
+   } queue;
+   pthread_mutex_t proc_lock;
+   pthread_cond_t proc_cond;
+diff -Nur a/Makefile.in b/Makefile.in
+--- a/Makefile.in	2013-05-14 10:59:45.005101449 +0200
++++ b/Makefile.in	2013-05-14 13:07:37.429101335 +0200
+@@ -227,6 +227,18 @@
+ #
+ 
+ # vim:ft=automake
++# Gearman
++# Copyright (C) 2012 Data Differential, http://datadifferential.com/
++# Copyright (C) 2012 Sven Nierlein, sven@consol.de
++# All rights reserved.
++#
++# Use and distribution licensed under the BSD license.  See
++# the COPYING file in the parent directory for full text.
++#
++# All paths should be given relative to the root
++#
++
++# vim:ft=automake
+ # Gearman server and library 
+ # Copyright (C) 2011 Data Differential, http://datadifferential.com/
+ # Copyright (C) 2009-2010 Brian Aker, Eric Day, Monty Taylor All rights
+@@ -456,6 +468,7 @@
+ 	$(srcdir)/libgearman-server/plugins/queue/mysql/include.am \
+ 	$(srcdir)/libgearman-server/plugins/queue/postgres/include.am \
+ 	$(srcdir)/libgearman-server/plugins/queue/redis/include.am \
++	$(srcdir)/libgearman-server/plugins/queue/retention/include.am \
+ 	$(srcdir)/libgearman-server/plugins/queue/sqlite/include.am \
+ 	$(srcdir)/libgearman-server/plugins/queue/tokyocabinet/include.am \
+ 	$(srcdir)/libgearman-server/struct/include.am \
+@@ -673,6 +686,7 @@
+ 	libgearman-server/plugins/queue/sqlite/queue.cc \
+ 	libgearman-server/plugins/queue/tokyocabinet/queue.cc \
+ 	libgearman-server/plugins/queue/mysql/queue.cc \
++	libgearman-server/plugins/queue/retention/queue.cc \
+ 	libgearman-server/text.cc libgearman-server/byteorder.cc \
+ 	libgearman-server/client.cc libgearman-server/connection.c \
+ 	libgearman-server/connection_list.cc libgearman-server/fifo.c \
+@@ -701,6 +715,7 @@
+ 	$(am__objects_1) $(am__objects_2) $(am__objects_3) \
+ 	$(am__objects_4) $(am__objects_5) $(am__objects_6) \
+ 	$(am__objects_7) \
++	libgearman-server/plugins/queue/retention/libgearman_server_libgearman_server_la-queue.lo \
+ 	libgearman-server/libgearman_server_libgearman_server_la-text.lo \
+ 	libgearman-server/libgearman_server_libgearman_server_la-byteorder.lo \
+ 	libgearman-server/libgearman_server_libgearman_server_la-client.lo \
+@@ -1598,6 +1613,7 @@
+ 	libgearman-server/plugins/queue/sqlite/queue.h \
+ 	libgearman-server/plugins/queue/tokyocabinet/queue.h \
+ 	libgearman-server/plugins/queue/mysql/queue.h \
++	libgearman-server/plugins/queue/retention/queue.h \
+ 	libgearman-server/text.h libgearman-server/byte.h \
+ 	libgearman-server/byteorder.h libgearman-server/client.h \
+ 	libgearman-server/common.h libgearman-server/connection.h \
+@@ -1939,9 +1955,10 @@
+ 	libgearman-server/plugins/protocol/http/method.cc \
+ 	$(am__append_26) $(am__append_30) $(am__append_34) \
+ 	$(am__append_38) $(am__append_40) $(am__append_44) \
+-	$(am__append_46) libgearman-server/text.cc \
+-	libgearman-server/byteorder.cc libgearman-server/client.cc \
+-	libgearman-server/connection.c \
++	$(am__append_46) \
++	libgearman-server/plugins/queue/retention/queue.cc \
++	libgearman-server/text.cc libgearman-server/byteorder.cc \
++	libgearman-server/client.cc libgearman-server/connection.c \
+ 	libgearman-server/connection_list.cc libgearman-server/fifo.c \
+ 	libgearman-server/function.cc libgearman-server/gearmand.cc \
+ 	libgearman-server/gearmand_con.c \
+@@ -2150,7 +2167,7 @@
+ .SUFFIXES: .c .cc .lo .o .obj
+ am--refresh:
+ 	@:
+-$(srcdir)/Makefile.in:  $(srcdir)/Makefile.am $(srcdir)/libtest/include.am $(srcdir)/libhostile/include.am $(srcdir)/benchmark/include.am $(srcdir)/bin/include.am $(srcdir)/examples/include.am $(srcdir)/gearmand/include.am $(srcdir)/libgearman-server/include.am $(srcdir)/libgearman-server/struct/include.am $(srcdir)/libgearman-server/error/include.am $(srcdir)/libgearman-server/plugins/include.am $(srcdir)/libgearman-server/plugins/protocol/include.am $(srcdir)/libgearman-server/plugins/protocol/http/include.am $(srcdir)/libgearman-server/plugins/queue/include.am $(srcdir)/libgearman-server/plugins/queue/drizzle/include.am $(srcdir)/libgearman-server/plugins/queue/libmemcached/include.am $(srcdir)/libgearman-server/plugins/queue/postgres/include.am $(srcdir)/libgearman-server/plugins/queue/redis/include.am $(srcdir)/libgearman-server/plugins/queue/sqlite/include.am $(srcdir)/libgearman-server/plugins/queue/tokyocabinet/include.am $(srcdir)/libgearman-server/plugins/queue/mysql/include.am $(srcdir)/libgearman/include.am $(srcdir)/libgearman-1.0/include.am $(srcdir)/libgearman-1.0/t/include.am $(srcdir)/util/include.am $(srcdir)/tests/include.am $(srcdir)/tests/libgearman-1.0/include.am $(srcdir)/tests/ephemeral.am $(srcdir)/tests/libdrizzle.am $(srcdir)/tests/libmemcached.am $(srcdir)/tests/postgres.am $(srcdir)/tests/sqlite.am $(srcdir)/tests/tokyocabinet.am $(srcdir)/tests/redis.am $(srcdir)/tests/httpd.am $(srcdir)/support/include.am $(srcdir)/docs/include.am $(am__configure_deps)
++$(srcdir)/Makefile.in:  $(srcdir)/Makefile.am $(srcdir)/libtest/include.am $(srcdir)/libhostile/include.am $(srcdir)/benchmark/include.am $(srcdir)/bin/include.am $(srcdir)/examples/include.am $(srcdir)/gearmand/include.am $(srcdir)/libgearman-server/include.am $(srcdir)/libgearman-server/struct/include.am $(srcdir)/libgearman-server/error/include.am $(srcdir)/libgearman-server/plugins/include.am $(srcdir)/libgearman-server/plugins/protocol/include.am $(srcdir)/libgearman-server/plugins/protocol/http/include.am $(srcdir)/libgearman-server/plugins/queue/include.am $(srcdir)/libgearman-server/plugins/queue/drizzle/include.am $(srcdir)/libgearman-server/plugins/queue/libmemcached/include.am $(srcdir)/libgearman-server/plugins/queue/postgres/include.am $(srcdir)/libgearman-server/plugins/queue/redis/include.am $(srcdir)/libgearman-server/plugins/queue/sqlite/include.am $(srcdir)/libgearman-server/plugins/queue/tokyocabinet/include.am $(srcdir)/libgearman-server/plugins/queue/mysql/include.am $(srcdir)/libgearman-server/plugins/queue/retention/include.am $(srcdir)/libgearman/include.am $(srcdir)/libgearman-1.0/include.am $(srcdir)/libgearman-1.0/t/include.am $(srcdir)/util/include.am $(srcdir)/tests/include.am $(srcdir)/tests/libgearman-1.0/include.am $(srcdir)/tests/ephemeral.am $(srcdir)/tests/libdrizzle.am $(srcdir)/tests/libmemcached.am $(srcdir)/tests/postgres.am $(srcdir)/tests/sqlite.am $(srcdir)/tests/tokyocabinet.am $(srcdir)/tests/redis.am $(srcdir)/tests/httpd.am $(srcdir)/support/include.am $(srcdir)/docs/include.am $(am__configure_deps)
+ 	@for dep in $?; do \
+ 	  case '$(am__configure_deps)' in \
+ 	    *$$dep*) \
+@@ -2354,6 +2371,15 @@
+ libgearman-server/plugins/queue/mysql/libgearman_server_libgearman_server_la-queue.lo:  \
+ 	libgearman-server/plugins/queue/mysql/$(am__dirstamp) \
+ 	libgearman-server/plugins/queue/mysql/$(DEPDIR)/$(am__dirstamp)
++libgearman-server/plugins/queue/retention/$(am__dirstamp):
++	@$(MKDIR_P) libgearman-server/plugins/queue/retention
++	@: > libgearman-server/plugins/queue/retention/$(am__dirstamp)
++libgearman-server/plugins/queue/retention/$(DEPDIR)/$(am__dirstamp):
++	@$(MKDIR_P) libgearman-server/plugins/queue/retention/$(DEPDIR)
++	@: > libgearman-server/plugins/queue/retention/$(DEPDIR)/$(am__dirstamp)
++libgearman-server/plugins/queue/retention/libgearman_server_libgearman_server_la-queue.lo:  \
++	libgearman-server/plugins/queue/retention/$(am__dirstamp) \
++	libgearman-server/plugins/queue/retention/$(DEPDIR)/$(am__dirstamp)
+ libgearman-server/$(am__dirstamp):
+ 	@$(MKDIR_P) libgearman-server
+ 	@: > libgearman-server/$(am__dirstamp)
+@@ -3268,6 +3294,8 @@
+ 	-rm -f libgearman-server/plugins/queue/postgres/libgearman_server_libgearman_server_la-queue.lo
+ 	-rm -f libgearman-server/plugins/queue/redis/libgearman_server_libgearman_server_la-queue.$(OBJEXT)
+ 	-rm -f libgearman-server/plugins/queue/redis/libgearman_server_libgearman_server_la-queue.lo
++	-rm -f libgearman-server/plugins/queue/retention/libgearman_server_libgearman_server_la-queue.$(OBJEXT)
++	-rm -f libgearman-server/plugins/queue/retention/libgearman_server_libgearman_server_la-queue.lo
+ 	-rm -f libgearman-server/plugins/queue/sqlite/libgearman_server_libgearman_server_la-queue.$(OBJEXT)
+ 	-rm -f libgearman-server/plugins/queue/sqlite/libgearman_server_libgearman_server_la-queue.lo
+ 	-rm -f libgearman-server/plugins/queue/tokyocabinet/libgearman_server_libgearman_server_la-queue.$(OBJEXT)
+@@ -3573,6 +3601,7 @@
+ @AMDEP_TRUE@@am__include@ @am__quote@libgearman-server/plugins/queue/mysql/$(DEPDIR)/libgearman_server_libgearman_server_la-queue.Plo@am__quote@
+ @AMDEP_TRUE@@am__include@ @am__quote@libgearman-server/plugins/queue/postgres/$(DEPDIR)/libgearman_server_libgearman_server_la-queue.Plo@am__quote@
+ @AMDEP_TRUE@@am__include@ @am__quote@libgearman-server/plugins/queue/redis/$(DEPDIR)/libgearman_server_libgearman_server_la-queue.Plo@am__quote@
++@AMDEP_TRUE@@am__include@ @am__quote@libgearman-server/plugins/queue/retention/$(DEPDIR)/libgearman_server_libgearman_server_la-queue.Plo@am__quote@
+ @AMDEP_TRUE@@am__include@ @am__quote@libgearman-server/plugins/queue/sqlite/$(DEPDIR)/libgearman_server_libgearman_server_la-queue.Plo@am__quote@
+ @AMDEP_TRUE@@am__include@ @am__quote@libgearman-server/plugins/queue/tokyocabinet/$(DEPDIR)/libgearman_server_libgearman_server_la-queue.Plo@am__quote@
+ @AMDEP_TRUE@@am__include@ @am__quote@libgearman/$(DEPDIR)/libgearman_libgearman_la-actions.Plo@am__quote@
+@@ -4002,6 +4031,14 @@
+ @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+ @am__fastdepCXX_FALSE@	$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgearman_server_libgearman_server_la_CXXFLAGS) $(CXXFLAGS) -c -o libgearman-server/plugins/queue/mysql/libgearman_server_libgearman_server_la-queue.lo `test -f 'libgearman-server/plugins/queue/mysql/queue.cc' || echo '$(srcdir)/'`libgearman-server/plugins/queue/mysql/queue.cc
+ 
++libgearman-server/plugins/queue/retention/libgearman_server_libgearman_server_la-queue.lo: libgearman-server/plugins/queue/retention/queue.cc
++@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgearman_server_libgearman_server_la_CXXFLAGS) $(CXXFLAGS) -MT libgearman-server/plugins/queue/retention/libgearman_server_libgearman_server_la-queue.lo -MD -MP -MF libgearman-server/plugins/queue/retention/$(DEPDIR)/libgearman_server_libgearman_server_la-queue.Tpo -c -o libgearman-server/plugins/queue/retention/libgearman_server_libgearman_server_la-queue.lo `test -f 'libgearman-server/plugins/queue/retention/queue.cc' || echo '$(srcdir)/'`libgearman-server/plugins/queue/retention/queue.cc
++@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) libgearman-server/plugins/queue/retention/$(DEPDIR)/libgearman_server_libgearman_server_la-queue.Tpo libgearman-server/plugins/queue/retention/$(DEPDIR)/libgearman_server_libgearman_server_la-queue.Plo
++@am__fastdepCXX_FALSE@	$(AM_V_CXX) @AM_BACKSLASH@
++@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='libgearman-server/plugins/queue/retention/queue.cc' object='libgearman-server/plugins/queue/retention/libgearman_server_libgearman_server_la-queue.lo' libtool=yes @AMDEPBACKSLASH@
++@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
++@am__fastdepCXX_FALSE@	$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgearman_server_libgearman_server_la_CXXFLAGS) $(CXXFLAGS) -c -o libgearman-server/plugins/queue/retention/libgearman_server_libgearman_server_la-queue.lo `test -f 'libgearman-server/plugins/queue/retention/queue.cc' || echo '$(srcdir)/'`libgearman-server/plugins/queue/retention/queue.cc
++
+ libgearman-server/libgearman_server_libgearman_server_la-text.lo: libgearman-server/text.cc
+ @am__fastdepCXX_TRUE@	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgearman_server_libgearman_server_la_CXXFLAGS) $(CXXFLAGS) -MT libgearman-server/libgearman_server_libgearman_server_la-text.lo -MD -MP -MF libgearman-server/$(DEPDIR)/libgearman_server_libgearman_server_la-text.Tpo -c -o libgearman-server/libgearman_server_libgearman_server_la-text.lo `test -f 'libgearman-server/text.cc' || echo '$(srcdir)/'`libgearman-server/text.cc
+ @am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) libgearman-server/$(DEPDIR)/libgearman_server_libgearman_server_la-text.Tpo libgearman-server/$(DEPDIR)/libgearman_server_libgearman_server_la-text.Plo
+@@ -5566,6 +5603,7 @@
+ 	-rm -rf libgearman-server/plugins/queue/mysql/.libs libgearman-server/plugins/queue/mysql/_libs
+ 	-rm -rf libgearman-server/plugins/queue/postgres/.libs libgearman-server/plugins/queue/postgres/_libs
+ 	-rm -rf libgearman-server/plugins/queue/redis/.libs libgearman-server/plugins/queue/redis/_libs
++	-rm -rf libgearman-server/plugins/queue/retention/.libs libgearman-server/plugins/queue/retention/_libs
+ 	-rm -rf libgearman-server/plugins/queue/sqlite/.libs libgearman-server/plugins/queue/sqlite/_libs
+ 	-rm -rf libgearman-server/plugins/queue/tokyocabinet/.libs libgearman-server/plugins/queue/tokyocabinet/_libs
+ 	-rm -rf libgearman/function/.libs libgearman/function/_libs
+@@ -6092,6 +6130,8 @@
+ 	-rm -f libgearman-server/plugins/queue/postgres/$(am__dirstamp)
+ 	-rm -f libgearman-server/plugins/queue/redis/$(DEPDIR)/$(am__dirstamp)
+ 	-rm -f libgearman-server/plugins/queue/redis/$(am__dirstamp)
++	-rm -f libgearman-server/plugins/queue/retention/$(DEPDIR)/$(am__dirstamp)
++	-rm -f libgearman-server/plugins/queue/retention/$(am__dirstamp)
+ 	-rm -f libgearman-server/plugins/queue/sqlite/$(DEPDIR)/$(am__dirstamp)
+ 	-rm -f libgearman-server/plugins/queue/sqlite/$(am__dirstamp)
+ 	-rm -f libgearman-server/plugins/queue/tokyocabinet/$(DEPDIR)/$(am__dirstamp)
+@@ -6128,7 +6168,7 @@
+ 
+ distclean: distclean-am
+ 	-rm -f $(am__CONFIG_DISTCLEAN_FILES)
+-	-rm -rf benchmark/$(DEPDIR) bin/$(DEPDIR) docs/libgearman/examples/$(DEPDIR) examples/$(DEPDIR) gearmand/$(DEPDIR) libgearman-1.0/t/$(DEPDIR) libgearman-server/$(DEPDIR) libgearman-server/error/$(DEPDIR) libgearman-server/plugins/protocol/http/$(DEPDIR) libgearman-server/plugins/queue/drizzle/$(DEPDIR) libgearman-server/plugins/queue/libmemcached/$(DEPDIR) libgearman-server/plugins/queue/mysql/$(DEPDIR) libgearman-server/plugins/queue/postgres/$(DEPDIR) libgearman-server/plugins/queue/redis/$(DEPDIR) libgearman-server/plugins/queue/sqlite/$(DEPDIR) libgearman-server/plugins/queue/tokyocabinet/$(DEPDIR) libgearman/$(DEPDIR) libgearman/function/$(DEPDIR) libgearman/protocol/$(DEPDIR) libhostile/$(DEPDIR) libtest/$(DEPDIR) tests/$(DEPDIR) tests/libgearman-1.0/$(DEPDIR) util/$(DEPDIR)
++	-rm -rf benchmark/$(DEPDIR) bin/$(DEPDIR) docs/libgearman/examples/$(DEPDIR) examples/$(DEPDIR) gearmand/$(DEPDIR) libgearman-1.0/t/$(DEPDIR) libgearman-server/$(DEPDIR) libgearman-server/error/$(DEPDIR) libgearman-server/plugins/protocol/http/$(DEPDIR) libgearman-server/plugins/queue/drizzle/$(DEPDIR) libgearman-server/plugins/queue/libmemcached/$(DEPDIR) libgearman-server/plugins/queue/mysql/$(DEPDIR) libgearman-server/plugins/queue/postgres/$(DEPDIR) libgearman-server/plugins/queue/redis/$(DEPDIR) libgearman-server/plugins/queue/retention/$(DEPDIR) libgearman-server/plugins/queue/sqlite/$(DEPDIR) libgearman-server/plugins/queue/tokyocabinet/$(DEPDIR) libgearman/$(DEPDIR) libgearman/function/$(DEPDIR) libgearman/protocol/$(DEPDIR) libhostile/$(DEPDIR) libtest/$(DEPDIR) tests/$(DEPDIR) tests/libgearman-1.0/$(DEPDIR) util/$(DEPDIR)
+ 	-rm -f Makefile
+ distclean-am: clean-am distclean-compile distclean-generic \
+ 	distclean-hdr distclean-libtool distclean-tags
+@@ -6178,7 +6218,7 @@
+ maintainer-clean: maintainer-clean-am
+ 	-rm -f $(am__CONFIG_DISTCLEAN_FILES)
+ 	-rm -rf $(top_srcdir)/autom4te.cache
+-	-rm -rf benchmark/$(DEPDIR) bin/$(DEPDIR) docs/libgearman/examples/$(DEPDIR) examples/$(DEPDIR) gearmand/$(DEPDIR) libgearman-1.0/t/$(DEPDIR) libgearman-server/$(DEPDIR) libgearman-server/error/$(DEPDIR) libgearman-server/plugins/protocol/http/$(DEPDIR) libgearman-server/plugins/queue/drizzle/$(DEPDIR) libgearman-server/plugins/queue/libmemcached/$(DEPDIR) libgearman-server/plugins/queue/mysql/$(DEPDIR) libgearman-server/plugins/queue/postgres/$(DEPDIR) libgearman-server/plugins/queue/redis/$(DEPDIR) libgearman-server/plugins/queue/sqlite/$(DEPDIR) libgearman-server/plugins/queue/tokyocabinet/$(DEPDIR) libgearman/$(DEPDIR) libgearman/function/$(DEPDIR) libgearman/protocol/$(DEPDIR) libhostile/$(DEPDIR) libtest/$(DEPDIR) tests/$(DEPDIR) tests/libgearman-1.0/$(DEPDIR) util/$(DEPDIR)
++	-rm -rf benchmark/$(DEPDIR) bin/$(DEPDIR) docs/libgearman/examples/$(DEPDIR) examples/$(DEPDIR) gearmand/$(DEPDIR) libgearman-1.0/t/$(DEPDIR) libgearman-server/$(DEPDIR) libgearman-server/error/$(DEPDIR) libgearman-server/plugins/protocol/http/$(DEPDIR) libgearman-server/plugins/queue/drizzle/$(DEPDIR) libgearman-server/plugins/queue/libmemcached/$(DEPDIR) libgearman-server/plugins/queue/mysql/$(DEPDIR) libgearman-server/plugins/queue/postgres/$(DEPDIR) libgearman-server/plugins/queue/redis/$(DEPDIR) libgearman-server/plugins/queue/retention/$(DEPDIR) libgearman-server/plugins/queue/sqlite/$(DEPDIR) libgearman-server/plugins/queue/tokyocabinet/$(DEPDIR) libgearman/$(DEPDIR) libgearman/function/$(DEPDIR) libgearman/protocol/$(DEPDIR) libhostile/$(DEPDIR) libtest/$(DEPDIR) tests/$(DEPDIR) tests/libgearman-1.0/$(DEPDIR) util/$(DEPDIR)
+ 	-rm -f Makefile
+ maintainer-clean-am: distclean-am maintainer-clean-generic
+ 
