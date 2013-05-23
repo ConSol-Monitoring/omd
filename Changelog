@@ -32,7 +32,8 @@ This file documents the revision history for the Open Monitoring Distribution
           - mod_python: Fixed our sys.path patch not to destory the default
             sys.path set during interpreter initialization
           - Dokuwiki: Now supporting the new multisite cookie format
-          - rrdtool: compile and install Python binding
+          - rrdtool: Update to version 1.4.8 
+            - compile and install Python binding
           - nagios: Changed init script to kill still running processes during
                 "stop" call after 60 seconds waiting
           - Added python module pysphere to make ESX monitoring easier
