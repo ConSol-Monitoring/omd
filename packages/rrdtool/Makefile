@@ -18,6 +18,7 @@ build:
 	export PERL5LIB=$(P5TMPDIST)/dest/lib/perl5; \
 	  export PERL_MM_OPT=INSTALL_BASE=$(DESTDIR)$(OMD_ROOT)/lib/perl5; \
 	  export MODULEBUILDRC=$$(pwd)/.modulebuildrc; \
+	  export LDFLAGS="-lglib-2.0"; \
 	  cd $(DIR) && \
 	  ./configure $(CONFIGUREOPTS) && \
 	  $(MAKE) all
