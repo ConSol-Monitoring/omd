@@ -3,11 +3,10 @@
 # Alias: Start Daemon for Check_MK Event Console
 # Menu: Addons
 # Description: 
-#  This option enabled mkeventd - the event corelation and
+#  This option enables mkeventd - the event correlation and
 #  classification daemon of Check_MK. This daemon will receive
-#  events via a pipe at tmp/run/mkeventd/events. It understands
-#  plain syslog format as well as RFC 3164 format (which includes
-#  the priority and facility).
+#  events via a pipe or socket and applies it so a set of
+#  rules.
 
 case "$1" in
     default)
