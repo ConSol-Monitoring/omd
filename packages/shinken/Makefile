@@ -6,9 +6,21 @@ SHINKEN_FILE=$(SHINKEN).tar.gz
 SHINKEN_URL=http://shinken-monitoring.org/pub/$(SHINKEN).tar.gz
 #
 # Python Remote Objects
-PYRO=Pyro4-4.18
-PYRO_FILE=$(PYRO).tar.gz
-PYRO_URL=https://pypi.python.org/packages/source/P/Pyro4/$(PYRO_FILE)
+ifeq ($(DISTRO_NAME),CENTOS)
+  ifeq ($(DISTRO_VERSION),$(filter $(DISTRO_VERSION),5.4 5.5 5.6 5.7 5.8 5.9))
+    PYRO=Pyro-3.16
+    PYRO_FILE=$(PYRO).tar.gz
+    PYRO_URL=https://pypi.python.org/packages/source/P/Pyro/$(PYRO_FILE)
+  else
+    PYRO=Pyro4-4.18
+    PYRO_FILE=$(PYRO).tar.gz
+    PYRO_URL=https://pypi.python.org/packages/source/P/Pyro4/$(PYRO_FILE)
+  endif
+else
+    PYRO=Pyro4-4.18
+    PYRO_FILE=$(PYRO).tar.gz
+    PYRO_URL=https://pypi.python.org/packages/source/P/Pyro4/$(PYRO_FILE)
+endif
 #
 # Python Multiprocessing
 MP=multiprocessing-2.6.2.1
@@ -96,7 +108,8 @@ build:
 		$(DISTRO_VERSION) = "5.5" -o \
 		$(DISTRO_VERSION) = "5.6" -o\
 		$(DISTRO_VERSION) = "5.7" -o \
-		$(DISTRO_VERSION) = "5.8" ]; then \
+		$(DISTRO_VERSION) = "5.8" -o \
+		$(DISTRO_VERSION) = "5.9" ]; then \
 		echo it is a centos 5; \
 		echo which has python 2.4; \
 		echo we need to remove the shinken webui; \
