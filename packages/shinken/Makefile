@@ -6,9 +6,9 @@ SHINKEN_FILE=$(SHINKEN).tar.gz
 SHINKEN_URL=http://shinken-monitoring.org/pub/$(SHINKEN).tar.gz
 #
 # Python Remote Objects
-PYRO=Pyro-3.11
+PYRO=Pyro4-4.18
 PYRO_FILE=$(PYRO).tar.gz
-PYRO_URL=http://www.xs4all.nl/~irmen/pyro3/download/$(PYRO_FILE)
+PYRO_URL=https://pypi.python.org/packages/source/P/Pyro4/$(PYRO_FILE)
 #
 # Python Multiprocessing
 MP=multiprocessing-2.6.2.1
