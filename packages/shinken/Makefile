@@ -44,7 +44,7 @@ MONGODB_FILE=$(MONGODB).tgz
 MONGODB_URL=http://fastdl.mongodb.org/linux/$(MONGODB_FILE)
 #
 # Python bindings for MongoDB
-PYMONGO=pymongo-2.1.1
+PYMONGO=pymongo-2.5.1
 PYMONGO_FILE=$(PYMONGO).tar.gz
 PYMONGO_URL=http://pypi.python.org/packages/source/p/pymongo/$(PYMONGO_FILE)
 #
