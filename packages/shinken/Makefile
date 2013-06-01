@@ -16,7 +16,7 @@ MP_FILE=$(MP).tar.gz
 MP_URL=http://pypi.python.org/packages/source/m/multiprocessing/$(MP_FILE)
 #
 # Simple JSON (not included in CentOS' python2.4)
-SJSON=simplejson-2.1.2
+SJSON=simplejson-3.3.0
 SJSON_FILE=$(SJSON).tar.gz
 SJSON_URL=http://pypi.python.org/packages/source/s/simplejson/$(SJSON_FILE)
 #
