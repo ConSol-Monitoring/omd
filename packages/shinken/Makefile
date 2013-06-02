@@ -31,18 +31,14 @@ MP_URL=http://pypi.python.org/packages/source/m/multiprocessing/$(MP_FILE)
 ifeq ($(DISTRO_NAME),CENTOS)
   ifeq ($(DISTRO_VERSION),$(filter $(DISTRO_VERSION),5.4 5.5 5.6 5.7 5.8 5.9))
     SJSON=simplejson-2.1.2
-    SJSON_FILE=$(SJSON).tar.gz
-    SJSON_URL=http://pypi.python.org/packages/source/s/simplejson/$(SJSON_FILE)
   else
     SJSON=simplejson-3.3.0
-    SJSON_FILE=$(SJSON).tar.gz
-    SJSON_URL=http://pypi.python.org/packages/source/s/simplejson/$(SJSON_FILE)
   endif
 else
   SJSON=simplejson-3.3.0
-  SJSON_FILE=$(SJSON).tar.gz
-  SJSON_URL=http://pypi.python.org/packages/source/s/simplejson/$(SJSON_FILE)
 endif
+SJSON_FILE=$(SJSON).tar.gz
+SJSON_URL=http://pypi.python.org/packages/source/s/simplejson/$(SJSON_FILE)
 #
 # Setup-Tools (needed to install Pyro on CentOS)
 STOOLS=setuptools-0.6c11
