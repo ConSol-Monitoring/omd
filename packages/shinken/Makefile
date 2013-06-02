@@ -8,7 +8,7 @@ SHINKEN_URL=http://shinken-monitoring.org/pub/$(SHINKEN).tar.gz
 # Python Remote Objects
 ifeq ($(DISTRO_NAME),CENTOS)
   ifeq ($(DISTRO_VERSION),$(filter $(DISTRO_VERSION),5.4 5.5 5.6 5.7 5.8 5.9))
-    PYRO=Pyro-3.16
+    PYRO=Pyro-3.12
     PYRO_FILE=$(PYRO).tar.gz
     PYRO_URL=https://pypi.python.org/packages/source/P/Pyro/$(PYRO_FILE)
   else
