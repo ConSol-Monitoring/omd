@@ -30,7 +30,7 @@ MP_URL=http://pypi.python.org/packages/source/m/multiprocessing/$(MP_FILE)
 # Simple JSON (not included in CentOS' python2.4)
 ifeq ($(DISTRO_NAME),CENTOS)
   ifeq ($(DISTRO_VERSION),$(filter $(DISTRO_VERSION),5.4 5.5 5.6 5.7 5.8 5.9))
-    SJSON=simplejson-2.6.2
+    SJSON=simplejson-2.1.2
     SJSON_FILE=$(SJSON).tar.gz
     SJSON_URL=http://pypi.python.org/packages/source/s/simplejson/$(SJSON_FILE)
   else
