@@ -1,6 +1,7 @@
 This file documents the revision history for the Open Monitoring Distribution
 
 0.58:
+          - Nagios: Update to 3.5.0
           - Icinga: Update to 1.9.1
           - Thruk: Update to 1.70-4
             - added cookie based login
