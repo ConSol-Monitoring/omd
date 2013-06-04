@@ -8,6 +8,6 @@
 +    use lib $ENV{'OMD_ROOT'}.'/share/thruk/lib';
 +};
 +
- use Catalyst::ScriptRunner;
- $ENV{'THRUK_SRC'} = 'FastCGI';
- Catalyst::ScriptRunner->run('Thruk', 'FastCGI');
+ ###################################################
+ # create connection pool
+ # has to be done really early to save memory
