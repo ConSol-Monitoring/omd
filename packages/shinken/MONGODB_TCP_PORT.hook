@@ -31,7 +31,7 @@ next_free_hook ()
     do
         PORT=$((PORT + 1))
     done
-    echo "127.0.0.1:$PORT"
+    echo "$PORT"
 }
 
 

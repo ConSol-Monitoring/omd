@@ -330,7 +330,7 @@ MODULES = \
           boolean-0.28.tar.gz \
           Any-Moose-0.20.tar.gz \
           Tie-IxHash-1.22.tar.gz \
-          MongoDB-0.45.tar.gz \
+          MongoDB-0.700.0.tar.gz \
           Sub-Exporter-Progressive-0.001001.tar.gz \
           Safe-Isa-1.000002.tar.gz \
           ExtUtils-PkgConfig-1.14.tar.gz \
