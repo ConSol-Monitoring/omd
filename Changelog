@@ -27,7 +27,7 @@ This file documents the revision history for the Open Monitoring Distribution
           - Webinject: Update to 1.76
           - NRPE: Update to 2.13
           - check_multi: updated to 0.26_581
-          - Mod-Gearman: Updated to version 1.4.4
+          - Mod-Gearman: Updated to version 1.4.6
           - Gearman: Updated to version 0.33
             - added queue retention
           - mod_python: Fixed our sys.path patch not to destory the default
