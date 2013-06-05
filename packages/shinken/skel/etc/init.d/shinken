@@ -150,6 +150,12 @@ EOTXT
     #  sed -ri 's/^([[:space:]]*port[[:space:]]*)(.+)/\1none/' $TARGET_ETC/shinken-specific.d/module_livestatus.cfg
     #fi
     #
+    # Remove the xinet-mk-livestatus-config if we listen on a port ourselves
+    #
+    if [ "$LIVESTATUS_TCP" = "on" ]; then
+      test -f ###ROOT###/etc/mk-livestatus/xinetd.conf && rm -f ###ROOT###/etc/mk-livestatus/xinetd.conf
+    fi
+    #
     # Add the npcd module to the broker
     #
     if [ "$PNP4NAGIOS" = "on" ]; then
