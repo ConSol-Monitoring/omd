@@ -330,6 +330,9 @@ def read_info():
                     # Skip comment and empty lines
                     if line.startswith('#') or line == '':
                         continue
+                    # Remove everything after the first comment sign
+                    if '#' in line:
+                        line = line[:line.index('#')].strip()
                     var, value = line.split('=')
                     value = value.strip()
                     if var.endswith("+"):
