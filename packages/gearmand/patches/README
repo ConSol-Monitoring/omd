@@ -1,3 +1,11 @@
+0001:
+Removes compiling test cases which break on some systems. This also
+speeds up the build process.
+
 0002:
 Fixes compilation of gearmand on several platforms, like eg Ubuntu 12.10.
 See issue 289 for reference, http://omdistro.org/issues/289.
+
+0003:
+Fix issue with clients connecting to multiple servers.
+See https://bugs.launchpad.net/gearmand/+bug/1098409
