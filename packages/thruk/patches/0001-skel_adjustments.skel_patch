@@ -1,5 +1,5 @@
---- a/etc/thruk/thruk.conf	2013-01-06 21:24:56.246229754 +0100
-+++ b/etc/thruk/thruk.conf	2013-01-06 21:25:42.366250367 +0100
+--- a/etc/thruk/thruk.conf	2013-07-09 11:49:22.040208026 +0200
++++ b/etc/thruk/thruk.conf	2013-07-09 11:49:42.003223744 +0200
 @@ -13,7 +13,7 @@
  
  ######################################
@@ -38,8 +38,8 @@
 +use_frames          = 1
  
  ######################################
- # normally passive checks would be marked as disabled.
-@@ -134,11 +134,11 @@
+ # use histograms, shows histogram links
+@@ -169,11 +169,11 @@
  
  ######################################
  # temporary directory, used for template cache...
@@ -53,7 +53,7 @@
  
  ######################################
  # mode used when creating or saving files
-@@ -147,27 +147,27 @@
+@@ -182,27 +182,27 @@
  
  ######################################
  # server side includes
@@ -86,7 +86,7 @@
  
  ######################################
  # use paged data instead of all data in one huge page
-@@ -227,7 +227,7 @@
+@@ -277,7 +277,7 @@
  # Instead of using a general resource_file, you could define one file
  # per peer in your peer config.
  #
@@ -95,7 +95,7 @@
  
  # enable a performance bar inside the status/host list which
  # create a graph from the performance data of the plugin output. Available
-@@ -305,6 +305,7 @@
+@@ -385,6 +385,7 @@
  # check should be rescheduled instead of the passive check.
  # Have a look at the documentation for a detailed description.
  #command_reschedule_alias = servicename_or_commandname_pattern;agent_service_name
@@ -103,7 +103,7 @@
  
  ######################################
  # Time Format Settings
-@@ -344,23 +345,23 @@
+@@ -424,23 +425,23 @@
  # Specifiy a file which is then completly under the control of Thruk.
  # It will be used to store cronjobs, ex. for reports. The file has to
  # be writable by Thruk.
@@ -132,7 +132,7 @@
  
  # Set first day of week. Used in reports.
  # Sunday: 0
-@@ -406,8 +407,8 @@
+@@ -497,8 +498,8 @@
  # COOKIE AUTH
  # cookie auth requires additional webserver settings, see the documentation
  # for detailed instructions.
@@ -143,7 +143,7 @@
  cookie_auth_session_timeout       = 604800
  cookie_auth_session_cache_timeout = 5
  #cookie_auth_domain               = .domain.com
-@@ -449,42 +450,19 @@
+@@ -540,42 +541,19 @@
  ######################################
  # Backend Configuration, enter your backends here
  <Component Thruk::Backend>
@@ -199,7 +199,7 @@
  </Component>
  
  
-@@ -501,9 +479,9 @@
+@@ -592,9 +570,9 @@
  <Component Thruk::Plugin::ConfigTool>
      show_plugin_syntax_helper = 1
  
@@ -209,10 +209,10 @@
 +    thruk    = ###ROOT###/etc/thruk/thruk_local.conf
 +    cgi.cfg  = ###ROOT###/etc/nagios/cgi.cfg
 +    htpasswd = ###ROOT###/etc/htpasswd
- </Component>
  
- ######################################
-@@ -527,7 +505,7 @@
+     #pre_obj_save_cmd   =
+     #post_obj_save_cmd  =
+@@ -627,7 +605,7 @@
      #report_base_url=http://host.local/thruk/cgi-bin/
  
      # wkhtmltopdf is used to convert html pages into pdf
