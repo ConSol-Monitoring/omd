@@ -1,6 +1,6 @@
 This file documents the revision history for the Open Monitoring Distribution
 
-1.00:
+1.00     Jun 17 2013
           - Nagios: Update to 3.5.0
           - Icinga: Update to 1.9.1
           - Thruk: Update to 1.72-2
