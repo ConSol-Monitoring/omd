@@ -14,7 +14,7 @@ This file documents the revision history for the Open Monitoring Distribution
             - Installing livestatus python API module now
             - Added config hook MULTISITE_AUTHORISATION to control some user
               permissions in NagVis and pnp4nagios via multisite permissions
-          - NagVis: Update to 1.7.8
+          - NagVis: Update to 1.7.9
           - omd:
             - new option --no-autostart, -A for omd create (set AUTOSTART
               to off right at creation, useful for test sites!)
