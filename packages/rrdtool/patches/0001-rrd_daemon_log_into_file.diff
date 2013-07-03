@@ -12,8 +12,8 @@
  #include <glib-2.0/glib.h>
  /* }}} */
  
-+#define LOGFILE_PATH "~/var/log/rrd_cached.log"
-+#define DATE_FORMAT  "%d.%m.%Y %H:%M:%S "
++#define LOGFILE_PATH "~/var/log/rrdcached.log"
++#define DATE_FORMAT  "%Y-%m-%d %H:%M:%S "
 +char g_logfile_path[512]; // Contains expanded path
 +char g_date[32];
 +

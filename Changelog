@@ -1,5 +1,8 @@
 This file documents the revision history for the Open Monitoring Distribution
 
+1.10:
+          - rrdcached is now logging to ~/var/log/rrdcached.log
+
 1.00:
           - Nagios: Update to 3.5.0
           - Icinga: Update to 1.9.1
