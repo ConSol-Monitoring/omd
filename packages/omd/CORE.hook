@@ -53,6 +53,8 @@ case "$1" in
             make_link ../../nagios/apache.conf $OMD_ROOT/etc/apache/conf.d/nagios.conf 
             make_link ../../icinga/apache.conf $OMD_ROOT/etc/apache/conf.d/icinga.conf 
             make_link nagios $OMD_ROOT/etc/init.d/core
+            # Beware: do not change the number of spaces before '='. Otherwise we will get severe
+            # merge conflicts at 'omd mv'
             sed -i -e "s|^nagios_binary[[:space:]]*=.*$|nagios_binary               = '$OMD_ROOT/bin/$2'|" $OMD_ROOT/etc/check_mk/defaults
             sed -i -e "s|^nagios_config_file[[:space:]]*=.*$|nagios_config_file          = '$OMD_ROOT/tmp/$2/$2.cfg'|" $OMD_ROOT/etc/check_mk/defaults
             sed -i -e "s|^nagios_url[[:space:]]*=.*$|nagios_url                  = '/$OMD_SITE/$2'|" $OMD_ROOT/etc/check_mk/defaults

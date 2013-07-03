@@ -27,7 +27,7 @@ if [ $? -eq 0 ]; then
   # do we have a even minor version?
   let mod=$minor%2
   if [ $mod -eq 0 ]; then
-    minor=$((minor+1))
+    minor=$(printf '%02d' $((minor+1)))
   fi
   version="$major.$minor"
 
