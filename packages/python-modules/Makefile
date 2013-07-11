@@ -4,14 +4,19 @@ NAME     = python-modules
 VERSION  = $(OMD_VERSION)
 DISTRO   = $(shell ../../distro)
 
-MODULES = pysphere-0.1.7.zip
+MODULES = pysphere-0.1.7.zip \
+          pyasn1-0.1.7.tar.gz \
+          pysnmp-4.2.4.tar.gz
 
 build:
 	mkdir -p dest
 	cd dest && \
 	    for M in $(MODULES); do \
-		unzip -o ../src/$$M ; \
-		cd $M ; \
+		if echo $$M | grep .tar.gz; then \
+		    tar xvzf ../src/$$M ; \
+		else \
+		    unzip -o ../src/$$M ; \
+		fi \
 	    done
 
 install:
