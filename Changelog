@@ -4,6 +4,11 @@ This file documents the revision history for the Open Monitoring Distribution
           - python modules: added pysnmp and pyasn1 modules
           - rrdcached is now logging to ~/var/log/rrdcached.log
           - added missing logrotation config for ~/var/log/xinetd.log
+          - added "diskspace" program which is meant to cleanup too old files
+            which are not needed/wanted anymore and are not handled by regular
+            logrotate (like e.g. the nagios archive). Is callec automatically
+            every hour when the OMD crontab is enabled. This can be changed by
+            editing the cron config etc/cron.d/diskspace
 
 1.00     Jun 17 2013
           - Nagios: Update to 3.5.0
