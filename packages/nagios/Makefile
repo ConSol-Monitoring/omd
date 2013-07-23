@@ -44,8 +44,8 @@ patch:
 install:
 	$(MAKE) DESTDIR=$(DESTDIR) -C $(DIR) install-base install-cgis install-html install-classicui
 	rm -f $(DESTDIR)$(OMD_ROOT)/share/nagios/htdocs/config.php.inc
-
-        # Install Themes
+	
+	# Install Themes
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/nagios/htdocs/themes/classicui 
 	cp -a $(DESTDIR)$(OMD_ROOT)/share/nagios/htdocs/stylesheets $(DESTDIR)$(OMD_ROOT)/share/nagios/htdocs/themes/classicui/
 	cp -a $(DESTDIR)$(OMD_ROOT)/share/nagios/htdocs/images      $(DESTDIR)$(OMD_ROOT)/share/nagios/htdocs/themes/classicui/
@@ -53,33 +53,33 @@ install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/nagios/htdocs/themes/exfoliation 
 	cp -a $(DESTDIR)$(OMD_ROOT)/share/nagios/htdocs/stylesheets $(DESTDIR)$(OMD_ROOT)/share/nagios/htdocs/themes/exfoliation/
 	cp -a $(DESTDIR)$(OMD_ROOT)/share/nagios/htdocs/images      $(DESTDIR)$(OMD_ROOT)/share/nagios/htdocs/themes/exfoliation/
-        # remove original files
+	# remove original files
 	rm -rf $(DESTDIR)$(OMD_ROOT)/share/nagios/htdocs/stylesheets
 	rm -rf $(DESTDIR)$(OMD_ROOT)/share/nagios/htdocs/images
 	# Link ClassicUI
 	cd $(DESTDIR)$(OMD_ROOT)/share/nagios/htdocs; rm -rf styleshets; ln -sfn themes/classicui/stylesheets
 	cd $(DESTDIR)$(OMD_ROOT)/share/nagios/htdocs; rm -rf images; ln -sfn themes/classicui/images
-
+	
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/nagios
 	install -m 664 $(DIR)/p1.pl $(DESTDIR)$(OMD_ROOT)/lib/nagios
-
+	
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/nagios/htdocs/ssi
 	install -m 755 ssi-wrapper.pl $(DESTDIR)$(OMD_ROOT)/share/nagios/htdocs/ssi
-
+	
 	for f in common avail cmd config extinfo histogram history notifications outages showlog status statusmap statuswml statuswrl summary tac trends ; do \
 		ln -sfn ssi-wrapper.pl $(DESTDIR)$(OMD_ROOT)/share/nagios/htdocs/ssi/$$f-header.ssi ; \
 		ln -sfn ssi-wrapper.pl $(DESTDIR)$(OMD_ROOT)/share/nagios/htdocs/ssi/$$f-footer.ssi ; \
 	done
-
+	
 	# Copy package documentations to have these information in the binary packages
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/doc/$(NAME)
 	for file in README THANKS LEGAL LICENSE ; do \
 	   install -m 644 $(DIR)/$$file $(DESTDIR)$(OMD_ROOT)/share/doc/$(NAME); \
 	done
-
+	
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/bin
 	install -m 755 merge-nagios-config $(DESTDIR)$(OMD_ROOT)/bin
-
+	
 	# Install the diskspace cleanup plugin
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/diskspace
 	install -m 644 diskspace $(DESTDIR)$(OMD_ROOT)/share/diskspace/nagios
