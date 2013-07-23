@@ -78,6 +78,10 @@ install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/check_mk/web
 	cp -pr $(EDIR)/web/* $(DESTDIR)$(OMD_ROOT)/share/check_mk/web
 
+        # Install the diskspace cleanup plugin
+        mkdir -p $(DESTDIR)$(OMD_ROOT)/share/diskspace
+        install -m 644 diskspace $(DESTDIR)$(OMD_ROOT)/share/diskspace/nagios
+
 skel:
 	rm -f $(SKEL)/etc/check_mk/main.mk-*
 	rm -f $(SKEL)/etc/check_mk/multisite.mk-*
