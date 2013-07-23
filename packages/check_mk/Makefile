@@ -52,21 +52,21 @@ install:
 	export nagiosuser='nagios' ; \
 	export wwwgroup='nagios' ; \
 	cd $(DIR) ; DESTDIR=$(DESTDIR) ./setup.sh --yes
-
+	
 	# Delete files we do not want to package
 	rm -rf $(DESTDIR)/REMOVE
 	rm -f $(OMD_ROOT)/skel/etc/check_mk/*-*.mk
-
+	
 	# Install special version of check_mk dealing with site specific defaults
 	install -m 755 check_mk $(DESTDIR)$(OMD_ROOT)/bin
 	ln -sfn check_mk $(DESTDIR)$(OMD_ROOT)/bin/cmk
 	echo -e '#!/bin/sh\nexec check_mk -P "$$@"' > $(DESTDIR)$(OMD_ROOT)/bin/mkp
 	chmod 755 $(DESTDIR)$(OMD_ROOT)/bin/mkp
-
+	
 	# defaults.py for Multisite which redirects to site specific defaults
 	install -m 644 defaults.py $(DESTDIR)$(OMD_ROOT)/share/check_mk/web/htdocs
-
-        # Event Console
+	
+	# Event Console
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/bin
 	install -m 755 $(EDIR)/bin/* $(DESTDIR)$(OMD_ROOT)/bin
 	install -m 755 $(EDIR)/src/mkevent $(DESTDIR)$(OMD_ROOT)/bin
@@ -77,6 +77,10 @@ install:
 	install -m 644 $(EDIR)/checks/* $(DESTDIR)$(OMD_ROOT)/share/check_mk/checks
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/check_mk/web
 	cp -pr $(EDIR)/web/* $(DESTDIR)$(OMD_ROOT)/share/check_mk/web
+	
+	# Install the diskspace cleanup plugin
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/diskspace
+	install -m 644 diskspace $(DESTDIR)$(OMD_ROOT)/share/diskspace/nagios
 
 skel:
 	rm -f $(SKEL)/etc/check_mk/main.mk-*
