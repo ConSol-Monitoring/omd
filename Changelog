@@ -1,20 +1,32 @@
 This file documents the revision history for the Open Monitoring Distribution
 
-0.58:
+1.10
+          - python modules: added pysnmp and pyasn1 modules
+          - rrdcached is now logging to ~/var/log/rrdcached.log
+          - added missing logrotation config for ~/var/log/xinetd.log
+          - added "diskspace" program which is meant to cleanup too old files
+            which are not needed/wanted anymore and are not handled by regular
+            logrotate (like e.g. the nagios archive). Is callec automatically
+            every hour when the OMD crontab is enabled. This can be changed by
+            editing the cron config etc/cron.d/diskspace
+          - Thruk: Update to 1.74
+          - Mod-Gearman: Update 1.4.10
+
+1.00     Jun 17 2013
           - Nagios: Update to 3.5.0
           - Icinga: Update to 1.9.1
-          - Thruk: Update to 1.72
+          - Thruk: Update to 1.72-2
             - added cookie based login
           - Apache: Enabling mod_status (if available) for 127.0.0.1 in own mode
           - Check_MK/MK Livestatus:
-            - new version 1.2.2p1
+            - new version 1.2.2p2
             - integrated Event Console
             - Changed path for check manpages from share/doc/check_mk/checks
               to share/check_mk/checkman to match the local/ path
             - Installing livestatus python API module now
             - Added config hook MULTISITE_AUTHORISATION to control some user
               permissions in NagVis and pnp4nagios via multisite permissions
-          - NagVis: Update to 1.7.8
+          - NagVis: Update to 1.7.9
           - omd:
             - new option --no-autostart, -A for omd create (set AUTOSTART
               to off right at creation, useful for test sites!)

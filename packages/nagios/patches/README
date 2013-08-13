@@ -35,5 +35,19 @@ Index of patches
     whenever you press F5.
 
 0007:
-   This patch rearranges the fields in the nagios struct schedule_downtime 
+   This patch rearranges the fields in the nagios struct schedule_downtime
    to be compatible again with the one livestatus is compiled with
+
+0008:
+   Reloading nagios config causes spaces in notifications to become
+   plus signs
+   http://sourceforge.net/p/nagios/nagioscore/ci/23c59c2b2725ec20934aee6f0b03ba464b708ec1/
+
+0009:
+  Corrected comparison operator in service freshness check logic
+  http://sourceforge.net/p/nagios/nagioscore/ci/6a6bf5320c0d81e60a77478809885d4fd7c362e4/
+
+0010:
+  Adding triggered downtime for child hosts causes a SIGSEGV on
+  restart/reload
+  http://sourceforge.net/p/nagios/nagioscore/ci/76310176f3ec9a37b0b4161dddbbea69b6fa6a73/

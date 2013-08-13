@@ -81,7 +81,7 @@ mysql_wait_stop() {
 check_install_db() {
     if [ ! -e ~/var/mysql/mysql ] ; then
         echo "first start of MySQL, creating initial database..."
-        mysql_install_db > $OMD_ROOT/var/log/omd.log 2>&1
+        mysql_install_db --defaults-file=$MYSQL_CNF > $OMD_ROOT/var/log/omd.log 2>&1
         if [ $? != 0 ]; then
             echo "failed: please have a look at $OMD_ROOT/var/log/omd.log"
             echo "and http://omdistro.org/wiki/omd/FAQ"

@@ -1,6 +1,6 @@
 ###ROOT###/var/nagios/livestatus.log {
 	missingok
-	rotate 14
+	rotate 7
 	compress
 	delaycompress
 	notifempty
