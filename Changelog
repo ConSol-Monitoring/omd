@@ -11,6 +11,7 @@ This file documents the revision history for the Open Monitoring Distribution
             editing the cron config etc/cron.d/diskspace
           - Thruk: Update to 1.74
           - Mod-Gearman: Update 1.4.10
+          - Nagios: Init script kills whole process groups during "stop"
 
 1.00     Jun 17 2013
           - Nagios: Update to 3.5.0

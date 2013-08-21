@@ -124,8 +124,10 @@ nagios_wait_stop() {
     # multiple times to fetch new processes until all are gone.
     I=0
     while kill -0 $pid >/dev/null 2>&1; do
-        # Send single kill per process
-        kill $pid
+        # Send TERM to process group to kill the nagios process and also
+        # other processes started by this nagios process, for example
+        # check plugins which are currently running
+        kill -TERM -$pid
         while kill -0 $pid  >/dev/null 2>&1;  do
             if [ $I = '60' ]; then
                 echo -ne "\nsending SIGKILL"
