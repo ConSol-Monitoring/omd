@@ -2,19 +2,15 @@
 
 use warnings;
 use strict;
-use Data::Dumper;
 use lib 'lib';
 use BuildHelper;
-use Storable qw/lock_store lock_retrieve/;
-use YAML;
-use JSON::XS;
 
 BEGIN {
-    undef $ENV{'PERL5LIB'}            if defined $ENV{'PERL5LIB'};
-    undef $ENV{'PERL_MB_OPT'}         if defined $ENV{'PERL_MB_OPT'};
-    undef $ENV{'PERL_LOCAL_LIB_ROOT'} if defined $ENV{'PERL_LOCAL_LIB_ROOT'};
-    undef $ENV{'PERL_MM_OPT'}         if defined $ENV{'PERL_MM_OPT'};
+    for my $val (qw/PERL5LIB PERL_MB_OPT PERL_LOCAL_LIB_ROOT PERL_MM_OPT/) {
+        undef $ENV{$val} if defined $ENV{$val};
+    }
 };
+
 my($deps,$files) = BuildHelper::get_all_deps();
 my $sorted       = BuildHelper::sort_deps($deps, $files);
 my $last         = pop @{$sorted};

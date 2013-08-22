@@ -3,16 +3,12 @@
 use warnings;
 use strict;
 use lib 'lib';
-use Data::Dumper;
 use BuildHelper;
-use YAML;
-use JSON::XS;
 
 BEGIN {
-    undef $ENV{'PERL5LIB'};
-    undef $ENV{'PERL_MB_OPT'};
-    undef $ENV{'PERL_LOCAL_LIB_ROOT'};
-    undef $ENV{'PERL_MM_OPT'};
+    for my $val (qw/PERL5LIB PERL_MB_OPT PERL_LOCAL_LIB_ROOT PERL_MM_OPT/) {
+        undef $ENV{$val} if defined $ENV{$val};
+    }
 };
 
 ####################################
@@ -39,7 +35,7 @@ for my $module (@ARGV) {
 my $downloaded;
 chdir('src') or die("cannot change dir 'src': $!");
 for my $module (@{$modules}) {
-    if($module =~ m/^[\w\.\-]+(\.gz|\.zip|\.tgz)$/g) {
+    if($module =~ m/^[\w\.\-\+]+(\.gz|\.zip|\.tgz)$/g) {
         BuildHelper::download_src($module);
         print "downloaded $module\n";
         next;
