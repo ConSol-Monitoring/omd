@@ -1,0 +1,74 @@
+#!/usr/bin/perl
+
+use warnings;
+use strict;
+use Getopt::Long;
+
+use lib 'lib';
+use BuildHelper;
+
+BEGIN {
+    for my $val (qw/PERL5LIB PERL_MB_OPT PERL_LOCAL_LIB_ROOT PERL_MM_OPT/) {
+        undef $ENV{$val} if defined $ENV{$val};
+    }
+};
+
+####################################
+my $verbose = 0;
+GetOptions ('v|verbose' => \$verbose);
+
+####################################
+my @packages     = glob("../jmx4perl/jmx4perl-*.tar.gz ../thruk/Thruk-*.tar.gz ../check_webinject/Webinject-*.tar.gz");
+my $more_modules = {
+        'CPAN'                          => '1.9402',    # OMD
+        'Module::Install'               => '1.01',      # OMD
+        'Nagios::Plugin'                => '0.35',      # OMD
+        'HTML::Lint'                    => '2.06',      # OMD tests
+        'Module::CoreList'              => '2.49',      # OMD tests
+        'Test::Simple'                  => '0.98',      # OMD tests
+        'Monitoring::Livestatus::Class' => '0.04',      # OMD tests
+        'DBD::Oracle'                   => '1.28',      # check_oracle_health
+        'DBD::mysql'                    => '4.019',     # check_mysql_health
+        'Gearman::Client'               => '1.11',      # pnp4nagios / gearman
+        'Crypt::Rijndael'               => '1.09',      # pnp4nagios / gearman
+        'Term::ReadLine::Gnu'           => '1.20',      # jmx4perl
+        'Tie::RefHash::Weak'            => '0',         # required by thruk -> chart-clicker -> moosex::close
+};
+
+####################################
+# get module dependencies
+my($deps,$files) = BuildHelper::get_all_deps(1);
+my $orphaned     = BuildHelper::get_orphaned($deps, $files, $verbose);
+
+####################################
+# remove referenced modules
+for my $p (@packages) {
+    my $meta         = BuildHelper::get_meta($p);
+    my $rem_deps   = BuildHelper::get_deps_from_meta($meta, 1);
+    for my $rem_dep (keys %{$rem_deps}) {
+        my $rdep = BuildHelper::module_to_file($rem_dep, $files, $rem_deps->{$rem_dep});
+        if(!defined $rdep) {
+            print "WARNING: ",$rem_dep, " does not resolve to a file\n";
+        } else {
+            delete $orphaned->{$rdep};
+        }
+    }
+}
+
+####################################
+# check other modules
+for my $m (keys %{$more_modules}) {
+    my $mdep = BuildHelper::module_to_file($m, $files, $more_modules->{$m});
+    if(!defined $mdep) {
+        print "WARNING: ",$m, " does not resolve to a file\n";
+    } else {
+        delete $orphaned->{$mdep};
+    }
+}
+
+####################################
+# print result
+for my $file (keys %{$orphaned}) {
+    print $file, " is orphaned and could probably removed\n";
+}
+

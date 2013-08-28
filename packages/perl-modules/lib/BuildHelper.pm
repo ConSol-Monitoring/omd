@@ -10,15 +10,22 @@ use lib '/var/tmp/p5_dist/dest/lib/perl5';
 use Storable qw/lock_store lock_retrieve/;
 use Cwd;
 
+####################################
+# Settings
 $Data::Dumper::Sortkeys = 1;
 my $verbose = 0;
+my $additional_deps = {
+  'IO' => { 'ExtUtils::ParseXS' => '3.21' },
+};
 
 ####################################
 # is this a core module?
 sub is_core_module {
     my($module) = @_;
-    my @v = split/\./, $Config{'version'};
-    my $v = $v[0] + $v[1]/1000;
+    #my @v = split/\./, $Config{'version'};
+    #my $v = $v[0] + $v[1]/1000;
+    # use fixed version: 5.008, otherwise we would to sort modules on the oldes possible host
+    my $v = "5.008";
     if(exists $Module::CoreList::version{$v}{$module}) {
         return $Module::CoreList::version{$v}{$module} || 0;
     }
@@ -44,8 +51,8 @@ sub cmd {
 # get all dependencies for a tarball
 # needs a filename like: Storable-2.21.tar.gz
 sub get_deps {
-    my $file     = shift;
-    my $download = shift;
+    my($file, $download, $quiet) = @_;
+    $quiet = 0 unless defined $quiet;
 
     our %deps_cache;
     our %deps_files;
@@ -53,31 +60,21 @@ sub get_deps {
     return if defined $already_checked{$file};
     $already_checked{$file} = 1;
 
-    print " -> checking dependecies for: $file\n";
-    my $dir  = BuildHelper::unpack($file);
-    my $meta = BuildHelper::get_meta_for_dir($dir);
+    print " -> checking dependecies for: $file\n" unless $quiet;
+    print "." if $quiet == 1;
+    my $meta = get_meta_for_tarball($file);
 
-    for my $f (split/\n/,`find -name \*.pm; find -name \*.PL`) {
-        open(my $fh, '<', $f);
-        while(my $line = <$fh>) {
-            if($line =~ m/^package\s+(.*?)(\s|;|#)/) {
-                $deps_files{$1} = $file;
-            }
-        }
-        close($fh);
-    }
-
-    BuildHelper::cmd("rm -fr $dir");
     my $deps = BuildHelper::get_deps_from_meta($meta);
+    add_additional_deps($file, $deps);
     $deps_cache{$file} = $deps;
     for my $dep (keys %{$deps}) {
         my $depv = $deps->{$dep};
         my $cv   = is_core_module($dep);
         if(defined $cv and $depv == 0) {
-            print "   -> $dep ($depv) skipped zero core dependency\n";
+            print "   -> $dep ($depv) skipped zero core dependency\n" unless $quiet;
             next;
         }
-        print "   -> $dep ($depv)\n";
+        print "   -> $dep ($depv)\n" unless $quiet;
         if($download) {
             BuildHelper::download_module($dep, $depv);
         }
@@ -206,20 +203,37 @@ sub module_to_file {
 ####################################
 # get dependencies
 sub get_all_deps {
+    my($quiet) = @_;
     our %deps_cache;
     our %deps_files;
     alarm(60);
     my $data;
     if(-f '.deps.cache') {
-        $data = lock_retrieve('.deps.cache') or die("cannot read .deps.cache: $!");
+        # this may fail due to mismatching hosts systems
+        eval {
+            $data = lock_retrieve('.deps.cache') or die("cannot read .deps.cache: $!");
+        };
+        warn($@) if $@;
+
+        # remove all tarballs from cache which no longer exist
+        for my $tf (keys %{$data->{'deps'}}) {
+            if(!-e $tf) {
+                delete $data->{'deps'}->{$tf};
+                for my $key (keys %{$data->{'files'}}) {
+                    delete $data->{'files'}->{$key} if $data->{'files'}->{$key} eq $tf;
+                }
+            }
+        }
     }
     alarm(0);
     my $cwd = cwd();
     chdir("src") or die("cannot change to src dir");
+    my @tarballs = glob("*.tgz *.tar.gz *.zip");
+
     %deps_cache = %{$data->{'deps'}}  if defined $data->{'deps'};
     %deps_files = %{$data->{'files'}} if defined $data->{'files'};
-    for my $tarball (glob("*.tgz *.tar.gz *.zip")) {
-        BuildHelper::get_deps($tarball) unless defined $deps_cache{$tarball};
+    for my $tarball (@tarballs) {
+        BuildHelper::get_deps($tarball, undef, $quiet) unless defined $deps_cache{$tarball};
     }
 
     chdir($cwd) or die("cannot change dir back");
@@ -295,6 +309,7 @@ sub sort_deps {
             next if $dep eq 'strict';
             next if $dep eq 'warnings';
             next if $dep eq 'lib';
+            next if $dep eq 'v';
             next if $dep eq 'IPC::Open'; # core module but not recognized
             my $cv = is_core_module($dep);
             my $dv = $deps->{$file}->{$dep};
@@ -400,8 +415,14 @@ sub install_module {
             if($? != 0 ) { die("error: rc $?\n".`cat $LOG`."\n"); }
         } elsif( -f "Makefile.PL" ) {
             `sed -i -e 's/auto_install;//g' Makefile.PL`;
-            `echo "\n\n\n" | $PERL Makefile.PL $makefile_opts >> $LOG 2>&1 && make -j 5 >> $LOG 2>&1 && make install >> $LOG 2>&1`;
-            if($? != 0 ) { die("error: rc $?\n".`cat $LOG`."\n"); }
+            my $rc;
+            # retry because sometimes Makefile.PL will be rebuild due to broken time
+            for my $retry (1..3) {
+                `echo "\n\n\n" | $PERL Makefile.PL $makefile_opts >> $LOG 2>&1 && make -j 5 >> $LOG 2>&1 && make install >> $LOG 2>&1`;
+                $rc = $?;
+                last if $rc == 0;
+            }
+            if($rc != 0 ) { die("error: rc $rc\n".`cat $LOG`."\n"); }
         } else {
             die("error: no Build.PL or Makefile.PL found in $file!\n");
         }
@@ -445,7 +466,7 @@ sub install_module {
 ####################################
 # return meta content from unpacked package
 sub get_meta_for_dir {
-    my $dir = shift;
+    my($dir) = @_;
 
     # create Makefile
     my $cwd = cwd();
@@ -482,6 +503,7 @@ sub get_meta_for_dir {
     }
     elsif(-s "$dir/META.yml") {
         eval {
+            require YAML;
             $meta = YAML::LoadFile("$dir/META.yml");
         };
         print Dumper $@ if $@;
@@ -545,7 +567,7 @@ sub get_meta_for_dir {
 ####################################
 # return dependencies from meta data
 sub get_deps_from_meta {
-    my $meta = shift;
+    my($meta, $all) = @_;
     my %deps = (%{$meta->{requires}},
                 %{$meta->{build_requires}},
                 %{$meta->{configure_requires}},
@@ -562,12 +584,28 @@ sub get_deps_from_meta {
         next if $dep eq 'warnings';
         next if $dep eq 'strict';
         next if $dep eq 'lib';
-        next if $dep eq 'IPC::Open'; # core module but not recognized
-        next if $dep =~ m/^Test::/;
-        next if $dep eq 'Test';
+        next if $dep eq 'v';
+        if(!$all) {
+            next if $dep eq 'IPC::Open'; # core module but not recognized
+            next if $dep =~ m/^Test::/;
+            next if $dep eq 'Test';
+        }
         $stripped_deps->{$dep} = $val;
     }
     return $stripped_deps;
+}
+
+####################################
+# add additional dependencies
+sub add_additional_deps {
+    my($file, $deps) = @_;
+    my($modname, $modvers) = file_to_module($file);
+    if($additional_deps->{$modname}) {
+        for my $key (keys %{$additional_deps->{$modname}}) {
+            $deps->{$key} = $additional_deps->{$modname}->{$key};
+        }
+    }
+    return $deps;
 }
 
 ####################################
@@ -584,6 +622,77 @@ sub unpack {
     $dir =~  s/.*\///g;
     $dir =~  s/\-src//g;
     return $dir;
+}
+
+####################################
+# find orphaned packages
+sub get_orphaned {
+    my($deps, $files, $verbose) = @_;
+    my $orphaned = {};
+    for my $file (keys %{$deps}) {
+        # verify this module is used somewhere
+        my $found = 0;
+        for my $file2 (keys %{$deps}) {
+            next if $file eq $file2;
+            for my $dep2 (keys %{$deps->{$file2}}) {
+                next if $dep2 eq 'perl';
+                next if $dep2 eq 'strict';
+                next if $dep2 eq 'warnings';
+                next if $dep2 eq 'lib';
+                next if $dep2 eq 'v';
+                my $fdep2 = BuildHelper::module_to_file($dep2, $files, $deps->{$file2}->{$dep2});
+                next unless $fdep2;
+                $found = 1 if $fdep2 eq $file;
+                if($found && $verbose) { print "$file is used by $file2\n"; }
+                last if $found;
+            }
+            last if $found;
+        }
+        $orphaned->{$file} = 1 unless $found;
+    }
+    return $orphaned;
+}
+
+####################################
+sub get_meta {
+    my($in) = @_;
+    my $meta = {};
+    if($in =~ m/Makefile\.PL$/mx) {
+        my $dir = $in;
+        $dir    =~ s/Makefile\.PL$//gmx;
+        $meta   = BuildHelper::get_meta_for_dir($dir);
+    }
+    elsif($in =~ m/(\.tar.gz|\.tgz|\.zip)$/mx) {
+        $meta = get_meta_for_tarball($in);
+    }
+    else {
+        die("unsupported file: ".$in);
+    }
+    return $meta;
+}
+
+####################################
+sub get_meta_for_tarball {
+    my($file) = @_;
+
+    our %deps_files;
+
+    my $dir  = BuildHelper::unpack($file);
+    my $meta = BuildHelper::get_meta_for_dir($dir);
+
+    for my $f (split/\n/,`find -name \*.pm; find -name \*.PL`) {
+        next if $f =~ m|/inc/|mxo; # skip inc modules included by Module::Install packaged modules
+        open(my $fh, '<', $f);
+        while(my $line = <$fh>) {
+            if($line =~ m/^package\s+(.*?)(\s|;|#)/) {
+                $deps_files{$1} = $file;
+            }
+        }
+        close($fh);
+    }
+
+    BuildHelper::cmd("rm -fr $dir");
+    return($meta);
 }
 
 1;

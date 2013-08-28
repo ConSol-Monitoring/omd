@@ -17,9 +17,25 @@ if(scalar @ARGV == 0) {
 for my $file (@modules) {
     printf "%-55s", $file;
 
+    if($file =~ m/^MongoDB/mx) {
+        print "skipped, broken since 0.46 on redhat 5.8\n";
+        next;
+    }
+    if($file =~ m/^ExtUtils\-Depends\-/mx) {
+        print "skipped, cpan points to wrong module\n";
+        next;
+    }
+    if($file =~ m/^File-Temp\-/mx) {
+        print "skipped, broken since 0.22\n";
+        next;
+    }
+
     my($modname,$modversion) = BuildHelper::file_to_module($file);
     my $urlpath = BuildHelper::get_url_for_module($modname);
-    my $tarball = $urlpath; $tarball =~ s/^.*\///g;
+    my $tarball = $urlpath;
+    $tarball =~ s/^.*\///g;
+    $tarball =~ s/%2B/+/g;
+    $tarball =~ s/0\.29a\.tar\.gz/0.29.tar.gz/g;
     my($newname,$newversion) = BuildHelper::file_to_module($tarball);
 
     if(-f $tarball) {
