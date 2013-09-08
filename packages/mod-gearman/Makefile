@@ -23,22 +23,10 @@ install:
 	# fix path for plugin
 	[ -d $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins ] || mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins
 	mv $(DESTDIR)$(OMD_ROOT)/bin/check_gearman $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins/
-	rm -rf $(DESTDIR)$(OMD_ROOT)/etc/mod-gearman
-	rm -rf $(DESTDIR)$(OMD_ROOT)/etc/init.d/gearmand
-	rm -rf $(DESTDIR)$(OMD_ROOT)/etc/init.d/mod_gearman_worker
 	rm -rf $(DESTDIR)$(OMD_ROOT)/share/mod_gearman/*.conf
-	rmdir $(DESTDIR)$(OMD_ROOT)/etc/init.d
-	rm -f $(DESTDIR)$(OMD_ROOT)/etc/mod_gearman/mod_gearman_neb.conf
-	rm -f $(DESTDIR)$(OMD_ROOT)/etc/mod_gearman/mod_gearman_worker.conf
-	rm -f $(DESTDIR)$(OMD_ROOT)/etc/logrotate.d/mod_gearman_worker
 	rm -f $(DESTDIR)$(OMD_ROOT)/lib/mod_gearman/mod_gearman.so
-	rmdir $(DESTDIR)$(OMD_ROOT)/etc/logrotate.d
-	rmdir $(DESTDIR)$(OMD_ROOT)/etc/mod_gearman
-	find $(DESTDIR)$(OMD_ROOT)/etc
-	rmdir $(DESTDIR)$(OMD_ROOT)/etc
-	rm -rf $(DESTDIR)$(OMD_ROOT)/var/mod_gearman
-	rm -rf $(DESTDIR)$(OMD_ROOT)/var/log
-	rmdir $(DESTDIR)$(OMD_ROOT)/var
+	rm -rf $(DESTDIR)$(OMD_ROOT)/etc
+	rm -rf $(DESTDIR)$(OMD_ROOT)/var
 
 skel:
 	mkdir -p $(SKEL)/etc/mod-gearman
