@@ -208,7 +208,7 @@ sub module_to_file {
 sub get_all_deps {
     our %deps_cache;
     our %deps_files;
-    alarm(60);
+    alarm(3600);
     my $data;
     if(-f '.deps.cache') {
         $data = lock_retrieve('.deps.cache') or die("cannot read .deps.cache: $!");
@@ -223,7 +223,7 @@ sub get_all_deps {
     }
 
     chdir($cwd) or die("cannot change dir back");
-    alarm(60);
+    alarm(3600);
     lock_store({'files' => \%deps_files, 'deps' => \%deps_cache}, '.deps.cache');
     alarm(0);
     return(\%deps_cache, \%deps_files);
@@ -394,7 +394,7 @@ sub install_module {
 
     eval {
         local $SIG{ALRM} = sub { die "timeout on: $file\n" };
-        alarm(120); # single module should not take longer than 1 minute
+        alarm(3600); # single module should not take longer than 1 minute
         if( -f "Build.PL" ) {
             `$PERL Build.PL >> $LOG 2>&1 && ./Build >> $LOG 2>&1 && ./Build install >> $LOG 2>&1`;
             if($? != 0 ) { die("error: rc $?\n".`cat $LOG`."\n"); }
@@ -424,7 +424,7 @@ sub install_module {
     system("grep 'is installed, but we need version' $LOG | grep ' ! ' | $grepv"); # or die('dependency error');
     system("grep 'is not a known MakeMaker parameter' $LOG | grep INSTALL_BASE | $grepv") or die('build error');
     chdir($cwd);
-    if($duration > 30) {
+    if($duration > 3600) {
         chomp(my $pwd = `pwd`);
         print "installation took to long, see $pwd/$dir/$LOG for details\n";
     } else {
@@ -450,7 +450,7 @@ sub get_meta_for_dir {
     # create Makefile
     my $cwd = cwd();
     chdir($dir);
-    alarm(120);
+    alarm(3600);
     eval {
         BuildHelper::cmd("yes n | perl Makefile.PL", 1) if -e 'Makefile.PL';
         BuildHelper::cmd("yes n | perl Build.PL", 1)    if -e 'Build.PL';
