@@ -90,6 +90,9 @@ case "$1" in
             exit 1;
         fi
 
+        # gearman opens lot of connections, so increase default ulimit
+        ulimit -n 8192
+
         CMD="$DAEMON --port=$PORT --pid-file=$PIDFILE $OPTIONS --log-file=$LOGFILE --verbose=$LOGLEVEL --listen=$LISTEN"
         if [ "$WHO" = "root" ]; then
             # try to exec commands as user

@@ -13,6 +13,7 @@ This file documents the revision history for the Open Monitoring Distribution
           - Mod-Gearman: Update 1.4.10
           - Nagios: Init script kills whole process groups during "stop"
           - check_webinject: Update to 1.80
+          - gearmand: increase open files limit
 
 1.00     Jun 17 2013
           - Nagios: Update to 3.5.0
