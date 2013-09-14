@@ -91,7 +91,7 @@ case "$1" in
         fi
 
         # gearman opens lot of connections, so increase default ulimit
-        ulimit -n 8192
+        ulimit -n 4096
 
         CMD="$DAEMON --port=$PORT --pid-file=$PIDFILE $OPTIONS --log-file=$LOGFILE --verbose=$LOGLEVEL --listen=$LISTEN"
         if [ "$WHO" = "root" ]; then
