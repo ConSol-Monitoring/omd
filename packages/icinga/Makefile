@@ -60,6 +60,9 @@ install:
 
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/bin
 	install -m 755 merge-icinga-config $(DESTDIR)$(OMD_ROOT)/bin
+
+	# remove empty folders
+	rm -rf $(DESTDIR)/usr
   
 clean:
 	rm -rf $(DIR)
