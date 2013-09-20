@@ -59,7 +59,11 @@ SQLITE_URL=http://pysqlite.googlecode.com/files/$(SQLITE_FILE)
 MONGODB=mongodb-linux-i686-2.4.1
 ifeq ($(shell uname -m),x86_64)
   MONGODB=mongodb-linux-x86_64-2.4.1
+else ifeq ($(shell uname -m),$(filter $(shell uname -m),armv6l armv7l))
+  # https://github.com/brice-morin/ArduPi/tree/master/mongodb-rpi
+  MONGODB=mongodb-linux-armv6l-2.1.1
 endif
+
 MONGODB_FILE=$(MONGODB).tgz
 MONGODB_URL=http://fastdl.mongodb.org/linux/$(MONGODB_FILE)
 #
