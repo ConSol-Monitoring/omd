@@ -8,6 +8,7 @@ BUILD_PACKAGES += freetype2-devel
 BUILD_PACKAGES += gcc
 BUILD_PACKAGES += gcc-c++
 BUILD_PACKAGES += gd-devel
+BUILD_PACKAGES += git
 BUILD_PACKAGES += glib-devel
 BUILD_PACKAGES += libcurl-devel   # needed by perl modules / thruk
 BUILD_PACKAGES += libexpat-devel
