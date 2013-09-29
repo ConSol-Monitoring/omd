@@ -2,6 +2,7 @@ This file documents the revision history for the Open Monitoring Distribution
 
 1.10
           - python modules: added pysnmp and pyasn1 modules
+          - rrdtool: Also deliver python bindings
           - rrdcached is now logging to ~/var/log/rrdcached.log
           - added missing logrotation config for ~/var/log/xinetd.log
           - added "diskspace" program which is meant to cleanup too old files
