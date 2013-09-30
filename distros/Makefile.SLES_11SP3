@@ -3,6 +3,7 @@ BUILD_PACKAGES  =
 BUILD_PACKAGES += boost-devel
 BUILD_PACKAGES += cairo-devel
 BUILD_PACKAGES += fping
+BUILD_PACKAGES += samba-client # otherwise path to smblient missing in util.pm
 BUILD_PACKAGES += freetype2-devel
 BUILD_PACKAGES += gcc
 BUILD_PACKAGES += gcc-c++
