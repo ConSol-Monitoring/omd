@@ -14,22 +14,12 @@
 
 # -- start omd, if not disabled in /etc/default/omd
 AUTOSTART=1
-
-PROGNAME=$0
-PROGNAME=${PROGNAME##*/}
-VERSION=${PROGNAME#omd-}
-
-if [ "$VERSION" = "###OMD_VERSION###" ]; then
-  VER="-V $VERSION"
-  MSG=" using omd version $VERSION"
-else 
-  VER=""
-  MSG=""
-fi
-
-OMD="/opt/omd/versions/###OMD_VERSION###/bin/omd"
-
 [ -r /etc/default/omd ] && . /etc/default/omd
+
+VERSION=###OMD_VERSION###
+VER="-V $VERSION"
+MSG="using omd version $VERSION"
+OMD="/omd/versions/$VERSION/bin/omd"
 
 case "$1" in
     start)
