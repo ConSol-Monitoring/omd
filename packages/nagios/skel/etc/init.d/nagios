@@ -45,6 +45,7 @@ STATUS_FILE=###ROOT###/tmp/nagios/status.dat
 CMD_FILE=###ROOT###/tmp/run/nagios.cmd
 PID_FILE=###ROOT###/tmp/lock/nagios.lock
 STATUS_DAT=###ROOT###/tmp/nagios/status.dat
+CHECKRESULTS_DIR=###ROOT###/tmp/nagios/checkresults
 USR=###SITE###
 GRP=###SITE###
 
@@ -109,6 +110,7 @@ prep_start() {
     fi
     touch $PID_FILE
     chown $USR:$GRP $PID_FILE
+    rm -f $CHECKRESULTS_DIR/*
 }
 
 nagios_wait_stop() {

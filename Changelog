@@ -17,6 +17,7 @@ This file documents the revision history for the Open Monitoring Distribution
           - gearmand: increase open files limit
           - Fix bug on Debian/Ubuntu where start/stop script started/stopped
              sites multiple times
+          - cleanup checkresults dir of Nagios when (re-)starting Nagios
 
 1.00     Jun 17 2013
           - Nagios: Update to 3.5.0
