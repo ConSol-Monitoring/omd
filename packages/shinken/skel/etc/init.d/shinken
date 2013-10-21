@@ -432,6 +432,7 @@ do_start() {
                 output=`echo "$output" | tail -1` # only show one line of error output...
                 printf "FAILED: " 
                 echo "$output" 
+                exit 1
             fi
         fi
     done
