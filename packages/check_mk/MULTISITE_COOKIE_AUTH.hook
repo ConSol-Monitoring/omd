@@ -21,9 +21,10 @@ case "$1" in
        APACHE_CFG=${OMD_ROOT}/etc/apache/conf.d/cookie_auth.conf
        NAGVIS_CFG=${OMD_ROOT}/etc/nagvis/conf.d/cookie_auth.ini.php
        PNP_CFG=${OMD_ROOT}/etc/pnp4nagios/config.d/cookie_auth.php
+       WIKI_CFG=${OMD_ROOT}/etc/dokuwiki/cookie_auth.php
        if [ "$2" == "on" ]; then
            cat > $APACHE_CFG <<EOF
-<LocationMatch ^/${OMD_SITE}/(omd|nagvis|check_mk|pnp4nagios)>
+<LocationMatch ^/${OMD_SITE}/(omd|wiki|nagvis|check_mk|pnp4nagios)>
     Order allow,deny
     Allow from all
     Satisfy any
@@ -36,6 +37,20 @@ logonmodule="LogonMultisite"
 logon_multisite_htpasswd="/omd/sites/$OMD_SITE/etc/htpasswd"
 logon_multisite_secret="/omd/sites/$OMD_SITE/etc/auth.secret"
 logon_multisite_serials="/omd/sites/$OMD_SITE/etc/auth.serials"
+EOF
+
+          cat > $WIKI_CFG <<EOF
+<?php
+// Created by OMD hook MULTISITE_COOKIE_AUTH
+//
+$conf['useacl'] = 1;
+$conf['authtype'] = 'multisite';
+$conf['superuser'] = '@admin';
+$conf['multisite']['authfile'] = '/omd/sites/$OMD_SITE/var/check_mk/wato/auth/auth.php';
+$conf['multisite']['auth_secret'] = '/omd/sites/$OMD_SITE/etc/auth.secret';
+$conf['multisite']['auth_serials'] = '/omd/sites/$OMD_SITE/etc/auth.serials';
+$conf['multisite']['htpasswd'] = '/omd/sites/$OMD_SITE/etc/htpasswd';
+?>
 EOF
 
           cat > $PNP_CFG <<EOF
@@ -56,6 +71,7 @@ EOF
           [ -f $APACHE_CFG ] && rm $APACHE_CFG
           [ -f $NAGVIS_CFG ] && rm $NAGVIS_CFG
           [ -f $PNP_CFG ] && rm $PNP_CFG
+          [ -f $WIKI_CFG ] && rm $WIKI_CFG
        fi
    ;;
 esac
