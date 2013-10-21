@@ -1,0 +1,75 @@
+--- a/libgearman/client.cc	2012-05-04 05:51:48.000000000 +0200
++++ b/libgearman/client.cc	2013-06-06 16:02:19.223730770 +0200
+@@ -1308,11 +1308,7 @@
+ 
+         if (client->new_tasks == 0)
+         {
+-          gearman_return_t local_ret= gearman_flush_all(client->universal);
+-          if (gearman_failed(local_ret))
+-          {
+-            return local_ret;
+-          }
++          gearman_flush_all(client->universal);
+         }
+       }
+ 
+--- a/libgearman/universal.cc	2012-05-04 05:51:48.000000000 +0200
++++ b/libgearman/universal.cc	2013-06-06 16:02:19.223730770 +0200
+@@ -233,7 +233,12 @@
+   }
+ }
+ 
+-gearman_return_t gearman_flush_all(gearman_universal_st& universal)
++/*
++ * Flush all shouldn't return any error, because there's no way to indicate
++ * which connection experienced an issue. Error detection is better done in gearman_wait()
++ * after flushing all the connections here.
++ */
++void gearman_flush_all(gearman_universal_st& universal)
+ {
+   for (gearman_connection_st *con= universal.con_list; con; con= con->next)
+   {
+@@ -242,14 +247,8 @@
+       continue;
+     }
+ 
+-    gearman_return_t ret= con->flush();
+-    if (gearman_failed(ret) and ret != GEARMAN_IO_WAIT)
+-    {
+-      return ret;
+-    }
++    con->flush();
+   }
+-
+-  return GEARMAN_SUCCESS;
+ }
+ 
+ gearman_return_t gearman_wait(gearman_universal_st& universal)
+--- a/libgearman/universal.hpp	2012-05-04 05:51:48.000000000 +0200
++++ b/libgearman/universal.hpp	2013-06-06 16:02:19.223730770 +0200
+@@ -77,7 +77,7 @@
+ 
+ // Flush the send buffer for all connections.
+ GEARMAN_LOCAL
+-gearman_return_t gearman_flush_all(gearman_universal_st&);
++void gearman_flush_all(gearman_universal_st&);
+ 
+ /**
+  * Set custom memory allocation function for workloads. Normally gearman uses
+--- a/libgearman/connection.cc	2012-05-04 05:51:48.000000000 +0200
++++ b/libgearman/connection.cc	2013-06-06 16:02:19.227730820 +0200
+@@ -390,6 +390,14 @@
+ 
+   recv_buffer_ptr= recv_buffer;
+   recv_buffer_size= 0;
++
++  // created_id_next is incremented for every outbound packet (except status).
++  // created_id is incremented for every response packet received, and also when
++  // no packets are received due to an error. There are lots of such error paths
++  // and it seems simpler to just reset these both to zero when a connection is
++  // 'closed'.
++  created_id= 0;
++  created_id_next= 0;
+ }
+ 
+ void gearman_connection_st::free_recv_packet()

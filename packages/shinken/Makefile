@@ -1,14 +1,26 @@
 include ../../Makefile.omd
 
 
-SHINKEN=shinken-1.2
+SHINKEN=shinken-1.4
 SHINKEN_FILE=$(SHINKEN).tar.gz
 SHINKEN_URL=http://shinken-monitoring.org/pub/$(SHINKEN).tar.gz
 #
 # Python Remote Objects
-PYRO=Pyro-3.11
-PYRO_FILE=$(PYRO).tar.gz
-PYRO_URL=http://www.xs4all.nl/~irmen/pyro3/download/$(PYRO_FILE)
+ifeq ($(DISTRO_NAME),CENTOS)
+  ifeq ($(DISTRO_VERSION),$(filter $(DISTRO_VERSION),5.4 5.5 5.6 5.7 5.8 5.9))
+    PYRO=Pyro-3.12
+    PYRO_FILE=$(PYRO).tar.gz
+    PYRO_URL=https://pypi.python.org/packages/source/P/Pyro/$(PYRO_FILE)
+  else
+    PYRO=Pyro4-4.18
+    PYRO_FILE=$(PYRO).tar.gz
+    PYRO_URL=https://pypi.python.org/packages/source/P/Pyro4/$(PYRO_FILE)
+  endif
+else
+    PYRO=Pyro4-4.18
+    PYRO_FILE=$(PYRO).tar.gz
+    PYRO_URL=https://pypi.python.org/packages/source/P/Pyro4/$(PYRO_FILE)
+endif
 #
 # Python Multiprocessing
 MP=multiprocessing-2.6.2.1
@@ -16,7 +28,15 @@ MP_FILE=$(MP).tar.gz
 MP_URL=http://pypi.python.org/packages/source/m/multiprocessing/$(MP_FILE)
 #
 # Simple JSON (not included in CentOS' python2.4)
-SJSON=simplejson-2.1.2
+ifeq ($(DISTRO_NAME),CENTOS)
+  ifeq ($(DISTRO_VERSION),$(filter $(DISTRO_VERSION),5.4 5.5 5.6 5.7 5.8 5.9))
+    SJSON=simplejson-2.1.2
+  else
+    SJSON=simplejson-3.3.0
+  endif
+else
+  SJSON=simplejson-3.3.0
+endif
 SJSON_FILE=$(SJSON).tar.gz
 SJSON_URL=http://pypi.python.org/packages/source/s/simplejson/$(SJSON_FILE)
 #
@@ -36,15 +56,23 @@ SQLITE_FILE=$(SQLITE).tar.gz
 SQLITE_URL=http://pysqlite.googlecode.com/files/$(SQLITE_FILE)
 #
 # MongoDB
-MONGODB=mongodb-linux-i686-static-2.0.3
+MONGODB=mongodb-linux-i686-2.4.1
 ifeq ($(shell uname -m),x86_64)
-  MONGODB=mongodb-linux-x86_64-static-legacy-2.0.3
+  MONGODB=mongodb-linux-x86_64-2.4.1
 endif
 MONGODB_FILE=$(MONGODB).tgz
 MONGODB_URL=http://fastdl.mongodb.org/linux/$(MONGODB_FILE)
 #
 # Python bindings for MongoDB
-PYMONGO=pymongo-2.1.1
+ifeq ($(DISTRO_NAME),CENTOS)
+  ifeq ($(DISTRO_VERSION),$(filter $(DISTRO_VERSION),5.4 5.5 5.6 5.7 5.8 5.9))
+    PYMONGO=pymongo-2.1.1
+  else
+    PYMONGO=pymongo-2.5.2
+  endif
+else
+  PYMONGO=pymongo-2.5.2
+endif
 PYMONGO_FILE=$(PYMONGO).tar.gz
 PYMONGO_URL=http://pypi.python.org/packages/source/p/pymongo/$(PYMONGO_FILE)
 #
@@ -69,10 +97,10 @@ export PYTHONPATH
 build:
 	test -f ${SHINKEN_FILE} || wget $(SHINKEN_URL)
 	tar xzf $(SHINKEN_FILE)
-	set -e ; for p in patches/*.patch ; do \
-	    echo "applying $$p..." ; \
-	    ( cd $(SHINKEN) ; patch -p1 -b ) < $$p ; \
-	done
+	#set -e ; for p in patches/*.patch ; do \
+	#    echo "applying $$p..." ; \
+	#    ( cd $(SHINKEN) ; patch -p1 -b ) < $$p ; \
+	#done
 	test -f $(PYRO_FILE) || wget $(PYRO_URL)
 	tar xzf $(PYRO_FILE)
 	test -f $(MP_FILE) || wget $(MP_URL)
@@ -96,7 +124,8 @@ build:
 		$(DISTRO_VERSION) = "5.5" -o \
 		$(DISTRO_VERSION) = "5.6" -o\
 		$(DISTRO_VERSION) = "5.7" -o \
-		$(DISTRO_VERSION) = "5.8" ]; then \
+		$(DISTRO_VERSION) = "5.8" -o \
+		$(DISTRO_VERSION) = "5.9" ]; then \
 		echo it is a centos 5; \
 		echo which has python 2.4; \
 		echo we need to remove the shinken webui; \
@@ -226,9 +255,8 @@ installhashlib:
 
 installmongodb:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/bin
-	for tmpfile in $(MONGODB)/bin/* ; do \
-		install -m 755 $$tmpfile $(DESTDIR)$(OMD_ROOT)/bin ; \
-	done
+	install -m 755 $(MONGODB)/bin/mongod $(DESTDIR)$(OMD_ROOT)/bin
+	install -m 755 $(MONGODB)/bin/mongo  $(DESTDIR)$(OMD_ROOT)/bin
 
 
 clean:

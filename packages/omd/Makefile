@@ -21,6 +21,8 @@ install:
 	install -m 644 apache.conf $(DESTDIR)$(OMD_ROOT)/share/omd/apache.conf
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/doc/$(NAME)
 	install -m 644 COPYING AUTHORS $(DESTDIR)$(OMD_ROOT)/share/doc/$(NAME)
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/omd
+	install -m 644 init_profile $(DESTDIR)$(OMD_ROOT)/lib/omd/
 
 skel:
 

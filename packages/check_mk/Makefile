@@ -2,13 +2,16 @@ include ../../Makefile.omd
 
 SHELL = /bin/bash
 NAME = check_mk
-VERSION = 1.2.0p3
+VERSION = 1.2.2p2
 DIR = $(NAME)-$(VERSION)
+EDIR = mkeventd-$(VERSION)
 
 .PHONY: skel
 
 build:
 	tar xzf $(DIR).tar.gz
+	tar xzf $(EDIR).tar.gz
+	cd $(EDIR)/src ; make
 
 install:
 	export bindir='$(OMD_ROOT)/bin' ; \
@@ -18,7 +21,7 @@ install:
 	export web_dir='$(OMD_ROOT)/share/check_mk/web' ; \
 	export mibsdir='$(OMD_ROOT)/share/snmp/mibs' ; \
 	export docdir='$(OMD_ROOT)/share/doc/check_mk' ; \
-	export checkmandir='$(OMD_ROOT)/share/doc/check_mk/checks' ; \
+	export checkmandir='$(OMD_ROOT)/share/check_mk/checkman' ; \
 	export agentsdir='$(OMD_ROOT)/share/check_mk/agents' ; \
 	export agentslibdir='/usr/lib/check_mk_agent' ; \
 	export nagios_binary='$(OMD_ROOT)/bin/nagios' ; \
@@ -49,19 +52,35 @@ install:
 	export nagiosuser='nagios' ; \
 	export wwwgroup='nagios' ; \
 	cd $(DIR) ; DESTDIR=$(DESTDIR) ./setup.sh --yes
-
+	
 	# Delete files we do not want to package
 	rm -rf $(DESTDIR)/REMOVE
 	rm -f $(OMD_ROOT)/skel/etc/check_mk/*-*.mk
-
+	
 	# Install special version of check_mk dealing with site specific defaults
 	install -m 755 check_mk $(DESTDIR)$(OMD_ROOT)/bin
 	ln -sfn check_mk $(DESTDIR)$(OMD_ROOT)/bin/cmk
 	echo -e '#!/bin/sh\nexec check_mk -P "$$@"' > $(DESTDIR)$(OMD_ROOT)/bin/mkp
 	chmod 755 $(DESTDIR)$(OMD_ROOT)/bin/mkp
-
+	
 	# defaults.py for Multisite which redirects to site specific defaults
 	install -m 644 defaults.py $(DESTDIR)$(OMD_ROOT)/share/check_mk/web/htdocs
+	
+	# Event Console
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/bin
+	install -m 755 $(EDIR)/bin/* $(DESTDIR)$(OMD_ROOT)/bin
+	install -m 755 $(EDIR)/src/mkevent $(DESTDIR)$(OMD_ROOT)/bin
+	install -m 755 $(EDIR)/src/mkeventd_open514 $(DESTDIR)$(OMD_ROOT)/bin
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins
+	install -m 755 $(EDIR)/lib/* $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/check_mk/checks
+	install -m 644 $(EDIR)/checks/* $(DESTDIR)$(OMD_ROOT)/share/check_mk/checks
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/check_mk/web
+	cp -pr $(EDIR)/web/* $(DESTDIR)$(OMD_ROOT)/share/check_mk/web
+	
+	# Install the diskspace cleanup plugin
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/diskspace
+	install -m 644 diskspace $(DESTDIR)$(OMD_ROOT)/share/diskspace/nagios
 
 skel:
 	rm -f $(SKEL)/etc/check_mk/main.mk-*
@@ -69,11 +88,13 @@ skel:
 
 clean:
 	rm -rf check_mk-*.*.*[0-9]
+	rm -rf mkeventd-*.*.*[0-9]
 
 # Get new upstream version (as in VERSION)
 # Adapt configuration files for skeleton from upstream version
 upstream:
 	if [ ! -e check_mk-$(VERSION).tar.gz ] ; then rm -f check_mk-*.tar.gz ; wget http://mathias-kettner.de/download/check_mk-$(VERSION).tar.gz ; fi
+	if [ ! -e mkeventd-$(VERSION).tar.gz ] ; then rm -f mkeventd-*.tar.gz ; wget http://mathias-kettner.de/download/mkeventd-$(VERSION).tar.gz ; fi
 	# check_mk_templates.cfg -> enter correct URLs and paths
 	if tar tvzf check_mk-$(VERSION).tar.gz | grep check_mk-$(VERSION)/share.tar.gz >/dev/null 2>&1; then \
 	    tar xzf check_mk-$(VERSION).tar.gz --to-stdout check_mk-$(VERSION)/share.tar.gz | \
@@ -106,3 +127,8 @@ upstream:
 	sed -i "s/^check_mk_version.*/check_mk_version            = '$(VERSION)'/" skel/etc/check_mk/defaults
 	
 	git add check_mk-$(VERSION).tar.gz
+	git add mkeventd-$(VERSION).tar.gz
+
+
+
+

@@ -14,6 +14,8 @@ Requires:
 
 #%define _missing_doc_files_terminate_build 0
 #%define _unpackaged_files_terminate_build 0
+# disable binary striping
+%global __os_install_post %{nil}
 
 %description
 Open Source Monitoring Distribution, containing Nagios,
@@ -46,6 +48,7 @@ rm -f $RPM_BUILD_ROOT/etc/init.d/omd
 /opt/omd
 %attr(4750,root,omd) /opt/omd/versions/%{version}/lib/nagios/plugins/check_icmp
 %attr(4750,root,omd) /opt/omd/versions/%{version}/lib/nagios/plugins/check_dhcp
+%attr(4750,root,omd) /opt/omd/versions/%{version}/bin/mkeventd_open514
 
 %pre
 groupadd -r omd 2>/dev/null || true
@@ -99,6 +102,10 @@ fi
 chkconfig --add @APACHE_NAME@
 chkconfig @APACHE_NAME@ on
 
+# ensure apache is running
+service @APACHE_NAME@ start >/dev/null 2>&1
+exit 0
+
 %preun
 # ON UNINSTALL: Make sure no sites use that version
 # Do not check this on new release of the same OMD version
@@ -118,7 +125,7 @@ if [ $1 = 0 ] ; then
         fi
     done
 fi
-     
+
 
 %postun
 rm -f /omd/versions/default

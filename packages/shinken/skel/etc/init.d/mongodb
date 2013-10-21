@@ -41,6 +41,8 @@ cd ###ROOT###
 . ###ROOT###/etc/omd/site.conf
 [ "$CONFIG_MONGODB" = "on" ] || exit 5
 
+ulimit -v unlimited
+
 BIN=###ROOT###/bin/mongod
 CFG_FILE=###ROOT###/tmp/mongodb/mongod.cfg
 PID_FILE=###ROOT###/tmp/lock/mongo.lock

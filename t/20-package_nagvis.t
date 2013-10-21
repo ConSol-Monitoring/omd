@@ -33,7 +33,7 @@ TestUtils::prepare_obj_config('t/data/omd/testconf1', '/omd/sites/'.$site.'/etc/
 
 # Developer test: Install NagVis into local hierarchy
 if($ENV{NAGVIS_DEVEL}) {
-    TestUtils::test_command({ cmd => "/d1/nagvis/.f12 testsite" });
+    TestUtils::test_command({ cmd => "/bin/bash -c 'cd /d1/lm/nagvis ; SITE=testsite bash .f12'" });
 }
 
 my $version = site_nagvis_version($site);

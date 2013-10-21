@@ -10,6 +10,10 @@ CONFIGUREOPTS = \
 
 build:
 	tar xzf $(DIR).tar.gz
+	set -e ; for p in patches/*.dif ; do \
+	    echo "applying $$p..." ; \
+	    ( cd $(DIR) ; patch -p1 -b ) < $$p ; \
+	done
 	cd $(DIR) ; ./configure $(CONFIGUREOPTS)
 	$(MAKE) -C $(DIR) all
 
@@ -27,7 +31,9 @@ install:
 	done
 
 	# link lib/nagios/plugins to lib/icinga/plugins
-	cd $(DESTDIR)$(OMD_ROOT)/lib/icinga && ln -s ../nagios/plugins plugins
+	if [ -d "$(DESTDIR)$(OMD_ROOT)/lib/icinga" ] ; then \
+            cd $(DESTDIR)$(OMD_ROOT)/lib/icinga && ln -s ../nagios/plugins plugins ; \
+	fi
 
 skel:
 

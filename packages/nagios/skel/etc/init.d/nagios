@@ -34,8 +34,9 @@
 #   the init script should execute a start instead
 
 cd ###ROOT###
-. ###ROOT###/.profile
-. ###ROOT###/etc/omd/site.conf
+. .profile
+. lib/omd/init_profile
+. etc/omd/site.conf
 [ "$CONFIG_CORE" = "nagios" ] || exit 5
 
 BIN=###ROOT###/bin/nagios
@@ -44,8 +45,16 @@ STATUS_FILE=###ROOT###/tmp/nagios/status.dat
 CMD_FILE=###ROOT###/tmp/run/nagios.cmd
 PID_FILE=###ROOT###/tmp/lock/nagios.lock
 STATUS_DAT=###ROOT###/tmp/nagios/status.dat
+CHECKRESULTS_DIR=###ROOT###/tmp/nagios/checkresults
 USR=###SITE###
 GRP=###SITE###
+
+# You can set the environment variable CORE_NOVERIFY=yes
+# in order to supress a verification of the nagios configuration
+# in case of start, restart or reload. This is in order to
+# avoid duplicate effort when being called by cmk -R or 
+# cmk -O.
+# export CORE_NOVERIFY=yes
 
 # Make sure that check plugins do not run localized.
 # check_icmp outputs performance data with german
@@ -101,6 +110,7 @@ prep_start() {
     fi
     touch $PID_FILE
     chown $USR:$GRP $PID_FILE
+    rm -f $CHECKRESULTS_DIR/*
 }
 
 nagios_wait_stop() {
@@ -116,16 +126,21 @@ nagios_wait_stop() {
     # multiple times to fetch new processes until all are gone.
     I=0
     while kill -0 $pid >/dev/null 2>&1; do
-        # Send single kill per process
-        kill $pid
+        # Send TERM to process group to kill the nagios process and also
+        # other processes started by this nagios process, for example
+        # check plugins which are currently running
+        kill -TERM -$pid
         while kill -0 $pid  >/dev/null 2>&1;  do
             if [ $I = '60' ]; then
-                return 1
-            else
-                echo -n "."
-                I=$(($I+1))
-                sleep 1
+                echo -ne "\nsending SIGKILL"
+                kill -9 $pid
+            elif [ $I = '70' ]; then
+                return 1 
             fi
+                
+            echo -n "."
+            I=$(($I+1))
+            sleep 1
         done
         # Is there another proc with ppid 1?
         pid=$(pidof_nagios) || break
@@ -171,15 +186,15 @@ case "$1" in
              exit 1
          fi
 
-         if ! verify_config quiet; then
-             exit 1
-         fi
+         [ "$CORE_NOVERIFY" ] || verify_config quiet || exit 1
 
          if nagios_wait_start; then
              echo 'OK'
+             __init_hook $0 $1 post 0
              exit 0
          else
              echo 'ERROR'
+             __init_hook $0 $1 post 1
              exit 1
          fi
     ;;
@@ -187,9 +202,11 @@ case "$1" in
         echo -n "Stopping nagios..."
         if nagios_wait_stop; then
             echo 'OK'
+             __init_hook $0 $1 post 0
             exit 0
         else
             echo 'ERROR'
+             __init_hook $0 $1 post 1
             exit 1
         fi
     ;;
@@ -201,17 +218,15 @@ case "$1" in
     ;;
     status)
         if pid=$(pidof_nagios 2>&1)
- 	then
-	    echo "Running ($pid)."
+        then
+            echo "Running ($pid)."
         else
             echo 'Not running.'
             exit 1
         fi
     ;;
     restart)
-        if ! verify_config quiet; then
-            exit 1
-        fi
+        [ "$CORE_NOVERIFY" ] || verify_config quiet || exit 1
 
         $0 stop || (echo "Unable to stop nagios. Terminating..." && exit 1)
         echo -n "Starting nagios..."
@@ -225,9 +240,7 @@ case "$1" in
     ;;
     
     reload|force-reload)
-        if ! verify_config quiet; then
-            exit 1
-        fi
+        [ "$CORE_NOVERIFY" ] || verify_config quiet || exit 1
         
         # Execute a start when nagios is not running
         if ! pid=$(pidof_nagios) 2>&1; then

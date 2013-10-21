@@ -27,7 +27,7 @@
 import sys, os, shutil, pwd, grp, re, time, pprint, tty, termios, traceback
 from subprocess import *
 
-OMD_VERSION = "0.56"
+OMD_VERSION = "1.00"
 
 # colored output, if stdout is a tty
 on_tty = sys.stdout.isatty()
@@ -89,6 +89,50 @@ opt_interactive = False
 opt_force = False
 
 g_hooks = None
+
+# Is used to duplicate output from stdout/stderr to a logfiles. This
+# is e.g. used during "omd update" to have a chance to analyze errors
+# during past updates
+class Log(object):
+    def __init__(self, fd, logfile):
+        self.log = open(logfile, 'a')
+        self.fd  = fd
+
+        if self.fd == 1:
+            self.orig  = sys.stdout
+            sys.stdout = self
+        else:
+            self.orig  = sys.stderr
+            sys.stderr = self
+
+        self.color_replace = re.compile("\033\[\d{1,2}m", re.UNICODE)
+
+    def __del__(self):
+        if self.fd == 1:
+            sys.stdout = self.orig
+        else:
+            sys.stderr = self.orig
+        self.log.close()
+
+    def write(self, data):
+        self.orig.write(data)
+        self.log.write(self.color_replace.sub('', data))
+
+    def flush(self):
+        self.log.flush()
+        self.orig.flush()
+
+g_stdout_log = None
+g_stderr_log = None
+def start_logging(logfile):
+    global g_stdout_log, g_stderr_log
+    g_stdout_log = Log(1, logfile)
+    g_stderr_log = Log(2, logfile)
+
+def stop_logging():
+    global g_stdout_log, g_stderr_log
+    g_stdout_log = None
+    g_stderr_log = None
 
 def show_success(exit_code):
     if exit_code == True or exit_code == 0:
@@ -286,6 +330,9 @@ def read_info():
                     # Skip comment and empty lines
                     if line.startswith('#') or line == '':
                         continue
+                    # Remove everything after the first comment sign
+                    if '#' in line:
+                        line = line[:line.index('#')].strip()
                     var, value = line.split('=')
                     value = value.strip()
                     if var.endswith("+"):
@@ -1689,10 +1736,9 @@ def load_hook_dependencies():
             hook["active"] = False
         else:
             hook["active"] = True
-        
 
-def refresh_hooks():
-    config_load_hooks()
+def refresh_hooks(force_reload = False):
+    config_load_hooks(force_reload)
     config_set_all() # execute 'set' functions with current values
     call_all_hooks("refresh")
     config_save()
@@ -2160,8 +2206,13 @@ def main_create(args, options={}):
         create_site_dir(g_sitename)
         add_to_fstab(g_sitename)
 
+    config_settings = {}
+    if "no-autostart" in options:
+        config_settings["AUTOSTART"] = "off"
+        sys.stdout.write("Going to set AUTOSTART to off.\n")
+
     if not "no-init" in options:
-        init_site()
+        init_site(config_settings)
         welcome_message()
 
     else:
@@ -2213,7 +2264,7 @@ def main_init(args, options):
     init_site()
     welcome_message()
 
-def init_site():
+def init_site(config_settings=None):
     # Create symbolic link to version
     create_version_symlink(g_sitename, OMD_VERSION)
 
@@ -2231,6 +2282,9 @@ def init_site():
     # Create site.conf with default values
     config_load_hooks()
     config_set_all() # execute 'set' functions with default values
+    if config_settings:
+        for hookname, value in config_settings.items():
+            config_set_value(hookname, value)
     config_save()
 
     # Change the few files that config save as created as root
@@ -2659,8 +2713,10 @@ def main_update(args, options={}):
             "Update!", "Abort"):
         bail_out("Aborted.")
 
-    sys.stdout.write("Updating site '%s' from version %s to %s...\n\n" %
-            (g_sitename, from_version, to_version))
+    start_logging(g_sitedir + '/var/log/update.log')
+
+    sys.stdout.write("%s - Updating site '%s' from version %s to %s...\n\n" %
+            (time.strftime('%Y-%m-%d %H:%M:%S'), g_sitename, from_version, to_version))
 
     # Now apply changes of skeleton files. This can be done
     # in two ways:
@@ -2688,7 +2744,12 @@ def main_update(args, options={}):
     create_version_symlink(g_sitename, to_version)
 
     # Let hooks do their work and update configuration
-    refresh_hooks()
+    # Ensure the hooks are reloaded prior to execution to be sure
+    # the hooks of the target version are executed
+    refresh_hooks(True)
+
+    sys.stdout.write('Finished update.\n\n')
+    stop_logging()
 
 def main_umount(args, options = {}):
     global g_sitename
@@ -2839,6 +2900,7 @@ commands = [
       ( "gid", "g", True, "create site group with GID ARG" ),
       ( "reuse", None, False, "do not create a site user, reuse existing one" ),
       ( "no-init",  "n",  False, "leave new site directory empty (a later omd init does this"),
+      ( "no-autostart", "A", False, "set AUTOSTART to off (useful for test sites)"), 
     ],
     "Create a new site (-u UID, -g GID)",
 

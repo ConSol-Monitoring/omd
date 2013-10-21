@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 NAME     = mod_gearman
-VERSION  = 1.3.8
+VERSION  = 1.4.10
 GEARMAND = $(shell grep "^VERSION " ../gearmand/Makefile | awk '{ print $$3 }')
 DIR      = mod_gearman-$(VERSION)
 
@@ -23,18 +23,10 @@ install:
 	# fix path for plugin
 	[ -d $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins ] || mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins
 	mv $(DESTDIR)$(OMD_ROOT)/bin/check_gearman $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins/
-	rm -rf $(DESTDIR)$(OMD_ROOT)/etc/mod-gearman
-	rm -rf $(DESTDIR)$(OMD_ROOT)/etc/init.d/gearmand
-	rm -rf $(DESTDIR)$(OMD_ROOT)/etc/init.d/mod_gearman_worker
 	rm -rf $(DESTDIR)$(OMD_ROOT)/share/mod_gearman/*.conf
-	rmdir $(DESTDIR)$(OMD_ROOT)/etc/init.d
-	rm -f $(DESTDIR)$(OMD_ROOT)/etc/mod_gearman_neb.conf
-	rm -f $(DESTDIR)$(OMD_ROOT)/etc/mod_gearman_worker.conf
 	rm -f $(DESTDIR)$(OMD_ROOT)/lib/mod_gearman/mod_gearman.so
-	rmdir $(DESTDIR)$(OMD_ROOT)/etc
-	rm -rf $(DESTDIR)$(OMD_ROOT)/var/mod_gearman
-	rm -rf $(DESTDIR)$(OMD_ROOT)/var/log
-	rmdir $(DESTDIR)$(OMD_ROOT)/var
+	rm -rf $(DESTDIR)$(OMD_ROOT)/etc
+	rm -rf $(DESTDIR)$(OMD_ROOT)/var
 
 skel:
 	mkdir -p $(SKEL)/etc/mod-gearman
@@ -46,7 +38,6 @@ skel:
 	done
 	find $(SKEL)/etc/mod-gearman -name \*.orig -exec rm {} \;
 	mkdir -p $(SKEL)/var/log/mod_gearman
-	cd $(SKEL)/var/log && ln -s gearman mod_gearman
 	touch $(SKEL)/var/log/mod_gearman/neb.log
 	touch $(SKEL)/var/log/mod_gearman/worker.log
 

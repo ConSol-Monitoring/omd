@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 NAME = mk-livestatus
-VERSION = 1.2.0p3
+VERSION = 1.2.2p2
 DIR = $(NAME)-$(VERSION)
 
 CONFIGUREOPTS = \
@@ -16,6 +16,8 @@ install:
 	$(MAKE) DESTDIR=$(DESTDIR) -C $(DIR) install
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/bin
 	install -m 755 lq $(DESTDIR)$(OMD_ROOT)/bin
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/python
+	install -m 644 $(DIR)/api/python/livestatus.py $(DESTDIR)$(OMD_ROOT)/lib/python
 
 skel:
 

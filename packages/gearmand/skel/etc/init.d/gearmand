@@ -19,7 +19,7 @@ fi
 
 NAME=gearmand
 DAEMON="###ROOT###/version/sbin/gearmand"
-OPTIONS="--daemon --job-retries=0"
+OPTIONS="--daemon --worker-wakeup=10 --retention-file=###ROOT###/var/gearmand.retention -q retention"
 PORT=`echo $CONFIG_GEARMAND_PORT | awk -F: {'print $2'}`
 LISTEN=`echo $CONFIG_GEARMAND_PORT | awk -F: {'print $1'}`
 if [ -z "$LISTEN" ]; then
@@ -28,22 +28,14 @@ fi
 PIDFILE=###ROOT###/tmp/run/gearmand.pid
 LOGFILE=###ROOT###/var/log/gearman/gearmand.log
 USER=###SITE###
-GRACEFUL_SHUTDOWN_TIME=10
-LIBEVENTMINVERSION=1.4
+SHUTDOWN_TIME=5
+LOGLEVEL="ERROR"
+
 for f in $( which netcat nc 2>/dev/null ) ; do
   if [ -x "$f" ]; then
     NC=$f
   fi
 done
-
-# check libevent version
-# io threads are only supported in lib event >= 1.4
-NUMTHREADS=0
-LIBEVENTVERSION=`/sbin/ldconfig -p 2>&1 | grep libevent- | tail -n 1 | sed -e 's/.*libevent\-\(.*\)\.so.*/\1/g' -e 's/[^0-9\.]//g'`
-if [ ! -z "$LIBEVENTVERSION" ]; then
-  [ `echo "$LIBEVENTVERSION $LIBEVENTMINVERSION" | awk '{if ($1 >= $2) print 1}'` ] && NUMTHREADS=10
-fi
-OPTIONS="$OPTIONS --threads=$NUMTHREADS"
 
 # create state dir
 mkdir -p $(dirname $LOGFILE)
@@ -98,7 +90,10 @@ case "$1" in
             exit 1;
         fi
 
-        CMD="$DAEMON --port=$PORT --pid-file=$PIDFILE $OPTIONS --log-file=$LOGFILE --verbose=2 --listen=$LISTEN"
+        # gearman opens lot of connections, so increase default ulimit
+        ulimit -n 2048 >/dev/null 2>&1
+
+        CMD="$DAEMON --port=$PORT --pid-file=$PIDFILE $OPTIONS --log-file=$LOGFILE --verbose=$LOGLEVEL --listen=$LISTEN"
         if [ "$WHO" = "root" ]; then
             # try to exec commands as user
             su - $USER -c /bin/true
@@ -106,7 +101,7 @@ case "$1" in
                 echo "cannot exec commands as user $USER, make sure user has a valid shell"
                 exit 1;
             fi
-            su - $USER -c  "$CMD > $LOGFILE 2>&1"
+            su - $USER -c  "$CMD >>$LOGFILE 2>&1"
         else
             $CMD > $LOGFILE 2>&1
         fi
@@ -124,11 +119,10 @@ case "$1" in
         if [ -z "$pid" ]; then
             echo ". Not running."
         else
-            # do a graceful shutdown
+            # do a shutdown
             if [ ! -z $NC ]; then
-                printf '%s' " gracefully "
-                echo "shutdown graceful" | $NC -w 1 -i 1 $LISTEN $PORT > /dev/null
-                x=$GRACEFUL_SHUTDOWN_TIME
+                echo "shutdown" | $NC -w 1 -i 1 $LISTEN $PORT > /dev/null
+                x=$SHUTDOWN_TIME
                 while [ $x -gt 0 ]; do
                     printf "."
                     ps -p $pid > /dev/null 2>&1 && sleep 1 || x=0;

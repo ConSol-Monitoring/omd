@@ -25,6 +25,9 @@ then
     if [ "${VERSION:0:6}" = "wheezy" ] ; then
         VERSION="7.0"
     fi
+    if [ "${VERSION:0:6}" = "jessie" ] ; then
+        VERSION="8.0"
+    fi
     echo "DEBIAN$SEP$VERSION"
     exit 0
 fi
@@ -47,12 +50,24 @@ then
         exit 0
     elif [ "${VERSION:0:43}" = "Red Hat Enterprise Linux Server release 6.0" ]
     then
-	echo "REDHAT${SEP}6.0"
-	exit 0
+        echo "REDHAT${SEP}6.0"
+        exit 0
     elif [ "${VERSION:0:43}" = "Red Hat Enterprise Linux Server release 6.1" ]
     then
-	echo "REDHAT${SEP}6.1"
-	exit 0
+        echo "REDHAT${SEP}6.1"
+        exit 0
+    elif [ "${VERSION:0:43}" = "Red Hat Enterprise Linux Server release 6.2" ]
+    then
+        echo "REDHAT${SEP}6.2"
+        exit 0
+    elif [ "${VERSION:0:43}" = "Red Hat Enterprise Linux Server release 6.3" ]
+    then
+        echo "REDHAT${SEP}6.3"
+        exit 0
+    elif [ "${VERSION:0:43}" = "Red Hat Enterprise Linux Server release 6.4" ]
+    then
+        echo "REDHAT${SEP}6.4"
+        exit 0
     fi
 fi
 
@@ -70,6 +85,10 @@ then
     then
         echo "SLES$SEP${VERSION}SP2"
         exit 0
+    elif [ "$VERSION" = 11 -a "$SP" = 3 ] 
+    then
+        echo "SLES$SEP${VERSION}SP3"
+        exit 0
     elif [ "$VERSION" = 10 -a "$SP" = 1 ] 
     then
         echo "SLES$SEP${VERSION}SP1"
@@ -84,7 +103,7 @@ then
         exit 0
     elif [ "$VERSION" = 12.1 ]
     then
-	echo "OPENSUSE$SEP${VERSION}"
+        echo "OPENSUSE$SEP${VERSION}"
         exit 0
     fi
 fi

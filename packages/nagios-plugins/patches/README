@@ -1,0 +1,7 @@
+0001-fix-compile-error-on-raring.dif:
+    This patch fixes a compile error on Ubuntu 13.04 (raring).
+    The unpatched version complains about a missing gets. This
+    results from a over-ambitious check in some stdio.h replacement
+    that is created in compile time. The patch simply disables
+    this check.
+

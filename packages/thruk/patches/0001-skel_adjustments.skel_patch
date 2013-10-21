@@ -1,5 +1,5 @@
---- a/etc/thruk/thruk.conf	2012-07-19 13:13:20.000000000 +0200
-+++ b/etc/thruk/thruk.conf	2012-07-19 16:03:03.639789375 +0200
+--- a/etc/thruk/thruk.conf	2013-07-09 11:49:22.040208026 +0200
++++ b/etc/thruk/thruk.conf	2013-07-09 11:49:42.003223744 +0200
 @@ -13,7 +13,7 @@
  
  ######################################
@@ -21,7 +21,7 @@
  # the path relative to your webserver root directory and 'physical_logo_path' is
  # the corresponding filesystem path.
 -#physical_logo_path = /usr/local/share/icons
-+physical_logo_path = local/share/nagios/htdocs/images/logos
++physical_logo_path = ###ROOT###/local/share/nagios/htdocs/images/logos
  
  ######################################
  # change path to your host / service action icons. You may use relative paths
@@ -38,8 +38,8 @@
 +use_frames          = 1
  
  ######################################
- # normally passive checks would be marked as disabled.
-@@ -134,35 +134,35 @@
+ # use histograms, shows histogram links
+@@ -169,11 +169,11 @@
  
  ######################################
  # temporary directory, used for template cache...
@@ -50,6 +50,10 @@
  # var directory, used to store user settings
 -#var_path = ./var
 +var_path = ###ROOT###/var/thruk
+ 
+ ######################################
+ # mode used when creating or saving files
+@@ -182,27 +182,27 @@
  
  ######################################
  # server side includes
@@ -82,16 +86,16 @@
  
  ######################################
  # use paged data instead of all data in one huge page
-@@ -222,7 +222,7 @@
+@@ -277,7 +277,7 @@
  # Instead of using a general resource_file, you could define one file
  # per peer in your peer config.
  #
 -#resource_file = path_to_your/resource.cfg
 +resource_file = ###ROOT###/etc/nagios/resource.cfg
  
- # show inline pnp graph if available
- # if a service or host has a pnp4nagios action url set
-@@ -294,6 +294,7 @@
+ # enable a performance bar inside the status/host list which
+ # create a graph from the performance data of the plugin output. Available
+@@ -385,6 +385,7 @@
  # check should be rescheduled instead of the passive check.
  # Have a look at the documentation for a detailed description.
  #command_reschedule_alias = servicename_or_commandname_pattern;agent_service_name
@@ -99,7 +103,7 @@
  
  ######################################
  # Time Format Settings
-@@ -343,23 +344,23 @@
+@@ -424,23 +425,23 @@
  # Specifiy a file which is then completly under the control of Thruk.
  # It will be used to store cronjobs, ex. for reports. The file has to
  # be writable by Thruk.
@@ -126,20 +130,20 @@
 -#thruk_init = /etc/init.d/thruk
 +thruk_init = ###ROOT###/etc/init.d/thruk
  
- # execute regular scheduled reports with this nice level
- #report_nice_level = 5
-@@ -390,8 +391,8 @@
- ######################################
+ # Set first day of week. Used in reports.
+ # Sunday: 0
+@@ -497,8 +498,8 @@
  # COOKIE AUTH
- ######################################
+ # cookie auth requires additional webserver settings, see the documentation
+ # for detailed instructions.
 -cookie_auth_login_url             = thruk/cgi-bin/login.cgi
 -cookie_auth_restricted_url        = http://localhost/thruk/cgi-bin/restricted.cgi
 +cookie_auth_login_url             = ###SITE###/thruk/cgi-bin/login.cgi
 +cookie_auth_restricted_url        = http://localhost/###SITE###/thruk/cgi-bin/restricted.cgi
- cookie_auth_session_timeout       = 86400
+ cookie_auth_session_timeout       = 604800
  cookie_auth_session_cache_timeout = 5
- 
-@@ -412,42 +413,19 @@
+ #cookie_auth_domain               = .domain.com
+@@ -540,42 +541,19 @@
  ######################################
  # Backend Configuration, enter your backends here
  <Component Thruk::Backend>
@@ -195,16 +199,25 @@
  </Component>
  
  
-@@ -461,9 +439,9 @@
+@@ -592,9 +570,9 @@
  <Component Thruk::Plugin::ConfigTool>
      show_plugin_syntax_helper = 1
  
 -    thruk    = ./thruk_local.conf
 -    cgi.cfg  = ./cgi.cfg
--#    htpasswd = ./htpasswd
+-    #htpasswd = ./htpasswd
 +    thruk    = ###ROOT###/etc/thruk/thruk_local.conf
 +    cgi.cfg  = ###ROOT###/etc/nagios/cgi.cfg
 +    htpasswd = ###ROOT###/etc/htpasswd
- </Component>
  
- ######################################
+     #pre_obj_save_cmd   =
+     #post_obj_save_cmd  =
+@@ -627,7 +605,7 @@
+     #report_base_url=http://host.local/thruk/cgi-bin/
+ 
+     # wkhtmltopdf is used to convert html pages into pdf
+-    #wkhtmltopdf = /path/to/wkhtmltopdf
++    wkhtmltopdf = ###ROOT###/bin/wkhtmltopdf
+ 
+     # pnp export script is used to export pnp graphs into reports
+     #pnp_export = /path/to/pnp_export.sh

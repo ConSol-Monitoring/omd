@@ -43,7 +43,10 @@ for my $tarball (glob("packages/perl-modules/src/*.gz packages/perl-modules/src/
     if($mod eq 'Module::Install')             { $mod = 'inc::'.$mod; }
     if($mod eq 'File::ChangeNotify')          { next; }
     if($mod eq 'UNIVERSAL::isa')              { next; }
+    if($mod eq 'Filter::exec')                { next; } # broken version string
+    if($mod eq 'Sub::Exporter::Progressive')  { next; }
     if($mod eq 'DBD::Oracle')                 { next; }
+    if($mod =~ m/curl/imx)                    { next; } # broken
 
     my $check = "use $mod";
     # Use with version doesnt work here, because of weird version numbers

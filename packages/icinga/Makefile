@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 NAME = icinga
-VERSION = 1.8.1
+VERSION = 1.9.1
 DIR = $(NAME)-$(VERSION)
 
 # Configure options for Icinga. Since we want to compile
@@ -19,6 +19,7 @@ CONFIGUREOPTS = \
     --enable-embedded-perl \
     --with-cgiurl="./cgi-bin" \
     --with-htmurl="." \
+    --enable-idoutils=no \
 
 build:
 	tar xzf $(DIR).tar.gz
@@ -59,6 +60,9 @@ install:
 
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/bin
 	install -m 755 merge-icinga-config $(DESTDIR)$(OMD_ROOT)/bin
+
+	# remove empty folders
+	rm -rf $(DESTDIR)/usr
   
 clean:
 	rm -rf $(DIR)

@@ -13,7 +13,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 2526 );
+plan( tests => 2598 );
 
 ##################################################
 # create our test site
@@ -42,6 +42,8 @@ my $reports = [
         'params.host'           => $host,
         'params.breakdown'      => 'months',
         'params.unavailable'    => [ 'down', 'unreachable' ],
+        'params.graph_min_sla'  => 90,
+        'params.decimals'       => 2,
         'send_type_1'           => 'month',
         'send_day_1'            => 1,
         'week_day_1'            => '',
@@ -61,6 +63,7 @@ my $tests = [
   { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -t 20 -H localhost -a omdadmin:omd -u \"/$site/thruk/cgi-bin/tac.cgi\" -e 200 -r \"Logged in as <i>omdadmin<\/i>\"'", like => '/HTTP OK:/' },
   { cmd => "/bin/su - $site -c './bin/thruk -l'", like => "/$site/" },
   { cmd => "/bin/su - $site -c './bin/thruk -l --local'", like => "/$site/" },
+  { cmd => "/bin/su - $site -c './bin/naglint ./etc/nagios/conf.d/commands.cfg'", like => "/check_local_load/" },
 ];
 
 my $own_tests = [
@@ -78,12 +81,12 @@ for my $report (@{$reports}) {
         }
     }
     push @{$tests}, (
-      { cmd => "/bin/su - $site -c './bin/thruk -A omdadmin \"/thruk/cgi-bin/reports.cgi?action=save&report=9999&".join('&', @{$args})."\"'",
+      { cmd => "/bin/su - $site -c './bin/thruk -A omdadmin \"/thruk/cgi-bin/reports2.cgi?action=save&report=9999&".join('&', @{$args})."\"'",
                like => "/OK - report updated/" },
       { cmd => "/bin/su - $site -c 'omd reload crontab'", like => [ '/OK/' ] },
       { cmd => "/bin/su - $site -c '/usr/bin/crontab -l | grep -i thruk | grep -v cron.d'", like => [ '/9999/' ] },
       { cmd => "/bin/su - $site -c './bin/thruk -a report=9999 --local'", like => [ '/%PDF\-1\.4/', '/%%EOF/' ] },
-      { cmd => "/bin/su - $site -c './bin/thruk -A omdadmin \"/thruk/cgi-bin/reports.cgi?action=remove&report=9999\"'", like => '/OK - report removed/' },
+      { cmd => "/bin/su - $site -c './bin/thruk -A omdadmin \"/thruk/cgi-bin/reports2.cgi?action=remove&report=9999\"'", like => '/OK - report removed/' },
     );
 }
 
@@ -156,14 +159,16 @@ my $urls = [
   { url => '/thruk/cgi-bin/conf.cgi?sub=objects&action=browser', like => [ '/Config Tool/', '/commands.cfg/' ] },
 
 # reporting
-  { url => '/thruk/cgi-bin/reports.cgi', like => '/Reporting/' },
-  { url => '/thruk/cgi-bin/reports.cgi?action=save&report=9999&name=Service%20SLA%20Report%20for%20'.$host.'%20-%20'.$service.'&template=sla_service.tt&params.sla=95&params.timeperiod=last12months&params.host='.$host.'&params.service='.$service.'&params.breakdown=months&params.unavailable=critical&params.unavailable=unknown', like => '/success_message/' },
-  { url => '/thruk/cgi-bin/reports.cgi?report=9999', like => [ '/%PDF-1.4/', '/%%EOF/' ] },
-  { url => '/thruk/cgi-bin/reports.cgi?action=remove&report=9999', like => '/report removed/' },
+  { url => '/thruk/cgi-bin/reports2.cgi', like => '/Reporting/' },
+  { url => '/thruk/cgi-bin/reports2.cgi?action=save&report=9999&name=Service%20SLA%20Report%20for%20'.$host.'%20-%20'.$service.'&template=sla_service.tt&params.sla=95&params.timeperiod=last12months&params.host='.$host.'&params.service='.$service.'&params.breakdown=months&params.unavailable=critical&params.unavailable=unknown&params.decimals=2&params.graph_min_sla=90', like => '/success_message/' },
+  { url => '/thruk/cgi-bin/reports2.cgi?report=9999&action=update' },
+  { url => '/thruk/cgi-bin/reports2.cgi', waitfor => 'reports2.cgi\?report=9999\&amp;refresh=0' },
+  { url => '/thruk/cgi-bin/reports2.cgi?report=9999', like => [ '/%PDF-1.4/', '/%%EOF/' ] },
+  { url => '/thruk/cgi-bin/reports2.cgi?action=remove&report=9999', like => '/report removed/' },
 
 # recurring downtimes
-  { url => '/thruk/cgi-bin/extinfo.cgi?type=6&recurring=save&old_host=&host='.$host.'&comment=automatic+downtime&send_type_1=month&send_day_1=1&week_day_1=&send_hour_1=0&send_minute_1=0&duration=120&childoptions=0', like => '/recurring downtime saved/' },
-  { url => '/thruk/cgi-bin/extinfo.cgi?type=6&recurring=remove&host='.$host, like => '/recurring downtime removed/' },
+  { url => '/thruk/cgi-bin/extinfo.cgi?type=6&recurring=save&target=host&host='.$host.'&comment=automatic+downtime&send_type_1=month&send_day_1=1&week_day_1=&send_hour_1=0&send_minute_1=0&duration=120&childoptions=0&nr=999', like => '/recurring downtime saved/' },
+  { url => '/thruk/cgi-bin/extinfo.cgi?type=6&target=host&recurring=remove&nr=999&host='.$host, like => '/recurring downtime removed/' },
 ];
 
 # complete the url
@@ -224,7 +229,7 @@ for my $core (qw/nagios shinken icinga/) {
     my $tlog = '/tmp/thruk_test_error.log';
     is(-f $log, 1, "log exists");
     # grep out commands
-    `/bin/cat $log | /bin/grep -v 'cmd: COMMAND' > $tlog 2>&1`;
+    `/bin/cat $log | /bin/grep -v 'cmd: COMMAND' | /bin/grep -v ' started ' | /bin/grep -v 'templates precompiled in' > $tlog 2>&1`;
     is(-s $tlog, 0, "log is empty") or diag(Dumper(`cat $log`));
     unlink($tlog);
 }

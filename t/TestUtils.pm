@@ -268,13 +268,34 @@ sub remove_test_site {
     unlike           => (list of) regular expressions which must not match content
     skip_html_lint   => flag to disable the html lint checking
     skip_link_check  => (list of) regular expressions to skip the link checks for
+    waitfor          => wait till regex occurs (max 60sec)
   }
 
 =cut
 sub test_url {
     my $test = shift;
 
-    my $page = _request($test);
+    my $start = time();
+    my $page  = _request($test);
+
+    # wait for something?
+    if(defined $test->{'waitfor'}) {
+        my $now = time();
+        my $waitfor = $test->{'waitfor'};
+        my $found   = 0;
+        while($now < $start + 60) {
+            if($page->{'content'} =~ m/$waitfor/mx) {
+                ok(1, "content ".$waitfor." found after ".($now - $start)."seconds");
+                $found = 1;
+                last;
+            }
+            sleep(1);
+            $now = time();
+            $page = _request($test);
+        }
+        fail("content did not occur within 60 seconds") unless $found;
+        return $page;
+    }
 
     # response code?
     $test->{'code'} = 200 unless exists $test->{'code'};
@@ -418,7 +439,7 @@ sub read_config {
     while(<$fh>) {
         my $line = $_;
         chomp($line);
-        next if $line =~ m/^\s*#/;
+        next if $line =~ m/^\s*(#|$)/;
         $line =~ s/\s*#.*$//;
         my $append = 0;
         my($key,$value) = split/\s+\+=\s*/,$line,2;
@@ -582,6 +603,7 @@ sub _diag_lint_errors_and_remove_some_exceptions {
             "Unknown attribute \"start\" for tag <div>",
             "Unknown attribute \"end\" for tag <div>",
             "for tag <meta>",
+            "Unknown\ attribute\ \"placeholder\"\ for\ tag\ <input>",
         ) {
             next LINT_ERROR if($err_str =~ m/$exclude_pattern/i);
         }
@@ -788,7 +810,7 @@ sub _tail {
     return unless defined $file;
     diag($name);
     if(-f $file) {
-        diag(`tail -n25 $file`);
+        diag(`tail -n100 $file`);
     } else {
         diag("cannot read $file: $!");
     }

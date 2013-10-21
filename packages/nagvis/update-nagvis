@@ -1,6 +1,6 @@
 #!/bin/bash
 if [ "$1" = "nightly" ]; then
-    VERSION=1.7-nightly
+    VERSION=1.8-nightly
     echo "Adding current nightly build..."
     git rm nagvis-*.tar.gz
     wget -O nagvis-$VERSION.tar.gz http://www.nagvis.org/share/nagvis-$VERSION.tar.gz
