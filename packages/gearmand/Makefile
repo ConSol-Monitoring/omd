@@ -31,6 +31,7 @@ build:
 	cd $(DIR) && \
 	export LIBRARY_PATH=/usr/lib64/boost141:/usr/lib/boost141 && \
 	export LD_LIBRARY_PATH=/usr/lib64/boost141:/usr/lib/boost141 && \
+	export LDFLAGS="-lboost_system" && \
     export CFLAGS=-std=c99 && \
 	export CPATH=/usr/include/boost141 && \
 	./configure $(CONFIGUREOPTS) && \
