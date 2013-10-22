@@ -68,12 +68,23 @@ case "$1" in
     done
 
     db_stop
-    # -- create apache conf.d if not exist
+    # -- create apache config include if not exist
+    if test -d /etc/apache2/conf-available; then
+      # On e.g. ubuntu 13.10 conf.d is not loaded anymore, use conf-available
+      APACHE_OMD_CONF="/etc/apache2/conf-available/zzz_omd.conf"
+    fi
+
     if ! test -e $APACHE_OMD_CONF; then
       echo "Include /omd/apache/*.conf" > $APACHE_OMD_CONF
       # avoid apache error message including /omd/apache if no site exist
       touch "/omd/apache/empty.conf"
+
+      # -- enable conf include, when available
+      if test -d /etc/apache2/conf-available; then
+        a2enconf zzz_omd
+      fi
     fi
+
     # -- enable apache modules
     if ! test -e /etc/apache2/mods-enabled/proxy_http.load; then
        a2enmod proxy_http	# also enables dependend modules

@@ -21,6 +21,7 @@ This file documents the revision history for the Open Monitoring Distribution
           - Init scripts can now deal with upstart user sessions, where the
             PPID is not 1 anymore, instead of it the PPID is the user session
             init process (init --user). This was first seen on ubuntu 13.10.
+          - Added build support on Ubuntu 13.10 (Saucy Salamander)
 
 1.00     Jun 17 2013
           - Nagios: Update to 3.5.0
