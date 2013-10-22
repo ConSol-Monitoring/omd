@@ -84,7 +84,7 @@ apache_wait_start() {
   # (nearly) reproducible problems with apache at boot-time. (alloc_listener: failed to set up sockaddr for 127.0.0.1)
   # With this ping the problem disappears.
   test -f /etc/debian_version && test $(cut -f1 -d"." /proc/uptime) -lt 300 && ping -nqc 10 $CONFIG_APACHE_TCP_ADDR >/dev/null 2>&1
-  setsid $APACHE_BIN -f "$CONFIG_FILE"
+  $APACHE_BIN -f "$CONFIG_FILE"
   
   i=0
   while ! pidof_apache >/dev/null 2>&1;  do
