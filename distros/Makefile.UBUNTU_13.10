@@ -50,7 +50,6 @@ OS_PACKAGES    += apache2-mpm-prefork   # Multisite/mod_python crashes with mpm-
 OS_PACKAGES    += libboost-program-options1.49.0
 OS_PACKAGES    += libdbi1
 OS_PACKAGES    += libevent-1.4-2
-OS_PACKAGES    += libgd2-xpm
 OS_PACKAGES    += libltdl7
 OS_PACKAGES    += libnet-snmp-perl
 OS_PACKAGES    += libpango1.0-0
