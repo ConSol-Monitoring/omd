@@ -23,6 +23,12 @@
     After my tests & searches the str.__init__(self, value) is useless and
     can simply be commented out.
 
+0008:
+   Makes mod_python compile with Apache 2.4 or newer. This patch has been
+   added to make mod_python compile for Ubuntu 13.10. The patch has been
+   taken from the libapache2-mod-python source package.
+   This patch is only applied when apache 2.4 or later is found.
+
 The other patches are taken with thanks from the FEDORA mod_python
 package and fix compile problems and RedHat 6.1 (and probably
 other distros as well).

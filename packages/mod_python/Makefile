@@ -7,12 +7,22 @@ DIR = $(NAME)-$(VERSION)
 CONFIGUREOPTS = \
     --prefix=$(OMD_ROOT)
 
+APACHE_VERSION      = $(shell $(APACHE_BIN) -v | awk '/version/ {print $$3}' | awk -F/ '{print $$2}')
+APACHE_VERSION_MAIN = $(word 1, $(subst ., ,$(APACHE_VERSION)))
+APACHE_VERSION_SUB  = $(word 2, $(subst ., ,$(APACHE_VERSION)))
+
+
 build:
 	tar xzf $(DIR).tar.gz
 	set -e ; for p in patches/*.dif ; do \
 	    echo "applying $$p..." ; \
 	    ( cd $(DIR) ; patch -p1 -b ) < $$p ; \
 	done
+	# Apply special patch for apache >= 2.4
+	if [ $(APACHE_VERSION_MAIN) -ge 2 -a $(APACHE_VERSION_SUB) -ge 4 ]; then \
+	    echo "applying patches/0008-apache24.patch..." ; \
+	    ( cd $(DIR) ; patch -p1 -b ) < patches/0008-apache24.patch ; \
+	fi
 	cd $(DIR) ; ./configure $(CONFIGUREOPTS) 
 	echo '#define OMD_VERSION "$(OMD_VERSION)"' > $(DIR)/src/omd_version.h
 	$(MAKE) -C $(DIR) all
