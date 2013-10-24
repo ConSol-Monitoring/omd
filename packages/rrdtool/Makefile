@@ -47,8 +47,8 @@ install:
 	    rm -rf $(DESTDIR)$(OMD_ROOT)/lib64 ; \
 	fi
 	# Cleanup files below lib/python2*. The real stuff is in lib/python
-	if ls $(DESTDIR)$(OMD_ROOT)/lib/python2* >/dev/null 2>&1; then
-	    rm -rf $(DESTDIR)$(OMD_ROOT)/lib/python2*
+	if ls $(DESTDIR)$(OMD_ROOT)/lib/python2* >/dev/null 2>&1; then \
+	    rm -rf $(DESTDIR)$(OMD_ROOT)/lib/python2* ; \
 	fi
 
 skel:

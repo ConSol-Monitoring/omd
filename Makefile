@@ -28,8 +28,6 @@ PACKAGES=perl-modules \
          shinken \
          thruk \
          maintenance \
-         gearmand \
-         mod-gearman \
          patch \
          nail \
          notifications-tt
