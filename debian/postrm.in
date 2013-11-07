@@ -40,6 +40,10 @@ case "$1" in
 	  # rm -f /usr/share/man/man8/omd.8.gz # -> alternatives
 	  # rm -f /etc/init.d/omd # -> alternatives
 	  rm -f /etc/default/omd
+          if test -d /etc/apache2/conf-available; then
+            # On e.g. ubuntu 13.10 conf.d is not used anymore, use conf-available
+            APACHE_OMD_CONF="/etc/apache2/conf-available/zzz_omd.conf"
+          fi
 	  rm -f $APACHE_OMD_CONF $APACHE_OMD_EMPTY_CONF
 	  rm -f /omd
 	  # Try to remove empty directories

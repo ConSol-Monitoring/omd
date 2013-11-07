@@ -163,3 +163,5 @@ $conf['ftp']['pass'] = 'password';
 $conf['ftp']['root'] = '/home/user/htdocs';
 
 $conf['readdircache'] = 0;               //time cache in second for the readdir opération, 0 to deactivate.
+
+@include('cookie_auth.php');

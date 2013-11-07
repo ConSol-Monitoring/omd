@@ -75,10 +75,9 @@ pid_npcd (){
     fi
 
     # It might happen that there is no pidfile or a stale pidfile but
-    # a process is running
-    # As fallback check the process table for a process with PPID=1 and
-    # running as this user
-    PID=$(pgrep -u $OMD_SITE -P 1 -f $NpcdBin)
+    # a process is running. As fallback check the process table for the
+    # oldest process executed by the site user
+    PID=$(pgrep -u $OMD_SITE -o -f $NpcdBin)
     if [ -n "$PID" ]; then
         NpcdPID=$PID
         return 0

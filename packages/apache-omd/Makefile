@@ -10,6 +10,11 @@ ifeq ($(shell uname -m),x86_64)
   MODULE_DIR=$(APACHE_MODULE_DIR_64)
 endif
 
+APACHE_VERSION      = $(shell $(APACHE_BIN) -v | awk '/version/ {print $$3}' | awk -F/ '{print $$2}')
+APACHE_VERSION_MAIN = $(word 1, $(subst ., ,$(APACHE_VERSION)))
+APACHE_VERSION_SUB  = $(word 2, $(subst ., ,$(APACHE_VERSION)))
+APACHE_24_OR_NEWER  = $(shell [ $(APACHE_VERSION_MAIN) -ge 2 -a $(APACHE_VERSION_SUB) -ge 4 ] && echo 1 || echo 0)
+
 APACHE_MODULES=
 APACHE_MODULES_INSTALL=
 APACHE_FCGID_PATH=$(MODULE_DIR)/$(APACHE_FCGID_MODULE)
@@ -44,6 +49,13 @@ skel:
 	if [ $(CENTOS_WORKAROUND) -eq 1 ]; then \
 		cp /etc/php.ini $(SKEL)/etc/apache/php.ini || exit 1; \
 		echo -e "\n\n; OMD OMD OMD OMD OMD OMD\n\nmemory_limit=64M\n\n[Session]\nsession.save_path=###ROOT###/tmp/php/session\nupload_tmp_dir=###ROOT###/tmp/php/upload\nsoap.wsdl_cache_dir=###ROOT###/tmp/php/wsdl-cache\n" >> $(SKEL)/etc/apache/php.ini; \
+	fi
+	
+	# install a custom apache configuration for apache 2.4 or later
+	if [ $(APACHE_24_OR_NEWER) -eq 1 ]; then \
+	    mv $(SKEL)/etc/apache/apache24.conf $(SKEL)/etc/apache/apache.conf ; \
+	else \
+	    rm $(SKEL)/etc/apache/apache24.conf ; \
 	fi
 
 	# Replace macros

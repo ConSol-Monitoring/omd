@@ -10,13 +10,19 @@ This file documents the revision history for the Open Monitoring Distribution
             logrotate (like e.g. the nagios archive). Is callec automatically
             every hour when the OMD crontab is enabled. This can be changed by
             editing the cron config etc/cron.d/diskspace
-          - Thruk: Update to 1.76
-          - Mod-Gearman: Update 1.4.10
+          - Thruk: Update to 1.78-3
+          - Mod-Gearman: Update 1.4.12
           - Nagios: Init script kills whole process groups during "stop"
-          - check_webinject: Update to 1.80
+          - check_webinject: Update to 1.84
           - gearmand: increase open files limit
           - Fix bug on Debian/Ubuntu where start/stop script started/stopped
              sites multiple times
+          - cleanup checkresults dir of Nagios when (re-)starting Nagios
+          - Init scripts can now deal with upstart user sessions, where the
+            PPID is not 1 anymore, instead of it the PPID is the user session
+            init process (init --user). This was first seen on ubuntu 13.10.
+          - Added build support on Ubuntu 13.10 (Saucy Salamander)
+          - Check_MK/MK Livestatus: new version 1.2.2p3
 
 1.00     Jun 17 2013
           - Nagios: Update to 3.5.0

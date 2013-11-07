@@ -13,7 +13,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 2598 );
+plan( tests => 2739 );
 
 ##################################################
 # create our test site
@@ -142,7 +142,7 @@ my $urls = [
   { url => '/thruk/cgi-bin/trends.cgi?host='.$host.'&service='.$service.'&t1=1264820912&t2=1265425712&includesoftstates=no&assumestateretention=yes&assumeinitialstates=yes&assumestatesduringnotrunning=yes&initialassumedservicestate=0&backtrack=4', 'like' => '/Host and Service State Trends/' },
 
 # statusmap
-  { url => '/thruk/cgi-bin/statusmap.cgi?host=all', like => '/Network Map For All Hosts/' },
+  { url => '/thruk/cgi-bin/statusmap.cgi?host=all', like => '/Network Map/' },
 
 # minemap
   { url => '/thruk/cgi-bin/minemap.cgi', like => '/Mine Map/' },
@@ -171,8 +171,24 @@ my $urls = [
   { url => '/thruk/cgi-bin/extinfo.cgi?type=6&target=host&recurring=remove&nr=999&host='.$host, like => '/recurring downtime removed/' },
 ];
 
+my $own_urls = [
+# business process
+  { url => '/thruk/cgi-bin/bp.cgi?action=new&bp_label=New Test Business Process', like => '/New Test Business Process/', skip_link_check => ['.cgi'] },
+  { url => '/thruk/cgi-bin/bp.cgi?action=commit&bp=1', follow => 1, like => '/New Test Business Process/', skip_link_check => ['.cgi'] },
+  { url => '/thruk/cgi-bin/status.cgi',             waitfor => 'New\ Test\ Business\ Process' },
+  { url => '/thruk/cgi-bin/bp.cgi?action=remove&bp=1', follow => 1, skip_link_check => ['.cgi'] },
+];
+
+my $shared_urls = [
+# business process
+  { url => '/thruk/cgi-bin/bp.cgi?action=new&bp_label=New Test Business Process', like => '/New Test Business Process/', skip_link_check => ['.cgi'] },
+  { url => '/thruk/cgi-bin/bp.cgi?action=commit&bp=1', follow => 1, like => '/New Test Business Process/', skip_link_check => ['.cgi'] },
+  { url => '/thruk/cgi-bin/bp.cgi?action=remove&bp=1', follow => 1, skip_link_check => ['.cgi'] },
+];
+
+
 # complete the url
-for my $url ( @{$urls} ) {
+for my $url ( @{$urls}, @{$shared_urls}, @{$own_urls} ) {
     $url->{'url'} = "http://localhost/".$site.$url->{'url'};
     $url->{'auth'}   = $auth;
     $url->{'unlike'} = [ '/internal server error/', '/"\/thruk\//', '/\'\/thruk\//' ];
@@ -203,6 +219,9 @@ for my $core (qw/nagios shinken icinga/) {
     for my $url ( @{$urls} ) {
         TestUtils::test_url($url);
     }
+    for my $url ( @{$own_urls} ) {
+        TestUtils::test_url($url);
+    }
 
     ##################################################
     # switch webserver to shared mode
@@ -222,6 +241,9 @@ for my $core (qw/nagios shinken icinga/) {
     ##################################################
     # and request some pages
     for my $url ( @{$urls} ) {
+        TestUtils::test_url($url);
+    }
+    for my $url ( @{$shared_urls} ) {
         TestUtils::test_url($url);
     }
 

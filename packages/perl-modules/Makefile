@@ -85,7 +85,6 @@ MODULES = \
           Module-CoreList-2.97.tar.gz \
           Module-Find-0.11.tar.gz \
           Module-Load-0.24.tar.gz \
-          Monitoring-Availability-0.46.tar.gz \
           Mozilla-CA-20130114.tar.gz \
           NEXT-0.65.tar.gz \
           Net-Curl-0.31.tar.gz \
