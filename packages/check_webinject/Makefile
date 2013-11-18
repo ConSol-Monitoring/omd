@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 NAME     = check_webinject
-VERSION  = 1.84
+VERSION  = 1.86
 DIR      = Webinject-$(VERSION)
 
 .PHONY: skel

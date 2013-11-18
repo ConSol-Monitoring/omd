@@ -11,9 +11,9 @@ This file documents the revision history for the Open Monitoring Distribution
             every hour when the OMD crontab is enabled. This can be changed by
             editing the cron config etc/cron.d/diskspace
           - Thruk: Update to 1.78-3
-          - Mod-Gearman: Update 1.4.12
+          - Mod-Gearman: Update 1.4.14
           - Nagios: Init script kills whole process groups during "stop"
-          - check_webinject: Update to 1.84
+          - check_webinject: Update to 1.86
           - gearmand: increase open files limit
           - Fix bug on Debian/Ubuntu where start/stop script started/stopped
              sites multiple times
