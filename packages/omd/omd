@@ -1578,6 +1578,9 @@ def init_scripts(sitename):
         return rc_dir, []
 
 def call_init_script(scriptpath, command):
+    if not os.path.exists(scriptpath):
+        sys.stderr.write('ERROR: This init script does not exist.\n')
+        return False
     return os.system("%s %s" % (scriptpath, command)) >> 8 in [ 0, 5 ]
 
 
