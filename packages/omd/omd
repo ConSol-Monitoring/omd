@@ -1579,7 +1579,7 @@ def init_scripts(sitename):
 
 def call_init_script(scriptpath, command):
     if not os.path.exists(scriptpath):
-        sys.stderr.write('ERROR: This init script does not exist.\n')
+        sys.stderr.write('ERROR: This daemon does not exist.\n')
         return False
     return os.system("%s %s" % (scriptpath, command)) >> 8 in [ 0, 5 ]
 
@@ -1621,6 +1621,10 @@ def check_status(sitename, display=True, daemon=None, bare=False):
     num_unused = 0
     num_stopped = 0
     rc_dir, scripts = init_scripts(sitename)
+    if daemon and daemon not in scripts:
+        if not bare:
+            sys.stderr.write('ERROR: This daemon does not exist.\n')
+        return 3
     for script in scripts:
         komponent = script.split("/")[-1].split('-', 1)[-1]
         if daemon and komponent != daemon:
