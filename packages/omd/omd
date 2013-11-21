@@ -1621,7 +1621,8 @@ def check_status(sitename, display=True, daemon=None, bare=False):
     num_unused = 0
     num_stopped = 0
     rc_dir, scripts = init_scripts(sitename)
-    if daemon and daemon not in scripts:
+    components = [ s.split('-', 1)[-1] for s in scripts ]
+    if daemon and daemon not in components:
         if not bare:
             sys.stderr.write('ERROR: This daemon does not exist.\n')
         return 3
