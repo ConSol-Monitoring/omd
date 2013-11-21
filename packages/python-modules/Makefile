@@ -21,7 +21,6 @@ build:
 
 install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/python
-	pwd
 	cd dest && \
 	    export PYTHONPATH=$$PYTHONPATH:$(DESTDIR)$(OMD_ROOT)/lib/python ; \
 	    for M in $(shell ls dest); do \
