@@ -55,7 +55,7 @@ install:
 	
 	# Delete files we do not want to package
 	rm -rf $(DESTDIR)/REMOVE
-	rm -f $(OMD_ROOT)/skel/etc/check_mk/*-*.mk
+	rm -f $(DESTDIR)$(OMD_ROOT)/skel/etc/check_mk/*-*.mk
 	
 	# Install special version of check_mk dealing with site specific defaults
 	install -m 755 check_mk $(DESTDIR)$(OMD_ROOT)/bin
