@@ -1,16 +1,19 @@
 include ../../Makefile.omd
 
 NAME = dokuwiki
-VERSION = 2012-01-25b
-DIR = $(NAME)-2012-01-25b
+VERSION = 2013-05-10a
+DIR = $(NAME)-2013-05-10a
 
 .PHONY: skel
 
 build:
 	tar xzf $(NAME)-$(VERSION).tgz
-	tar xzf template-arctic-stable.tgz -C $(DIR)/lib/tpl/
-	tar xzf template-vector.tar.gz -C $(DIR)/lib/tpl/
+	tar xzf template-arctictut.tgz -C $(DIR)/lib/tpl/
+	ln -sf ../../../images/fileicons/pdf.png $(DIR)/lib/tpl/arctictut/images/tool-pdf.png
+	tar xzf template-vector.tgz -C $(DIR)/lib/tpl/
 	tar xzf plugin-include.tgz -C $(DIR)/lib/plugins/
+	tar xzf plugin-dw2pdf.tgz -C $(DIR)/lib/plugins/
+	tar xzf plugin-bookcreator.tgz -C $(DIR)/lib/plugins/
 	tar xf formular.tar -C $(DIR)/lib/plugins/
 
 	for p in patches/*.patch ; do \
@@ -21,7 +24,7 @@ build:
 install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/dokuwiki
 	cp preload.php $(DIR)/inc/
-	cp multisite.class.php $(DIR)/inc/auth/
+	cp -r authmultisite $(DIR)/lib/plugins/
 	touch $(DIR)/lib/plugins/plugin/disabled
 	touch $(DIR)/conf $(DIR)/data
 	rm -r $(DIR)/conf $(DIR)/data

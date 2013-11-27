@@ -55,20 +55,28 @@ $config_cascade = array(
         'default'   => array(DOKU_CONF.'wordblock.conf'),
         'local'     => array(DOKU_CONF.'wordblock.local.conf'),
     ),
-    'userstyle' => array(
-        'default' => DOKU_CONF.'userstyle.css',
-        'print'   => DOKU_CONF.'printstyle.css',
-        'feed'    => DOKU_CONF.'feedstyle.css',
-        'all'     => DOKU_CONF.'allstyle.css',
-    ),
-    'userscript' => array(
-        'default' => DOKU_CONF.'userscript.js'
-    ),
     'acl'       => array(
         'default'   => DOKU_CONF.'acl.auth.php',
     ),
     'plainauth.users' => array(
-        'default' => DOKU_CONF.'users.auth.php',
+        'default'   => DOKU_CONF.'users.auth.php',
+    ),
+    'plugins' => array( // needed since Angua
+        'default'   => array(DOKU_CONF.'plugins.php'),
+        'local'     => array(DOKU_CONF.'plugins.local.php'),
+        'protected' => array(
+            DOKU_CONF.'plugins.required.php',
+            DOKU_CONF.'plugins.protected.php',
+        ),
+    ),
+    'userstyle' => array(
+        'screen'  => DOKU_CONF.'userstyle.css',
+        'print'   => DOKU_CONF.'userprint.css',
+        'feed'    => DOKU_CONF.'userfeed.css',
+        'all'     => DOKU_CONF.'userall.css',
+    ),
+    'userscript' => array(
+        'default' => DOKU_CONF.'userscript.js'
     ),
 );
 
