@@ -182,7 +182,7 @@ for my $url ( @{$urls} ) {
 #    $htpasswd = "htpasswd2";
 #}
 #TestUtils::test_command({ cmd  => "/bin/su - $site -c '$htpasswd -b /omd/sites/$site/etc/htpasswd omduser test 2>/dev/null'"});
-TestUtils::test_command({ cmd => "echo 'omduser:\$1\$603408\$zWSJGl97FgNiugBoaG2qS/' >> /omd/sites/".$site."/etc/htpasswd"});
+TestUtils::test_command({ cmd => "/bin/sh -c \"echo 'omduser:bbTdyOM4g6r9Q' >> /omd/sites/".$site."/etc/htpasswd\""});
 
 # Now try to auth with that user (environment auth)
 $auth = 'OMD Monitoring Site '.$site.':omduser:test';
