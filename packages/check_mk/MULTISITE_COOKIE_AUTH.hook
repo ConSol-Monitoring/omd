@@ -31,15 +31,18 @@ case "$1" in
 </LocationMatch>
 EOF
 
-          cat > $NAGVIS_CFG <<EOF
+          if [ -d ${NAGVIS_CFG%/*} ]; then
+              cat > $NAGVIS_CFG <<EOF
 [global]
 logonmodule="LogonMultisite"
 logon_multisite_htpasswd="/omd/sites/$OMD_SITE/etc/htpasswd"
 logon_multisite_secret="/omd/sites/$OMD_SITE/etc/auth.secret"
 logon_multisite_serials="/omd/sites/$OMD_SITE/etc/auth.serials"
 EOF
+          fi
 
-          cat > $WIKI_CFG <<EOF
+          if [ -d ${WIKI_CFG%/*} ]; then
+              cat > $WIKI_CFG <<EOF
 <?php
 // Created by OMD hook MULTISITE_COOKIE_AUTH
 //
@@ -52,8 +55,10 @@ EOF
 \$conf['multisite']['htpasswd'] = '/omd/sites/$OMD_SITE/etc/htpasswd';
 ?>
 EOF
+          fi
 
-          cat > $PNP_CFG <<EOF
+          if [ -d ${PNP_CFG%/*} ]; then
+              cat > $PNP_CFG <<EOF
 <?php
 // Created by OMD hook MULTISITE_COOKIE_AUTH
 //
@@ -67,6 +72,8 @@ EOF
 \$conf['auth_multisite_login_url']  = '/$OMD_SITE/check_mk/login.py';
 ?>
 EOF
+          fi
+
        else
           [ -f $APACHE_CFG ] && rm $APACHE_CFG
           [ -f $NAGVIS_CFG ] && rm $NAGVIS_CFG
