@@ -1752,6 +1752,28 @@ def refresh_hooks(force_reload = False):
     config_save()
     config_reload_hooks()
 
+def call_scripts(hookname):
+    path = g_sitedir + "/lib/omd/scripts/" + hookname
+    putenv("OMD_ROOT", g_sitedir)
+    putenv("OMD_SITE", g_sitename)
+    for f in os.listdir(path):
+        if f[0] == '.':
+            continue
+        sys.stdout.write('Executing %s script "%s"...' % (hookname, f))
+        p = Popen('%s/%s' % (path, f), shell = True, stdout = PIPE, stderr = PIPE)
+        stdout = p.stdout.read()
+        stderr = p.stderr.read()
+        exitcode = p.wait()
+        if exitcode == 0:
+            sys.stdout.write(tty_ok + '\n')
+        else:
+            sys.stdout.write(tty_error + ' (RC: %d, use -v for details)\n' % exitcode)
+        if opt_verbose:
+            if stdout:
+                sys.stdout.write('Output: %s\n' % stdout)
+            if stderr:
+                sys.stdout.write('Errors: %s\n' % stderr)
+
 def call_hook(hookname, args):
     hook_file = g_sitedir + "/lib/omd/hooks/" + hookname
     argsstring = " ".join([ "'%s'" % arg for arg in args ])
@@ -2307,6 +2329,8 @@ def init_site(config_settings=None):
     # users. They could create files below tmp which would be shadowed
     # by the mount.
     create_tmpfs(g_sitename)
+
+    call_scripts('post-create')
 
 def main_rm(args, options={}):
     # omd rm is called as root but the init scripts need to be called as

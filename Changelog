@@ -2,6 +2,8 @@ This file documents the revision history for the Open Monitoring Distribution
 
 1.10
           - omd: More friendly error messages when init scripts do not exist
+          - omd: Added option to execute scripts during site creation by putting
+            files to ~/lib/omd/scripts/post-create
           - python modules: added pysnmp and pyasn1 modules
           - rrdtool: Also deliver python bindings
           - rrdcached is now logging to ~/var/log/rrdcached.log
