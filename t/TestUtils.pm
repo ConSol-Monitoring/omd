@@ -231,7 +231,7 @@ sub file_contains {
 
 =cut
 sub create_test_site {
-    my $site = "testsite";
+    my $site = $_[0] || "testsite";
     if(test_command({ cmd => TestUtils::get_omd_bin()." create $site" })) {
         return $site;
     }
