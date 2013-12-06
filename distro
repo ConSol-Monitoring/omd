@@ -68,6 +68,10 @@ then
     then
         echo "REDHAT${SEP}6.4"
         exit 0
+    elif [ "${VERSION:0:43}" = "Red Hat Enterprise Linux Server release 6.5" ]
+    then
+        echo "REDHAT${SEP}6.5"
+        exit 0
     fi
 fi
 
