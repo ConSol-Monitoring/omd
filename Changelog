@@ -13,7 +13,7 @@ This file documents the revision history for the Open Monitoring Distribution
             logrotate (like e.g. the nagios archive). Is callec automatically
             every hour when the OMD crontab is enabled. This can be changed by
             editing the cron config etc/cron.d/diskspace
-          - Thruk: Update to 1.80-2
+          - Thruk: Update to 1.80-3
           - Mod-Gearman: Update 1.4.14
           - Nagios: Init script kills whole process groups during "stop"
           - check_webinject: Update to 1.86
