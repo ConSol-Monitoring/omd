@@ -27,6 +27,7 @@ This file documents the revision history for the Open Monitoring Distribution
           - Added build support on Ubuntu 13.10 (Saucy Salamander)
           - Check_MK/MK Livestatus: new version 1.2.2p3
           - NagVis: Update to 1.8b1
+          - Nagios Plugins: Update to 1.5
 
 1.00     Jun 17 2013
           - Nagios: Update to 3.5.0
