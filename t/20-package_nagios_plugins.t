@@ -25,7 +25,7 @@ my $tests = [
   { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_icmp'",     exit => 3, like => '/check_icmp: No hosts to check/' },
   { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_fping'",    exit => 3, like => '/check_fping: Could not parse arguments/' },
   { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_snmp'",     exit => 3, like => '/check_snmp: Could not parse arguments/' },
-  { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_mysql'",    exit => 2, like => '/Can\'t connect to local MySQL server through socket/' },
+  { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_mysql'",    exit => 2, like => '/Can\'t connect to local MySQL server through socket|Access denied for user/' },
   { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_logfiles'", exit => 3, like => '/Usage: check_logfiles/' },
 ];
 for my $test (@{$tests}) {
