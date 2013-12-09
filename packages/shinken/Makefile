@@ -7,7 +7,7 @@ SHINKEN_URL=http://shinken-monitoring.org/pub/$(SHINKEN).tar.gz
 #
 # Python Remote Objects
 ifeq ($(DISTRO_NAME),CENTOS)
-  ifeq ($(DISTRO_VERSION),$(filter $(DISTRO_VERSION),5.4 5.5 5.6 5.7 5.8 5.9))
+  ifeq ($(DISTRO_VERSION),$(filter $(DISTRO_VERSION),5.4 5.5 5.6 5.7 5.8 5.9 5.10))
     PYRO=Pyro-3.12
     PYRO_FILE=$(PYRO).tar.gz
     PYRO_URL=https://pypi.python.org/packages/source/P/Pyro/$(PYRO_FILE)
@@ -29,7 +29,7 @@ MP_URL=http://pypi.python.org/packages/source/m/multiprocessing/$(MP_FILE)
 #
 # Simple JSON (not included in CentOS' python2.4)
 ifeq ($(DISTRO_NAME),CENTOS)
-  ifeq ($(DISTRO_VERSION),$(filter $(DISTRO_VERSION),5.4 5.5 5.6 5.7 5.8 5.9))
+  ifeq ($(DISTRO_VERSION),$(filter $(DISTRO_VERSION),5.4 5.5 5.6 5.7 5.8 5.9 5.10))
     SJSON=simplejson-2.1.2
   else
     SJSON=simplejson-3.3.0
@@ -65,7 +65,7 @@ MONGODB_URL=http://fastdl.mongodb.org/linux/$(MONGODB_FILE)
 #
 # Python bindings for MongoDB
 ifeq ($(DISTRO_NAME),CENTOS)
-  ifeq ($(DISTRO_VERSION),$(filter $(DISTRO_VERSION),5.4 5.5 5.6 5.7 5.8 5.9))
+  ifeq ($(DISTRO_VERSION),$(filter $(DISTRO_VERSION),5.4 5.5 5.6 5.7 5.8 5.9 5.10))
     PYMONGO=pymongo-2.1.1
   else
     PYMONGO=pymongo-2.5.2
@@ -125,7 +125,8 @@ build:
 		$(DISTRO_VERSION) = "5.6" -o\
 		$(DISTRO_VERSION) = "5.7" -o \
 		$(DISTRO_VERSION) = "5.8" -o \
-		$(DISTRO_VERSION) = "5.9" ]; then \
+		$(DISTRO_VERSION) = "5.9" -o \
+		$(DISTRO_VERSION) = "5.10" ]; then \
 		echo it is a centos 5; \
 		echo which has python 2.4; \
 		echo we need to remove the shinken webui; \
