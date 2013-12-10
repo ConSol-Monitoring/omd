@@ -25,9 +25,11 @@ install:
 	    export PYTHONPATH=$$PYTHONPATH:$(DESTDIR)$(OMD_ROOT)/lib/python ; \
 	    for M in $(shell ls dest); do \
 		cd $$M ; \
-		python setup.py install --home=$(DESTDIR)$(OMD_ROOT) --prefix='' ; \
-		if [ -n "$(DESTDIR)$(OMD_ROOT)" -a -d "$(DESTDIR)$(OMD_ROOT)/lib64" ] ; then rsync -avh $(DESTDIR)$(OMD_ROOT)/lib64/* $(DESTDIR)$(OMD_ROOT)/lib/ ; rm -rf $(DESTDIR)$(OMD_ROOT)/lib64 ; fi ;\
-		cd .. ; \
+	        python setup.py install --home=$(DESTDIR)$(OMD_ROOT) \
+	            --prefix='' \
+	            --install-platlib=$(DESTDIR)$(OMD_ROOT)/lib/python \
+	            --install-purelib=$(DESTDIR)$(OMD_ROOT)/lib/python ;
+	        cd .. ; \
 	    done
 
 skel:
