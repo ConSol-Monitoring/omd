@@ -13,7 +13,7 @@ This file documents the revision history for the Open Monitoring Distribution
             logrotate (like e.g. the nagios archive). Is callec automatically
             every hour when the OMD crontab is enabled. This can be changed by
             editing the cron config etc/cron.d/diskspace
-          - Thruk: Update to 1.80-2
+          - Thruk: Update to 1.80-3
           - Mod-Gearman: Update 1.4.14
           - Nagios: Init script kills whole process groups during "stop"
           - check_webinject: Update to 1.86
@@ -27,6 +27,8 @@ This file documents the revision history for the Open Monitoring Distribution
           - Added build support on Ubuntu 13.10 (Saucy Salamander)
           - Check_MK/MK Livestatus: new version 1.2.2p3
           - NagVis: Update to 1.8b1
+          - Nagios Plugins: Update to 1.5
+          - Support builds on CentOS/RedHat 5.10
 
 1.00     Jun 17 2013
           - Nagios: Update to 3.5.0

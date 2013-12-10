@@ -99,7 +99,7 @@ sub get_omd_bin {
   needs test hash
   {
     cmd     => command line to execute
-    exit    => expected exit code
+    exit    => expected exit code (set to undef to ignore exit code verification)
     like    => (list of) regular expressions which have to match stdout
     errlike => (list of) regular expressions which have to match stderr, default: empty
     sleep   => time to wait after executing the command
