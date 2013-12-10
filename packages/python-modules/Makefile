@@ -28,7 +28,7 @@ install:
 	        python setup.py install --home=$(DESTDIR)$(OMD_ROOT) \
 	            --prefix='' \
 	            --install-platlib=$(DESTDIR)$(OMD_ROOT)/lib/python \
-	            --install-purelib=$(DESTDIR)$(OMD_ROOT)/lib/python ;
+	            --install-purelib=$(DESTDIR)$(OMD_ROOT)/lib/python ; \
 	        cd .. ; \
 	    done
 
