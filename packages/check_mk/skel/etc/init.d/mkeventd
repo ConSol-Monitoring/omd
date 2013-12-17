@@ -35,7 +35,7 @@ case "$1" in
         echo OK
     ;;
     stop)
-	echo -n 'Stopping mkeventd...'
+        echo -n 'Stopping mkeventd...'
         if [ -z "$THE_PID" ] ; then
             echo 'Not running.'
         else
@@ -61,10 +61,10 @@ case "$1" in
         fi
     ;;
     restart)
-	$0 stop && $0 start
+        $0 stop && $0 start
     ;;
     reload)
-	echo -n 'Reloading mkeventd...'
+        echo -n 'Reloading mkeventd...'
         if [ -z "$THE_PID" ] ; then
             echo 'Not running.'
             exit 1
@@ -75,7 +75,7 @@ case "$1" in
     ;;
         
     status)
-	echo -n 'Checking status of mkeventd...'
+        echo -n 'Checking status of mkeventd...'
         if [ -z "$THE_PID" ] ; then
             echo "not running (PID file missing)"
             exit 1
@@ -106,6 +106,6 @@ case "$1" in
         fi
     ;;
     *)
-	echo "Usage: $0 {start|stop|restart|reload|status|flush}"
+        echo "Usage: $0 {start|stop|restart|reload|status|flush}"
     ;;
 esac
