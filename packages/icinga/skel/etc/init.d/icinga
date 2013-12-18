@@ -263,6 +263,7 @@ case "$1" in
         echo -n "Reloading icinga configuration (PID: $PID)... "
         if kill -HUP ${PID:-} >/dev/null 2>&1; then
             echo 'OK'
+            __init_hook $0 $1 post 0
             exit 0
         else
             $0 restart

@@ -3,6 +3,7 @@ This file documents the revision history for the Open Monitoring Distribution
 1.20
           - debian packge: Removed non existant URL from changelog
           - perl-modules: Added missing semikolon to fix syntax error
+          - omd: added nagios/icinga reload init hooks
 
 1.10     Dec 15 2013
           - omd: More friendly error messages when init scripts do not exist
