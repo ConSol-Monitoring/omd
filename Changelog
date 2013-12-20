@@ -8,6 +8,7 @@ This file documents the revision history for the Open Monitoring Distribution
             are no hanging livestatus connections started by web clients anymore.
           - debian packge: Removed non existant URL from changelog
           - perl-modules: Added missing semikolon to fix syntax error
+          - omd: added nagios/icinga reload init hooks
 
 1.10     Dec 15 2013
           - omd: More friendly error messages when init scripts do not exist
