@@ -10,6 +10,8 @@ if [ $(id -u) -ne 0 ]; then
     exit 1
 fi
 
+export PATH="$PATH:/usr/sbin"
+
 # do we install a package?
 if [ ! -z "$OMD_PACKAGE" ]; then
     echo "###################################################################"
@@ -29,7 +31,7 @@ if [ ! -z "$OMD_PACKAGE" ]; then
         apt-get -qq update && \
         DEBIAN_FRONTEND=noninteractive apt-get -q -y --no-install-recommends install $DEPENDS && \
         dpkg -i $OMD_PACKAGE && \
-        /usr/sbin/update-alternatives --set omd /omd/versions/$VERSION
+        update-alternatives --set omd /omd/versions/$VERSION
 
     # Centos
     elif [ -x /usr/bin/yum  ]; then
