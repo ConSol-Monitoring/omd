@@ -13,7 +13,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 2739 );
+plan( tests => 2774 );
 
 ##################################################
 # create our test site
@@ -186,9 +186,13 @@ my $shared_urls = [
   { url => '/thruk/cgi-bin/bp.cgi?action=remove&bp=1', follow => 1, skip_link_check => ['.cgi'] },
 ];
 
+my $cookie_urls = [
+  { url => '/thruk/cgi-bin/tac.cgi', follow => 1, like => '/Password/' },
+];
+
 
 # complete the url
-for my $url ( @{$urls}, @{$shared_urls}, @{$own_urls} ) {
+for my $url ( @{$urls}, @{$shared_urls}, @{$own_urls}, @{$cookie_urls} ) {
     $url->{'url'} = "http://localhost/".$site.$url->{'url'};
     $url->{'auth'}   = $auth;
     $url->{'unlike'} = [ '/internal server error/', '/"\/thruk\//', '/\'\/thruk\//' ];
@@ -254,6 +258,21 @@ for my $core (qw/nagios shinken icinga/) {
     `/bin/cat $log | /bin/grep -v 'cmd: COMMAND' | /bin/grep -v ' started ' | /bin/grep -v 'templates precompiled in' > $tlog 2>&1`;
     is(-s $tlog, 0, "log is empty") or diag(Dumper(`cat $log`));
     unlink($tlog);
+}
+
+##################################################
+# enable cookie auth
+TestUtils::test_command({ cmd => $omd_bin." stop $site" });
+TestUtils::test_command({ cmd => $omd_bin." config $site set CORE nagios" });
+TestUtils::test_command({ cmd => $omd_bin." config $site set APACHE_MODE own" });
+TestUtils::test_command({ cmd => $omd_bin." config $site set THRUK_COOKIE_AUTH on" });
+TestUtils::test_command({ cmd => $omd_bin." start $site", like => '/OK/' });
+TestUtils::test_command({ cmd => TestUtils::config('APACHE_INIT')." restart" });
+TestUtils::test_command({ cmd => $omd_bin." start $site thruk", like => '/OK/' });
+sleep(3);
+TestUtils::test_command({ cmd => $omd_bin." status $site apache", like => '/running/' });
+for my $url ( @{$cookie_urls} ) {
+    TestUtils::test_url($url);
 }
 
 ##################################################
