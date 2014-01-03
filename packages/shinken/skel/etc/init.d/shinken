@@ -361,7 +361,7 @@ do_stop() {
             if [ $running -gt 0 ]; then
                 echo "FAIL"
                 # stop means stop
-                for cpid in $(ps -aefw | grep $pid | grep "shinken-" | awk '{print $2}' | sort -g -r); do
+                for cpid in $(ps -aefw | grep $OMD_SITE | grep "shinken-$mod" | awk '{print $2}' | sort -g -r); do
                     kill -9 $cpid > /dev/null 2>&1
                     #printf "."
                 done
