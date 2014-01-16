@@ -1,6 +1,7 @@
 #!/bin/bash
 
-. "###ROOT###/.profile"
+[ -e ###ROOT###/.profile ] && . ###ROOT###/.profile
+[ -e ###ROOT###/.thruk   ] && . ###ROOT###/.thruk
 
 # set omd environment
 export CATALYST_CONFIG="###ROOT###/etc/thruk"
