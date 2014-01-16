@@ -12,7 +12,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-my $num_tests = 382;
+my $num_tests = 375;
 if($ENV{NAGVIS_DEVEL}) {
     $num_tests += 3;
 }
@@ -382,12 +382,6 @@ TestUtils::test_url(
 TestUtils::test_url(
     api_url({ url  => '/nagvis/server/core/ajax_handler.php?mod=Overview&act=getOverviewProperties',
               like => [ '/"showmaps":1,"showgeomap":0,"showmapthumbs":0,"showrotations":1/', ]})
-);
-
-# /nagvis/server/core/ajax_handler.php?mod=Overview&act=getOverviewMaps
-TestUtils::test_url(
-    api_url_list({ url  => '/nagvis/server/core/ajax_handler.php?mod=Overview&act=getOverviewMaps',
-                   like => [ '/"alias":/', ]})
 );
 
 # /nagvis/server/core/ajax_handler.php?mod=Overview&act=getOverviewRotations
