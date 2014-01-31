@@ -5,6 +5,8 @@
 # Mail starts here --->
 SUBJECT: *** [% NOTIFICATIONTYPE %] *** [% HOSTNAME %] is [% HOSTSTATE %]
 TO: [% CONTACTEMAIL %]
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
 #FROM: omd@domain.com
 #REPLY-TO: support@domain.com
 
