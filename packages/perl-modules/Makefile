@@ -287,6 +287,7 @@ MODULES = \
           MooseX-Role-Parameterized-1.00.tar.gz \
           MooseX-SemiAffordanceAccessor-0.09.tar.gz \
           Nagios-Plugin-0.36.tar.gz \
+          Monitoring-Plugin-0.37.tar.gz \
           String-RewritePrefix-0.006.tar.gz \
           Text-Flow-0.01.tar.gz \
           namespace-clean-0.24.tar.gz \
