@@ -120,22 +120,32 @@ The following options can be used:
 \fB--no-init\fP Omits the population of the site's home directory and the integration into 
 the system Apache (/omd/apache/SITE.conf will be empty). 
 
+\fB--apache-reload\fP Issue a reaload of the apache process instead of the default restart
+
 .TP
-.B omd init SITE
+.B omd init [OPTIONS] SITE
 Initializes a site that has been created with \fBomd create --no-init\fP.
 This includes populating the site's home directory with the default
 configuration files and enabling the site (see \fBomd disable\fP). Afterwards
 the site is in the same state as after an \fBomd create\fP without \fB--no-init\fP.
 
+The following options can be used:
+
+\fB--apache-reload\fP Issue a reaload of the apache process instead of the default restart
+
 .TP
-.B omd [-f, --force] [--kill] rm         SITE             
+.B omd [-f, --force] rm [OPTIONS] SITE             
 Remove a site and all of its data. This includes deleting the
 directory \fB/omd/sites/\fPSITE and removing the system user
 and group of that site. This - of course - needs root permissions.
 
+The following options can be used:
+
 The option \fB--kill\fP will automatically kill all processes that
 use the temporary filesystem of the site before unmounting it.
 Otherwise the unmount and the removal of the site will fail.
+
+\fB--apache-reload\fP Issue a reaload of the apache process instead of the default restart
 
 .TP
 .B omd disable [--kill] SITE

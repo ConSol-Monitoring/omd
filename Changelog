@@ -10,7 +10,10 @@ This file documents the revision history for the Open Monitoring Distribution
           - perl-modules:
             - Added missing semikolon to fix syntax error
             - Added Monitoring-Plugin module
-          - omd: added nagios/icinga reload init hooks
+          - omd:
+            - Added --apache-reload flag to omd create/rm for executing a
+              reload of the system apache instead of a restart
+            - Added nagios/icinga reload init hooks
 
 1.10     Dec 15 2013
           - omd: More friendly error messages when init scripts do not exist

@@ -883,7 +883,7 @@ def delete_apache_hook(sitename):
 def reload_apache():
     sys.stdout.write("Reloading Apache...")
     sys.stdout.flush()
-    show_success(os.system("%s reload" % g_info["APACHE_CTL"]))
+    show_success(os.system("%s graceful" % g_info["APACHE_CTL"]))
 
 def restart_apache():
     if os.system("%s status >/dev/null 2>&1" % g_info["APACHE_INIT"]) >> 8 == 0:
@@ -2242,7 +2242,7 @@ def main_create(args, options={}):
         sys.stdout.write("Going to set AUTOSTART to off.\n")
 
     if not "no-init" in options:
-        init_site(config_settings)
+        init_site(config_settings, apache_reload = "apache-reload" in options)
         welcome_message()
 
     else:
@@ -2291,10 +2291,10 @@ def main_init(args, options):
 
 
     # Do the things that have been ommited on omd create --disabled
-    init_site()
+    init_site(apache_reload = "apache-reload" in options)
     welcome_message()
 
-def init_site(config_settings=None):
+def init_site(config_settings = None, apache_reload = False):
     # Create symbolic link to version
     create_version_symlink(g_sitename, OMD_VERSION)
 
@@ -2322,7 +2322,10 @@ def init_site(config_settings=None):
 
     # Create include-hook for Apache and reload apache
     create_apache_hook(g_sitename)
-    restart_apache()
+    if apache_reload:
+        reload_apache()
+    else:
+        restart_apache()
 
     # Mount and create contents of tmpfs. This must be done as normal
     # user. We also could do this at 'omd start', but this might confuse
@@ -2366,7 +2369,10 @@ def main_rm(args, options={}):
 
     # remove include-hook for Apache and tell apache
     delete_apache_hook(g_sitename)
-    restart_apache()
+    if "apache-reload" in options:
+        reload_apache()
+    else:
+        restart_apache()
 
 def create_site_dir(sitename):
     os.makedirs(site_dir(sitename))
@@ -2933,6 +2939,7 @@ commands = [
       ( "reuse", None, False, "do not create a site user, reuse existing one" ),
       ( "no-init",  "n",  False, "leave new site directory empty (a later omd init does this"),
       ( "no-autostart", "A", False, "set AUTOSTART to off (useful for test sites)"), 
+      ( "apache-reload",  False,  False, "Issue a reload of the system apache instead of a restart"),
     ],
     "Create a new site (-u UID, -g GID)",
 
@@ -2944,12 +2951,17 @@ commands = [
     "- Add tmpfs for the site to fstab and mount it"),
 
   ( "init",      True,  1, 1, False, "",       main_init,
-    [],
+    [
+      ( "apache-reload",  False,  False, "Issue a reload of the system apache instead of a restart"),
+    ],
     "Populate site directory with default files and enable the site", ""),
 
   ( "rm",        True,  1, 1, True, "",        main_rm,
-    [ ( "reuse", None, False, "assume --reuse on create, do not delete site user/group" ),
-      ( "kill", None, False, "kill processes of the site before deleting it" )],
+    [
+      ( "reuse", None, False, "assume --reuse on create, do not delete site user/group" ),
+      ( "kill", None, False, "kill processes of the site before deleting it" ),
+      ( "apache-reload",  False,  False, "Issue a reload of the system apache instead of a restart"),
+    ],
     "Remove a site (and its data)",
 
     "PLEASE NOTE: This action removes all configuration files\n"
