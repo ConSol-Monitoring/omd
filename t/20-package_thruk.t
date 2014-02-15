@@ -67,7 +67,7 @@ my $tests = [
 ];
 
 my $own_tests = [
-  { cmd => "/bin/su - $site -c './etc/init.d/thruk restart'", like => '/\(\d+\)\ OK/' },
+  { cmd => "/bin/su - $site -c './etc/init.d/thruk restart'", like => '/\([\d\ ]+\)\ OK/' },
 ];
 my $shared_tests = [
   { cmd => "/bin/su - $site -c './etc/init.d/thruk restart'", like => '/only available for apaches/', exit => 1 },
@@ -207,7 +207,8 @@ for my $core (qw/nagios shinken icinga/) {
     TestUtils::test_command({ cmd => TestUtils::config('APACHE_INIT')." restart" });
     TestUtils::test_command({ cmd => $omd_bin." start $site" }) or TestUtils::bail_out_clean("No need to test Thruk without proper startup");
     TestUtils::wait_for_file("/omd/sites/$site/tmp/run/live")   or TestUtils::bail_out_clean("No need to test Thruk without livestatus connection");
-    unlink('var/thruk/obj_retention.dat');
+    unlink("/omd/sites/$site/tmp/thruk/thruk.cache");
+    unlink("/omd/sites/$site/var/thruk/obj_retention.dat");
 
     TestUtils::test_command({ cmd => "/bin/su - $site -c './lib/nagios/plugins/check_http -H localhost -a omdadmin:omd -u /$site/thruk/cgi-bin/cmd.cgi -e 200 -P \"cmd_typ=7&cmd_mod=2&host=omd-$site&service=Dummy+Service&start_time=2010-11-06+09%3A46%3A02&force_check=on&btnSubmit=Commit\" -r \"Your command request was successfully submitted\"'", like => '/HTTP OK:/' });
     TestUtils::wait_for_file("/omd/sites/$site/var/pnp4nagios/perfdata/omd-$site/Dummy_Service_omd-dummy.rrd") or TestUtils::bail_out_clean("No need to test Thruk without working pnp");;
