@@ -15,6 +15,7 @@ This file documents the revision history for the Open Monitoring Distribution
               reload of the system apache instead of a restart
             - Added nagios/icinga reload init hooks
           - Check_MK/MK Livestatus: new version 1.2.4
+          - Dokuwiki: Fixed integration with multisite cookie authentication
 
 1.10     Dec 15 2013
           - omd: More friendly error messages when init scripts do not exist
