@@ -1,10 +1,13 @@
---- a/Makefile.PL	2013-08-14 01:00:08.000000000 +0200
-+++ b/Makefile.PL	2013-08-14 10:38:59.189061944 +0200
-@@ -189,7 +189,6 @@
+--- a/Makefile.PL	2014-01-26 20:07:29.007276745 +0100
++++ b/Makefile.PL	2014-01-26 22:01:14.419284326 +0100
+@@ -174,10 +174,6 @@
  
  tests_recursive;
  install_script glob('script/*.pl');
--auto_install;
+-eval {
+-    require CPAN;
+-};
+-auto_install unless $@;
  WriteAll;
  
  ##################################

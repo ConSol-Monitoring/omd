@@ -16,7 +16,7 @@ if(substr($_SERVER["SCRIPT_FILENAME"], 0, 4) == '/omd') {
 $config_cascade = array(
     'main' => array(
         'default'   => array(DOKU_CONF.'dokuwiki.php'),
-        'local'     => array(DOKU_CONF.'local.php'),
+        'local'     => array(DOKU_CONF.'local.php', DOKU_CONF.'cookie_auth.php'),
         'protected' => array(DOKU_CONF.'local.protected.php'),
     ),
     'acronyms'  => array(

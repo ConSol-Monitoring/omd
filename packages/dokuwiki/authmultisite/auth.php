@@ -91,7 +91,7 @@ class auth_plugin_authmultisite extends DokuWiki_Auth_Plugin {
             continue;
         }
       }
-      header('Location:../check_mk/login.py?_origtarget=' . $_SERVER['REQUEST_URI']);
+      header('Location:../check_mk/login.py?_origtarget=' . urlencode($_SERVER['REQUEST_URI']));
       return false;
   }
 

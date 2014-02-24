@@ -1,5 +1,5 @@
---- a/etc/thruk/thruk.conf	2013-10-03 01:00:07.000000000 +0200
-+++ b/etc/thruk/thruk.conf	2013-10-03 01:26:41.536551235 +0200
+--- a/etc/thruk/thruk.conf	2014-01-23 14:33:48.313763429 +0100
++++ b/etc/thruk/thruk.conf	2014-01-23 14:34:36.821784893 +0100
 @@ -13,7 +13,7 @@
  
  ######################################
@@ -25,12 +25,12 @@
  
  ######################################
  # change path to your host / service action icons. You may use relative paths
-@@ -77,11 +77,11 @@
+@@ -80,11 +80,11 @@
  
  ######################################
  # location of your cgi.cfg
 -cgi.cfg             = cgi.cfg
-+cgi.cfg             = ###ROOT###/etc/nagios/cgi.cfg
++cgi.cfg             = ###ROOT###/etc/thruk/cgi.cfg
  
  ######################################
  # use frames, can be useful for addons
@@ -39,7 +39,7 @@
  
  ######################################
  # use histograms, shows histogram links
-@@ -179,11 +179,11 @@
+@@ -182,11 +182,11 @@
  
  ######################################
  # temporary directory, used for template cache...
@@ -53,7 +53,7 @@
  
  ######################################
  # mode used when creating or saving files
-@@ -192,27 +192,27 @@
+@@ -200,27 +200,27 @@
  
  ######################################
  # server side includes
@@ -86,7 +86,7 @@
  
  ######################################
  # use paged data instead of all data in one huge page
-@@ -287,7 +287,7 @@
+@@ -295,7 +295,7 @@
  # Instead of using a general resource_file, you could define one file
  # per peer in your peer config.
  #
@@ -95,7 +95,7 @@
  
  # enable a performance bar inside the status/host list which
  # create a graph from the performance data of the plugin output. Available
-@@ -395,6 +395,7 @@
+@@ -403,6 +403,7 @@
  # check should be rescheduled instead of the passive check.
  # Have a look at the documentation for a detailed description.
  #command_reschedule_alias = servicename_or_commandname_pattern;agent_service_name
@@ -103,7 +103,7 @@
  
  ######################################
  # Time Format Settings
-@@ -445,23 +446,23 @@
+@@ -453,23 +454,23 @@
  # Specifiy a file which is then completly under the control of Thruk.
  # It will be used to store cronjobs, ex. for reports. The file has to
  # be writable by Thruk.
@@ -132,7 +132,7 @@
  
  # Set first day of week. Used in reports.
  # Sunday: 0
-@@ -518,8 +519,8 @@
+@@ -532,8 +533,8 @@
  # COOKIE AUTH
  # cookie auth requires additional webserver settings, see the documentation
  # for detailed instructions.
@@ -143,12 +143,12 @@
  cookie_auth_session_timeout       = 604800
  cookie_auth_session_cache_timeout = 5
  #cookie_auth_domain               = .domain.com
-@@ -563,42 +564,19 @@
+@@ -577,42 +578,19 @@
  ######################################
  # Backend Configuration, enter your backends here
  <Component Thruk::Backend>
 -#    <peer>
--#        name   = Local Nagios
+-#        name   = Local Naemon
 -#        type   = livestatus
 -#        hidden = 1             # make this backend hidden by default
 -#        groups = admins        # make this backend only visible to the admin group
@@ -157,13 +157,13 @@
 -#            resource_file = path_to_your/resource.cfg
 -#       </options>
 -#       <configtool>
--#            core_conf      = /etc/nagios/nagios.cfg
--#            obj_check_cmd  = /etc/init.d/nagios checkconfig
--#            obj_reload_cmd = /etc/init.d/nagios reload
+-#            core_conf      = /etc/naemon/naemon.cfg
+-#            obj_check_cmd  = /etc/init.d/naemon checkconfig
+-#            obj_reload_cmd = /etc/init.d/naemon reload
 -#       </configtool>
 -#    </peer>
 -#    <peer>
--#        name   = External Nagios
+-#        name   = External Naemon
 -#        type   = livestatus
 -#        <options>
 -#            peer    = 172.16.0.1:9999
@@ -199,7 +199,7 @@
  </Component>
  
  
-@@ -615,9 +593,9 @@
+@@ -629,9 +607,9 @@
  <Component Thruk::Plugin::ConfigTool>
      show_plugin_syntax_helper = 1
  
@@ -207,12 +207,12 @@
 -    cgi.cfg  = ./cgi.cfg
 -    #htpasswd = ./htpasswd
 +    thruk    = ###ROOT###/etc/thruk/thruk_local.conf
-+    cgi.cfg  = ###ROOT###/etc/nagios/cgi.cfg
++    cgi.cfg  = ###ROOT###/etc/thruk/cgi.cfg
 +    htpasswd = ###ROOT###/etc/htpasswd
  
      #pre_obj_save_cmd   =
      #post_obj_save_cmd  =
-@@ -650,7 +628,7 @@
+@@ -664,7 +642,7 @@
      #report_base_url=http://host.local/thruk/cgi-bin/
  
      # wkhtmltopdf is used to convert html pages into pdf
@@ -221,23 +221,29 @@
  
      # pnp export script is used to export pnp graphs into reports
      #pnp_export = /path/to/pnp_export.sh
-@@ -683,16 +661,16 @@
+@@ -700,21 +678,21 @@
  <Component Thruk::Plugin::BP>
      # Results will be send back by using the spool folder.
      # This folder should point to the 'check_result_path' of your core.
--    #spool_dir = /var/nagios/rw/check_results
+-    #spool_dir = /var/naemon/rw/check_results
 +    spool_dir = ###ROOT###/tmp/nagios/checkresults
  
+     # as alternative to the spool_dir, a livestatus connection can be used
+     # to send results to the core.
+-    #result_backend = sitename
++    #result_backend = ###SITE###
+ 
      # Save objects to this file. Content will be overwritten.
--    #objects_save_file = /etc/nagios/conf.d/thruk_bp_generated.cfg
+-    #objects_save_file = /etc/naemon/conf.d/thruk_bp_generated.cfg
 +    objects_save_file = ###ROOT###/etc/nagios/conf.d/thruk_bp_generated.cfg
  
      # User maintained file containing templates used for business process services.
--    #objects_templates_file = /etc/nagios/conf.d/thruk_bp_templates.cfg
-+    objects_templates_file = ###ROOT###/etc/nagios/conf.d/thruk_bp_templates.cfg
+-    #objects_templates_file = /etc/naemon/conf.d/thruk_templates.cfg
++    objects_templates_file = ###ROOT###/etc/nagios/conf.d/thruk_templates.cfg
  
-     # Command to apply changes to the objects_save_file
--    #objects_reload_cmd = /etc/init.d/nagios reload
+     # Command to apply changes to the objects_save_file. If no set and
+     # and result_backend is used, the restart will be triggered as external command.
+-    #objects_reload_cmd = /etc/init.d/naemon reload
 +    objects_reload_cmd = ###ROOT###/etc/init.d/core reload
  
      # hooks which will be executed before or after saving.
