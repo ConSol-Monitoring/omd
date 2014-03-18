@@ -338,7 +338,7 @@ sub test_url {
                 $lint->parse($page->{'content'});
                 my @errors = $lint->errors;
                 @errors = _diag_lint_errors_and_remove_some_exceptions($lint);
-                is( scalar @errors, 0, "No errors found in HTML" );
+                is( scalar @errors, 0, "No errors found in HTML (".$test->{'url'}.")" );
                 $lint->clear_errors();
             }
         }
@@ -472,6 +472,9 @@ sub read_config {
 sub wait_for_file {
     my $file    = shift;
     my $timeout = shift || 120;
+
+    my $testfile = glob($file);
+    $file = $testfile if defined $testfile;
 
     my $x = 0;
     if(-e $file) {
@@ -782,18 +785,17 @@ sub _diag_request {
     my $test  = shift;
     my $page  = shift;
 
+    diag(Dumper($page->{'response'}));
+
     $test->{'url'} =~ m/localhost\/(\w+)\//;
     my $site = $1;
     return unless defined $site;
 
     # check logfiles on apache errors
-    if(   $page->{'code'}    == 500
-       or $page->{'content'} =~ m/Internal Server Error/) {
-        _tail("apache logs:", "/omd/sites/$site/var/log/apache/error_log");
-        _tail_apache_logs();
-        _tail("thruk logs:", "/omd/sites/$site/var/log/thruk.log") if $test->{'url'} =~ m/\/thruk\//;
-    }
-    diag(Dumper($page->{'response'}));
+    _tail("apache logs:", "/omd/sites/$site/var/log/apache/error_log");
+    _tail_apache_logs();
+    _tail("thruk logs:", "/omd/sites/$site/var/log/thruk.log") if $test->{'url'} =~ m/\/thruk\//;
+
     return;
 }
 
