@@ -39,7 +39,6 @@ for my $tarball (glob("packages/perl-modules/src/*.gz packages/perl-modules/src/
 
     if($mod eq 'Package::DeprecationManager') { $version .= ' -deprecations => { blah => foo }'; }
     if($mod eq 'Filter::exec')                { $version .= " 'test'"; }
-    if($mod eq 'Term::ReadLine::Gnu')         { $mod      = 'Term::ReadLine; use Term::ReadLine::Gnu' }
     if($mod eq 'Module::Install')             { $mod = 'inc::'.$mod; }
     if($mod eq 'File::ChangeNotify')          { next; }
     if($mod eq 'UNIVERSAL::isa')              { next; }
@@ -48,6 +47,7 @@ for my $tarball (glob("packages/perl-modules/src/*.gz packages/perl-modules/src/
     if($mod eq 'DBD::Oracle')                 { next; }
     if($mod eq 'IO')                          { $version .= " qw/File/"; }    # Parameterless "use IO" deprecated at...
     if($mod =~ m/curl/imx)                    { next; } # broken
+    if($mod eq 'Term::ReadLine::Gnu')         { next; } # removed in ubuntu 10.04
 
     my $check = "use $mod";
     # Use with version doesnt work here, because of weird version numbers

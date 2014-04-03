@@ -35,6 +35,7 @@ my $x = 1;
 my $max = scalar @ARGV;
 for my $mod (@ARGV) {
     next if $mod =~ m/curl/mxi and $DISTRO =~ m/^CENTOS\ 5/mxi;
+    next if $mod =~ m/Term-ReadLine-Gnu/mxi and $DISTRO =~ m/^UBUNTU\ 10/mxi;
     BuildHelper::install_module($mod, $TARGET, $PERL, $verbose, $x, $max) || exit 1;
     $x++;
 }
