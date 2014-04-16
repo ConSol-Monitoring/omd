@@ -122,7 +122,7 @@ MODULES = \
           Sys-Syslog-0.33.tar.gz \
           Task-Weaken-1.04.tar.gz \
           Template-Toolkit-2.25.tar.gz \
-          Term-ReadLine-Gnu-1.20.tar.gz \
+          Term-ReadLine-Gnu-1.24.tar.gz \
           Term-ShellUI-0.92.tar.gz \
           Term-Size-0.207.tar.gz \
           TermReadKey-2.30.tar.gz \
