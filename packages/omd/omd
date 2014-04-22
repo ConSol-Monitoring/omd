@@ -2863,7 +2863,7 @@ def main_init_action(command, args, options={}):
 		sys.stdout.write("%sDoing '%s' on site %s:%s\n" % (tty_bold, command, site, tty_normal))
 	    sys.stdout.flush()
             exit_status = max(exit_status, os.system("%s %s %s %s %s" % 
-			(sys.argv[0], command, "bare" in options and "--bare" or "", site, " ".join(args))))
+			(sys.argv[0], command, "bare" in options and "--bare" or "", site, " ".join(args))) >> 8)
 	    if not bare:
 		sys.stdout.write("\n")
     else:
