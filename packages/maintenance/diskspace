@@ -192,7 +192,7 @@ read_config()
 
 if min_free_bytes is None:
     verbose('minimal free bytes (min_free_bytes) not configured. terminating.')
-    sys.exit(3)
+    sys.exit(0)
 
 try:
     main()
