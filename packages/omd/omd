@@ -391,6 +391,13 @@ def site_dir(sitename):
 def tmp_dir(sitename):
     return "/omd/sites/%s/tmp" % sitename
 
+def site_autostart(sitename):
+    global g_sitename, g_sitedir
+    g_sitename = sitename
+    g_sitedir  = site_dir(sitename)
+    config = config_read()
+    return config.get('CONFIG_AUTOSTART', 'on') == 'on'
+
 # The version of a site is solely determined by the
 # link ~SITE/version
 def site_version(sitename):
@@ -1680,11 +1687,11 @@ def check_status(sitename, display=True, daemon=None, bare=False):
                 (tty_bold + ovstate + tty_normal))
     return exit_code
 
-
-def config_load():
+def config_read():
+    config = {}
     confpath = g_sitedir + "/etc/omd/site.conf"
     if not os.path.exists(confpath):
-        return
+        return config
 
     for line in file(confpath):
         line = line.strip()
@@ -1693,6 +1700,16 @@ def config_load():
         var, value = line.split("=", 1)
         value = value.strip('"').strip("'")
         var = var.strip()
+
+        config[var] = value
+    return config
+
+def config_load():
+    config = config_read()
+    if not config:
+        return
+
+    for var, value in config.items():
         if not var.startswith("CONFIG_"):
             sys.stderr.write("Ignoring invalid variable %s.\n" % var)
         else:
@@ -2828,9 +2845,6 @@ def main_umount(args, options = {}):
 
 
 def main_init_action(command, args, options={}):
-    global g_sitename
-    global g_sitedir
-
     only_version = options.get("version")
     bare = "bare" in options
 
@@ -2849,10 +2863,7 @@ def main_init_action(command, args, options={}):
             # site user. And after setuid() we cannot return.
             if command in [ "start", "restart", "reload" ] or \
 		 ( "auto" in options and command == "status" ):
-                g_sitename = site
-                g_sitedir = site_dir(g_sitename)
-                config_load_hooks(True)
-                if not opt_force and g_hooks["AUTOSTART"]["value"] != "on":
+                if not opt_force and not site_autostart(site):
 		    if not bare:
 			sys.stdout.write("Ignoring site '%s': AUTOSTART != on\n" % site)
                     continue
@@ -2862,7 +2873,7 @@ def main_init_action(command, args, options={}):
 	    else:
 		sys.stdout.write("%sDoing '%s' on site %s:%s\n" % (tty_bold, command, site, tty_normal))
 	    sys.stdout.flush()
-            exit_status = max(exit_status, os.system("%s %s %s %s %s" % 
+            exit_status = max(exit_status, os.system("%s %s %s %s %s" %
 			(sys.argv[0], command, "bare" in options and "--bare" or "", site, " ".join(args))) >> 8)
 	    if not bare:
 		sys.stdout.write("\n")
