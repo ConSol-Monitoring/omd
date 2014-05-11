@@ -645,7 +645,12 @@ sub _request {
                                        );
     }
 
-    my $ua = LWP::UserAgent->new;
+    my $ua = LWP::UserAgent->new(
+        keep_alive   => 1,
+        max_redirect => 10,
+        timeout      => 30,
+        requests_redirectable => ['GET', 'POST'],
+    );
     $ua->timeout(30);
     $ua->env_proxy;
     $ua->cookie_jar($cookie_jar);

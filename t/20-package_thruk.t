@@ -13,7 +13,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 2774 );
+plan( tests => 2805 );
 
 ##################################################
 # create our test site
@@ -22,6 +22,7 @@ my $site    = TestUtils::create_test_site() or TestUtils::bail_out_clean("no fur
 my $auth    = 'OMD Monitoring Site '.$site.':omdadmin:omd';
 my $host    = "omd-".$site;
 my $service = "Dummy+Service";
+my $servicep= "Dummy Service";
 
 # create test host/service
 TestUtils::prepare_obj_config('t/data/omd/testconf1', '/omd/sites/'.$site.'/etc/nagios/conf.d', $site);
@@ -32,6 +33,13 @@ TestUtils::test_command({ cmd => "/usr/bin/env sed -i -e 's/^perfdata_file_proce
 # set thruk as default
 TestUtils::test_command({ cmd => $omd_bin." config $site set DEFAULT_GUI thruk" });
 TestUtils::test_command({ cmd => $omd_bin." start $site" });
+
+# set token for post requests
+push @INC, '/omd/sites/'.$site.'/share/thruk/lib';
+use_ok('Thruk::Utils::Cache');
+use_ok('Thruk::Config');
+set_test_user_token();
+
 
 my $reports = [
     {
@@ -160,34 +168,37 @@ my $urls = [
 
 # reporting
   { url => '/thruk/cgi-bin/reports2.cgi', like => '/Reporting/' },
-  { url => '/thruk/cgi-bin/reports2.cgi?action=save&report=9999&name=Service%20SLA%20Report%20for%20'.$host.'%20-%20'.$service.'&template=sla_service.tt&params.sla=95&params.timeperiod=last12months&params.host='.$host.'&params.service='.$service.'&params.breakdown=months&params.unavailable=critical&params.unavailable=unknown&params.decimals=2&params.graph_min_sla=90', like => '/success_message/' },
+  { url => '/thruk/cgi-bin/reports2.cgi', post => { 'action' => 'save', 'report' => '9999', 'name' => 'Service SLA Report for '.$host.' - '.$servicep, 'template' => 'sla_service.tt', 'params.sla' => 95, 'params.timeperiod' => 'last12months', 'params.host' => $host, 'params.service' => $servicep, 'params.breakdown' => 'months', 'params.unavailable' => ['critical', 'unknown' ], 'params.decimals' => 2, 'params.graph_min_sla' => 90 }, like => '/success_message/' },
   { url => '/thruk/cgi-bin/reports2.cgi?report=9999&action=update' },
   { url => '/thruk/cgi-bin/reports2.cgi', waitfor => 'reports2.cgi\?report=9999\&amp;refresh=0' },
   { url => '/thruk/cgi-bin/reports2.cgi?report=9999', like => [ '/%PDF-1.4/', '/%%EOF/' ] },
-  { url => '/thruk/cgi-bin/reports2.cgi?action=remove&report=9999', like => '/report removed/' },
+  { url => '/thruk/cgi-bin/reports2.cgi', post => { 'action' => 'remove', 'report' => 9999 }, like => '/report removed/' },
 
 # recurring downtimes
-  { url => '/thruk/cgi-bin/extinfo.cgi?type=6&recurring=save&target=host&host='.$host.'&comment=automatic+downtime&send_type_1=month&send_day_1=1&week_day_1=&send_hour_1=0&send_minute_1=0&duration=120&childoptions=0&nr=999', like => '/recurring downtime saved/' },
-  { url => '/thruk/cgi-bin/extinfo.cgi?type=6&target=host&recurring=remove&nr=999&host='.$host, like => '/recurring downtime removed/' },
+  { url => '/thruk/cgi-bin/extinfo.cgi', post => { 'type' => 6, 'recurring' => 'save', 'target' => 'host', 'host' => $host, 'comment' => 'automatic downtime', 'send_type_1' => 'month', 'send_day_1' => 1, 'week_day_1' => '', 'send_hour_1' => 0, 'send_minute_1' => 0, 'duration' => 120, 'childoptions' => 0, 'nr' => 999 }, like => '/recurring downtime saved/' },
+  { url => '/thruk/cgi-bin/extinfo.cgi', post => { 'type' => 6, 'target' => 'host', 'recurring' => 'remove', 'nr' => 999, 'host' => $host }, like => '/recurring downtime removed/' },
+
+# usercontent examples
+  { url => '/thruk/usercontent/backgrounds/world.png', like => '/PNG/' },
 ];
 
 my $own_urls = [
 # business process
   { url => '/thruk/cgi-bin/bp.cgi?action=new&bp_label=New Test Business Process', like => '/New Test Business Process/', skip_link_check => ['.cgi'] },
-  { url => '/thruk/cgi-bin/bp.cgi?action=commit&bp=1', follow => 1, like => '/New Test Business Process/', skip_link_check => ['.cgi'] },
+  { url => '/thruk/cgi-bin/bp.cgi', post => { 'action' => 'commit', 'bp' => 1 }, like => '/New Test Business Process/', skip_link_check => ['.cgi'] },
   { url => '/thruk/cgi-bin/status.cgi',             waitfor => 'New\ Test\ Business\ Process' },
-  { url => '/thruk/cgi-bin/bp.cgi?action=remove&bp=1', follow => 1, skip_link_check => ['.cgi'] },
+  { url => '/thruk/cgi-bin/bp.cgi', post => { 'action' => 'remove', 'bp' => 1 }, skip_link_check => ['.cgi'] },
 ];
 
 my $shared_urls = [
 # business process
   { url => '/thruk/cgi-bin/bp.cgi?action=new&bp_label=New Test Business Process', like => '/New Test Business Process/', skip_link_check => ['.cgi'] },
-  { url => '/thruk/cgi-bin/bp.cgi?action=commit&bp=1', follow => 1, like => '/New Test Business Process/', skip_link_check => ['.cgi'] },
-  { url => '/thruk/cgi-bin/bp.cgi?action=remove&bp=1', follow => 1, skip_link_check => ['.cgi'] },
+  { url => '/thruk/cgi-bin/bp.cgi', post => { 'action' => 'commit', 'bp' => 1 }, like => '/New Test Business Process/', skip_link_check => ['.cgi'] },
+  { url => '/thruk/cgi-bin/bp.cgi', post => { 'action' => 'remove', 'bp' => 1 }, skip_link_check => ['.cgi'] },
 ];
 
 my $cookie_urls = [
-  { url => '/thruk/cgi-bin/tac.cgi', follow => 1, like => '/Password/' },
+  { url => '/thruk/cgi-bin/tac.cgi', like => '/Password/', unlike => [ '/internal server error/'] },
 ];
 
 
@@ -195,7 +206,10 @@ my $cookie_urls = [
 for my $url ( @{$urls}, @{$shared_urls}, @{$own_urls}, @{$cookie_urls} ) {
     $url->{'url'} = "http://localhost/".$site.$url->{'url'};
     $url->{'auth'}   = $auth;
-    $url->{'unlike'} = [ '/internal server error/', '/"\/thruk\//', '/\'\/thruk\//' ];
+    $url->{'unlike'} = [ '/internal server error/', '/"\/thruk\//', '/\'\/thruk\//' ] unless defined $url->{'unlike'};
+    if($url->{'post'}) {
+        $url->{'post'}->{'token'} = 'test';
+    }
 }
 
 for my $core (qw/nagios shinken icinga/) {
@@ -210,7 +224,7 @@ for my $core (qw/nagios shinken icinga/) {
     unlink("/omd/sites/$site/tmp/thruk/thruk.cache");
     unlink("/omd/sites/$site/var/thruk/obj_retention.dat");
 
-    TestUtils::test_command({ cmd => "/bin/su - $site -c './lib/nagios/plugins/check_http -H localhost -a omdadmin:omd -u /$site/thruk/cgi-bin/cmd.cgi -e 200 -P \"cmd_typ=7&cmd_mod=2&host=omd-$site&service=Dummy+Service&start_time=2010-11-06+09%3A46%3A02&force_check=on&btnSubmit=Commit\" -r \"Your command request was successfully submitted\"'", like => '/HTTP OK:/' });
+    TestUtils::test_command({ cmd => "/bin/su - $site -c './bin/thruk -A omdadmin \"cmd.cgi?cmd_typ=7&cmd_mod=2&host=omd-$site&service=Dummy+Service&start_time=now&force_check=on&btnSubmit=Commit\" --local'", like => '/Command request successfully submitted/', errlike => '/cmd: COMMAND/' });
     TestUtils::wait_for_file("/omd/sites/$site/var/pnp4nagios/perfdata/omd-$site/Dummy_Service_omd-dummy.rrd") or TestUtils::bail_out_clean("No need to test Thruk without working pnp");;
 
     for my $test (@{$tests}) {
@@ -280,3 +294,18 @@ for my $url ( @{$cookie_urls} ) {
 # cleanup test site
 TestUtils::test_command({ cmd => TestUtils::config('APACHE_INIT')." restart" });
 TestUtils::remove_test_site($site);
+
+
+##################################################
+sub set_test_user_token {
+    my $file = '/omd/sites/'.$site.'/var/thruk/token';
+    local $ENV{'CATALYST_CONFIG'} = '/omd/sites/'.$site.'/etc/thruk/';
+    my $config = Thruk::Config::get_config();
+    my $store  = Thruk::Utils::Cache->new($file);
+    my $tokens = $store->get('token');
+    $tokens->{'omdadmin'} = { token => 'test', time => time() };
+    $store->set('token', $tokens);
+    `chown $site:$site $file`;
+    ok(-s $file, $file." exists") or TestUtils::bail_out_clean("no further testing without token");
+    return;
+}
