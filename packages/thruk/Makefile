@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 NAME     = Thruk
-VERSION  = 1.84
+VERSION  = 1.84-2
 DIR      = $(NAME)-$(VERSION)
 PERLARCH = $(shell $(PERL) -e 'use Config; print $$Config{archname}')
 
@@ -58,6 +58,8 @@ skel:
 	    ( cd $(SKEL) ; patch -p1 -b ) < $$p || exit 1; \
 	done
 	find $(SKEL) -name \*.orig -exec rm {} \;
+	mkdir -p $(SKEL)/etc/thruk/bp/
+	cp $(DIR)/examples/bp_functions.pm $(SKEL)/etc/thruk/bp/
 
 clean:
 	rm -rf $(DIR)
