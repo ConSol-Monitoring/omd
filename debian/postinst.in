@@ -80,7 +80,7 @@ case "$1" in
       touch "/omd/apache/empty.conf"
 
       # -- enable conf include, when available
-      test -x /usr/sbin/a2enconf && a2enconf zzz_omd
+      ! test -x /usr/sbin/a2enconf || a2enconf zzz_omd
     fi
 
     # -- enable apache modules
