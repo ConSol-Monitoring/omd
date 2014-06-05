@@ -28,7 +28,7 @@ MODULES = \
           Crypt-Blowfish_PP-1.12.tar.gz \
           Crypt-RC4-2.02.tar.gz \
           Crypt-Rijndael-1.11.tar.gz \
-          DBI-1.628.tar.gz \
+          DBI-1.631.tar.gz \
           Data-Dump-1.22.tar.gz \
           Data-Dumper-2.145.tar.gz \
           Devel-PPPort-3.21.tar.gz \
