@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 NAME = check_logfiles
-VERSION = 3.6.1
+VERSION = 3.6.2.1
 DIR = $(NAME)-$(VERSION)
 
 .PHONY: skel
@@ -13,6 +13,9 @@ CONFIGUREOPTS = ""
 
 build:
 	tar xzf $(DIR).tar.gz
+	for i in configure.ac aclocal.m4 configure Makefile.am Makefile.in ; do \
+	  test -f $(DIR)/$$i && touch $(DIR)/$$i ; \
+	done
 	cd $(DIR) ; ./configure $(CONFIGUREOPTS)
 	$(MAKE) -C $(DIR)
 

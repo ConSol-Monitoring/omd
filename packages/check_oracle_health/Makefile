@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 NAME = check_oracle_health
-VERSION = 1.9.3.7
+VERSION = 1.9.4
 DIR = $(NAME)-$(VERSION)
 
 .PHONY: skel
@@ -13,6 +13,9 @@ CONFIGUREOPTS = ""
 
 build:
 	tar xzf $(DIR).tar.gz
+	for i in configure.ac aclocal.m4 configure Makefile.am Makefile.in ; do \
+	  test -f $(DIR)/$$i && touch $(DIR)/$$i ; \
+	done
 	cd $(DIR) ; ./configure $(CONFIGUREOPTS)
 	$(MAKE) -C $(DIR)
 
