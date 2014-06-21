@@ -23,6 +23,8 @@ This file documents the revision history for the Open Monitoring Distribution
           - Icinga: Update to 1.11.4
           - Dokuwiki: Fixed integration with multisite cookie authentication
           - Added build support for Ubuntu 14.04
+          - New command lc for sending a core command via Livestatus, e.g.
+            lc ENABLE_NOTIFICATIONS
 
 1.10     Dec 15 2013
           - omd: More friendly error messages when init scripts do not exist
