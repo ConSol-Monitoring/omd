@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 NAME = mk-livestatus
-VERSION = 1.2.4
+VERSION = 1.2.4p4
 DIR = $(NAME)-$(VERSION)
 
 CONFIGUREOPTS = \
