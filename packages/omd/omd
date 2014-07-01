@@ -2850,7 +2850,7 @@ def main_init_action(command, args, options={}):
 
     # if no site is selected, all sites are affected
     if not g_sitename:
-        exit_status = 0
+        exit_states = []
         for site in all_sites():
             if only_version and site_version(site) != only_version:
                 continue
@@ -2873,10 +2873,20 @@ def main_init_action(command, args, options={}):
 	    else:
 		sys.stdout.write("%sDoing '%s' on site %s:%s\n" % (tty_bold, command, site, tty_normal))
 	    sys.stdout.flush()
-            exit_status = max(exit_status, os.system("%s %s %s %s %s" %
-			(sys.argv[0], command, "bare" in options and "--bare" or "", site, " ".join(args))) >> 8)
+            exit_states.append(os.system("%s %s %s %s %s" % (sys.argv[0], command,
+                                         "bare" in options and "--bare" or "", site, " ".join(args))) >> 8)
 	    if not bare:
 		sys.stdout.write("\n")
+
+        # Do not simply take the highest exit code from the single sites.
+        # We want to be able to output the fact that either none of the
+        # sites is running or just some of the sites. For this we transform
+        # the sites states 1 (not running) to 2 (partially running) if at least
+        # one other site has state 0 (running) or 2 (partially running).
+        if 1 in exit_states and (0 in exit_states or 2 in exit_states):
+            exit_status = 2 # not all sites running, but at least one
+        else:
+            exit_status = max(exit_states)
     else:
         exit_status = init_action(command, args, options)
     sys.exit(exit_status)

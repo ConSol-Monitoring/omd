@@ -15,6 +15,8 @@ This file documents the revision history for the Open Monitoring Distribution
               reload of the system apache instead of a restart
             - Added nagios/icinga reload init hooks
             - FIX: Providing correct exit codes when running "omd status"
+            - FIX: exit with 2 (partially running) when only some of the
+              sites are running or partially running using "omd status"
           - diskspace: Fixed error messages in syslog which were caused by
             exit codes of 3 when diskspace cleanup has not been configured
           - Check_MK/MK Livestatus: new version 1.2.4p4
