@@ -2704,9 +2704,9 @@ def walk_skel(root, handler, args, exclude_if_in = None, relbase = '.'):
                     # In case of non interactive mode just throw the exception
                     if opt_conflict == 'ask':
                         options = [
-                            ("retry",  "Retry the operation"),
-                            ("accept", "Continue with next files"),
-                            ("abort",  "Stop here and abort update!")
+                            ("retry",    "Retry the operation"),
+                            ("continue", "Continue with next files"),
+                            ("abort",    "Stop here and abort update!")
                         ]
                         choice = ask_user_choices(
                             'Problem occured',
