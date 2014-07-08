@@ -21,6 +21,12 @@ APACHE_FCGID_PATH=$(MODULE_DIR)/$(APACHE_FCGID_MODULE)
 CENTOS_WORKAROUND=0
 REPLACE_PHP_FCGI_BIN=$(PHP_FCGI_BIN)
 
+# Try to find the apxs binary
+APXS=/usr/sbin/apxs
+ifneq ("$(wildcard $(APXS))","")
+    APXS=apxs
+endif
+
 ifeq ($(DISTRO_NAME),CENTOS)
    CENTOS_WORKAROUND=1
 endif
@@ -85,7 +91,7 @@ modfcgid:
 	tar zxf $(FCGI_FILE).tar.gz
 	patch -p0 < ./patches/0001-fcgid_proc_unix.c.patch
 	patch -p0 < ./patches/0002-fcgid_pm_unix.c.patch
-	cd $(FCGI_FILE) && APXS=/usr/sbin/apxs ./configure.apxs
+	cd $(FCGI_FILE) && APXS=$(APXS) ./configure.apxs
 	$(MAKE) -C $(FCGI_FILE)
 
 modfcgid_install:
