@@ -23,7 +23,7 @@ REPLACE_PHP_FCGI_BIN=$(PHP_FCGI_BIN)
 
 # Try to find the apxs binary
 APXS=/usr/sbin/apxs
-ifneq ("$(wildcard $(APXS))","")
+ifeq ("$(wildcard $(APXS))","")
     APXS=apxs
 endif
 
