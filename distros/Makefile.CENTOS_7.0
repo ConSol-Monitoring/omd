@@ -27,7 +27,6 @@ BUILD_PACKAGES   += patch
 BUILD_PACKAGES   += php
 BUILD_PACKAGES   += python-devel
 BUILD_PACKAGES   += readline-devel
-BUILD_PACKAGES   += compat-readline5
 BUILD_PACKAGES   += rpm-build
 BUILD_PACKAGES   += samba-client
 BUILD_PACKAGES   += libuuid-devel
