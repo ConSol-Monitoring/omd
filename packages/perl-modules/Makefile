@@ -258,6 +258,7 @@ MODULES = \
           Package-DeprecationManager-0.13.tar.gz \
           Package-Stash-0.35.tar.gz \
           Params-Validate-1.08.tar.gz \
+          autodie-2.25.tar.gz \
           Perl-Critic-1.118.tar.gz \
           Perl-Critic-Deprecated-1.108.tar.gz \
           Perl-Critic-Dynamic-0.05.tar.gz \
