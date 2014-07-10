@@ -48,6 +48,7 @@ OS_PACKAGES    += graphviz
 OS_PACKAGES    += libapache2-mod-fcgid
 OS_PACKAGES    += libapache2-mod-proxy-html
 OS_PACKAGES    += apache2-mpm-prefork   # Multisite/mod_python crashes with mpm-worker!
+OS_PACKAGES    += apache2-utils # contains htpasswd2
 OS_PACKAGES    += libboost-program-options1.54.0
 OS_PACKAGES    += libboost-system1.54.0
 OS_PACKAGES    += libdbi1
