@@ -27,11 +27,16 @@ ifeq ("$(wildcard $(APXS))","")
     APXS=apxs
 endif
 
+VERSIONLT7 := $(shell expr $(DISTRO_VERSION) \<= 7)
 ifeq ($(DISTRO_NAME),CENTOS)
-   CENTOS_WORKAROUND=1
+  ifeq ($(VERSIONLT7), 1)
+    CENTOS_WORKAROUND=1
+  endif
 endif
 ifeq ($(DISTRO_NAME),REDHAT)
-  CENTOS_WORKAROUND=1
+  ifeq ($(VERSIONLT7), 1)
+    CENTOS_WORKAROUND=1
+  endif
 endif
 
 ifeq ($(CENTOS_WORKAROUND), 1)
