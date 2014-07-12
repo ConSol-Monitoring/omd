@@ -18,7 +18,7 @@ PACKAGES=perl-modules \
          mysql-omd \
          icinga \
          nagios \
-         nagios-plugins \
+         monitoring-plugins \
          nagvis \
          nrpe \
          nsca \

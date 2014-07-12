@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
-NAME = nagios-plugins
-VERSION = 1.5
+NAME = monitoring-plugins
+VERSION = 2.0
 DIR = $(NAME)-$(VERSION)
 
 CONFIGUREOPTS = \
