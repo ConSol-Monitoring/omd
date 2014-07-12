@@ -20,7 +20,7 @@ This file documents the revision history for the Open Monitoring Distribution
           - diskspace: Fixed error messages in syslog which were caused by
             exit codes of 3 when diskspace cleanup has not been configured
           - Check_MK/MK Livestatus: new version 1.2.4p5
-          - Thruk: Update to 1.84-4
+          - Thruk: Update to 1.84-5
           - PNP4Nagios: Update to 0.6.22
           - Icinga: Update to 1.11.4
           - Dokuwiki: Fixed integration with multisite cookie authentication
