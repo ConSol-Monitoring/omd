@@ -893,10 +893,10 @@ def reload_apache():
     show_success(os.system("%s graceful" % g_info["APACHE_CTL"]))
 
 def restart_apache():
-    if os.system("%s status >/dev/null 2>&1" % g_info["APACHE_INIT"]) >> 8 == 0:
+    if os.system("%s status >/dev/null 2>&1" % g_info["APACHE_CTL"]) >> 8 == 0:
         sys.stdout.write("Restarting Apache...")
         sys.stdout.flush()
-        show_success(os.system("%s restart >/dev/null" % g_info["APACHE_INIT"]))
+        show_success(os.system("%s restart >/dev/null" % g_info["APACHE_CTL"]))
 
 def replace_tags(content, replacements):
     for var, value in replacements.items():
