@@ -177,5 +177,5 @@ for my $core (qw/nagios/) {
 	}
 }
 
-TestUtils::test_command({ cmd => TestUtils::config('APACHE_INIT')." restart" });
+TestUtils::test_command({ cmd => TestUtils::config('APACHE_CTL')." restart" });
 TestUtils::remove_test_site($site);

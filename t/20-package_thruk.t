@@ -218,7 +218,7 @@ for my $core (qw/nagios shinken icinga/) {
     TestUtils::test_command({ cmd => $omd_bin." stop $site" });
     TestUtils::test_command({ cmd => $omd_bin." config $site set CORE $core" });
     TestUtils::test_command({ cmd => $omd_bin." config $site set APACHE_MODE own" });
-    TestUtils::test_command({ cmd => TestUtils::config('APACHE_INIT')." restart" });
+    TestUtils::test_command({ cmd => TestUtils::config('APACHE_CTL')." restart" });
     TestUtils::test_command({ cmd => $omd_bin." start $site" }) or TestUtils::bail_out_clean("No need to test Thruk without proper startup");
     TestUtils::wait_for_file("/omd/sites/$site/tmp/run/live")   or TestUtils::bail_out_clean("No need to test Thruk without livestatus connection");
     unlink("/omd/sites/$site/tmp/thruk/thruk.cache");
@@ -246,7 +246,7 @@ for my $core (qw/nagios shinken icinga/) {
     # switch webserver to shared mode
     TestUtils::test_command({ cmd => $omd_bin." stop $site" });
     TestUtils::test_command({ cmd => $omd_bin." config $site set APACHE_MODE shared" });
-    TestUtils::test_command({ cmd => TestUtils::config('APACHE_INIT')." restart" });
+    TestUtils::test_command({ cmd => TestUtils::config('APACHE_CTL')." restart" });
     TestUtils::test_command({ cmd => $omd_bin." start $site" });
 
     ##################################################
@@ -282,7 +282,7 @@ TestUtils::test_command({ cmd => $omd_bin." config $site set CORE nagios" });
 TestUtils::test_command({ cmd => $omd_bin." config $site set APACHE_MODE own" });
 TestUtils::test_command({ cmd => $omd_bin." config $site set THRUK_COOKIE_AUTH on" });
 TestUtils::test_command({ cmd => $omd_bin." start $site", like => '/OK/' });
-TestUtils::test_command({ cmd => TestUtils::config('APACHE_INIT')." restart" });
+TestUtils::test_command({ cmd => TestUtils::config('APACHE_CTL')." restart" });
 TestUtils::test_command({ cmd => $omd_bin." start $site thruk", like => '/OK/' });
 sleep(3);
 TestUtils::test_command({ cmd => $omd_bin." status $site apache", like => '/running/' });
@@ -292,7 +292,7 @@ for my $url ( @{$cookie_urls} ) {
 
 ##################################################
 # cleanup test site
-TestUtils::test_command({ cmd => TestUtils::config('APACHE_INIT')." restart" });
+TestUtils::test_command({ cmd => TestUtils::config('APACHE_CTL')." restart" });
 TestUtils::remove_test_site($site);
 
 

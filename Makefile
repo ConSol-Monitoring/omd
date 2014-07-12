@@ -50,7 +50,7 @@ DPKG_TOPDIR=$$(pwd)/dpkg.topdir
 SOURCE_TGZ=omd-$(OMD_VERSION).tar.gz
 BIN_TGZ=omd-bin-$(OMD_VERSION).tar.gz
 NEWSERIAL=$$(($(OMD_SERIAL) + 1))
-APACHE_NAME=$(notdir $(APACHE_INIT))
+APACHE_NAME=$(APACHE_INIT_NAME)
 
 .PHONY: install-global
 
