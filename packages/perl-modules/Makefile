@@ -6,6 +6,7 @@ DISTRO   = $(shell ../../distro)
 
 MODULES = \
           ExtUtils-MakeMaker-6.72.tar.gz \
+          autodie-2.25.tar.gz \
           Any-Moose-0.21.tar.gz \
           AppConfig-1.66.tar.gz \
           Attribute-Handlers-0.93.tar.gz \
@@ -258,7 +259,6 @@ MODULES = \
           Package-DeprecationManager-0.13.tar.gz \
           Package-Stash-0.35.tar.gz \
           Params-Validate-1.08.tar.gz \
-          autodie-2.25.tar.gz \
           Perl-Critic-1.118.tar.gz \
           Perl-Critic-Deprecated-1.108.tar.gz \
           Perl-Critic-Dynamic-0.05.tar.gz \
