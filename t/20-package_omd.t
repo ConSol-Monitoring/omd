@@ -42,7 +42,7 @@ for my $test (@{$tests}) {
 
 # switch webserver to shared mode
 TestUtils::test_command({ cmd => $omd_bin." config $site set APACHE_MODE shared" });
-TestUtils::test_command({ cmd => TestUtils::config('APACHE_CTL')." restart" });
+TestUtils::restart_system_apache();
 
 # then run tests again
 for my $test (@{$tests}) {

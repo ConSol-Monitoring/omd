@@ -842,6 +842,22 @@ sub _tail_apache_logs {
 
 ##################################################
 
+=head2 restart_system_apache
+
+  restart system apache
+
+=cut
+sub restart_system_apache {
+    my $name = TestUtils::config('APACHE_INIT_NAME');
+    my $init = TestUtils::config('INIT_CMD');
+    my $cmd  = $init;
+    $cmd     =~ s/\Q%(name)s\E/$name/mx;
+    $cmd     =~ s/\Q%(action)s\E/restart/mx;
+    TestUtils::test_command({ cmd => $cmd });
+}
+
+##################################################
+
 END {
     if(defined $omd_symlink_created and $omd_symlink_created == 1) {
         unlink('/omd');
