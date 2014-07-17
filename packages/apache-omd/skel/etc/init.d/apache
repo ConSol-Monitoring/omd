@@ -76,7 +76,7 @@ apache_wait_stop() {
 apache_wait_start() {
   if pidof_apache >/dev/null 2>&1; then
     echo -n '(already running)...'
-    return 1
+    return 0
   fi
 
   mkdir -p ###ROOT###/tmp/apache/run

@@ -25,7 +25,8 @@
 # - There are exceptions for the exit code handling:
 #   - When a service is already stopped and should be
 #     restarted/stopped, it should result in an exit code of 0.
-#   - FIXME: What if a service should be started and is already started?
+#   - When a service is already running and should be started
+#     this also should result in an exit code of 0.
 # - When a restart is requested and the program is still not running
 #   the script should only execute a start
 # - When a restart is requested and the program can not be stopped the
@@ -190,7 +191,7 @@ case "$1" in
          echo -n "Starting nagios..."
          if pidof_nagios >/dev/null 2>&1; then
              echo 'Already running.'
-             exit 1
+             exit 0
          fi
 
          [ "$CORE_NOVERIFY" ] || verify_config quiet || exit 1
