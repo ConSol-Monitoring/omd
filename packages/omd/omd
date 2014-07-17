@@ -1900,9 +1900,9 @@ def config_set(args):
 
 def config_set_all():
     for hookname, hook in g_hooks.items():
-        config_set_value(hookname, hook["value"])
+        config_set_value(hookname, hook["value"], save = False)
 
-def config_set_value(hookname, value):
+def config_set_value(hookname, value, save = True):
     hook = g_hooks.get(hookname)
 
     # Call hook with 'set'. If it outputs something, that will
@@ -1915,7 +1915,9 @@ def config_set_value(hookname, value):
         value = answer.strip()
 
     hook["value"] = value
-    config_save()
+
+    if save:
+        config_save()
 
 def config_usage():
     sys.stdout.write("""Usage of config command:
@@ -2337,7 +2339,7 @@ def init_site(config_settings = None, apache_reload = False):
     config_set_all() # execute 'set' functions with default values
     if config_settings:
         for hookname, value in config_settings.items():
-            config_set_value(hookname, value)
+            config_set_value(hookname, value, save = False)
     config_save()
 
     # Change the few files that config save as created as root
