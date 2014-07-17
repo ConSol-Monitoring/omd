@@ -23,7 +23,7 @@ This file documents the revision history for the Open Monitoring Distribution
           - diskspace: Fixed error messages in syslog which were caused by
             exit codes of 3 when diskspace cleanup has not been configured
           - Check_MK/MK Livestatus: new version 1.2.4p5
-          - Thruk: Update to 1.84-4
+          - Thruk: Update to 1.84-5
           - PNP4Nagios: Update to 0.6.22
           - Icinga: Update to 1.11.4
           - Dokuwiki: Fixed integration with multisite cookie authentication
@@ -31,6 +31,7 @@ This file documents the revision history for the Open Monitoring Distribution
           - Added build support for CentOS 7.0
           - New command lc for sending a core command via Livestatus, e.g.
             lc ENABLE_NOTIFICATIONS
+          - Updated Monitoring-Plugins to 2.0
 
 1.10     Dec 15 2013
           - omd: More friendly error messages when init scripts do not exist

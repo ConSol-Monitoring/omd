@@ -55,6 +55,12 @@ build: $(APACHE_MODULES)
 
 install: $(APACHE_MODULES_INSTALL)
 	# Install software below $(DESTDIR)$(OMD_ROOT)/{bin,lib,share}
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/omd
+	if [ $(APACHE_24_OR_NEWER) -eq 1 ]; then \
+		install -m 644 apache24.conf $(DESTDIR)$(OMD_ROOT)/share/omd/apache.conf; \
+	else \
+		install -m 644 apache.conf $(DESTDIR)$(OMD_ROOT)/share/omd/apache.conf; \
+	fi
 
 skel:
 	if [ $(CENTOS_WORKAROUND) -eq 1 ]; then \
