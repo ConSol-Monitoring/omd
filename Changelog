@@ -26,6 +26,7 @@ This file documents the revision history for the Open Monitoring Distribution
           - Thruk: Update to 1.84-5
           - PNP4Nagios: Update to 0.6.22
           - Icinga: Update to 1.11.4
+          - NagVis: Update to 1.8b5
           - Dokuwiki: Fixed integration with multisite cookie authentication
           - Added build support for Ubuntu 14.04
           - Added build support for CentOS 7.0
