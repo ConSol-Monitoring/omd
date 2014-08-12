@@ -1,10 +1,10 @@
 This file documents the revision history for the Open Monitoring Distribution
 
-1.20
+1.20     Aug 25 2014
           - apache: Changed order of apache daemon startup/stopping
             The webserver is now started after the monitoring core, but more
             important, it is now stopped after the core. This should reduce
-            the time needed to bring down all worker processes, since there 
+            the time needed to bring down all worker processes, since there
             are no hanging livestatus connections started by web clients anymore.
           - debian packge: Removed non existant URL from changelog
           - perl-modules:
