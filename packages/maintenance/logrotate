@@ -18,6 +18,10 @@ LOCAL_LOGROTATE=$OMD_ROOT/var/tmp/logrotate
 if [ ! -x $LOCAL_LOGROTATE ] || \
     [ $(stat --dereference --format "%s" $LOCAL_LOGROTATE) -ne \
          $(stat --dereference --format "%s" $SBIN_LOGROTATE) ]; then
+  DIR=$(dirname $LOCAL_LOGROTATE)
+  if [ ! -d $DIR ]; then
+    mkdir -p $DIR
+  fi
   cp -f $SBIN_LOGROTATE $LOCAL_LOGROTATE
 fi
 $LOCAL_LOGROTATE $@
