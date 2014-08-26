@@ -110,14 +110,14 @@ def page_welcome(req):
                               'well in large installations.'),
                              ('check_mk', 'Check_MK Multisite',
                               'share/check_mk/web',
-                              'Check_MK Multisite is a fast and flexibile status GUI written '
+                              'Check_MK Multisite is a fast and flexible status GUI written '
                               'in Python. It supports user definable views and is able to '
                               'display the status of several sites in one combined view. It '
                               'uses MK Livestatus for getting the status data from the sites.'),
                              ('thruk', 'Thruk Monitoring Webinterface',
                               'share/thruk',
                               'Thruk is a complete rework of the classic interface '
-                              'in Perl. While maintainig the original look and feel it '
+                              'in Perl. While maintaining the original look and feel it '
                               'brings lots of improvements and new features. Just as Multisite '
                               'it uses MK Livestatus as backend and supports the visualization '
                               'of multiple sites.'),
