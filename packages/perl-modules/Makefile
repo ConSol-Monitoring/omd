@@ -97,7 +97,7 @@ MODULES = \
           Package-Stash-XS-0.28.tar.gz \
           PadWalker-1.96.tar.gz \
           Params-Check-0.38.tar.gz \
-          Parse-CPAN-Meta-1.4414.tar.gz \
+          Parse-CPAN-Meta-1.4405.tar.gz \
           PathTools-3.40.tar.gz \
           Perl-OSType-1.003.tar.gz \
           Perl-Tidy-20130806.tar.gz \
@@ -107,7 +107,7 @@ MODULES = \
           Pod-Spell-1.05.tar.gz \
           Readonly-1.03.tar.gz \
           Safe-Isa-1.000003.tar.gz \
-          Scalar-List-Utils-1.40.tar.gz \
+          Scalar-List-Utils-1.31.tar.gz \
           Set-Infinite-0.65.tar.gz \
           Set-Object-1.31.tar.gz \
           Spreadsheet-ParseExcel-0.59.tar.gz \
