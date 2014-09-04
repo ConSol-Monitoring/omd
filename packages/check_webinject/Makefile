@@ -8,6 +8,10 @@ DIR      = Webinject-$(VERSION)
 
 build:
 	tar xzf $(DIR).tar.gz
+	for p in patches/*.patch ; do \
+	    echo "applying $$p..." ; \
+	    ( cd $(DIR) ; patch -p1 ) < $$p || exit 1; \
+	done
 	export PERL5LIB=$(P5TMPDIST)/dest/lib/perl5; \
 	    cd $(DIR) && echo "" | $(PERL) Makefile.PL
 	cd $(DIR) && $(MAKE) check_webinject
