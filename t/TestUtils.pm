@@ -310,6 +310,7 @@ sub test_url {
 
     # matches output?
     if(defined $test->{'like'}) {
+        defined $page->{'content'} or _diag_request($test, $page);
         for my $expr (ref $test->{'like'} eq 'ARRAY' ? @{$test->{'like'}} : $test->{'like'} ) {
             like($page->{'content'}, $expr, "content like ".$expr);
         }
@@ -675,7 +676,7 @@ sub _request {
 
     $return->{'response'}     = $response;
     $return->{'code'}         = $response->code;
-    $return->{'content'}      = $response->decoded_content;
+    $return->{'content'}      = $response->decoded_content || $response->content;
     $return->{'content_type'} = $response->header('Content-Type');
 
     return($return);

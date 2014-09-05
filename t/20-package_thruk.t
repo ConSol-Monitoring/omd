@@ -13,7 +13,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 2805 );
+plan( tests => 2853 );
 
 ##################################################
 # create our test site
@@ -104,6 +104,7 @@ my $urls = [
   { url => "/thruk/side.html",       like => '/<title>Thruk<\/title>/' },
   { url => "",                       like => '/<title>Thruk<\/title>/' },
   { url => "/thruk/index.html",      like => '/<title>Thruk<\/title>/' },
+  { url => "/thruk/startup.html",    like => '/<title>Thruk Monitoring Webinterface<\/title>/' },
   { url => "/thruk/docs/index.html", like => '/<title>Documentation<\/title>/' },
   { url => "/thruk/main.html",       like => '/<title>Thruk Monitoring Webinterface<\/title>/' },
 
