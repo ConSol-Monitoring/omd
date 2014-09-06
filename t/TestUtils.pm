@@ -640,7 +640,7 @@ sub _request {
     our $cookie_jar;
 
     if(!defined $cookie_jar) {
-        my($fh, $cookie_file) = tempfile(undef, UNLINK => 1);
+        my($fh, $cookie_file) = tempfile('', UNLINK => 1);
         unlink ($cookie_file);
         $cookie_jar = HTTP::Cookies::Netscape->new(
                                        file     => $cookie_file,
