@@ -2,7 +2,7 @@
 export OMD_SITE=###SITE###
 export OMD_ROOT=###ROOT###
 
-PATH=~/local/bin:~/bin:~/local/lib/perl5/bin:$PATH
+PATH=$OMD_ROOT/local/bin:$OMD_ROOT/bin:$OMD_ROOT/local/lib/perl5/bin:$PATH
 export LD_LIBRARY_PATH=$OMD_ROOT/local/lib:$OMD_ROOT/lib
 
 # enable local perl env
@@ -15,14 +15,14 @@ export PYTHONPATH="$OMD_ROOT/lib/python:$OMD_ROOT/local/lib/python"
 export MAILRC="$OMD_ROOT/etc/mail.rc"
 
 
-if [ -f ~/etc/environment ]
+if [ -f $OMD_ROOT/etc/environment ]
 then
     eval $(egrep -v '^[[:space:]]*(#|$)' < ~/etc/environment | sed 's/^/export /')
 fi
 
 # Only load bashrc when in a bash shell and not loaded yet.
 # The load once is ensured by the variable $BASHRC.
-if [ "$BASH" -a -s ~/.bashrc -a -z "$BASHRC" ]; then
-    . ~/.bashrc
+if [ "$BASH" -a -s $OMD_ROOT/.bashrc -a -z "$BASHRC" ]; then
+    . $OMD_ROOT/.bashrc
 fi
 
