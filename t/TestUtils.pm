@@ -637,10 +637,10 @@ sub _request {
     my $data = shift;
 
     my $return = {};
-    our $cookie_jar;
+    our($fh, $cookie_jar, $cookie_file);
 
     if(!defined $cookie_jar) {
-        my($fh, $cookie_file) = tempfile('', UNLINK => 1);
+        ($fh, $cookie_file) = tempfile();
         unlink ($cookie_file);
         $cookie_jar = HTTP::Cookies::Netscape->new(
                                        file     => $cookie_file,
@@ -860,6 +860,8 @@ sub restart_system_apache {
 ##################################################
 
 END {
+    our($cookie_file);
+    unlink($cookie_file);
     if(defined $omd_symlink_created and $omd_symlink_created == 1) {
         unlink('/omd');
     }
