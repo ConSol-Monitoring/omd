@@ -861,7 +861,7 @@ sub restart_system_apache {
 
 END {
     our($cookie_file);
-    unlink($cookie_file);
+    unlink($cookie_file) if $cookie_file;
     if(defined $omd_symlink_created and $omd_symlink_created == 1) {
         unlink('/omd');
     }
