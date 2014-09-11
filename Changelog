@@ -1,6 +1,20 @@
 This file documents the revision history for the Open Monitoring Distribution
 
 1.30
+          - NagVis:
+            - Update to current nightly build
+            - Removed deprecated directory var/nagvis/userfiles. This was
+	      deprecated since version 0.52. During the update to 1.30, the
+	      directory and all its contents will be removed. This should be
+	      no problem for most users, because the directory is not used
+	      anymore since a long time.
+	      If you update from OMD 0.52 or below, you need to manually backup
+	      files from var/nagvis/userfiles and copy them to 
+	      local/share/nagvis/htdocs/userfiles after the update to make them
+	      available again.
+	      Note: If you decide to downgrade from this or a following
+	      version to version 0.52 or older, you will again need to care
+	      about these files manually.
 
 1.20     Aug 25 2014
           - apache: Changed order of apache daemon startup/stopping
