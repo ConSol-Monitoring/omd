@@ -64,22 +64,40 @@ TestUtils::test_command({ cmd => $omd_bin." config $site set DEFAULT_GUI welcome
 # b) htmlcgi="/nv/nagios/cgi-bin"
 TestUtils::test_command({ cmd  => "/bin/su - $site -c 'cat etc/nagvis/conf.d/urls.ini.php'",
                           like => [ '/hosturl="\[htmlcgi\]\/status.cgi\?host=\[host_name\]"/',
-                                    '/htmlcgi="\/'.$site.'\/nagios\/cgi-bin"/' ] }),
+                                    '/htmlcgi="\/'.$site.'\/nagios\/cgi-bin"/' ] });
 
-TestUtils::test_command({ cmd => $omd_bin." config $site set DEFAULT_GUI nagios" });
-TestUtils::test_command({ cmd  => "/bin/su - $site -c 'cat etc/nagvis/conf.d/urls.ini.php'",
-                          like => [ '/hosturl="\[htmlcgi\]\/status.cgi\?host=\[host_name\]"/',
-                                    '/htmlcgi="\/'.$site.'\/nagios\/cgi-bin"/' ] }),
+if (-e '/omd/sites/' . $site .  '/etc/nagios') {
+    TestUtils::test_command({ cmd => $omd_bin." config $site set DEFAULT_GUI nagios" });
+    TestUtils::test_command({ cmd  => "/bin/su - $site -c 'cat etc/nagvis/conf.d/urls.ini.php'",
+                              like => [ '/hosturl="\[htmlcgi\]\/status.cgi\?host=\[host_name\]"/',
+                                        '/htmlcgi="\/'.$site.'\/nagios\/cgi-bin"/' ] });
+} else {
+    # dummy tests to statisfy number of tests (did not know how to decrease number of them)
+    TestUtils::test_command({ cmd => "/bin/echo skip nagios url test"});
+    TestUtils::test_command({ cmd => "/bin/echo skip nagios url test"});
+}
 
-TestUtils::test_command({ cmd => $omd_bin." config $site set DEFAULT_GUI thruk" });
-TestUtils::test_command({ cmd  => "/bin/su - $site -c 'cat etc/nagvis/conf.d/urls.ini.php'",
-                          like => [ '/hosturl="\[htmlcgi\]\/status.cgi\?host=\[host_name\]"/',
-                                    '/htmlcgi="\/'.$site.'\/thruk\/cgi-bin"/' ] }),
+if (-e '/omd/sites/' . $site .  '/etc/thruk') {
+    TestUtils::test_command({ cmd => $omd_bin." config $site set DEFAULT_GUI thruk" });
+    TestUtils::test_command({ cmd  => "/bin/su - $site -c 'cat etc/nagvis/conf.d/urls.ini.php'",
+                              like => [ '/hosturl="\[htmlcgi\]\/status.cgi\?host=\[host_name\]"/',
+                                        '/htmlcgi="\/'.$site.'\/thruk\/cgi-bin"/' ] });
+} else {
+    # dummy tests to statisfy number of tests (did not know how to decrease number of them)
+    TestUtils::test_command({ cmd => "/bin/echo skip thruk url test"});
+    TestUtils::test_command({ cmd => "/bin/echo skup thruk url test"});
+}
 
-TestUtils::test_command({ cmd => $omd_bin." config $site set DEFAULT_GUI check_mk" });
-TestUtils::test_command({ cmd  => "/bin/su - $site -c 'cat etc/nagvis/conf.d/urls.ini.php'",
-                          like => [ '/hosturl="\[htmlcgi\]\/view\.py\?view_name=host&site=&host=\[host_name\]"/',
-                                    '/htmlcgi="\/'.$site.'\/check_mk"/' ] }),
+if (-e '/omd/sites/' . $site .  '/etc/check_mk') {
+    TestUtils::test_command({ cmd => $omd_bin." config $site set DEFAULT_GUI check_mk" });
+    TestUtils::test_command({ cmd  => "/bin/su - $site -c 'cat etc/nagvis/conf.d/urls.ini.php'",
+                              like => [ '/hosturl="\[htmlcgi\]\/view\.py\?view_name=host&site=&host=\[host_name\]"/',
+                                        '/htmlcgi="\/'.$site.'\/check_mk"/' ] });
+} else {
+    # dummy tests to statisfy number of tests (did not know how to decrease number of them)
+    TestUtils::test_command({ cmd => "/bin/echo skip check_mk url test"});
+    TestUtils::test_command({ cmd => "/bin/echo skup check_mk url test"});
+}
 
 
 ##################################################
