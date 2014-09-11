@@ -9,6 +9,7 @@ CONFIGUREOPTS = \
     --libexecdir=$(OMD_ROOT)/lib/nagios/plugins
 
 build:
+	rm -rf $(DIR)
 	tar xzf $(DIR).tar.gz
 	set -e ; for p in patches/*.dif ; do \
 	    echo "applying $$p..." ; \
