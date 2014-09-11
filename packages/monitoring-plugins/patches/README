@@ -1,7 +1,9 @@
-0001-fix-compile-error-on-raring.dif:
-    This patch fixes a compile error on Ubuntu 13.04 (raring).
-    The unpatched version complains about a missing gets. This
-    results from a over-ambitious check in some stdio.h replacement
-    that is created in compile time. The patch simply disables
-    this check.
+0001-check-icmp-allows-pl-of-101.dif
+    This patch allows to configure check_icmp in a way that a packet loss of
+    100% is not CRITICAL. Consider:
 
+    check_icmp 10.1.1.1 -t1 -w500,80% -c1000,101%
+
+    In this case the user would expect the outcome to be WARN, if 100%
+    packats are lost. An RTA is "nan" in this case. But check_icmp would
+    insist to make the outcome CRITICAL. The patch fixes this.

@@ -1,0 +1,31 @@
+--- monitoring-plugins-2.0/plugins-root/check_icmp.c.orig	2014-09-11 13:33:32.743945623 +0200
++++ monitoring-plugins-2.0/plugins-root/check_icmp.c	2014-09-11 13:43:59.488254263 +0200
+@@ -940,7 +940,9 @@
+ 			 * conspicuosly as missing entries in perfparse and cacti */
+ 			pl = 100;
+ 			rta = 0;
+-			status = STATE_CRITICAL;
++			if (pl >= crit.pl)
++                            status = STATE_CRITICAL;
++
+ 			/* up the down counter if not already counted */
+ 			if(!(host->flags & FLAG_LOST_CAUSE) && targets_alive) targets_down++;
+ 		}
+@@ -964,7 +966,7 @@
+ 		host = host->next;
+ 	}
+ 	/* this is inevitable */
+-	if(!targets_alive) status = STATE_CRITICAL;
++	if(!targets_alive && crit.pl <= 100) status = STATE_CRITICAL;
+ 	if(min_hosts_alive > -1) {
+ 		if(hosts_ok >= min_hosts_alive) status = STATE_OK;
+ 		else if((hosts_ok + hosts_warn) >= min_hosts_alive) status = STATE_WARNING;
+@@ -1246,7 +1248,7 @@
+ 	if(!th->rta) return -1;
+ 
+ 	if(th->rta > MAXTTL * 1000000) th->rta = MAXTTL * 1000000;
+-	if(th->pl > 100) th->pl = 100;
++	if(th->pl > 101) th->pl = 101;
+ 
+ 	return 0;
+ }
