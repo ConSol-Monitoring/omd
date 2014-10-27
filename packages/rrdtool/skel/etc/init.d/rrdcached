@@ -100,6 +100,17 @@ case "$1" in
 	echo "stopped"
 	exit 1
     ;;
+    flush)
+        echo -n 'Triggering global flush of rrdcached...'
+        result=$(echo 'FLUSHALL' | unixcat ~/tmp/run/rrdcached.sock)
+        if [ "$result" = "0 Started flush." ] ; then
+            echo "OK"
+            exit 0
+        else
+            echo Failed: $result
+            exit 1
+        fi
+    ;;
     *)
 	echo "Usage: $0 {start|stop|restart|reload|status}"
     ;;
