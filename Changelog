@@ -1,6 +1,23 @@
 This file documents the revision history for the Open Monitoring Distribution
 
 1.30
+          - omd:
+	    - Added backup/restore modes to backup and restore sites completely
+	      You can backup your sites and restore them with the same or a
+	      different name.
+	      
+	      Example:
+	        omd backup mysite /tmp/backup.tgz
+
+	      And for restore use:
+	        omd restore restored /tmp/backup.tgz
+
+	      You need to ensure you have the OMD version installed during
+	      restore, which the site was using during backup.
+
+	      You can also backup to stdout and restore from stdin which means
+	      you can stream a backup cross the network. This might not only
+	      be useful for backups, but also for migrations across servers.
           - NagVis:
             - Update to current nightly build
             - Removed deprecated directory var/nagvis/userfiles. This was
