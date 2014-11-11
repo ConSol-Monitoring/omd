@@ -2951,6 +2951,8 @@ def main_backup(args, options={}):
     if dest == '-':
         fh = sys.stdout
     else:
+        if dest[0] != '/':
+            dest = g_orig_wd + '/' + dest
         fh = file(dest, 'w')
 
     tar = tarfile.open(fileobj=fh, mode='w:gz')
@@ -3450,6 +3452,7 @@ read_info()
 # site user should always run with site user priviledges. That way
 # we are sure that new files and processes are created under the
 # site user and never as root.
+g_orig_wd = os.getcwd()
 if g_sitename and os.getuid() == 0 and not only_root:
     switch_to_site_user()
 
