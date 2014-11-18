@@ -360,6 +360,48 @@ The ramdisk can only be unmounted when a site is stopped and no processes are cu
 using it (have a directory in it as current directory are have an open file in it).
 If you specify \fB--kill\fP, then omd will kill processes using the filesystem using
 \fBfuser -k\fP.
+.TP
+.B omd backup [SITE] [-|TARBALL_PATH]
+Creates a backup tarball containing the whole site. When executing this command as root,
+you need to specify the name of the site, otherwise your current site will be used.
+
+You need to provide either a path where the tarball will be created or specify \fB-\fP
+for streaming the tarball to stdout.
+
+The site needs to be stopped to be able to create the backup. During the backup the
+ramdisk filesystem (tmpfs) of the site will be unmounted. It's contents are not saved
+in the tarball.
+.TP
+.B omd restore [SITE] [-|TARBALL_PATH]
+Restores a backup which was previously created with \fBomd backup\fP. This command is
+only available as root user at the moment.
+
+You need to provide either a path where the backup tarball is located or specify \fB-\fP
+for reading the tarball from stdin.
+
+When you specify no \fBSITE\fP the restore will be made with the original site name.
+If you like to restore the site with another name, you can specify the new name with
+by setting the \fBSITE\fP argument.
+
+You can either restore a backup to overwrite an existing site using the \fB--reuse\fP
+option. Together with the \fB--kill\fP option, the site will be stopped and cleaned up
+before applying the restore.
+
+Additionally the following options can be used:
+
+\fB--apache-reload\fP Issue a reaload of the apache process instead of the default restart.
+
+\fB-u UID\fP Force a specific user id for the new user
+
+\fB-g GID\fP Force a specific group id for the group of the new user
+
+\fB--conflict=HOW\fP non-interactively resolve merge conflicts. See
+section about \fBomd update\fP for details.
+
+\fB-t SIZE\fP By default the tmpfs of the site is created to allocate 50% of
+the available RAM at max. When providing the \fB-t\fP option together with the SIZE
+given as absolute value of e.g. \fB500M\fP or percentage value like \fB10%\fP the
+maximum size of the tmpfs can be changed.
 
 .SH SEE ALSO
 .BR http://www.omdistro.org
