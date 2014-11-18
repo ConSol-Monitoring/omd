@@ -2070,7 +2070,7 @@ def main_help(args=[], options={}):
     else:
         sys.stdout.write("Usage (called as site user):\n\n")
 
-    for command, only_root, needs_site, site_must_exist, confirm, synopsis, command_function, options, descr, confirm_text in commands:
+    for command, only_root, no_suid, needs_site, site_must_exist, confirm, synopsis, command_function, options, descr, confirm_text in commands:
         if only_root and not am_root:
             continue
         if am_root:
@@ -3069,7 +3069,9 @@ def main_restore(args, options={}):
 
 commands = [
 #  command       The id of the command
-#  only_root:    This option is only available when omd command is run as root
+#  only_root     This option is only available when omd command is run as root
+#  no_suid       The command is available for root and site-user, but no switch
+#                to the site user is performed before execution the mode function
 #  needs_site    When run as root:
 #                0: No site must be specified
 #                1: A site must be specified
@@ -3081,45 +3083,45 @@ commands = [
 #  options_spec  List of individual arguments for this command
 #  description   Text for the help of omd
 #  confirm_text  Confirm text to show before calling the handler function
-  ( "help",      False, 0, 0, False, "",        main_help,
+  ( "help",      False, False, 0, 0, False, "",        main_help,
     [],
     "Show general help",
     ""),
 
-  ( "setup",     True,  0, 0, True, "",        main_setup,
+  ( "setup",     True,  False, 0, 0, True, "",        main_setup,
     [],
     "Prepare operating system for OMD (installs packages)",
     "We will install missing packages from your operating system and setup the\n"
     "system apache daemon (add configuration files and modules needed by omd)\n"),
 
-  ( "uninstall", True,  0, 0, True, "",        main_uninstall,
+  ( "uninstall", True,  False, 0, 0, True, "",        main_uninstall,
     [],
     "Remove OMD and all sites!",
 
     "BE WARNED: You are about to remove everything your system\n"
     "           have ever known about omd."),
 
-  ( "setversion", True, 0, 0, False, "VERSION", main_setversion,
+  ( "setversion", True, False, 0, 0, False, "VERSION", main_setversion,
     [],
     "Sets the default version of OMD which will be used by new sites",
     ""),
 
-  ( "version",   False, 0, 0, False, "[SITE]",        main_version,
+  ( "version",   False, False, 0, 0, False, "[SITE]",        main_version,
     [("bare", "b", False, "output plain text optimized for parsing")],
     "Show version of OMD",
     ""),
 
-  ( "versions",  False, 0, 0, False, "",        main_versions,
+  ( "versions",  False, False, 0, 0, False, "",        main_versions,
     [("bare", "b", False, "output plain text optimized for parsing")],
     "List installed OMD versions",
     ""),
 
-  ( "sites",     False, 0, 0, False, "", main_sites,
+  ( "sites",     False, False, 0, 0, False, "", main_sites,
     [("bare", "b", False, "output plain text for easy parsing")],
     "Show list of sites",
     ""),
 
-  ( "create",    True,  1, 0, False, "",        main_create,
+  ( "create",    True, False, 1, 0, False, "",        main_create,
     [ ( "uid", "u", True, "create site user with UID ARG" ), 
       ( "gid", "g", True, "create site group with GID ARG" ),
       ( "reuse", None, False, "do not create a site user, reuse existing one" ),
@@ -3137,13 +3139,13 @@ commands = [
     "- Restart the system wide apache daemon\n"
     "- Add tmpfs for the site to fstab and mount it"),
 
-  ( "init",      True,  1, 1, False, "",       main_init,
+  ( "init",      True, False, 1, 1, False, "",       main_init,
     [
       ( "apache-reload",  False,  False, "Issue a reload of the system apache instead of a restart"),
     ],
     "Populate site directory with default files and enable the site", ""),
 
-  ( "rm",        True,  1, 1, True, "",        main_rm,
+  ( "rm",        True, False, 1, 1, True, "",        main_rm,
     [
       ( "reuse", None, False, "assume --reuse on create, do not delete site user/group" ),
       ( "kill", None, False, "kill processes of the site before deleting it" ),
@@ -3163,17 +3165,17 @@ commands = [
     "- Remove the site home directory\n"
     "- Restart the system wide apache daemon\n"),
 
-  ( "disable",   True,  1, 1, False, "", main_disable,
+  ( "disable",   True, False, 1, 1, False, "", main_disable,
     [( "kill", None, False, "kill processes using tmpfs before unmounting it" )],
     "Disable a site (stop it, unmount tmpfs, remove Apache hook)",
     "" ),
 
-  ( "enable",    True,  1, 1, False, "", main_enable,
+  ( "enable",    True, False, 1, 1, False, "", main_enable,
     [],
     "Enable a site (reenable a formerly disabled site)",
     "" ),
 
-  ( "mv",        True,  1, 1, False, "NEWNAME", lambda args, opts: main_mv_or_cp("mv", args, opts),
+  ( "mv",        True, False, 1, 1, False, "NEWNAME", lambda args, opts: main_mv_or_cp("mv", args, opts),
     [ ( "uid", "u", True, "create site user with UID ARG" ), 
       ( "gid", "g", True, "create site group with GID ARG" ),
       ( "reuse", None, False, "do not create a site user, reuse existing one" ),
@@ -3183,7 +3185,7 @@ commands = [
     "Rename a site",
     ""),
 
-  ( "cp",        True,  1, 1, False, "NEWNAME", lambda args, opts: main_mv_or_cp("cp", args, opts),
+  ( "cp",        True, False, 1, 1, False, "NEWNAME", lambda args, opts: main_mv_or_cp("cp", args, opts),
     [ ( "uid", "u", True, "create site user with UID ARG" ), 
       ( "gid", "g", True, "create site group with GID ARG" ),
       ( "reuse", None, False, "do not create a site user, reuse existing one" ),
@@ -3196,65 +3198,65 @@ commands = [
     "Make a copy of a site",
     ""),
 
-  ( "update",    False, 1, 1, False, "", main_update,
+  ( "update",    False, False, 1, 1, False, "", main_update,
     [ ( "conflict", None, True, "non-interactive conflict resolution. ARG is install, keepold, abort or ask") ],
     "Update site to other version of OMD",
     ""),
 
-  ( "start",     False, 2, 1, False, "[SERVICE]", lambda args, opts: main_init_action("start", args, opts),
+  ( "start",     False, False, 2, 1, False, "[SERVICE]", lambda args, opts: main_init_action("start", args, opts),
     [ ( "version", "V", True, "only start services having version ARG" ) ],
     "Start services of one or all sites",
     ""),
 
-  ( "stop",      False, 2, 1, False, "[SERVICE]", lambda args, opts: main_init_action("stop", args, opts),
+  ( "stop",      False, False, 2, 1, False, "[SERVICE]", lambda args, opts: main_init_action("stop", args, opts),
     [ ( "version", "V", True, "only stop sites having version ARG" ) ],
     "Stop services of site(s)",
     ""),
 
-  ( "restart",   False, 2, 1, False, "[SERVICE]", lambda args, opts: main_init_action("restart", args, opts),
+  ( "restart",   False, False, 2, 1, False, "[SERVICE]", lambda args, opts: main_init_action("restart", args, opts),
     [ ( "version", "V", True, "only restart sites having version ARG" ) ],
     "Restart services of site(s)",
     ""),
 
-  ( "reload",    False, 2, 1, False, "[SERVICE]", lambda args, opts: main_init_action("reload", args, opts),
+  ( "reload",    False, False, 2, 1, False, "[SERVICE]", lambda args, opts: main_init_action("reload", args, opts),
     [ ( "version", "V", True, "only reload sites having version ARG" ) ],
     "Reload services of site(s)",
     ""),
 
-  ( "status",    False, 2, 1, False, "[SERVICE]", lambda args, opts: main_init_action("status", args, opts),
+  ( "status",    False, False, 2, 1, False, "[SERVICE]", lambda args, opts: main_init_action("status", args, opts),
     [ ( "version", "V", True, "show only sites having version ARG" ),
       ( "auto", None, False, "show only sites with AUTOSTART = on"), 
       ( "bare", "b", False, "output plain format optimized for parsing") ],
     "Show status of services of site(s)",
     ""),
 
-  ( "config",    False, 1, 1, False, "...", main_config,
+  ( "config",    False, False, 1, 1, False, "...", main_config,
     [ ],
     "Show and set site configuration parameters",
     ""),
 
-  ( "diff",      False, 1, 1, False, "([RELBASE])", main_diff,
+  ( "diff",      False, False, 1, 1, False, "([RELBASE])", main_diff,
     [("bare", "b", False, "output plain diff format, no beautifying" )],
     "Shows differences compared to the original version files",
     ""),
 
-  ( "su",     True, 1, 1, False, "", main_su,
+  ( "su",     True, False, 1, 1, False, "", main_su,
     [ ],
     "Run a shell as a site-user",
     ""),
 
-  ( "umount",      False, 2, 1, False, "", main_umount,
+  ( "umount",      False, False, 2, 1, False, "", main_umount,
     [ ( "version", "V", True, "unmount only sites with version ARG" ),
       ( "kill", None, False, "kill processes using the tmpfs before unmounting it" ) ],
     "Umount ramdisk volumes of site(s)",
     ""),
 
-  ( "backup", False, 1, 1, False, "[-|ARCHIVE_PATH]", main_backup,
+  ( "backup", False, True, 1, 1, False, "SITE [-|ARCHIVE_PATH]", main_backup,
     [ ],
     "Create a backup tarball of a site, writing it to a file or stdout",
     ""),
 
-  ( "restore", True, 0, 0, False, "[SITE] [-|ARCHIVE_PATH]", main_restore,
+  ( "restore", True, False, 0, 0, False, "[SITE] [-|ARCHIVE_PATH]", main_restore,
     [ ( "uid", "u", True, "create site user with UID ARG" ),
       ( "gid", "g", True, "create site group with GID ARG" ),
       ( "reuse", None, False, "do not create a site user, reuse existing one" ),
@@ -3392,7 +3394,8 @@ if len(main_args) < 1:
 command = main_args[0]
 args = main_args[1:]
 found = False
-for c, only_root, needs_site, site_must_exist, confirm, argumentlist, command_function, option_spec, description, confirm_text in commands:
+for c, only_root, no_suid, needs_site, site_must_exist, confirm, argumentlist, \
+    command_function, option_spec, description, confirm_text in commands:
     if c == command:
         found = True
         break
@@ -3453,7 +3456,7 @@ read_info()
 # we are sure that new files and processes are created under the
 # site user and never as root.
 g_orig_wd = os.getcwd()
-if g_sitename and os.getuid() == 0 and not only_root:
+if not no_suid and g_sitename and os.getuid() == 0 and not only_root:
     switch_to_site_user()
 
 # Make sure environment is in a defined state
