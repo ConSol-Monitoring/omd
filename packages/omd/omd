@@ -2519,6 +2519,9 @@ def main_mv_or_cp(what, args, options={}):
             excludes.append("var/nagios/archive/")
             excludes.append("var/pnp4nagios/log/")
             excludes.append("var/pnp4nagios/perfdata.dump")
+            excludes.append("var/mkeventd/history/")
+            excludes.append("var/check_mk/core/history")
+            excludes.append("var/check_mk/core/archive/")
 
         for p in excludes:
             addopts += " --exclude '/%s'" % p
