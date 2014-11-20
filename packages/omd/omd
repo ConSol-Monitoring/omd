@@ -288,8 +288,8 @@ def ask_user_choices(title, message, choices):
     empty_line = " %s%-78s%s\n" % (tty_bgblue + tty_white, "", tty_normal)
     sys.stdout.write(empty_line)
     for choice, title in choices:
-        sys.stdout.write(" %s %s%s%s%-10s %-65s%s\n" % 
-                (tty_bgblue + tty_white, tty_bold, choice[0], 
+        sys.stdout.write(" %s %s%s%s%-10s %-65s%s\n" %
+                (tty_bgblue + tty_white, tty_bold, choice[0],
                  tty_normal + tty_bgblue + tty_white, choice[1:], title, tty_normal))
         for c in choice:
             if c.lower() not in chars:
@@ -589,7 +589,7 @@ def switch_to_site_user():
     gid = p.pw_gid
     os.chdir(p.pw_dir)
     os.setgid(gid)
-    # Darn. The site user might have been put into further groups. 
+    # Darn. The site user might have been put into further groups.
     # This is e.g. needed if you want to access the livestatus socket
     # from one site by another. We make use of the "id" command here.
     # If you know something better, that does not rely on an external
@@ -998,8 +998,8 @@ def patch_template_file(src, dst, old, new):
         try_chown(filename, new)
 
     # If old and new skeleton file are identical, then do nothing
-    old_orig_path = "%s.skel.%s" % (dst, old) 
-    new_orig_path = "%s.skel.%s" % (dst, new) 
+    old_orig_path = "%s.skel.%s" % (dst, old)
+    new_orig_path = "%s.skel.%s" % (dst, new)
     if file(old_orig_path).read() == file(new_orig_path).read():
         os.remove(old_orig_path)
         os.remove(new_orig_path)
@@ -1007,11 +1007,11 @@ def patch_template_file(src, dst, old, new):
 
     # Now create a patch from old to new and immediately apply on
     # existing - possibly user modified - file.
-    
+
     result = os.system("diff -u %s %s | %s/bin/patch --force --backup --forward --silent %s" %
             (old_orig_path, new_orig_path, site_dir(new), dst))
     try_chown(dst, new)
-    try_chown(dst + ".rej", new) 
+    try_chown(dst + ".rej", new)
     try_chown(dst + ".orig", new)
     if result == 0:
         sys.stdout.write(good + " Converted      %s\n" % src)
@@ -1036,7 +1036,7 @@ def patch_template_file(src, dst, old, new):
             elif opt_conflict == "keepold":
                 choice = "restore"
             else:
-                choice = ask_user_choices("Conflicts in " + src + "!", 
+                choice = ask_user_choices("Conflicts in " + src + "!",
                    "I've tried to merge your changes with the renaming of %s into %s.\n"
                    "Unfortunately there are conflicts with your changes. \n"
                    "You have the following options: " %
@@ -1057,7 +1057,7 @@ def patch_template_file(src, dst, old, new):
                 if changed == 0:
                     sys.stdout.write("Found no matching line.\n")
                 else:
-                    sys.stdout.write("Did brute-force replace, changed %s%d%s lines:\n" % 
+                    sys.stdout.write("Did brute-force replace, changed %s%d%s lines:\n" %
                       (tty_bold, changed, tty_normal))
                     os.system("diff -u %s.orig %s" % (dst, dst))
                     break
@@ -1920,7 +1920,7 @@ def config_set_value(hookname, value, save = True):
 
     # Call hook with 'set'. If it outputs something, that will
     # be our new value (i.e. hook disagrees with the new setting!)
-    commandline = "%s/lib/omd/hooks/%s set '%s'" % (g_sitedir, hookname, value) 
+    commandline = "%s/lib/omd/hooks/%s set '%s'" % (g_sitedir, hookname, value)
     if os.getuid() == 0:
         commandline = 'su - %s -c "%s"' % (g_sitename, commandline)
     answer = os.popen(commandline).read()
@@ -2305,15 +2305,15 @@ def welcome_message():
 
 def main_init(args, options):
     if not site_is_disabled(g_sitename):
-        bail_out("Cannot initialize site that is not disabled.\n" 
+        bail_out("Cannot initialize site that is not disabled.\n"
                  "Please call 'omd disable %s' first." % g_sitename)
 
     if not site_is_empty(g_sitename):
         if not opt_force:
-            bail_out("The site's home directory is not empty. Please add use\n" 
+            bail_out("The site's home directory is not empty. Please add use\n"
                      "'omd --force init %s' if you want to erase all data." % g_sitename)
 
-        sitedir = site_dir(g_sitename) 
+        sitedir = site_dir(g_sitename)
         # We must not delete the directory itself, just its contents.
         # The directory might be a separate filesystem. This is not quite
         # unlikely, since people using 'omd init' are doing this most times
@@ -2430,7 +2430,7 @@ def main_disable(args, options):
         sys.stderr.write("This site is already disabled.\n")
         sys.exit(0)
 
-    stop_if_not_stopped(g_sitename) 
+    stop_if_not_stopped(g_sitename)
     unmount_tmpfs(g_sitename, kill = "kill" in options)
     sys.stdout.write("Disabling Apache configuration for this site...")
     delete_apache_hook(g_sitename)
@@ -2529,7 +2529,7 @@ def main_mv_or_cp(what, args, options={}):
         if opt_verbose:
             addopts += " -v"
 
-        os.system("rsync -arx %s '%s/' '%s/'" % 
+        os.system("rsync -arx %s '%s/' '%s/'" %
                 (addopts, site_dir(g_sitename), site_dir(new)))
 
     # give new user all files
@@ -2637,7 +2637,7 @@ def diff_list(from_skelroot, g_sitedir, from_version, orig_path):
     else:
         if not rel_path:
             rel_path = "."
-        walk_skel(from_skelroot, print_diff, (from_skelroot, g_sitedir, 
+        walk_skel(from_skelroot, print_diff, (from_skelroot, g_sitedir,
                   from_version, old_perms), relbase = rel_path)
 
 
@@ -3137,11 +3137,11 @@ commands = [
     ""),
 
   ( "create",    True, False, 1, 0, False, "",        main_create,
-    [ ( "uid", "u", True, "create site user with UID ARG" ), 
+    [ ( "uid", "u", True, "create site user with UID ARG" ),
       ( "gid", "g", True, "create site group with GID ARG" ),
       ( "reuse", None, False, "do not create a site user, reuse existing one" ),
       ( "no-init",  "n",  False, "leave new site directory empty (a later omd init does this"),
-      ( "no-autostart", "A", False, "set AUTOSTART to off (useful for test sites)"), 
+      ( "no-autostart", "A", False, "set AUTOSTART to off (useful for test sites)"),
       ( "apache-reload",  False,  False, "Issue a reload of the system apache instead of a restart"),
       ( "tmpfs-size",  "t",  True, "specify the maximum size of the tmpfs (defaults to 50% of RAM)"),
     ],
@@ -3191,7 +3191,7 @@ commands = [
     "" ),
 
   ( "mv",        True, False, 1, 1, False, "NEWNAME", lambda args, opts: main_mv_or_cp("mv", args, opts),
-    [ ( "uid", "u", True, "create site user with UID ARG" ), 
+    [ ( "uid", "u", True, "create site user with UID ARG" ),
       ( "gid", "g", True, "create site group with GID ARG" ),
       ( "reuse", None, False, "do not create a site user, reuse existing one" ),
       ( "conflict", None, True, "non-interactive conflict resolution. ARG is install, keepold, abort or ask"),
@@ -3201,7 +3201,7 @@ commands = [
     ""),
 
   ( "cp",        True, False, 1, 1, False, "NEWNAME", lambda args, opts: main_mv_or_cp("cp", args, opts),
-    [ ( "uid", "u", True, "create site user with UID ARG" ), 
+    [ ( "uid", "u", True, "create site user with UID ARG" ),
       ( "gid", "g", True, "create site group with GID ARG" ),
       ( "reuse", None, False, "do not create a site user, reuse existing one" ),
       ( "no-rrds", None, False, "do not copy RRD files (performance data"),
@@ -3240,7 +3240,7 @@ commands = [
 
   ( "status",    False, False, 2, 1, False, "[SERVICE]", lambda args, opts: main_init_action("status", args, opts),
     [ ( "version", "V", True, "show only sites having version ARG" ),
-      ( "auto", None, False, "show only sites with AUTOSTART = on"), 
+      ( "auto", None, False, "show only sites with AUTOSTART = on"),
       ( "bare", "b", False, "output plain format optimized for parsing") ],
     "Show status of services of site(s)",
     ""),
