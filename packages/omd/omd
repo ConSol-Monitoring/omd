@@ -437,6 +437,13 @@ def site_is_empty(sitename):
             return False
     return True
 
+def find_processes_of_user(username):
+    try:
+        return os.popen("pgrep -u '%s'" % username).read().split()
+    except:
+        return []
+
+
 def groupdel(groupname):
     os.system("groupdel " + groupname)
 
@@ -2470,6 +2477,11 @@ def main_mv_or_cp(what, args, options={}):
     old = g_sitename
     if not site_is_stopped(old):
         bail_out("Cannot %s site '%s' while it is running." % (action, old))
+
+    pids = find_processes_of_user(old)
+    if pids:
+        bail_out("Cannot %s site '%s' while there are processes owned by %s.\n"
+                 "PIDs: %s" % (action, old, old, " ".join(pids)))
 
     if what == "mv":
         unmount_tmpfs(old, kill = "kill" in options)
