@@ -150,7 +150,7 @@ MODULES = \
           XSLoader-0.16.tar.gz \
           YAML-0.84.tar.gz \
           YAML-Syck-1.27.tar.gz \
-          YAML-Tiny-1.53.tar.gz \
+          YAML-Tiny-1.64.tar.gz \
           base-2.18.tar.gz \
           boolean-0.30.tar.gz \
           common-sense-3.72.tar.gz \
