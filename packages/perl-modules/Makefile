@@ -6,7 +6,6 @@ DISTRO   = $(shell ../../distro)
 
 MODULES = \
           ExtUtils-MakeMaker-6.72.tar.gz \
-          autodie-2.25.tar.gz \
           Any-Moose-0.21.tar.gz \
           AppConfig-1.66.tar.gz \
           Attribute-Handlers-0.93.tar.gz \
@@ -97,7 +96,6 @@ MODULES = \
           Package-Stash-XS-0.28.tar.gz \
           PadWalker-1.96.tar.gz \
           Params-Check-0.38.tar.gz \
-          Parse-CPAN-Meta-1.4414.tar.gz \
           PathTools-3.40.tar.gz \
           Perl-OSType-1.003.tar.gz \
           Perl-Tidy-20130806.tar.gz \
@@ -150,7 +148,7 @@ MODULES = \
           XSLoader-0.16.tar.gz \
           YAML-0.84.tar.gz \
           YAML-Syck-1.27.tar.gz \
-          YAML-Tiny-1.64.tar.gz \
+          autodie-2.25.tar.gz \
           base-2.18.tar.gz \
           boolean-0.30.tar.gz \
           common-sense-3.72.tar.gz \
@@ -191,6 +189,7 @@ MODULES = \
           Module-Metadata-1.000014.tar.gz \
           Object-Signature-1.07.tar.gz \
           PDF-Reuse-0.35.tar.gz \
+          Parse-CPAN-Meta-1.4414.tar.gz \
           Pod-Coverage-0.23.tar.gz \
           Template-Timer-1.00.tar.gz \
           Term-Clui-1.68.tar.gz \
@@ -231,6 +230,7 @@ MODULES = \
           Tie-IxHash-1.23.tar.gz \
           Tree-Simple-1.18.tar.gz \
           Tree-Simple-VisitorFactory-0.10.tar.gz \
+          YAML-Tiny-1.64.tar.gz \
           aliased-0.31.tar.gz \
           constant-1.27.tar.gz \
           Algorithm-C3-0.08.tar.gz \
@@ -280,6 +280,7 @@ MODULES = \
           DateTime-TimeZone-1.60.tar.gz \
           Getopt-Long-Descriptive-0.093.tar.gz \
           Log-Dispatch-2.41.tar.gz \
+          Monitoring-Plugin-0.37.tar.gz \
           Moose-2.1005.tar.gz \
           MooseX-Aliases-0.11.tar.gz \
           MooseX-AttributeHelpers-0.23.tar.gz \
@@ -288,7 +289,6 @@ MODULES = \
           MooseX-Role-Parameterized-1.00.tar.gz \
           MooseX-SemiAffordanceAccessor-0.09.tar.gz \
           Nagios-Plugin-0.36.tar.gz \
-          Monitoring-Plugin-0.37.tar.gz \
           String-RewritePrefix-0.006.tar.gz \
           Text-Flow-0.01.tar.gz \
           namespace-clean-0.24.tar.gz \
