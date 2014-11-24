@@ -10,7 +10,7 @@ for hook in *.hook; do
     sudo cp -v $hook /omd/versions/default/lib/omd/hooks/${hook%*.hook}
     sudo chmod +x /omd/versions/default/lib/omd/hooks/${hook%*.hook}
 done
-sudo mkdir /omd/versions/default/lib/omd/scripts/post-create
+sudo mkdir -p /omd/versions/default/lib/omd/scripts/post-create
 
 OLD_VERSION=$(sed -rn < /omd/versions/default/bin/omd 's/^OMD_VERSION = "(.*)"$/\1/p')
 echo $OLD_VERSION

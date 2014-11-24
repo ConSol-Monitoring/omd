@@ -116,6 +116,10 @@ then
     then
         echo "SLES$SEP${VERSION}"
         exit 0
+    elif [ "$VERSION" = 12 ]
+    then
+        echo "SLES$SEP${VERSION}"
+        exit 0
     elif [ "$VERSION" = 12.1 ]
     then
         echo "OPENSUSE$SEP${VERSION}"
