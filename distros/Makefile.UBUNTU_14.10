@@ -1,6 +1,5 @@
 DISTRO_CODE     = utopic
 BUILD_PACKAGES  =
-BUILD_PACKAGES += smbclient
 BUILD_PACKAGES += build-essential
 BUILD_PACKAGES += dpatch
 BUILD_PACKAGES += dnsutils
