@@ -97,7 +97,7 @@ MODULES = \
           Package-Stash-XS-0.28.tar.gz \
           PadWalker-1.96.tar.gz \
           Params-Check-0.38.tar.gz \
-          Parse-CPAN-Meta-1.4405.tar.gz \
+          Parse-CPAN-Meta-1.4414.tar.gz \
           PathTools-3.40.tar.gz \
           Perl-OSType-1.003.tar.gz \
           Perl-Tidy-20130806.tar.gz \
