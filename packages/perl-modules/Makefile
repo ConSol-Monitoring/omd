@@ -107,7 +107,7 @@ MODULES = \
           Pod-Spell-1.05.tar.gz \
           Readonly-1.03.tar.gz \
           Safe-Isa-1.000003.tar.gz \
-          Scalar-List-Utils-1.31.tar.gz \
+          Scalar-List-Utils-1.41.tar.gz \
           Set-Infinite-0.65.tar.gz \
           Set-Object-1.31.tar.gz \
           Spreadsheet-ParseExcel-0.59.tar.gz \
