@@ -163,6 +163,7 @@ MODULES = \
           Archive-Zip-1.30.tar.gz \
           Bit-Vector-7.3.tar.gz \
           CGI.pm-3.63.tar.gz \
+          CPAN-Meta-YAML-0.012.tar.gz \
           Cairo-1.103.tar.gz \
           Color-Scheme-1.05.tar.gz \
           DBD-Oracle-1.64.tar.gz \
