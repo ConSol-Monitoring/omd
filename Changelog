@@ -19,7 +19,7 @@ This file documents the revision history for the Open Monitoring Distribution
 	      you can stream a backup cross the network. This might not only
 	      be useful for backups, but also for migrations across servers.
           - NagVis:
-            - Update to current nightly build
+            - Update to version 1.8rc1
             - Removed deprecated directory var/nagvis/userfiles. This was
 	      deprecated since version 0.52. During the update to 1.30, the
 	      directory and all its contents will be removed. This should be
