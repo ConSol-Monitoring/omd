@@ -1,4 +1,3 @@
-var/log/check_mk 0775
 var/check_mk/web 0775
 var/check_mk/logwatch 0775
 var/check_mk/wato 0775

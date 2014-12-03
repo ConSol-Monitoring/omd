@@ -32,6 +32,7 @@ This file documents the revision history for the Open Monitoring Distribution
 	      Note: If you decide to downgrade from this or a following
 	      version to version 0.52 or older, you will again need to care
 	      about these files manually.
+          - Check_MK: moved log dir to var/log
           - Added build support for SLES 12
           - Added build support for CentOS 6.6
           - Added build support for Ubuntu 14.10
