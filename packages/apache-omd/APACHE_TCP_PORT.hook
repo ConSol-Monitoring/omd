@@ -21,7 +21,7 @@ fi
 port_is_used ()
 {
     local PORT=$1
-    ls /omd/sites/*/etc/omd/site.conf >/dev/null 2>&1 || return 1
+    ls /omd/sites/* >/dev/null || return 1
     for conf in /omd/sites/*/etc/omd/site.conf
     do
         [ $conf != /omd/sites/$OMD_SITE/etc/omd/site.conf ] || continue
