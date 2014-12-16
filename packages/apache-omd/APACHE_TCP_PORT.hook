@@ -21,10 +21,13 @@ fi
 port_is_used ()
 {
     local PORT=$1
-    ls /omd/sites/* >/dev/null || return 1
-    for conf in /omd/sites/*/etc/omd/site.conf
-    do
-        [ $conf != /omd/sites/$OMD_SITE/etc/omd/site.conf ] || continue
+    for S in $(ls /omd/sites); do
+        conf=/omd/sites/$S/etc/omd/site.conf
+        [ $S != $OMD_SITE ] || continue # skip current site
+        if ! ls $conf >/dev/null 2>&1; then
+            echo "ERROR: Failed to read config of site ${S}. APACHE_TCP_PORT will propably be allocated twice" >&2
+            continue
+        fi
         if grep -qx "CONFIG_APACHE_TCP_PORT='$PORT'" < $conf > /dev/null 2>&1 ; then
             return 0
         fi
