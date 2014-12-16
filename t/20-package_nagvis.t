@@ -12,7 +12,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-my $num_tests = 375;
+my $num_tests = 373;
 if($ENV{NAGVIS_DEVEL}) {
     $num_tests += 3;
 }
