@@ -35,8 +35,10 @@ case "$1" in
         ;;
 
     stop)
-	echo "Removing Crontab..."
-	$CRONTAB $CRONTAB_OPTS -r
+        echo -n "Removing Crontab..."
+        $CRONTAB $CRONTAB_OPTS -r || exit 0
+        echo OK
+        exit 0
         ;;
 
     restart|reload)
