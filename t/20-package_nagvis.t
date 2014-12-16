@@ -12,9 +12,23 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-my $num_tests = 373;
+my $sitename  = "testsite";
+
+my $num_tests = 375;
 if($ENV{NAGVIS_DEVEL}) {
     $num_tests += 3;
+}
+
+my $has_thruk = 1;
+if (! -e '/omd/sites/' . $sitename .  '/etc/thruk') {
+    $num_tests -= 8;
+    $has_thruk = 0;
+}
+
+my $has_cmk = 1;
+if (! -e '/omd/sites/' . $sitename .  '/etc/check_mk') {
+    $num_tests -= 8;
+    $has_cmk = 0;
 }
 
 plan(tests => $num_tests);
@@ -24,7 +38,7 @@ plan(tests => $num_tests);
 my $response;
 my $userId;
 my $omd_bin   = TestUtils::get_omd_bin();
-my $site      = TestUtils::create_test_site() or TestUtils::bail_out_clean("no further testing without site");
+my $site      = TestUtils::create_test_site($sitename) or TestUtils::bail_out_clean("no further testing without site");
 my $auth      = 'OMD Monitoring Site '.$site.':omdadmin:omd';
 my $orig_auth = $auth;
 
@@ -77,28 +91,19 @@ if (-e '/omd/sites/' . $site .  '/etc/nagios') {
     TestUtils::test_command({ cmd => "/bin/echo skip nagios url test"});
 }
 
-if (-e '/omd/sites/' . $site .  '/etc/thruk') {
+if ($has_thruk) {
     TestUtils::test_command({ cmd => $omd_bin." config $site set DEFAULT_GUI thruk" });
     TestUtils::test_command({ cmd  => "/bin/su - $site -c 'cat etc/nagvis/conf.d/urls.ini.php'",
                               like => [ '/hosturl="\[htmlcgi\]\/status.cgi\?host=\[host_name\]"/',
                                         '/htmlcgi="\/'.$site.'\/thruk\/cgi-bin"/' ] });
-} else {
-    # dummy tests to statisfy number of tests (did not know how to decrease number of them)
-    TestUtils::test_command({ cmd => "/bin/echo skip thruk url test"});
-    TestUtils::test_command({ cmd => "/bin/echo skup thruk url test"});
 }
 
-if (-e '/omd/sites/' . $site .  '/etc/check_mk') {
+if ($has_cmk) {
     TestUtils::test_command({ cmd => $omd_bin." config $site set DEFAULT_GUI check_mk" });
     TestUtils::test_command({ cmd  => "/bin/su - $site -c 'cat etc/nagvis/conf.d/urls.ini.php'",
                               like => [ '/hosturl="\[htmlcgi\]\/view\.py\?view_name=host&site=&host=\[host_name\]"/',
                                         '/htmlcgi="\/'.$site.'\/check_mk"/' ] });
-} else {
-    # dummy tests to statisfy number of tests (did not know how to decrease number of them)
-    TestUtils::test_command({ cmd => "/bin/echo skip check_mk url test"});
-    TestUtils::test_command({ cmd => "/bin/echo skup check_mk url test"});
 }
-
 
 ##################################################
 # Prepare the site for testing...
