@@ -2,41 +2,42 @@ This file documents the revision history for the Open Monitoring Distribution
 
 1.30
           - omd:
-	    - Added backup/restore modes to backup and restore sites completely
-	      You can backup your sites and restore them with the same or a
-	      different name.
-	      
-	      Example:
-	        omd backup mysite /tmp/backup.tgz
+            - Added backup/restore modes to backup and restore sites completely
+              You can backup your sites and restore them with the same or a
+              different name.
 
-	      And for restore use:
-	        omd restore restored /tmp/backup.tgz
+              Example:
+                omd backup mysite /tmp/backup.tgz
 
-	      You need to ensure you have the OMD version installed during
-	      restore, which the site was using during backup.
+              And for restore use:
+                omd restore restored /tmp/backup.tgz
 
-	      You can also backup to stdout and restore from stdin which means
-	      you can stream a backup cross the network. This might not only
-	      be useful for backups, but also for migrations across servers.
+              You need to ensure you have the OMD version installed during
+              restore, which the site was using during backup.
+
+              You can also backup to stdout and restore from stdin which means
+              you can stream a backup cross the network. This might not only
+              be useful for backups, but also for migrations across servers.
           - NagVis:
             - Update to version 1.8rc1
             - Removed deprecated directory var/nagvis/userfiles. This was
-	      deprecated since version 0.52. During the update to 1.30, the
-	      directory and all its contents will be removed. This should be
-	      no problem for most users, because the directory is not used
-	      anymore since a long time.
-	      If you update from OMD 0.52 or below, you need to manually backup
-	      files from var/nagvis/userfiles and copy them to 
-	      local/share/nagvis/htdocs/userfiles after the update to make them
-	      available again.
-	      Note: If you decide to downgrade from this or a following
-	      version to version 0.52 or older, you will again need to care
-	      about these files manually.
+              deprecated since version 0.52. During the update to 1.30, the
+              directory and all its contents will be removed. This should be
+              no problem for most users, because the directory is not used
+              anymore since a long time.
+              If you update from OMD 0.52 or below, you need to manually backup
+              files from var/nagvis/userfiles and copy them to
+              local/share/nagvis/htdocs/userfiles after the update to make them
+              available again.
+              Note: If you decide to downgrade from this or a following
+              version to version 0.52 or older, you will again need to care
+              about these files manually.
           - Check_MK: moved log dir to var/log
           - Added build support for SLES 12
           - Added build support for CentOS 6.6
           - Added build support for Ubuntu 14.10
           - Mod-Gearman: Update 1.4.18
+          - Thruk: Update to 1.86
 
 1.20     Aug 25 2014
           - apache: Changed order of apache daemon startup/stopping
