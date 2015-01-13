@@ -18,6 +18,8 @@ This file documents the revision history for the Open Monitoring Distribution
               You can also backup to stdout and restore from stdin which means
               you can stream a backup cross the network. This might not only
               be useful for backups, but also for migrations across servers.
+            - FIX: Update mechanism detects obsolete but non empty directories
+              correctly and asks the user whether or not to delete them
           - NagVis:
             - Update to version 1.8rc1
             - Removed deprecated directory var/nagvis/userfiles. This was
