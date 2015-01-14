@@ -3014,7 +3014,7 @@ def main_restore(args, options={}):
     # Get the first file of the tar archive (expecting site directory)
     sitename = tar.next().name
 
-    # Restore sit with its original name, or specify a new one
+    # Restore site with its original name, or specify a new one
     new_sitename = sitename
     if len(args) == 2:
         new_sitename = args[0]
@@ -3067,6 +3067,11 @@ def main_restore(args, options={}):
     for tarinfo in tar:
         # remove leading site name from paths
         tarinfo.name = '/'.join(tarinfo.name.split('/')[1:])
+        if tarinfo.issym() or tarinfo.islnk():
+            parts = tarinfo.linkname.split('/')
+            if parts[0] == sitename:
+                parts = parts[1:]
+            tarinfo.linkname = '/'.join(parts)
         tar.extract(tarinfo, path=g_sitedir)
 
     # give new user all files
