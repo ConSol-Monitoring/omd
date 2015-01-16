@@ -75,8 +75,6 @@ skel:
 	    rm $(SKEL)/etc/apache/apache24.conf ; \
 	fi
 
-	if [
-
 	# Replace macros
 	sed -i -e 's|###APACHE_MODULE_DIR###|$(MODULE_DIR)|g' \
 	       $(SKEL)/etc/apache/apache.conf
