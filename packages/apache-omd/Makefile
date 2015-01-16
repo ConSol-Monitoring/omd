@@ -75,9 +75,17 @@ skel:
 	    rm $(SKEL)/etc/apache/apache24.conf ; \
 	fi
 
+	if [
+
 	# Replace macros
 	sed -i -e 's|###APACHE_MODULE_DIR###|$(MODULE_DIR)|g' \
 	       $(SKEL)/etc/apache/apache.conf
+
+	# SLES12 has apache 2.4 but does not have the prefork module to be loaded,
+	# so remove this load line for this distro from the apache config
+	if [ ! -e $(MODULE_DIR)/mod_mpm_prefork.so ]; then \
+	    sed -i '/^LoadModule mpm_prefork_module/d' $(SKEL)/etc/apache/apache.conf
+	fi
 
 	sed -i -e 's|###APACHE_FCGID_MODULE###|$(APACHE_FCGID_PATH)|g' \
 	       $(SKEL)/etc/apache/conf.d/02_fcgid.conf
