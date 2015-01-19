@@ -93,9 +93,11 @@ then
     a2enmod proxy 2>/dev/null || true
     a2enmod proxy_http 2>/dev/null || true
     a2enmod rewrite 2>/dev/null || true
+%if 0%{?suse_version} > 1200
     # Only relevant for SLES12 or newer (having apache 2.4)
     # This still allows old permission configs like "Order: ..."
     a2enmod mod_access_compat 2>/dev/null || true
+%endif
 fi
 
 # SLES: make sure that the following file exists:
