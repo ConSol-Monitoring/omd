@@ -20,6 +20,7 @@ This file documents the revision history for the Open Monitoring Distribution
               be useful for backups, but also for migrations across servers.
             - FIX: Update mechanism detects obsolete but non empty directories
               correctly and asks the user whether or not to delete them
+            - FIX: SLES omd init-Script does not use default runlevel 4 anymore
           - NagVis:
             - Update to version 1.8rc1
             - Removed deprecated directory var/nagvis/userfiles. This was

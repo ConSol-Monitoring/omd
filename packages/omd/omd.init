@@ -5,7 +5,7 @@
 # Provides:          omd
 # Required-Start:    $syslog
 # Required-Stop:     $syslog
-# Default-Start:     2 3 4 5
+# Default-Start:     ###DEFAULT_RUNLEVELS###
 # Default-Stop:      1
 # Short-Description: OMD sites
 # Description:       Start and stop the sites of the Open Monitoring 

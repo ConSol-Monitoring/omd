@@ -4,6 +4,12 @@ NAME = omd
 VERSION = $(OMD_VERSION)
 SHELL = /bin/bash
 
+ifeq ($(DISTRO_NAME),SLES)
+    DEFAULT_RUNLEVELS=2 3 5
+else
+    DEFAULT_RUNLEVELS=2 3 4 5
+endif
+
 build:
 
 install:
@@ -18,6 +24,7 @@ install:
 	install -m 644 omd.8 $(DESTDIR)$(OMD_ROOT)/share/man/man8
 	gzip $(DESTDIR)$(OMD_ROOT)/share/man/man8/omd.8
 	install -m 755 omd.init $(DESTDIR)$(OMD_ROOT)/share/omd/omd.init
+	sed -i 's|###DEFAULT_RUNLEVELS###|$(DEFAULT_RUNLEVELS)|g' $(DESTDIR)$(OMD_ROOT)/share/omd/omd.init
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/doc/$(NAME)
 	install -m 644 COPYING AUTHORS $(DESTDIR)$(OMD_ROOT)/share/doc/$(NAME)
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/omd
