@@ -2998,18 +2998,20 @@ def main_restore(args, options={}):
     set_conflict_option(options)
 
     if len(args) == 0:
-        bail_out("You need to provide either a path to the destination "
-                 "file or \"-\" for backup to stdout.")
+        bail_out("You need to provide either a path to the source "
+                 "file or \"-\" for restore from stdin.")
 
     source = args[-1]
     if source == '-':
-        fh = sys.stdout
+        fh = sys.stdin
+        tar_mode = 'r|gz'
     elif os.path.exists(source):
         fh = file(source)
+        tar_mode = 'r:gz'
     else:
         bail_out("The backup archive does not exist.")
 
-    tar = tarfile.open(fileobj=fh, mode='r:gz')
+    tar = tarfile.open(fileobj=fh, mode=tar_mode)
 
     # Get the first file of the tar archive (expecting site directory)
     sitename = tar.next().name
