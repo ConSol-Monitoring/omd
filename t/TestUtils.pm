@@ -849,11 +849,15 @@ sub _tail_apache_logs {
 
 =cut
 sub restart_system_apache {
-    my $name = TestUtils::config('APACHE_INIT_NAME');
-    my $init = TestUtils::config('INIT_CMD');
-    my $cmd  = $init;
-    $cmd     =~ s/\Q%(name)s\E/$name/mx;
-    $cmd     =~ s/\Q%(action)s\E/restart/mx;
+    my $name  = TestUtils::config('APACHE_INIT_NAME');
+    my $init  = TestUtils::config('INIT_CMD');
+    my $cmd   = $init;
+    $cmd      =~ s/\Q%(name)s\E/$name/mx;
+    my $stop  = $cmd;
+    $stop     =~ s/\Q%(action)s\E/stop/mx;
+    my $start = $cmd;
+    $start    =~ s/\Q%(action)s\E/start/mx;
+    $cmd      = $stop.'; sleep 3; '.$start;
     TestUtils::test_command({ cmd => $cmd });
 }
 
