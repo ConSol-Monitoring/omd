@@ -8,7 +8,6 @@ BUILD_PACKAGES += dnsutils
 BUILD_PACKAGES += git-buildpackage
 BUILD_PACKAGES += libboost-all-dev
 BUILD_PACKAGES += libcloog-ppl0
-BUILD_PACKAGES += libcairo2-dev
 BUILD_PACKAGES += libcurl4-openssl-dev # needed by perl modules / thruk
 BUILD_PACKAGES += libevent-dev
 BUILD_PACKAGES += libgd2-xpm-dev
