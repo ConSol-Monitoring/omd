@@ -17,7 +17,7 @@ export MAILRC="$OMD_ROOT/etc/mail.rc"
 
 if [ -f $OMD_ROOT/etc/environment ]
 then
-    eval $(egrep -v '^[[:space:]]*(#|$)' < ~/etc/environment | sed 's/^/export /')
+    eval $(egrep -v '^[[:space:]]*(#|$)' < $OMD_ROOT/etc/environment | sed 's/^/export /')
 fi
 
 # Only load bashrc when in a bash shell and not loaded yet.
