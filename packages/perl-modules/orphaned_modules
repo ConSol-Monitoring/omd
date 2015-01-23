@@ -66,6 +66,20 @@ for my $f (keys %{$files}) {
     }
 }
 
+# check other modules
+for my $m (keys %{$more_modules}) {
+    if(BuildHelper::is_core_module($m, 5.008)) {
+        print "WARNING: ",$m, " is a core module and should be removed\n";
+        next;
+    }
+    my $mdep = BuildHelper::module_to_file($m, $files, $more_modules->{$m});
+    if(!defined $mdep) {
+        print "WARNING: ",$m, " does not resolve to a file\n";
+    } else {
+        delete $orphaned->{$mdep};
+    }
+}
+
 ####################################
 # print result
 for my $file (keys %{$orphaned}) {
