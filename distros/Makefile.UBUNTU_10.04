@@ -7,7 +7,6 @@ BUILD_PACKAGES += smbclient # otherwise missing path in util.pm
 BUILD_PACKAGES += dnsutils
 BUILD_PACKAGES += git-buildpackage
 BUILD_PACKAGES += libboost1.40-all-dev
-BUILD_PACKAGES += libcairo2-dev
 BUILD_PACKAGES += libcurl4-openssl-dev # needed by perl modules / thruk
 BUILD_PACKAGES += libevent-dev
 BUILD_PACKAGES += libgd2-xpm-dev

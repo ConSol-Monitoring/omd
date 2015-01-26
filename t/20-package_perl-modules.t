@@ -48,12 +48,23 @@ for my $tarball (glob("packages/perl-modules/src/*.gz packages/perl-modules/src/
     if($mod eq 'IO')                          { $version .= " qw/File/"; }    # Parameterless "use IO" deprecated at...
     if($mod =~ m/curl/imx)                    { next; } # broken
     if($mod eq 'Term::ReadLine::Gnu')         { next; } # removed in ubuntu 10.04
+    if($mod eq 'LWP::Protocol::connect')      { next; } # requires IO::Socket::SSL which cannot be included
+    if($mod eq 'Plack::Middleware::RemoveRedundantBody') { $version = ""; } # has broken version
+    if($mod eq 'YAML::LibYAML')               { $mod = "YAML::XS"; $version = ""; }
 
     my $check = "use $mod";
     # Use with version doesnt work here, because of weird version numbers
     $check .= " $version" unless $mod =~ /^(Math::BaseCnv|XML::Tidy)$/;
 
     TestUtils::test_command({ cmd => "/bin/su - $site -c 'perl -e \"$check;\"'" });
+}
+
+##################################################
+for my $file (qw|/*/Class/MethodMaker/scalar.pm /*/Class/MethodMaker/hash.pm /*/Class/MethodMaker/array.pm|) {
+    my $pattern = "/omd/sites/$site/lib/perl5/lib/perl5".$file;
+    my @files   = glob($pattern);
+    ok(scalar @files > 0, "found file(s) for pattern: ".$pattern);
+    ok(-s $files[0], $files[0]." must not be empty");
 }
 
 ##################################################

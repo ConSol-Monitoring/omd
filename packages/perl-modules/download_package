@@ -44,7 +44,7 @@ for my $module (@{$modules}) {
     $module =~ s/\-/::/g;
     $module =~ s/\.pm$//g;
     print $module." is a core module\n" if BuildHelper::is_core_module($module);
-    $downloaded = BuildHelper::download_module($module);
+    $downloaded = BuildHelper::download_module($module, undef, 1);
 }
 chdir('..') or die("cannot change dir '..': $!");
 

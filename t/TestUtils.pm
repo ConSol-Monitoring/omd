@@ -330,8 +330,11 @@ sub test_url {
                 if($use_html_lint == 0) {
                     skip "no HTML::Lint installed", 2;
                 }
-                if($page->{'content'} =~ /^\[.*\]$/mx) {
+                if($page->{'content'} =~ /^\[.*\]$/mx || $page->{'content'} =~ /^\{.*\}$/mx) {
                     skip "no lint check for json data", 2;
+                }
+                if($ENV{LINTSKIPPATTERN} && $test->{'url'} =~ m|/$ENV{LINTSKIPPATTERN}/|mx) {
+                    skip "lint check skipped by LINTSKIPPATTERN: ".$ENV{LINTSKIPPATTERN}, 2;
                 }
                 my $lint = new HTML::Lint;
                 isa_ok( $lint, "HTML::Lint" );

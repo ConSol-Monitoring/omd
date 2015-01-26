@@ -50,6 +50,7 @@ This file documents the revision history for the Open Monitoring Distribution
           - Mod-Gearman: Update 1.5.1
           - Thruk: Update to 1.86-2
           - Updated Monitoring-Plugins to 2.1.1
+          - Icinga: Update to 1.12.0
 
 1.20     Aug 25 2014
           - apache: Changed order of apache daemon startup/stopping

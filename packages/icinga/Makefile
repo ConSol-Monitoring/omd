@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 NAME = icinga
-VERSION = 1.11.4
+VERSION = 1.12.0
 DIR = $(NAME)-$(VERSION)
 
 # Configure options for Icinga. Since we want to compile

@@ -4,9 +4,6 @@ use warnings;
 use strict;
 use Config;
 use Data::Dumper;
-use Module::CoreList;
-use lib '/omd/versions/default/lib/perl5/lib/perl5';
-use lib '/var/tmp/p5_dist/dest/lib/perl5';
 use Storable qw/lock_store lock_retrieve/;
 use Cwd;
 
@@ -15,19 +12,29 @@ use Cwd;
 $Data::Dumper::Sortkeys = 1;
 my $verbose = 0;
 my $additional_deps = {
-  'IO' => { 'ExtUtils::ParseXS' => '3.21' },
+  'IO'                 => { 'ExtUtils::ParseXS' => '3.21' },
+  'Class::MethodMaker' => { 'Fatal'             => '1' },
+};
+# override which dependencies should not be considered a core module
+my $no_core_dependency = {
+  'Fatal' => 1,
 };
 
 ####################################
 # is this a core module?
 sub is_core_module {
-    my($module) = @_;
-    #my @v = split/\./, $Config{'version'};
-    #my $v = $v[0] + $v[1]/1000;
-    # use fixed version: 5.008, otherwise we would to sort modules on the oldes possible host
-    my $v = "5.008";
+    my($module, $perl_version) = @_;
+    eval {
+        require Module::CoreList;
+        Module::CoreList->import();
+    };
+    return if $@;
+    my @v = split/\./, $Config{'version'};
+    my $v = $perl_version || $v[0] + $v[1]/1000;
+    #my $v = "5.020000";
+    return if defined $no_core_dependency->{$module};
     if(exists $Module::CoreList::version{$v}{$module}) {
-        return $Module::CoreList::version{$v}{$module} || 0;
+        return($Module::CoreList::version{$v}{$module});
     }
     return;
 }
@@ -60,23 +67,23 @@ sub get_deps {
     return if defined $already_checked{$file};
     $already_checked{$file} = 1;
 
-    print " -> checking dependecies for: $file\n" unless $quiet;
+    print "checking dependecies for: $file\n" unless $quiet;
     print "." if $quiet == 1;
     my $meta = get_meta_for_tarball($file);
 
-    my $deps = BuildHelper::get_deps_from_meta($meta);
+    my $deps = get_deps_from_meta($meta);
     add_additional_deps($file, $deps);
     $deps_cache{$file} = $deps;
     for my $dep (keys %{$deps}) {
         my $depv = $deps->{$dep};
         my $cv   = is_core_module($dep);
-        if(defined $cv and $depv == 0) {
-            print "   -> $dep ($depv) skipped zero core dependency\n" unless $quiet;
+        if($cv and version_compare($cv, $depv)) {
+            print "   -> $dep ($depv) skipped core dependency\n" unless $quiet;
             next;
         }
         print "   -> $dep ($depv)\n" unless $quiet;
         if($download) {
-            BuildHelper::download_module($dep, $depv);
+            download_module($dep, $depv);
         }
     }
     return \%deps_cache;
@@ -87,7 +94,7 @@ sub get_deps {
 # needs a filename like: Storable-2.21.tar.gz
 sub download_deps {
     my $file = shift;
-    return BuildHelper::get_deps($file, 1);
+    return get_deps($file, 1);
 }
 
 ####################################
@@ -110,7 +117,7 @@ sub download_module {
     # we dont need core modules or perl dependency
     if($mod eq 'perl') { return \@downloaded; }
 
-    my $urlpath = BuildHelper::get_url_for_module($mod);
+    my $urlpath = get_url_for_module($mod);
     return \@downloaded if defined $already_downloaded{$urlpath};
     if($urlpath =~ m/\/perl\-[\d\.]+\.tar\.gz/) {
         $already_downloaded{$urlpath} = 1;
@@ -120,16 +127,16 @@ sub download_module {
     my $tarball=$urlpath; $tarball =~ s/^.*\///g;
 
     if( ! -f $tarball and !defined $already_downloaded{$urlpath}) {
-        BuildHelper::cmd('wget --retry-connrefused -q "http://search.cpan.org'.$urlpath.'"');
+        cmd('wget --retry-connrefused -q "http://search.cpan.org'.$urlpath.'"');
         $already_downloaded{$urlpath} = 1;
-        BuildHelper::download_deps($tarball) unless $no_dep == 1;
+        download_deps($tarball) unless $no_dep == 1;
         push @downloaded, $tarball;
         print "downloaded $tarball\n" unless $quiet;
     } else {
         if(!defined $deps_checked{$tarball}) {
             print "$tarball already downloaded\n";
             #print "rechecking dependency\n";
-            #BuildHelper::download_deps($tarball);
+            #download_deps($tarball);
             $deps_checked{$tarball} = 1;
         } else {
             print "$tarball already downloaded\n";
@@ -141,7 +148,7 @@ sub download_module {
 ####################################
 sub download_src {
     my $module = shift;
-    BuildHelper::cmd('wget --retry-connrefused -q "http://thruk.org/libs/src/'.$module.'"');
+    cmd('wget --retry-connrefused -q "http://thruk.org/libs/src/'.$module.'"');
     return;
 }
 
@@ -192,6 +199,7 @@ sub translate_module_name {
 # return filename from list
 sub module_to_file {
     my($mod, $files, $version) = @_;
+    $version = 0 unless defined $version;
     if($version > 0 and defined $files->{$mod}) {
         my($m,$v) = file_to_module($files->{$mod});
         return $files->{$mod} if version_compare($v, $version);
@@ -217,11 +225,12 @@ sub get_all_deps {
 
         # remove all tarballs from cache which no longer exist
         for my $tf (keys %{$data->{'deps'}}) {
-            if(!-e $tf) {
+            if(!-e 'src/'.$tf) {
                 delete $data->{'deps'}->{$tf};
                 for my $key (keys %{$data->{'files'}}) {
                     delete $data->{'files'}->{$key} if $data->{'files'}->{$key} eq $tf;
                 }
+                print " -> cleaned dependecies for: $tf because tarball does not exist anymore\n" unless $quiet;
             }
         }
     }
@@ -232,8 +241,13 @@ sub get_all_deps {
 
     %deps_cache = %{$data->{'deps'}}  if defined $data->{'deps'};
     %deps_files = %{$data->{'files'}} if defined $data->{'files'};
-    for my $tarball (@tarballs) {
-        BuildHelper::get_deps($tarball, undef, $quiet) unless defined $deps_cache{$tarball};
+    my($x,$max) = (1, scalar @tarballs);
+    for my $tarball (sort @tarballs) {
+        if(!defined $deps_cache{$tarball}) {
+            printf("*** (%3s/%s) ", $x, $max) if($max > 1 and !$quiet);
+            get_deps($tarball, undef, $quiet);
+        }
+        $x++;
     }
 
     chdir($cwd) or die("cannot change dir back");
@@ -299,6 +313,7 @@ sub version_compare {
 sub sort_deps {
     my $deps  = shift;
     my $files = shift;
+    my $already_printed = {};
 
     # 1st clean up and resolve modules to files
     our $modules = {};
@@ -309,23 +324,20 @@ sub sort_deps {
             next if $dep eq 'strict';
             next if $dep eq 'warnings';
             next if $dep eq 'lib';
+            next if $dep eq 'blib';
+            next if $dep eq 'utf8';
             next if $dep eq 'v';
             next if $dep eq 'IPC::Open'; # core module but not recognized
-            my $cv = is_core_module($dep);
-            my $dv = $deps->{$file}->{$dep};
-            # next when dependency is a core module and we require version 0
-            next if $dv == 0 and defined $cv;
-            if(defined $cv) {
-                next if version_compare($cv, $dv);
-            }
+            my $cv = is_core_module($dep, 5.008);
+            next if $cv;
             my $fdep = module_to_file($dep, $files, $deps->{$file}->{$dep});
             if(defined $fdep) {
                 next if $fdep eq $file;
                 $modules->{$file}->{$fdep} = 1
             } else {
-                if($dep !~ m/^Test::/
-                   and !defined is_core_module($dep)) {
-                    warn("cannot resolve dependency '$dep' to file, referenced by: $file\n");
+                if($dep !~ m/^Test::/ and $dep !~ m/^Devel::/) {
+                    warn("cannot resolve dependency '$dep' to file, referenced by: $file\n") unless $already_printed->{$dep};
+                    $already_printed->{$dep} = 1;
                 }
             }
         }
@@ -344,7 +356,7 @@ sub get_url_for_module {
     $mod = translate_module_name($mod);
     return $url_cache{$mod} if exists $url_cache{$mod};
     for my $url ('http://search.cpan.org/perldoc?'.$mod, 'http://search.cpan.org/dist/'.$mod) {
-        my $out = BuildHelper::cmd("wget --retry-connrefused -O - '".$url."'", 1);
+        my $out = cmd("wget --retry-connrefused -O - '".$url."'", 1);
         if($out =~ m/href="(\/CPAN\/authors\/id\/.*?\/.*?(\.tar\.gz|\.tgz|\.zip))">/) {
             $url_cache{$mod} = $1;
             return($1);
@@ -362,6 +374,7 @@ sub install_module {
     my $verbose = shift || 0;
     my $x       = shift || 1;
     my $max     = shift || 1;
+    my $force   = shift;
     die("error: $file does not exist in ".`pwd`) unless -e $file;
     die("error: module name missing") unless defined $file;
 
@@ -381,22 +394,24 @@ sub install_module {
         }
     }
 
-    my $core   = BuildHelper::is_core_module($modname);
-    if(BuildHelper::version_compare($core, $modvers)) {
-        print "skipped core module $core >= $modvers\n";
-        return 1;
+    unless($force) {
+        my $core = is_core_module($modname);
+        if(version_compare($core, $modvers)) {
+            print "skipped core module $core >= $modvers\n";
+            return 1;
+        }
     }
 
     my $installed = 0;
     `grep $file $TARGET/modlist.txt 2>&1`;
     $installed = 1 if $? == 0;
-    if( $installed and $modname ne 'Catalyst::Runtime' ) {
+    if( $installed and $modname ne 'Catalyst::Runtime' and $modname ne 'parent' ) {
         print "already installed\n";
         return 1;
     }
 
     my $start = time();
-    my $dir   = BuildHelper::unpack($file);
+    my $dir   = _unpack($file);
     my $cwd   = cwd();
     chdir($dir);
     `rm -f $LOG`;
@@ -406,12 +421,15 @@ sub install_module {
     if($modname eq 'XML::LibXML') {
         $makefile_opts = 'FORCE=1';
     }
+    if($modname eq 'List::MoreUtils') {
+        system("sed -i -e '/url\\s*=>.*github/d' -e '/perl.*=>\\s*\\\$^V/d' Makefile.PL");
+    }
 
     eval {
         local $SIG{ALRM} = sub { die "timeout on: $file\n" };
         alarm(120); # single module should not take longer than 1 minute
         if( -f "Build.PL" ) {
-            `$PERL Build.PL >> $LOG 2>&1 && ./Build >> $LOG 2>&1 && ./Build install >> $LOG 2>&1`;
+            `$PERL Build.PL >> $LOG 2>&1 && $PERL ./Build >> $LOG 2>&1 && $PERL ./Build install >> $LOG 2>&1`;
             if($? != 0 ) { die("error: rc $?\n".`cat $LOG`."\n"); }
         } elsif( -f "Makefile.PL" ) {
             `sed -i -e 's/auto_install;//g' Makefile.PL`;
@@ -439,15 +457,15 @@ sub install_module {
     my $end = time();
     my $duration = $end - $start;
     print "ok (".$duration."s)\n";
-    my $grepv = "grep -v 'Test::' | grep -v 'Linux::Inotify2' | grep -v 'IO::KQueue' | grep -v 'prerequisite Carp' | grep -v ExtUtils::Install";
+    my $grepv = "grep -v 'Test::' | grep -v 'Linux::Inotify2' | grep -v 'IO::KQueue' | grep -v 'prerequisite Carp' | grep -v ExtUtils::Install | grep -v ^Add | grep -v 'We have '";
     system("grep 'Warning: prerequisite' $LOG         | $grepv"); # or die('dependency error');
     system("grep 'is not installed' $LOG | grep ' ! ' | $grepv"); # or die('dependency error');
     system("grep 'is installed, but we need version' $LOG | grep ' ! ' | $grepv"); # or die('dependency error');
     system("grep 'is not a known MakeMaker parameter' $LOG | grep INSTALL_BASE | $grepv") or die('build error');
     chdir($cwd);
-    if($duration > 30) {
+    if($duration > 60) {
         chomp(my $pwd = `pwd`);
-        print "installation took to long, see $pwd/$dir/$LOG for details\n";
+        print "installation took too long, see $pwd/$dir/$LOG for details\n";
     } else {
         `rm -rf $dir`;
     }
@@ -473,8 +491,8 @@ sub get_meta_for_dir {
     chdir($dir);
     alarm(120);
     eval {
-        BuildHelper::cmd("yes n | perl Makefile.PL", 1) if -e 'Makefile.PL';
-        BuildHelper::cmd("yes n | perl Build.PL", 1)    if -e 'Build.PL';
+        cmd("yes n | perl Makefile.PL", 1) if -e 'Makefile.PL';
+        cmd("yes n | perl Build.PL", 1)    if -e 'Build.PL';
     };
     warn($@) if $@;
     alarm(0);
@@ -580,6 +598,7 @@ sub get_deps_from_meta {
         my $val = $deps{$dep};
         $dep =~ s/('|")//gmx;
         $val =~ s/('|")//gmx;
+        next if $val =~ m/win32/;
         next if $dep eq 'perl';
         next if $dep eq 'warnings';
         next if $dep eq 'strict';
@@ -610,12 +629,12 @@ sub add_additional_deps {
 
 ####################################
 # return dependencies from meta data
-sub unpack {
+sub _unpack {
     my $file = shift;
     if($file =~ m/\.zip$/gmx) {
-        BuildHelper::cmd("unzip $file");
+        cmd("unzip $file");
     } else {
-        BuildHelper::cmd("tar zxf $file");
+        cmd("tar zxf $file");
     }
     my $dir = $file;
     $dir =~  s/(\.tar\.gz|\.tgz|\.zip)//g;
@@ -640,7 +659,7 @@ sub get_orphaned {
                 next if $dep2 eq 'warnings';
                 next if $dep2 eq 'lib';
                 next if $dep2 eq 'v';
-                my $fdep2 = BuildHelper::module_to_file($dep2, $files, $deps->{$file2}->{$dep2});
+                my $fdep2 = module_to_file($dep2, $files, $deps->{$file2}->{$dep2});
                 next unless $fdep2;
                 $found = 1 if $fdep2 eq $file;
                 if($found && $verbose) { print "$file is used by $file2\n"; }
@@ -660,7 +679,7 @@ sub get_meta {
     if($in =~ m/Makefile\.PL$/mx) {
         my $dir = $in;
         $dir    =~ s/Makefile\.PL$//gmx;
-        $meta   = BuildHelper::get_meta_for_dir($dir);
+        $meta   = get_meta_for_dir($dir);
     }
     elsif($in =~ m/(\.tar.gz|\.tgz|\.zip)$/mx) {
         $meta = get_meta_for_tarball($in);
@@ -677,8 +696,8 @@ sub get_meta_for_tarball {
 
     our %deps_files;
 
-    my $dir  = BuildHelper::unpack($file);
-    my $meta = BuildHelper::get_meta_for_dir($dir);
+    my $dir  = _unpack($file);
+    my $meta = get_meta_for_dir($dir);
 
     for my $f (split/\n/,`find -name \*.pm; find -name \*.PL`) {
         next if $f =~ m|/inc/|mxo; # skip inc modules included by Module::Install packaged modules
@@ -688,10 +707,17 @@ sub get_meta_for_tarball {
                 $deps_files{$1} = $file;
             }
         }
+        if($f =~ m/\.pm$/mx) {
+            $f =~ s|^/||gmx;
+            $f =~ s|b?lib/||gmx;
+            $f =~ s|/|::|gmx;
+            $f =~ s|\.pm||gmx;
+            $deps_files{$f} = $file;
+        }
         close($fh);
     }
 
-    BuildHelper::cmd("rm -fr $dir");
+    cmd("rm -fr $dir");
     return($meta);
 }
 

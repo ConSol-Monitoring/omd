@@ -7,7 +7,6 @@ BUILD_PACKAGES   += smbclient # otherwise missing path in util.pm
 BUILD_PACKAGES   += dnsutils # nagios-plugins check_dns
 BUILD_PACKAGES   += git-buildpackage
 BUILD_PACKAGES   += libboost-dev
-BUILD_PACKAGES   += libcairo2-dev
 BUILD_PACKAGES   += libevent-dev
 BUILD_PACKAGES   += libgd2-xpm-dev
 BUILD_PACKAGES   += libglib2.0-dev
