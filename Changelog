@@ -2,6 +2,14 @@ This file documents the revision history for the Open Monitoring Distribution
 
 1.30
           - omd:
+            - Added "Basic / ADMIN_MAIL" hook to configure the target mail
+              address for eMails sent to the site user (e.g. created by
+              crontab). Finally this generates the ~/.forward file within
+              the sites directory. When a mail address is configured, the
+              file is written, when you have none configured, the file is
+              deleted.
+              If you already have a ~/.forward file, the mail address will
+              automatically be used as ADMIN_MAIL value.
             - Added backup/restore modes to backup and restore sites completely
               You can backup your sites and restore them with the same or a
               different name.
