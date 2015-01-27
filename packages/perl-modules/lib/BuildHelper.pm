@@ -405,7 +405,7 @@ sub install_module {
     my $installed = 0;
     `grep $file $TARGET/modlist.txt 2>&1`;
     $installed = 1 if $? == 0;
-    if( $installed and $modname ne 'Catalyst::Runtime' and $modname ne 'parent' ) {
+    if( $installed and $modname ne 'parent' ) {
         print "already installed\n";
         return 1;
     }
