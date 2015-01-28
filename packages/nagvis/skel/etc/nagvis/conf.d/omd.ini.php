@@ -9,6 +9,7 @@
 
 [global]
 sesscookiepath="/###SITE###/nagvis"
+authorisation_group_perms_file="###ROOT###/etc/nagvis/perms.db"
 
 [paths]
 base="###ROOT###/share/nagvis/"
