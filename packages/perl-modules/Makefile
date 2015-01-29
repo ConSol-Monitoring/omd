@@ -6,6 +6,7 @@ DISTRO   = $(shell ../../distro)
 
 MODULES = \
           Algorithm-C3-0.10.tar.gz \
+          Any-Moose-0.25.tar.gz \
           AppConfig-1.67.tar.gz \
           Capture-Tiny-0.27.tar.gz \
           Carp-Clan-6.04.tar.gz \
@@ -116,11 +117,11 @@ MODULES = \
           podlators-2.5.3.tar.gz \
           threads-1.96.tar.gz \
           threads-shared-1.46.tar.gz \
-          Any-Moose-0.25.tar.gz \
           Archive-Tar-2.04.tar.gz \
           Archive-Zip-1.43.tar.gz \
           Attribute-Handlers-0.96.tar.gz \
           Bit-Vector-7.4.tar.gz \
+          CPAN-Meta-YAML-0.012.tar.gz \
           DBD-mysql-4.029.tar.gz \
           Date-Calc-6.3.tar.gz \
           Date-Calc-XS-6.3.tar.gz \
@@ -215,6 +216,7 @@ MODULES = \
           Params-Validate-1.17.tar.gz \
           Sub-Exporter-0.987.tar.gz \
           B-Hooks-EndOfScope-0.13.tar.gz \
+          Catalyst-Plugin-CustomErrorMessage-0.06.tar.gz \
           Class-C3-Adopt-NEXT-0.13.tar.gz \
           DateTime-Locale-0.45.tar.gz \
           DateTime-TimeZone-1.84.tar.gz \
@@ -253,7 +255,6 @@ MODULES = \
           Catalyst-Plugin-Authentication-0.10023.tar.gz \
           Catalyst-Plugin-Authorization-Roles-0.09.tar.gz \
           Catalyst-Plugin-ConfigLoader-0.34.tar.gz \
-          Catalyst-Plugin-CustomErrorMessage-0.06.tar.gz \
           Catalyst-Plugin-Redirect-0.02.tar.gz \
           Catalyst-Plugin-Static-Simple-0.33.tar.gz \
           Catalyst-Devel-1.39.tar.gz
