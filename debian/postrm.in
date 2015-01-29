@@ -46,6 +46,7 @@ case "$1" in
           fi
 	  rm -f $APACHE_OMD_CONF $APACHE_OMD_EMPTY_CONF
 	  rm -f /omd
+	  ! test -x /usr/sbin/a2dismod || a2dismod zzz_omd
 	  # Try to remove empty directories
 	  if test -d /opt/omd/versions; then
 	    rmdir --ignore-fail-on-non-empty /opt/omd/versions
