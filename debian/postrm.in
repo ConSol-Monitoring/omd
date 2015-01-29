@@ -44,9 +44,9 @@ case "$1" in
             # On e.g. ubuntu 13.10 conf.d is not used anymore, use conf-available
             APACHE_OMD_CONF="/etc/apache2/conf-available/zzz_omd.conf"
           fi
+	  ! test -x /usr/sbin/a2disconf || a2disconf zzz_omd
 	  rm -f $APACHE_OMD_CONF $APACHE_OMD_EMPTY_CONF
 	  rm -f /omd
-	  ! test -x /usr/sbin/a2dismod || a2dismod zzz_omd
 	  # Try to remove empty directories
 	  if test -d /opt/omd/versions; then
 	    rmdir --ignore-fail-on-non-empty /opt/omd/versions
