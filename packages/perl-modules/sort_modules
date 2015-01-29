@@ -30,7 +30,6 @@ if(defined $ARGV[0] and $ARGV[0] eq '-u') {
                 next if $file =~ m/^JSON\-/mx;
                 next if $file =~ m/^Types\-Serialiser\-\d+/mx;
                 next if $file =~ m/^common\-sense\-\d+/mx;
-                next if $file =~ m/^YAML\-LibYAML\-\d+/mx;
                 printf $out "          %s \\\n", $file;
             }
             printf $out "          %s\n", $last if defined $last;

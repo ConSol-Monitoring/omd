@@ -285,10 +285,8 @@ build:
 	            Module-CoreList-*.tar.gz \
 	            common-sense-*.tar.gz \
 	            Types-Serialiser-*.tar.gz \
-	            YAML-LibYAML-*.tar.gz \
 	            JSON-*.tar.gz; \
 	    export PERL_JSON_BACKEND='JSON::XS'; \
-	    export PERL_YAML_BACKEND='YAML::XS'; \
 	    cd $(P5TMPDIST)/src && \
 	        ./build_module.pl -d "$(DISTRO)" -p $(P5TMPDIST)/dest $(MODULES)
 	cd $(P5TMPDIST)/dest/lib/perl5/ && rm -f utils.pm && ln -s ../../../nagios/plugins/utils.pm .
