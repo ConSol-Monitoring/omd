@@ -2655,7 +2655,7 @@ def diff_list(from_skelroot, g_sitedir, from_version, orig_path):
         if not rel_path:
             rel_path = "."
         walk_skel(from_skelroot, print_diff, (from_skelroot, g_sitedir,
-                  from_version, old_perms), relbase = rel_path)
+                  from_version, old_perms), depth_first=False, relbase = rel_path)
 
 
 def print_diff(rel_path, source_path, target_path, source_version, source_perms):
@@ -2711,27 +2711,40 @@ def print_diff(rel_path, source_path, target_path, source_version, source_perms)
     if source_perm != target_perm:
         print_status(warn, fn, 'p', 'Changed permissions')
 
-def walk_skel(root, handler, args, exclude_if_in = None, relbase = '.'):
-    # Walks all files in the skeleton dir to execute a function for each file
-    # The given handler is called with the provided args. Additionally the relative
-    # path of the file to handle is handed over in the 'relpath' parameter.
+# Walks all files in the skeleton dir to execute a function for each file
+# The given handler is called with the provided args. Additionally the relative
+# path of the file to handle is handed over in the 'relpath' parameter.
 
-    # When called with a path in 'exclude_if_in' then paths existing relative to
-    # that are skipped. This is used for a second run during the update-process: to handle
-    # files that have vanished in the new version.
+# When called with a path in 'exclude_if_in' then paths existing relative to
+# that are skipped. This is used for a second run during the update-process: to handle
+# files that have vanished in the new version.
 
-    # The option 'relbase' is optional. It can contain a relative path which can be used
-    # as base for the walk instead of walking the whole tree.
+# The option 'relbase' is optional. It can contain a relative path which can be used
+# as base for the walk instead of walking the whole tree.
 
-    # The function returns a set of already handled files.
+# The function returns a set of already handled files.
+def walk_skel(root, handler, args, depth_first, exclude_if_in = None, relbase = '.'):
     os.chdir(root)
-    for dirpath, dirnames, filenames in os.walk(relbase):
+
+    # Note: os.walk first finds level 1 directories, then deeper
+    # layers. If we need a real depth search instead, where we first
+    # handle deep directories and files, then the top level ones.
+    walk_entries = list(os.walk(relbase))
+    if depth_first:
+        walk_entries.reverse()
+
+    for dirpath, dirnames, filenames in walk_entries:
         if dirpath.startswith("./"):
             dirpath = dirpath[2:]
         if dirpath.startswith("tmp"):
             continue
 
-        for entry in dirnames + filenames:
+        # In depth first search first handle files, then directories
+        if depth_first:
+            entries = filenames + dirnames
+        else:
+            entries = dirnames + filenames
+        for entry in entries:
             path = dirpath + "/" + entry
             if path.startswith("./"):
                 path = path[2:]
@@ -2841,10 +2854,10 @@ def main_update(args, options={}):
     tmp = tmp_dir(g_sitename)
 
     # First walk through skeleton files of new version
-    walk_skel(to_skelroot, update_file, (from_version, to_version, g_sitedir, old_perms))
+    walk_skel(to_skelroot, update_file, (from_version, to_version, g_sitedir, old_perms), depth_first=False)
 
     # Now handle files present in old but not in new skel files
-    walk_skel(from_skelroot, update_file, (from_version, to_version, g_sitedir, old_perms), to_skelroot)
+    walk_skel(from_skelroot, update_file, (from_version, to_version, g_sitedir, old_perms), depth_first=True, exclude_if_in = to_skelroot)
 
     # Change symbolic link pointing to new version
     create_version_symlink(g_sitename, to_version)
