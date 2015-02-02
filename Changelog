@@ -48,7 +48,7 @@ This file documents the revision history for the Open Monitoring Distribution
           - Added build support for CentOS 6.6
           - Added build support for Ubuntu 14.10
           - Mod-Gearman: Update 1.5.1
-          - Thruk: Update to 1.86-2
+          - Thruk: Update to 1.86-3
           - Updated Monitoring-Plugins to 2.1.1
           - Icinga: Update to 1.12.0
           - updated to nail/mailx 12.5
