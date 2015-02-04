@@ -55,6 +55,7 @@ case "$1" in start|restart|reload|checkconfig|check)
        ###ROOT###/etc/icinga/icinga.d/*.cfg \
        ###ROOT###/etc/icinga/icinga.cfg \
        > $CFG_FILE || rm -f $CFG_FILE 
+    if [ $? -ne 0 ]; then exit 1; fi
 esac
 
 OPTIONS="-ud"

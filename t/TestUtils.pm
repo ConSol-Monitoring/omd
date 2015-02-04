@@ -268,7 +268,7 @@ sub remove_test_site {
     unlike           => (list of) regular expressions which must not match content
     skip_html_lint   => flag to disable the html lint checking
     skip_link_check  => (list of) regular expressions to skip the link checks for
-    waitfor          => wait till regex occurs (max 60sec)
+    waitfor          => wait till regex occurs (max 120sec)
   }
 
 =cut
@@ -283,7 +283,7 @@ sub test_url {
         my $now = time();
         my $waitfor = $test->{'waitfor'};
         my $found   = 0;
-        while($now < $start + 60) {
+        while($now < $start + 120) {
             if($page->{'content'} =~ m/$waitfor/mx) {
                 ok(1, "content ".$waitfor." found after ".($now - $start)."seconds");
                 $found = 1;
@@ -293,7 +293,7 @@ sub test_url {
             $now = time();
             $page = _request($test);
         }
-        fail("content did not occur within 60 seconds") unless $found;
+        fail("content did not occur within 120 seconds") unless $found;
         return $page;
     }
 

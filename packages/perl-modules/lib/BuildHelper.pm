@@ -474,9 +474,6 @@ sub install_module {
     if($modname eq 'JSON::XS') {
         $ENV{'PERL_JSON_BACKEND'} = 'JSON::XS';
     }
-    if($modname eq 'YAML::LibYAML') {
-        $ENV{'PERL_YAML_BACKEND'} = 'YAML::XS';
-    }
 
     return 1;
 }

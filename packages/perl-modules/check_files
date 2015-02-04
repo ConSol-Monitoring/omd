@@ -14,7 +14,7 @@ for file in $(grep 'tar.gz' Makefile | awk '{ print $1 }' | sed 's/\-[0-9\-\.]*\
 done
 
 echo "checking for unused files..."
-for file in $(cd src && ls -1 *.gz *.tgz *.zip 2>/dev/null | grep -v JSON | grep -v common-sense | grep -v ExtUtils-MakeMaker | grep -v Module-CoreList- | grep -v Types-Serialiser- | grep -v parent- | grep -v YAML-LibYAML- | grep -v version-); do
+for file in $(cd src && ls -1 *.gz *.tgz *.zip 2>/dev/null | grep -v JSON | grep -v common-sense | grep -v ExtUtils-MakeMaker | grep -v Module-CoreList- | grep -v Types-Serialiser- | grep -v parent- | grep -v version-); do
     if [ $(grep -c "$file" Makefile) = 0 ]; then
         echo "$file is not used anymore"
     fi
