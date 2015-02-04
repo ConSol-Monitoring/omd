@@ -29,6 +29,8 @@ This file documents the revision history for the Open Monitoring Distribution
             - FIX: Update mechanism detects obsolete but non empty directories
               correctly and asks the user whether or not to delete them
             - FIX: SLES omd init-Script does not use default runlevel 4 anymore
+            - FIX: Added PYTHONPATH to site crontab for being able to access
+              the sites python modules as when run in interactive mdoe
           - NagVis:
             - Update to version 1.8rc1
             - Removed deprecated directory var/nagvis/userfiles. This was
