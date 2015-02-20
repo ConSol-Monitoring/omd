@@ -1,16 +1,16 @@
-Summary:        OMD - OpenSource Monitoring Distribution
+Summary:        OMD - OpenSource Monitoring Distribution (New Cores Edition)
 Name:           omd-%{version}
 Version:        SET BY MAKEFILE
-Release:        SET BY MAKEFILE 
+Release:        SET BY MAKEFILE
 License:        GPL
-URL:            http://omdistro.org/
+URL:            http://labs.consol.de/
 Group:          Application/System
 Source:         %{name}.tar.gz
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root
 AutoReq:        off
 AutoProv:       off
 Provides:       omd
-Requires:	
+Requires:
 
 #%define _missing_doc_files_terminate_build 0
 #%define _unpackaged_files_terminate_build 0
@@ -21,10 +21,10 @@ Requires:
 
 
 %description
-Open Source Monitoring Distribution, containing Nagios,
-the Nagios plugins, Check_MK, Livestatus, Multisite,
-PNP4Nagios, NagVis, and other addons. Please visit
-http://omdistro.org/.
+Open Source Monitoring Distribution (New Cores Edition),
+containing Nagios3 and Nagios4, Icinga1 and 2, Shinken,
+Thruk, Mod-Gearman, Nagvis, PNP4Nagios and many more...
+Maintained by http://labs.consol.de/.
 
 %prep
 %setup -q -n omd-%{version}

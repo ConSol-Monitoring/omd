@@ -1,0 +1,17 @@
+--- a/icinga-app/icinga.cpp	2015-02-13 15:06:28.833541996 +0100
++++ b/icinga-app/icinga.cpp	2015-02-13 15:06:40.454543276 +0100
+@@ -355,10 +355,10 @@
+ 		Logger::DisableTimestamp(true);
+ #ifndef _WIN32
+ 		if (command->GetImpersonationLevel() == ImpersonateRoot) {
+-			if (getuid() != 0) {
+-				Log(LogCritical, "cli", "This command must be run as root.");
+-				return 0;
+-			}
++			//if (getuid() != 0) {
++			//	Log(LogCritical, "cli", "This command must be run as root.");
++			//	return 0;
++			//}
+ 		} else if (command && command->GetImpersonationLevel() == ImpersonateIcinga) {
+ 			String group = Application::GetRunAsGroup();
+ 	

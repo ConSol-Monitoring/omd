@@ -1,0 +1,43 @@
+--- a/etc/mod-gearman/server.cfg	2011-12-29 22:19:49.281089611 +0100
++++ b/etc/mod-gearman/server.cfg	2011-12-29 22:21:54.745094683 +0100
+@@ -18,12 +18,11 @@
+ debug=0
+ 
+ # Path to the logfile.
+-logfile=%LOGFILE_NEB%
+-
+-# sets the addess of your gearman job server. Can be specified
+-# more than once to add more server.
+-server=localhost:4730
++logfile=###ROOT###/var/log/gearman/neb.log
+ 
++# server address is set by "omd config"
++# please change port only by using the "omd config" command.
++config=###ROOT###/etc/mod-gearman/port.conf
+ 
+ # sets the address of your 2nd (duplicate) gearman job server. Can
+ # be specified more than once o add more servers.
+@@ -80,13 +79,13 @@
+ # A shared password which will be used for
+ # encryption of data pakets. Should be at least 8
+ # bytes long. Maximum length is 32 characters.
+-key=should_be_changed
++#key=should_be_changed
+ 
+ 
+ # The shared password will be read from this file.
+ # Use either key or keyfile. Only the first 32
+ # characters will be used.
+-#keyfile=/path/to/secret.file
++keyfile=###ROOT###/etc/mod-gearman/secret.key
+ 
+ 
+ ###############################################################################
+@@ -125,6 +124,6 @@
+ # Performance data is just written to the gearman
+ # queue.
+ # Default: no
+-perfdata=no
++config=###ROOT###/etc/mod-gearman/perfdata.conf
+ 
+ 

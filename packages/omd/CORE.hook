@@ -21,21 +21,25 @@ make_link ()
 
 case "$1" in
     default)
-            if [ -e $OMD_ROOT/bin/nagios ] ; then echo "nagios"
+            if [ -e $OMD_ROOT/bin/naemon ] ; then echo "naemon"
+            elif [ -e $OMD_ROOT/bin/nagios ] ; then echo "nagios"
             elif [ -e $OMD_ROOT/bin/icinga ] ; then echo "icinga"
+            elif [ -e $OMD_ROOT/bin/icinga2 ] ; then echo "icinga2"
             elif [ -e $OMD_ROOT/bin/shinken-arbiter ] ; then echo "shinken"
             else echo "none"
             fi
     ;;
     choices)
-            [ ! -e $OMD_ROOT/bin/nagios ] || echo "nagios: Nagios"
-            [ ! -e $OMD_ROOT/bin/icinga ] || echo "icinga: Icinga"
+            [ ! -e $OMD_ROOT/bin/nagios ] || echo "nagios: Nagios 3"
+            [ ! -e $OMD_ROOT/bin/naemon ] || echo "naemon: Naemon"
+            [ ! -e $OMD_ROOT/bin/icinga ] || echo "icinga: Icinga 1"
+            [ ! -e $OMD_ROOT/bin/icinga2 ] || echo "icinga2: Icinga 2"
             [ ! -e $OMD_ROOT/bin/shinken-arbiter ] || echo "shinken: Shinken"
             echo "none: No monitoring core"
     ;;
     set)
         # cleanup the former selection
-        if [ "$2" != "nagios" ]
+        if [ "$2" != "nagios" -a "$2" != "naemon" ]
         then
             rm -f $OMD_ROOT/etc/apache/conf.d/nagios.conf
             rm -f $OMD_ROOT/etc/apache/conf.d/icinga.conf
@@ -48,7 +52,7 @@ case "$1" in
         fi
         rm -f $OMD_ROOT/etc/init.d/core
         # now setup the new selection
-        if [ "$2" == "nagios" ]
+        if [ "$2" == "nagios" -o "$2" == "naemon" ]
         then
             make_link ../../nagios/apache.conf $OMD_ROOT/etc/apache/conf.d/nagios.conf
             make_link ../../icinga/apache.conf $OMD_ROOT/etc/apache/conf.d/icinga.conf
@@ -56,9 +60,9 @@ case "$1" in
             # Beware: do not change the number of spaces before '='. Otherwise we will get severe
             # merge conflicts at 'omd mv'
             sed -i -e "s|^nagios_binary[[:space:]]*=.*$|nagios_binary               = '$OMD_ROOT/bin/$2'|" $OMD_ROOT/etc/check_mk/defaults
-            sed -i -e "s|^nagios_config_file[[:space:]]*=.*$|nagios_config_file          = '$OMD_ROOT/tmp/$2/$2.cfg'|" $OMD_ROOT/etc/check_mk/defaults
-            sed -i -e "s|^nagios_url[[:space:]]*=.*$|nagios_url                  = '/$OMD_SITE/$2'|" $OMD_ROOT/etc/check_mk/defaults
-            sed -i -e "s|^nagios_cgi_url[[:space:]]*=.*$|nagios_cgi_url              = '/$OMD_SITE/$2/cgi-bin'|" $OMD_ROOT/etc/check_mk/defaults
+            sed -i -e "s|^nagios_config_file[[:space:]]*=.*$|nagios_config_file          = '$OMD_ROOT/tmp/nagios/nagios.cfg'|" $OMD_ROOT/etc/check_mk/defaults
+            sed -i -e "s|^nagios_url[[:space:]]*=.*$|nagios_url                  = '/$OMD_SITE/nagios'|" $OMD_ROOT/etc/check_mk/defaults
+            sed -i -e "s|^nagios_cgi_url[[:space:]]*=.*$|nagios_cgi_url              = '/$OMD_SITE/nagios/cgi-bin'|" $OMD_ROOT/etc/check_mk/defaults
         elif [ "$2" == "icinga" ]
         then
             make_link ../../nagios/apache.conf $OMD_ROOT/etc/apache/conf.d/nagios.conf
@@ -80,6 +84,18 @@ case "$1" in
             rm -f $OMD_ROOT/etc/apache/conf.d/icinga.conf
             rm -f $OMD_ROOT/etc/apache/conf.d/shinken.conf
         fi
+
+        if [ "$2" == "icinga2"  ]; then
+            make_link ../../nagios/apache.conf $OMD_ROOT/etc/apache/conf.d/nagios.conf
+            make_link ../../icinga/apache.conf $OMD_ROOT/etc/apache/conf.d/icinga.conf
+            make_link icinga2 $OMD_ROOT/etc/init.d/core
+        fi
+        if [ "$2" == "naemon"  ]; then
+            make_link naemon $OMD_ROOT/etc/init.d/core
+        fi
+        # refresh some hooks
+        [ "$CONFIG_PNP4NAGIOS" ]  && CONFIG_CORE="$2" $OMD_ROOT/lib/omd/hooks/PNP4NAGIOS  set "$CONFIG_PNP4NAGIOS"
+        [ "$CONFIG_GEARMAN_NEB" ] && CONFIG_CORE="$2" $OMD_ROOT/lib/omd/hooks/GEARMAN_NEB set "$CONFIG_GEARMAN_NEB"
     ;;
 esac
 

@@ -9,7 +9,7 @@
 
 case "$1" in
     default)
-            echo "welcome"
+            echo "thruk"
     ;;
     choices)
             echo "welcome: Welcome page which lists all available GUIs"

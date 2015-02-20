@@ -1,4 +1,11 @@
-This file documents the revision history for the Open Monitoring Distribution
+WARNING: this is not a official OMD release!
+
+This file documents the revision history for the Open Monitoring Distribution (NewCores Edition)
+
+2.00
+          - new core Naemon 1.0.0 added
+          - new core Icinga 2.2.4 added
+
 
 1.30 (next, not yet released)
           - omd:

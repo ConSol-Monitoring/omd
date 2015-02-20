@@ -233,6 +233,9 @@ sub file_contains {
 sub create_test_site {
     my $site = $_[0] || "testsite";
     if(test_command({ cmd => TestUtils::get_omd_bin()." create $site" })) {
+        # disable cookie auth for tests
+        my $omd_bin = TestUtils::get_omd_bin();
+        print `$omd_bin config $site set THRUK_COOKIE_AUTH off`;
         return $site;
     }
     return;
@@ -778,6 +781,8 @@ sub _diag_cmd {
         my $site = $1;
         _tail("apache logs:", "/omd/sites/$site/var/log/apache/error_log") if defined $site;
         _tail_apache_logs();
+        _tail("nagios livestatus nagios logs:", "/omd/sites/$site/var/nagios/livestatus.log") if defined $site;
+        _tail("naemon livestatus logs:", "/omd/sites/$site/var/naemon/livestatus.log") if defined $site;
     }
     if( $stderr =~ m/User '(\w+)' still logged in or running processes/ ) {
         my $site = $1;

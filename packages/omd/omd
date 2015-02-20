@@ -27,7 +27,7 @@
 import sys, os, shutil, pwd, grp, re, time, pprint, tty, termios, traceback, tarfile
 from subprocess import *
 
-OMD_VERSION = "1.20"
+OMD_VERSION = "2.00-newcores"
 
 # Some global variables
 opt_verbose     = False

@@ -31,7 +31,7 @@ if [ $? -eq 0 ]; then
   fi
   version="$major.$minor"
 
-  echo $version.$date | tr -d 'v'
+  echo $version.$date-newcores | tr -d 'v'
   exit 1
 fi
 

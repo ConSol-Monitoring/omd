@@ -5,7 +5,7 @@
 . /usr/share/debconf/confmodule
 
 db_version 2.0
-db_title "OMD - Open Monitoring Distribution"
+db_title "OMD - Open Monitoring Distribution (New Cores Edition)"
 
 db_get omd/nagios-plugins-suid
 if [ -z "$RET" ]; then

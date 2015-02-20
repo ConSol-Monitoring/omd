@@ -1,11 +1,13 @@
 etc/cron.d/thruk.auto 0660
 etc/init.d/thruk 0770
+etc/init-hooks.d/apache-start-post 0770
 etc/init-hooks.d/apache-start-pre.sample 0770
 etc/thruk/bp 0770
 etc/thruk/fcgid_env.sh 0770
 etc/thruk/reload_cron.sh 0770
 tmp/icinga/checkresults 0770
 tmp/nagios/checkresults 0770
+tmp/naemon/checkresults 0770
 tmp/thruk 0770
 var/log/thruk.log 0660
 var/thruk 0770
