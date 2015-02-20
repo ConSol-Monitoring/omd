@@ -1,4 +1,4 @@
-Summary:        OMD - OpenSource Monitoring Distribution (New Cores Edition)
+Summary:        New Cores OMD - OpenSource Monitoring Distribution (New Cores Edition)
 Name:           omd-%{version}
 Version:        SET BY MAKEFILE
 Release:        SET BY MAKEFILE
