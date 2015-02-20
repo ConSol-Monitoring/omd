@@ -1,0 +1,19 @@
+Index of patches
+
+0002:
+    The file include/utils.inc.php includes config.inc.php by going up 
+    one directory in the physical directory tree. This patch changes that
+    behaviour in a way needed for OMD: It is including the site specific
+    config file /omd/sites/###SITE###/etc/ngaios/config.inc.php. The site name
+    is extracted from the script file name (supplied by Apache).
+
+0010:
+    This patches fixed the problem to jump back to the start page
+    whenever you press F5.
+
+0017:
+   This patch removes a check in the configuration validation that complains
+   when there are no hosts or services. That way OMD does not need a dummy
+   host anymore but can start plain without any host or service. The cgi-bins,
+   Thruk and Multisite do not show any problems. Nor does the Nagios core.
+

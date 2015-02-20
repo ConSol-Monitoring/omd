@@ -1,9 +1,0 @@
-#!/bin/sh
-
-# arguments are:
-# <initscriptname> <start|stop> <pre|post> <init script exitcode>
-
-# check return code of apache start
-if [ $4 = 0 ]; then
-  ./etc/init.d/thruk start
-fi

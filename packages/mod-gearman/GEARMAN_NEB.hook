@@ -26,9 +26,14 @@ case "$1" in
                 echo ${key:0:32} > $KEYSTORE
             fi
             mkdir -p $OMD_ROOT/etc/nagios/nagios.d
-            ln -sfn ../../mod-gearman/nagios.cfg $OMD_ROOT/etc/nagios/nagios.d/mod-gearman.cfg
             mkdir -p $OMD_ROOT/etc/icinga/icinga.d
-            ln -sfn ../../mod-gearman/nagios.cfg $OMD_ROOT/etc/icinga/icinga.d/mod-gearman.cfg
+            if [ $CONFIG_CORE = "naemon" ]; then
+                ln -sfn ../../mod-gearman/naemon.cfg $OMD_ROOT/etc/nagios/nagios.d/mod-gearman.cfg
+                ln -sfn ../../mod-gearman/naemon.cfg $OMD_ROOT/etc/icinga/icinga.d/mod-gearman.cfg
+            else
+                ln -sfn ../../mod-gearman/nagios.cfg $OMD_ROOT/etc/nagios/nagios.d/mod-gearman.cfg
+                ln -sfn ../../mod-gearman/nagios.cfg $OMD_ROOT/etc/icinga/icinga.d/mod-gearman.cfg
+            fi
         fi
     ;;
     depends)

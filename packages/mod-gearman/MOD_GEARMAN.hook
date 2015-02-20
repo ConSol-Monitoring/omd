@@ -27,9 +27,12 @@ case "$1" in
             ln -sfn ../../mod-gearman/nagios.cfg $OMD_ROOT/etc/nagios/nagios.d/mod-gearman.cfg
             mkdir -p $OMD_ROOT/etc/icinga/icinga.d
             ln -sfn ../../mod-gearman/nagios.cfg $OMD_ROOT/etc/icinga/icinga.d/mod-gearman.cfg
+            mkdir -p $OMD_ROOT/etc/naemon/naemon.d
+            ln -sfn ../../mod-gearman/naemon.cfg $OMD_ROOT/etc/naemon/naemon.d/mod-gearman.cfg
         else
             rm -f $OMD_ROOT/etc/nagios/nagios.d/mod-gearman.cfg
             rm -f $OMD_ROOT/etc/icinga/icinga.d/mod-gearman.cfg
+            rm -f $OMD_ROOT/etc/naemon/naemon.d/mod-gearman.cfg
         fi
     ;;
 esac

@@ -1,0 +1,11 @@
+--- pnp4nagios-0.6.24/src/npcdmod.c	2014-07-30 12:32:23.000000000 +0200
++++ pnp4nagios-0.6.24/src/npcdmod.c.neu	2014-09-08 17:53:19.933690506 +0200
+@@ -20,6 +20,8 @@
+  *
+  *****************************************************************************/
+ 
++#define _NAEMON_H_INSIDE
++
+ /* include (minimum required) event broker header files */
+ #include "../include/nebmodules.h"
+ #include "../include/nebcallbacks.h"

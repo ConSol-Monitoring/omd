@@ -213,7 +213,7 @@ for my $url ( @{$urls}, @{$shared_urls}, @{$own_urls}, @{$cookie_urls} ) {
     }
 }
 
-for my $core (qw/nagios shinken icinga/) {
+for my $core (qw/nagios icinga shinken/) {
     ##################################################
     # run our tests
     TestUtils::test_command({ cmd => $omd_bin." stop $site" });

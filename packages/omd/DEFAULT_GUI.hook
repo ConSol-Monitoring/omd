@@ -9,7 +9,7 @@
 
 case "$1" in
     default)
-            if [ ! -z "$CONFIG_WEB" ]; then echo "$CONFIG_WEB"; else  echo "welcome"; fi
+            if [ ! -z "$CONFIG_WEB" ]; then echo "$CONFIG_WEB"; else  echo "thruk"; fi
     ;;
     choices)
             echo "welcome: Welcome page which lists all available GUIs"

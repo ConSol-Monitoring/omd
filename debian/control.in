@@ -1,16 +1,16 @@
 Source: omd-###OMD_VERSION###
 Section: admin
 Priority: optional
-Maintainer: OMD-Team <debian@omdistro.org>
+Maintainer: Labs Consol <sven@consol.de>
 Build-Depends:@dpatch,@debhelper@(>=@7),@###BUILD_PACKAGES###
 Standards-Version: 3.8.3
-Homepage: http://www.omdistro.org
+Homepage: http://labs.consol.de
 
 Package: omd-###OMD_VERSION###
 Architecture: any
 Depends:@${misc:Depends},@###OS_PACKAGES###
-Description:  Open Source Monitoring Distribution, containing Nagios,
- the Nagios plugins, Check_MK, Livestatus, Multisite,
- PNP4Nagios, NagVis, and other addons. Please visit
- http://omdistro.org/.
+Description: Open Source Monitoring Distribution (New Cores Edition),
+ containing Nagios3 and Nagios4, Icinga1 and 2, Shinken,
+ Thruk, Mod-Gearman, Nagvis, PNP4Nagios and many more...
+ Maintained by http://labs.consol.de/.
 

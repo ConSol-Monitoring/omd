@@ -1,0 +1,11 @@
+--- a/icinga-app/icinga.cpp	2015-01-24 22:55:39.457303112 +0100
++++ b/icinga-app/icinga.cpp	2015-01-24 22:56:14.888238472 +0100
+@@ -202,7 +202,7 @@
+ 		return EXIT_FAILURE;
+ 	}
+ 
+-	String initconfig = Application::GetSysconfDir() + "/icinga2/init.conf";
++	String initconfig = std::string(getenv("OMD_ROOT")) + "/etc/icinga2/init.conf";
+ 
+ 	if (Utility::PathExists(initconfig)) {
+ 		ConfigCompilerContext::GetInstance()->Reset();

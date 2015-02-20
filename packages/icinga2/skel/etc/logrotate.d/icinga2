@@ -1,0 +1,24 @@
+###ROOT###var/log/icinga2.log {
+    daily
+    rotate 7
+    compress
+    delaycompress
+    missingok
+    notifempty
+    create 0644 ###SITE### ###SITE###
+    copytruncate
+    postrotate
+        [ -f ###ROOT###/tmp/run/icinga2.pid ] && kill -s USR1 `cat ###ROOT###/tmp/run/icinga2.pid`
+    endscript
+}
+
+###ROOT###/var/log/icinga2/error.log {
+    daily
+    rotate 90
+    compress
+    delaycompress
+    missingok
+    notifempty
+    create 0644 ###SITE### ###SITE###
+    copytruncate
+}

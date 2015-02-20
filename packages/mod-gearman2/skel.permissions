@@ -1,0 +1,2 @@
+etc/init.d/gearman_worker 0755
+etc/mod-gearman/secret.key 0600

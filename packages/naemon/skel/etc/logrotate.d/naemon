@@ -1,0 +1,14 @@
+###ROOT###/var/naemon/naemon.log {
+    daily
+    rotate 3650
+    nocompress
+    olddir ###ROOT###/var/naemon/archive
+    dateext
+    dateformat -%Y%m%d
+    missingok
+    notifempty
+    postrotate
+      [ -f ###ROOT###/tmp/lock/naemon.lock ] && kill -s USR1 `cat ###ROOT###/tmp/lock/naemon.lock`
+    endscript
+    create 0664 ###SITE### ###SITE###
+}

@@ -17,19 +17,24 @@ PACKAGES=perl-modules \
          mk-livestatus \
          mysql-omd \
          icinga \
+         icinga2 \
          nagios \
          monitoring-plugins \
+         naemon \
          nagvis \
          nrpe \
          nsca \
          omd \
          pnp4nagios \
+         pnp4nagios4 \
          rrdtool \
          shinken \
          thruk \
          maintenance \
          gearmand \
          mod-gearman \
+         mod-gearman2 \
+         naemon-livestatus \
          patch \
          nail \
          notifications-tt
