@@ -25,7 +25,7 @@ port_is_used ()
         conf=/omd/sites/$S/etc/omd/site.conf
         [ $S != $OMD_SITE ] || continue # skip current site
         if ! ls $conf >/dev/null 2>&1; then
-            echo "ERROR: Failed to read config of site ${S}. APACHE_TCP_PORT will propably be allocated twice" >&2
+            echo "ERROR: Failed to read config of site ${S}. APACHE_TCP_PORT will possibly be allocated twice" >&2
             continue
         fi
         if grep -qx "CONFIG_APACHE_TCP_PORT='$PORT'" < $conf > /dev/null 2>&1 ; then
