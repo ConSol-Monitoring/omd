@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # chkconfig: 345 99 01
-# description: Icinga network monitoring daemon (version 2)
+# description: Icinga2 network monitoring daemon
 
 ### BEGIN INIT INFO
 # Provides:       icinga2
@@ -9,7 +9,7 @@
 # Required-Stop:
 # Default-Start:  2 3 5
 # Default-Stop:
-# Description:    Icinga network monitoring daemon (v2)
+# Description:    Icinga2 network monitoring daemon
 ### END INIT INFO
 
 cd ###ROOT###
@@ -154,7 +154,7 @@ esac
 __init_hook $0 $1 pre
 case "$1" in
     start)
-         echo -n "Starting icinga..."
+         echo -n "Starting icinga2..."
          if pidof_icinga2 >/dev/null 2>&1; then
              echo 'Already running.'
              exit 1
@@ -175,7 +175,7 @@ case "$1" in
          fi
     ;;
     stop)
-        echo -n "Stopping icinga..."
+        echo -n "Stopping icinga2..."
         if icinga2_wait_stop; then
             echo 'OK'
              __init_hook $0 $1 post 0
@@ -207,8 +207,8 @@ case "$1" in
             exit 1
         fi
 
-        $0 stop || (echo "Unable to stop icinga. Terminating..." && exit 1)
-        echo -n "Starting icinga..."
+        $0 stop || (echo "Unable to stop icinga2. Terminating..." && exit 1)
+        echo -n "Starting icinga2..."
         if icinga2_wait_start; then
             echo 'OK'
             exit 0
@@ -229,7 +229,7 @@ case "$1" in
             exit $?
         fi
 
-        echo -n "Reloading icinga configuration (PID: $PID)... "
+        echo -n "Reloading icinga2 configuration (PID: $PID)... "
         if kill -HUP ${PID:-} >/dev/null 2>&1; then
             echo 'OK'
             exit 0
@@ -240,7 +240,7 @@ case "$1" in
     ;;
 
     *)
-        echo "Usage: icinga {start|stop|restart|reload|status|checkconfig}"
+        echo "Usage: icinga2 {start|stop|restart|reload|status|checkconfig}"
         exit 2
     ;;
 esac
