@@ -46,6 +46,7 @@ OS_PACKAGES    += fping
 OS_PACKAGES    += gd
 OS_PACKAGES    += graphviz
 OS_PACKAGES    += libboost_program_options1_36_0
+OS_PACKAGES    += libboost_regex1_36_0
 OS_PACKAGES    += libpng12-0
 OS_PACKAGES    += libevent-1_4-2
 OS_PACKAGES    += libltdl7

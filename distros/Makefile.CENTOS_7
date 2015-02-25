@@ -50,6 +50,7 @@ OS_PACKAGES      += time # needed for mk-job
 OS_PACKAGES      += traceroute # needed for Check_MK parent scan
 OS_PACKAGES      += boost-program-options
 OS_PACKAGES      += boost-date-time  # icinga 2
+OS_PACKAGES      += boost-regex      # icinga 2
 OS_PACKAGES      += curl
 OS_PACKAGES      += dialog
 OS_PACKAGES      += expat
