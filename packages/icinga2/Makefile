@@ -36,8 +36,6 @@ install:
 	rmdir $(DESTDIR)$(OMD_ROOT)/sbin
 	mv $(DESTDIR)$(OMD_ROOT)/lib*/icinga2/* $(DESTDIR)$(OMD_ROOT)/lib/
 	rm -rf $(DESTDIR)$(OMD_ROOT)/lib*/icinga2
-	mkdir -p $(DESTDIR)$(OMD_ROOT)/etc/bash_completion.d
-	install $(DIR)/etc/bash_completion.d/icinga2 $(DESTDIR)$(OMD_ROOT)/etc/bash_completion.d
 
 skel:
 	mkdir -p $(SKEL)/etc/icinga2
@@ -45,6 +43,8 @@ skel:
 	rm -rf $(SKEL)/etc/icinga2/conf.d/win32
 	mv $(SKEL)/etc/icinga2/constants.conf.cmake $(SKEL)/etc/icinga2/constants.conf
 	mv $(SKEL)/etc/icinga2/init.conf.cmake $(SKEL)/etc/icinga2/init.conf
+	mkdir -p $(SKEL)/etc/bash_completion.d
+	install $(DIR)/etc/bash_completion.d/icinga2 $(SKEL)/etc/bash_completion.d
 	sed -i -e 's/@ICINGA2_USER@/###SITE###/g' \
 	       -e 's/@ICINGA2_GROUP@/###SITE###/g' \
 	       -e 's/@ICINGA2_PLUGINDIR@/###ROOT###\/lib\/nagios\/plugins/g' \
