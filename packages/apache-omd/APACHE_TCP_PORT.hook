@@ -22,6 +22,9 @@ port_is_used ()
 {
     local PORT=$1
     for S in $(ls /omd/sites); do
+        if [ ! -d /omd/sites/$S ]; then
+            continue
+        fi
         conf=/omd/sites/$S/etc/omd/site.conf
         [ $S != $OMD_SITE ] || continue # skip current site
         if ! ls $conf >/dev/null 2>&1; then
