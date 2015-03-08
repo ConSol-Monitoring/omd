@@ -13,6 +13,7 @@ BUILD_PACKAGES   += httpd-devel
 BUILD_PACKAGES   += libmcrypt-devel
 BUILD_PACKAGES   += libxml2-devel
 BUILD_PACKAGES   += mysql-devel
+BUILD_PACKAGES   += postgresql-devel
 BUILD_PACKAGES   += ncurses-devel
 BUILD_PACKAGES   += net-snmp
 BUILD_PACKAGES   += net-snmp-utils

@@ -17,6 +17,7 @@ BUILD_PACKAGES += libldap2-dev
 BUILD_PACKAGES += libltdl-dev
 BUILD_PACKAGES += libmcrypt-dev
 BUILD_PACKAGES += libmysqlclient15-dev
+BUILD_PACKAGES += libpq-dev
 BUILD_PACKAGES += libpango1.0-dev
 BUILD_PACKAGES += libperl-dev
 BUILD_PACKAGES += libreadline-dev
