@@ -167,6 +167,7 @@ MODULES = \
           ExtUtils-ParseXS-3.24.tar.gz \
           IO-1.25.tar.gz \
           LWP-Protocol-https-6.06.tar.gz \
+          List-AllUtils-0.09.tar.gz \
           Module-Build-0.4007.tar.gz \
           Module-Build-Tiny-0.039.tar.gz \
           Module-Pluggable-5.1.tar.gz \
