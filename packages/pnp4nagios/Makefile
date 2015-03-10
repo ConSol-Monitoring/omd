@@ -3,7 +3,7 @@ include ../../Makefile.omd
 .PHONY: skel
 
 NAME = pnp4nagios
-VERSION = 0.6.24
+VERSION = 0.6.25
 DIR = $(NAME)-$(VERSION)
 # Unset CONFIG_SITE
 CONFIG_SITE = ''
