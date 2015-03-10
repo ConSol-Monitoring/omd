@@ -79,6 +79,10 @@ then
     then
         echo "REDHAT${SEP}7.0"
         exit 0
+    then
+        [[ $VERSION =~ (Fedora release ([0-9]+)) ]] && REL=${BASH_REMATCH[2]} || exit 0
+        echo "FEDORA$SEP$REL"
+        exit 0
     fi
 fi
 
