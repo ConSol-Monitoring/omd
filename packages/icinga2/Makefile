@@ -10,11 +10,12 @@ DIR = $(NAME)-$(VERSION)
 # as non-root, we use our own user and group for compiling.
 # All files will be packaged as user 'root' later anyway.
 CONFIGUREOPTS = \
-    -DICINGA2_GIT_VERSION_INFO=ON \
+    -DCMAKE_BUILD_TYPE=RELEASE \
     -DCMAKE_INSTALL_PREFIX=$(OMD_ROOT) \
     -DINSTALL_SBINDIR=$(OMD_ROOT)/bin \
+    -DICINGA2_GIT_VERSION_INFO=ON \
     -DICINGA2_WITH_MYSQL=OFF \
-    -DICINGA2_WITH_PGSQL=OFF \
+    -DICINGA2_WITH_PGSQL=ON \
     -DICINGA2_USER=root \
     -DICINGA2_GROUP=root
 
@@ -25,8 +26,10 @@ build:
 	    echo "applying $$p..." ; \
 	    ( cd $(DIR) ; patch -p1 ) < $$p || exit 1; \
 	done
-	cd $(DIR)/build; cmake .. $(CONFIGUREOPTS)
-	cd $(DIR)/build; make
+	cd $(DIR)/build && \
+		export CXXFLAGS=-O2; \
+		cmake .. $(CONFIGUREOPTS) && \
+		make -j1
 
 install:
 	$(MAKE) DESTDIR=$(DESTDIR) -C $(DIR)/build install
