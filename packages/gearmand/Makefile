@@ -4,7 +4,7 @@ NAME     = gearmand
 VERSION  = 0.33
 DIR      = gearmand-$(VERSION)
 SHELL    = /bin/bash
-BOOST    = $(shell grep '^\#define\s*BOOST_VERSION\s*[0-9][0-9]*' /usr/include/boost/version.hpp | awk '{ print $$3 }' )
+BOOST    = $(shell grep '^\#define\s*BOOST_VERSION\s*[0-9][0-9]*' /usr/include/boost/version.hpp /usr/include/boost*/boost/version.hpp 2>/dev/null | awk '{ print $$3 }' )
 
 CONFIGUREOPTS = \
     --disable-libmemcached \
@@ -34,8 +34,8 @@ build: clean
 		export LIBS="-lboost_system";  \
 	fi && \
 	cd $(DIR) && \
-	export LIBRARY_PATH=/usr/lib64/boost141:/usr/lib/boost141 && \
-	export LD_LIBRARY_PATH=/usr/lib64/boost141:/usr/lib/boost141 && \
+	export LIBRARY_PATH=$(shell ls -d1 ls -d1 /usr/lib*/boost*/. 2>/dev/null | tr '\n' ':') && \
+	export LD_LIBRARY_PATH=$(shell ls -d1 ls -d1 /usr/lib*/boost*/. 2>/dev/null | tr '\n' ':') && \
 	export CFLAGS=-std=c99 && \
 	export CPATH=/usr/include/boost141 && \
 	./configure $(CONFIGUREOPTS) && \
