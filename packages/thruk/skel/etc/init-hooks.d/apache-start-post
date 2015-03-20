@@ -5,7 +5,7 @@
 
 waitfor() {
     for i in $(seq 1 $1); do
-        sleep 2
+        sleep 0.1
         test -e ###ROOT###/tmp/apache/run/apache.pid || return 1 # only if apache is running, we don't want to break omd rm
         test -e $2 && return 0
     done
@@ -14,5 +14,5 @@ waitfor() {
 
 # check return code of apache start
 if [ $4 = 0 ]; then
-    (waitfor 30 $OMD_ROOT/tmp/run/live && ./etc/init.d/thruk start &) >/dev/null 2>&1
+    (waitfor 600 $OMD_ROOT/tmp/run/live && ./etc/init.d/thruk start &) >/dev/null 2>&1
 fi
