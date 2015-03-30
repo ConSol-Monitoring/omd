@@ -60,7 +60,7 @@ skel:
 	find $(SKEL) -name \*.orig -exec rm {} \;
 	mkdir -p $(SKEL)/etc/thruk/bp/
 	cp $(DIR)/examples/bp_functions.pm $(SKEL)/etc/thruk/bp/
-	cp $(DIR)/ssi/status-header.ssi-pnp $(SKEL)/etc/thruk/ssi/status-header.ssi-pnp
+	cp $(DIR)/ssi/status-header.ssi-pnp $(SKEL)/etc/thruk/ssi/status-header.ssi
 	cp $(DIR)/ssi/status-header.ssi-pnp $(SKEL)/etc/thruk/ssi/extinfo-header.ssi
 	cp $(DIR)/ssi/extinfo-header.ssi-tickets $(SKEL)/etc/thruk/ssi/extinfo-header.ssi-example
 
