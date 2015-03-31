@@ -2792,6 +2792,15 @@ def main_mv_or_cp(what, args, options={}):
         os.system("rsync -arx %s '%s/' '%s/'" %
                 (addopts, site_dir(g_sitename), site_dir(new)))
 
+        httpdlogdir = site_dir(new) + "/var/log/apache"
+        if not os.path.exists(httpdlogdir):
+            os.mkdir(httpdlogdir)
+
+        rrdcacheddir = site_dir(new) + "/var/rrdcached"
+        if not os.path.exists(rrdcacheddir):
+            os.mkdir(rrdcacheddir)
+
+
     # give new user all files
     chown_tree(site_dir(new), new)
 
