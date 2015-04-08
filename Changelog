@@ -1,6 +1,6 @@
 This file documents the revision history for the Open Monitoring Distribution
 
-1.30
+1.30 (next, not yet released)
           - omd:
             - Added "Basic / ADMIN_MAIL" hook to configure the target mail
               address for eMails sent to the site user (e.g. created by
