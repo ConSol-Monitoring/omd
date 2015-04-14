@@ -39,6 +39,7 @@ OS_PACKAGES    += bind-utils
 OS_PACKAGES    += curl
 OS_PACKAGES    += dialog
 OS_PACKAGES    += fping
+OS_PACKAGES    += gd
 OS_PACKAGES    += graphviz
 OS_PACKAGES    += libboost_program_options1_36_0
 OS_PACKAGES    += libpng12-0
