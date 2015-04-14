@@ -1749,7 +1749,7 @@ def config_load():
         if not var.startswith("CONFIG_"):
             sys.stderr.write("Ignoring invalid variable %s.\n" % var)
         else:
-            os.putenv(var, value)
+            putenv(var, value)
             var = var[7:]
             if var in g_hooks:
                 g_hooks[var]["value"] = value
@@ -1929,7 +1929,7 @@ def config_set(args):
     config_set_value(hookname, value)
 
 def config_set_all():
-    for hookname, hook in g_hooks.items():
+    for hookname, hook in sorted(g_hooks.items()):
         config_set_value(hookname, hook["value"], save = False)
 
 def config_set_value(hookname, value, save = True):
@@ -1939,12 +1939,16 @@ def config_set_value(hookname, value, save = True):
     # be our new value (i.e. hook disagrees with the new setting!)
     commandline = "%s/lib/omd/hooks/%s set '%s'" % (g_sitedir, hookname, value)
     if os.getuid() == 0:
-        commandline = 'su - %s -c "%s"' % (g_sitename, commandline)
+        commandline = 'su -l -p %s -c "%s"' % (g_sitename, commandline)
     answer = os.popen(commandline).read()
     if len(answer) > 0:
         value = answer.strip()
 
     hook["value"] = value
+    # config_load() writes all config vars to the environment
+    # Updated vars should directly be updated even in the env
+    # to have a consistent state.
+    putenv("CONFIG_"+hookname, value)
 
     if save:
         config_save()
