@@ -1939,7 +1939,7 @@ def config_set_value(hookname, value, save = True):
     # be our new value (i.e. hook disagrees with the new setting!)
     commandline = "%s/lib/omd/hooks/%s set '%s'" % (g_sitedir, hookname, value)
     if os.getuid() == 0:
-        commandline = 'su -l -p %s -c "%s"' % (g_sitename, commandline)
+        commandline = 'su -p %s -c "%s"' % (g_sitename, commandline)
     answer = os.popen(commandline).read()
     if len(answer) > 0:
         value = answer.strip()
