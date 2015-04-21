@@ -1,6 +1,6 @@
 diff -ur dokuwiki-2013-05-10a/lib/tpl/arctictut/style.ini dokuwiki-2013-05-10a/lib/tpl/arctictut/style.ini.neu
---- dokuwiki-2013-05-10a/lib/tpl/arctictut/main.php    2013-09-06 08:05:55.000000000 +0200
-+++ dokuwiki-2013-05-10a/lib/tpl/arctictut/main.php.neu        2013-11-24 22:14:37.000000000 +0100
+--- a/lib/tpl/arctictut/main.php    2013-09-06 08:05:55.000000000 +0200
++++ b/lib/tpl/arctictut/main.php.neu        2013-11-24 22:14:37.000000000 +0100
 @@ -133,6 +133,7 @@
                  break;
                case('links'):

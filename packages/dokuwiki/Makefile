@@ -1,8 +1,8 @@
 include ../../Makefile.omd
 
 NAME = dokuwiki
-VERSION = 2013-05-10a
-DIR = $(NAME)-2013-05-10a
+VERSION = 2014-09-29d
+DIR = $(NAME)
 
 .PHONY: skel
 
@@ -25,14 +25,35 @@ install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/dokuwiki
 	cp preload.php $(DIR)/inc/
 	cp -r authmultisite $(DIR)/lib/plugins/
-	touch $(DIR)/lib/plugins/plugin/disabled
-	touch $(DIR)/conf $(DIR)/data
-	rm -r $(DIR)/conf $(DIR)/data
+#	touch $(DIR)/conf $(DIR)/data
+#	rm -r $(DIR)/conf $(DIR)/data
 	cp -r $(DIR) $(DESTDIR)$(OMD_ROOT)/share/dokuwiki/htdocs
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/doc/dokuwiki
 	install -m 644 $(DIR)/README $(DESTDIR)$(OMD_ROOT)/share/doc/dokuwiki
 	install -m 644 $(DIR)/COPYING $(DESTDIR)$(OMD_ROOT)/share/doc/dokuwiki
 	install -m 644 $(DIR)/VERSION $(DESTDIR)$(OMD_ROOT)/share/doc/dokuwiki
+
+#install:
+#	$(MAKE) DESTDIR=$(DESTDIR) -C $(DIR) -j 1 install
+#	# fix path for plugin
+#	[ -d $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins ] || mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins
+#	mv $(DESTDIR)$(OMD_ROOT)/bin/check_gearman $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins/
+#	rm -rf $(DESTDIR)$(OMD_ROOT)/share/mod_gearman/*.conf
+#	rm -f $(DESTDIR)$(OMD_ROOT)/lib/mod_gearman/mod_gearman.so
+#	rm -rf $(DESTDIR)$(OMD_ROOT)/etc
+#	rm -rf $(DESTDIR)$(OMD_ROOT)/var
+
+skel:
+	mkdir -p $(SKEL)/etc/dokuwiki
+	cp $(DIR)/conf/*.conf				$(SKEL)/etc/dokuwiki/.
+	cp $(DIR)/conf/*.php$				$(SKEL)/etc/dokuwiki/.
+	cp $(DIR)/conf/acl.auth.php.dist	$(SKEL)/etc/dokuwiki/acl.auth.php
+	cp $(DIR)/conf/mysql.conf.php.example $(SKEL)/etc/dokuwiki/mysql.conf.php.example
+
+	for p in patches/*.skel_patch ; do \
+	    echo "applying $$p..." ; \
+	    ( cd $(SKEL) ; patch -p1 ) < $$p || exit 1; \
+	done
 
 clean:
 	# Remove files created by build/install
