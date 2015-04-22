@@ -17,13 +17,32 @@ fi
 
 case "$1" in
     start)
-        if [ "$CONFIG_MKEVENTD_SYSLOG" = on ] ; then
-            echo -n 'Starting mkeventd with integrated syslog...'
+        if [ "$CONFIG_MKEVENTD_SYSLOG" = on ] \
+           || [ "$CONFIG_MKEVENTD_SYSLOG_TCP" = on ] \
+           || [ "$CONFIG_MKEVENTD_SNMPTRAP" = on ]; then
+
+            ADD_TXT=
+            if [ "$CONFIG_MKEVENTD_SYSLOG" = on ]; then
+                ADD_TXT+='syslog-udp,'
+                OPTS+=' --syslog --syslog-fd 3'
+            fi
+            if [ "$CONFIG_MKEVENTD_SYSLOG_TCP" = on ]; then
+                ADD_TXT+='syslog-tcp,'
+                OPTS+=' --syslog-tcp --syslog-tcp-fd 4'
+            fi
+            if [ "$CONFIG_MKEVENTD_SNMPTRAP" = on ]; then
+                ADD_TXT+='snmptrap,'
+                OPTS+=' --snmptrap --snmptrap-fd 5'
+            fi
+
+            echo -n "Starting mkeventd (builtin: ${ADD_TXT%*,})..."
             if kill -0 $THE_PID >/dev/null 2>&1; then
               echo 'Already running.'
               exit 0
             fi
-            ${DAEMON}_open514 --syslog --syslog-fd 3 $OPTS
+
+
+            ${DAEMON}_open514 $OPTS
         else
             echo -n 'Starting mkeventd...'
             if kill -0 $THE_PID >/dev/null 2>&1; then

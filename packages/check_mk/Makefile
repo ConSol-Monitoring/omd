@@ -2,7 +2,7 @@ include ../../Makefile.omd
 
 SHELL = /bin/bash
 NAME = check_mk
-VERSION = 1.2.4p5
+VERSION = 1.2.6p1
 DIR = $(NAME)-$(VERSION)
 EDIR = mkeventd-$(VERSION)
 
@@ -12,6 +12,7 @@ build:
 	tar xzf $(DIR).tar.gz
 	tar xzf $(EDIR).tar.gz
 	cd $(EDIR)/src ; make
+	cd $(EDIR)/lib ; make
 
 install:
 	export bindir='$(OMD_ROOT)/bin' ; \
@@ -72,7 +73,7 @@ install:
 	install -m 755 $(EDIR)/src/mkevent $(DESTDIR)$(OMD_ROOT)/bin
 	install -m 755 $(EDIR)/src/mkeventd_open514 $(DESTDIR)$(OMD_ROOT)/bin
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins
-	install -m 755 $(EDIR)/lib/* $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins
+	install -m 755 $(EDIR)/lib/check_mkevents $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/check_mk/checks
 	install -m 644 $(EDIR)/checks/* $(DESTDIR)$(OMD_ROOT)/share/check_mk/checks
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/check_mk/web
@@ -80,7 +81,12 @@ install:
 	
 	# Install the diskspace cleanup plugin
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/diskspace
-	install -m 644 diskspace $(DESTDIR)$(OMD_ROOT)/share/diskspace/nagios
+	install -m 644 diskspace $(DESTDIR)$(OMD_ROOT)/share/diskspace/check_mk
+	
+	# Install active checks
+	tar xzf $(DIR)/doc.tar.gz -C $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins \
+	    --strip-components 2 --wildcards --no-anchored treasures/active_checks/*
+	chmod 755 $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins/*
 
 skel:
 	rm -f $(SKEL)/etc/check_mk/main.mk-*
