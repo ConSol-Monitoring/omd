@@ -1929,8 +1929,14 @@ def config_set(args):
     config_set_value(hookname, value)
 
 def config_set_all():
-    for hookname, hook in sorted(g_hooks.items()):
-        config_set_value(hookname, hook["value"], save = False)
+    if os.getuid() == 0:
+        os.system("omd config %s refresh" % g_sitename)
+        for hookname, hook in sorted(g_hooks.items()):
+            putenv("CONFIG_" + hookname, hook["value"])
+
+    else:
+	for hookname, hook in sorted(g_hooks.items()):
+	    config_set_value(hookname, hook["value"], save = False)
 
 def config_set_value(hookname, value, save = True):
     hook = g_hooks.get(hookname)
@@ -1939,7 +1945,10 @@ def config_set_value(hookname, value, save = True):
     # be our new value (i.e. hook disagrees with the new setting!)
     commandline = "%s/lib/omd/hooks/%s set '%s'" % (g_sitedir, hookname, value)
     if os.getuid() == 0:
-        commandline = 'su -p %s -c "%s"' % (g_sitename, commandline)
+        sys.stderr.write("I am root. This should never happen!\n")
+        sys.exit(1)
+
+        # commandline = 'su -p -l %s -c "%s"' % (g_sitename, commandline)
     answer = os.popen(commandline).read()
     if len(answer) > 0:
         value = answer.strip()
@@ -1948,7 +1957,7 @@ def config_set_value(hookname, value, save = True):
     # config_load() writes all config vars to the environment
     # Updated vars should directly be updated even in the env
     # to have a consistent state.
-    putenv("CONFIG_"+hookname, value)
+    putenv("CONFIG_" + hookname, value)
 
     if save:
         config_save()
@@ -2972,6 +2981,8 @@ def main_config(args, options={}):
             config_show(args)
         elif command == "set":
             config_set(args)
+        elif command == "refresh":
+            config_set_all()
         else:
             config_usage()
 
