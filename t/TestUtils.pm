@@ -248,7 +248,8 @@ sub create_test_site {
 =cut
 sub remove_test_site {
     my $site = shift;
-    test_command({ cmd => TestUtils::get_omd_bin()." rm $site", stdin => "yes\n" });
+    # kill all processes, sometimes checks are still running and prevent us from removing the site
+    test_command({ cmd => "/usr/bin/pkill -U $site -2; sleep 1;".TestUtils::get_omd_bin()." rm $site", stdin => "yes\n" });
     return;
 }
 
