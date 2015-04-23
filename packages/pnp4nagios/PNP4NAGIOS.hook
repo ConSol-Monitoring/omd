@@ -2,7 +2,7 @@
 
 # Alias: Process performance data with PNP4Nagios
 # Menu: Addons
-# Description: 
+# Description:
 #  PNP4Nagios is a great addon for storing Nagios performance data
 #  into round robin databases. This switch enabled the processing
 #  of performance data by pnp. It implies the starting of the daemon
@@ -40,7 +40,7 @@ case "$1" in
            fi
            if [ -e $OMD_ROOT/etc/icinga/icinga.d ] ; then
                ln -sfn ../../pnp4nagios/nagios_gearman.cfg $OMD_ROOT/etc/icinga/icinga.d/pnp4nagios.cfg
-           fi 
+           fi
            ln -sfn ../../pnp4nagios/apache.conf $OMD_ROOT/etc/apache/conf.d/pnp4nagios.conf
            if [ -s $OMD_ROOT/etc/mod-gearman/perfdata.conf ]; then
                sed -i -e 's/^perfdata=.*$/perfdata=yes/' $OMD_ROOT/etc/mod-gearman/perfdata.conf
@@ -52,7 +52,7 @@ case "$1" in
            fi
            if [ -e $OMD_ROOT/etc/icinga/icinga.d ] ; then
                ln -sfn ../../pnp4nagios/nagios_npcd.cfg $OMD_ROOT/etc/icinga/icinga.d/pnp4nagios.cfg
-           fi 
+           fi
            ln -sfn ../../pnp4nagios/apache.conf $OMD_ROOT/etc/apache/conf.d/pnp4nagios.conf
        else
            rm -f $OMD_ROOT/etc/nagios/nagios.d/pnp4nagios.cfg

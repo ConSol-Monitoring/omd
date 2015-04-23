@@ -13,13 +13,16 @@
 # handle the upgrade from 1.5 to 1.6x and leave the old files where they are.
 
 # Skip this when already copied once
-if [ ! -d $OMD_ROOT/var/nagvis/userfiles ] \
-   || [ -e $OMD_ROOT/var/nagvis/userfiles/.copied ]; then
-    exit 0
-fi
 
 case "$1" in
+    default)
+        echo
+    ;;
     refresh)
+        if [ ! -d $OMD_ROOT/var/nagvis/userfiles ] \
+           || [ -e $OMD_ROOT/var/nagvis/userfiles/.copied ]; then
+            exit 0
+        fi
         # Copy while excluding standard NagVis files
         rsync -a -f "- images/maps/*demo*.png" \
                  -f "- images/iconsets/20x20.gif" \

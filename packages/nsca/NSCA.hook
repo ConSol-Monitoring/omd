@@ -2,7 +2,7 @@
 
 # Alias: Make NSCA accessable via TCP
 # Menu: Distributed Monitoring
-# Description: 
+# Description:
 #  This option is used to make NSCA reachable via TCP on a port configurable with
 #  NSCA_TCP_PORT.
 

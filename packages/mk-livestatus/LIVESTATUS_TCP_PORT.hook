@@ -2,7 +2,7 @@
 
 # Alias: TCP port number for MK Livestatus
 # Menu: Distributed Monitoring
-# Description: 
+# Description:
 #  If Livestatus is configured to listen on a TCP port, you
 #  can configure that port here.
 

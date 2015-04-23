@@ -1,6 +1,9 @@
 #!/bin/bash
 
 case "$1" in
+    default)
+        echo
+    ;;
     refresh)
         cd $OMD_ROOT
         if [ -e etc/cron.d/thruk.auto ]; then

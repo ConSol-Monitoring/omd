@@ -2,7 +2,7 @@
 
 # Alias: Start site-local MySQL Daemon
 # Menu: Addons
-# Description: 
+# Description:
 #  If you want to use addons based on MySQL, then you can activate
 #  this option and a site specific MySQL daemon will be started.
 

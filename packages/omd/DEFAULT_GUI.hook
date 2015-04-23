@@ -2,10 +2,10 @@
 
 # Alias: Default web GUI
 # Menu: Web GUI
-# Description: 
+# Description:
 #  Here you can choose your default webinterface to use. You can run several Nagios GUIs at
 #  the same time but only one GUI can be your default. The default GUI is opened when
-#  someone opens your site in a browser without a specific URL. 
+#  someone opens your site in a browser without a specific URL.
 
 case "$1" in
     default)

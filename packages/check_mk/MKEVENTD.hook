@@ -2,7 +2,7 @@
 
 # Alias: Start Daemon for Check_MK Event Console
 # Menu: Addons
-# Description: 
+# Description:
 #  This option enables mkeventd - the event correlation and
 #  classification daemon of Check_MK. This daemon will receive
 #  events via a pipe or socket and applies it so a set of

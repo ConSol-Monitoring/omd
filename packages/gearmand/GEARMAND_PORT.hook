@@ -2,7 +2,7 @@
 
 # Alias: Port for the Gearman Daemon
 # Menu: Distributed Monitoring
-# Description: 
+# Description:
 #  Set the listen address and port for gearmand. Use the fqdn instead of localhost
 #  to make gearman accessible from other hosts too. Use ":port" to bind on all
 #  interfaces.

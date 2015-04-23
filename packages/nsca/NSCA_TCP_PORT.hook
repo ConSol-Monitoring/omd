@@ -2,7 +2,7 @@
 
 # Alias: TCP port number for NSCA
 # Menu: Distributed Monitoring
-# Description: 
+# Description:
 #  Configure the TCP port used for NSCA
 
 case "$1" in

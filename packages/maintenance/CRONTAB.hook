@@ -2,7 +2,7 @@
 
 # Alias: Initialize site crontab via etc/init.d/crontab
 # Menu: Basic
-# Description: 
+# Description:
 #  Merge all files in etc/cron.d and initialize a site specific crontab.
 
 case "$1" in

@@ -2,11 +2,11 @@
 
 # Alias: TCP port number and listening address for MongoDB
 # Menu: Addons
-# Description: 
+# Description:
 #  Configure the TCP port used for the MongoDB
-#  process of this site. This option is only useful if 
+#  process of this site. This option is only useful if
 #  the CORE is set to "shinken" and MONGODB is set to "on".
-#  
+#
 
 
 port_is_used ()

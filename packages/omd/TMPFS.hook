@@ -3,7 +3,7 @@
 # Alias: Use a ramdisk for temporary files
 # Menu: Basic
 #  This settings decides, wether this site uses a ramdisk for
-#  temporary files. Using a ramdisk reduces disk IO produced 
+#  temporary files. Using a ramdisk reduces disk IO produced
 #  during monitoring dramatically. It is highly recommended to
 #  leave this option enabled. Only disable this if you really
 #  need to.

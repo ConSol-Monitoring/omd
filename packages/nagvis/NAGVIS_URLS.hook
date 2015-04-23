@@ -2,12 +2,12 @@
 
 # Alias: NagVis linked Web GUI
 # Menu: Addons
-# Description: 
+# Description:
 #  When clicking on NagVis map icons the user is redirected to another
 #  Web-GUI. By default this is the classic Nagios webinterface. With
 #  this switch the targeted Web-GUI can be changed.
 
-# Makes it possible to switch all the links from NagVis 
+# Makes it possible to switch all the links from NagVis
 # to the default Web GUI to the choosen GUI or a defined
 # other one.
 #
@@ -52,7 +52,7 @@ case "$1" in
         if [ ! -d $OMD_ROOT/etc/nagvis/conf.d ]; then
             mkdir -p $OMD_ROOT/etc/nagvis/conf.d
         fi
-        
+
         if [ "$GUI" == "check_mk" ]; then
             HTMLCGI="/$OMD_SITE/check_mk"
             HOSTURL="[htmlcgi]/view.py?view_name=host&site=&host=[host_name]"

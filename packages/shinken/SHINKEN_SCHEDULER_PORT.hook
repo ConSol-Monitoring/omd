@@ -2,7 +2,7 @@
 
 # Alias: TCP port the Shinken scheduler listens on
 # Menu: Basic
-# Description: 
+# Description:
 #  If you configured Shinken as the monitoring core, this is the
 #  listening port of the scheduler .
 

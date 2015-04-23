@@ -2,7 +2,7 @@
 
 # Alias: Gearman Daemon
 # Menu: Distributed Monitoring
-# Description: 
+# Description:
 #  Gearman is the central job server for distributed monitoring
 #  based on Mod-Gearman. You have to start at least one job server
 #  somewhere. Keep the gearmand close to the nagios core for maximum
