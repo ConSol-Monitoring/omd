@@ -50,5 +50,6 @@ EOF
           [ -f $NAGVIS_CFG ] && rm $NAGVIS_CFG
           [ -f $PNP_CFG ] && rm $PNP_CFG
        fi
+       true
    ;;
 esac

@@ -9,7 +9,7 @@
 
 case "$1" in
     default)
-            if [ ! -z "$CONFIG_WEB" ]; then echo "$CONFIG_WEB"; else  echo "welcome"; fi
+            echo "welcome"
     ;;
     choices)
             echo "welcome: Welcome page which lists all available GUIs"
@@ -20,19 +20,7 @@ case "$1" in
             [ -e $OMD_ROOT/share/nagvis ]        && echo "nagvis: NagVis - The visualisation addon for Nagios"
             echo "none: No default webinterface"
     ;;
-    set)
-            # This is some sort of hack. The problem here:
-            # The NAGVIS_URL hook depends on this hooks value but is not
-            # executed when this hook is changed. It would be better to
-            # solve this in a more general way in omd.
-            if [ "$2" == "welcome" -o "$2" == "nagvis" ]; then
-                omd config set NAGVIS_URLS nagios >/dev/null 2>&1
-            else
-                omd config set NAGVIS_URLS $2 >/dev/null 2>&1
-            fi
-    ;;
     depends)
         [ "$CONFIG_APACHE_MODE" != none ]
     ;;
 esac
-

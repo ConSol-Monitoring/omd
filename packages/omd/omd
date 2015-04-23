@@ -33,7 +33,12 @@ OMD_VERSION = "1.20"
 opt_verbose     = False
 opt_interactive = False
 opt_force       = False
-g_hooks         = None
+
+# Global variables, that are *always* present as soon as we deal with
+# one specific site. They are set by set_site_globals()
+g_sitename      = None # "mysite"
+g_sitedir       = None # "/omd/sites/mysite"
+g_site_conf     = None # { "CORE" : "nagios", ... } (contents of etc/omd/site.conf plus defaults from hooks)
 
 #   .--Logging-------------------------------------------------------------.
 #   |                _                      _                              |
@@ -384,8 +389,8 @@ def useradd(sitename, uid = None, gid = None):
         groupdel(sitename)
         bail_out("Error creating site user.")
 
-    # Add Apache to new group. It needs to be able to write in to the 
-    # command pipe and possible other stuff 
+    # Add Apache to new group. It needs to be able to write in to the
+    # command pipe and possible other stuff
     add_user_to_group(g_info["APACHE_USER"], sitename)
 
 def add_user_to_group(user, group):
@@ -393,7 +398,7 @@ def add_user_to_group(user, group):
     return os.system(cmd + " >/dev/null") == 0
 
 def userdel(name):
-    os.system("userdel -r " + name + " 2>/dev/null")
+    os.system("userdel -r %s >/dev/null 2>&1" % name)
     # On some OSes (e.g. debian) the group is automatically removed if
     # it bears the same name as the user. So first check for the group.
     if group_exists(name):
@@ -452,10 +457,6 @@ def group_id(name):
     except:
         return None
 
-def switch_back_to_root():
-    os.setgid(0)
-    os.setuid(0)
-
 def user_logged_in(name):
     # Check, if processes of named user are existing
     return os.system("ps --no-headers --user '%s' >/dev/null 2>&1" % name) == 0
@@ -495,7 +496,7 @@ def switch_to_site_user():
     uid = p.pw_uid
     gid = p.pw_gid
     os.chdir(p.pw_dir)
-    os.setgid(gid)
+    os.setresgid(gid, gid, 0)
     # Darn. The site user might have been put into further groups.
     # This is e.g. needed if you want to access the livestatus socket
     # from one site by another. We make use of the "id" command here.
@@ -504,7 +505,12 @@ def switch_to_site_user():
     # course), then please tell mk -> mk@mathias-kettner.de.
 
     os.setgroups(groups_of(g_sitename))
-    os.setuid(uid)
+    os.setresuid(uid, uid, 0)
+
+def switch_back_to_root():
+    os.setresgid(0, 0, 0)
+    os.setresuid(0, 0, 0)
+
 
 def groups_of(username):
     return map(int, os.popen("id -G '%s'" % username).read().split())
@@ -542,6 +548,12 @@ def execute_as_user(function, arguments):
 #   |  Helper functions for dealing with sites                             |
 #   '----------------------------------------------------------------------'
 
+# Sets all site global variables except g_sitename - which must already be set.
+def set_site_globals():
+    global g_sitedir
+    g_sitedir = site_dir(g_sitename)
+    load_site_conf()
+
 def site_dir(sitename):
     return "/omd/sites/" + sitename
 
@@ -573,11 +585,11 @@ def site_is_empty(sitename):
             return False
     return True
 
+# Determines wether a specific site is set to autostart. Note that
+# this needs to be called from a non-site-specific context and
+# can there not use the g_site... variables.
 def site_autostart(sitename):
-    global g_sitename, g_sitedir
-    g_sitename = sitename
-    g_sitedir  = site_dir(sitename)
-    config = config_read()
+    config = parse_site_conf(sitename)
     return config.get('CONFIG_AUTOSTART', 'on') == 'on'
 
 # The version of a site is solely determined by the
@@ -1502,16 +1514,12 @@ def tmpfs_mounted(sitename):
     return False
 
 def create_tmpfs(sitename):
-    if os.getuid() == 0:
-        switch_to_site_user()
-
     tmp = tmp_dir(sitename)
 
     # Only try to mount the tmpfs if it is enabled for this site
     # When not using the tmpfs the tmp/ hierarchy needs to be
     # to be populated like the tmpfs afterwards.
-    config_load_hooks()
-    if g_hooks["TMPFS"]["value"] == "on":
+    if g_site_conf["TMPFS"] == "on":
         if tmpfs_mounted(sitename):
             return
 
@@ -1543,8 +1551,7 @@ def unmount_tmpfs(sitename, output = True, kill = False):
     # that the hook is enabled by default.
     # If kill is True, then we do an fuser -k on the tmp
     # directory first.
-    config_load_hooks()
-    if g_hooks.get("TMPFS", {'value': 'on'})["value"] != "on":
+    if not tmpfs_mounted(sitename):
         tmp = tmp_dir(sitename)
         if os.path.exists(tmp):
             if output:
@@ -1555,7 +1562,7 @@ def unmount_tmpfs(sitename, output = True, kill = False):
                 ok()
         return True
 
-    if tmpfs_mounted(sitename):
+    else:
         if output:
             sys.stdout.write("Unmounting temporary filesystem...")
 
@@ -1746,113 +1753,96 @@ def check_status(sitename, display=True, daemon=None, bare=False):
 #   |  Site configuration and config hooks                                 |
 #   '----------------------------------------------------------------------'
 
-def config_read():
+# Hooks are scripts in lib/omd/hooks that are being called with one
+# of the following arguments:
+#
+# default - return the default value of the hook. Mandatory
+# set     - implements a new setting for the hook
+# choices - available choices for enumeration hooks
+# depends - exists with 1, if this hook misses its dependent hook settings
+
+# Parse the file site.conf of a site into a dictionary. Does
+# not use any global variables. Has no side effects.
+def parse_site_conf(sitename):
     config = {}
-    confpath = g_sitedir + "/etc/omd/site.conf"
+    confpath = "/omd/sites/%s/etc/omd/site.conf" % sitename
     if not os.path.exists(confpath):
-        return config
+        return {}
 
     for line in file(confpath):
         line = line.strip()
         if line == "" or line[0] == "#":
             continue
         var, value = line.split("=", 1)
-        value = value.strip('"').strip("'")
-        var = var.strip()
-
-        config[var] = value
-    return config
-
-def config_load():
-    config = config_read()
-    if not config:
-        return
-
-    for var, value in config.items():
         if not var.startswith("CONFIG_"):
             sys.stderr.write("Ignoring invalid variable %s.\n" % var)
         else:
-            putenv(var, value)
-            var = var[7:]
-            if var in g_hooks:
-                g_hooks[var]["value"] = value
+            config[var[7:].strip()] = value.strip().strip("'")
 
-def config_save():
+    return config
+
+
+
+# Load all variables from omd/sites.conf. These variables always begin with
+# CONFIG_. The reason is that this file can be sources with the shell. Puts
+# these variables into the global dict g_site_conf without the CONFIG_. Also
+# puts the variables into the environment.
+def load_site_conf():
+    global g_site_conf
+    g_site_conf = parse_site_conf(g_sitename)
+
+    # Get the default values of all config hooks that are not contained
+    # in the site configuration. This can happen if there are new hooks
+    # after an update or when a site is being created.
+    hook_dir = g_sitedir + "/lib/omd/hooks"
+    if os.path.exists(hook_dir):
+        for hook_name in os.listdir(hook_dir):
+            if hook_name[0] != '.' and hook_name not in g_site_conf:
+                content = call_hook(hook_name, ["default"])[1]
+                g_site_conf[hook_name] = content
+
+
+# Put all site configuration (explicit and defaults) into environment
+# variables beginning with CONFIG_
+def create_config_environment():
+    for varname, value in g_site_conf.items():
+        putenv("CONFIG_" + varname, value)
+
+
+# TODO: RENAME
+def save_site_conf():
     confdir = g_sitedir + "/etc/omd"
     if not os.path.exists(confdir):
         os.mkdir(confdir)
     f = file(g_sitedir + "/etc/omd/site.conf", "w")
-    hooknames = g_hooks.keys()
-    hooknames.sort()
-    for hookname in hooknames:
-        hook = g_hooks[hookname]
-        f.write("CONFIG_%s='%s'\n" % (hookname, hook["value"]))
+    for hook_name, value in g_site_conf.items():
+        f.write("CONFIG_%s='%s'\n" % (hook_name, value))
 
 
-# Get information about all hooks
-def config_load_hooks(force_reload = False):
-    global g_hooks
-    if not force_reload and g_hooks != None:
-        return # already loaded
+# Get information about all hooks. Just needed for
+# the "omd config" command.
+def load_config_hooks():
+    global g_config_hooks
+    g_config_hooks = {}
 
-    g_hooks = {}
     hook_dir = g_sitedir + "/lib/omd/hooks"
-    for hookname in os.listdir(hook_dir):
+    for hook_name in os.listdir(hook_dir):
         try:
-            if hookname[0] != '.':
-                hook = config_load_hook(hookname)
+            if hook_name[0] != '.':
+                hook = config_load_hook(hook_name)
                 # only load configuration hooks
                 if hook.get("choices", None) != None:
-                    g_hooks[hookname] = hook
+                    g_config_hooks[hook_name] = hook
         except:
             pass
-    # now load actual values from site.conf, if available
-    config_load()
     load_hook_dependencies()
 
-def config_reload_hooks():
-    config_load_hooks(True)
-
-def load_hook_dependencies():
-    for hookname, hook in g_hooks.items():
-        exitcode, content = call_hook(hookname, ["depends"])
-        if exitcode:
-            hook["active"] = False
-        else:
-            hook["active"] = True
-
-def refresh_hooks(force_reload = False):
-    config_load_hooks(force_reload)
-    config_set_all() # execute 'set' functions with current values
-    call_all_hooks("refresh")
-    config_save()
-    config_reload_hooks()
-
-def call_hook(hookname, args):
-    hook_file = g_sitedir + "/lib/omd/hooks/" + hookname
-    argsstring = " ".join([ "'%s'" % arg for arg in args ])
-    putenv("OMD_ROOT", g_sitedir)
-    putenv("OMD_SITE", g_sitename)
-    pipe = os.popen(hook_file + " " + argsstring)
-    content = pipe.read().strip()
-    exitcode = pipe.close()
-    return exitcode, content
-
-def call_all_hooks(command):
-    hook_dir = g_sitedir + "/lib/omd/hooks"
-    for hookname in os.listdir(hook_dir):
-        commandline = '%s/%s "%s"' % (hook_dir, hookname, command)
-        if os.getuid() == 0:
-            os.system("su - %s -c '%s'" % (g_sitename, commandline))
-        else:
-            os.system(commandline)
-
-def config_load_hook(hookname):
-    hook = { "name" : hookname }
+def config_load_hook(hook_name):
+    hook = { "name" : hook_name }
 
     description = ""
     description_active = False
-    for line in file(g_sitedir + "/lib/omd/hooks/" + hookname):
+    for line in file(g_sitedir + "/lib/omd/hooks/" + hook_name):
         if line.startswith("# Alias:"):
             hook["alias"] = line[8:].strip()
         elif line.startswith("# Menu:"):
@@ -1866,10 +1856,8 @@ def config_load_hook(hookname):
     hook["description"] = description
 
     def get_hook_info(info):
-        return call_hook(hookname, [info])[1]
+        return call_hook(hook_name, [info])[1]
 
-    hook["default"] = get_hook_info("default")
-    hook["value"] = hook["default"]
     # The choices can either be a list of possible keys. Then
     # the hook outputs one live for each choice where the key and a
     # description are separated by a colon. Or it outputs one line
@@ -1896,6 +1884,39 @@ def config_load_hook(hookname):
     hook["choices"] = choices
     return hook
 
+def load_hook_dependencies():
+    for hook_name, hook in g_config_hooks.items():
+        exitcode, content = call_hook(hook_name, ["depends"])
+        if exitcode:
+            hook["active"] = False
+        else:
+            hook["active"] = True
+
+# TODO: Wer ruft das hier auf?
+def refresh_hooks(force_reload = False):
+    load_config_hooks(force_reload)
+    config_set_all() # execute 'set' functions with current values
+    save_site_conf()
+    config_reload_hooks()
+
+
+def hook_exists(hook_name):
+    hook_file = g_sitedir + "/lib/omd/hooks/" + hook_name
+    return os.path.exists(hook_file)
+
+def call_hook(hook_name, args):
+    hook_file = g_sitedir + "/lib/omd/hooks/" + hook_name
+    argsstring = " ".join([ "'%s'" % arg for arg in args ])
+    command = hook_file + " " + argsstring
+    putenv("OMD_ROOT", g_sitedir)
+    putenv("OMD_SITE", g_sitename)
+    pipe = os.popen(command)
+    content = pipe.read().strip()
+    exitcode = pipe.close()
+    if exitcode and args[0] != "depends":
+        sys.stderr.write("Error running %s: %s\n" % (command, content))
+    return exitcode, content
+
 
 def config_set(args):
     if len(args) != 2:
@@ -1907,11 +1928,11 @@ def config_set(args):
         sys.stderr.write("Cannot change config variables while site is running.\n")
         return
 
-    hookname = args[0]
+    hook_name = args[0]
     value = args[1]
-    hook = g_hooks.get(hookname)
+    hook = g_config_hooks.get(hook_name)
     if not hook:
-        sys.stderr.write("No such variable '%s'\n" % hookname)
+        sys.stderr.write("No such variable '%s'\n" % hook_name)
         return
 
     # Check if value is valid. Choices are either a list of allowed
@@ -1927,24 +1948,23 @@ def config_set(args):
             sys.stderr.write("Invalid value for '%s'. Does not match allowed pattern.\n" % value)
             return
 
-    config_set_value(hookname, value)
+    config_set_value(hook_name, value)
 
 def config_set_all():
-    if os.getuid() == 0:
-        os.system("omd config %s refresh" % g_sitename)
-        for hookname, hook in sorted(g_hooks.items()):
-            putenv("CONFIG_" + hookname, hook["value"])
+    for hook_name, value in g_site_conf.items():
+        # Hooks might vanish after and up- or downdate
+        if hook_exists(hook_name):
+            call_hook(hook_name, [ "set", value ])
 
-    else:
-	for hookname, hook in sorted(g_hooks.items()):
-	    config_set_value(hookname, hook["value"], save = False)
 
-def config_set_value(hookname, value, save = True):
-    hook = g_hooks.get(hookname)
+def config_set_value(hook_name, value, save = True):
+    hook = g_config_hooks.get(hook_name)
+
+    # TODO: Warum wird hier nicht call_hook() aufgerufen!!
 
     # Call hook with 'set'. If it outputs something, that will
     # be our new value (i.e. hook disagrees with the new setting!)
-    commandline = "%s/lib/omd/hooks/%s set '%s'" % (g_sitedir, hookname, value)
+    commandline = "%s/lib/omd/hooks/%s set '%s'" % (g_sitedir, hook_name, value)
     if os.getuid() == 0:
         sys.stderr.write("I am root. This should never happen!\n")
         sys.exit(1)
@@ -1954,14 +1974,11 @@ def config_set_value(hookname, value, save = True):
     if len(answer) > 0:
         value = answer.strip()
 
-    hook["value"] = value
-    # config_load() writes all config vars to the environment
-    # Updated vars should directly be updated even in the env
-    # to have a consistent state.
-    putenv("CONFIG_" + hookname, value)
+    g_site_conf[hook_name] = value
+    putenv("CONFIG_" + hook_name, value)
 
     if save:
-        config_save()
+        save_site_conf()
 
 def config_usage():
     sys.stdout.write("""Usage of config command:
@@ -1974,28 +1991,28 @@ omd config set VAR VALUE - set VAR to VALUE
 
 def config_show(args):
     if len(args) == 0:
-        hooknames = g_hooks.keys()
-        hooknames.sort()
-        for hookname in hooknames:
-            hook = g_hooks[hookname]
+        hook_names = g_config_hooks.keys()
+        hook_names.sort()
+        for hook_name in hook_names:
+            hook = g_config_hooks[hook_name]
             if hook["active"]:
-                sys.stdout.write("%s: %s\n" % (hookname, g_hooks[hookname]["value"]))
+                sys.stdout.write("%s: %s\n" % (hook_name, g_site_conf[hook_name]))
     else:
         output = []
-        for hookname in args:
-            hook = g_hooks.get(hookname)
+        for hook_name in args:
+            hook = g_config_hooks.get(hook_name)
             if not hook:
-                sys.stderr.write("No such variable %s\n" % hookname)
+                sys.stderr.write("No such variable %s\n" % hook_name)
             else:
-                output.append(hook["value"])
+                output.append(g_site_conf[hook_name])
 
         sys.stdout.write(" ".join(output))
         sys.stdout.write("\n")
 
 def config_configure():
-    hooknames = g_hooks.keys()
-    hooknames.sort()
-    current_hookname = ""
+    hook_names = g_config_hooks.keys()
+    hook_names.sort()
+    current_hook_name = ""
     menu_open = False
     current_menu = "Basic"
 
@@ -2007,12 +2024,12 @@ def config_configure():
 
         # Rebuild hook information (values possible changed)
         menu = {}
-        for hookname in hooknames:
-            hook = g_hooks[hookname]
+        for hook_name in hook_names:
+            hook = g_config_hooks[hook_name]
             if hook["active"]:
                 mp = hook.get("menu", "Other")
                 entries = menu.get(mp, [])
-                entries.append((hookname, hook["value"]))
+                entries.append((hook_name, g_site_conf[hook_name]))
                 menu[mp] = entries
                 if mp not in menu_choices:
                     menu_choices.append(mp)
@@ -2029,28 +2046,28 @@ def config_configure():
                         "Exit")
             if not change:
                 return
-            current_hookname = None
+            current_hook_name = None
             menu_open = True
 
         else:
-            change, current_hookname = \
+            change, current_hook_name = \
                 dialog_menu(
                     current_menu,
                     "",
                     menu[current_menu],
-                    current_hookname,
+                    current_hook_name,
                     "Change",
                     "Main menu")
             if change:
                 try:
-                    config_configure_hook(current_hookname)
+                    config_configure_hook(current_hook_name)
                 except Exception, e:
-                    bail_out("Error in hook %s: %s" % (current_hookname, e))
+                    bail_out("Error in hook %s: %s" % (current_hook_name, e))
             else:
                 menu_open = False
 
 
-def config_configure_hook(hookname):
+def config_configure_hook(hook_name):
     if not site_is_stopped(g_sitename):
         if not dialog_yesno("You cannot change configuration value while the "
                 "site is running. Do you want me to stop the site now?"):
@@ -2058,10 +2075,10 @@ def config_configure_hook(hookname):
         stop_site(g_sitename)
         dialog_message("The site has been stopped.")
 
-    hook = g_hooks[hookname]
+    hook = g_config_hooks[hook_name]
     title = hook["alias"]
     descr = hook["description"].replace("\n\n", "\001").replace("\n", " ").replace("\001", "\n\n")
-    value = hook["value"]
+    value = g_site_conf[hook_name]
     choices = hook["choices"]
     if type(choices) == list:
         dialog_function = dialog_menu
@@ -2071,7 +2088,8 @@ def config_configure_hook(hookname):
         dialog_function(title, descr, choices, value, "Change", "Cancel")
     if change:
         config_set_value(hook["name"], new_value)
-        config_reload_hooks()
+        g_site_conf[hook_name] = new_value
+        save_site_conf()
 
 def init_action(command, args, options):
     if site_is_disabled(g_sitename):
@@ -2142,13 +2160,6 @@ def fstab_verify(name):
             return True
     bail_out(tty_error + ": fstab entry for %s does not exist" % mountpoint )
 
-def switch_temp_to_user(user):
-    p = pwd.getpwnam(user)
-    uid = p.pw_uid
-    gid = p.pw_gid
-    os.chdir(p.pw_dir)
-    os.setegid(gid)
-    os.seteuid(uid)
 
 
 # No using os.putenv, os.getenv os.unsetenv directly because
@@ -2215,6 +2226,8 @@ def set_environment():
                 value = value.strip("'")
             putenv(varname, value)
 
+    create_config_environment()
+
 def hostname():
     try:
         return os.popen("hostname").read().strip()
@@ -2272,14 +2285,14 @@ def pipe_pager():
     else:
         return ""
 
-def call_scripts(hookname):
-    path = g_sitedir + "/lib/omd/scripts/" + hookname
+def call_scripts(phase):
+    path = g_sitedir + "/lib/omd/scripts/" + phase
     putenv("OMD_ROOT", g_sitedir)
     putenv("OMD_SITE", g_sitename)
     for f in os.listdir(path):
         if f[0] == '.':
             continue
-        sys.stdout.write('Executing %s script "%s"...' % (hookname, f))
+        sys.stdout.write('Executing %s script "%s"...' % (phase, f))
         p = Popen('%s/%s' % (path, f), shell = True, stdout = PIPE, stderr = PIPE)
         stdout = p.stdout.read()
         stderr = p.stderr.read()
@@ -2287,7 +2300,7 @@ def call_scripts(hookname):
         if exitcode == 0:
             sys.stdout.write(tty_ok + '\n')
         else:
-            sys.stdout.write(tty_error + ' (RC: %d, use -v for details)\n' % exitcode)
+            sys.stdout.write(tty_error + ' (exit code: %d, use -v for details)\n' % exitcode)
         if opt_verbose:
             if stdout:
                 sys.stdout.write('Output: %s\n' % stdout)
@@ -2588,23 +2601,17 @@ def init_site(config_settings = None, apache_reload = False):
     # Change ownership of all files and dirs to site user
     chown_tree(g_sitedir, g_sitename)
 
-    # Create site.conf with default values
-    config_load_hooks()
-    config_set_all() # execute 'set' functions with default values
-    if config_settings:
-        for hookname, value in config_settings.items():
-            config_set_value(hookname, value, save = False)
-    config_save()
+    load_site_conf() # load default values from all hooks
+    if config_settings: # add specific settings
+        for hook_name, value in config_settings.items():
+            g_site_conf[hook_name] = value
+    create_config_environment()
 
     # Change the few files that config save as created as root
     chown_tree(g_sitedir, g_sitename)
 
-    # Create include-hook for Apache and reload apache
-    create_apache_hook(g_sitename)
-    if apache_reload:
-        reload_apache()
-    else:
-        restart_apache()
+    # From now on we run as normal site user!
+    switch_to_site_user()
 
     # Mount and create contents of tmpfs. This must be done as normal
     # user. We also could do this at 'omd start', but this might confuse
@@ -2612,14 +2619,28 @@ def init_site(config_settings = None, apache_reload = False):
     # by the mount.
     create_tmpfs(g_sitename)
 
+    # Run all hooks in order to setup things according to the
+    # configuration settings
+    config_set_all()
+    save_site_conf()
+
     call_scripts('post-create')
+
+    # Finally reload global apache - with root permissions - and
+    # create include-hook for Apache and reload apache
+    switch_back_to_root()
+    create_apache_hook(g_sitename)
+    if apache_reload:
+        reload_apache()
+    else:
+        restart_apache()
+
 
 def main_rm(args, options={}):
     # omd rm is called as root but the init scripts need to be called as
     # site user but later steps need root privilegies. So a simple user
     # switch to the site user would not work. Better create a subprocess
     # for this dedicated action and switch to the user in that subprocess
-    #execute_as_user(stop_site, (g_sitename, ))
     os.system('omd stop %s' % g_sitename)
 
     reuse = "reuse" in options
@@ -2627,6 +2648,7 @@ def main_rm(args, options={}):
 
     if not kill and user_logged_in(g_sitename):
         bail_out("User '%s' still logged in or running processes." % g_sitename)
+
     if tmpfs_mounted(g_sitename):
         unmount_tmpfs(g_sitename, kill=kill)
 
@@ -2788,12 +2810,8 @@ def main_mv_or_cp(what, args, options={}):
 
     # Now switch over to the new site as currently active site
     g_sitename = new
-    g_sitedir = site_dir(new)
-    os.chdir(g_sitedir)
+    set_site_globals()
     set_environment()
-
-    # Give hooks chance to update configuration
-    refresh_hooks()
 
     # Entry for tmps in /etc/fstab
     if not reuse:
@@ -2803,8 +2821,14 @@ def main_mv_or_cp(what, args, options={}):
     create_apache_hook(new)
     restart_apache()
 
+    switch_to_site_user()
+
     # Mount and create contents of tmpfs.
     create_tmpfs(g_sitename)
+
+    # Give hooks chance to update configuration
+    config_set_all()
+
 
 
 def main_diff(args, options={}):
@@ -3011,13 +3035,12 @@ def main_update(args, options={}):
     # Change symbolic link pointing to new version
     create_version_symlink(g_sitename, to_version)
 
-    # Let hooks do their work and update configuration
-    # Ensure the hooks are reloaded prior to execution to be sure
-    # the hooks of the target version are executed
-    refresh_hooks(True)
+    # Let hooks do their work and update configuration.
+    config_set_all()
 
     sys.stdout.write('Finished update.\n\n')
     stop_logging()
+
 
 def main_umount(args, options = {}):
     global g_sitename
@@ -3107,7 +3130,7 @@ def main_init_action(command, args, options={}):
     sys.exit(exit_status)
 
 def main_config(args, options={}):
-    config_load_hooks()
+    load_config_hooks() # needed for all config commands
     if len(args) == 0:
         config_configure()
     else:
@@ -3117,8 +3140,6 @@ def main_config(args, options={}):
             config_show(args)
         elif command == "set":
             config_set(args)
-        elif command == "refresh":
-            config_set_all()
         else:
             config_usage()
 
@@ -3251,9 +3272,6 @@ def main_restore(args, options={}):
     os.chdir(g_sitedir)
     set_environment()
 
-    # Give hooks chance to update configuration
-    refresh_hooks()
-
     # Entry for tmps in /etc/fstab
     if not reuse:
         add_to_fstab(g_sitename, tmpfs_size = options.get('tmpfs-size'))
@@ -3265,10 +3283,16 @@ def main_restore(args, options={}):
     else:
         restart_apache()
 
+    switch_to_site_user()
+
+    # Give hooks chance to update configuration
+    config_set_all()
+
     # Mount and create contents of tmpfs.
     create_tmpfs(g_sitename)
 
     tar.close()
+
 
 commands = [
 #  command       The id of the command
@@ -3348,7 +3372,7 @@ commands = [
     ],
     "Populate site directory with default files and enable the site", ""),
 
-  ( "rm",        True, False, 1, 1, True, "",        main_rm,
+  ( "rm",        True, True, 1, 1, True, "",        main_rm,
     [
       ( "reuse", None, False, "assume --reuse on create, do not delete site user/group" ),
       ( "kill", None, False, "kill processes of the site before deleting it" ),
@@ -3650,12 +3674,10 @@ if g_sitename and site_must_exist and command != "update":
         exec_other_omd(v)
 
 
-if g_sitename:
-    g_sitedir = site_dir(g_sitename)
-else:
-    g_sitedir = None
-
 read_info()
+
+if g_sitename:
+    set_site_globals()
 
 # Commands which affect a site and can be called as root *or* as
 # site user should always run with site user priviledges. That way

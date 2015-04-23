@@ -80,5 +80,6 @@ EOF
           [ -f $PNP_CFG ] && rm $PNP_CFG
           [ -f $WIKI_CFG ] && rm $WIKI_CFG
        fi
+       true
    ;;
 esac
