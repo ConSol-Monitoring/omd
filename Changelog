@@ -47,13 +47,15 @@ This file documents the revision history for the Open Monitoring Distribution
               about these files manually.
             - FIX: The nagvis URLs were not correctly linking to e.g. Check_MK
               when a site has been created with Check_MK as default GUI
-          - Check_MK: moved log dir to var/log
+          - Check_MK:
+            - Update to 1.2.6p1
+            - moved log dir to var/log
           - Added build support for SLES 12
           - Added build support for Ubuntu 14.10
           - RedHat / CentOS: Builds are now only dedicated to the major
             version, not caring about the minor versions anymore
           - Mod-Gearman: Update 1.5.2
-          - Thruk: Update to 1.88-2
+          - Thruk: Update to 1.88-4
             - fix pnp ssi files
           - PNP4Nagios: Update to 0.6.25
           - Updated Monitoring-Plugins to 2.1.1
