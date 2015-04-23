@@ -29,6 +29,23 @@ from subprocess import *
 
 OMD_VERSION = "1.20"
 
+# Some global variables
+opt_verbose     = False
+opt_interactive = False
+opt_force       = False
+g_hooks         = None
+
+#   .--Logging-------------------------------------------------------------.
+#   |                _                      _                              |
+#   |               | |    ___   __ _  __ _(_)_ __   __ _                  |
+#   |               | |   / _ \ / _` |/ _` | | '_ \ / _` |                 |
+#   |               | |__| (_) | (_| | (_| | | | | | (_| |                 |
+#   |               |_____\___/ \__, |\__, |_|_| |_|\__, |                 |
+#   |                           |___/ |___/         |___/                  |
+#   +----------------------------------------------------------------------+
+#   | Helper functions for output on the TTY                               |
+#   '----------------------------------------------------------------------'
+
 # colored output, if stdout is a tty
 on_tty = sys.stdout.isatty()
 
@@ -78,17 +95,13 @@ else:
 def ok():
     sys.stdout.write(tty_ok + "\n")
 
+def bail_out(message):
+    sys.exit(message)
+
 # Symbols for update
 good  = " " + tty_green +  tty_bold + "*" + tty_normal
 warn  = " " + tty_bgyellow + tty_black + tty_bold + "!" + tty_normal
 error = " " + tty_bgred +  tty_white +   tty_bold + "!" + tty_normal
-
-# Options to set via command line
-opt_verbose = False
-opt_interactive = False
-opt_force = False
-
-g_hooks = None
 
 # Is used to duplicate output from stdout/stderr to a logfiles. This
 # is e.g. used during "omd update" to have a chance to analyze errors
@@ -124,6 +137,7 @@ class Log(object):
 
 g_stdout_log = None
 g_stderr_log = None
+
 def start_logging(logfile):
     global g_stdout_log, g_stderr_log
     g_stdout_log = Log(1, logfile)
@@ -140,6 +154,19 @@ def show_success(exit_code):
     else:
         sys.stdout.write(tty_error + "\n")
     return exit_code
+
+
+#.
+#   .--Dialog--------------------------------------------------------------.
+#   |                     ____  _       _                                  |
+#   |                    |  _ \(_) __ _| | ___   __ _                      |
+#   |                    | | | | |/ _` | |/ _ \ / _` |                     |
+#   |                    | |_| | | (_| | | (_) | (_| |                     |
+#   |                    |____/|_|\__,_|_|\___/ \__, |                     |
+#   |                                           |___/                      |
+#   +----------------------------------------------------------------------+
+#   |  Wrapper functions for interactive dialogs using the dialog cmd tool |
+#   '----------------------------------------------------------------------'
 
 patch_supports_merge = None
 def patch_has_merge():
@@ -161,6 +188,7 @@ def run_dialog(args):
     response = p.stderr.read()
     return 0 == os.waitpid(p.pid, 0)[1], response
 
+
 def dialog_menu(title, text, choices, defvalue, oktext, canceltext):
     args = [ "--ok-label", oktext, "--cancel-label", canceltext ]
     if defvalue != None:
@@ -169,6 +197,7 @@ def dialog_menu(title, text, choices, defvalue, oktext, canceltext):
     for text, value in choices:
         args += [ text, value ]
     return run_dialog(args)
+
 
 def dialog_regex(title, text, regex, value, oktext, canceltext):
     while True:
@@ -188,8 +217,10 @@ def dialog_yesno(text, yeslabel = "yes", nolabel = "no"):
     state, response = run_dialog(["--yes-label", yeslabel, "--no-label", nolabel, "--yesno", text, "0", "0"])
     return state
 
+
 def dialog_message(text, buttonlabel="OK"):
     run_dialog(["--ok-label", buttonlabel, "--msgbox", text, "0", "0"])
+
 
 def user_confirms(title, message, relpath, yes_choice, yes_text, no_choice, no_text):
     # Handle non-interactive mode
@@ -311,138 +342,24 @@ def ask_user_choices(title, message, choices):
                 sys.stdout.write(tty_bold + tty_bgred + tty_white + a + tty_normal + "\n\n")
                 return choice
 
-def bail_out(message):
-    sys.exit(message)
 
-def omd_root():
-    return "/omd/versions/" + OMD_VERSION
-
-# Read distro- and version specific values
-def read_info():
-    global g_info
-    g_info = {}
-    info_dir = omd_root() + "/share/omd"
-    for f in os.listdir(info_dir):
-        if f.endswith(".info"):
-            for line in file(info_dir + "/" + f):
-                try:
-                    line = line.strip()
-                    # Skip comment and empty lines
-                    if line.startswith('#') or line == '':
-                        continue
-                    # Remove everything after the first comment sign
-                    if '#' in line:
-                        line = line[:line.index('#')].strip()
-                    var, value = line.split('=')
-                    value = value.strip()
-                    if var.endswith("+"):
-                        var = var[:-1] # remove +
-                        g_info[var.strip()] += " " + value
-                    else:
-                        g_info[var.strip()] = value
-                except Exception, e:
-                    bail_out('Unable to parse line "%s" in file "%s"' % (line, info_dir + "/" + f))
-
-def read_skel_permissions():
-    global g_skel_permissions
-    g_skel_permissions = load_skel_permissions(OMD_VERSION)
-    if not g_skel_permissions:
-        bail_out("%s is missing or currupted." % file_path)
-
-def load_skel_permissions(version):
-    perms = {}
-    file_path = "/omd/versions/%s/share/omd/skel.permissions" % version
-    try:
-        for line in file(file_path):
-            line = line.strip()
-            if line == "" or line[0] == "#":
-                continue
-            path, perm = line.split()
-            mode = int(perm, 8)
-            perms[path] = mode
-        return perms
-    except:
-        return None
-
-def get_skel_permissions(version, perms, relpath):
-    try:
-        return perms[relpath]
-    except:
-        return get_file_permissions("/omd/versions/%s/skel/%s" % (version, relpath))
-
-def get_file_permissions(path):
-    try:
-        return os.stat(path).st_mode & 07777
-    except:
-        return 0
-
-def get_file_owner(path):
-    try:
-        return pwd.getpwuid(os.stat(path).st_uid)[0]
-    except:
-        return None
-
-def site_name():
-        return pwd.getpwuid(os.getuid()).pw_name
-
-def site_dir(sitename):
-    return "/omd/sites/" + sitename
-
-def tmp_dir(sitename):
-    return "/omd/sites/%s/tmp" % sitename
-
-def site_autostart(sitename):
-    global g_sitename, g_sitedir
-    g_sitename = sitename
-    g_sitedir  = site_dir(sitename)
-    config = config_read()
-    return config.get('CONFIG_AUTOSTART', 'on') == 'on'
-
-# The version of a site is solely determined by the
-# link ~SITE/version
-def site_version(sitename):
-    version_link = site_dir(sitename) + "/version"
-    try:
-        version = os.readlink(version_link).split("/")[-1]
-        return version
-    except:
-        return None
-
-def create_version_symlink(sitename, version):
-    linkname = site_dir(sitename) + "/version"
-    if os.path.exists(linkname):
-        os.remove(linkname)
-    os.symlink("../../versions/%s" % OMD_VERSION, linkname)
-
-
-def site_exists(sitename):
-    return os.path.exists(site_dir(sitename))
-
-def all_sites():
-    l = [ s for s in os.listdir("/omd/sites") if os.path.isdir(os.path.join("/omd/sites/", s)) ]
-    l.sort()
-    return l
-
-# Check if site is completely stopped
-def site_is_stopped(sitename):
-    return check_status(sitename, False) == 1
-
-def site_is_running(sitename):
-    return check_status(sitename, False) == 0
-
-def site_is_empty(sitename):
-    sitedir = site_dir(sitename)
-    for entry in os.listdir(sitedir):
-        if entry not in [ '.', '..' ]:
-            return False
-    return True
+#.
+#   .--Users/Groups--------------------------------------------------------.
+#   |     _   _                      ______                                |
+#   |    | | | |___  ___ _ __ ___   / / ___|_ __ ___  _   _ _ __  ___      |
+#   |    | | | / __|/ _ \ '__/ __| / / |  _| '__/ _ \| | | | '_ \/ __|     |
+#   |    | |_| \__ \  __/ |  \__ \/ /| |_| | | | (_) | |_| | |_) \__ \     |
+#   |     \___/|___/\___|_|  |___/_/  \____|_|  \___/ \__,_| .__/|___/     |
+#   |                                                      |_|             |
+#   +----------------------------------------------------------------------+
+#   |  Helper functions for dealing with Linux users and groups            |
+#   '----------------------------------------------------------------------'
 
 def find_processes_of_user(username):
     try:
         return os.popen("pgrep -u '%s'" % username).read().split()
     except:
         return []
-
 
 def groupdel(groupname):
     os.system("groupdel " + groupname)
@@ -467,8 +384,8 @@ def useradd(sitename, uid = None, gid = None):
         groupdel(sitename)
         bail_out("Error creating site user.")
 
-    # Add Apache to new group. It needs to be able to write in to the
-    # command pipe and possible other stuff
+    # Add Apache to new group. It needs to be able to write in to the 
+    # command pipe and possible other stuff 
     add_user_to_group(g_info["APACHE_USER"], sitename)
 
 def add_user_to_group(user, group):
@@ -513,12 +430,14 @@ def user_has_group(user, group):
     except:
         return False
 
+
 def group_exists(name):
     try:
         grp.getgrnam(name)
         return True
     except:
         return False
+
 
 def group_by_id(id):
     try:
@@ -532,6 +451,10 @@ def group_id(name):
         return g.gr_gid
     except:
         return None
+
+def switch_back_to_root():
+    os.setgid(0)
+    os.setuid(0)
 
 def user_logged_in(name):
     # Check, if processes of named user are existing
@@ -567,22 +490,6 @@ def user_verify(name, allow_populated=False):
 
     return True
 
-def file_owner_verify(path, user_id, group_id):
-    try:
-        s = os.stat(path)
-        if s.st_uid != user_id or s.st_gid != group_id:
-            return False
-    except:
-        return False
-    return True
-
-def fstab_verify(name):
-    mountpoint = tmp_dir(name)
-    for line in file("/etc/fstab"):
-        if "uid=%s," % name in line and mountpoint in line:
-            return True
-    bail_out(tty_error + ": fstab entry for %s does not exist" % mountpoint )
-
 def switch_to_site_user():
     p = pwd.getpwnam(g_sitename)
     uid = p.pw_uid
@@ -601,20 +508,6 @@ def switch_to_site_user():
 
 def groups_of(username):
     return map(int, os.popen("id -G '%s'" % username).read().split())
-
-
-def switch_temp_to_user(user):
-    p = pwd.getpwnam(user)
-    uid = p.pw_uid
-    gid = p.pw_gid
-    os.chdir(p.pw_dir)
-    os.setegid(gid)
-    os.seteuid(uid)
-
-def switch_back_to_root():
-    os.setgid(0)
-    os.setuid(0)
-
 
 # Starts a subprocess to execute a python function as other user
 # without switching the user for the whole main process
@@ -636,198 +529,145 @@ def execute_as_user(function, arguments):
     p.start()
     p.join(20)
 
-# No using os.putenv, os.getenv os.unsetenv directly because
-# they seem not to work correctly in debian 503.
-#
-# Unsetting all vars with os.unsetenv and after that using os.getenv to read
-# some vars did not bring the expected result that the environment was empty.
-# The vars were still set.
-#
-# Same for os.putenv. Executing os.getenv right after os.putenv did not bring
-# the expected result.
-#
-# Directly modifying os.environ seems to work.
-def putenv(key, value):
-    os.environ[key] = value
 
-def getenv(key, default = None):
-    if not key in os.environ:
-        return default
-    return os.environ[key]
+#.
+#   .--Sites---------------------------------------------------------------.
+#   |                        ____  _ _                                     |
+#   |                       / ___|(_) |_ ___  ___                          |
+#   |                       \___ \| | __/ _ \/ __|                         |
+#   |                        ___) | | ||  __/\__ \                         |
+#   |                       |____/|_|\__\___||___/                         |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   |  Helper functions for dealing with sites                             |
+#   '----------------------------------------------------------------------'
 
-def clear_environment():
-    # first remove *all* current environment variables
-    keep = [ "TERM" ]
-    for key in os.environ.keys():
-        if key not in keep:
-            del os.environ[key]
+def site_dir(sitename):
+    return "/omd/sites/" + sitename
 
-def set_environment():
-    putenv("OMD_SITE", g_sitename)
-    putenv("OMD_ROOT", g_sitedir)
-    putenv("PATH", "%s/local/bin:%s/bin:/usr/local/bin:/bin:/usr/bin:/sbin:/usr/sbin" %
-                                                                  (g_sitedir, g_sitedir))
-    putenv("USER", g_sitename)
+def tmp_dir(sitename):
+    return "/omd/sites/%s/tmp" % sitename
 
-    putenv("LD_LIBRARY_PATH", "%s/local/lib:%s/lib" % (g_sitedir, g_sitedir))
-    putenv("HOME", g_sitedir)
-    putenv("PYTHONPATH", "%s/lib/python:%s/local/lib/python" % (g_sitedir, g_sitedir))
+def site_name():
+        return pwd.getpwuid(os.getuid()).pw_name
 
-    # allow user to define further environment variable in ~/etc/environment
-    envfile = g_sitedir + "/etc/environment"
-    if os.path.exists(envfile):
-        lineno = 0
-        for line in file(envfile):
-            lineno += 1
-            line = line.strip()
-            if line == "" or line[0] == "#":
-                continue # allow empty lines and comments
-            parts = line.split("=")
-            if len(parts) != 2:
-                bail_out("%s: syntax error in line %d" % (envfile, lineno))
-            varname = parts[0]
-            value = parts[1]
-            if value.startswith('"'):
-                value = value.strip('"')
+def site_exists(sitename):
+    return os.path.exists(site_dir(sitename))
 
-            # Add the present environment when someone wants to append some
-            if value.startswith("$%s:" % varname):
-                before = getenv(varname, None)
-                if before:
-                    value = before + ":" + value.replace("$%s:" % varname, '')
+def all_sites():
+    l = [ s for s in os.listdir("/omd/sites") if os.path.isdir(os.path.join("/omd/sites/", s)) ]
+    l.sort()
+    return l
 
-            if value.startswith("'"):
-                value = value.strip("'")
-            putenv(varname, value)
+# Check if site is completely stopped
+def site_is_stopped(sitename):
+    return check_status(sitename, False) == 1
 
-def hostname():
-    try:
-        return os.popen("hostname").read().strip()
-    except:
-        return "localhost"
+def site_is_running(sitename):
+    return check_status(sitename, False) == 0
 
-def tmpfs_mounted(sitename):
-    # Problem here: if /omd is a symbolic link somewhere else,
-    # then in /proc/mounts the physical path will appear and be
-    # different from tmp_path. We just check the suffix therefore.
-    path_suffix = "sites/%s/tmp" % sitename
-    for line in file("/proc/mounts"):
-        try:
-            device, mp, fstype, options, dump, fsck = line.split()
-            if mp.endswith(path_suffix) and fstype == 'tmpfs':
-                return True
-        except:
-            continue
-    return False
-
-def create_tmpfs(sitename):
-    if os.getuid() == 0:
-        switch_to_site_user()
-
-    tmp = tmp_dir(sitename)
-
-    # Only try to mount the tmpfs if it is enabled for this site
-    # When not using the tmpfs the tmp/ hierarchy needs to be
-    # to be populated like the tmpfs afterwards.
-    config_load_hooks()
-    if g_hooks["TMPFS"]["value"] == "on":
-        if tmpfs_mounted(sitename):
-            return
-
-        sys.stdout.write("Creating temporary filesystem %s..." % tmp)
-        sys.stdout.flush()
-        if not os.path.exists(tmp):
-            os.mkdir(tmp)
-        if 0 != os.system("mount %s '%s'" % (g_info["MOUNT_OPTIONS"], tmp) ):
-            sys.stdout.write(tty_error + "\n")
-            return
-    else:
-        # Skip initializing when either the tmp dir does not exist
-        # and the site is not totally stopped
-        if os.path.exists(tmp) and not site_is_stopped(sitename):
-            return
-
-        sys.stdout.write("Preparing tmp directory %s..." % tmp)
-        sys.stdout.flush()
-        if not os.path.exists(tmp):
-            os.mkdir(tmp)
-
-    create_skeleton_files(sitename, "tmp")
-    chown_tree(tmp, sitename)
-    ok()
-
-def unmount_tmpfs(sitename, output = True, kill = False):
-    # Clear directory hierarchy when not using a tmpfs
-    # During omd update TMPFS hook might not be set so assume
-    # that the hook is enabled by default.
-    # If kill is True, then we do an fuser -k on the tmp
-    # directory first.
-    config_load_hooks()
-    if g_hooks.get("TMPFS", {'value': 'on'})["value"] != "on":
-        tmp = tmp_dir(sitename)
-        if os.path.exists(tmp):
-            if output:
-                sys.stdout.write("Cleaning up temp filesystem...")
-                sys.stdout.flush()
-            delete_directory_contents(tmp)
-            if output:
-                ok()
-        return True
-
-    if tmpfs_mounted(sitename):
-        if output:
-            sys.stdout.write("Unmounting temporary filesystem...")
-
-        for t in range(0, 10):
-            if 0 == os.system("umount '%s'" % tmp_dir(sitename)):
-                if output:
-                    ok()
-                return True
-
-            if kill:
-                if output:
-                    sys.stdout.write("Killing processes still using '%s'\n" % tmp_dir(sitename))
-                os.system("fuser --silent -k '%s'" % tmp_dir(sitename))
-
-            if output:
-                sys.stdout.write(kill and "K" or ".")
-                sys.stdout.flush()
-            time.sleep(1)
-
-        if output:
-            bail_out(tty_error + ": Cannot unmount tmp filesystem.")
-        else:
+def site_is_empty(sitename):
+    sitedir = site_dir(sitename)
+    for entry in os.listdir(sitedir):
+        if entry not in [ '.', '..' ]:
             return False
-
     return True
 
-def add_to_fstab(sitename, tmpfs_size = None):
-    # tmpfs                   /opt/omd/sites/b01/tmp  tmpfs   user,uid=b01,gid=b01 0 0
-    mountpoint = tmp_dir(sitename)
-    sys.stdout.write("Adding %s to /etc/fstab.\n" % mountpoint)
+def site_autostart(sitename):
+    global g_sitename, g_sitedir
+    g_sitename = sitename
+    g_sitedir  = site_dir(sitename)
+    config = config_read()
+    return config.get('CONFIG_AUTOSTART', 'on') == 'on'
 
-    # No size option: using up to 50% of the RAM
-    sizespec = ''
-    if tmpfs_size != None and re.match('^[0-9]+(G|M|%)$', tmpfs_size):
-        sizespec = ',size=%s' % tmpfs_size
-
-    file("/etc/fstab", "a+").write("tmpfs  %s tmpfs noauto,user,mode=755,uid=%s,gid=%s%s 0 0\n" % \
-        (mountpoint, sitename, sitename, sizespec))
-
-def remove_from_fstab(sitename):
-    mountpoint = tmp_dir(sitename)
-    sys.stdout.write("Removing %s from /etc/fstab..." % mountpoint)
-    newtab = file("/etc/fstab.new", "w")
-    for line in file("/etc/fstab"):
-        if "uid=%s," % sitename in line and mountpoint in line:
-            continue
-        newtab.write(line)
-    os.rename("/etc/fstab.new", "/etc/fstab")
-    ok()
+# The version of a site is solely determined by the
+# link ~SITE/version
+def site_version(sitename):
+    version_link = site_dir(sitename) + "/version"
+    try:
+        version = os.readlink(version_link).split("/")[-1]
+        return version
+    except:
+        return None
 
 def start_site(sitename):
     create_tmpfs(sitename)
     call_init_scripts(sitename, "start")
+
+def stop_if_not_stopped(sitename):
+    if not site_is_stopped(sitename):
+        stop_site(sitename)
+
+def stop_site(sitename):
+    call_init_scripts(sitename, "stop")
+
+
+
+#.
+#   .--Skeleton------------------------------------------------------------.
+#   |                ____  _        _      _                               |
+#   |               / ___|| | _____| | ___| |_ ___  _ __                   |
+#   |               \___ \| |/ / _ \ |/ _ \ __/ _ \| '_ \                  |
+#   |                ___) |   <  __/ |  __/ || (_) | | | |                 |
+#   |               |____/|_|\_\___|_|\___|\__\___/|_| |_|                 |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   |  Deal with file owners, permissions and the the skel hierarchy       |
+#   '----------------------------------------------------------------------'
+
+def read_skel_permissions():
+    global g_skel_permissions
+    g_skel_permissions = load_skel_permissions(OMD_VERSION)
+    if not g_skel_permissions:
+        bail_out("%s is missing or currupted." % file_path)
+
+def load_skel_permissions(version):
+    perms = {}
+    file_path = "/omd/versions/%s/share/omd/skel.permissions" % version
+    try:
+        for line in file(file_path):
+            line = line.strip()
+            if line == "" or line[0] == "#":
+                continue
+            path, perm = line.split()
+            mode = int(perm, 8)
+            perms[path] = mode
+        return perms
+    except:
+        return None
+
+def get_skel_permissions(version, perms, relpath):
+    try:
+        return perms[relpath]
+    except:
+        return get_file_permissions("/omd/versions/%s/skel/%s" % (version, relpath))
+
+def get_file_permissions(path):
+    try:
+        return os.stat(path).st_mode & 07777
+    except:
+        return 0
+
+def get_file_owner(path):
+    try:
+        return pwd.getpwuid(os.stat(path).st_uid)[0]
+    except:
+        return None
+
+def create_version_symlink(sitename, version):
+    linkname = site_dir(sitename) + "/version"
+    if os.path.exists(linkname):
+        os.remove(linkname)
+    os.symlink("../../versions/%s" % OMD_VERSION, linkname)
+
+def file_owner_verify(path, user_id, group_id):
+    try:
+        s = os.stat(path)
+        if s.st_uid != user_id or s.st_gid != group_id:
+            return False
+    except:
+        return False
+    return True
 
 def create_skeleton_files(sitename, dir):
     read_skel_permissions()
@@ -887,72 +727,6 @@ def create_skeleton_file(skelbase, userbase, relpath, replacements):
         os.chmod(user_path, mode)
 
 
-def create_apache_hook(sitename):
-    file("/omd/apache/%s.conf" % sitename, "w")\
-        .write("Include %s/etc/apache/mode.conf\n" % site_dir(sitename))
-
-def delete_apache_hook(sitename):
-    hook_path = "/omd/apache/%s.conf" % sitename
-    if not os.path.exists(hook_path):
-        return
-    try:
-        os.remove(hook_path)
-    except Exception, e:
-        sys.stderr.write("Cannot remove apache hook %s: %s\n" % (hook_path, e))
-
-def init_cmd(name, action):
-    return g_info['INIT_CMD'] % {
-        'name'   : name,
-        'action' : action,
-    }
-
-def reload_apache():
-    sys.stdout.write("Reloading Apache...")
-    sys.stdout.flush()
-    show_success(os.system("%s graceful" % g_info["APACHE_CTL"]) >> 8)
-
-def restart_apache():
-    if os.system(init_cmd(g_info['APACHE_INIT_NAME'], 'status') + ' >/dev/null 2>&1') >> 8 == 0:
-        sys.stdout.write("Restarting Apache...")
-        sys.stdout.flush()
-        show_success(os.system(init_cmd(g_info['APACHE_INIT_NAME'], 'restart') + ' >/dev/null') >> 8)
-
-def replace_tags(content, replacements):
-    for var, value in replacements.items():
-        content = content.replace(var, value)
-    return content
-
-def stop_if_not_stopped(sitename):
-    if not site_is_stopped(sitename):
-        stop_site(sitename)
-
-def stop_site(sitename):
-    call_init_scripts(sitename, "stop")
-
-
-# Change site specific information in files originally create from
-# skeleton files. Skip files below tmp/
-def patch_skeleton_files(old, new):
-    skelroot = "/omd/versions/%s/skel" % OMD_VERSION
-    os.chdir(skelroot)  # make relative paths
-    for dirpath, dirnames, filenames in os.walk("."):
-        if dirpath.startswith("./"):
-            dirpath = dirpath[2:]
-        targetdir = site_dir(new) + "/" + dirpath
-        if targetdir.startswith(tmp_dir(new)):
-            continue # Skip files below tmp
-        for fn in filenames:
-            src = dirpath + "/" + fn
-            dst = targetdir + "/" + fn
-            if os.path.isfile(src) and not os.path.islink(src) \
-                and os.path.exists(dst): # not deleted by user
-                try:
-                    patch_template_file(src, dst, old, new)
-                except Exception, e:
-                    sys.stderr.write("Error patching template file '%s': %s\n" %
-                            (dst, e))
-
-
 def chown_tree(dir, user):
     uid = pwd.getpwnam(user).pw_uid
     gid = pwd.getpwnam(user).pw_gid
@@ -984,6 +758,113 @@ def instantiate_skel(path):
     except:
         return "" # e.g. due to permission error
 
+
+# Walks all files in the skeleton dir to execute a function for each file
+# The given handler is called with the provided args. Additionally the relative
+# path of the file to handle is handed over in the 'relpath' parameter.
+
+# When called with a path in 'exclude_if_in' then paths existing relative to
+# that are skipped. This is used for a second run during the update-process: to handle
+# files that have vanished in the new version.
+
+# The option 'relbase' is optional. It can contain a relative path which can be used
+# as base for the walk instead of walking the whole tree.
+
+# The function returns a set of already handled files.
+def walk_skel(root, handler, args, depth_first, exclude_if_in = None, relbase = '.'):
+    os.chdir(root)
+
+    # Note: os.walk first finds level 1 directories, then deeper
+    # layers. If we need a real depth search instead, where we first
+    # handle deep directories and files, then the top level ones.
+    walk_entries = list(os.walk(relbase))
+    if depth_first:
+        walk_entries.reverse()
+
+    for dirpath, dirnames, filenames in walk_entries:
+        if dirpath.startswith("./"):
+            dirpath = dirpath[2:]
+        if dirpath.startswith("tmp"):
+            continue
+
+        # In depth first search first handle files, then directories
+        if depth_first:
+            entries = filenames + dirnames
+        else:
+            entries = dirnames + filenames
+        for entry in entries:
+            path = dirpath + "/" + entry
+            if path.startswith("./"):
+                path = path[2:]
+
+            if exclude_if_in and os.path.exists(exclude_if_in + "/" + path):
+                continue
+
+            todo = True
+            while todo:
+                try:
+                    handler(path, *args)
+                    todo = False
+                except Exception, e:
+                    todo = False
+                    sys.stderr.write(error * 40 + "\n")
+                    sys.stderr.write(error + " Exception      %s\n" % (path))
+                    sys.stderr.write(error + " " + traceback.format_exc().replace('\n', "\n" + error + " ") + "\n")
+                    sys.stderr.write(error * 40 + "\n")
+
+                    # If running in interactive mode ask the user to terminate or retry
+                    # In case of non interactive mode just throw the exception
+                    if opt_conflict == 'ask':
+                        options = [
+                            ("retry",    "Retry the operation"),
+                            ("continue", "Continue with next files"),
+                            ("abort",    "Stop here and abort update!")
+                        ]
+                        choice = ask_user_choices(
+                            'Problem occured',
+                            'We detected an exception (printed above). You have the '
+                            'chance to fix things and retry the operation now.',
+                            options
+                        )
+                        if choice == 'abort':
+                            bail_out("Update aborted.")
+                        elif choice == 'retry':
+                            todo = True # Try again
+
+
+#.
+#   .--omd update----------------------------------------------------------.
+#   |                           _                   _       _              |
+#   |        ___  _ __ ___   __| |  _   _ _ __   __| | __ _| |_ ___        |
+#   |       / _ \| '_ ` _ \ / _` | | | | | '_ \ / _` |/ _` | __/ _ \       |
+#   |      | (_) | | | | | | (_| | | |_| | |_) | (_| | (_| | ||  __/       |
+#   |       \___/|_| |_| |_|\__,_|  \__,_| .__/ \__,_|\__,_|\__\___|       |
+#   |                                    |_|                               |
+#   +----------------------------------------------------------------------+
+#   |  Complex handling of skeleton and user files during update           |
+#   '----------------------------------------------------------------------'
+
+# Change site specific information in files originally create from
+# skeleton files. Skip files below tmp/
+def patch_skeleton_files(old, new):
+    skelroot = "/omd/versions/%s/skel" % OMD_VERSION
+    os.chdir(skelroot)  # make relative paths
+    for dirpath, dirnames, filenames in os.walk("."):
+        if dirpath.startswith("./"):
+            dirpath = dirpath[2:]
+        targetdir = site_dir(new) + "/" + dirpath
+        if targetdir.startswith(tmp_dir(new)):
+            continue # Skip files below tmp
+        for fn in filenames:
+            src = dirpath + "/" + fn
+            dst = targetdir + "/" + fn
+            if os.path.isfile(src) and not os.path.islink(src) \
+                and os.path.exists(dst): # not deleted by user
+                try:
+                    patch_template_file(src, dst, old, new)
+                except Exception, e:
+                    sys.stderr.write("Error patching template file '%s': %s\n" %
+                            (dst, e))
 
 def patch_template_file(src, dst, old, new):
     # Create patch from old instantiated skeleton file to new one
@@ -1091,22 +972,6 @@ def patch_template_file(src, dst, old, new):
         os.remove(dst + ".rej")
     except:
         pass
-
-def get_editor():
-    editor = getenv("VISUAL", getenv("EDITOR", "/usr/bin/vi"))
-    if not os.path.exists(editor):
-        editor = 'vi'
-    return editor
-
-# return "| $PAGER", if a pager is available
-def pipe_pager():
-    pager = getenv("PAGER")
-    if not pager and os.path.exists("/usr/bin/less"):
-        pager = "less -F -X"
-    if pager:
-        return "| %s" % pager
-    else:
-        return ""
 
 # Try to merge changes from old->new version and
 # old->user version
@@ -1259,33 +1124,8 @@ def merge_update_file(relpath, old_version, new_version):
         except:
             pass
 
-
-def filetype(p):
-    # check for symlinks first. Might be dangling. In that
-    # case os.path.exists checks the links target for existance
-    # and reports it is non-existing.
-    if os.path.islink(p):
-        tp = "link"
-    elif not os.path.exists(p):
-        tp = None
-    elif os.path.isdir(p):
-        tp = "dir"
-    else:
-        tp = "file"
-
-    return tp
-
-
-def file_contents(path):
-    """ Returns the file contents of a site file or a skel file """
-    if '/skel/' in path:
-        return instantiate_skel(path)
-    else:
-        return file(path).read()
-
-
+# Compares two files and returns infos wether the file type or contants have changed """
 def file_status(source_path, target_path):
-    """ Compares two files and returns infos wether the file type or contants have changed """
     source_type  = filetype(source_path)
     target_type  = filetype(target_path)
 
@@ -1611,6 +1451,174 @@ def update_file(relpath, old_version, new_version, userdir, old_perms):
                 sys.stdout.write(error + " Permission:    cannot change %04o -> %04o %s: %s\n" % (user_perm, new_perm, fn, e))
 
 
+def filetype(p):
+    # check for symlinks first. Might be dangling. In that
+    # case os.path.exists checks the links target for existance
+    # and reports it is non-existing.
+    if os.path.islink(p):
+        tp = "link"
+    elif not os.path.exists(p):
+        tp = None
+    elif os.path.isdir(p):
+        tp = "dir"
+    else:
+        tp = "file"
+
+    return tp
+
+
+# Returns the file contents of a site file or a skel file
+def file_contents(path):
+    if '/skel/' in path:
+        return instantiate_skel(path)
+    else:
+        return file(path).read()
+
+
+#.
+#   .--tmpfs---------------------------------------------------------------.
+#   |                     _                    __                          |
+#   |                    | |_ _ __ ___  _ __  / _|___                      |
+#   |                    | __| '_ ` _ \| '_ \| |_/ __|                     |
+#   |                    | |_| | | | | | |_) |  _\__ \                     |
+#   |                     \__|_| |_| |_| .__/|_| |___/                     |
+#   |                                  |_|                                 |
+#   +----------------------------------------------------------------------+
+#   |  Helper functions for dealing with the tmpfs                         |
+#   '----------------------------------------------------------------------'
+
+def tmpfs_mounted(sitename):
+    # Problem here: if /omd is a symbolic link somewhere else,
+    # then in /proc/mounts the physical path will appear and be
+    # different from tmp_path. We just check the suffix therefore.
+    path_suffix = "sites/%s/tmp" % sitename
+    for line in file("/proc/mounts"):
+        try:
+            device, mp, fstype, options, dump, fsck = line.split()
+            if mp.endswith(path_suffix) and fstype == 'tmpfs':
+                return True
+        except:
+            continue
+    return False
+
+def create_tmpfs(sitename):
+    if os.getuid() == 0:
+        switch_to_site_user()
+
+    tmp = tmp_dir(sitename)
+
+    # Only try to mount the tmpfs if it is enabled for this site
+    # When not using the tmpfs the tmp/ hierarchy needs to be
+    # to be populated like the tmpfs afterwards.
+    config_load_hooks()
+    if g_hooks["TMPFS"]["value"] == "on":
+        if tmpfs_mounted(sitename):
+            return
+
+        sys.stdout.write("Creating temporary filesystem %s..." % tmp)
+        sys.stdout.flush()
+        if not os.path.exists(tmp):
+            os.mkdir(tmp)
+        if 0 != os.system("mount %s '%s'" % (g_info["MOUNT_OPTIONS"], tmp) ):
+            sys.stdout.write(tty_error + "\n")
+            return
+    else:
+        # Skip initializing when either the tmp dir does not exist
+        # and the site is not totally stopped
+        if os.path.exists(tmp) and not site_is_stopped(sitename):
+            return
+
+        sys.stdout.write("Preparing tmp directory %s..." % tmp)
+        sys.stdout.flush()
+        if not os.path.exists(tmp):
+            os.mkdir(tmp)
+
+    create_skeleton_files(sitename, "tmp")
+    chown_tree(tmp, sitename)
+    ok()
+
+def unmount_tmpfs(sitename, output = True, kill = False):
+    # Clear directory hierarchy when not using a tmpfs
+    # During omd update TMPFS hook might not be set so assume
+    # that the hook is enabled by default.
+    # If kill is True, then we do an fuser -k on the tmp
+    # directory first.
+    config_load_hooks()
+    if g_hooks.get("TMPFS", {'value': 'on'})["value"] != "on":
+        tmp = tmp_dir(sitename)
+        if os.path.exists(tmp):
+            if output:
+                sys.stdout.write("Cleaning up temp filesystem...")
+                sys.stdout.flush()
+            delete_directory_contents(tmp)
+            if output:
+                ok()
+        return True
+
+    if tmpfs_mounted(sitename):
+        if output:
+            sys.stdout.write("Unmounting temporary filesystem...")
+
+        for t in range(0, 10):
+            if 0 == os.system("umount '%s'" % tmp_dir(sitename)):
+                if output:
+                    ok()
+                return True
+
+            if kill:
+                if output:
+                    sys.stdout.write("Killing processes still using '%s'\n" % tmp_dir(sitename))
+                os.system("fuser --silent -k '%s'" % tmp_dir(sitename))
+
+            if output:
+                sys.stdout.write(kill and "K" or ".")
+                sys.stdout.flush()
+            time.sleep(1)
+
+        if output:
+            bail_out(tty_error + ": Cannot unmount tmp filesystem.")
+        else:
+            return False
+
+    return True
+
+def add_to_fstab(sitename, tmpfs_size = None):
+    # tmpfs                   /opt/omd/sites/b01/tmp  tmpfs   user,uid=b01,gid=b01 0 0
+    mountpoint = tmp_dir(sitename)
+    sys.stdout.write("Adding %s to /etc/fstab.\n" % mountpoint)
+
+    # No size option: using up to 50% of the RAM
+    sizespec = ''
+    if tmpfs_size != None and re.match('^[0-9]+(G|M|%)$', tmpfs_size):
+        sizespec = ',size=%s' % tmpfs_size
+
+    file("/etc/fstab", "a+").write("tmpfs  %s tmpfs noauto,user,mode=755,uid=%s,gid=%s%s 0 0\n" % \
+        (mountpoint, sitename, sitename, sizespec))
+
+def remove_from_fstab(sitename):
+    mountpoint = tmp_dir(sitename)
+    sys.stdout.write("Removing %s from /etc/fstab..." % mountpoint)
+    newtab = file("/etc/fstab.new", "w")
+    for line in file("/etc/fstab"):
+        if "uid=%s," % sitename in line and mountpoint in line:
+            continue
+        newtab.write(line)
+    os.rename("/etc/fstab.new", "/etc/fstab")
+    ok()
+
+
+#.
+#   .--init.d--------------------------------------------------------------.
+#   |                        _       _ _        _                          |
+#   |                       (_)_ __ (_) |_   __| |                         |
+#   |                       | | '_ \| | __| / _` |                         |
+#   |                       | | | | | | |_ | (_| |                         |
+#   |                       |_|_| |_|_|\__(_)__,_|                         |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   |  Handling of site-internal init scripts                              |
+#   '----------------------------------------------------------------------'
+
 def init_scripts(sitename):
     rc_dir = "/omd/sites/%s/etc/rc.d" % sitename
     try:
@@ -1723,6 +1731,21 @@ def check_status(sitename, display=True, daemon=None, bare=False):
                 (tty_bold + ovstate + tty_normal))
     return exit_code
 
+
+
+
+#.
+#   .--Config & Hooks------------------------------------------------------.
+#   |  ____             __ _          ___     _   _             _          |
+#   | / ___|___  _ __  / _(_) __ _   ( _ )   | | | | ___   ___ | | _____   |
+#   || |   / _ \| '_ \| |_| |/ _` |  / _ \/\ | |_| |/ _ \ / _ \| |/ / __|  |
+#   || |__| (_) | | | |  _| | (_| | | (_>  < |  _  | (_) | (_) |   <\__ \  |
+#   | \____\___/|_| |_|_| |_|\__, |  \___/\/ |_| |_|\___/ \___/|_|\_\___/  |
+#   |                        |___/                                         |
+#   +----------------------------------------------------------------------+
+#   |  Site configuration and config hooks                                 |
+#   '----------------------------------------------------------------------'
+
 def config_read():
     config = {}
     confpath = g_sitedir + "/etc/omd/site.conf"
@@ -1804,28 +1827,6 @@ def refresh_hooks(force_reload = False):
     call_all_hooks("refresh")
     config_save()
     config_reload_hooks()
-
-def call_scripts(hookname):
-    path = g_sitedir + "/lib/omd/scripts/" + hookname
-    putenv("OMD_ROOT", g_sitedir)
-    putenv("OMD_SITE", g_sitename)
-    for f in os.listdir(path):
-        if f[0] == '.':
-            continue
-        sys.stdout.write('Executing %s script "%s"...' % (hookname, f))
-        p = Popen('%s/%s' % (path, f), shell = True, stdout = PIPE, stderr = PIPE)
-        stdout = p.stdout.read()
-        stderr = p.stderr.read()
-        exitcode = p.wait()
-        if exitcode == 0:
-            sys.stdout.write(tty_ok + '\n')
-        else:
-            sys.stdout.write(tty_error + ' (RC: %d, use -v for details)\n' % exitcode)
-        if opt_verbose:
-            if stdout:
-                sys.stdout.write('Output: %s\n' % stdout)
-            if stderr:
-                sys.stdout.write('Errors: %s\n' % stderr)
 
 def call_hook(hookname, args):
     hook_file = g_sitedir + "/lib/omd/hooks/" + hookname
@@ -2092,14 +2093,220 @@ def init_action(command, args, options):
     else:
         return call_init_scripts(g_sitename, command, daemon)
 
-# ----------------------------------------------------------
-#                                                  _
-#     ___ ___  _ __ ___  _ __ ___   __ _ _ __   __| |___
-#    / __/ _ \| '_ ` _ \| '_ ` _ \ / _` | '_ \ / _` / __|
-#   | (_| (_) | | | | | | | | | | | (_| | | | | (_| \__ \
-#    \___\___/|_| |_| |_|_| |_| |_|\__,_|_| |_|\__,_|___/
+
+#.
+#   .--Helpers-------------------------------------------------------------.
+#   |                  _   _      _                                        |
+#   |                 | | | | ___| |_ __   ___ _ __ ___                    |
+#   |                 | |_| |/ _ \ | '_ \ / _ \ '__/ __|                   |
+#   |                 |  _  |  __/ | |_) |  __/ |  \__ \                   |
+#   |                 |_| |_|\___|_| .__/ \___|_|  |___/                   |
+#   |                              |_|                                     |
+#   +----------------------------------------------------------------------+
+#   |  Various helper functions                                            |
+#   '----------------------------------------------------------------------'
+
+def omd_root():
+    return "/omd/versions/" + OMD_VERSION
+
+# Read distro- and version specific values
+def read_info():
+    global g_info
+    g_info = {}
+    info_dir = omd_root() + "/share/omd"
+    for f in os.listdir(info_dir):
+        if f.endswith(".info"):
+            for line in file(info_dir + "/" + f):
+                try:
+                    line = line.strip()
+                    # Skip comment and empty lines
+                    if line.startswith('#') or line == '':
+                        continue
+                    # Remove everything after the first comment sign
+                    if '#' in line:
+                        line = line[:line.index('#')].strip()
+                    var, value = line.split('=')
+                    value = value.strip()
+                    if var.endswith("+"):
+                        var = var[:-1] # remove +
+                        g_info[var.strip()] += " " + value
+                    else:
+                        g_info[var.strip()] = value
+                except Exception, e:
+                    bail_out('Unable to parse line "%s" in file "%s"' % (line, info_dir + "/" + f))
+
+def fstab_verify(name):
+    mountpoint = tmp_dir(name)
+    for line in file("/etc/fstab"):
+        if "uid=%s," % name in line and mountpoint in line:
+            return True
+    bail_out(tty_error + ": fstab entry for %s does not exist" % mountpoint )
+
+def switch_temp_to_user(user):
+    p = pwd.getpwnam(user)
+    uid = p.pw_uid
+    gid = p.pw_gid
+    os.chdir(p.pw_dir)
+    os.setegid(gid)
+    os.seteuid(uid)
+
+
+# No using os.putenv, os.getenv os.unsetenv directly because
+# they seem not to work correctly in debian 503.
 #
-# ----------------------------------------------------------
+# Unsetting all vars with os.unsetenv and after that using os.getenv to read
+# some vars did not bring the expected result that the environment was empty.
+# The vars were still set.
+#
+# Same for os.putenv. Executing os.getenv right after os.putenv did not bring
+# the expected result.
+#
+# Directly modifying os.environ seems to work.
+def putenv(key, value):
+    os.environ[key] = value
+
+def getenv(key, default = None):
+    if not key in os.environ:
+        return default
+    return os.environ[key]
+
+def clear_environment():
+    # first remove *all* current environment variables
+    keep = [ "TERM" ]
+    for key in os.environ.keys():
+        if key not in keep:
+            del os.environ[key]
+
+def set_environment():
+    putenv("OMD_SITE", g_sitename)
+    putenv("OMD_ROOT", g_sitedir)
+    putenv("PATH", "%s/local/bin:%s/bin:/usr/local/bin:/bin:/usr/bin:/sbin:/usr/sbin" %
+                                                                  (g_sitedir, g_sitedir))
+    putenv("USER", g_sitename)
+
+    putenv("LD_LIBRARY_PATH", "%s/local/lib:%s/lib" % (g_sitedir, g_sitedir))
+    putenv("HOME", g_sitedir)
+    putenv("PYTHONPATH", "%s/lib/python:%s/local/lib/python" % (g_sitedir, g_sitedir))
+
+    # allow user to define further environment variable in ~/etc/environment
+    envfile = g_sitedir + "/etc/environment"
+    if os.path.exists(envfile):
+        lineno = 0
+        for line in file(envfile):
+            lineno += 1
+            line = line.strip()
+            if line == "" or line[0] == "#":
+                continue # allow empty lines and comments
+            parts = line.split("=")
+            if len(parts) != 2:
+                bail_out("%s: syntax error in line %d" % (envfile, lineno))
+            varname = parts[0]
+            value = parts[1]
+            if value.startswith('"'):
+                value = value.strip('"')
+
+            # Add the present environment when someone wants to append some
+            if value.startswith("$%s:" % varname):
+                before = getenv(varname, None)
+                if before:
+                    value = before + ":" + value.replace("$%s:" % varname, '')
+
+            if value.startswith("'"):
+                value = value.strip("'")
+            putenv(varname, value)
+
+def hostname():
+    try:
+        return os.popen("hostname").read().strip()
+    except:
+        return "localhost"
+
+def create_apache_hook(sitename):
+    file("/omd/apache/%s.conf" % sitename, "w")\
+        .write("Include %s/etc/apache/mode.conf\n" % site_dir(sitename))
+
+def delete_apache_hook(sitename):
+    hook_path = "/omd/apache/%s.conf" % sitename
+    if not os.path.exists(hook_path):
+        return
+    try:
+        os.remove(hook_path)
+    except Exception, e:
+        sys.stderr.write("Cannot remove apache hook %s: %s\n" % (hook_path, e))
+
+def init_cmd(name, action):
+    return g_info['INIT_CMD'] % {
+        'name'   : name,
+        'action' : action,
+    }
+
+def reload_apache():
+    sys.stdout.write("Reloading Apache...")
+    sys.stdout.flush()
+    show_success(os.system("%s graceful" % g_info["APACHE_CTL"]) >> 8)
+
+def restart_apache():
+    if os.system(init_cmd(g_info['APACHE_INIT_NAME'], 'status') + ' >/dev/null 2>&1') >> 8 == 0:
+        sys.stdout.write("Restarting Apache...")
+        sys.stdout.flush()
+        show_success(os.system(init_cmd(g_info['APACHE_INIT_NAME'], 'restart') + ' >/dev/null') >> 8)
+
+def replace_tags(content, replacements):
+    for var, value in replacements.items():
+        content = content.replace(var, value)
+    return content
+
+def get_editor():
+    editor = getenv("VISUAL", getenv("EDITOR", "/usr/bin/vi"))
+    if not os.path.exists(editor):
+        editor = 'vi'
+    return editor
+
+# return "| $PAGER", if a pager is available
+def pipe_pager():
+    pager = getenv("PAGER")
+    if not pager and os.path.exists("/usr/bin/less"):
+        pager = "less -F -X"
+    if pager:
+        return "| %s" % pager
+    else:
+        return ""
+
+def call_scripts(hookname):
+    path = g_sitedir + "/lib/omd/scripts/" + hookname
+    putenv("OMD_ROOT", g_sitedir)
+    putenv("OMD_SITE", g_sitename)
+    for f in os.listdir(path):
+        if f[0] == '.':
+            continue
+        sys.stdout.write('Executing %s script "%s"...' % (hookname, f))
+        p = Popen('%s/%s' % (path, f), shell = True, stdout = PIPE, stderr = PIPE)
+        stdout = p.stdout.read()
+        stderr = p.stderr.read()
+        exitcode = p.wait()
+        if exitcode == 0:
+            sys.stdout.write(tty_ok + '\n')
+        else:
+            sys.stdout.write(tty_error + ' (RC: %d, use -v for details)\n' % exitcode)
+        if opt_verbose:
+            if stdout:
+                sys.stdout.write('Output: %s\n' % stdout)
+            if stderr:
+                sys.stdout.write('Errors: %s\n' % stderr)
+
+
+#.
+#   .--Commands------------------------------------------------------------.
+#   |         ____                                          _              |
+#   |        / ___|___  _ __ ___  _ __ ___   __ _ _ __   __| |___          |
+#   |       | |   / _ \| '_ ` _ \| '_ ` _ \ / _` | '_ \ / _` / __|         |
+#   |       | |__| (_) | | | | | | | | | | | (_| | | | | (_| \__ \         |
+#   |        \____\___/|_| |_| |_|_| |_| |_|\__,_|_| |_|\__,_|___/         |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   |  Implementation of actual omd commands                               |
+#   '----------------------------------------------------------------------'
+
 def main_help(args=[], options={}):
     am_root = os.getuid() == 0
     if am_root:
@@ -2724,77 +2931,6 @@ def print_diff(rel_path, source_path, target_path, source_version, source_perms)
     if source_perm != target_perm:
         print_status(warn, fn, 'p', 'Changed permissions')
 
-# Walks all files in the skeleton dir to execute a function for each file
-# The given handler is called with the provided args. Additionally the relative
-# path of the file to handle is handed over in the 'relpath' parameter.
-
-# When called with a path in 'exclude_if_in' then paths existing relative to
-# that are skipped. This is used for a second run during the update-process: to handle
-# files that have vanished in the new version.
-
-# The option 'relbase' is optional. It can contain a relative path which can be used
-# as base for the walk instead of walking the whole tree.
-
-# The function returns a set of already handled files.
-def walk_skel(root, handler, args, depth_first, exclude_if_in = None, relbase = '.'):
-    os.chdir(root)
-
-    # Note: os.walk first finds level 1 directories, then deeper
-    # layers. If we need a real depth search instead, where we first
-    # handle deep directories and files, then the top level ones.
-    walk_entries = list(os.walk(relbase))
-    if depth_first:
-        walk_entries.reverse()
-
-    for dirpath, dirnames, filenames in walk_entries:
-        if dirpath.startswith("./"):
-            dirpath = dirpath[2:]
-        if dirpath.startswith("tmp"):
-            continue
-
-        # In depth first search first handle files, then directories
-        if depth_first:
-            entries = filenames + dirnames
-        else:
-            entries = dirnames + filenames
-        for entry in entries:
-            path = dirpath + "/" + entry
-            if path.startswith("./"):
-                path = path[2:]
-
-            if exclude_if_in and os.path.exists(exclude_if_in + "/" + path):
-                continue
-
-            todo = True
-            while todo:
-                try:
-                    handler(path, *args)
-                    todo = False
-                except Exception, e:
-                    todo = False
-                    sys.stderr.write(error * 40 + "\n")
-                    sys.stderr.write(error + " Exception      %s\n" % (path))
-                    sys.stderr.write(error + " " + traceback.format_exc().replace('\n', "\n" + error + " ") + "\n")
-                    sys.stderr.write(error * 40 + "\n")
-
-                    # If running in interactive mode ask the user to terminate or retry
-                    # In case of non interactive mode just throw the exception
-                    if opt_conflict == 'ask':
-                        options = [
-                            ("retry",    "Retry the operation"),
-                            ("continue", "Continue with next files"),
-                            ("abort",    "Stop here and abort update!")
-                        ]
-                        choice = ask_user_choices(
-                            'Problem occured',
-                            'We detected an exception (printed above). You have the '
-                            'chance to fix things and retry the operation now.',
-                            options
-                        )
-                        if choice == 'abort':
-                            bail_out("Update aborted.")
-                        elif choice == 'retry':
-                            todo = True # Try again
 
 
 def main_update(args, options={}):
@@ -3429,14 +3565,17 @@ def exec_other_omd(version):
                 (g_sitename, version))
 
 
-# ----------------------------------------------------------
-#                                _
-#                _ __ ___   __ _(_)_ __
-#               | '_ ` _ \ / _` | | '_ \
-#               | | | | | | (_| | | | | |
-#               |_| |_| |_|\__,_|_|_| |_|
-#
-# ----------------------------------------------------------
+#.
+#   .--Main----------------------------------------------------------------.
+#   |                        __  __       _                                |
+#   |                       |  \/  | __ _(_)_ __                           |
+#   |                       | |\/| |/ _` | | '_ \                          |
+#   |                       | |  | | (_| | | | | |                         |
+#   |                       |_|  |_|\__,_|_|_| |_|                         |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   |  Main entry point                                                    |
+#   '----------------------------------------------------------------------'
 
 # Handle global options. We might convert this to getopt
 # later. But a problem here is that we have options appearing
