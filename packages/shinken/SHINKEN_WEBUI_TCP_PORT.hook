@@ -2,11 +2,11 @@
 
 # Alias: TCP port number for Apache
 # Menu: Web GUI
-# Description: 
+# Description:
 #  Configure the TCP port used for the Shinken WebUI
-#  process of this site. This option is only useful if 
+#  process of this site. This option is only useful if
 #  the CORE is set to "shinken" and WEBSERVER is set to "own".
-#  
+#
 #  After changing this variable, the site-wide Apache webserver
 #  must be restarted.
 

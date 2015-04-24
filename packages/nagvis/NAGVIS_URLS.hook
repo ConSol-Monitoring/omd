@@ -2,12 +2,12 @@
 
 # Alias: NagVis linked Web GUI
 # Menu: Addons
-# Description: 
+# Description:
 #  When clicking on NagVis map icons the user is redirected to another
 #  Web-GUI. By default this is the classic Nagios webinterface. With
 #  this switch the targeted Web-GUI can be changed.
 
-# Makes it possible to switch all the links from NagVis 
+# Makes it possible to switch all the links from NagVis
 # to the default Web GUI to the choosen GUI or a defined
 # other one.
 #
@@ -21,14 +21,13 @@
 
 case "$1" in
     default)
-        echo "auto"
+        echo "nagios"
     ;;
     choices)
-        echo "auto: Use the default Web-GUI"
         echo "nagios: Classic Nagios webinterface"
         echo "check_mk: The Check_MK's Multisite GUI"
         echo "thruk: Thruk Monitoring Webinterface"
-        echo "none: disable"
+        echo "none: Use NagVis default behaviour"
     ;;
     set)
         # Skip this hook when NagVis configuration directory does not exist
@@ -38,9 +37,6 @@ case "$1" in
 
         CFG_FILE=$OMD_ROOT/etc/nagvis/conf.d/urls.ini.php
         GUI=$2
-        if [ "$GUI" == "auto" ]; then
-            GUI=$CONFIG_DEFAULT_GUI
-        fi
 
         # Fallback to classic Nagios GUI when auto mode and unhandled GUIs selected
         # (welcome/nagvis GUIs are catched in DEFAULT_GUI hook)
@@ -52,7 +48,7 @@ case "$1" in
         if [ ! -d $OMD_ROOT/etc/nagvis/conf.d ]; then
             mkdir -p $OMD_ROOT/etc/nagvis/conf.d
         fi
-        
+
         if [ "$GUI" == "check_mk" ]; then
             HTMLCGI="/$OMD_SITE/check_mk"
             HOSTURL="[htmlcgi]/view.py?view_name=host&site=&host=[host_name]"

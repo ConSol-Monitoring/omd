@@ -2,7 +2,7 @@
 
 # Alias: Use multisite cookie auth
 # Menu: Web GUI
-# Description: 
+# Description:
 #  Multisite provides a cookie based authentication which can be
 #  used as alternative to the default basic authentication.
 #  The cookie authentication is done by multisite. The cookie can
@@ -80,5 +80,6 @@ EOF
           [ -f $PNP_CFG ] && rm $PNP_CFG
           [ -f $WIKI_CFG ] && rm $WIKI_CFG
        fi
+       true
    ;;
 esac

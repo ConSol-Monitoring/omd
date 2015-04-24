@@ -2,8 +2,8 @@
 
 # Alias: Use Dokuwiki for user management
 # Menu: Web GUI
-# Description: 
-#  Dokuwiki - on OMD available on the URL /$OMD_SITE/wiki - is not only 
+# Description:
+#  Dokuwiki - on OMD available on the URL /$OMD_SITE/wiki - is not only
 #  a useful Wiki, but also implements a user management.
 #  If you enable this option, you will have Nagios, NagVis, Multisite and
 #  other web applications access the user database of Dokuwiki for authentication.

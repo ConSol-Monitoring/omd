@@ -2,15 +2,15 @@
 
 # Alias: TCP port number for Apache
 # Menu: Web GUI
-# Description: 
+# Description:
 #  Configure the TCP port used for the Apache webserver
-#  process of this site. This option is only useful if 
+#  process of this site. This option is only useful if
 #  APACHE is set to "on" and WEBSERVER is set to "own".
-#  
+#
 #  After changing this variable, the man Apache webserver
 #  must be restarted.
 
-# Load other config options. This hook needs 
+# Load other config options. This hook needs
 # APACHE_TCP_PORT.
 if [ -f $OMD_ROOT/etc/omd/site.conf ]; then
     . $OMD_ROOT/etc/omd/site.conf
@@ -26,7 +26,7 @@ port_is_used ()
             continue
         fi
         conf=/omd/sites/$S/etc/omd/site.conf
-        [ $S != $OMD_SITE ] || continue # skip current site
+        [ "$S" != "$OMD_SITE" ] || continue # skip current site
         if ! ls $conf >/dev/null 2>&1; then
             echo "ERROR: Failed to read config of site ${S}. APACHE_TCP_PORT will possibly be allocated twice" >&2
             continue
@@ -63,12 +63,12 @@ case "$1" in
     set)
         PORT=$(next_free_hook $2)
         cat <<EOF > $OMD_ROOT/etc/apache/listen-port.conf
-# This file is created by 'omd config set APACHE_TCP_PORT'. 
+# This file is created by 'omd config set APACHE_TCP_PORT'.
 # Better do not edit manually
 Listen $CONFIG_APACHE_TCP_ADDR:$PORT
 EOF
         cat <<EOF > $OMD_ROOT/etc/apache/proxy-port.conf
-# This file is created by 'omd config set APACHE_TCP_PORT'. 
+# This file is created by 'omd config set APACHE_TCP_PORT'.
 # Better do not edit manually
 <IfModule mod_proxy_http.c>
   <Proxy http://$CONFIG_APACHE_TCP_ADDR:$PORT/$OMD_SITE>
