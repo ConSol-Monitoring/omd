@@ -579,7 +579,7 @@ def site_version(sitename):
         return None
 
 def start_site(sitename):
-    create_tmpfs(sitename)
+    prepare_and_populate_tmpfs(sitename)
     call_init_scripts(sitename, "start")
 
 def stop_if_not_stopped(sitename):
@@ -1489,7 +1489,7 @@ def tmpfs_mounted(sitename):
             continue
     return False
 
-def create_tmpfs(sitename):
+def prepare_and_populate_tmpfs(sitename):
     tmp = tmp_dir(sitename)
 
     # Only try to mount the tmpfs if it is enabled for this site
@@ -1868,17 +1868,11 @@ def load_hook_dependencies():
         else:
             hook["active"] = True
 
-# TODO: Wer ruft das hier auf?
-def refresh_hooks(force_reload = False):
-    load_config_hooks(force_reload)
-    config_set_all() # execute 'set' functions with current values
-    save_site_conf()
-    config_reload_hooks()
-
 
 def hook_exists(hook_name):
     hook_file = g_sitedir + "/lib/omd/hooks/" + hook_name
     return os.path.exists(hook_file)
+
 
 def call_hook(hook_name, args):
     hook_file = g_sitedir + "/lib/omd/hooks/" + hook_name
@@ -1926,11 +1920,16 @@ def config_set(args):
 
     config_set_value(hook_name, value)
 
+
 def config_set_all():
     for hook_name, value in g_site_conf.items():
         # Hooks might vanish after and up- or downdate
         if hook_exists(hook_name):
-            call_hook(hook_name, [ "set", value ])
+            exitcode, output = call_hook(hook_name, [ "set", value ])
+            if not exitcode:
+                if output and output != value:
+                    g_site_conf[hook_name] = output
+
 
 
 def config_set_value(hook_name, value, save = True):
@@ -2072,7 +2071,7 @@ def init_action(command, args, options):
         bail_out("This site is disabled.")
 
     if command in [ "start", "restart" ]:
-        create_tmpfs(g_sitename)
+        prepare_and_populate_tmpfs(g_sitename)
 
     if len(args) > 0:
         daemon = args[0] # restrict to this daemon
@@ -2263,25 +2262,26 @@ def pipe_pager():
 
 def call_scripts(phase):
     path = g_sitedir + "/lib/omd/scripts/" + phase
-    putenv("OMD_ROOT", g_sitedir)
-    putenv("OMD_SITE", g_sitename)
-    for f in os.listdir(path):
-        if f[0] == '.':
-            continue
-        sys.stdout.write('Executing %s script "%s"...' % (phase, f))
-        p = Popen('%s/%s' % (path, f), shell = True, stdout = PIPE, stderr = PIPE)
-        stdout = p.stdout.read()
-        stderr = p.stderr.read()
-        exitcode = p.wait()
-        if exitcode == 0:
-            sys.stdout.write(tty_ok + '\n')
-        else:
-            sys.stdout.write(tty_error + ' (exit code: %d, use -v for details)\n' % exitcode)
-        if opt_verbose:
-            if stdout:
-                sys.stdout.write('Output: %s\n' % stdout)
-            if stderr:
-                sys.stdout.write('Errors: %s\n' % stderr)
+    if os.path.exists(path):
+        putenv("OMD_ROOT", g_sitedir)
+        putenv("OMD_SITE", g_sitename)
+        for f in os.listdir(path):
+            if f[0] == '.':
+                continue
+            sys.stdout.write('Executing %s script "%s"...' % (phase, f))
+            p = Popen('%s/%s' % (path, f), shell = True, stdout = PIPE, stderr = PIPE)
+            stdout = p.stdout.read()
+            stderr = p.stderr.read()
+            exitcode = p.wait()
+            if exitcode == 0:
+                sys.stdout.write(tty_ok + '\n')
+            else:
+                sys.stdout.write(tty_error + ' (exit code: %d, use -v for details)\n' % exitcode)
+            if opt_verbose:
+                if stdout:
+                    sys.stdout.write('Output: %s\n' % stdout)
+                if stderr:
+                    sys.stdout.write('Errors: %s\n' % stderr)
 
 
 #.
@@ -2586,6 +2586,14 @@ def init_site(config_settings = None, apache_reload = False):
     # Change the few files that config save as created as root
     chown_tree(g_sitedir, g_sitename)
 
+    finalize_site("create", apache_reload)
+
+
+# Is being called at the end of create, cp and mv.
+# What is "create", "mv" or "cp". It is used for
+# running the appropriate hooks.
+def finalize_site(what, apache_reload):
+
     # Now we need to do a few things as site user. Note:
     # - We cannot use setuid() here, since we need to get back to root.
     # - We cannot use seteuid() here, since the id command call will then still
@@ -2603,14 +2611,14 @@ def init_site(config_settings = None, apache_reload = False):
             # user. We also could do this at 'omd start', but this might confuse
             # users. They could create files below tmp which would be shadowed
             # by the mount.
-            create_tmpfs(g_sitename)
+            prepare_and_populate_tmpfs(g_sitename)
 
             # Run all hooks in order to setup things according to the
             # configuration settings
             config_set_all()
             save_site_conf()
 
-            call_scripts('post-create')
+            call_scripts('post-' + what)
             sys.exit(0)
         except Exception, e:
             bail_out(e)
@@ -2809,17 +2817,7 @@ def main_mv_or_cp(what, args, options={}):
     if not reuse:
         add_to_fstab(new, tmpfs_size = options.get('tmpfs-size'))
 
-    # Make apache aware of new site
-    create_apache_hook(new)
-    restart_apache()
-
-    switch_to_site_user()
-
-    # Mount and create contents of tmpfs.
-    create_tmpfs(g_sitename)
-
-    # Give hooks chance to update configuration
-    config_set_all()
+    finalize_site(what, "apache-reload" in options)
 
 
 
@@ -3252,6 +3250,9 @@ def main_restore(args, options={}):
                 parts = parts[1:]
             tarinfo.linkname = '/'.join(parts)
         tar.extract(tarinfo, path=g_sitedir)
+    tar.close()
+
+    load_site_conf()
 
     # give new user all files
     chown_tree(g_sitedir, g_sitename)
@@ -3268,22 +3269,8 @@ def main_restore(args, options={}):
     if not reuse:
         add_to_fstab(g_sitename, tmpfs_size = options.get('tmpfs-size'))
 
-    # Make apache aware of eventual new site
-    create_apache_hook(g_sitename)
-    if 'apache-reload' in options:
-        reload_apache()
-    else:
-        restart_apache()
+    finalize_site("restore", "apache-reload" in options)
 
-    switch_to_site_user()
-
-    # Give hooks chance to update configuration
-    config_set_all()
-
-    # Mount and create contents of tmpfs.
-    create_tmpfs(g_sitename)
-
-    tar.close()
 
 
 commands = [
@@ -3400,6 +3387,7 @@ commands = [
       ( "reuse", None, False, "do not create a site user, reuse existing one" ),
       ( "conflict", None, True, "non-interactive conflict resolution. ARG is install, keepold, abort or ask"),
       ( "tmpfs-size",  "t",  True, "specify the maximum size of the tmpfs (defaults to 50% of RAM), examples: 500M, 20G, 60%"),
+      ( "apache-reload",  False,  False, "Issue a reload of the system apache instead of a restart"),
     ],
     "Rename a site",
     ""),
@@ -3413,6 +3401,7 @@ commands = [
       ( "no-past", "N", False,  "do not copy RRD file and log files"),
       ( "conflict", None, True, "non-interactive conflict resolution. ARG is install, keepold, abort or ask"),
       ( "tmpfs-size",  "t",  True, "specify the maximum size of the tmpfs (defaults to 50% of RAM), examples: 500M, 20G, 60%"),
+      ( "apache-reload",  False,  False, "Issue a reload of the system apache instead of a restart"),
     ],
     "Make a copy of a site",
     ""),
