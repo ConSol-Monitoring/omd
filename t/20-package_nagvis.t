@@ -14,7 +14,7 @@ BEGIN {
 
 my $sitename  = "testsite";
 
-my $num_tests = 375;
+my $num_tests = 372;
 if($ENV{NAGVIS_DEVEL}) {
     $num_tests += 3;
 }
@@ -71,7 +71,7 @@ site_thing_exists($site, 'local/share/nagvis/htdocs');
 # Ensure the site is stopped, but don't care about the exit code here!
 TestUtils::test_command({ cmd => $omd_bin." stop $site", exit => -1 });
 
-TestUtils::test_command({ cmd => $omd_bin." config $site set NAGVIS_URLS auto" });
+#TestUtils::test_command({ cmd => $omd_bin." config $site set NAGVIS_URLS auto" });
 TestUtils::test_command({ cmd => $omd_bin." config $site set DEFAULT_GUI welcome" });
 # Now grep conf.d/urls.ini.php for lines matching
 # a) hosturl="[htmlcgi]/status.cgi?host=[host_name]"
