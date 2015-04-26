@@ -496,44 +496,20 @@ def switch_to_site_user():
     uid = p.pw_uid
     gid = p.pw_gid
     os.chdir(p.pw_dir)
-    os.setresgid(gid, gid, 0)
+    os.setgid(gid)
+
     # Darn. The site user might have been put into further groups.
     # This is e.g. needed if you want to access the livestatus socket
     # from one site by another. We make use of the "id" command here.
     # If you know something better, that does not rely on an external
     # command (and that does not try to parse around /etc/group, of
     # course), then please tell mk -> mk@mathias-kettner.de.
-
     os.setgroups(groups_of(g_sitename))
-    os.setresuid(uid, uid, 0)
-
-def switch_back_to_root():
-    os.setresgid(0, 0, 0)
-    os.setresuid(0, 0, 0)
-
+    os.setuid(uid)
 
 def groups_of(username):
     return map(int, os.popen("id -G '%s'" % username).read().split())
 
-# Starts a subprocess to execute a python function as other user
-# without switching the user for the whole main process
-#
-# Would need:
-# try:
-#    from multiprocessing import Process
-# except:
-#     # The package is named processing in debian
-#     from processing import Process
-#
-# Has been removed since multiprocessing is not available on
-# e.g. CentOS. Too modern stuff...
-def execute_as_user(function, arguments):
-    def run():
-        switch_to_site_user()
-        function(*arguments)
-    p = Process(target=run)
-    p.start()
-    p.join(20)
 
 
 #.
@@ -2610,25 +2586,41 @@ def init_site(config_settings = None, apache_reload = False):
     # Change the few files that config save as created as root
     chown_tree(g_sitedir, g_sitename)
 
-    # From now on we run as normal site user!
-    switch_to_site_user()
+    # Now we need to do a few things as site user. Note:
+    # - We cannot use setuid() here, since we need to get back to root.
+    # - We cannot use seteuid() here, since the id command call will then still
+    #   report root and confuse some tools
+    # - We cannot sue setresuid() here, since that is not supported an Python 2.4
+    # So we need to fork() and use a real setuid() here and leave the main process
+    # at being root.
+    pid = os.fork()
+    if pid == 0:
+        try:
+            # From now on we run as normal site user!
+            switch_to_site_user()
 
-    # Mount and create contents of tmpfs. This must be done as normal
-    # user. We also could do this at 'omd start', but this might confuse
-    # users. They could create files below tmp which would be shadowed
-    # by the mount.
-    create_tmpfs(g_sitename)
+            # Mount and create contents of tmpfs. This must be done as normal
+            # user. We also could do this at 'omd start', but this might confuse
+            # users. They could create files below tmp which would be shadowed
+            # by the mount.
+            create_tmpfs(g_sitename)
 
-    # Run all hooks in order to setup things according to the
-    # configuration settings
-    config_set_all()
-    save_site_conf()
+            # Run all hooks in order to setup things according to the
+            # configuration settings
+            config_set_all()
+            save_site_conf()
 
-    call_scripts('post-create')
+            call_scripts('post-create')
+            sys.exit(0)
+        except Exception, e:
+            bail_out(e)
+    else:
+        wpid, status = os.waitpid(pid, 0)
+        if status:
+            bail_out("Error in non-priviledged sub-process.")
 
     # Finally reload global apache - with root permissions - and
     # create include-hook for Apache and reload apache
-    switch_back_to_root()
     create_apache_hook(g_sitename)
     if apache_reload:
         reload_apache()
