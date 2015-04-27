@@ -1,0 +1,8 @@
+#!/bin/bash
+
+cd $OMD_ROOT
+if [ -s etc/cron.d/thruk.auto ]; then
+    newversion=$(basename $(readlink version))
+    sed -i etc/cron.d/thruk.auto -e "s|/omd/versions/[0-9\.]*/|/omd/versions/$newversion/|g" || echo "Updating Thruk Jobs Failed"
+    ./bin/thruk -a installcron > /dev/null
+fi

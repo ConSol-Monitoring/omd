@@ -36,6 +36,8 @@ install:
 	else \
 		cp -p wkhtmltopdf-i386  $(DESTDIR)$(OMD_ROOT)/bin/wkhtmltopdf; \
 	fi
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/omd/scripts/post-update
+	install -m 755 thruk.post-update $(DESTDIR)$(OMD_ROOT)/lib/omd/scripts/post-update/thruk
 
 
 skel:
