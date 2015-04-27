@@ -3028,6 +3028,8 @@ def main_update(args, options={}):
     # Let hooks do their work and update configuration.
     config_set_all()
 
+    call_scripts('post-update')
+
     sys.stdout.write('Finished update.\n\n')
     stop_logging()
 
