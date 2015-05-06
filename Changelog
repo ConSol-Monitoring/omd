@@ -32,7 +32,7 @@ This file documents the revision history for the Open Monitoring Distribution
             - FIX: Added PYTHONPATH to site crontab for being able to access
               the sites python modules as when run in interactive mdoe
           - NagVis:
-            - Update to version 1.8
+            - Update to version 1.8.3
             - Removed deprecated directory var/nagvis/userfiles. This was
               deprecated since version 0.52. During the update to 1.30, the
               directory and all its contents will be removed. This should be
