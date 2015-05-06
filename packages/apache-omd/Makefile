@@ -3,7 +3,7 @@ include ../../Makefile.omd
 NAME = apache-omd
 VERSION = 1.0
 DIR = $(NAME)-$(VERSION)
-FCGI_FILE="mod_fcgid-2.3.6"
+FCGI_FILE="mod_fcgid-2.3.9"
 
 MODULE_DIR=$(APACHE_MODULE_DIR)
 ifeq ($(shell uname -m),x86_64)
@@ -19,12 +19,16 @@ APACHE_MODULES=
 APACHE_MODULES_INSTALL=
 APACHE_FCGID_PATH=$(MODULE_DIR)/$(APACHE_FCGID_MODULE)
 CENTOS_WORKAROUND=0
+INSTALL_FCGID=0
 REPLACE_PHP_FCGI_BIN=$(PHP_FCGI_BIN)
 
 # Try to find the apxs binary
 APXS=/usr/sbin/apxs
 ifeq ("$(wildcard $(APXS))","")
     APXS=apxs
+endif
+ifneq ("$(wildcard /usr/sbin/apxs2)","")
+    APXS=/usr/sbin/apxs2
 endif
 
 VERSIONLT7 := $(shell expr $(DISTRO_VERSION) \<= 7)
@@ -38,14 +42,20 @@ ifeq ($(DISTRO_NAME),REDHAT)
     CENTOS_WORKAROUND=1
   endif
 endif
+ifneq (,$(findstring 11SP,$(DISTRO_VERSION)))
+  INSTALL_FCGID=1
+endif
 
 ifeq ($(CENTOS_WORKAROUND), 1)
-  CENTOS_WORKAROUND=1
+  # workaround for centos/rh which ignores "php-cgi -d settings"
+  REPLACE_PHP_FCGI_BIN=$(PHP_FCGI_BIN) -c $(OMD_ROOT)/etc/apache/php.ini
+  INSTALL_FCGID=1
+endif
+
+ifeq ($(INSTALL_FCGID), 1)
   APACHE_MODULES=modfcgid
   APACHE_MODULES_INSTALL=modfcgid_install
   APACHE_FCGID_PATH=$(OMD_ROOT)/lib/apache/mod_fcgid.so
-  # workaround for centos/rh which ignores "php-cgi -d settings"
-  REPLACE_PHP_FCGI_BIN=$(PHP_FCGI_BIN) -c $(OMD_ROOT)/etc/apache/php.ini
 endif
 
 .PHONY: skel
@@ -102,14 +112,14 @@ skel:
 
 clean:
 	# Remove files created by build/install
-	rm -rf mod_fcgid-2.3.6
+	rm -rf $(FCGI_FILE)
 
 modfcgid:
 	tar zxf $(FCGI_FILE).tar.gz
-	patch -p0 < ./patches/0001-fcgid_proc_unix.c.patch
-	patch -p0 < ./patches/0002-fcgid_pm_unix.c.patch
+	cd $(FCGI_FILE) && patch -p1 < ../patches/0001-fcgid_proc_unix.c.patch
+	cd $(FCGI_FILE) && patch -p1 < ../patches/0002-fcgid_pm_unix.c.patch
 	cd $(FCGI_FILE) && APXS=$(APXS) ./configure.apxs
-	$(MAKE) -C $(FCGI_FILE)
+	CPATH="/usr/include/apache2-worker" $(MAKE) -C $(FCGI_FILE)
 
 modfcgid_install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/apache
