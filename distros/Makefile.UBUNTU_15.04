@@ -22,6 +22,7 @@ BUILD_PACKAGES += libreadline-dev
 BUILD_PACKAGES += libssl-dev
 BUILD_PACKAGES += libxml2-dev
 BUILD_PACKAGES += patch
+BUILD_PACKAGES += rsync
 BUILD_PACKAGES += python-dev
 BUILD_PACKAGES += python-setuptools
 BUILD_PACKAGES += uuid-dev
