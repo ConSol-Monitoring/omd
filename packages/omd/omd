@@ -2065,6 +2065,7 @@ def config_configure_hook(hook_name):
         config_set_value(hook["name"], new_value)
         g_site_conf[hook_name] = new_value
         save_site_conf()
+        load_hook_dependencies()
 
 def init_action(command, args, options):
     if site_is_disabled(g_sitename):
