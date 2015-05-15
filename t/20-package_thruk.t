@@ -13,7 +13,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 2853 );
+plan( tests => 2857 );
 
 ##################################################
 # create our test site
@@ -220,6 +220,7 @@ for my $core (qw/nagios shinken icinga/) {
     TestUtils::test_command({ cmd => $omd_bin." config $site set CORE $core" });
     TestUtils::test_command({ cmd => $omd_bin." config $site set APACHE_MODE own" });
     TestUtils::restart_system_apache();
+    unlink("/omd/sites/$site/tmp/run/live");
     TestUtils::test_command({ cmd => $omd_bin." start $site" }) or TestUtils::bail_out_clean("No need to test Thruk without proper startup");
     TestUtils::wait_for_file("/omd/sites/$site/tmp/run/live")   or TestUtils::bail_out_clean("No need to test Thruk without livestatus connection");
     unlink("/omd/sites/$site/tmp/thruk/thruk.cache");
@@ -248,7 +249,9 @@ for my $core (qw/nagios shinken icinga/) {
     TestUtils::test_command({ cmd => $omd_bin." stop $site" });
     TestUtils::test_command({ cmd => $omd_bin." config $site set APACHE_MODE shared" });
     TestUtils::restart_system_apache();
+    unlink("/omd/sites/$site/tmp/run/live");
     TestUtils::test_command({ cmd => $omd_bin." start $site" });
+    TestUtils::wait_for_file("/omd/sites/$site/tmp/run/live")   or TestUtils::bail_out_clean("No need to test Thruk without livestatus connection");
 
     ##################################################
     # then run tests again
@@ -282,7 +285,9 @@ TestUtils::test_command({ cmd => $omd_bin." stop $site" });
 TestUtils::test_command({ cmd => $omd_bin." config $site set CORE nagios" });
 TestUtils::test_command({ cmd => $omd_bin." config $site set APACHE_MODE own" });
 TestUtils::test_command({ cmd => $omd_bin." config $site set THRUK_COOKIE_AUTH on" });
+unlink("/omd/sites/$site/tmp/run/live");
 TestUtils::test_command({ cmd => $omd_bin." start $site", like => '/OK/' });
+TestUtils::wait_for_file("/omd/sites/$site/tmp/run/live")   or TestUtils::bail_out_clean("No need to test Thruk without livestatus connection");
 TestUtils::restart_system_apache();
 TestUtils::test_command({ cmd => $omd_bin." start $site thruk", like => '/OK/' });
 sleep(3);
@@ -300,7 +305,7 @@ TestUtils::remove_test_site($site);
 ##################################################
 sub set_test_user_token {
     my $file = '/omd/sites/'.$site.'/var/thruk/token';
-    local $ENV{'CATALYST_CONFIG'} = '/omd/sites/'.$site.'/etc/thruk/';
+    local $ENV{'THRUK_CONFIG'} = '/omd/sites/'.$site.'/etc/thruk/';
     my $config = Thruk::Config::get_config();
     my $store  = Thruk::Utils::Cache->new($file);
     my $tokens = $store->get('token');
