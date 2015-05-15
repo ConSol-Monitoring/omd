@@ -1,5 +1,5 @@
---- a/etc/thruk/thruk.conf	2015-05-14 22:54:38.000000000 +0200
-+++ b/etc/thruk/thruk.conf	2015-05-15 09:55:20.102354252 +0200
+--- a/etc/thruk/thruk.conf	2015-06-07 12:22:03.853792726 +0200
++++ b/etc/thruk/thruk.conf	2015-06-07 12:22:13.005795391 +0200
 @@ -13,7 +13,7 @@
  
  ######################################
@@ -25,7 +25,7 @@
  
  ######################################
  # change path to your host / service action icons. You may use relative paths
-@@ -91,7 +91,7 @@
+@@ -101,7 +101,7 @@
  
  ######################################
  # location of your cgi.cfg
@@ -34,7 +34,7 @@
  
  ######################################
  # use frames, can be useful for addons
-@@ -197,11 +197,11 @@
+@@ -207,11 +207,11 @@
  
  ######################################
  # temporary directory, used for template cache...
@@ -48,7 +48,7 @@
  
  ######################################
  # mode used when creating or saving files
-@@ -215,27 +215,27 @@
+@@ -225,27 +225,27 @@
  
  ######################################
  # server side includes
@@ -81,7 +81,7 @@
  
  ######################################
  # use paged data instead of all data in one huge page
-@@ -314,7 +314,7 @@
+@@ -324,7 +324,7 @@
  # Instead of using a general resource_file, you could define one file
  # per peer in your peer config.
  #
@@ -90,7 +90,7 @@
  
  # enable a performance bar inside the status/host list which
  # create a graph from the performance data of the plugin output. Available
-@@ -440,6 +440,7 @@
+@@ -450,6 +450,7 @@
  # check should be rescheduled instead of the passive check.
  # Have a look at the documentation for a detailed description.
  #command_reschedule_alias = servicename_or_commandname_pattern;agent_service_name
@@ -98,7 +98,7 @@
  
  ######################################
  # Time Format Settings
-@@ -490,23 +491,23 @@
+@@ -500,23 +501,23 @@
  # Specifiy a file which is then completly under the control of Thruk.
  # It will be used to store cronjobs, ex. for reports. The file has to
  # be writable by Thruk.
@@ -127,7 +127,7 @@
  
  # Set first day of week. Used in reports.
  # Sunday: 0
-@@ -570,8 +571,8 @@
+@@ -580,8 +581,8 @@
  # COOKIE AUTH
  # cookie auth requires additional webserver settings, see the documentation
  # for detailed instructions.
@@ -138,7 +138,7 @@
  cookie_auth_session_timeout       = 604800
  cookie_auth_session_cache_timeout = 5
  #cookie_auth_domain               = .domain.com
-@@ -615,42 +616,19 @@
+@@ -625,42 +626,19 @@
  ######################################
  # Backend Configuration, enter your backends here
  <Component Thruk::Backend>
@@ -194,7 +194,7 @@
  </Component>
  
  
-@@ -667,9 +645,9 @@
+@@ -677,9 +655,9 @@
  <Component Thruk::Plugin::ConfigTool>
      show_plugin_syntax_helper = 1
  
@@ -207,7 +207,7 @@
  
      #pre_obj_save_cmd   =
      #post_obj_save_cmd  =
-@@ -718,7 +696,7 @@
+@@ -728,7 +706,7 @@
      #report_base_url=http://host.local/thruk/cgi-bin/
  
      # wkhtmltopdf is used to convert html pages into pdf
@@ -216,7 +216,7 @@
  
      # pnp export script is used to export pnp graphs into reports
      #pnp_export = /path/to/pnp_export.sh
-@@ -754,21 +732,21 @@
+@@ -764,21 +742,21 @@
  <Component Thruk::Plugin::BP>
      # Results will be send back by using the spool folder.
      # This folder should point to the 'check_result_path' of your core.
