@@ -1,0 +1,11 @@
+###ROOT###/var/log/influxdb.log {
+	missingok
+	rotate 52
+	compress
+	delaycompress
+	notifempty
+	create 640 ###SITE### ###SITE###
+	postrotate
+		###ROOT###/bin/omd reload influxdb > /dev/null
+	endscript
+}

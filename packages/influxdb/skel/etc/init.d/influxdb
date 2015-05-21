@@ -1,0 +1,120 @@
+#!/bin/sh
+
+### BEGIN INIT INFO
+# Provides:          influxdb
+# Required-Start:    $local_fs
+# Required-Stop:     $local_fs
+# Should-Start:
+# Should-Stop:
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Start/Stop the influxdb database
+### END INIT INFO
+
+# Check if influxdb is enabled in OMD. If not terminate.
+. etc/omd/site.conf
+if [ "$CONFIG_INFLUXDB" != "on" ] ; then
+    exit 5
+fi
+
+NAME=influxdb
+DAEMON="$OMD_ROOT/version/bin/influxd"
+PIDFILE="$OMD_ROOT/tmp/run/influxdb.pid"
+LOGFILE="$OMD_ROOT/var/log/influxdb.log"
+OPTIONS="run -config $OMD_ROOT/etc/influxdb/influxdb.conf -pidfile $PIDFILE"
+
+# create state dir
+mkdir -p $OMD_ROOT/tmp/run \
+         $OMD_ROOT/var/influxdb/db \
+         $OMD_ROOT/var/influxdb/raft
+
+get_status() {
+        pid=$( cat $PIDFILE 2>/dev/null )
+        if [ -n "$pid" ]; then
+            if ps -p $pid > /dev/null 2>&1 ; then
+                echo "$NAME is running with pid $pid"
+                return 0;
+            fi
+        fi
+        echo "$NAME is not running"
+        return 1;
+}
+
+stop_influxdb() {
+    printf '%s' "Stopping $NAME..."
+    pid=$( cat $PIDFILE 2>/dev/null )
+    if [ -z "$pid" ]; then
+        echo ". Not running."
+    else
+        ps -p $pid > /dev/null 2>&1 && kill $pid
+        for x in 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5; do
+            printf "."
+            ps -p $pid > /dev/null 2>&1 && sleep 0.2;
+        done
+        if ! ps -p $pid > /dev/null 2>&1 ; then
+            echo "OK"
+            exit 0;
+        else
+            echo "failed"
+            exit 1;
+        fi
+    fi
+}
+
+case "$1" in
+    start)
+        printf '%s' "Starting $NAME..."
+        if get_status > /dev/null ; then
+            echo "failed"
+            echo "$NAME already running"
+            exit 0;
+        fi
+        if [ ! -x "$DAEMON" ]; then
+            echo "Cannot start. Make sure $DAEMON exists and is executable"
+            exit 1;
+        fi
+
+        nohup $DAEMON $OPTIONS >>$LOGFILE 2>&1 &
+        if [ $? -eq 0 ]; then
+            echo "OK"
+            exit 0;
+        else
+            echo "failed"
+            exit 1;
+        fi
+        ;;
+    stop)
+        printf '%s' "Stopping $NAME..."
+        pid=$( cat $PIDFILE 2>/dev/null )
+        if [ -z "$pid" ]; then
+            echo ". Not running."
+        else
+            stop_influxdb;
+        fi
+        ;;
+    reload|force-reload)
+        printf '%s' "Reloading $NAME configuration files..."
+        pid=$( cat $PIDFILE 2>/dev/null )
+        if [ -n "$pid" ]; then
+            kill -HUP $pid
+            exit 0
+        else
+            echo "$NAME is not running"
+            exit 1;
+        fi
+    ;;
+    status)
+        get_status;
+        exit $?;
+    ;;
+    restart)
+        $0 stop && sleep 1 && $0 start
+        exit $?
+        ;;
+    *)
+        echo "Usage: $NAME {start|stop|kill|status|restart}"
+        exit 1
+        ;;
+esac
+
+exit 0

@@ -1,0 +1,18 @@
+#!/bin/bash
+
+# Alias: Influxdb Daemon
+# Menu: Addons
+# Description:
+#  Influxdb is an open-source, distributed, time series database.
+
+case "$1" in
+    default)
+        echo "off"
+    ;;
+    choices)
+        echo "on: enable influxdb database"
+        echo "off: disable influxdb database"
+    ;;
+    set)
+    ;;
+esac
