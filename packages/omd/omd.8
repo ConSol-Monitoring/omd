@@ -19,14 +19,14 @@
 omd \- admin interface for OMD, the Open Monitoring Distribution
 .SH SYNOPSIS
 .B omd
-.RI [ command 
-.RI [ site... ] 
+.RI [ command
+.RI [ site... ]
 .RI ]
 .SH DESCRIPTION
 .B OMD - the Open Monitoring Distribution
-is something really new. OMD bundles existing open source software to 
-ease the installation procedure of Nagios and many important addons 
-like NagVis, PNP4Nagios, rrdtool, nagios-plugins, Check_MK, 
+is something really new. OMD bundles existing open source software to
+ease the installation procedure of Nagios and many important addons
+like NagVis, PNP4Nagios, rrdtool, nagios-plugins, Check_MK,
 MK Livestatus, Dokuwiki, NSCA, check_nrpe and others.
 
 .B OMD
@@ -40,7 +40,7 @@ supports:
 .\" TeX users may be more comfortable with the \fB<whatever>\fP and
 .\" \fI<whatever>\fP escape sequences to invode bold face and italics,
 .\" respectively.
-\fBomd\fP is the administration interface for creating and maintaining 
+\fBomd\fP is the administration interface for creating and maintaining
 sites within OMD - the open monitoring distribution.
 .SH COMMANDS
 .TP
@@ -68,7 +68,7 @@ This mainly updates the symlink \fB/omd/versions/default\fP. On debian based dis
 it calls update-alternatives to change the default versions. In this case there is a special
 option \fBauto\fP available to let update-alternatives choose the default OMD version.
 .TP
-.B omd setup                       
+.B omd setup
 Prepare operating system for OMD. This includes installing all software
 packages from your linux distribution that the components of OMD need
 to run properly. You need to make sure that a package installation via
@@ -82,7 +82,7 @@ correctly configured (for the group omd).
 \fBNote:\fP If you have installed OMD via RPM or DEB and have installed
 all packages the omd package depends on, no \fBomd setup\fP is neccessary.
 .TP
-.B omd uninstall                   
+.B omd uninstall
 This deletes all software and data of OMD and its sites. That command is mainly used
 for trying out OMD or testing the installation of OMD. Be aware that
 all your monitoring configuration and data will be lost!
@@ -96,13 +96,13 @@ Show a list of all sites and the version of OMD each site uses. If you specify
 the option \fB-b\fP or \fB--bare\fP, then the output leaves out hints to the
 versions, so it is better parseable by scripts.
 .TP
-.B omd create [OPTIONS] SITE             
+.B omd create [OPTIONS] SITE
 Create a new site. The name of the site must be at most 16 characters
 long and consist only of letters, digits and underscores. It must not
-begin with a digit. 
+begin with a digit.
 
 OMD creates an operating system user and group with the name of the
-site. No user or group with that name must exist prior to the site creation. Then a 
+site. No user or group with that name must exist prior to the site creation. Then a
 directory \fB/omd/sites/\fPSITE will be created and used as the new
 user's home directory.
 
@@ -117,8 +117,8 @@ The following options can be used:
 
 \fB-g GID\fP Force a specific group id for the group of the new user
 
-\fB--no-init\fP Omits the population of the site's home directory and the integration into 
-the system Apache (/omd/apache/SITE.conf will be empty). 
+\fB--no-init\fP Omits the population of the site's home directory and the integration into
+the system Apache (/omd/apache/SITE.conf will be empty).
 
 \fB--apache-reload\fP Issue a reaload of the apache process instead of the default restart
 
@@ -139,7 +139,7 @@ The following options can be used:
 \fB--apache-reload\fP Issue a reaload of the apache process instead of the default restart
 
 .TP
-.B omd [-f, --force] rm [OPTIONS] SITE             
+.B omd [-f, --force] rm [OPTIONS] SITE
 Remove a site and all of its data. This includes deleting the
 directory \fB/omd/sites/\fPSITE and removing the system user
 and group of that site. This - of course - needs root permissions.
@@ -180,7 +180,7 @@ Enables a formerly disabled site. The site is not started. This command
 needs root permissions.
 
 .TP
-.B omd mv [OPTIONS] SITE NEWNAME     
+.B omd mv [OPTIONS] SITE NEWNAME
 Rename a site. The site must be stopped. the NEWNAME must be a valid
 site name as described in "omd create". Root permissions are needed.
 
@@ -199,9 +199,9 @@ given as absolute value of e.g. \fB500M\fP or percentage value like \fB10%\fP th
 maximum size of the tmpfs can be changed.
 
 .TP
-.B omd cp [OPTIONS] SITE NEWNAME     
+.B omd cp [OPTIONS] SITE NEWNAME
 Make a copy of a site. A new site with the name NEWSITE will be created
-as an exact copy of SITE. All occurrances of SITE will be replaced by 
+as an exact copy of SITE. All occurrances of SITE will be replaced by
 NEWSITE in the sites configuration files.
 
 The following options can be used:
@@ -233,11 +233,11 @@ given as absolute value of e.g. \fB500M\fP or percentage value like \fB10%\fP th
 maximum size of the tmpfs can be changed.
 
 .TP
-.B omd [-f, --force] [ -V VERSION ] update [ --conflict=HOW ] SITE             
+.B omd [-f, --force] [ -V VERSION ] update [ --conflict=HOW ] SITE
 Update SITE to the current default version of OMD or to the version
 \fBVERSION\fP, if the option \fB-V\fP is specified.  The default version is
 usually the version that was installed most lately. It can be changed
-with \fBomd setversion\fP. 
+with \fBomd setversion\fP.
 
 Those configuration files of the site that were initially created
 will be updated if the new version brings changes in these files. OMD tries hard to
@@ -276,10 +276,10 @@ This is the default behaviour of interactive conflict resolution.
 
 .TP
 .B omd [-f, --force] start      [SITE] [SERVICE]
-Start a site, i.e. start all activated daemons and services of a site. 
+Start a site, i.e. start all activated daemons and services of a site.
 If you call this as root, you need to specify the site to
 be started. If you do not specify a site, then all sites with AUTOSTART=on
-will be started, or all sites at all, if you specify \fB-f\fP or \fB--force\fP. 
+will be started, or all sites at all, if you specify \fB-f\fP or \fB--force\fP.
 If you call this as site user, no site must be specified.
 The current site will be started.
 
@@ -313,7 +313,7 @@ format.
 If you add the option \fB--auto\fP then only the status of those sites will
 be displayed, that are set to {AUTOSTART} = {on}.
 .TP
-.B omd config     [SITE] [set|show] [VARIABLE] [VALUE]
+.B omd config [-f, --force] [SITE] [set|show] [VARIABLE] [VALUE]
 This command is used to view and change the configuration of a site. Each
 site has a list of configuration variables. Those variables configure
 how the addons of the site should work together. Optional addons can be
@@ -333,6 +333,11 @@ Setting and querying variables in batch mode can be done with
 \fBomd config [SITE] set VARIABLE VALUE\fP
 .br
 \fBomd config [SITE] show VARIABLE\fP
+
+The option \fB--force\fP will automatically stop the site in case
+it is running before the config change is done and start it afterwards
+again.
+
 .TP
 .B omd [-v] diff [RELBASE] [-b, --bare]
 Shows the differences of files in the current site compared to the files
