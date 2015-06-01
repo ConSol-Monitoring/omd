@@ -372,6 +372,10 @@ do_stop() {
         else
             echo "OK"
         fi
+        # kill all leftovers
+        for cpid in $(ps -fu $OMD_SITE | grep "shinken-$mod" | grep -v grep | awk '{print $2}'); do
+            kill -9 $cpid > /dev/null 2>&1
+        done
     done 
     return 0
 }
