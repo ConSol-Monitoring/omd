@@ -32,7 +32,7 @@ This file documents the revision history for the Open Monitoring Distribution
             - FIX: Added PYTHONPATH to site crontab for being able to access
               the sites python modules as when run in interactive mdoe
           - NagVis:
-            - Update to version 1.8.3
+            - Update to version 1.8.4
             - Removed deprecated directory var/nagvis/userfiles. This was
               deprecated since version 0.52. During the update to 1.30, the
               directory and all its contents will be removed. This should be
@@ -48,7 +48,7 @@ This file documents the revision history for the Open Monitoring Distribution
             - FIX: The nagvis URLs were not correctly linking to e.g. Check_MK
               when a site has been created with Check_MK as default GUI
           - Check_MK:
-            - Update to 1.2.6p1
+            - Update to 1.2.6p4
             - moved log dir to var/log
           - Added build support for SLES 12
           - Added build support for Ubuntu 14.10 and 15.04

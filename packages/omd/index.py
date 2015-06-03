@@ -73,7 +73,8 @@ def page_welcome(req):
       padding:10px;
       background-color:#EEEEEE;
       margin-top:20px;
-      margin-bottom:20px
+      margin-bottom:20px;
+      overflow: hidden;
   }
   a.gui:hover {
       background-color:#759FCF
