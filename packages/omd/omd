@@ -2769,19 +2769,19 @@ def main_mv_or_cp(what, args, options={}):
         addopts = ""
         excludes = []
         if "no-rrds" in options or "no-past" in options:
-            excludes.append("var/pnp4nagios/perfdata/")
-            excludes.append("var/pnp4nagios/spool/")
-            excludes.append("var/rrdcached/")
-            excludes.append("var/pnp4nagios/states/")
+            excludes.append("var/pnp4nagios/perfdata/*")
+            excludes.append("var/pnp4nagios/spool/*")
+            excludes.append("var/rrdcached/*")
+            excludes.append("var/pnp4nagios/states/*")
         if "no-logs" in options or "no-past" in options:
-            excludes.append("var/log/*/")
+            excludes.append("var/log/*/*")
             excludes.append("var/nagios/nagios.log")
             excludes.append("var/nagios/archive/")
-            excludes.append("var/pnp4nagios/log/")
+            excludes.append("var/pnp4nagios/log/*")
             excludes.append("var/pnp4nagios/perfdata.dump")
-            excludes.append("var/mkeventd/history/")
+            excludes.append("var/mkeventd/history/*")
             excludes.append("var/check_mk/core/history")
-            excludes.append("var/check_mk/core/archive/")
+            excludes.append("var/check_mk/core/archive/*")
 
         for p in excludes:
             addopts += " --exclude '/%s'" % p
