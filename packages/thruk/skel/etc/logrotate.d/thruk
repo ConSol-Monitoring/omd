@@ -4,5 +4,5 @@
 	compress
 	delaycompress
 	notifempty
-	create 640 ###SITE### ###SITE### 
+	create 660 ###SITE### ###SITE### 
 }
