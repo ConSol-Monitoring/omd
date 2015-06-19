@@ -1,0 +1,18 @@
+#!/bin/bash
+
+# Alias: Grafana Daemon
+# Menu: Addons
+# Description:
+#  Grafana is an open-source, time series visualisation.
+
+case "$1" in
+    default)
+        echo "off"
+    ;;
+    choices)
+        echo "on: enable grafana"
+        echo "off: disable grafana"
+    ;;
+    set)
+    ;;
+esac
