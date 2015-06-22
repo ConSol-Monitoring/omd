@@ -22,12 +22,9 @@ BIN=###ROOT###/bin/icinga2
 CFG_FILE=###ROOT###/etc/icinga2/icinga2.conf
 CMD_FILE=###ROOT###/tmp/run/icinga.cmd
 PID_FILE=###ROOT###/tmp/run/icinga2.pid
-ERROR_LOG=###ROOT###/var/log/icinga2/error.log
+ERROR_LOG=###ROOT###/var/icinga2/log/icinga2/error.log
 USR=###SITE###
 GRP=###SITE###
-
-mkdir -p var/icinga2
-mkdir -p tmp/icinga2
 
 OPTIONS="-c $CFG_FILE"
 
@@ -83,7 +80,7 @@ prep_start() {
     fi
     touch $PID_FILE
     chown $USR:$GRP $PID_FILE
-    mkdir -p ###ROOT###/var/log/icinga2
+    #-#mkdir -p ###ROOT###/var/log/icinga2
 }
 
 icinga2_wait_stop() {

@@ -43,6 +43,7 @@ install:
 skel:
 	mkdir -p $(SKEL)/etc/icinga2
 	cp -rp $(DIR)/etc/icinga2/* $(SKEL)/etc/icinga2/
+	chmod 755 $(SKEL)/etc/icinga2/scripts/*
 	rm -rf $(SKEL)/etc/icinga2/conf.d/win32
 	mv $(SKEL)/etc/icinga2/constants.conf.cmake $(SKEL)/etc/icinga2/constants.conf
 	mv $(SKEL)/etc/icinga2/init.conf.cmake $(SKEL)/etc/icinga2/init.conf
@@ -53,13 +54,15 @@ skel:
 	       -e 's/@ICINGA2_PLUGINDIR@/###ROOT###\/lib\/nagios\/plugins/g' \
 	    $(SKEL)/etc/icinga2/init.conf \
 	    $(SKEL)/etc/icinga2/constants.conf
-	echo 'const SysconfDir    = "###ROOT###/etc"'                       >> $(SKEL)/etc/icinga2/init.conf
-	echo 'const LocalStateDir = "###ROOT###/var/icinga2"'               >> $(SKEL)/etc/icinga2/init.conf
-	echo 'const RunDir        = "###ROOT###/tmp/icinga2"'               >> $(SKEL)/etc/icinga2/init.conf
-	echo 'const StatePath     = "###ROOT###/var/icinga2/state"'         >> $(SKEL)/etc/icinga2/init.conf
-	echo 'const ObjectsPath   = "###ROOT###/tmp/icinga2/icinga2.debug"' >> $(SKEL)/etc/icinga2/init.conf
-	echo 'const VarsPath      = "###ROOT###/tmp/icinga2/icinga2.vars"'  >> $(SKEL)/etc/icinga2/init.conf
-	echo 'const PidPath       = "###ROOT###/tmp/run/icinga2.pid"'       >> $(SKEL)/etc/icinga2/init.conf
+	sed -i -e '/const PluginDir/a /* The directory which contains your local site plugins */\nconst LocalPluginDir = "###ROOT###/local/lib/nagios/plugins"' \
+	    $(SKEL)/etc/icinga2/constants.conf
+	echo 'const SysconfDir     = "###ROOT###/etc"'                       >> $(SKEL)/etc/icinga2/init.conf
+	echo 'const LocalStateDir  = "###ROOT###/var/icinga2"'               >> $(SKEL)/etc/icinga2/init.conf
+	echo 'const RunDir         = "###ROOT###/tmp/icinga2"'               >> $(SKEL)/etc/icinga2/init.conf
+	echo 'const StatePath      = "###ROOT###/var/icinga2/state"'         >> $(SKEL)/etc/icinga2/init.conf
+	echo 'const ObjectsPath    = "###ROOT###/tmp/icinga2/icinga2.debug"' >> $(SKEL)/etc/icinga2/init.conf
+	echo 'const VarsPath       = "###ROOT###/tmp/icinga2/icinga2.vars"'  >> $(SKEL)/etc/icinga2/init.conf
+	echo 'const PidPath        = "###ROOT###/tmp/run/icinga2.pid"'       >> $(SKEL)/etc/icinga2/init.conf
 	# enable livestatus
 	ln -sf ../features-available/livestatus.conf $(SKEL)/etc/icinga2/features-enabled/livestatus.conf
 	sed -e 's/ }//g' -i $(SKEL)/etc/icinga2/features-available/livestatus.conf
@@ -70,10 +73,7 @@ skel:
 	ln -sf ../features-available/compatlog.conf $(SKEL)/etc/icinga2/features-enabled/compatlog.conf
 	sed -e 's/ }//g' -i $(SKEL)/etc/icinga2/features-available/compatlog.conf
 	echo 'rotation_method = "DAILY"'                      >> $(SKEL)/etc/icinga2/features-available/compatlog.conf
-	echo 'log_dir         = "###ROOT###/var/log/icinga2"' >> $(SKEL)/etc/icinga2/features-available/compatlog.conf
 	echo '}'                                              >> $(SKEL)/etc/icinga2/features-available/compatlog.conf
-	# fix logfile folder
-	sed -e 's/path.*=.*/path = "###ROOT###\/var\/log\/icinga2.log"/g' -i $(SKEL)/etc/icinga2/features-available/mainlog.conf
 	# prepare perfdata
 	sed -e 's/ }//g' -i $(SKEL)/etc/icinga2/features-available/perfdata.conf
 	echo 'host_perfdata_path = "var/pnp4nagios/spool/host-perfdata"'       >> $(SKEL)/etc/icinga2/features-available/perfdata.conf

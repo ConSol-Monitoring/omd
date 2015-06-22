@@ -1,4 +1,4 @@
-###ROOT###var/log/icinga2.log {
+###ROOT###var/icinga2/log/icinga2.log {
     daily
     rotate 7
     compress
@@ -12,7 +12,7 @@
     endscript
 }
 
-###ROOT###/var/log/icinga2/error.log {
+###ROOT###/var/icinga2/log/icinga2/error.log {
     daily
     rotate 90
     compress
