@@ -1,6 +1,6 @@
 diff -ur dokuwiki-2013-05-10a/lib/tpl/arctictut/style.ini dokuwiki-2013-05-10a/lib/tpl/arctictut/style.ini.neu
---- dokuwiki-2013-05-10a/lib/tpl/arctictut/style.ini       2012-08-04 15:30:05.000000000 +0200
-+++ dokuwiki-2013-05-10a/lib/tpl/arctictut/style.ini.neu   2012-08-04 15:30:46.000000000 +0200
+--- a/lib/tpl/arctictut/style.ini       2012-08-04 15:30:05.000000000 +0200
++++ b/lib/tpl/arctictut/style.ini.neu   2012-08-04 15:30:46.000000000 +0200
 @@ -36,10 +36,10 @@
  ; give your wiki a new look.
  [replacements]
