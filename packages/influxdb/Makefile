@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 NAME       = influxdb
-VERSION    = 0.9
+VERSION    = 0.9.0
 SRC        = $(NAME)-$(VERSION).tar.gz
 GOPATH     = go
 PWD        = $(shell pwd)
@@ -24,17 +24,18 @@ skel:
 clean:
 	rm -rf $(GOPATH)
 
-package:
+package: clean
 	mkdir -p $(GOPATH)
 	export GOROOT=$(PWD)/../go/go-$(GO_VERSION)/ && export GOPATH=$(PWD)/$(GOPATH)/ && PATH=$$GOROOT/bin:$$PATH && \
 		mkdir -p $(GOPATH)/src/github.com/influxdb/ && \
 		cd $(GOPATH)/src/github.com/influxdb && \
-		git clone https://github.com/influxdb/influxdb.git && \
+		git clone --depth=1 --branch "v$(VERSION)" https://github.com/influxdb/influxdb.git && \
 		cd influxdb && \
+		git branch master && \
+		git checkout master && \
 		go fmt ./... && \
 		cd .. && \
-		go get -u -f ./... && \
+		go get ./... && \
 		cd $(PWD) && \
-		tar zcf $(SRC) $(GOPATH)/src/
-	rm -rf $(GOPATH)
+		tar zcf $(SRC) $(GOPATH)/src/ --exclude=.git
 
