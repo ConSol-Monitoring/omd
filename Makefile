@@ -4,6 +4,7 @@ SHELL = /bin/bash
 PACKAGES=perl-modules \
          go \
          influxdb \
+         grafana \
          python-modules \
          apache-omd \
          mod_python \
