@@ -1,20 +1,22 @@
 WARNING: this is not a official OMD release!
 
-   OMD - the Open Monitoring Distribution (New Cores Edition)
-      <http://omdistro.org/> - <http://labs.consol.de
+   OMD - the Open Monitoring Distribution (Labs Edition)
+      <http://labs.consol.de/omd/> - <http://omdistro.org/>
 
 OMD with 2 new Cores: Naemon and Icinga 2. APIs have changed, new
 Livestatus implementations have been build, so this build makes it
 easier to test the new cores with Thruk and Mod-Gearman.
 
 
-What OMD-NC contains in addition
---------------------------------
+What OMD-Labs contains in addition
+----------------------------------
 
+  * Grafana
+  * Influxdb
+  * Icinga 2
   * Naemon
   * Livestatus for Naemon
   * Mod-Gearman for Naemon
-  * Icinga 2
   * PNP for Naemon
   * Best Practices:
     - Thruk
@@ -26,7 +28,7 @@ What OMD-NC contains in addition
 
 Licensing
 ---------
-OMD-NC is available under the terms of the GNU General Public License of
+OMD-Labs is available under the terms of the GNU General Public License of
 version 2.  You find those terms in the file COPYING. Please note, that that
 license only applies to OMD itself (its scripts, patches, configuration files,
 etc.). The licenses of the packages it ships may differ. Please checkout
@@ -34,5 +36,5 @@ those packages for details on their licensing.
 
 Further information
 -------------------
+Information about OMD-Labs can be found at https://github.com/ConSol/omd/tree/labs
 The original OMD homepage is located at http://omdistro.org.
-Information about OMD-NC can be found at https://github.com/ConSol/omd/tree/newcores

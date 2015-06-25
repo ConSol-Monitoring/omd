@@ -1,6 +1,6 @@
 # General settings included by all packages
 
-OMD_VERSION        = 2.00-newcores
+OMD_VERSION        = 2.00-labs-edition
 OMD_SERIAL         = 34
 OMD_BASE           = /omd
 OMD_PHYSICAL_BASE  = /opt/omd
