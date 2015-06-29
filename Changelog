@@ -47,6 +47,8 @@ This file documents the revision history for the Open Monitoring Distribution
               about these files manually.
             - FIX: The nagvis URLs were not correctly linking to e.g. Check_MK
               when a site has been created with Check_MK as default GUI
+            - FIX: Fixed site not starting after "omd cp" when using 
+              the arguments --no-past, --no-rrds or --no-logs
           - Check_MK:
             - Update to 1.2.6p5
             - moved log dir to var/log
