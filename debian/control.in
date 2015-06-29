@@ -9,7 +9,7 @@ Homepage: http://labs.consol.de
 Package: omd-###OMD_VERSION###
 Architecture: any
 Depends:@${misc:Depends},@###OS_PACKAGES###
-Description: New Cores OMD - Open Source Monitoring Distribution (New Cores Edition),
+Description: OMD Labs Edition- Open Source Monitoring Distribution (Labs Edition),
  containing Nagios3 and Naemon, Icinga1 and 2, Shinken,
  Thruk, Mod-Gearman, Nagvis, PNP4Nagios and many more...
  Maintained by http://labs.consol.de/.
