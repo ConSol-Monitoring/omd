@@ -67,6 +67,14 @@ This file documents the revision history for the Open Monitoring Distribution
           - apache:
             - mod_fcgid: update to 2.3.9, sles 11 and centos 5/6 only
             - set graceful restart timeout
+            - Default redirects from /[site] and /[site]/ to /[site]/omd/ are
+              are now preserving the original requested protocol (http/https).
+              When using the apache shared mode (which is the default), having
+              the system apache service the pages via HTTPS, you will need to
+              configure the system apache to provide the X-Forwarded-Proto
+              request header to the site apache, which can be done by
+              adding the line 'RequestHeader set X-Forwarded-Proto "https"' to
+              the proxy configuration related to the site.
           - Dokuwiki
             - Updated to Version 2014-09-29d
             - fix discarding all local settings on update
