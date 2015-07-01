@@ -6,6 +6,7 @@ This file documents the revision history for the Open Monitoring Distribution (N
 next:
           - Icinga update to 2.3.5
           - Naemon update to 1.0.2
+          - Mod-Gearman2: Update 2.1.3
 
 2.00
           - new core Naemon 1.0.0 added
