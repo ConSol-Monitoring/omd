@@ -69,10 +69,6 @@ case "$1" in
             echo "$NAME already running"
             exit 0;
         fi
-        if [ ! -x "$DAEMON" ]; then
-            echo "Cannot start. Make sure $DAEMON exists and is executable"
-            exit 1;
-        fi
 
         nohup $DAEMON $OPTIONS >>$LOGFILE 2>&1 &
         if [ $? -eq 0 ]; then
