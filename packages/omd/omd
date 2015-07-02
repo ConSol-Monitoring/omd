@@ -1929,6 +1929,7 @@ def config_set_all():
             if not exitcode:
                 if output and output != value:
                     g_site_conf[hook_name] = output
+                    putenv("CONFIG_" + hook_name, output)
 
 
 
