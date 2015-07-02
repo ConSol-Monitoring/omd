@@ -57,6 +57,7 @@ skel:
 	sed -i -e '/const PluginDir/a /* The directory which contains your local site plugins */\nconst LocalPluginDir = "###ROOT###/local/lib/nagios/plugins"' \
 	    $(SKEL)/etc/icinga2/constants.conf
 	echo 'const SysconfDir     = "###ROOT###/etc"'                       >> $(SKEL)/etc/icinga2/init.conf
+	echo 'const ZonesDir       = "###ROOT###/etc/icinga2/zones.d"'       >> $(SKEL)/etc/icinga2/init.conf
 	echo 'const LocalStateDir  = "###ROOT###/var/icinga2"'               >> $(SKEL)/etc/icinga2/init.conf
 	echo 'const RunDir         = "###ROOT###/tmp/icinga2"'               >> $(SKEL)/etc/icinga2/init.conf
 	echo 'const StatePath      = "###ROOT###/var/icinga2/state"'         >> $(SKEL)/etc/icinga2/init.conf
