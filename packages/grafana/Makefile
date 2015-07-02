@@ -18,7 +18,9 @@ build:
 
 install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/bin
-	install -m 755 $(PWD)/$(GOPATH)/bin/grafana  $(DESTDIR)$(OMD_ROOT)/bin
+	install -m 755 $(GOPATH)/bin/grafana  $(DESTDIR)$(OMD_ROOT)/bin
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/grafana
+	cp -rp $(GOPATH)/src/github.com/grafana/grafana/public $(DESTDIR)$(OMD_ROOT)/share/grafana
 
 skel:
 
@@ -41,4 +43,5 @@ package:
 	echo "packageing"
 	tar zcf $(SRC) $(GOPATH)/src/ --exclude=.git
 	rm -rf $(GOPATH)
+	cd skel/etc/grafana/ && wget --no-check-certificate "https://github.com/grafana/grafana/raw/master/conf/defaults.ini" -O defaults.ini
 
