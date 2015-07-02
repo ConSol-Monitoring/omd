@@ -80,7 +80,6 @@ prep_start() {
     fi
     touch $PID_FILE
     chown $USR:$GRP $PID_FILE
-    #-#mkdir -p ###ROOT###/var/log/icinga2
 }
 
 icinga2_wait_stop() {
