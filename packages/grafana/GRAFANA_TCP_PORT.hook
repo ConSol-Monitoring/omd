@@ -1,0 +1,27 @@
+#!/bin/bash
+
+# Alias: TCP port the grafana daemon listens on
+# Menu: Addons
+# Description:
+#  If you enabled grafana, this is the
+#  listening port of the daemon.
+
+case "$1" in
+    default)
+        echo 3000
+    ;;
+    choices)
+        echo "[0-9]{1,4}"
+    ;;
+    set)
+        PORT=$($OMD_ROOT/lib/omd/port_is_used GRAFANA_TCP_PORT $2)
+        sed -e 's/^http_port = .*$/http_port = '$PORT'/' -i $OMD_ROOT/etc/grafana/grafana.ini
+        sed -e 's/127.0.0.1:[0-9]{4}/127.0.0.1:'$PORT'/' -i $OMD_ROOT/etc/apache/conf.d/grafana.conf
+        if [ "$PORT" != "$2" ] ; then
+            echo "$PORT"
+        fi
+    ;;
+    depends)
+    [ "$CONFIG_GRAFANA" = "on" ]
+    ;;
+esac

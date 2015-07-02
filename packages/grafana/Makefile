@@ -8,6 +8,12 @@ PWD        = $(shell pwd)
 GO_VERSION = $(shell grep "^VERSION " ../go/Makefile | awk '{ print $$3 }')
 GO         = export GOROOT=$(PWD)/../go/go-$(GO_VERSION)/ && export GOPATH=$(PWD)/$(GOPATH)/ && PATH=$$GOROOT/bin:$$PATH && go
 
+MODULE_DIR=$(APACHE_MODULE_DIR)
+ifeq ($(shell uname -m),x86_64)
+  MODULE_DIR=$(APACHE_MODULE_DIR_64)
+endif
+
+.PHONY: skel
 
 build:
 	tar zxf $(SRC)
@@ -20,14 +26,18 @@ install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/bin
 	install -m 755 $(GOPATH)/bin/grafana  $(DESTDIR)$(OMD_ROOT)/bin
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/grafana
-	cp -rp $(GOPATH)/src/github.com/grafana/grafana/public $(DESTDIR)$(OMD_ROOT)/share/grafana
+	tar zxf public.tar.gz -C $(DESTDIR)$(OMD_ROOT)/share/grafana
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/grafana/conf
+	install -m 644 defaults.ini $(DESTDIR)$(OMD_ROOT)/share/grafana/conf/
 
 skel:
+	sed -i -e 's|###APACHE_MODULE_DIR###|$(MODULE_DIR)|g' \
+	       $(SKEL)/etc/apache/conf.d/grafana.conf
 
 clean:
 	rm -rf $(GOPATH)
 
-package:
+package: public
 	$(GO) env
 	mkdir -p $(GOPATH)/src/github.com/grafana/
 	cd $(GOPATH)/src/github.com/grafana && \
@@ -43,5 +53,11 @@ package:
 	echo "packageing"
 	tar zcf $(SRC) $(GOPATH)/src/ --exclude=.git
 	rm -rf $(GOPATH)
-	cd skel/etc/grafana/ && wget --no-check-certificate "https://github.com/grafana/grafana/raw/master/conf/defaults.ini" -O defaults.ini
+	wget --no-check-certificate "https://github.com/grafana/grafana/raw/master/conf/defaults.ini" -O defaults.ini
 
+public:
+	wget --no-check-certificate https://grafanarel.s3.amazonaws.com/builds/grafana-latest.linux-x64.tar.gz
+	tar zxf grafana-latest.linux-x64.tar.gz
+	cd grafana-*/. && tar cfz ../public.tar.gz public
+	rm grafana-latest.linux-x64.tar.gz
+	rm -rf grafana-*/.
