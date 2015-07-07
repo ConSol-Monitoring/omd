@@ -20,10 +20,9 @@ build:
 	    done
 	cd dest && \
 	    export PYTHONPATH=$$PYTHONPATH:$(DESTDIR)$(OMD_ROOT)/lib/python ; \
-	    for M in $$(ls dest); do \
+	    for M in $$(ls); do \
 		cd $$M ; \
-	        python setup.py build --home=$(DESTDIR)$(OMD_ROOT) \
-	            --prefix=''; \
+	        python setup.py build --prefix=''; \
 	        cd .. ; \
 	    done
 
@@ -31,7 +30,7 @@ install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/python
 	cd dest && \
 	    export PYTHONPATH=$$PYTHONPATH:$(DESTDIR)$(OMD_ROOT)/lib/python ; \
-	    for M in $$(ls dest); do \
+	    for M in $$(ls); do \
 		cd $$M ; \
 	        python setup.py install --home=$(DESTDIR)$(OMD_ROOT) \
 	            --prefix='' \
