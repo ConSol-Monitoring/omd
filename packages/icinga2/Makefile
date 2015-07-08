@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 NAME = icinga2
-VERSION = 2.3.5
+VERSION = 2.3.6
 DIR = $(NAME)-$(VERSION)
 
 .PHONY: skel
@@ -98,3 +98,9 @@ upstream:
 	cd icinga2-master && echo 'set(GIT_VERSION "'$$(git tag -l | tail -n 1)'-git-'$$(git log --format=%h -1 | tr v r)'")' >> CMakeLists.txt
 	tar cfz icinga2-master.tar.gz icinga2-master
 	rm -rf icinga2-master
+
+githubrelease:
+	git rm *.gz
+	wget "https://github.com/Icinga/icinga2/archive/v$(VERSION).tar.gz"
+	mv v$(VERSION).tar.gz icinga2-$(VERSION).tar.gz
+	git add *.gz
