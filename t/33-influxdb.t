@@ -26,7 +26,7 @@ TestUtils::test_command({ cmd => $omd_bin." start $site", like => '/Starting inf
 sleep(2); # influxdb api returns 404 when accessed directly after first start
 
 #admin interface
-TestUtils::test_command({ cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -t 60 -H localhost -p 8083 -s \"<title>InfluxDB Administration</title>\"'", like => '/HTTP OK:/' });
+TestUtils::test_command({ cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -t 60 -H localhost -p 8083 -s \"<title>InfluxDB - Admin Interface</title>\"'", like => '/HTTP OK:/' });
 #http api
 #create database
 TestUtils::test_command({ cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -t 60 -H localhost -p 8086 -u \"/query?q=CREATE%20DATABASE%20mydb\" -s \"{\\\"results\\\":[{}]}\"'", like => '/HTTP OK:/' });
