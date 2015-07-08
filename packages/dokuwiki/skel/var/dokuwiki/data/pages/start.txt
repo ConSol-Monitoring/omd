@@ -1,0 +1,20 @@
+~~NOTOC~~
+====== Welcome to your Dokuwiki ======
+This is an example start page. Please customize to your own
+requirements.
+----
+<dokuteaser>
+
+</dokuteaser>
+<dokuteaser>
+==== DokuWiki =====
+{{:wiki:dokuwiki-128.png?50 |}}
+[[playground:playground]]
+[[wiki:syntax|DokuWiki Syntax Documentation]]
+</dokuteaser>
+
+<dokuteaser>
+==== Labs ====
+More informations about ConSol* Labs could be found here.
+[[http://labs.consol.de]]
+</dokuteaser>

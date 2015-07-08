@@ -1,0 +1,7 @@
+~~NOCACHE~~
+====== Table of contents ======
+{{indexmenu>..:#1|js#indextheme navbar notoc nocookie skipfile+/^sidebar$/}}
+
+===== last changes =====
+{{changes>render = pagelist(summary,header)&count=5}}
+[[sidebar|change sidebar]]
