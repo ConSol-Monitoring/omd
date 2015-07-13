@@ -7,7 +7,7 @@ OMD_PHYSICAL_BASE  = /opt/omd
 OMD_ROOT           = $(OMD_BASE)/versions/$(OMD_VERSION)
 
 PERL               = /usr/bin/perl
-P5TMPDIST          = /var/tmp/p5_dist
+P5TMPDIST          = $(shell pwd)/../perl-modules/dist
 
 # Determine the distro we are running on and its version. Nasty here:
 # We do not known wether we are called from the main Makefile or
