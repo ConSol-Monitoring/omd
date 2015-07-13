@@ -51,10 +51,21 @@ SOURCE_TGZ=omd-$(OMD_VERSION).tar.gz
 BIN_TGZ=omd-bin-$(OMD_VERSION).tar.gz
 NEWSERIAL=$$(($(OMD_SERIAL) + 1))
 APACHE_NAME=$(APACHE_INIT_NAME)
+ifdef BUILD_CACHE
+DEFAULT_BUILD=build-cached
+else
+DEFAULT_BUILD=build
+endif
 
 .PHONY: install-global
 
-omd: build
+omd: $(DEFAULT_BUILD)
+
+build-cached:
+	@set -e ; cd packages ; for p in $(PACKAGES) ; do \
+		OMD_VERSION="$(OMD_VERSION)" BUILD_CACHE="$(BUILD_CACHE)" ../build_cached "$(MAKE)" "$$p" "$(DISTRO_NAME)/$(DISTRO_VERSION)/$(shell uname -m)"; \
+        done
+
 
 build:
 	@set -e ; cd packages ; for p in $(PACKAGES) ; do \

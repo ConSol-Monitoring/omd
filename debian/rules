@@ -10,6 +10,14 @@
 _PWD=`pwd`
 
 include Makefile.omd
+-include .config
+
+ifdef BUILD_CACHE
+DEFAULT_BUILD=build-cached
+else
+DEFAULT_BUILD=build
+endif
+
 
 build: patch build-stamp
 build-stamp:
@@ -17,7 +25,7 @@ build-stamp:
 
 	# Add here commands to compile the package.
 	# ./configure
-	$(MAKE) -j 4 build
+	$(MAKE) -j 4 $(DEFAULT_BUILD)
 
 	touch build-stamp
 

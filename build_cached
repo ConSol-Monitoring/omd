@@ -1,0 +1,69 @@
+#!/bin/bash
+
+MAKE=$1
+SRC=$2
+CACHESUBDIR=$3
+
+# skip caching if cache folder is not set or does not exist or omd version length is too small, which would be error prone
+if [ "x$BUILD_CACHE" = "x" ] || ! test -d $BUILD_CACHE || [ ${#OMD_VERSION} -lt 5 ]; then
+    $MAKE -C "$SRC" build
+    exit $?
+fi
+
+BUILD_CACHE=$BUILD_CACHE/$CACHESUBDIR
+mkdir -p $BUILD_CACHE
+
+$MAKE -C "$SRC" clean
+MD5=$(cd "$SRC" && find . -type f -exec md5sum {} \; | sort | md5sum | awk '{ print $1 }')
+CACHE_FILE="$BUILD_CACHE/${SRC}_${MD5}.tgz"
+
+# cache hit - just unpack the already built package
+if test -e "$CACHE_FILE"; then
+    echo "md5sum matched, using cache from $CACHE_FILE"
+    tar zxf "$CACHE_FILE"
+    find "$SRC/" -type f | \
+    while read file; do
+        if grep -Ic "###BUILD_OMD_VERSION###" "$file" >/dev/null 2>&1; then
+            cp -p "$file" "$file.tmp"
+            sed -e "s%###BUILD_OMD_VERSION###%$OMD_VERSION%g" -i "$file"
+            touch -r "$file.tmp" "$file"
+            rm -f "$file.tmp"
+        fi
+    done
+    exit 0
+fi
+EXCLUDES_FILE=$(mktemp)
+find "$SRC" -type f > $EXCLUDES_FILE
+
+# no cache hit - rebuild package and create cache tarball
+set -e
+$MAKE -C "$SRC" build
+set +e
+
+# create cache file
+find "$SRC/" -type f | \
+while read file; do
+    if grep -Ic "$OMD_VERSION" "$file" >/dev/null 2>&1; then
+        cp -p "$file" "$file.tmp"
+        sed -e "s%$OMD_VERSION%###BUILD_OMD_VERSION###%g" -i "$file"
+        touch -r "$file.tmp" "$file"
+        rm -f "$file.tmp"
+    fi
+done
+TARBALL_TMP=$(mktemp)
+tar cfz $TARBALL_TMP "$SRC" --exclude-from=$EXCLUDES_FILE
+rm -f "$CACHE_FILE"
+mv $TARBALL_TMP "$CACHE_FILE"
+echo "cache file $CACHE_FILE created"
+rm $EXCLUDES_FILE
+find "$SRC/" -type f | \
+while read file; do
+    if grep -Ic "###BUILD_OMD_VERSION###" "$file" >/dev/null 2>&1; then
+        cp -p "$file" "$file.tmp"
+        sed -e "s%###BUILD_OMD_VERSION###%$OMD_VERSION%g" -i "$file"
+        touch -r "$file.tmp" "$file"
+        rm -f "$file.tmp"
+    fi
+done
+
+exit 0
