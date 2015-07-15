@@ -11,10 +11,11 @@ build:
 	tar xzf template-arctictut.tgz -C $(DIR)/lib/tpl/
 	ln -sf ../../../images/fileicons/pdf.png $(DIR)/lib/tpl/arctictut/images/tool-pdf.png
 	tar xzf template-vector.tgz -C $(DIR)/lib/tpl/
-	tar xzf plugin-include.tgz -C $(DIR)/lib/plugins/
-	tar xzf plugin-dw2pdf.tgz -C $(DIR)/lib/plugins/
-	tar xzf plugin-bookcreator.tgz -C $(DIR)/lib/plugins/
-	tar xf formular.tar -C $(DIR)/lib/plugins/
+
+	for p in plugins/*.tgz ; do \
+		echo "add plugin $$p..." ; \
+		tar xzf $$p -C $(DIR)/lib/plugins ; \
+	done
 
 	for p in patches/*.patch ; do \
 		echo "applying $$p..." ; \
