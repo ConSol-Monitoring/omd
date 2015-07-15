@@ -18,12 +18,20 @@ build:
 		    unzip -o ../src/$$M ; \
 		fi \
 	    done
+	
+	set -e ; cd dest && \
+	    export PYTHONPATH=$$PYTHONPATH:$(DESTDIR)$(OMD_ROOT)/lib/python ; \
+	    for M in $$(ls); do \
+		cd $$M ; \
+	        python setup.py build ; \
+	        cd .. ; \
+	    done
 
 install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/python
 	cd dest && \
 	    export PYTHONPATH=$$PYTHONPATH:$(DESTDIR)$(OMD_ROOT)/lib/python ; \
-	    for M in $(shell ls dest); do \
+	    for M in $$(ls); do \
 		cd $$M ; \
 	        python setup.py install --home=$(DESTDIR)$(OMD_ROOT) \
 	            --prefix='' \

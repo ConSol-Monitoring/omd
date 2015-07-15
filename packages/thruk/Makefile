@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 NAME     = Thruk
-VERSION  = 1.88-4
+VERSION  = 2.00
 DIR      = $(NAME)-$(VERSION)
 PERLARCH = $(shell $(PERL) -e 'use Config; print $$Config{archname}')
 
@@ -53,6 +53,7 @@ skel:
 	cp $(DIR)/support/thruk.init $(SKEL)/etc/init.d/thruk
 	mkdir -p $(SKEL)/etc/nagios/conf.d
 	cp $(DIR)/support/thruk_templates.cfg $(SKEL)/etc/nagios/conf.d/
+	cp $(DIR)/support/fcgid_env.sh $(SKEL)/etc/thruk/fcgid_env.sh
 	cp $(DIR)/thruk.conf $(SKEL)/etc/thruk/thruk.conf
 	cp -rp $(DIR)/root/thruk/usercontent $(SKEL)/etc/thruk
 	for p in patches/*.skel_patch ; do \

@@ -23,10 +23,10 @@ then
         VERSION=${VERSION:0:1}
     fi
     if [ "${VERSION:0:6}" = "wheezy" ] ; then
-        VERSION="7.0"
+        VERSION="7"
     fi
     if [ "${VERSION:0:6}" = "jessie" ] ; then
-        VERSION="8.0"
+        VERSION="8"
     fi
     echo "DEBIAN$SEP$VERSION"
     exit 0

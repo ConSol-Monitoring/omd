@@ -1929,6 +1929,7 @@ def config_set_all():
             if not exitcode:
                 if output and output != value:
                     g_site_conf[hook_name] = output
+                    putenv("CONFIG_" + hook_name, output)
 
 
 
@@ -2769,19 +2770,19 @@ def main_mv_or_cp(what, args, options={}):
         addopts = ""
         excludes = []
         if "no-rrds" in options or "no-past" in options:
-            excludes.append("var/pnp4nagios/perfdata/")
-            excludes.append("var/pnp4nagios/spool/")
-            excludes.append("var/rrdcached/")
-            excludes.append("var/pnp4nagios/states/")
+            excludes.append("var/pnp4nagios/perfdata/*")
+            excludes.append("var/pnp4nagios/spool/*")
+            excludes.append("var/rrdcached/*")
+            excludes.append("var/pnp4nagios/states/*")
         if "no-logs" in options or "no-past" in options:
-            excludes.append("var/log/*/")
+            excludes.append("var/log/*/*")
             excludes.append("var/nagios/nagios.log")
             excludes.append("var/nagios/archive/")
-            excludes.append("var/pnp4nagios/log/")
+            excludes.append("var/pnp4nagios/log/*")
             excludes.append("var/pnp4nagios/perfdata.dump")
-            excludes.append("var/mkeventd/history/")
+            excludes.append("var/mkeventd/history/*")
             excludes.append("var/check_mk/core/history")
-            excludes.append("var/check_mk/core/archive/")
+            excludes.append("var/check_mk/core/archive/*")
 
         for p in excludes:
             addopts += " --exclude '/%s'" % p
@@ -2791,6 +2792,15 @@ def main_mv_or_cp(what, args, options={}):
 
         os.system("rsync -arx %s '%s/' '%s/'" %
                 (addopts, site_dir(g_sitename), site_dir(new)))
+
+        httpdlogdir = site_dir(new) + "/var/log/apache"
+        if not os.path.exists(httpdlogdir):
+            os.mkdir(httpdlogdir)
+
+        rrdcacheddir = site_dir(new) + "/var/rrdcached"
+        if not os.path.exists(rrdcacheddir):
+            os.mkdir(rrdcacheddir)
+
 
     # give new user all files
     chown_tree(site_dir(new), new)

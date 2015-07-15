@@ -29,6 +29,7 @@ install:
 	install -m 644 COPYING AUTHORS $(DESTDIR)$(OMD_ROOT)/share/doc/$(NAME)
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/omd
 	install -m 644 init_profile $(DESTDIR)$(OMD_ROOT)/lib/omd/
+	install -m 755 port_is_used $(DESTDIR)$(OMD_ROOT)/lib/omd/
 	
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/omd/scripts/post-create
 

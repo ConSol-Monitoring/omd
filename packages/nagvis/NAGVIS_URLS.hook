@@ -10,14 +10,6 @@
 # Makes it possible to switch all the links from NagVis
 # to the default Web GUI to the choosen GUI or a defined
 # other one.
-#
-# Idea: Default mode is "auto". In this mode the HOOK
-# checks the current configuration for the default
-# web gui and sets the NagVis links to point to it.
-# It is also possible to force the other Web GUIs instead
-# of "auto".
-# Another option is "none". In this case OMD configures
-# nothing and NagVis uses the hard coded optionsa
 
 case "$1" in
     default)
@@ -38,11 +30,20 @@ case "$1" in
         CFG_FILE=$OMD_ROOT/etc/nagvis/conf.d/urls.ini.php
         GUI=$2
 
-        # Fallback to classic Nagios GUI when auto mode and unhandled GUIs selected
-        # (welcome/nagvis GUIs are catched in DEFAULT_GUI hook)
-        if [ "$GUI" == "none" ] && [ -f $CFG_FILE ]; then
-            rm $CFG_FILE
+        # When a user sets NAGVIS_URL to "none", previous config files are
+        # deleted and the hook finishes. NagVis will use it's defaults or the
+        # configuration which has been made in the NagVis configuration manually.
+        if [ "$GUI" == "none" ]; then
+            if [ -f $CFG_FILE ]; then
+                rm $CFG_FILE
+            fi
             exit 0
+        fi
+
+        # Previous OMD versions offered the option "auto", which is not possible
+        # anymore. Behave like the default value has been selected.
+        if [ "$GUI" == "auto" ]; then
+            GUI=nagios
         fi
 
         if [ ! -d $OMD_ROOT/etc/nagvis/conf.d ]; then

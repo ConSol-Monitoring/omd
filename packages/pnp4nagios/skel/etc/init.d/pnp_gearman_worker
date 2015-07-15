@@ -24,7 +24,12 @@ fi
 ### read mod_gearman port.conf ###
 if [ -r etc/mod-gearman/port.conf ] ; then
     . etc/mod-gearman/port.conf
-    GM_PORT="--gearman=$server"
+    PORT=`echo $server | awk -F: {'print $2'}`
+    LISTEN=`echo $server | awk -F: {'print $1'}`
+    if [ -z "$LISTEN" ]; then
+        LISTEN=0.0.0.0
+    fi
+    GM_PORT="--gearman=$LISTEN:$PORT"
 else
     GM_PORT="--gearman"
 fi
