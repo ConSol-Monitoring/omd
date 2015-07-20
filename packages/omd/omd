@@ -566,7 +566,7 @@ def site_is_empty(sitename):
 # can there not use the g_site... variables.
 def site_autostart(sitename):
     config = parse_site_conf(sitename)
-    return config.get('CONFIG_AUTOSTART', 'on') == 'on'
+    return config.get('AUTOSTART', 'on') == 'on'
 
 # The version of a site is solely determined by the
 # link ~SITE/version
