@@ -1,7 +1,8 @@
 SHELL = /bin/bash
 # You can select a subset of the packages by overriding this
 # variale, e.g. make PACKAGES='nagios rrdtool' pack
-PACKAGES=perl-modules \
+PACKAGES=freetds \
+         perl-modules \
          go \
          influxdb \
          grafana \
@@ -13,6 +14,7 @@ PACKAGES=perl-modules \
          check_multi \
          check_mysql_health \
          check_oracle_health \
+         check_mssql_health \
          check_webinject \
          dokuwiki \
          example \

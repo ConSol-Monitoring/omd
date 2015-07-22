@@ -18,6 +18,7 @@ MODULES = \
           Crypt-RC4-2.02.tar.gz \
           Crypt-Rijndael-1.12.tar.gz \
           DBI-1.633.tar.gz \
+          DBD-Sybase-1.15.tar.gz \
           Data-Dumper-2.154.tar.gz \
           Digest-1.17.tar.gz \
           Digest-MD5-2.54.tar.gz \
