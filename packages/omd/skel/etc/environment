@@ -14,4 +14,5 @@
 # FOO2="With some spaces"
 #
 
+FREETDSCONF=$OMD_ROOT/etc/freetds/freetds.conf
 
