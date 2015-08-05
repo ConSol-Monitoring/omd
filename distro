@@ -50,7 +50,7 @@ then
         exit 0
     elif [ "${VERSION:0:24}" = "Red Hat Enterprise Linux" ]
     then
-        echo "RHEL$SEP${VERSION:40:1}"
+        echo "REDHAT$SEP${VERSION:40:1}"
         exit 0
     elif [ "${VERSION:0:6}" = "Fedora" ]
     then
