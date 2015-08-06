@@ -1,6 +1,7 @@
 #!/bin/bash
 
 cd ###ROOT###
+. .profile
 . lib/omd/init_profile
 . etc/omd/site.conf
 if [ "$CONFIG_APACHE_MODE" != own ] ; then
