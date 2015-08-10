@@ -1,0 +1,21 @@
+# OMD gitignore
+local/lib/perl5/
+tmp/
+var/
+*.gz
+*.log
+*.rrd
+*.swp
+etc/cron.d/thruk.auto
+.bash_history
+.cpan
+.cpanm/
+dead.letter
+.fontconfig
+.gnupg/
+.jolokia_meta
+.lesshst
+.mysql_history
+.spamassassin
+.ssh/
+.viminfo

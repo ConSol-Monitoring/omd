@@ -34,5 +34,6 @@ install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/omd/scripts/post-create
 
 skel:
+	install -m 644 gitignore $(SKEL)/.gitignore
 
 clean:

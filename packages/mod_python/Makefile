@@ -49,3 +49,7 @@ skel:
 clean:
 	rm -rf $(NAME)-*.*.[0-9] tmp.root
 
+
+# make this file differ from the original upstream Makefile
+# because mod-python compiles in the full path which breaks
+# our cache then.
