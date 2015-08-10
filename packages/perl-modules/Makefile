@@ -4,6 +4,8 @@ NAME     = perl-modules
 VERSION  = $(OMD_VERSION)
 DISTRO   = $(shell ../../distro)
 
+SYBASE   = $(shell readlink -m ../freetds/tmpinstall$(OMD_ROOT))
+
 MODULES = \
           AppConfig-1.71.tar.gz \
           Capture-Tiny-0.27.tar.gz \
@@ -203,6 +205,7 @@ build:
 	    export PERL_MB_OPT=--install_base=$(P5TMPDIST)/dest; \
 	    export MODULEBUILDRC=$(P5TMPDIST)/dest/.modulebuildrc; \
 	    export PERL5LIB=$(P5TMPDIST)/dest/lib/perl5:$(P5TMPDIST)/src/lib; \
+	    export SYBASE=$(SYBASE); \
 	    cd $(P5TMPDIST)/src && \
 	        FORCE=1 ./build_module.pl -d "$(DISTRO)" -p $(P5TMPDIST)/dest \
 	            ExtUtils-MakeMaker-*.tar.gz \
