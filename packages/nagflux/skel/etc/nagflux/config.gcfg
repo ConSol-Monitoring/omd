@@ -1,0 +1,25 @@
+[main]
+SpoolfileFolder = "###ROOT###/var/pnp4nagios/spool"
+SpoolfileWorker = 1
+InfluxWorker = 2
+MaxInfluxWorker = 5
+NumberOfCPUs = 1
+DumpFile = "###ROOT###/var/log/nagflux/nagflux.dump"
+
+[Log]
+#leave empty for stdout
+LogFile = ""
+#List of Severities https://godoc.org/github.com/kdar/factorlog#Severity
+MinSeverity = "DEBUG"
+
+[Monitoring]
+#leave empty to disable
+#WebserverPort = ":7000"
+WebserverPort = ""
+
+[Influx]
+Version = 0.9
+Address = "http://127.0.0.1:8086/write?precision=s&db=nagflux"
+
+[Grafana]
+FieldSeperator = "&"
