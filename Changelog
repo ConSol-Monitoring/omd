@@ -75,6 +75,7 @@ This file documents the revision history for the Open Monitoring Distribution
               request header to the site apache, which can be done by
               adding the line 'RequestHeader set X-Forwarded-Proto "https"' to
               the proxy configuration related to the site.
+            - Apache is now using the default site profile (e.g. PATH)
           - Dokuwiki
             - Updated to Version 2014-09-29d
             - fix discarding all local settings on update
