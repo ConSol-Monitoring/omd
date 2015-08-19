@@ -1,10 +1,11 @@
 [main]
-SpoolfileFolder = "###ROOT###/var/pnp4nagios/spool"
-SpoolfileWorker = 1
+NagiosSpoolfileFolder = "###ROOT###/var/pnp4nagios/spool"
+NagiosSpoolfileWorker = 1
 InfluxWorker = 2
 MaxInfluxWorker = 5
 NumberOfCPUs = 1
 DumpFile = "###ROOT###/var/log/nagflux/nagflux.dump"
+NagfluxSpoolfileFolder = "###ROOT###/var/nagflux"
 
 [Log]
 #leave empty for stdout

@@ -16,6 +16,7 @@ build:
 install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/bin
 	install -m 755 $(PWD)/$(GOPATH)/bin/nagflux  $(DESTDIR)$(OMD_ROOT)/bin
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/var/nagflux
 
 skel:
 

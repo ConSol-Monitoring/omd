@@ -6,6 +6,8 @@ PACKAGES=freetds \
          go \
          influxdb \
          grafana \
+         histou \
+         nagflux \
          python-modules \
          apache-omd \
          mod_python \
