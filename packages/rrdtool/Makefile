@@ -36,7 +36,6 @@ install:
 	$(MAKE) DESTDIR=$(DESTDIR) -C $(DIR) install
 	
 	mkdir $(DESTDIR)$(OMD_ROOT)/share/doc/rrdtool
-	install -m 644 $(DIR)/COPYING $(DESTDIR)$(OMD_ROOT)/share/doc/rrdtool
 	install -m 644 $(DIR)/COPYRIGHT $(DESTDIR)$(OMD_ROOT)/share/doc/rrdtool
 	install -m 644 $(DIR)/CONTRIBUTORS $(DESTDIR)$(OMD_ROOT)/share/doc/rrdtool
 	
