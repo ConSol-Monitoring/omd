@@ -11,10 +11,11 @@ CONFIGUREOPTS = \
 	--with-perl-options=""
 
 build:
+	if [ -d $(DIR) ]; then rm -rf $(DIR); fi
 	tar xzf $(DIR).tar.gz
 	for p in patches/*.diff ; do \
-        echo "applying $$p..." ; \
-        ( cd $(DIR) ; patch -p1 -b ) < $$p ; \
+          echo "applying $$p..." ; \
+          ( cd $(DIR) ; patch -p1 -b ) < $$p ; \
         done
 	
 	# set perl environment to match the other perl modules
