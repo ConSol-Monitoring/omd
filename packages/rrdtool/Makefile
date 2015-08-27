@@ -5,10 +5,14 @@ VERSION = 1.5.4
 DIR = $(NAME)-$(VERSION)
 
 CONFIGUREOPTS = \
-    --prefix=$(OMD_ROOT) \
+	--prefix=$(OMD_ROOT) \
 	--disable-ruby \
 	--disable-libwrap \
-	--with-perl-options=""
+	--enable-perl-site-install \
+	--disable-tcl \
+	--disable-lua \
+	--disable-rrdcgi \
+	--with-perl-options="LIB=$(DESTDIR)$(OMD_ROOT)/lib/perl5/lib/perl5"
 
 build:
 	if [ -d $(DIR) ]; then rm -rf $(DIR); fi
@@ -34,6 +38,11 @@ build:
 install:
 	export PERL5LIB=$(P5TMPDIST)/dest/lib/perl5; \
 	$(MAKE) DESTDIR=$(DESTDIR) -C $(DIR) install
+	
+	# clean up perl man pages which end up in wrong location
+	rm -fr $(DESTDIR)/usr/local
+	# clean up systemd init files
+	rm -fr $(DESTDIR)/lib
 	
 	mkdir $(DESTDIR)$(OMD_ROOT)/share/doc/rrdtool
 	install -m 644 $(DIR)/COPYRIGHT $(DESTDIR)$(OMD_ROOT)/share/doc/rrdtool
