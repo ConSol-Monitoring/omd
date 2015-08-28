@@ -1,20 +1,25 @@
 include ../../Makefile.omd
 
 NAME = rrdtool
-VERSION = 1.4.8
+VERSION = 1.5.4
 DIR = $(NAME)-$(VERSION)
 
 CONFIGUREOPTS = \
-    --prefix=$(OMD_ROOT) \
+	--prefix=$(OMD_ROOT) \
 	--disable-ruby \
 	--disable-libwrap \
-	--with-perl-options=""
+	--enable-perl-site-install \
+	--disable-tcl \
+	--disable-lua \
+	--disable-rrdcgi \
+	--with-perl-options="LIB=$(DESTDIR)$(OMD_ROOT)/lib/perl5/lib/perl5"
 
 build:
+	if [ -d $(DIR) ]; then rm -rf $(DIR); fi
 	tar xzf $(DIR).tar.gz
 	for p in patches/*.diff ; do \
-        echo "applying $$p..." ; \
-        ( cd $(DIR) ; patch -p1 -b ) < $$p ; \
+          echo "applying $$p..." ; \
+          ( cd $(DIR) ; patch -p1 -b ) < $$p ; \
         done
 	
 	# set perl environment to match the other perl modules
@@ -34,9 +39,12 @@ install:
 	export PERL5LIB=$(P5TMPDIST)/dest/lib/perl5; \
 	$(MAKE) DESTDIR=$(DESTDIR) -C $(DIR) install
 	
+	# clean up perl man pages which end up in wrong location
+	rm -fr $(DESTDIR)/usr/local
+	# clean up systemd init files
+	rm -fr $(DESTDIR)/lib
+	
 	mkdir $(DESTDIR)$(OMD_ROOT)/share/doc/rrdtool
-	install -m 644 $(DIR)/README $(DESTDIR)$(OMD_ROOT)/share/doc/rrdtool
-	install -m 644 $(DIR)/COPYING $(DESTDIR)$(OMD_ROOT)/share/doc/rrdtool
 	install -m 644 $(DIR)/COPYRIGHT $(DESTDIR)$(OMD_ROOT)/share/doc/rrdtool
 	install -m 644 $(DIR)/CONTRIBUTORS $(DESTDIR)$(OMD_ROOT)/share/doc/rrdtool
 	

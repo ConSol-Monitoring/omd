@@ -42,7 +42,7 @@ then
         if [ "${VERSION:0:24}" = "CentOS Linux release 6.0" ]; then
             echo "CENTOS${SEP}6"
             exit 0
-        elif [ "${VERSION:0:24}" = "CentOS Linux release 7.0" ]; then
+        elif [ "${VERSION:0:22}" = "CentOS Linux release 7" ]; then
             echo "CENTOS${SEP}7"
             exit 0
         fi
@@ -50,7 +50,7 @@ then
         exit 0
     elif [ "${VERSION:0:24}" = "Red Hat Enterprise Linux" ]
     then
-        echo "RHEL$SEP${VERSION:40:1}"
+        echo "REDHAT$SEP${VERSION:40:1}"
         exit 0
     elif [ "${VERSION:0:6}" = "Fedora" ]
     then

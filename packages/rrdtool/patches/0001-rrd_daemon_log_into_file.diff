@@ -1,15 +1,15 @@
---- a/src/rrd_daemon.c	2013-07-02 15:55:17.603432495 +0200
-+++ b/src/rrd_daemon.c	2013-07-02 16:13:31.031628071 +0200
-@@ -100,6 +100,7 @@
- #include <time.h>
+--- a/src/rrd_daemon.c	2015-08-09 17:18:19.000000000 +0200
++++ b/src/rrd_daemon.c	2015-08-26 14:18:08.010681423 +0200
+@@ -103,6 +103,7 @@
  #include <libgen.h>
  #include <grp.h>
+ #include <pwd.h>
 +#include <wordexp.h>
  
  #ifdef HAVE_LIBWRAP
  #include <tcpd.h>
-@@ -108,14 +109,47 @@
- #include <glib-2.0/glib.h>
+@@ -112,14 +113,46 @@
+ #include <glib.h>
  /* }}} */
  
 +#define LOGFILE_PATH "~/var/log/rrdcached.log"
@@ -29,7 +29,6 @@
 +    log_to_file(__VA_ARGS__); \
    } while (0)
  
-+
 +void log_to_file(char* format, ...)
 +{
 +    va_list ap;
@@ -54,10 +53,10 @@
 +  strncpy(g_logfile_path, exp_result.we_wordv[0], sizeof(g_logfile_path));
 +}
 +
- /*
-  * Types
-  */
-@@ -3172,6 +3206,9 @@
+ #if defined(__FreeBSD__) || defined(__APPLE__)
+ #define RRD_LISTEN_BACKLOG -1
+ #else
+@@ -4337,6 +4370,9 @@
  {
    int status;
  
