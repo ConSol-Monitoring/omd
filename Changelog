@@ -57,7 +57,7 @@ This file documents the revision history for the Open Monitoring Distribution
           - Added build support for Debian 8
           - RedHat / CentOS: Builds are now only dedicated to the major
             version, not caring about the minor versions anymore
-          - Mod-Gearman: Update 1.5.3
+          - Mod-Gearman: Update 1.5.4
           - Thruk: Update to 2.00
             - fix pnp ssi files
           - PNP4Nagios: Update to 0.6.25
