@@ -58,7 +58,7 @@ This file documents the revision history for the Open Monitoring Distribution
           - RedHat / CentOS: Builds are now only dedicated to the major
             version, not caring about the minor versions anymore
           - Mod-Gearman: Update 1.5.4
-          - Thruk: Update to 2.00
+          - Thruk: Update to 2.00-2
             - fix pnp ssi files
           - PNP4Nagios: Update to 0.6.25
           - Updated Monitoring-Plugins to 2.1.1
