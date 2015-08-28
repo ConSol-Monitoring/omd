@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 NAME     = mod_gearman2
-VERSION  = 2.1.3
+VERSION  = 2.1.4
 GEARMAND = $(shell grep "^VERSION " ../gearmand/Makefile | awk '{ print $$3 }')
 DIR      = $(NAME)-$(VERSION)
 
