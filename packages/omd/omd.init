@@ -5,6 +5,7 @@
 # Provides:          omd
 # Required-Start:    $syslog
 # Required-Stop:     $syslog
+# Should-Start:      ntpdate
 # Default-Start:     ###DEFAULT_RUNLEVELS###
 # Default-Stop:      1
 # Short-Description: OMD sites
