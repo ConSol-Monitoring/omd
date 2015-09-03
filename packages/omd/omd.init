@@ -8,7 +8,7 @@
 # Default-Start:     ###DEFAULT_RUNLEVELS###
 # Default-Stop:      1
 # Short-Description: OMD sites
-# Description:       Start and stop the sites of the Open Monitoring 
+# Description:       Start and stop the sites of the Open Monitoring
 #                    Distribution (OMD)
 ### END INIT INFO
 

@@ -1,7 +1,7 @@
 Summary:        OMD - OpenSource Monitoring Distribution
 Name:           omd-%{version}
 Version:        SET BY MAKEFILE
-Release:        SET BY MAKEFILE 
+Release:        SET BY MAKEFILE
 License:        GPL
 URL:            http://omdistro.org/
 Group:          Application/System
@@ -10,7 +10,7 @@ BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root
 AutoReq:        off
 AutoProv:       off
 Provides:       omd
-Requires:	
+Requires:
 
 #%define _missing_doc_files_terminate_build 0
 #%define _unpackaged_files_terminate_build 0
@@ -62,7 +62,7 @@ then
 fi
 
 %post
-# Activate init script for OMD, but only the first 
+# Activate init script for OMD, but only the first
 # time an OMD package is being installed. The admin
 # might have deactivated the script himself and does
 # not want to make it implicitely active again.
