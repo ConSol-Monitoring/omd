@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 NAME       = grafana
-VERSION    = 2.0
+VERSION    = 2.1.3
 SRC        = $(NAME)-$(VERSION).tar.gz
 GOPATH     = go
 PWD        = $(shell pwd)
@@ -41,11 +41,11 @@ package: public
 	$(GO) env
 	mkdir -p $(GOPATH)/src/github.com/grafana/
 	cd $(GOPATH)/src/github.com/grafana && \
-		git clone --depth=1 https://github.com/grafana/grafana.git
+		git clone --depth=1 --branch="v$(VERSION)" https://github.com/grafana/grafana.git
 	cd $(GOPATH)/src/github.com/grafana/grafana && \
 		$(GO) fmt ./...
 	echo "Get everything"
-	cd $(GOPATH)/src/github.com/grafana/grafana && \
+	-cd $(GOPATH)/src/github.com/grafana/grafana && \
 		$(GO) get -u -f -v ./...
 	echo "build app"
 	cd $(GOPATH)/src/github.com/grafana/grafana && \
@@ -56,8 +56,8 @@ package: public
 	wget --no-check-certificate "https://github.com/grafana/grafana/raw/master/conf/defaults.ini" -O defaults.ini
 
 public:
-	wget --no-check-certificate https://grafanarel.s3.amazonaws.com/builds/grafana-latest.linux-x64.tar.gz
-	tar zxf grafana-latest.linux-x64.tar.gz
+	wget --no-check-certificate https://grafanarel.s3.amazonaws.com/builds/grafana-$(VERSION).linux-x64.tar.gz
+	tar zxf grafana-$(VERSION).linux-x64.tar.gz
 	cd grafana-*/. && tar cfz ../public.tar.gz public
-	rm grafana-latest.linux-x64.tar.gz
-	rm -rf grafana-*/.
+	rm grafana-$(VERSION).linux-x64.tar.gz
+	rm -rf grafana-*/
