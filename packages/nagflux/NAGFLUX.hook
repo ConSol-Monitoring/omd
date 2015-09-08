@@ -14,5 +14,19 @@ case "$1" in
         echo "off: disable nagflux"
     ;;
     set)
+       if [ "$2" == "on" ]
+       then
+           InfluxPort=`grep CONFIG_INFLUXDB_HTTP_TCP_PORT /omd/sites/test/etc/omd/site.conf | sed 's/[^0-9]*//g'`
+           if [ $InfluxPort =~ ^-?[0-9]+$ ]
+           then
+             $OMD_ROOT/lib/nagios/plugins/check_http -t 10 -H localhost -p $InfluxPort -u "/query?q=CREATE%20DATABASE%20nagflux" -s "{\"results\":[{}]}" &>/dev/null
+             sed -e 's/8086/'$InfluxPort'/' -i $OMD_ROOT/etc/nagflux/config.gcfg
+           fi
+           if [ -e $OMD_ROOT/etc/icinga2/features-enabled/ ] ; then
+               ln -sfn ../features-available/perfdata.conf $OMD_ROOT/etc/icinga2/features-enabled/perfdata.conf
+           fi
+       else
+               rm -f $OMD_ROOT/etc/icinga2/features-enabled/perfdata.conf
+       fi
     ;;
 esac
