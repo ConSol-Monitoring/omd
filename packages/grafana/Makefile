@@ -6,7 +6,7 @@ SRC        = $(NAME)-$(VERSION).tar.gz
 GOPATH     = go
 GOVERSION  = 1.4
 PWD        = $(shell pwd)
-GO         = export GOROOT=$(PWD)/../go/go-$(GOVERSION)/ && export GOPATH=$(PWD)/$(GOPATH)/ && PATH=$$GOROOT/bin:$$PATH && go
+GO         = export GOROOT=$(PWD)/../go-$(GOVERSION)/go-$(GOVERSION)/ && export GOPATH=$(PWD)/$(GOPATH)/ && PATH=$$GOROOT/bin:$$PATH && go
 
 MODULE_DIR=$(APACHE_MODULE_DIR)
 ifeq ($(shell uname -m),x86_64)
@@ -17,7 +17,7 @@ endif
 
 build:
 	tar zxf $(SRC)
-	export GOROOT=$(PWD)/../go/go-$(GOVERSION)/ && export GOPATH=$(PWD)/$(GOPATH)/ && PATH=$$GOROOT/bin:$$PATH && \
+	export GOROOT=$(PWD)/../go-$(GOVERSION)/go-$(GOVERSION)/ && export GOPATH=$(PWD)/$(GOPATH)/ && PATH=$$GOROOT/bin:$$PATH && \
 		cd $(GOPATH)/src/github.com/grafana && \
 		go build ./... && \
 		go install ./...

@@ -10,7 +10,7 @@ CONFIG_FILE = $(DESTDIR)$(OMD_ROOT)/etc/nagflux/config.gcfg
 
 build:
 	tar zxf $(SRC)
-	export GOROOT=$(PWD)/../go/go-$(GOVERSION)/ && export GOPATH=$(PWD)/$(GOPATH)/ && PATH=$$GOROOT/bin:$$PATH && \
+	export GOROOT=$(PWD)/../go-$(GOVERSION)/go-$(GOVERSION)/ && export GOPATH=$(PWD)/$(GOPATH)/ && PATH=$$GOROOT/bin:$$PATH && \
 	go install github.com/griesbacher/nagflux
 
 install:
@@ -25,7 +25,7 @@ clean:
 
 package: clean
 	mkdir -p $(GOPATH)
-	export GOROOT=$(PWD)/../go/go-$(GOVERSION)/ && export GOPATH=$(PWD)/$(GOPATH)/ && PATH=$$GOROOT/bin:$$PATH && \
+	export GOROOT=$(PWD)/../go-$(GOVERSION)/go-$(GOVERSION)/ && export GOPATH=$(PWD)/$(GOPATH)/ && PATH=$$GOROOT/bin:$$PATH && \
 		go get -u github.com/griesbacher/nagflux && \
 		tar zcf $(SRC) $(GOPATH)/src/ --exclude=.git
 
