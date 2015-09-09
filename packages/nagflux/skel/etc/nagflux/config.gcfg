@@ -20,7 +20,7 @@ WebserverPort = ""
 
 [Influx]
 Version = 0.9
-Address = "http://127.0.0.1:8086/write?precision=s&db=nagflux"
+Address = "http://127.0.0.1:8086/write?precision=ms&db=nagflux"
 
 [Grafana]
 FieldSeperator = "&"
