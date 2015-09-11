@@ -22,15 +22,15 @@ DAEMON=$OMD_ROOT/bin/grafana
 OPTIONS="--homepath=${GRAFANA_HOME} --pidfile=${PID_FILE} --config=${CONF_FILE} cfg:default.paths.data=${DATA_DIR} cfg:default.paths.logs=${LOG_DIR}"
 
 get_status() {
-        pid=$( cat $PID_FILE 2>/dev/null )
-        if [ -n "$pid" ]; then
-            if ps -p $pid > /dev/null 2>&1 ; then
-                echo "$NAME is running with pid $pid"
-                return 0;
-            fi
+    pid=$( cat $PID_FILE 2>/dev/null )
+    if [ -n "$pid" ]; then
+        if ps -p $pid > /dev/null 2>&1 ; then
+            echo "$NAME is running with pid $pid"
+            return 0;
         fi
-        echo "$NAME is not running"
-        return 1;
+    fi
+    echo "$NAME is not running"
+    return 1;
 }
 
 stop_grafana() {
@@ -55,7 +55,8 @@ stop_grafana() {
 
 case "$1" in
   start)
-
+        test -f var/grafana/data/grafana.db
+        FIRST_START=$?
         printf '%s' "Starting $NAME..."
 
         if get_status > /dev/null ; then
@@ -64,17 +65,25 @@ case "$1" in
             exit 0;
         fi
 
-	mkdir -p "$LOG_DIR" "$DATA_DIR"
-	touch "$PID_FILE"
+        mkdir -p "$LOG_DIR" "$DATA_DIR"
+        touch "$PID_FILE"
         nohup $DAEMON $OPTIONS >>$LOGFILE 2>&1 &
         if [ $? -eq 0 ]; then
             echo "OK"
+            if [ $FIRST_START -eq 1 ]; then
+                echo "first start, trying to create datasource"
+                sleep 3; # give grafana a few seconds
+                curl "http://localhost:$CONFIG_GRAFANA_TCP_PORT/api/datasources" \
+                        -X POST \
+                        -H 'Content-Type: application/json;charset=UTF-8' \
+                        --data-binary '{"name":"influxdb","type":"influxdb","url":"http://127.0.0.1:'$CONFIG_INFLUXDB_HTTP_TCP_PORT'","access":"proxy","isDefault":true,"database":"nagflux", "user": "root", "password":"root"}'
+            fi
             exit 0;
         else
             echo "failed"
             exit 1;
         fi
-	;;
+    ;;
   stop)
         printf '%s' "Stopping $NAME..."
         pid=$( cat $PID_FILE 2>/dev/null )
@@ -83,7 +92,7 @@ case "$1" in
         else
             stop_grafana;
         fi
-	;;
+    ;;
   status)
         get_status;
         exit $?;
