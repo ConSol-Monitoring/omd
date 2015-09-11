@@ -74,9 +74,12 @@ case "$1" in
                 echo "first start, trying to create datasource"
                 sleep 3; # give grafana a few seconds
                 curl "http://localhost:$CONFIG_GRAFANA_TCP_PORT/api/datasources" \
+                        --silent \
+                        --show-error \
                         -X POST \
                         -H 'Content-Type: application/json;charset=UTF-8' \
-                        --data-binary '{"name":"influxdb","type":"influxdb","url":"http://127.0.0.1:'$CONFIG_INFLUXDB_HTTP_TCP_PORT'","access":"proxy","isDefault":true,"database":"nagflux", "user": "root", "password":"root"}'
+                        --data-binary '{"name":"influxdb","type":"influxdb","url":"http://127.0.0.1:'$CONFIG_INFLUXDB_HTTP_TCP_PORT'","access":"proxy","isDefault":true,"database":"nagflux", "user": "root", "password":"root"}' \
+                        2>&1
             fi
             exit 0;
         else
