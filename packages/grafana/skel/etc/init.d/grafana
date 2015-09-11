@@ -34,7 +34,6 @@ get_status() {
 }
 
 stop_grafana() {
-    printf '%s' "Stopping $NAME..."
     pid=$( cat $PID_FILE 2>/dev/null )
     if [ -z "$pid" ]; then
         echo ". Not running."
