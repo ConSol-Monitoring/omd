@@ -8,7 +8,7 @@
 
 case "$1" in
     default)
-        echo 3000
+        echo 8003
     ;;
     choices)
         echo "[0-9]{1,4}"
