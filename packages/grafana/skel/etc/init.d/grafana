@@ -39,9 +39,10 @@ stop_grafana() {
         echo ". Not running."
     else
         ps -p $pid > /dev/null 2>&1 && kill $pid
-        for x in 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5; do
+        for x in $(seq 15); do
             printf "."
-            ps -p $pid > /dev/null 2>&1 && sleep 0.2;
+            ps -p $pid > /dev/null 2>&1 || break
+            sleep 0.2;
         done
         if ! ps -p $pid > /dev/null 2>&1 ; then
             echo "OK"
@@ -72,7 +73,12 @@ case "$1" in
             echo "OK"
             if [ $FIRST_START -eq 1 ]; then
                 echo "first start, trying to create datasource"
-                sleep 3; # give grafana a few seconds
+                for x in $(seq 60); do
+                    curl "http://localhost:$CONFIG_GRAFANA_TCP_PORT/api/datasources" --silent
+                    [ $? == 0 ] && break;
+                    printf "."
+                    sleep 0.5;
+                done
                 curl "http://localhost:$CONFIG_GRAFANA_TCP_PORT/api/datasources" \
                         --silent \
                         --show-error \
@@ -80,6 +86,7 @@ case "$1" in
                         -H 'Content-Type: application/json;charset=UTF-8' \
                         --data-binary '{"name":"influxdb","type":"influxdb","url":"http://127.0.0.1:'$CONFIG_INFLUXDB_HTTP_TCP_PORT'","access":"proxy","isDefault":true,"database":"nagflux", "user": "root", "password":"root"}' \
                         2>&1
+                echo ""
             fi
             exit 0;
         else
