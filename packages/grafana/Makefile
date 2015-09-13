@@ -29,6 +29,8 @@ install:
 	tar zxf public.tar.gz -C $(DESTDIR)$(OMD_ROOT)/share/grafana
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/grafana/conf
 	install -m 644 defaults.ini $(DESTDIR)$(OMD_ROOT)/share/grafana/conf/
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/grafana/vendor/
+	cp -rp go/src/github.com/grafana/grafana/vendor/phantomjs $(DESTDIR)$(OMD_ROOT)/share/grafana/vendor/
 
 skel:
 	sed -i -e 's|###APACHE_MODULE_DIR###|$(MODULE_DIR)|g' \
