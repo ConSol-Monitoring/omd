@@ -14,7 +14,7 @@ return function(callback) {
         url = site[1]+'/histou/index.php';
     }
 
-    configUrl = url+'?host='+host+'&service='+service+debug;
+    configUrl = url+'?host='+host+'&service='+service+'&height='+height+'&legend='+legend+debug;
 
     $.ajax({
         method: 'GET',
@@ -86,13 +86,19 @@ function parseArgs() {
     if(!_.isUndefined(ARGS.height)) {
         height = ARGS.height;
     }else{
-        height = "200px"
+        height = ""
     }
 
     if(_.isUndefined(ARGS.debug)) {
         debug = '';
     }else{
         debug = "&debug"
+    }
+
+    if(!_.isUndefined(ARGS.legend)) {
+        legend = ARGS.legend;
+    }else{
+        legend = true
     }
 }
 
