@@ -26,7 +26,7 @@ TestUtils::test_command({ cmd => $omd_bin." start $site", like => '/Starting Gra
 
 #grafana interface
 TestUtils::test_url({ url => 'http://localhost/'.$site.'/grafana/', waitfor => '<title>Grafana<\/title>', auth => $auth });
-TestUtils::test_command({ cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -t 60 -H localhost -p 3000 -s \"<title>Grafana</title>\"'", like => '/HTTP OK:/' });
+TestUtils::test_command({ cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -t 60 -H localhost -p 8003 -s \"<title>Grafana</title>\"'", like => '/HTTP OK:/' });
 
 TestUtils::test_command({ cmd => $omd_bin." stop $site" });
 TestUtils::remove_test_site($site);
