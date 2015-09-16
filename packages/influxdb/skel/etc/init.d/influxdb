@@ -71,8 +71,18 @@ case "$1" in
 
         nohup $DAEMON $OPTIONS >>$LOGFILE 2>&1 &
         if [ $? -eq 0 ]; then
-            echo "OK"
-            exit 0;
+            for x in $(seq 50); do
+                [ $(netstat -an | grep LISTEN | grep -c :$CONFIG_INFLUXDB_HTTP_TCP_PORT) -eq 1 ] && break;
+                printf "."
+                sleep 0.2
+            done
+            if get_status > /dev/null ; then
+                echo "OK"
+                exit 0;
+            else
+                echo "FAILED"
+                exit 1;
+            fi
         else
             echo "failed"
             exit 1;
