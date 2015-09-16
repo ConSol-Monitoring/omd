@@ -17,6 +17,10 @@ endif
 
 build:
 	tar zxf $(SRC)
+	set -e ; for p in patches/*.patch ; do \
+	    echo "applying $$p..." ; \
+	    ( cd $(GOPATH) ; patch -p1 ) < $$p ; \
+	done
 	export GOROOT=$(PWD)/../go-$(GOVERSION)/go-$(GOVERSION)/ && export GOPATH=$(PWD)/$(GOPATH)/ && PATH=$$GOROOT/bin:$$PATH && \
 		cd $(GOPATH)/src/github.com/grafana && \
 		go build ./... && \
