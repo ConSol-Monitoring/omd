@@ -22,7 +22,7 @@ my $site    = TestUtils::create_test_site() or TestUtils::bail_out_clean("no fur
 my $curl    = '/usr/bin/curl --user root:root';
 
 TestUtils::test_command({ cmd => $omd_bin." config $site set INFLUXDB on" });
-TestUtils::test_command({ cmd => $omd_bin." start $site", like => '/Starting influxdb...OK/' });
+TestUtils::test_command({ cmd => $omd_bin." start $site", like => '/Starting influxdb\.+OK/' });
 sleep(2); # influxdb api returns 404 when accessed directly after first start
 
 #admin interface
