@@ -62,7 +62,7 @@ then
 fi
 
 %post
-# Activate init script for OMD, but only the first 
+# Activate init script for OMD, but only the first
 # time an OMD package is being installed. The admin
 # might have deactivated the script himself and does
 # not want to make it implicitely active again.
