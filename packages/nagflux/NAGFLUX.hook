@@ -17,9 +17,9 @@ case "$1" in
        if [ "$2" == "on" ]
        then
            InfluxPort=`grep CONFIG_INFLUXDB_HTTP_TCP_PORT /omd/sites/test/etc/omd/site.conf | sed 's/[^0-9]*//g'`
-           if [ $InfluxPort =~ ^-?[0-9]+$ ]
+           if [[ $InfluxPort =~ ^-?[0-9]+$ ]]
            then
-             sed -e 's/8086/'$InfluxPort'/' -i $OMD_ROOT/etc/nagflux/config.gcfg
+             sed -e 's%^Address = "http.*$%Address = "http://127.0.0.1:'$InfluxPort'"%' -i $OMD_ROOT/etc/nagflux/config.gcfg
            fi
            if [ -e $OMD_ROOT/etc/icinga2/features-enabled/ ] ; then
                ln -sfn ../features-available/perfdata.conf $OMD_ROOT/etc/icinga2/features-enabled/perfdata.conf
