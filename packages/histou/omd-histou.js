@@ -26,9 +26,9 @@ return function(callback) {
                     for (var i = 0; i < indices.length; i++){
                             var pointIndex = indices[i];
                             var oldTimestamp = points[pointIndex];
-                            points.splice(indices[i],0,null);
-                            points.splice(indices[i],0,null);
-                            points.splice(indices[i],0,null);
+                            for (var j = 0; i < stepSize; i++){
+                                    points.splice(pointIndex,0,null);
+                            }
                     }
             }
             plot.hooks.processDatapoints.push(fixGaps);
