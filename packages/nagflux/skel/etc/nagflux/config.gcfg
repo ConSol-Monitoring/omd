@@ -3,7 +3,6 @@ NagiosSpoolfileFolder = "###ROOT###/var/pnp4nagios/spool"
 NagiosSpoolfileWorker = 1
 InfluxWorker = 2
 MaxInfluxWorker = 5
-NumberOfCPUs = 1
 DumpFile = "###ROOT###/var/log/nagflux/nagflux.dump"
 NagfluxSpoolfileFolder = "###ROOT###/var/nagflux"
 
@@ -11,7 +10,7 @@ NagfluxSpoolfileFolder = "###ROOT###/var/nagflux"
 #leave empty for stdout
 LogFile = ""
 #List of Severities https://godoc.org/github.com/kdar/factorlog#Severity
-MinSeverity = "DEBUG"
+MinSeverity = "INFO"
 
 [Monitoring]
 #leave empty to disable
