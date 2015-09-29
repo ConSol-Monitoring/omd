@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 NAME = check_logfiles
-VERSION = 3.7.2
+VERSION = 3.7.3
 DIR = $(NAME)-$(VERSION)
 
 .PHONY: skel
