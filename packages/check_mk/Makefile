@@ -2,7 +2,7 @@ include ../../Makefile.omd
 
 SHELL = /bin/bash
 NAME = check_mk
-VERSION = 1.2.6p5
+VERSION = 1.2.6p12
 DIR = $(NAME)-$(VERSION)
 EDIR = mkeventd-$(VERSION)
 
