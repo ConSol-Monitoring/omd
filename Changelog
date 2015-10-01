@@ -60,6 +60,7 @@ This file documents the revision history for the Open Monitoring Distribution
           - Mod-Gearman: Update 1.5.5
           - Thruk: Update to 2.02
             - fix pnp ssi files
+          - Gearman: Updated to version 0.33-4
           - PNP4Nagios: Update to 0.6.25
           - Updated Monitoring-Plugins to 2.1.1
           - Icinga: Update to 1.12.0
