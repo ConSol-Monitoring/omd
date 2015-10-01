@@ -63,7 +63,7 @@ next:
             - FIX: Fixed site not starting after "omd cp" when using 
               the arguments --no-past, --no-rrds or --no-logs
           - Check_MK:
-            - Update to 1.2.6p5
+            - Update to 1.2.6p12
             - moved log dir to var/log
           - Added build support for SLES 12
           - Added build support for Ubuntu 14.10, 15.04, 15.10
@@ -71,8 +71,9 @@ next:
           - RedHat / CentOS: Builds are now only dedicated to the major
             version, not caring about the minor versions anymore
           - Mod-Gearman: Update 1.5.5
-          - Thruk: Update to 2.00-2
+          - Thruk: Update to 2.02
             - fix pnp ssi files
+          - Gearman: Updated to version 0.33-4
           - PNP4Nagios: Update to 0.6.25
           - Updated Monitoring-Plugins to 2.1.1
           - Icinga: Update to 1.12.0
