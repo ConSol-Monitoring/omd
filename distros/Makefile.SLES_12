@@ -36,6 +36,7 @@ BUILD_PACKAGES += net-snmp
 BUILD_PACKAGES += openldap2-devel
 BUILD_PACKAGES += pango-devel
 BUILD_PACKAGES += patch
+BUILD_PACKAGES += postgresql-devel   # icinga 2
 BUILD_PACKAGES += python
 BUILD_PACKAGES += python-devel
 BUILD_PACKAGES += readline-devel
