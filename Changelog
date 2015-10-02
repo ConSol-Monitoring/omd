@@ -52,7 +52,7 @@ This file documents the revision history for the Open Monitoring Distribution
           - Check_MK:
             - Update to 1.2.6p12
             - moved log dir to var/log
-          - Added build support for SLES 12
+          - Added build support for SLES 12, 11 SP4
           - Added build support for Ubuntu 14.10, 15.04, 15.10
           - Added build support for Debian 8
           - RedHat / CentOS: Builds are now only dedicated to the major
