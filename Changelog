@@ -13,7 +13,7 @@ next:
           - new core Icinga 2.2.4 added
 
 
-1.30 (next, not yet released)
+1.30     Oct 01 2015
           - omd:
             - Added "Basic / ADMIN_MAIL" hook to configure the target mail
               address for eMails sent to the site user (e.g. created by
