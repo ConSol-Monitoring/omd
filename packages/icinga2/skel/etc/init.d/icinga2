@@ -33,9 +33,8 @@ OPTIONS="-c $CFG_FILE"
 # It returns 1 when no process can be found and echos the PID while
 # returning 0 when a process can be found.
 icinga2_proc() {
-    PROC=$(ps -u $USR --ppid 1 -o pid,ppid,cmd \
-             | grep "bin/icinga2" 2>&1 | grep daemon | grep ' 1 ' | grep -v grep)
-    PID=$(echo "$PROC" | sed 's/^ *//g' | cut -d' ' -f1)
+    PROC=$(ps -f -p"$(pgrep -d, -u $USER -P 1)" 2>/dev/null)
+    PID=$(echo "$PROC" | grep -v grep | grep "bin/icinga2" | grep daemon | awk '{print $2}')
     if [ "$PID" != "" ]; then
         echo "$PID"
         return 0
