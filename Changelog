@@ -6,6 +6,10 @@ next:
           - Naemon update to 1.0.2
           - Mod-Gearman2: Update 2.1.5
           - Apache shared mode removed
+          - added Grafana
+          - added Influxdb
+          - added Histou
+          - added Nagflux
 
 2.00
           - new core Naemon 1.0.0 added
