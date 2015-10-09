@@ -1,12 +1,11 @@
-WARNING: this is not a official OMD release!
-
-This file documents the revision history for the Open Monitoring Distribution (NewCores Edition)
+This file documents the revision history for the Open Monitoring Distribution (Labs Edition)
 
 
 next:
           - Icinga update to 2.3.10
           - Naemon update to 1.0.2
           - Mod-Gearman2: Update 2.1.5
+          - Apache shared mode removed
 
 2.00
           - new core Naemon 1.0.0 added
