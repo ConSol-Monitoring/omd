@@ -33,6 +33,7 @@ BUILD_PACKAGES += libtiff-devel # Perl::GD
 BUILD_PACKAGES += libuuid-devel
 BUILD_PACKAGES += libxml2-devel
 BUILD_PACKAGES += make
+BUILD_PACKAGES += mysql
 BUILD_PACKAGES += net-snmp
 BUILD_PACKAGES += openldap2-devel
 BUILD_PACKAGES += pango-devel
