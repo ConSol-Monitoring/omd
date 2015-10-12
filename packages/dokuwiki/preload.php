@@ -4,12 +4,14 @@ if(substr($_SERVER["SCRIPT_FILENAME"], 0, 4) == '/omd') {
     $site_parts = array_slice(explode('/' ,dirname($_SERVER["SCRIPT_FILENAME"])), 0, 4);
     $site = $site_parts[count($site_parts)-1];
     define('DOKU_CONF', '/omd/sites/'.$site.'/etc/dokuwiki/');
+    define('DOKU_PLUGIN', '/omd/sites/'.$site.'/var/dokuwiki/lib/plugins/');
     unset($site_parts);
     unset($site);
 } else {
     $site=getenv('OMD_SITE');
     define('DOKU_CONF', '/omd/sites/'.$site.'/etc/dokuwiki/');
-    define('DOKU_INC', '/omd/sites/'.$site.'/var/dokuwiki/data/');
+    define('DOKU_INC', '/omd/sites/'.$site.'/var/dokuwiki/');
+    define('DOKU_PLUGIN', '/omd/sites/'.$site.'/var/dokuwiki/lib/plugins/');
     unset($site);
 }
 
