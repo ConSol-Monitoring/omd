@@ -38,6 +38,7 @@ patch:
 	    echo "applying $$p..." ; \
 	    ( cd $(DIR) ; patch -p1 -b ) < $$p ; \
 	done
+	find $(DIR)/ -name \*.orig -exec rm {} \;
 
 
 
