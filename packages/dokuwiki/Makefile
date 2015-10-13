@@ -46,6 +46,7 @@ install:
 
 skel:
 	mkdir -p $(SKEL)/etc/dokuwiki
+	mkdir -p $(SKEL)/var/dokuwiki/lib/plugins
 	cp $(DIR)/conf/*.conf				$(SKEL)/etc/dokuwiki/.
 	cp $(DIR)/conf/*.php$				$(SKEL)/etc/dokuwiki/.
 	cp $(DIR)/conf/acl.auth.php.dist	$(SKEL)/etc/dokuwiki/acl.auth.php
@@ -54,6 +55,11 @@ skel:
 	for p in patches/*.skel_patch ; do \
 	    echo "applying $$p..." ; \
 	    ( cd $(SKEL) ; patch -p1 ) < $$p || exit 1; \
+	done
+
+	cd $(SKEL)/var/dokuwiki/lib/plugins/ ; \
+	for i in `ls -1 $(DESTDIR)$(OMD_ROOT)/share/dokuwiki/htdocs/lib/plugins/` ; do \
+	    ln -s ../../../../share/dokuwiki/htdocs/lib/plugins/$$i . ; \
 	done
 
 clean:
