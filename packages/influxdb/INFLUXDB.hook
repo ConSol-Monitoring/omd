@@ -14,5 +14,9 @@ case "$1" in
         echo "off: disable influxdb database"
     ;;
     set)
+       if [ "$2" == "off" ]
+       then
+           rm -f $OMD_ROOT/influxportupdated
+       fi
     ;;
 esac
