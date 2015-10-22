@@ -1,5 +1,9 @@
 This file documents the revision history for the Open Monitoring Distribution
 
+1.40     (not yet released)
+          - NagVis:
+            - Update to version 1.9b3
+
 1.30     Oct 01 2015
           - omd:
             - Added "Basic / ADMIN_MAIL" hook to configure the target mail
