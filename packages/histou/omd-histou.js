@@ -8,7 +8,7 @@ parseArgs()
 
 
 return function(callback) {
-    document.body.style.background = '#FFF';
+    document.documentElement.style.background = '#FFF';
 
     site = window.location.href.match(/(https?:\/\/.*?\/.*?)\/grafana\/.*/);
     if(site.length > 1){
