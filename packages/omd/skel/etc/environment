@@ -15,4 +15,5 @@
 #
 
 FREETDSCONF=$OMD_ROOT/etc/freetds/freetds.conf
+TNS_ADMIN=$OMD_ROOT/etc/oracle
 
