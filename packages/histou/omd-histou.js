@@ -8,7 +8,9 @@ parseArgs()
 
 
 return function(callback) {
-    document.documentElement.style.background = '#FFF';
+    if(window.location.href.search('/dashboard-solo/') != -1){
+        document.documentElement.style.background = '#FFF';
+    }
 
     site = window.location.href.match(/(https?:\/\/.*?\/.*?)\/grafana\/.*/);
     if(site.length > 1){
