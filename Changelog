@@ -1,19 +1,22 @@
-WARNING: this is not a official OMD release!
-
-This file documents the revision history for the Open Monitoring Distribution (NewCores Edition)
+This file documents the revision history for the Open Monitoring Distribution (Labs Edition)
 
 
 next:
-          - Icinga update to 2.3.6
+          - Icinga update to 2.3.10
           - Naemon update to 1.0.2
-          - Mod-Gearman2: Update 2.1.4
+          - Mod-Gearman2: Update 2.1.5
+          - Apache shared mode removed
+          - added Grafana
+          - added Influxdb
+          - added Histou
+          - added Nagflux
 
-2.00
+2.00     Feb 20 2015
           - new core Naemon 1.0.0 added
           - new core Icinga 2.2.4 added
 
 
-1.30 (next, not yet released)
+1.30     Oct 01 2015
           - omd:
             - Added "Basic / ADMIN_MAIL" hook to configure the target mail
               address for eMails sent to the site user (e.g. created by
@@ -63,16 +66,17 @@ next:
             - FIX: Fixed site not starting after "omd cp" when using 
               the arguments --no-past, --no-rrds or --no-logs
           - Check_MK:
-            - Update to 1.2.6p5
+            - Update to 1.2.6p12
             - moved log dir to var/log
-          - Added build support for SLES 12
+          - Added build support for SLES 12, 11 SP4
           - Added build support for Ubuntu 14.10, 15.04, 15.10
           - Added build support for Debian 8
           - RedHat / CentOS: Builds are now only dedicated to the major
             version, not caring about the minor versions anymore
-          - Mod-Gearman: Update 1.5.4
-          - Thruk: Update to 2.00-2
+          - Mod-Gearman: Update 1.5.5
+          - Thruk: Update to 2.02
             - fix pnp ssi files
+          - Gearman: Updated to version 0.33-4
           - PNP4Nagios: Update to 0.6.25
           - Updated Monitoring-Plugins to 2.1.1
           - Icinga: Update to 1.12.0

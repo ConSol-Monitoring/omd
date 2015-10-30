@@ -16,16 +16,26 @@ case "$1" in
     set)
        if [ "$2" == "on" ]
        then
-           InfluxPort=`grep CONFIG_INFLUXDB_HTTP_TCP_PORT /omd/sites/test/etc/omd/site.conf | sed 's/[^0-9]*//g'`
-           if [[ $InfluxPort =~ ^-?[0-9]+$ ]]
-           then
-             sed -e 's%^Address = "http.*$%Address = "http://127.0.0.1:'$InfluxPort'"%' -i $OMD_ROOT/etc/nagflux/config.gcfg
-           fi
            if [ -e $OMD_ROOT/etc/icinga2/features-enabled/ ] ; then
                ln -sfn ../features-available/perfdata.conf $OMD_ROOT/etc/icinga2/features-enabled/perfdata.conf
            fi
+           if [ -e $OMD_ROOT/etc/nagios/nagios.d ] ; then
+               ln -sfn ../../nagflux/nagios_nagflux.cfg $OMD_ROOT/etc/nagios/nagios.d/nagflux.cfg
+           fi
+           if [ -e $OMD_ROOT/etc/icinga/icinga.d ] ; then
+               ln -sfn ../../nagflux/nagios_nagflux.cfg $OMD_ROOT/etc/icinga/icinga.d/nagflux.cfg
+           fi
+           if [ -e $OMD_ROOT/etc/naemon/naemon.d ] ; then
+               ln -sfn ../../nagflux/nagios_nagflux.cfg $OMD_ROOT/etc/naemon/naemon.d/nagflux.cfg
+           fi
+           if [ -s $OMD_ROOT/etc/mod-gearman/perfdata.conf ]; then
+               sed -i -e 's/^perfdata=.*$/perfdata=yes/' $OMD_ROOT/etc/mod-gearman/perfdata.conf
+           fi
        else
-               rm -f $OMD_ROOT/etc/icinga2/features-enabled/perfdata.conf
+           rm -f $OMD_ROOT/etc/icinga2/features-enabled/perfdata.conf
+           rm -f $OMD_ROOT/etc/nagios/nagios.d/nagflux.cfg
+           rm -f $OMD_ROOT/etc/icinga/icinga.d/nagflux.cfg
+           rm -f $OMD_ROOT/etc/naemon/naemon.d/nagflux.cfg
        fi
     ;;
 esac

@@ -56,8 +56,10 @@ stop_grafana() {
 
 case "$1" in
   start)
-        test -f var/grafana/data/grafana.db
+        test -f $OMD_ROOT/var/grafana/data/grafana.db
         FIRST_START=$?
+        test -f $OMD_ROOT/influxportupdated
+        PORT_UPDATED=$?
         printf '%s' "Starting $NAME..."
 
         if get_status > /dev/null ; then
@@ -87,6 +89,25 @@ case "$1" in
                         --data-binary '{"name":"nagflux","type":"influxdb","url":"http://127.0.0.1:'$CONFIG_INFLUXDB_HTTP_TCP_PORT'","access":"proxy","isDefault":true,"database":"nagflux", "user": "root", "password":"root"}' \
                         2>&1
                 echo ""
+            fi
+            if [ $PORT_UPDATED -eq 0 ]; then
+                echo "influxdb port has changed, trying to update datasource"
+                for x in $(seq 60); do
+                    curl "http://localhost:$CONFIG_GRAFANA_TCP_PORT/api/datasources" --silent
+                    [ $? == 0 ] && break;
+                    printf "."
+                    sleep 0.5;
+                done
+                # use first data source
+                curl "http://localhost:$CONFIG_GRAFANA_TCP_PORT/api/datasources/1" \
+                        --silent \
+                        --show-error \
+                        -X PUT \
+                        -H 'Content-Type: application/json;charset=UTF-8' \
+                        --data-binary '{"name":"nagflux","type":"influxdb","url":"http://127.0.0.1:'$CONFIG_INFLUXDB_HTTP_TCP_PORT'","access":"proxy","isDefault":true,"database":"nagflux", "user": "root", "password":"root"}' \
+                        2>&1
+                echo ""
+                rm -f $OMD_ROOT/influxportupdated
             fi
             exit 0;
         else

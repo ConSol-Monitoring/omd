@@ -19,10 +19,6 @@ CONFIGUREOPTS = \
 build: clean
 	test -f gearmand-${VERSION}.tar.gz || wget "http://launchpad.net/gearmand/trunk/${VERSION}/+download/gearmand-${VERSION}.tar.gz"
 	tar xzf gearmand-$(VERSION).tar.gz
-	for p in patches/*.patch ; do \
-	    echo "applying $$p..." ; \
-	    ( cd $(DIR) ; patch -p1 -b ) < $$p ; \
-	done
 	sed -i -e 's/boost_version_req=1.39/boost_version_req=1.34/g' gearmand-$(VERSION)/configure
 	DISTRO_VERSION=$(DISTRO_VERSION); \
 	if [ "$(DISTRO_NAME)" = "CENTOS" -a "$${DISTRO_VERSION:0:1}" = "5" ]; then \

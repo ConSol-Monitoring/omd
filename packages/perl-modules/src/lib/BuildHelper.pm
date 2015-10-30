@@ -424,6 +424,9 @@ sub install_module {
     if($modname eq 'List::MoreUtils') {
         system("sed -i -e '/url\\s*=>.*github/d' -e '/perl.*=>\\s*\\\$^V/d' Makefile.PL");
     }
+    if($modname eq 'GD') {
+        system("sed -i 's|-Wformat=0||g' Makefile.PL");
+    }
 
     eval {
         local $SIG{ALRM} = sub { die "timeout on: $file\n" };

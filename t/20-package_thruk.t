@@ -13,7 +13,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 2857 );
+plan( tests => 1474 );
 
 ##################################################
 # create our test site
@@ -76,9 +76,6 @@ my $tests = [
 
 my $own_tests = [
   { cmd => "/bin/su - $site -c './etc/init.d/thruk restart'", like => '/\([\d\ ]+\)\ OK/' },
-];
-my $shared_tests = [
-  { cmd => "/bin/su - $site -c './etc/init.d/thruk restart'", like => '/only available for apaches/', exit => 1 },
 ];
 
 for my $report (@{$reports}) {
@@ -191,20 +188,13 @@ my $own_urls = [
   { url => '/thruk/cgi-bin/bp.cgi', post => { 'action' => 'remove', 'bp' => 1 }, skip_link_check => ['.cgi'] },
 ];
 
-my $shared_urls = [
-# business process
-  { url => '/thruk/cgi-bin/bp.cgi?action=new&bp_label=New Test Business Process', like => '/New Test Business Process/', skip_link_check => ['.cgi'] },
-  { url => '/thruk/cgi-bin/bp.cgi', post => { 'action' => 'commit', 'bp' => 1 }, like => '/New Test Business Process/', skip_link_check => ['.cgi'] },
-  { url => '/thruk/cgi-bin/bp.cgi', post => { 'action' => 'remove', 'bp' => 1 }, skip_link_check => ['.cgi'] },
-];
-
 my $cookie_urls = [
   { url => '/thruk/cgi-bin/tac.cgi', like => '/Password/', unlike => [ '/internal server error/'] },
 ];
 
 
 # complete the url
-for my $url ( @{$urls}, @{$shared_urls}, @{$own_urls}, @{$cookie_urls} ) {
+for my $url ( @{$urls}, @{$own_urls}, @{$cookie_urls} ) {
     $url->{'url'} = "http://localhost/".$site.$url->{'url'};
     $url->{'auth'}   = $auth;
     $url->{'unlike'} = [ '/internal server error/', '/"\/thruk\//', '/\'\/thruk\//' ] unless defined $url->{'unlike'};
@@ -241,32 +231,6 @@ for my $core (qw/nagios icinga shinken/) {
         TestUtils::test_url($url);
     }
     for my $url ( @{$own_urls} ) {
-        TestUtils::test_url($url);
-    }
-
-    ##################################################
-    # switch webserver to shared mode
-    TestUtils::test_command({ cmd => $omd_bin." stop $site" });
-    TestUtils::test_command({ cmd => $omd_bin." config $site set APACHE_MODE shared" });
-    TestUtils::restart_system_apache();
-    unlink("/omd/sites/$site/tmp/run/live");
-    TestUtils::test_command({ cmd => $omd_bin." start $site" });
-    TestUtils::wait_for_file("/omd/sites/$site/tmp/run/live")   or TestUtils::bail_out_clean("No need to test Thruk without livestatus connection");
-
-    ##################################################
-    # then run tests again
-    for my $test (@{$tests}) {
-        TestUtils::test_command($test);
-    }
-    for my $test (@{$shared_tests}) {
-        TestUtils::test_command($test);
-    }
-    ##################################################
-    # and request some pages
-    for my $url ( @{$urls} ) {
-        TestUtils::test_url($url);
-    }
-    for my $url ( @{$shared_urls} ) {
         TestUtils::test_url($url);
     }
 

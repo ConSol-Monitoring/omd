@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 NAME = icinga2
-VERSION = 2.3.10
+VERSION = 2.3.11
 DIR = $(NAME)-$(VERSION)
 
 .PHONY: skel
@@ -15,7 +15,7 @@ CONFIGUREOPTS = \
     -DINSTALL_SBINDIR=$(OMD_ROOT)/bin \
     -DICINGA2_GIT_VERSION_INFO=ON \
     -DICINGA2_WITH_MYSQL=OFF \
-    -DICINGA2_WITH_PGSQL=ON \
+    -DICINGA2_WITH_PGSQL=OFF \
     -DICINGA2_USER=root \
     -DICINGA2_GROUP=root
 

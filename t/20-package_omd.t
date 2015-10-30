@@ -12,7 +12,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 76 );
+plan( tests => 40 );
 
 ##################################################
 # create our test site
@@ -36,15 +36,6 @@ my $tests = [
 
   { cmd => $omd_bin." stop $site" },
 ];
-for my $test (@{$tests}) {
-    TestUtils::test_command($test);
-}
-
-# switch webserver to shared mode
-TestUtils::test_command({ cmd => $omd_bin." config $site set APACHE_MODE shared" });
-TestUtils::restart_system_apache();
-
-# then run tests again
 for my $test (@{$tests}) {
     TestUtils::test_command($test);
 }

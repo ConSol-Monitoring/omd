@@ -4,13 +4,13 @@ Priority: optional
 Maintainer: Labs Consol <sven@consol.de>
 Build-Depends:@dpatch,@debhelper@(>=@7),@###BUILD_PACKAGES###
 Standards-Version: 3.8.3
-Homepage: http://labs.consol.de
+Homepage: http://labs.consol.de/omd/
 
 Package: omd-###OMD_VERSION###
 Architecture: any
 Depends:@${misc:Depends},@###OS_PACKAGES###
-Description: OMD Labs Edition- Open Source Monitoring Distribution (Labs Edition),
- containing Nagios3 and Naemon, Icinga1 and 2, Shinken,
+Description: OMD Labs Edition - Open Source Monitoring Distribution (Labs Edition),
+ containing Nagios3 and Naemon, Icinga1 and Icinga 2, Shinken,
  Thruk, Mod-Gearman, Nagvis, PNP4Nagios and many more...
- Maintained by http://labs.consol.de/.
+ Maintained by http://labs.consol.de/omd/.
 
