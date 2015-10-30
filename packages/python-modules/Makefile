@@ -4,11 +4,7 @@ NAME     = python-modules
 VERSION  = $(OMD_VERSION)
 DISTRO   = $(shell ../../distro)
 
-MODULES = pysphere-0.1.7.zip \
-          pyasn1-0.1.7.tar.gz \
-          pysnmp-4.2.4.tar.gz \
-	  Jinja2-2.8 \
-	  openpyxl-2.3.0.tar.gz
+MODULES = $(shell cd src; ls *.tar.gz *.zip; cd ..)
 
 build:
 	mkdir -p dest

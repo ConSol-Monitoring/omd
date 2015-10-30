@@ -45,7 +45,8 @@ PACKAGES=freetds \
          naemon-livestatus \
          patch \
          nail \
-         notifications-tt
+         notifications-tt \
+	 coshsh
 
 include Makefile.omd
 
