@@ -185,7 +185,8 @@ MODULES = \
           Monitoring-Plugin-0.38.tar.gz \
           Nagios-Plugin-0.36.tar.gz \
           namespace-clean-0.25.tar.gz \
-          DateTime-1.18.tar.gz
+          DateTime-1.18.tar.gz \
+	  Monitoring-GLPlugin-1.0.tar.gz
 
 
 
