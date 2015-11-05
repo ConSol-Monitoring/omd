@@ -177,7 +177,7 @@ installshinken:
 
 
 repairdistutils:
-	mkdir $(TMP_DISTU)
+	mkdir -p $(TMP_DISTU)
 	cp -r $(DISTUTILS) $(TMP_DISTU)
 	# SuSE prevents installation of modules to private locations
 	rm -f /tmp/temp_distutils/distutils/distutils.cfg
