@@ -87,10 +87,9 @@ LOCALPYTHONDIR=$(DESTDIR)$(OMD_ROOT)/lib/python
 # Find the directory where python distutils are located
 PYTHONPATH=
 export PYTHONPATH
-RM_DISTU=$(shell rm -rf /tmp/temp_distutils)
 DISTUTILS=$(shell python -c "import sys; import os; print [os.path.join(p, 'distutils') for p in sys.path if os.path.exists(os.path.join(p, 'distutils'))][0]")
 # This is where the distutils module is temporary copied to
-TMP_DISTU=/tmp/temp_distutils
+TMP_DISTU=$(shell pwd)/temp_distutils
 PYTHONPATH=$(TMP_DISTU):$(LOCALPYTHONDIR)
 export PYTHONPATH
 
