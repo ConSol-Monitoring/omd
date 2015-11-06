@@ -20,6 +20,7 @@ LOGFILE=$LOG_DIR/grafana.log
 DAEMON=$OMD_ROOT/bin/grafana
 
 OPTIONS="--homepath=${GRAFANA_HOME} --pidfile=${PID_FILE} --config=${CONF_FILE} cfg:default.paths.data=${DATA_DIR} cfg:default.paths.logs=${LOG_DIR}"
+APIURL="http://omdadmin:omd@localhost:$CONFIG_GRAFANA_TCP_PORT/api"
 
 get_status() {
     pid=$( cat $PID_FILE 2>/dev/null )
@@ -76,12 +77,12 @@ case "$1" in
             if [ $FIRST_START -eq 1 ]; then
                 echo "first start, trying to create datasource"
                 for x in $(seq 60); do
-                    curl "http://localhost:$CONFIG_GRAFANA_TCP_PORT/api/datasources" --silent
+                    curl "$APIURL/datasources" --silent
                     [ $? == 0 ] && break;
                     printf "."
                     sleep 0.5;
                 done
-                curl "http://localhost:$CONFIG_GRAFANA_TCP_PORT/api/datasources" \
+                curl "$APIURL/datasources" \
                         --silent \
                         --show-error \
                         -X POST \
@@ -93,13 +94,13 @@ case "$1" in
             if [ $PORT_UPDATED -eq 0 ]; then
                 echo "influxdb port has changed, trying to update datasource"
                 for x in $(seq 60); do
-                    curl "http://localhost:$CONFIG_GRAFANA_TCP_PORT/api/datasources" --silent
+                    curl "$APIURL/datasources" --silent
                     [ $? == 0 ] && break;
                     printf "."
                     sleep 0.5;
                 done
                 # use first data source
-                curl "http://localhost:$CONFIG_GRAFANA_TCP_PORT/api/datasources/1" \
+                curl "$APIURL/datasources/1" \
                         --silent \
                         --show-error \
                         -X PUT \
