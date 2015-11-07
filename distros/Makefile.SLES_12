@@ -41,7 +41,6 @@ BUILD_PACKAGES += patch
 BUILD_PACKAGES += postgresql-devel   # icinga 2
 BUILD_PACKAGES += python
 BUILD_PACKAGES += python-devel
-BUILD_PACKAGES += python-setuptools
 BUILD_PACKAGES += readline-devel
 BUILD_PACKAGES += apache2-devel
 BUILD_PACKAGES += freeradius-client-devel

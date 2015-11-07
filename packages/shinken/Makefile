@@ -192,6 +192,7 @@ repairdistutils:
 
 installstools:
 	( cd $(STOOLS) ; python setup.py install \
+		--prefix="" \
 		--home=$(DESTDIR)$(OMD_ROOT) \
 		--install-platlib=$(LOCALPYTHONDIR) \
 		--install-purelib=$(LOCALPYTHONDIR) \
@@ -201,6 +202,7 @@ installstools:
 
 installpyro:
 	( cd $(PYRO) ; python setup.py install \
+		--prefix="" \
 		--home=$(DESTDIR)$(OMD_ROOT) \
 		--install-platlib=$(LOCALPYTHONDIR) \
 		--install-purelib=$(LOCALPYTHONDIR) \
@@ -210,6 +212,7 @@ installpyro:
 
 installmp:
 	( cd $(MP) ; python setup.py install \
+		--prefix="" \
 		--home=$(DESTDIR)$(OMD_ROOT) \
 		--install-platlib=$(LOCALPYTHONDIR) \
 		--install-scripts=$(DESTDIR)$(OMD_ROOT)/tmp \
@@ -226,6 +229,7 @@ installsqlite:
 
 installjson:
 	( cd $(SJSON) ; python setup.py install \
+		--prefix="" \
 		--home=$(DESTDIR)$(OMD_ROOT) \
 		--install-platlib=$(LOCALPYTHONDIR) \
 		--install-scripts=$(DESTDIR)$(OMD_ROOT)/tmp \
@@ -241,6 +245,7 @@ installctypes:
 
 installpymongo:
 	( cd $(PYMONGO) ; python setup.py install \
+		--prefix="" \
 		--home=$(DESTDIR)$(OMD_ROOT) \
 		--install-platlib=$(LOCALPYTHONDIR) \
 		--install-scripts=$(DESTDIR)$(OMD_ROOT)/tmp \
