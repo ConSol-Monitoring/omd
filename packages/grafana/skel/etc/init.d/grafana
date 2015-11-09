@@ -76,8 +76,10 @@ case "$1" in
             echo "OK"
             if [ $FIRST_START -eq 1 ]; then
                 echo "first start, trying to create datasource"
-                for x in $(seq 60); do
-                    curl "$APIURL/datasources" --silent
+                for x in $(seq 120); do
+                    curl "$APIURL/datasources" \
+                            --silent \
+			    -H 'X-WEBAUTH-USER: omdadmin'
                     [ $? == 0 ] && break;
                     printf "."
                     sleep 0.5;
@@ -86,6 +88,7 @@ case "$1" in
                         --silent \
                         --show-error \
                         -X POST \
+			-H 'X-WEBAUTH-USER: omdadmin' \
                         -H 'Content-Type: application/json;charset=UTF-8' \
                         --data-binary '{"name":"nagflux","type":"influxdb","url":"http://127.0.0.1:'$CONFIG_INFLUXDB_HTTP_TCP_PORT'","access":"proxy","isDefault":true,"database":"nagflux", "user": "root", "password":"root"}' \
                         2>&1
@@ -94,7 +97,9 @@ case "$1" in
             if [ $PORT_UPDATED -eq 0 ]; then
                 echo "influxdb port has changed, trying to update datasource"
                 for x in $(seq 60); do
-                    curl "$APIURL/datasources" --silent
+                    curl "$APIURL/datasources" \
+                            --silent \
+			    -H 'X-WEBAUTH-USER: omdadmin'
                     [ $? == 0 ] && break;
                     printf "."
                     sleep 0.5;
@@ -104,6 +109,7 @@ case "$1" in
                         --silent \
                         --show-error \
                         -X PUT \
+			-H 'X-WEBAUTH-USER: omdadmin' \
                         -H 'Content-Type: application/json;charset=UTF-8' \
                         --data-binary '{"name":"nagflux","type":"influxdb","url":"http://127.0.0.1:'$CONFIG_INFLUXDB_HTTP_TCP_PORT'","access":"proxy","isDefault":true,"database":"nagflux", "user": "root", "password":"root"}' \
                         2>&1
