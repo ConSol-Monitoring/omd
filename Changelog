@@ -3,7 +3,7 @@ This file documents the revision history for the Open Monitoring Distribution (L
 
 next:
           - Icinga update to 2.3.10
-          - Naemon update to 1.0.2
+          - Naemon update to 1.0.3
           - Mod-Gearman2: Update 2.1.5
           - Apache shared mode removed
           - added Grafana
