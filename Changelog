@@ -10,6 +10,7 @@ next:
           - added Influxdb
           - added Histou
           - added Nagflux
+          - Thruk: Update to 2.04
 
 2.00     Feb 20 2015
           - new core Naemon 1.0.0 added

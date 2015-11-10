@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 NAME     = Thruk
-VERSION  = 2.02
+VERSION  = 2.04
 DIR      = $(NAME)-$(VERSION)
 PERLARCH = $(shell $(PERL) -e 'use Config; print $$Config{archname}')
 
@@ -32,9 +32,9 @@ install:
 	chmod 755 $(DESTDIR)$(OMD_ROOT)/bin/thruk
 	chmod 755 $(DESTDIR)$(OMD_ROOT)/bin/naglint
 	if [ `uname -m` = 'x86_64' ]; then \
-		cp -p wkhtmltopdf-amd64 $(DESTDIR)$(OMD_ROOT)/bin/wkhtmltopdf; \
+		cp -p phantomjs-x86_64 $(DESTDIR)$(OMD_ROOT)/bin/phantomjs; \
 	else \
-		cp -p wkhtmltopdf-i386  $(DESTDIR)$(OMD_ROOT)/bin/wkhtmltopdf; \
+		cp -p phantomjs-i686   $(DESTDIR)$(OMD_ROOT)/bin/phantomjs; \
 	fi
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/omd/scripts/post-update
 	install -m 755 thruk.post-update $(DESTDIR)$(OMD_ROOT)/lib/omd/scripts/post-update/thruk

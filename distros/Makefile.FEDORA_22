@@ -86,7 +86,6 @@ OS_PACKAGES      += readline
 OS_PACKAGES      += rsync
 OS_PACKAGES      += uuid
 OS_PACKAGES      += xinetd
-OS_PACKAGES      += xorg-x11-server-Xvfb
 OS_PACKAGES      += cronie
 OS_PACKAGES      += python-ldap # needed for ldap support in multisite
 OS_PACKAGES      += freeradius-utils
