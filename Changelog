@@ -1,8 +1,8 @@
 This file documents the revision history for the Open Monitoring Distribution (Labs Edition)
 
 
-next:
-          - Icinga update to 2.3.10
+2.10     Nov 10 2015
+          - Icinga update to 2.3.11
           - Naemon update to 1.0.3
           - Mod-Gearman2: Update 2.1.5
           - Apache shared mode removed
