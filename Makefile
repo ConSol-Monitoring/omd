@@ -18,7 +18,7 @@ PACKAGES=freetds \
          check_mysql_health \
          check_oracle_health \
          check_mssql_health \
-	 check_nwc_health \
+         check_nwc_health \
          check_webinject \
          dokuwiki \
          example \
@@ -39,6 +39,7 @@ PACKAGES=freetds \
          rrdtool \
          shinken \
          thruk \
+         thruk-consol-theme \
          maintenance \
          gearmand \
          mod-gearman \
