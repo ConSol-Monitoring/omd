@@ -1,7 +1,7 @@
 This file documents the revision history for the Open Monitoring Distribution (Labs Edition)
 
 
-2.10     Nov 10 2015
+2.10     Nov 12 2015
           - Icinga update to 2.3.11
           - Naemon update to 1.0.3
           - Mod-Gearman2: Update 2.1.5
