@@ -107,8 +107,8 @@ then
 fi
 
 # Make sure, global apache startscript is activated
-chkconfig --add @APACHE_NAME@
-chkconfig @APACHE_NAME@ on
+chkconfig --add @APACHE_NAME@ >/dev/null 2>&1
+chkconfig @APACHE_NAME@ on    >/dev/null 2>&1
 
 # ensure apache is running
 service @APACHE_NAME@ start >/dev/null 2>&1
