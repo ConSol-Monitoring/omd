@@ -33,6 +33,8 @@ install:
 	chmod 755 $(DESTDIR)$(OMD_ROOT)/bin/naglint
 	if [ `uname -m` = 'x86_64' ]; then \
 		cp -p wkhtmltopdf-amd64 $(DESTDIR)$(OMD_ROOT)/bin/wkhtmltopdf; \
+	elif [ `uname -m` = 'armv7l' ]; then \
+		cp -p wkhtmltopdf-armv7l $(DESTDIR)$(OMD_ROOT)/bin/wkhtmltopdf; \
 	else \
 		cp -p wkhtmltopdf-i386  $(DESTDIR)$(OMD_ROOT)/bin/wkhtmltopdf; \
 	fi
