@@ -33,6 +33,8 @@ install:
 	chmod 755 $(DESTDIR)$(OMD_ROOT)/bin/naglint
 	if [ `uname -m` = 'x86_64' ]; then \
 		cp -p phantomjs-x86_64 $(DESTDIR)$(OMD_ROOT)/bin/phantomjs; \
+	elif [ `uname -m` = 'armv7l' ]; then \
+		cp -p phantomjs-armv7l   $(DESTDIR)$(OMD_ROOT)/bin/phantomjs; \
 	else \
 		cp -p phantomjs-i686   $(DESTDIR)$(OMD_ROOT)/bin/phantomjs; \
 	fi
