@@ -56,9 +56,15 @@ SQLITE_FILE=$(SQLITE).tar.gz
 SQLITE_URL=http://pysqlite.googlecode.com/files/$(SQLITE_FILE)
 #
 # MongoDB
-MONGODB=mongodb-linux-i686-2.4.1
 ifeq ($(shell uname -m),x86_64)
   MONGODB=mongodb-linux-x86_64-2.4.1
+else ifeq ($(shell uname -m),$(filter $(shell uname -m),i386 i486 i586 i686))
+  MONGODB=mongodb-linux-i686-2.4.1
+else ifeq ($(shell uname -m),armv7l)
+  # http://andyfelong.com/2015/02/mongodb-on-the-raspberry-pi-2/
+  MONGODB=mongodb-linux-armv7l-2.6.3
+else ifeq ($(shell uname -m),armv6l)
+  MONGODB=mongodb-linux-armv6l-2012-09-16
 endif
 MONGODB_FILE=$(MONGODB).tgz
 MONGODB_URL=http://fastdl.mongodb.org/linux/$(MONGODB_FILE)
