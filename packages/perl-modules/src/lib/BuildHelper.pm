@@ -6,7 +6,7 @@ use Config;
 use POSIX;
 use Data::Dumper;
 use Storable qw/lock_store lock_retrieve/;
-use Cwd;
+use Cwd qw/cwd/;
 
 ####################################
 # Settings
