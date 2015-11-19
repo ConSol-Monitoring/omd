@@ -4,7 +4,7 @@ cd ###ROOT###
 . .profile
 . lib/omd/init_profile
 . etc/omd/site.conf
-if [ "$CONFIG_APACHE_MODE" != own ] ; then
+if [ "$CONFIG_APACHE_MODE" == none ]; then
   exit 5
 fi
 

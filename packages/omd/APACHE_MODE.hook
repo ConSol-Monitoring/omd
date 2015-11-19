@@ -20,7 +20,8 @@ case "$1" in
             echo "none: Do not run or configure a webserver"
     ;;
     set)
-        if [ "$2" == "own" ]; then
+        # When one configured shared, fallback to own mode
+        if [ "$2" == "own" ] || [ "$2" == "shared" ]; then
             ln -sfn apache-own.conf $OMD_ROOT/etc/apache/mode.conf
         elif [ "$2" == "none" ] ; then
             rm -f $OMD_ROOT/etc/apache/mode.conf
