@@ -47,7 +47,7 @@ TestUtils::prepare_obj_config('t/data/omd/testconf1', '/omd/sites/'.$site.'/etc/
 
 # Developer test: Install NagVis into local hierarchy
 if($ENV{NAGVIS_DEVEL}) {
-    TestUtils::test_command({ cmd => "/bin/bash -c 'cd /d1/lm/nagvis ; SITE=testsite bash .f12'" });
+    TestUtils::test_command({ cmd => "/bin/bash -c 'cd /home/lm/git/nagvis ; SITE=testsite bash .f12'" });
 }
 
 my $version = site_nagvis_version($site);
@@ -228,25 +228,15 @@ if($response->{'content'} =~ m/<option value=\\\"([0-9]*)\\\">omduser<\\\/option
 }
 ok($userId ne "", 'User-ID of omduser: '.$userId) or diag('Unable to gather the userid!');
 
-# Check roles of the user
-TestUtils::test_url(
-    api_url_list({ url  => '/nagvis/server/core/ajax_handler.php?mod=UserMgmt&act=getUserRoles&userId='.$userId,
-                   like => '/^\[{"roleId":"3","name":"Guests"}\]$/'})
-);
-
 ##################################################
 # User management tests
 
 # 1. Create a user
-#    http://127.0.0.1/testsite/nagvis/server/core/ajax_handler.php?mod=UserMgmt&act=doAdd&_t=1322353697000
-#    password1  123
-#    password2  123
-#    username   testuser
-#    submit Create User
 TestUtils::test_url(
-    api_url({ url  => '/nagvis/server/core/ajax_handler.php?mod=UserMgmt&act=doAdd',
-              post => { password1 => '123', password2 => '123', username => 'testuser', 'submit' => 'Create User' },
-              like => '/^{"message":"The user has been created/' })
+    api_url({ url  => '/nagvis/server/core/ajax_handler.php?mod=UserMgmt&act=view',
+              post => { password1 => '123', password2 => '123', name => 'testuser', _submit => 'Create',
+                        _update => '0', '_form_name' => 'create', mode => 'create' },
+              like => '/The user has been created/' })
 );
 
 # 2. Fetch user management dialog
@@ -263,32 +253,30 @@ if($response->{'content'} =~ m/<option value=\\\"([0-9]*)\\\">testuser<\\\/optio
 }
 ok($userId ne "", 'User-ID of testuser: '.$userId) or diag('Unable to gather the userid!');
 
-# 4. get all roles of the user
-TestUtils::test_url(
-    api_url_list({ url  => '/nagvis/server/core/ajax_handler.php?mod=UserMgmt&act=getUserRoles&userId='.$userId,
-                   like => '/^\[\]$/'})
-);
-
 # 5. add a role to the user
 TestUtils::test_url(
-    api_url({ url  => '/nagvis/server/core/ajax_handler.php?mod=UserMgmt&act=doEdit',
-              post => { submit => "Modify User", userId => $userId, 'rolesSelected[]' => 1},
+    api_url({ url  => '/nagvis/server/core/ajax_handler.php?mod=UserMgmt&act=view',
+              post => { _form_name => "edit", _update => "0", mode => "edit", user_roles => "1",
+                        _submit => "Save", user_id => $userId },
               like => '/The roles for this user have been updated/'})
 );
 
 # 6. verify user roles
 TestUtils::test_url(
-    api_url_list({ url  => '/nagvis/server/core/ajax_handler.php?mod=UserMgmt&act=getUserRoles&userId='.$userId,
-                   like => '/^\[{"roleId":"1","name":"Administrators"}\]$/'})
+    api_url({ url  => '/nagvis/server/core/ajax_handler.php?mod=UserMgmt&act=view',
+              post => { user_id => $userId, _update => "1", _form_name => "edit",
+                        mode => "edit", _submit => "Save" },
+              like => '/roles_selected.*?value=\\\"1\\\">Administrators/'})
 );
 
 ###
 
 # 8. Now try to delete this user again
 TestUtils::test_url(
-    api_url({ url    => '/nagvis/server/core/ajax_handler.php?mod=UserMgmt&act=doDelete',
-              post   => { userId => $userId, submit => 'Delete User' },
-              like   => [ '/^{"message":"The user has been deleted/' ]})
+    api_url({ url    => '/nagvis/server/core/ajax_handler.php?mod=UserMgmt&act=view',
+              post   => { user_id => $userId, _form_name => "delete", _update => "0", mode => "delete",
+                          _submit => "Delete" },
+              like   => [ '/The user has been deleted./' ]})
 );
 
 TestUtils::test_url(
@@ -400,13 +388,6 @@ TestUtils::test_url(
 ###############################################################################
 # OVERVIEW
 ###############################################################################
-# /nagvis/server/core/ajax_handler.php?mod=Overview&act=getOverviewProperties
-# {"cellsperrow":4,"showautomaps":1,"showmaps":1,"showgeomap":0,"showmapthumbs":0,"showrotations":1,"page_title":"NagVis 1.5.7","favicon_image":"\/nagvis\/frontend\/nagvis-js\/images\/internal\/favicon.png","background_color":"#ffffff","lang_mapIndex":"Map Index","lang_automapIndex":"Automap Index","lang_rotationPools":"Rotation Pools","event_log":0,"event_log_level":"info","event_log_height":100,"event_log_hidden":1}
-TestUtils::test_url(
-    api_url({ url  => '/nagvis/server/core/ajax_handler.php?mod=Overview&act=getOverviewProperties',
-              like => [ '/"showmaps":1,"showgeomap":0,"showmapthumbs":0,"showrotations":1/', ]})
-);
-
 # /nagvis/server/core/ajax_handler.php?mod=Overview&act=getOverviewRotations
 TestUtils::test_url(
     api_url_list({ url  => '/nagvis/server/core/ajax_handler.php?mod=Overview&act=getOverviewRotations',
