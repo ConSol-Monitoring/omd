@@ -28,7 +28,7 @@ install:
 	
 	# Move package documentations to have these files in the binary packages
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/doc/$(NAME)
-	for file in COPYING README.rst ChangeLog ; do \
+	for file in COPYING README ; do \
 	  mv $(DESTDIR)$(OMD_ROOT)/share/nagvis/$$file $(DESTDIR)$(OMD_ROOT)/share/doc/$(NAME); \
 	done
 	
