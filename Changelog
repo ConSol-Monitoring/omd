@@ -48,6 +48,13 @@ next:
           - Icinga: Update to 1.13.3
 
 1.40     (not yet released)
+          - Apache:
+            - Removed the shared mode (only one system wide apache process).
+              This mode was not used widely and it was a pain to maintain it,
+              so we decided to drop it. If you used the shared mode before,
+              it will be changed to own mode during update. You might need
+              to reload/restart your system apache manually once to apply
+              the change.
           - NagVis:
             - Update to version 1.9b3
           - Icinga: Update to 1.13.3
