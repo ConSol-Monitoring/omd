@@ -7,15 +7,13 @@ GOPATH     = go
 GOVERSION  = 1.4
 PWD        = $(shell pwd)
 DATE       = $(shell date -u '+%Y-%m-%d_%I:%M:%S%p')
-BRANCH     = $(shell git rev-parse --abbrev-ref HEAD)
-COMMIT     = $(shell git rev-parse HEAD)
 
 build:
 	tar zxf $(SRC)
 	export GOROOT=$(PWD)/../go-$(GOVERSION)/go-$(GOVERSION)/ && export GOPATH=$(PWD)/$(GOPATH)/ && PATH=$$GOROOT/bin:$$PATH && \
 		cd $(GOPATH)/src/github.com/influxdb && \
 		go build ./... && \
-		go install -ldflags "-X main.version $(VERSION) -X main.buildTime $(DATE) -X main.branch $(BRANCH) -X main.commit $(COMMIT)" ./...
+		go install -ldflags "-X main.version $(VERSION) -X main.buildTime $(DATE)" ./...
 
 install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/bin
