@@ -1162,7 +1162,7 @@ def update_file(relpath, old_version, new_version, userdir, old_perms):
     # compare our old with our new version
     we_changed_type, we_changed_content, we_changed = file_status(old_path, new_path)
 
-    non_empty_directory = os.path.isdir(user_path) and bool(os.listdir(user_path))
+    non_empty_directory = not os.path.islink(user_path) and os.path.isdir(user_path) and bool(os.listdir(user_path))
 
 #     if opt_verbose:
 #         sys.stdout.write("%s%s%s:\n" % (tty_bold, relpath, tty_normal))

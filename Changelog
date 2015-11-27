@@ -1,5 +1,7 @@
 This file documents the revision history for the Open Monitoring Distribution (Labs Edition)
 
+next:
+          - Icinga update to 2.4.1
 
 2.10     Nov 12 2015
           - Icinga update to 2.3.11

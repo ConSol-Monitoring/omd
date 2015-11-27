@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 NAME = icinga2
-VERSION = 2.3.11
+VERSION = 2.4.1
 DIR = $(NAME)-$(VERSION)
 
 .PHONY: skel
@@ -39,6 +39,8 @@ install:
 	rmdir $(DESTDIR)$(OMD_ROOT)/sbin
 	mv $(DESTDIR)$(OMD_ROOT)/lib*/icinga2/* $(DESTDIR)$(OMD_ROOT)/lib/
 	rm -rf $(DESTDIR)$(OMD_ROOT)/lib*/icinga2
+	sed   -e "s#/lib/icinga2/sbin/icinga2#/lib/sbin/icinga2#g" -i $(DESTDIR)$(OMD_ROOT)/bin/icinga2
+	sed -e "s#/lib64/icinga2/sbin/icinga2#/lib/sbin/icinga2#g" -i $(DESTDIR)$(OMD_ROOT)/bin/icinga2
 
 skel:
 	mkdir -p $(SKEL)/etc/icinga2

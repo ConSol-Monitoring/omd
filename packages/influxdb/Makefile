@@ -1,18 +1,19 @@
 include ../../Makefile.omd
 
 NAME       = influxdb
-VERSION    = 0.9.4.2
+VERSION    = 0.9.5.1
 SRC        = $(NAME)-$(VERSION).tar.gz
 GOPATH     = go
-GOVERSION  = 1.5
+GOVERSION  = 1.4
 PWD        = $(shell pwd)
+DATE       = $(shell date -u '+%Y-%m-%d_%I:%M:%S%p')
 
 build:
 	tar zxf $(SRC)
 	export GOROOT=$(PWD)/../go-$(GOVERSION)/go-$(GOVERSION)/ && export GOPATH=$(PWD)/$(GOPATH)/ && PATH=$$GOROOT/bin:$$PATH && \
 		cd $(GOPATH)/src/github.com/influxdb && \
 		go build ./... && \
-		go install ./...
+		go install -ldflags "-X main.version $(VERSION) -X main.buildTime $(DATE)" ./...
 
 install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/bin
