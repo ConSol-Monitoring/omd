@@ -12,7 +12,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 32 );
+plan( tests => 35 );
 
 ##################################################
 # create our test site

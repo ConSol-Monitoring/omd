@@ -14,7 +14,7 @@ BEGIN {
 
 my $sitename  = "testsite";
 
-my $num_tests = 372;
+my $num_tests = 375;
 if($ENV{NAGVIS_DEVEL}) {
     $num_tests += 3;
 }

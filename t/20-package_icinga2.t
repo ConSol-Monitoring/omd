@@ -13,7 +13,7 @@ BEGIN {
 }
 
 plan skip_all => "icinga2 not included, cannot test" unless -x '/omd/versions/default/bin/icinga2';
-plan( tests => 38 );
+plan( tests => 41 );
 
 ##################################################
 # create our test site

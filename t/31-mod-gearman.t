@@ -14,7 +14,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 200 );
+plan( tests => 206 );
 
 ##################################################
 # get version strings
