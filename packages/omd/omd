@@ -1955,6 +1955,7 @@ def config_set_value(hook_name, value, save = True):
 
     if save:
         save_site_conf()
+        config_set_all()
 
 def config_usage():
     sys.stdout.write("""Usage of config command:
@@ -2066,6 +2067,7 @@ def config_configure_hook(hook_name):
         config_set_value(hook["name"], new_value)
         g_site_conf[hook_name] = new_value
         save_site_conf()
+        config_set_all()
         load_hook_dependencies()
 
 def init_action(command, args, options):
@@ -2619,6 +2621,7 @@ def finalize_site(what, apache_reload):
             # configuration settings
             config_set_all()
             save_site_conf()
+            config_set_all()
 
             call_scripts('post-' + what)
             sys.exit(0)

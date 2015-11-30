@@ -12,7 +12,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 159 );
+plan( tests => 203 );
 
 my $omd_bin = TestUtils::get_omd_bin();
 
@@ -33,6 +33,15 @@ my $tests = [
   { cmd => $omd_bin." rm $site2",    stdin => "yes\n", 'exit' => undef, errlike => undef },
   { cmd => $omd_bin." create $site", like => '/Created new site '.$site.'./' },
   { cmd => $omd_bin." sites",        like => '/^'.$site.'\s+\d+\.\d+( \(default\))?/m' },
+  { cmd => $omd_bin." config $site show APACHE_TCP_PORT",  like => '/^5000$/' },
+  { cmd => $omd_bin." config $site set APACHE_TCP_ADDR 127.0.0.2",  like => '/^$/' },
+  { cmd => $omd_bin." config $site show APACHE_TCP_ADDR",  like => '/^127.0.0.2$/' },
+  { cmd => "/bin/su - $site -c 'grep -c 127.0.0.2 etc/apache/proxy-port.conf'", like => '/^3$/' },
+  { cmd => $omd_bin." config $site set APACHE_TCP_PORT 5010",  like => '/^$/' },
+  { cmd => "/bin/su - $site -c 'grep -c 5010 etc/apache/proxy-port.conf'", like => '/^3$/' },
+  { cmd => $omd_bin." config $site set APACHE_TCP_PORT 5000",  like => '/^$/' },
+  { cmd => $omd_bin." config $site set APACHE_TCP_ADDR 127.0.0.1",  like => '/^$/' },
+  { cmd => "/bin/su - $site -c 'grep -c 5010 etc/apache/proxy-port.conf'", like => '/^0$/', exit => 1 },
   { cmd => "/bin/df -k /omd/sites/$site/tmp/.", like => '/tmpfs/m' },
   { cmd => $omd_bin." start $site",  like => '/Starting naemon/' },
   { cmd => $omd_bin." status $site", like => [
@@ -46,9 +55,11 @@ my $tests = [
   { cmd => $omd_bin." stop $site",       like => '/Stopping naemon/' },
   { cmd => $omd_bin." cp $site $site2",  like => '/Copying site '.$site.' to '.$site2.'.../', 
                                          errlike => '/Apache port \d+ is in use\. I\'ve choosen \d+ instead\./' },
+  { cmd => $omd_bin." config $site2 show APACHE_TCP_PORT",  like => '/^5001$/' },
   { cmd => "/usr/bin/find /omd/sites/$site2/ -not -user $site2 -ls",  like => '/^\s*$/' },
   { cmd => "/bin/df -k /omd/sites/$site2/tmp/.", like => '/tmpfs/m' },
   { cmd => $omd_bin." mv $site2 $site3", like => '/Moving site '.$site2.' to '.$site3.'.../' },
+  { cmd => $omd_bin." config $site3 show APACHE_TCP_PORT",  like => '/^5001$/' },
   { cmd => "/usr/bin/find /omd/sites/$site3/ -not -user $site3 -ls",  like => '/^\s*$/' },
   { cmd => "/bin/df -k /omd/sites/$site3/tmp/.", like => '/tmpfs/m' },
   { cmd => $omd_bin." rm $site3",        like => '/Restarting Apache...\s*OK/', stdin => "yes\n" },
