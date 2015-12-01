@@ -62,6 +62,7 @@ OS_PACKAGES      += libevent
 OS_PACKAGES      += libmcrypt
 OS_PACKAGES      += libtool-ltdl
 OS_PACKAGES      += mod_fcgid
+OS_PACKAGES      += mod_ssl
 OS_PACKAGES      += mariadb-server
 OS_PACKAGES      += net-snmp
 OS_PACKAGES      += net-snmp-utils

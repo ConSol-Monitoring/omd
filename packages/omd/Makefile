@@ -30,6 +30,7 @@ install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/omd
 	install -m 644 init_profile $(DESTDIR)$(OMD_ROOT)/lib/omd/
 	install -m 755 port_is_used $(DESTDIR)$(OMD_ROOT)/lib/omd/
+	install -m 600 openssl.cnf $(DESTDIR)$(OMD_ROOT)/share/omd/
 	
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/omd/scripts/post-create
 

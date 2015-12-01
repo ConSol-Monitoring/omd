@@ -236,6 +236,8 @@ sub create_test_site {
         # disable cookie auth for tests
         my $omd_bin = TestUtils::get_omd_bin();
         print `$omd_bin config $site set THRUK_COOKIE_AUTH off`;
+        print `$omd_bin config $site set APACHE_MODE own`;
+        restart_system_apache();
         return $site;
     }
     return;

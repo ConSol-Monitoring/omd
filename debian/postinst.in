@@ -90,6 +90,10 @@ case "$1" in
     if ! test -e /etc/apache2/mods-enabled/rewrite.load; then
        a2enmod rewrite
     fi
+    if ! test -e /etc/apache2/mods-enabled/ssl.load; then
+        a2enmod ssl
+        a2ensite default-ssl
+    fi
 
     # -- default for init
     DEFAULT=/etc/default/omd

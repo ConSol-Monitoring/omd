@@ -62,6 +62,13 @@ endif
 
 build: $(APACHE_MODULES)
 	# Unpack source code, apply patches, call configure, call make
+	cp APACHE_TCP_ADDR.hook.in APACHE_TCP_ADDR.hook
+	cp APACHE_TCP_PORT.hook.in APACHE_TCP_PORT.hook
+	sed -i -e 's|###APACHE_MODULE_DIR###|$(MODULE_DIR)|g' \
+	       APACHE_TCP_ADDR.hook \
+	       APACHE_TCP_PORT.hook
+
+
 
 install: $(APACHE_MODULES_INSTALL)
 	# Install software below $(DESTDIR)$(OMD_ROOT)/{bin,lib,share}
@@ -87,7 +94,8 @@ skel:
 
 	# Replace macros
 	sed -i -e 's|###APACHE_MODULE_DIR###|$(MODULE_DIR)|g' \
-	       $(SKEL)/etc/apache/apache.conf
+	       $(SKEL)/etc/apache/apache.conf \
+	       $(SKEL)/etc/apache/apache-ssl.conf
 
 	# SLES12 has apache 2.4 but does not have the prefork module to be loaded,
 	# so remove this load line for this distro from the apache config
@@ -112,7 +120,7 @@ skel:
 
 clean:
 	# Remove files created by build/install
-	rm -rf $(FCGI_FILE)
+	rm -rf $(FCGI_FILE) APACHE_TCP_ADDR.hook APACHE_TCP_PORT.hook
 
 modfcgid:
 	tar zxf $(FCGI_FILE).tar.gz

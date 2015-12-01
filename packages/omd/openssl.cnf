@@ -1,0 +1,43 @@
+####################################################################
+# OpenSSL example configuration file.
+####################################################################
+[ ca ]
+default_ca  = CA_default
+
+####################################################################
+[ CA_default ]
+default_days        = 3650
+
+####################################################################
+[ req ]
+default_bits        = 1024
+default_keyfile     = privkey.pem
+distinguished_name  = req_distinguished_name
+
+input_password                  = selfsigned
+output_password                 = selfsigned
+
+####################################################################
+[ req_distinguished_name ]
+countryName                     = Country Name (2 letter code)
+countryName_default             = DE
+
+stateOrProvinceName             = State or Province Name (full name)
+stateOrProvinceName_default     = Bavaria
+
+localityName                    = Locality Name (eg, city)
+localityName_default            = Munich
+
+0.organizationName              = Organization Name (eg, company)
+0.organizationName_default      = Selfsigned ROOT CA
+
+organizationalUnitName          = Organizational Unit Name (eg, section)
+organizationalUnitName_default  = OMD
+
+commonName                      = Common Name (eg, your name or your server\'s hostname)
+commonName_default              = localhost
+
+emailAddress                    = Email Address
+emailAddress_default            = root@localhost
+emailAddress_max                = 64
+

@@ -54,6 +54,7 @@ OS_PACKAGES      += httpd
 OS_PACKAGES      += libevent
 OS_PACKAGES      += libmcrypt
 OS_PACKAGES      += libtool-ltdl
+OS_PACKAGES      += mod_ssl
 OS_PACKAGES      += mysql-server
 OS_PACKAGES      += net-snmp
 OS_PACKAGES      += pango

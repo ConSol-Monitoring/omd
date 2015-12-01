@@ -28,17 +28,43 @@ case "$1" in
         echo "[1-9][0-9]{0,4}"
     ;;
     set)
+        PROTO="http"
+        if [ $CONFIG_APACHE_MODE = "ssl" ]; then
+            PROTO="https"
+        fi
         PORT=$($OMD_ROOT/lib/omd/port_is_used APACHE_TCP_PORT $2)
         cat <<EOF > $OMD_ROOT/etc/apache/listen-port.conf
-# This file is created by 'omd config set APACHE_TCP_PORT'.
+# This file is managed by 'omd config set APACHE_TCP_PORT' and 'omd config set APACHE_TCP_ADDR'.
 # Better do not edit manually
 Listen $CONFIG_APACHE_TCP_ADDR:$PORT
 EOF
         cat <<EOF > $OMD_ROOT/etc/apache/proxy-port.conf
-# This file is created by 'omd config set APACHE_TCP_PORT'.
+# This file is managed by 'omd config set APACHE_TCP_PORT' and 'omd config set APACHE_TCP_ADDR'.
 # Better do not edit manually
+EOF
+        if [ $CONFIG_APACHE_MODE = "ssl" ]; then
+            cat <<EOF >> $OMD_ROOT/etc/apache/proxy-port.conf
+<IfModule !mod_ssl.c>
+  LoadModule ssl_module         ###APACHE_MODULE_DIR###/mod_ssl.so
+</IfModule>
+SSLProxyEngine on
+SSLProxyCheckPeerExpire off
+SSLProxyCheckPeerCN off
+# apache 2.4 only
+<IfModule mod_authz_core.c>
+  SSLProxyCheckPeerName off
+</IfModule>
+<Location /$OMD_SITE>
+  # redirect all http traffic to https
+  RewriteEngine On
+  RewriteCond %{HTTPS} off
+  RewriteRule (.*) https://%{HTTP_HOST}%{REQUEST_URI}
+</Location>
+EOF
+        fi
+        cat <<EOF >> $OMD_ROOT/etc/apache/proxy-port.conf
 <IfModule mod_proxy_http.c>
-  <Proxy http://$CONFIG_APACHE_TCP_ADDR:$PORT/$OMD_SITE>
+  <Proxy $PROTO://$CONFIG_APACHE_TCP_ADDR:$PORT/$OMD_SITE>
     Order allow,deny
     allow from all
   </Proxy>
@@ -48,8 +74,8 @@ EOF
     # the site apache is down and someone tries to access the page.
     # "disablereuse=On" prevents the apache from keeping the connection which leads to
     # wrong devlivered pages sometimes
-    ProxyPass http://$CONFIG_APACHE_TCP_ADDR:$PORT/$OMD_SITE retry=0 disablereuse=On
-    ProxyPassReverse http://$CONFIG_APACHE_TCP_ADDR:$PORT/$OMD_SITE
+    ProxyPass $PROTO://$CONFIG_APACHE_TCP_ADDR:$PORT/$OMD_SITE retry=0 disablereuse=On
+    ProxyPassReverse $PROTO://$CONFIG_APACHE_TCP_ADDR:$PORT/$OMD_SITE
   </Location>
 </IfModule>
 EOF
@@ -59,6 +85,6 @@ EOF
         fi
     ;;
     depends)
-        [ "$CONFIG_APACHE_MODE" = own ]
+        [ "$CONFIG_APACHE_MODE" != "none" ]
     ;;
 esac

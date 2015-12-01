@@ -97,6 +97,16 @@ then
     # Only relevant for SLES12 or newer (having apache 2.4)
     # This still allows old permission configs like "Order: ..."
     a2enmod mod_access_compat 2>/dev/null || true
+    a2enmod ssl 2>/dev/null || true
+    a2enmod socache_shmcb 2>/dev/null || true
+    a2enflag SSL 2>/dev/null || true
+    # prepare ssl webserver
+    if ! test -f /etc/apache2/vhosts.d/vhost-ssl.conf && ! test -f /etc/apache2/ssl.key/server.key; then
+        cp /etc/apache2/vhosts.d/vhost-ssl.template /etc/apache2/vhosts.d/vhost-ssl.conf
+        openssl req -new -config /omd/versions/%{version}/share/omd/openssl.cnf -keyout /etc/apache2/privkey.pem -batch > /etc/apache2/ssl.csr/omd.csr 2>/dev/null
+        openssl rsa -in /etc/apache2/privkey.pem -out /etc/apache2/ssl.key/server.key -passin pass:selfsigned 2> /dev/null
+        openssl x509 -in /etc/apache2/ssl.csr/omd.csr -out /etc/apache2/ssl.crt/server.crt -req -signkey /etc/apache2/ssl.key/server.key -days 3650 2> /dev/null
+    fi
 %endif
 fi
 
