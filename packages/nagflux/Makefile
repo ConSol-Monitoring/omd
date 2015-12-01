@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 NAME        = nagflux
-VERSION     = 0.0.1
+VERSION     = 0.1.0
 SRC         = $(NAME)-$(VERSION).tar.gz
 GOVERSION   = 1.5
 GOPATH      = go
@@ -26,6 +26,9 @@ clean:
 package: clean
 	mkdir -p $(GOPATH)
 	export GOROOT=$(PWD)/../go-$(GOVERSION)/go-$(GOVERSION)/ && export GOPATH=$(PWD)/$(GOPATH)/ && PATH=$$GOROOT/bin:$$PATH && \
-		go get -u github.com/griesbacher/nagflux && \
+		mkdir -p $(GOPATH)/src/github.com/griesbacher && \
+		cd $(GOPATH)/src/github.com/griesbacher && \
+		git clone --depth=1 --branch "v$(VERSION)" https://github.com/griesbacher/nagflux && \
+		cd $(PWD)
 		tar zcf $(SRC) $(GOPATH)/src/ --exclude=.git
 
