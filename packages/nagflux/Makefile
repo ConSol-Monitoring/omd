@@ -29,6 +29,7 @@ package: clean
 		mkdir -p $(GOPATH)/src/github.com/griesbacher && \
 		cd $(GOPATH)/src/github.com/griesbacher && \
 		git clone --depth=1 --branch "v$(VERSION)" https://github.com/griesbacher/nagflux && \
-		cd $(PWD)
+		go get ./... && \
+		cd $(PWD) && \
 		tar zcf $(SRC) $(GOPATH)/src/ --exclude=.git
 
