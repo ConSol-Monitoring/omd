@@ -1,5 +1,8 @@
 #!/bin/sh
 # Startskript for OMD sites
+# chkconfig: - 98 1
+# description: OMD Open Monitoring Distribution
+
 
 ### BEGIN INIT INFO
 # Provides:          omd
