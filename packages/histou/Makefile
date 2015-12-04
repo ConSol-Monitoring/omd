@@ -14,7 +14,7 @@ install:
 #	mv histou/histou.js $(DESTDIR)$(OMD_ROOT)/share/grafana/public/dashboards/histou.js
 	cp omd-histou.js $(DESTDIR)$(OMD_ROOT)/share/grafana/public/dashboards/histou.js
 	rm -rf histou
-	mkdir -p $(DESTDIR)$(OMD_ROOT)/tmp/histou
+
 skel:
 
 clean:
