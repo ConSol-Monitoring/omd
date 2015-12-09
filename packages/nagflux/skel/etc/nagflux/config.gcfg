@@ -22,6 +22,8 @@ Version = 0.9
 Address = "http://127.0.0.1:8086"
 Arguments = "precision=ms&db=nagflux"
 CreateDatabaseIfNotExists = true
+NastyString = "\\ "
+NastyStringToReplace = " "
 
 [Grafana]
 FieldSeperator = "&"
