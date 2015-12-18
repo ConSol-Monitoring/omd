@@ -3189,8 +3189,17 @@ def main_backup(args, options={}):
         fh = file(dest, 'w')
 
     tar = tarfile.open(fileobj=fh, mode='w:gz')
-    tar.add(g_sitedir, g_sitename)
-    tar.close()
+    try:
+        # Add the version symlink as first file to be able to
+        # check a) the sitename and b) the version before reading
+        # the whole tar archive. Important for streaming.
+        # The file is added twice to get the first for validation
+        # and the second for excration during restore.
+        tar.add(g_sitedir + "/version", g_sitename + "/version")
+        tar.add(g_sitedir, g_sitename)
+        tar.close()
+    except IOError, e:
+        bail_out("Failed to perform backup: %s" % e)
 
 def main_restore(args, options={}):
     global g_sitename
@@ -3214,24 +3223,24 @@ def main_restore(args, options={}):
 
     tar = tarfile.open(fileobj=fh, mode=tar_mode)
 
-    # Get the first file of the tar archive (expecting site directory)
-    sitename = tar.next().name
+    # Get the first file of the tar archive. Expecting <site>/version symlink
+    # for validation reasons.
+    site_tarinfo = tar.next()
+    sitename, version_name = site_tarinfo.name.split("/", 1)
+
+    if version_name == "version":
+        version = site_tarinfo.linkname.split('/')[-1]
+    else:
+        bail_out("Failed to detect version of backed up site.")
+
+    if not version_exists(version):
+        bail_out("You need to have version %s installed to be able to restore "
+                 "this backup." % version)
 
     # Restore site with its original name, or specify a new one
     new_sitename = sitename
     if len(args) == 2:
         new_sitename = args[0]
-
-    # Read the needed OMD version from the site
-    version = None
-    for tarinfo in tar:
-        if tarinfo.name == '%s/version' % sitename:
-            version = tarinfo.linkname.split('/')[-1]
-    if not version:
-        bail_out("Failed to detect version of backed up site.")
-
-    if not version_exists(version):
-        bail_out("You need to have version %s installed to be able to restore this backup." % version)
 
     g_sitename = new_sitename
     g_sitedir  = site_dir(new_sitename)
@@ -3252,7 +3261,8 @@ def main_restore(args, options={}):
             os.system('omd stop %s' % g_sitename)
         unmount_tmpfs(g_sitename, kill = "kill" in options)
 
-    sys.stdout.write("Restoring site %s from %s...\n" % (g_sitename, source == '-' and 'stdin' or source))
+    sys.stdout.write("Restoring site %s from %s...\n" %
+                    (g_sitename, source == '-' and 'stdin' or source))
     sys.stdout.flush()
 
     if not reuse:
@@ -3260,7 +3270,7 @@ def main_restore(args, options={}):
         gid = options.get("gid")
         useradd(g_sitename, uid, gid) # None for uid/gid means: let Linux decide
     else:
-        sys.stdout.write("Deleting existing site data...")
+        sys.stdout.write("Deleting existing site data...\n")
         shutil.rmtree(g_sitedir)
         ok()
 
@@ -3270,6 +3280,8 @@ def main_restore(args, options={}):
     for tarinfo in tar:
         # remove leading site name from paths
         tarinfo.name = '/'.join(tarinfo.name.split('/')[1:])
+        if opt_verbose:
+            sys.stdout.write("Restoring %s...\n" % tarinfo.name)
         if tarinfo.issym() or tarinfo.islnk():
             parts = tarinfo.linkname.split('/')
             if parts[0] == sitename:
