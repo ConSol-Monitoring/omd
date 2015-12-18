@@ -2288,6 +2288,11 @@ def call_scripts(phase):
                     sys.stdout.write('Errors: %s\n' % stderr)
 
 
+def check_site_user(site_must_exist):
+    if g_sitename != None and site_must_exist and not site_exists(g_sitename):
+        bail_out("omd: You need to execute omd as root or site user.")
+
+
 #.
 #   .--Commands------------------------------------------------------------.
 #   |         ____                                          _              |
@@ -3676,8 +3681,7 @@ if needs_site > 0:
     else:
         g_sitename = site_name()
 
-if g_sitename != None and site_must_exist and not site_exists(g_sitename):
-    bail_out("omd: no such site: %s" % g_sitename)
+check_site_user(site_must_exist)
 
 # Commands operating on an existing site *must* run omd in
 # the same version as the site has! Sole exception: update.

@@ -23,6 +23,7 @@ next:
             - FIX: Fixed streamed "omd restore" resulting in an exception
             - FIX: Improved "omd restore" error handling in case of trying
                    to restore invalid backup files
+            - Improved error message when trying omd action as non site user
           - Apache:
             - Removed the shared mode (only one system wide apache process).
               This mode was not used widely and it was a pain to maintain it,
