@@ -3221,7 +3221,10 @@ def main_restore(args, options={}):
     else:
         bail_out("The backup archive does not exist.")
 
-    tar = tarfile.open(fileobj=fh, mode=tar_mode)
+    try:
+        tar = tarfile.open(fileobj=fh, mode=tar_mode)
+    except tarfile.ReadError, e:
+        bail_out("Failed to open the backup: %s" % e)
 
     # Get the first file of the tar archive. Expecting <site>/version symlink
     # for validation reasons.
