@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 NAME = check_mssql_health
-CHECK_MSSQL_HEALTH_VERSION = 1.6
+CHECK_MSSQL_HEALTH_VERSION = 1.6.2.3
 CHECK_MSSQL_HEALTH_DIR = check_mssql_health-$(CHECK_MSSQL_HEALTH_VERSION)
 SHELL = /bin/bash
 
