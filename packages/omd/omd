@@ -3655,7 +3655,9 @@ for c, only_root, no_suid, needs_site, site_must_exist, confirm, argumentlist, \
         break
 
 if not found:
-    bail_out("omd: no such command: %s" % command)
+    sys.stderr.write("omd: no such command: %s\n" % command)
+    main_help()
+    sys.exit(1)
 
 if os.getuid() != 0 and only_root:
     bail_out("omd: root permissions are needed for this command.")
