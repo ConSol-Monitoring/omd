@@ -48,6 +48,8 @@ next:
           - Icinga: Update to 1.13.3
 
 1.40     (not yet released)
+          - omd:
+            - FIX: Fixed streamed "omd restore" resulting in an exception
           - Apache:
             - Removed the shared mode (only one system wide apache process).
               This mode was not used widely and it was a pain to maintain it,

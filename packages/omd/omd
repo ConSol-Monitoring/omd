@@ -3279,6 +3279,19 @@ def main_restore(args, options={}):
     else:
         bail_out("Failed to detect version of backed up site.")
 
+<<<<<<< HEAD
+=======
+    # Get the first file of the tar archive. Expecting <site>/version symlink
+    # for validation reasons.
+    site_tarinfo = tar.next()
+    sitename, version_name = site_tarinfo.name.split("/", 1)
+
+    if version_name == "version":
+        version = site_tarinfo.linkname.split('/')[-1]
+    else:
+        bail_out("Failed to detect version of backed up site.")
+
+>>>>>>> FIX: Fixed streamed "omd restore" resulting in an exception
     if not version_exists(version):
         bail_out("You need to have version %s installed to be able to restore "
                  "this backup." % version)
