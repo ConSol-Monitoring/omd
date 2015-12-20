@@ -3234,7 +3234,11 @@ def main_restore(args, options={}):
     # Get the first file of the tar archive. Expecting <site>/version symlink
     # for validation reasons.
     site_tarinfo = tar.next()
-    sitename, version_name = site_tarinfo.name.split("/", 1)
+    try:
+        sitename, version_name = site_tarinfo.name.split("/", 1)
+    except ValueError:
+        bail_out("Failed to detect version of backed up site. "
+                 "Maybe the backup is from an incompatible version.")
 
     if version_name == "version":
         version = site_tarinfo.linkname.split('/')[-1]
