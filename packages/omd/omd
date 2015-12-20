@@ -3516,6 +3516,7 @@ commands = [
       ( "reuse", None, False, "do not create a site user, reuse existing one" ),
       ( "kill", None, False, "kill processes of site when reusing an existing one before restoring" ),
       ( "apache-reload",  False,  False, "Issue a reload of the system apache instead of a restart"),
+      ( "conflict", None, True, "non-interactive conflict resolution. ARG is install, keepold, abort or ask"),
       ( "tmpfs-size",  "t",  True, "specify the maximum size of the tmpfs (defaults to 50% of RAM)"),
     ],
     "Restores the backup of a site to an existing site or creates a new site",

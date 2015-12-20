@@ -23,6 +23,7 @@ next:
             - FIX: Fixed streamed "omd restore" resulting in an exception
             - FIX: Improved "omd restore" error handling in case of trying
                    to restore invalid backup files
+            - FIX: Added missing but documented --conflict flag to "omd restore"
             - Improved error message when trying omd action as non site user
             - Printing usage info in case of unknown command
           - Apache:
