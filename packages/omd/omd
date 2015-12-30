@@ -2724,6 +2724,26 @@ def set_conflict_option(options):
         bail_out("Argument to --conflict must be one of ask, install, keepold and abort.")
 
 
+def get_exclude_patterns(options):
+    excludes = []
+    if "no-rrds" in options or "no-past" in options:
+        excludes.append("var/pnp4nagios/perfdata/*")
+        excludes.append("var/pnp4nagios/spool/*")
+        excludes.append("var/rrdcached/*")
+        excludes.append("var/pnp4nagios/states/*")
+
+    if "no-logs" in options or "no-past" in options:
+        excludes.append("var/log/*/*")
+        excludes.append("var/nagios/nagios.log")
+        excludes.append("var/nagios/archive/")
+        excludes.append("var/pnp4nagios/log/*")
+        excludes.append("var/pnp4nagios/perfdata.dump")
+        excludes.append("var/mkeventd/history/*")
+        excludes.append("var/check_mk/core/history")
+        excludes.append("var/check_mk/core/archive/*")
+    return excludes
+
+
 def main_mv_or_cp(what, args, options={}):
     set_conflict_option(options)
     action = what == "mv" and "rename" or "copy"
@@ -2775,24 +2795,9 @@ def main_mv_or_cp(what, args, options={}):
         # Make exact file-per-file copy with same user but already new name
         if not reuse:
             os.mkdir(site_dir(new))
-        addopts = ""
-        excludes = []
-        if "no-rrds" in options or "no-past" in options:
-            excludes.append("var/pnp4nagios/perfdata/*")
-            excludes.append("var/pnp4nagios/spool/*")
-            excludes.append("var/rrdcached/*")
-            excludes.append("var/pnp4nagios/states/*")
-        if "no-logs" in options or "no-past" in options:
-            excludes.append("var/log/*/*")
-            excludes.append("var/nagios/nagios.log")
-            excludes.append("var/nagios/archive/")
-            excludes.append("var/pnp4nagios/log/*")
-            excludes.append("var/pnp4nagios/perfdata.dump")
-            excludes.append("var/mkeventd/history/*")
-            excludes.append("var/check_mk/core/history")
-            excludes.append("var/check_mk/core/archive/*")
 
-        for p in excludes:
+        addopts = ""
+        for p in get_exclude_patterns(options):
             addopts += " --exclude '/%s'" % p
 
         if opt_verbose:
@@ -3173,10 +3178,23 @@ def main_su(args, options={}):
     except OSError:
         bail_out("Cannot open a shell for user %s" % g_sitename)
 
-def main_backup(args, options={}):
-    global g_sitename
-    global g_sitedir
 
+def backup_site_to_tarfile(fh):
+    tar = tarfile.open(fileobj=fh, mode='w:gz')
+    try:
+        # Add the version symlink as first file to be able to
+        # check a) the sitename and b) the version before reading
+        # the whole tar archive. Important for streaming.
+        # The file is added twice to get the first for validation
+        # and the second for excration during restore.
+        tar.add(g_sitedir + "/version", g_sitename + "/version")
+        tar.add(g_sitedir, g_sitename)
+        tar.close()
+    except IOError, e:
+        bail_out("Failed to perform backup: %s" % e)
+
+
+def main_backup(args, options={}):
     if len(args) == 0:
         bail_out("You need to provide either a path to the destination "
                  "file or \"-\" for backup to stdout.")
@@ -3196,18 +3214,8 @@ def main_backup(args, options={}):
             dest = g_orig_wd + '/' + dest
         fh = file(dest, 'w')
 
-    tar = tarfile.open(fileobj=fh, mode='w:gz')
-    try:
-        # Add the version symlink as first file to be able to
-        # check a) the sitename and b) the version before reading
-        # the whole tar archive. Important for streaming.
-        # The file is added twice to get the first for validation
-        # and the second for excration during restore.
-        tar.add(g_sitedir + "/version", g_sitename + "/version")
-        tar.add(g_sitedir, g_sitename)
-        tar.close()
-    except IOError, e:
-        bail_out("Failed to perform backup: %s" % e)
+    backup_site_to_tarfile(fh)
+
 
 def main_restore(args, options={}):
     global g_sitename
