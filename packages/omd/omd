@@ -24,7 +24,8 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import sys, os, shutil, pwd, grp, re, time, pprint, tty, termios, traceback, tarfile
+import sys, os, shutil, pwd, grp, re, time, pprint, tty, termios, traceback
+import tarfile, fnmatch
 from subprocess import *
 
 OMD_VERSION = "1.30"
@@ -3176,7 +3177,29 @@ def main_su(args, options={}):
         bail_out("Cannot open a shell for user %s" % g_sitename)
 
 
-def backup_site_to_tarfile(fh):
+def backup_site_files_to_tarfile(tar, options):
+    exclude = get_exclude_patterns(options)
+
+    def filter_files(filename):
+        for glob_pattern in exclude:
+            # patterns are relative to site dir, filename is full path.
+            # strip of the g_sitedir prefix from full path
+            if fnmatch.fnmatch(filename[len(g_sitedir)+1:], glob_pattern):
+                return True # exclude this file
+        return False
+
+    if not exclude:
+        tar.add(g_sitedir, g_sitename)
+    else:
+        try:
+            tar.add(g_sitedir, g_sitename, exclude=filter_files)
+        except TypeError:
+            bail_out("You can not exclude files from your backup using your "
+                     "Python version %s. You may need to update." %
+                                     ".".join(map(str, sys.version_info[:3])))
+
+
+def backup_site_to_tarfile(fh, options):
     tar = tarfile.open(fileobj=fh, mode='w:gz')
     try:
         # Add the version symlink as first file to be able to
@@ -3185,7 +3208,7 @@ def backup_site_to_tarfile(fh):
         # The file is added twice to get the first for validation
         # and the second for excration during restore.
         tar.add(g_sitedir + "/version", g_sitename + "/version")
-        tar.add(g_sitedir, g_sitename)
+        backup_site_files_to_tarfile(tar, options)
         tar.close()
     except IOError, e:
         bail_out("Failed to perform backup: %s" % e)
@@ -3211,7 +3234,7 @@ def main_backup(args, options={}):
             dest = g_orig_wd + '/' + dest
         fh = file(dest, 'w')
 
-    backup_site_to_tarfile(fh)
+    backup_site_to_tarfile(fh, options)
 
 
 def main_restore(args, options={}):
@@ -3329,6 +3352,12 @@ def main_restore(args, options={}):
 
     finalize_site("restore", "apache-reload" in options)
 
+
+exclude_options = [
+    ( "no-rrds", None, False, "do not copy RRD files (performance data"),
+    ( "no-logs", None, False, "do not copy log files"),
+    ( "no-past", "N", False,  "do not copy RRD file and log files"),
+]
 
 
 commands = [
@@ -3453,10 +3482,8 @@ commands = [
   ( "cp",        True, False, 1, 1, False, "NEWNAME", lambda args, opts: main_mv_or_cp("cp", args, opts),
     [ ( "uid", "u", True, "create site user with UID ARG" ),
       ( "gid", "g", True, "create site group with GID ARG" ),
-      ( "reuse", None, False, "do not create a site user, reuse existing one" ),
-      ( "no-rrds", None, False, "do not copy RRD files (performance data"),
-      ( "no-logs", None, False, "do not copy log files"),
-      ( "no-past", "N", False,  "do not copy RRD file and log files"),
+      ( "reuse", None, False, "do not create a site user, reuse existing one" )
+    ] + exclude_options + [
       ( "conflict", None, True, "non-interactive conflict resolution. ARG is install, keepold, abort or ask"),
       ( "tmpfs-size",  "t",  True, "specify the maximum size of the tmpfs (defaults to 50% of RAM), examples: 500M, 20G, 60%"),
       ( "apache-reload",  False,  False, "Issue a reload of the system apache instead of a restart"),
@@ -3518,7 +3545,7 @@ commands = [
     ""),
 
   ( "backup", False, True, 1, 1, False, "SITE [-|ARCHIVE_PATH]", main_backup,
-    [ ],
+    exclude_options,
     "Create a backup tarball of a site, writing it to a file or stdout",
     ""),
 
