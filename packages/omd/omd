@@ -3096,7 +3096,10 @@ def main_init_action(command, args, options={}):
     if not g_sitename:
         exit_states = []
         for site in all_sites():
-            if only_version and site_version(site) != only_version:
+            v = site_version(site)
+            if v == None: # skip partially created sites
+                continue
+            if only_version and v != only_version:
                 continue
             # Skip disabled sites completely
             if site_is_disabled(site):
