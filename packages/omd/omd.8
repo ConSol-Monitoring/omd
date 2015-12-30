@@ -366,18 +366,34 @@ using it (have a directory in it as current directory are have an open file in i
 If you specify \fB--kill\fP, then omd will kill processes using the filesystem using
 \fBfuser -k\fP.
 .TP
-.B omd backup [SITE] [-|TARBALL_PATH]
+.B omd backup [OPTIONS] [SITE] [-|TARBALL_PATH]
 Creates a backup tarball containing the whole site. When executing this command as root,
 you need to specify the name of the site, otherwise your current site will be used.
 
 You need to provide either a path where the tarball will be created or specify \fB-\fP
 for streaming the tarball to stdout.
 
+The following options can be used:
+
+\fB--no-rrds\fP Do not copy any performance data from the past. This
+includes RRD and XML files created by PNP4Nagios as well as journal
+files from the RRD caching daemon. This option usually greatly speeds
+up the copying.
+
+\fB--no-logs\fP Do not copy any logfiles from the past. This
+include the Nagios logfiles, which bear the historical events. While
+this does speed up the copying, the new site will have no history
+of past events.
+
+The option \fB-N\fP or \fB--no-past\fP combines both \fB--no-rrds\fP and \fB--no-logs\fP.
+This is very useful especially for copies that are created for testing
+purposes.
+
 The site needs to be stopped to be able to create the backup. During the backup the
 ramdisk filesystem (tmpfs) of the site will be unmounted. It's contents are not saved
 in the tarball.
 .TP
-.B omd restore [SITE] [-|TARBALL_PATH]
+.B omd restore [OPTIONS] [SITE] [-|TARBALL_PATH]
 Restores a backup which was previously created with \fBomd backup\fP. This command is
 only available as root user at the moment.
 

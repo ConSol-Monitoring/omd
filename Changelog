@@ -25,6 +25,10 @@ next:
                    to restore invalid backup files
             - FIX: Added missing but documented --conflict flag to "omd restore"
             - FIX: Skipping partially created sites during omd start/stop/restart
+            - omd backup: Can use --no-rrds,--no-logs or --no-past now to
+              exclude RRDs and/or the monitoring history from the backup. These
+              options can be used to make the backup/restore procedure faster
+              and reduces the size of the backup, but it is not a complete backup.
             - Improved error message when trying omd action as non site user
             - Printing usage info in case of unknown command
           - Apache:
