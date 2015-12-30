@@ -3180,7 +3180,6 @@ def main_su(args, options={}):
         bail_out("Cannot open a shell for user %s" % g_sitename)
 
 
-<<<<<<< HEAD
 def backup_site_files_to_tarfile(tar, options):
     exclude = get_exclude_patterns(options)
 
@@ -3204,9 +3203,6 @@ def backup_site_files_to_tarfile(tar, options):
 
 
 def backup_site_to_tarfile(fh, options):
-=======
-def backup_site_to_tarfile(fh):
->>>>>>> omd: Some small refactorings
     tar = tarfile.open(fileobj=fh, mode='w:gz')
     try:
         # Add the version symlink as first file to be able to
@@ -3215,11 +3211,7 @@ def backup_site_to_tarfile(fh):
         # The file is added twice to get the first for validation
         # and the second for excration during restore.
         tar.add(g_sitedir + "/version", g_sitename + "/version")
-<<<<<<< HEAD
         backup_site_files_to_tarfile(tar, options)
-=======
-        tar.add(g_sitedir, g_sitename)
->>>>>>> omd: Some small refactorings
         tar.close()
     except IOError, e:
         bail_out("Failed to perform backup: %s" % e)
