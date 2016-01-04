@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 NAME       = influxdb
-VERSION    = 0.9.5.1
+VERSION    = 0.9.6.1
 SRC        = $(NAME)-$(VERSION).tar.gz
 GOPATH     = go
 GOVERSION  = 1.4
