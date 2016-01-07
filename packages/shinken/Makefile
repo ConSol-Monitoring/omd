@@ -144,7 +144,7 @@ install:
 	$(MAKE) installpymongo
 	$(MAKE) installmongodb
 	echo "distro is " $(DISTRO_NAME)
-	if [ $(DISTRO_NAME) = "CENTOS" ]; then \
+	if [ $(DISTRO_NAME) = "CENTOS" ] && [ $(DISTRO_VERSION) = "5" ]; then \
 		$(MAKE) installctypes; \
 		$(MAKE) installhashlib; \
 	fi
