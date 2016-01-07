@@ -12,15 +12,15 @@ return function(callback) {
         document.documentElement.style.background = '#FFF';
     }
 
-    site = window.location.href.match(/(https?:\/\/.*?\/.*?)\/grafana\/.*/);
+    var site = window.location.href.match(/(https?:\/\/.*?\/.*?)\/grafana\/.*/);
     if(site.length > 1){
         url = site[1]+'/histou/';
     }
 
-    flotAddons = url + 'flotAddons.js';
+    var flotAddons = url + 'flotAddons.js';
     $.getScript(flotAddons, function(){});
 
-    configUrl = url+'index.php?host='+host+'&service='+service+'&height='+height+'&legend='+legend+debug;
+    var configUrl = url+'index.php?host='+host+'&service='+service+'&height='+height+'&legend='+legend+debug;
 
     $.ajax({
         method: 'GET',
@@ -65,46 +65,47 @@ function parseArgs() {
         //change ui to our needs
         clearUi()
     }
+
     if(!_.isUndefined(ARGS.host)) {
         host = ARGS.host;
     }else{
-        host = "Host0"
+        host = "Host0";
     }
 
     if(!_.isUndefined(ARGS.service)) {
         service = ARGS.service;
     }else{
-        service = ""
+        service = "";
     }
 
     if(!_.isUndefined(ARGS.command)) {
         command = ARGS.command;
     }else{
-        command = ""
+        command = "";
     }
 
     if(!_.isUndefined(ARGS.perf)) {
         perf = ARGS.perf;
     }else{
-        perf = ""
+        perf = "";
     }
 
     if(!_.isUndefined(ARGS.height)) {
         height = ARGS.height;
     }else{
-        height = ""
+        height = "";
     }
 
     if(_.isUndefined(ARGS.debug)) {
         debug = '';
     }else{
-        debug = "&debug"
+        debug = "&debug";
     }
 
     if(!_.isUndefined(ARGS.legend)) {
         legend = ARGS.legend;
     }else{
-        legend = true
+        legend = true;
     }
 }
 
