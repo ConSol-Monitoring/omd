@@ -38,6 +38,11 @@ next:
               it will be changed to own mode during update. You might need
               to reload/restart your system apache manually once to apply
               the change.
+	    - FIX: PHP-Sessions were not cleaned up during run time. The sessions
+	      were only cleared on system boot.
+	      Added a cron job to the sites that runs on a daily base at 0:10
+	      to search the session directory at tmp/php/session to remove all
+	      files which are older than 24 hours
           - NagVis:
             - Update to version 1.9b3
           - Icinga: Update to 1.13.3
