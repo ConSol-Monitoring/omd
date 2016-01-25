@@ -1,14 +1,14 @@
 include ../../Makefile.omd
 
 NAME = check_mssql_health
-CHECK_MSSQL_HEALTH_VERSION = 1.6.2.3
+CHECK_MSSQL_HEALTH_VERSION = 2.3
 CHECK_MSSQL_HEALTH_DIR = check_mssql_health-$(CHECK_MSSQL_HEALTH_VERSION)
 SHELL = /bin/bash
 
 build:
 	tar xf check_mssql_health-$(CHECK_MSSQL_HEALTH_VERSION).tar.gz
 	cd $(CHECK_MSSQL_HEALTH_DIR) && \
-	./configure && \
+	./configure --disable-standalone && \
 	$(MAKE)
 
 install:
