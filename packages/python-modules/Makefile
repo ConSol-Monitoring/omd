@@ -21,6 +21,7 @@ build:
 	    export PYTHONPATH=$$PYTHONPATH:$(DESTDIR)$(OMD_ROOT)/lib/python ; \
 	    for M in $$(ls); do \
 		cd $$M ; \
+	        echo PYTHONBUILD $$M ; \
 	        python setup.py build ; \
 	        cd .. ; \
 	    done
@@ -31,6 +32,7 @@ install:
 	    export PYTHONPATH=$$PYTHONPATH:$(DESTDIR)$(OMD_ROOT)/lib/python ; \
 	    for M in $$(ls); do \
 		cd $$M ; \
+	        echo PYTHONINSTALL $$M ; \
 	        python setup.py install --home=$(DESTDIR)$(OMD_ROOT) \
 	            --prefix='' \
 	            --install-platlib=$(DESTDIR)$(OMD_ROOT)/lib/python \
