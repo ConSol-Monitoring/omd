@@ -4,7 +4,17 @@ NAME     = python-modules
 VERSION  = $(OMD_VERSION)
 DISTRO   = $(shell ../../distro)
 
-MODULES = $(shell cd src; ls *.tar.gz *.zip; cd ..)
+MODULES = texttable-0.8.4.tar.gz \
+	  pyexcel-io-0.1.0.tar.gz \
+	  pyexcel-0.2.0.tar.gz \
+	  odfpy-0.9.6.tar.gz \
+	  pyexcel-ods-0.1.0.tar.gz \
+	  jdcal-1.2.tar.gz \
+	  openpyxl-2.2.2.tar.gz \
+	  pyexcel-xlsx-0.1.0.tar.gz
+	  MarkupSafe-0.23.tar.gz \
+	  Jinja2-2.8.tar.gz
+
 
 build:
 	mkdir -p dest
@@ -30,8 +40,9 @@ install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/python
 	cd dest && \
 	    export PYTHONPATH=$$PYTHONPATH:$(DESTDIR)$(OMD_ROOT)/lib/python ; \
-	    for M in $$(ls); do \
-		cd $$M ; \
+	    for M in $(MODULES); do \
+		MDIR=$$(echo $$M | sed -e 's/.tar.gz//g' -e 's/.zip//g') ; \
+		cd $$MDIR ; \
 	        echo PYTHONINSTALL $$M ; \
 	        python setup.py install --home=$(DESTDIR)$(OMD_ROOT) \
 	            --prefix='' \
