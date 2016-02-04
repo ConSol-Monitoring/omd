@@ -1,35 +1,41 @@
 [main]
-NagiosSpoolfileFolder = "###ROOT###/var/pnp4nagios/spool"
-NagiosSpoolfileWorker = 1
-InfluxWorker = 2
-MaxInfluxWorker = 5
-DumpFile = "###ROOT###/var/log/nagflux/nagflux.dump"
-NagfluxSpoolfileFolder = "###ROOT###/var/nagflux"
+	NagiosSpoolfileFolder = "###ROOT###/var/pnp4nagios/spool"
+	NagiosSpoolfileWorker = 1
+	InfluxWorker = 2
+	MaxInfluxWorker = 5
+	DumpFile = "###ROOT###/var/log/nagflux/nagflux.dump"
+	NagfluxSpoolfileFolder = "###ROOT###/var/nagflux"
+	FieldSeparator = "&"
 
 [Log]
-#leave empty for stdout
-LogFile = ""
-#List of Severities https://godoc.org/github.com/kdar/factorlog#Severity
-MinSeverity = "INFO"
+	#leave empty for stdout
+	LogFile = ""
+	#List of Severities https://godoc.org/github.com/kdar/factorlog#Severity
+	MinSeverity = "INFO"
 
 [Monitoring]
-#leave empty to disable
-#WebserverPort = ":7000"
-WebserverPort = ""
+	#leave empty to disable
+	#WebserverPort = ":7000"
+	WebserverPort = ""
 
 [Influx]
-Version = 0.9
-Address = "http://127.0.0.1:8086"
-Arguments = "precision=ms&db=nagflux"
-CreateDatabaseIfNotExists = true
-NastyString = "\\ "
-NastyStringToReplace = " "
-
-[Grafana]
-FieldSeperator = "&"
+	Enabled = true
+	Version = 0.9
+	Address = "http://127.0.0.1:8086"
+	Arguments = "precision=ms&db=nagflux"
+	CreateDatabaseIfNotExists = true
+	NastyString = ""
+	NastyStringToReplace = ""
+	HostcheckAlias = "hostcheck"
 
 [Livestatus]
-#tcp or file
-Type = "file"
-#tcp: 127.0.0.1:6557 or file /var/run/live
-Address = "###ROOT###/tmp/run/live"
+	#tcp or file
+	Type = "file"
+	#tcp: 127.0.0.1:6557 or file /var/run/live
+	Address = "###ROOT###/tmp/run/live"
+
+[Elasticsearch]
+	Enabled = false
+	Address = "http://localhost:9200"
+	Index = "nagflux"
+	Version = 2.1
