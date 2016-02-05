@@ -19,6 +19,8 @@ install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/bin
 	install -m 755 $(PWD)/$(GOPATH)/bin/influx  $(DESTDIR)$(OMD_ROOT)/bin
 	install -m 755 $(PWD)/$(GOPATH)/bin/influxd $(DESTDIR)$(OMD_ROOT)/bin
+	install -m 755 $(PWD)/$(GOPATH)/bin/influx_tsm  $(DESTDIR)$(OMD_ROOT)/bin
+	install -m 755 $(PWD)/$(GOPATH)/bin/influx_stress  $(DESTDIR)$(OMD_ROOT)/bin
 
 skel:
 
