@@ -13,7 +13,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 47 );
+plan( tests => 43 );
 
 ##################################################
 # create our test site
@@ -30,8 +30,6 @@ TestUtils::test_command({ cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_h
 #http api
 #create database
 TestUtils::test_command({ cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -t 60 -H localhost -p 8086 -u \"/query?q=CREATE%20DATABASE%20mydb\" -s \"{\\\"results\\\":[{}]}\"'", like => '/HTTP OK:/' });
-#duplicate database should throw an exception
-TestUtils::test_command({ cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -t 60 -H localhost -p 8086 -u \"/query?q=CREATE%20DATABASE%20mydb\" -s \"{\\\"results\\\":[{\\\"error\\\":\\\"database already exists\\\"}]}\"'", like => '/HTTP OK:/' });
 #write data
 TestUtils::test_command({ cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -t 60 -H localhost -p 8086 -u \"/write?db=mydb\" -P \"cpu_load_short,host=server01,region=us-west value=0.64 1434055562000000000\"'", like => '/HTTP OK:/' });
 #read data
