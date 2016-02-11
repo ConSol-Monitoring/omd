@@ -96,7 +96,12 @@ then
         exit 0
     elif [ "$VERSION" = 12 ]
     then
-        echo "SLES$SEP${VERSION}"
+        echo -n "SLES$SEP${VERSION}"
+        if [ $SP != 0 ]; then
+            echo "SP$SP"
+        else
+            echo
+        fi
         exit 0
     elif [ "$VERSION" = 12.1 ]
     then
