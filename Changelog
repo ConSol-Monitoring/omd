@@ -41,10 +41,13 @@ next:
               to reload/restart your system apache manually once to apply
               the change.
           - FIX: PHP-Sessions were not cleaned up during run time. The sessions
-              were only cleared on system boot.
-              Added a cron job to the sites that runs on a daily base at 0:10
-              to search the session directory at tmp/php/session to remove all
-              files which are older than 24 hours
+            were only cleared on system boot.
+            Added a cron job to the sites that runs on a daily base at 0:10
+            to search the session directory at tmp/php/session to remove all
+            files which are older than 24 hours
+          - Nagios:
+            - FIX: Starting nagios daemon with LC_ALL=C to prevent localization
+              of performance data output of e.g. check_icmp
           - NagVis:
             - Update to version 1.9b3
           - Icinga: Update to 1.13.3
