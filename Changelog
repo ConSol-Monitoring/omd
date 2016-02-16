@@ -53,6 +53,7 @@ next:
           - Icinga: Update to 1.13.3
           - Thruk: Update to 2.04
           - Added build support for SLES 12 SP1
+          - Added build support for Fedora 23
 
 1.30     Oct 01 2015
           - omd:
