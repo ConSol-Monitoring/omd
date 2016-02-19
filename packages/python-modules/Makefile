@@ -12,6 +12,7 @@ MODULES = texttable-0.8.4.tar.gz \
 	  jdcal-1.2.tar.gz \
 	  openpyxl-2.2.2.tar.gz \
 	  pyexcel-xlsx-0.1.0.tar.gz \
+	  pyexcel-xls-0.1.0.tar.gz \
 	  MarkupSafe-0.23.tar.gz \
 	  Jinja2-2.8.tar.gz
 
