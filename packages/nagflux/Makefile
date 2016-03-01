@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 NAME        = nagflux
-VERSION     = 0.2.0-beta
+VERSION     = 0.2.0-beta2
 SRC         = $(NAME)-$(VERSION).tar.gz
 GOVERSION   = 1.5
 GOPATH      = go

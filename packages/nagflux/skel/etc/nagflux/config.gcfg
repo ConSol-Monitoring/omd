@@ -20,7 +20,7 @@
 
 [Influx]
 	Enabled = true
-	Version = 0.9
+	Version = 0.10
 	Address = "http://127.0.0.1:8086"
 	Arguments = "precision=ms&db=nagflux"
 	CreateDatabaseIfNotExists = true
@@ -39,3 +39,7 @@
 	Address = "http://localhost:9200"
 	Index = "nagflux"
 	Version = 2.1
+        HostcheckAlias = "hostcheck"
+        NumberOfShards = 5
+        NumberOfReplicas = 0
+        IndexRotation = "monthly"
