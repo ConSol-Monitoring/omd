@@ -3,6 +3,7 @@
 use warnings;
 use strict;
 use lib 'lib';
+use lib 'src/lib';
 use BuildHelper;
 
 BEGIN {
