@@ -160,9 +160,9 @@ MODULES = \
           Tie-IxHash-1.23.tar.gz \
           XML-Parser-2.44.tar.gz \
           XML-Twig-3.48.tar.gz \
-          constant-1.27.tar.gz \
+          constant-1.33.tar.gz \
           App-cpanminus-1.7024.tar.gz \
-          CPAN-2.05.tar.gz \
+          CPAN-2.10.tar.gz \
           Config-Tiny-2.20.tgz \
           Crypt-SSLeay-0.72.tar.gz \
           Date-Manip-6.49.tar.gz \
