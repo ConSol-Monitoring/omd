@@ -203,6 +203,9 @@ for my $url ( @{$urls}, @{$own_urls}, @{$cookie_urls} ) {
     }
 }
 
+my $log  = "/omd/sites/$site/var/log/thruk.log";
+my $tlog = '/tmp/thruk_test_error.log';
+is(-f $log, 1, "log exists");
 for my $core (qw/nagios icinga shinken/) {
     ##################################################
     # run our tests
@@ -215,31 +218,40 @@ for my $core (qw/nagios icinga shinken/) {
     TestUtils::wait_for_file("/omd/sites/$site/tmp/run/live")   or TestUtils::bail_out_clean("No need to test Thruk without livestatus connection");
     unlink("/omd/sites/$site/tmp/thruk/thruk.cache");
     unlink("/omd/sites/$site/var/thruk/obj_retention.dat");
+    `/bin/cat $log | /bin/grep -v 'cmd: COMMAND' | /bin/grep -v ' started ' | /bin/grep -v 'templates precompiled in' > $tlog 2>&1`;
+    is(-s $tlog, 0, "log is empty") or do { diag(Dumper(`cat $log`)); exit(1); };
 
     TestUtils::test_command({ cmd => "/bin/su - $site -c './bin/thruk -A omdadmin \"cmd.cgi?cmd_typ=7&cmd_mod=2&host=omd-$site&service=Dummy+Service&start_time=now&force_check=on&btnSubmit=Commit\" --local'", like => '/Command request successfully submitted/', errlike => '/cmd: COMMAND/' });
     TestUtils::wait_for_file("/omd/sites/$site/var/pnp4nagios/perfdata/omd-$site/Dummy_Service_omd-dummy.rrd") or TestUtils::bail_out_clean("No need to test Thruk without working pnp");;
+    `/bin/cat $log | /bin/grep -v 'cmd: COMMAND' | /bin/grep -v ' started ' | /bin/grep -v 'templates precompiled in' > $tlog 2>&1`;
+    is(-s $tlog, 0, "log is empty") or do { diag(Dumper(`cat $log`)); exit(1); };
 
     for my $test (@{$tests}) {
+    `/bin/cat $log | /bin/grep -v 'cmd: COMMAND' | /bin/grep -v ' started ' | /bin/grep -v 'templates precompiled in' > $tlog 2>&1`;
+    is(-s $tlog, 0, "log is empty") or do { diag(Dumper(`cat $log`)); exit(1); };
         TestUtils::test_command($test);
     }
     for my $test (@{$own_tests}) {
+    `/bin/cat $log | /bin/grep -v 'cmd: COMMAND' | /bin/grep -v ' started ' | /bin/grep -v 'templates precompiled in' > $tlog 2>&1`;
+    is(-s $tlog, 0, "log is empty") or do { diag(Dumper(`cat $log`)); exit(1); };
         TestUtils::test_command($test);
     }
     ##################################################
     # and request some pages
     for my $url ( @{$urls} ) {
+    `/bin/cat $log | /bin/grep -v 'cmd: COMMAND' | /bin/grep -v ' started ' | /bin/grep -v 'templates precompiled in' > $tlog 2>&1`;
+    is(-s $tlog, 0, "log is empty") or do { diag(Dumper(`cat $log`)); exit(1); };
         TestUtils::test_url($url);
     }
     for my $url ( @{$own_urls} ) {
+    `/bin/cat $log | /bin/grep -v 'cmd: COMMAND' | /bin/grep -v ' started ' | /bin/grep -v 'templates precompiled in' > $tlog 2>&1`;
+    is(-s $tlog, 0, "log is empty") or do { diag(Dumper(`cat $log`)); exit(1); };
         TestUtils::test_url($url);
     }
 
-    my $log  = "/omd/sites/$site/var/log/thruk.log";
-    my $tlog = '/tmp/thruk_test_error.log';
-    is(-f $log, 1, "log exists");
     # grep out commands
     `/bin/cat $log | /bin/grep -v 'cmd: COMMAND' | /bin/grep -v ' started ' | /bin/grep -v 'templates precompiled in' > $tlog 2>&1`;
-    is(-s $tlog, 0, "log is empty") or diag(Dumper(`cat $log`));
+    is(-s $tlog, 0, "log is empty") or do { diag(Dumper(`cat $log`)); exit(1); };
     unlink($tlog);
 }
 
