@@ -19,6 +19,12 @@ CONFIGUREOPTS = \
     -DICINGA2_USER=root \
     -DICINGA2_GROUP=root
 
+# workaround for https://bugzilla.redhat.com/show_bug.cgi?id=849791#c8
+ifeq ($(DISTRO_INFO),CENTOS 6)
+CONFIGUREOPTS+=-DBoost_NO_BOOST_CMAKE=ON
+endif
+
+
 build:
 	tar xzf $(DIR).tar.gz
 	mkdir -p $(DIR)/build
