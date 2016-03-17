@@ -1,20 +1,16 @@
 include ../../Makefile.omd
 
 NAME     = mod_gearman
-VERSION  = 1.5.5
+VERSION  = 3.0.0b1
 GEARMAND = $(shell grep "^VERSION " ../gearmand/Makefile | awk '{ print $$3 }')
 DIR      = mod_gearman-$(VERSION)
 
 .PHONY: skel
 
 build:
-	test -f mod_gearman-${VERSION}.tar.gz || wget "http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-$(VERSION).tar.gz"
 	tar xzf mod_gearman-$(VERSION).tar.gz
-	#for p in patches/*.patch ; do \
-	#    echo "applying $$p..." ; \
-	#    ( cd $(DIR) ; patch -p1 -b ) < $$p || exit 1; \
-	#done
 	cd $(DIR) && \
+	export PKG_CONFIG_PATH=$(shell ls -d1 $$(pwd)/../naemon/naemon-*/.) C_INCLUDE_PATH=$(shell pwd)/$(DIR)/include:$(shell ls -d1 $$(pwd)/../naemon/naemon-*/.)/src; \
 	./configure --prefix=$(OMD_ROOT) --enable-embedded-perl --with-gearman=$(shell pwd)/../gearmand/gearmand-${GEARMAND} && \
 	$(MAKE) -j 1
 
@@ -37,9 +33,8 @@ skel:
 	    ( cd $(SKEL) ; patch -p1 ) < $$p || exit 1; \
 	done
 	find $(SKEL)/etc/mod-gearman -name \*.orig -exec rm {} \;
-	mkdir -p $(SKEL)/var/log/mod_gearman
-	touch $(SKEL)/var/log/mod_gearman/neb.log
-	touch $(SKEL)/var/log/mod_gearman/worker.log
+	mkdir -p $(SKEL)/var/log/
+	cd $(SKEL)/var/log/ && ln -s gearman mod_gearman
 
 
 

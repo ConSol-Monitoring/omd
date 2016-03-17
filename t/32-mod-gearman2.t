@@ -18,7 +18,7 @@ plan( tests => 120 );
 
 ##################################################
 # get version strings
-chomp(my $modgearman_version = qx(grep "^VERSION " packages/mod-gearman2/Makefile | awk '{ print \$3 }'));
+chomp(my $modgearman_version = qx(grep "^VERSION " packages/mod-gearman/Makefile | awk '{ print \$3 }'));
 chomp(my $libgearman_version = qx(grep "^VERSION " packages/gearmand/Makefile | awk '{ print \$3 }'));
 isnt($modgearman_version, '', "got modgearman_version") or BAIL_OUT("need mod-gearman version");
 isnt($libgearman_version, '', "got libgearman_version") or BAIL_OUT("need lib-gearman version");;
@@ -79,7 +79,7 @@ for my $core (qw/naemon/) {
     ##################################################
     # execute some checks
     my $tests = [
-      { cmd => "/bin/grep 'Event broker module.*mod_gearman2.o.*initialized successfully' /omd/sites/$site/var/$core/$core.log", like => '/successfully/' },
+      { cmd => "/bin/grep 'Event broker module.*mod_gearman_naemon.o.*initialized successfully' /omd/sites/$site/var/$core/$core.log", like => '/successfully/' },
       { cmd => "/bin/grep 'mod_gearman: initialized version ".$modgearman_version." \(libgearman ".$libgearman_version."\)' /omd/sites/$site/var/$core/$core.log", like => '/initialized/' },
       { cmd => "/bin/su - $site -c 'bin/send_gearman --server=localhost:4730 --keyfile=etc/mod-gearman/secret.key --host=$host --message=test'" },
       { cmd => "/bin/su - $site -c 'bin/send_gearman --server=localhost:4730 --keyfile=etc/mod-gearman/secret.key --host=$host --service=$service --message=test'" },

@@ -43,7 +43,6 @@ PACKAGES=freetds \
          maintenance \
          gearmand \
          mod-gearman \
-         mod-gearman2 \
          naemon-livestatus \
          patch \
          nail \

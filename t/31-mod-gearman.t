@@ -71,7 +71,7 @@ for my $core (qw/nagios icinga/) {
     ##################################################
     # execute some checks
     my $tests = [
-      { cmd => "/bin/grep 'Event broker module.*mod_gearman.o.*initialized successfully' /omd/sites/$site/var/$core/$core.log", like => '/successfully/' },
+      { cmd => "/bin/grep 'Event broker module.*mod_gearman_nagios3.o.*initialized successfully' /omd/sites/$site/var/$core/$core.log", like => '/successfully/' },
       { cmd => "/bin/grep 'mod_gearman: initialized version ".$modgearman_version." \(libgearman ".$libgearman_version."\)' /omd/sites/$site/var/$core/$core.log", like => '/initialized/' },
       { cmd => "/bin/su - $site -c 'bin/send_gearman --server=localhost:4730 --keyfile=etc/mod-gearman/secret.key --host=$host --message=test'" },
       { cmd => "/bin/su - $site -c 'bin/send_gearman --server=localhost:4730 --keyfile=etc/mod-gearman/secret.key --host=$host --service=$service --message=test'" },
