@@ -1,4 +1,4 @@
-DISTRO_CODE     = saucy
+DISTRO_CODE     = ubuntu13.10
 BUILD_PACKAGES  =
 BUILD_PACKAGES += build-essential
 BUILD_PACKAGES += dpatch

@@ -1,6 +1,8 @@
 This file documents the revision history for the Open Monitoring Distribution (Labs Edition)
 
 next:
+          - OMD
+            - use distro version numbers in package names for debian and ubuntu too
           - Icinga update to 2.4.1
           - Influxdb update to 0.10.0
           - Grafana update to 2.6.0

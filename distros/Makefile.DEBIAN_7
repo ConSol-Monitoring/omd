@@ -1,4 +1,4 @@
-DISTRO_CODE       = wheezy
+DISTRO_CODE       = debian7
 BUILD_PACKAGES    =
 BUILD_PACKAGES   += build-essential
 BUILD_PACKAGES   += dpatch
