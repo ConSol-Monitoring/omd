@@ -15,6 +15,7 @@ install:
 	cd $(COSHSH) && \
 	    export PYTHONPATH=$$PYTHONPATH:$(DESTDIR)$(OMD_ROOT)/lib/python ; \
 	    python setup.py install \
+	        --prefix= \
 	        --home=$(DESTDIR)$(OMD_ROOT) \
                 --install-platlib=$(DESTDIR)$(OMD_ROOT)/lib/python \
                 --install-purelib=$(DESTDIR)$(OMD_ROOT)/lib/python \
