@@ -6,9 +6,9 @@ DISTRO   = $(shell ../../distro)
 
 # This is where the python modules are going to be installed to
 LOCALPYTHONDIR=$(DESTDIR)$(OMD_ROOT)/lib/python
-PYTHONREL=$(shell python -c "import sys; print '.'.join(map(str, sys.version_info[0:2]))")
 
-MODULES = texttable-0.8.4.tar.gz \
+MODULES = pysphere-0.1.7.zip \
+          texttable-0.8.4.tar.gz \
           ordereddict-1.1.tar.gz \
           pyexcel-io-0.1.0.tar.gz \
           pyexcel-0.2.0.tar.gz \
