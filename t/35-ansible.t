@@ -13,7 +13,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 52 );
+plan( tests => 60 );
 
 ##################################################
 # create our test site
@@ -28,7 +28,9 @@ TestUtils::test_command({ cmd => "/bin/su - $site -c 'mkdir .ssh'", like => '/^$
 TestUtils::test_command({ cmd => "/bin/su - $site -c 'chmod 700 .ssh'", like => '/^$/' });
 TestUtils::test_command({ cmd => "/bin/su - $site -c 'ssh-keygen -t rsa -f .ssh/id_rsa -N \"\"'", like => '/RSA/' });
 TestUtils::test_command({ cmd => "/bin/su - $site -c 'cat .ssh/id_rsa.pub > .ssh/authorized_keys'", like => '/^$/' });
+TestUtils::test_command({ cmd => "/bin/su - $site -c 'chmod 600 .ssh/authorized_keys'", like => '/^$/' });
 TestUtils::test_command({ cmd => "/bin/su - $site -c 'echo \"Host *\nStrictHostKeyChecking no\n\" > .ssh/config'", like => '/^$/' });
+TestUtils::test_command({ cmd => "/bin/su - $site -c 'chmod 600 .ssh/config'", like => '/^$/' });
 TestUtils::test_command({ cmd => "/bin/su - $site -c 'ssh localhost bin/omd status'", like => '/Overall state:/', errlike => '//', exit => 1 });
 
 TestUtils::test_command({ cmd => "/bin/su - $site -c 'echo \"localhost\n\" > inventory'", like => '/^$/' });

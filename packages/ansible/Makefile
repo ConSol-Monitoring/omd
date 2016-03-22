@@ -2,7 +2,7 @@ include ../../Makefile.omd
 
 PYTHONREL=$(shell python -c "import sys; print '.'.join(map(str, sys.version_info[0:2]))")
 
-ANSIBLE=ansible-1.9.0.1
+ANSIBLE=ansible-1.9.5
 
 # This is where the python modules are going to be installed to
 LOCALPYTHONDIR=$(DESTDIR)$(OMD_ROOT)/lib/python
@@ -21,7 +21,7 @@ export PYTHONPATH
 .PHONY: repairdistutils
 
 build:
-	( cd src; tar xzf $(ANSIBLE).tar.gz )
+	( tar xzf $(ANSIBLE).tar.gz )
 
 install:
 	rm -rf $(TMP_DISTU)
@@ -38,15 +38,14 @@ repairdistutils:
 	# No longer...
 	#
 installansible:
-	( cd src/$(ANSIBLE) ; python setup.py install \
+	( cd $(ANSIBLE) ; python setup.py install \
 		--home=$(DESTDIR)$(OMD_ROOT) \
 		--install-purelib=$(LOCALPYTHONDIR) \
 		--install-platlib=$(LOCALPYTHONDIR) \
 		--install-scripts=$(DESTDIR)$(OMD_ROOT)/bin \
 		--install-data=$(DESTDIR)$(OMD_ROOT)/tmp )
-	echo "./${ANSIBLE}-py${PYTHONREL}.egg" > $(LOCALPYTHONDIR)/ansible.pth
 
 skel:
 
 clean:
-	rm -rf src/$(ANSIBLE)
+	rm -rf $(ANSIBLE)
