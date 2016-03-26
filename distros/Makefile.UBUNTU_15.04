@@ -1,4 +1,4 @@
-DISTRO_CODE     = vivid
+DISTRO_CODE     = ubuntu15.04
 BUILD_PACKAGES  =
 BUILD_PACKAGES += build-essential
 BUILD_PACKAGES += devscripts

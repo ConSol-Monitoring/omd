@@ -1,4 +1,4 @@
-DISTRO_CODE     = wily
+DISTRO_CODE     = ubuntu15.10
 BUILD_PACKAGES  =
 BUILD_PACKAGES += build-essential
 BUILD_PACKAGES += devscripts

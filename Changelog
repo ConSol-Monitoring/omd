@@ -1,11 +1,14 @@
 This file documents the revision history for the Open Monitoring Distribution (Labs Edition)
 
 next:
+          - OMD
+            - use distro version numbers in package names for debian and ubuntu too
           - Icinga update to 2.4.1
           - Influxdb update to 0.10.0
           - Grafana update to 2.6.0
           - Core
             - set log_external_commands=1 by default
+          - added ansible 1.9.5
 
 2.10     Nov 12 2015
           - Icinga update to 2.3.11
