@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 NAME = naemon-livestatus
-VERSION = 1.0.2
+VERSION = 1.0.4_20160325
 DIR = $(NAME)-$(VERSION)
 
 CONFIGUREOPTS = \
@@ -9,7 +9,10 @@ CONFIGUREOPTS = \
 
 build:
 	tar xzf $(NAME)-$(VERSION).tar.gz
-	cd $(DIR) ; NAEMON_LIBS="-L$(shell pwd)/../naemon/naemon-*/src" NAEMON_CFLAGS="-I$(shell pwd)../naemon/naemon-*/src" ./configure $(CONFIGUREOPTS)
+	cd $(DIR); \
+		NAEMON_LIBS="$(shell PKG_CONFIG_PATH="`ls -d1 ../naemon/naemon-*/.`" pkg-config --libs naemon-uninstalled)" \
+		NAEMON_CFLAGS="$(shell PKG_CONFIG_PATH="`ls -d1 ../naemon/naemon-*/.`" pkg-config --cflags naemon-uninstalled)" \
+		 ./configure $(CONFIGUREOPTS)
 	rm -f $(DIR)/src/lib $(DIR)/src/naemon
 	cd $(DIR)/src && src=`ls -d1 ../../../naemon/naemon-*/src/naemon` && ln -s $$src naemon
 	cd $(DIR)/src && lib=`ls -d1 ../../../naemon/naemon-*/lib` && ln -s $$lib lib

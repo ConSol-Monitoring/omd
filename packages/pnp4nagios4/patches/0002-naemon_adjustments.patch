@@ -1,0 +1,68 @@
+--- a/src/npcdmod.c	2016-03-26 21:38:51.667316848 +0100
++++ b/src/npcdmod.c	2016-03-26 21:42:10.121493944 +0100
+@@ -22,18 +22,10 @@
+ 
+ #define _NAEMON_H_INSIDE
+ 
+-/* include (minimum required) event broker header files */
+-#include "../include/nebmodules.h"
+-#include "../include/nebcallbacks.h"
+-
+-/* include other event broker header files that we need for our work */
+-#include "../include/nebstructs.h"
+-#include "../include/broker.h"
+-
+ /* include some Nagios stuff as well */
+ #include "../include/config.h"
+ #include "../include/common.h"
+-#include "../include/nagios.h"
++#include "../include/naemon.h"
+ 
+ /* include some pnp stuff */
+ #include "../include/pnp.h"
+@@ -52,12 +44,17 @@
+ char *spool_dir = NULL;
+ char *perfdata_file_processing_interval = "15";
+ 
+-void npcdmod_file_roller();
++static void npcdmod_file_roller(struct nm_event_execution_properties *evprop);
+ int npcdmod_handle_data(int, void *);
+ 
+ int npcdmod_process_config_var(char *arg);
+ int npcdmod_process_module_args(char *args);
+ 
++/* for backwards compatibilty */
++static void write_to_all_logs(char *buffer, int level) {
++	nm_log(level, buffer);
++}
++
+ /* this function gets called when the module is loaded by the event broker */
+ int nebmodule_init(int flags, char *args, nebmodule *handle) {
+ 	char temp_buffer[1024];
+@@ -123,8 +120,7 @@
+ 	/* register for a 15 seconds file move event */
+ 	time(&current_time);
+ 	//interval = 15;
+-	schedule_new_event(EVENT_USER_FUNCTION,TRUE, current_time + atoi(perfdata_file_processing_interval), TRUE,
+-	atoi(perfdata_file_processing_interval), NULL, TRUE, (void *) npcdmod_file_roller, "", 0);
++	schedule_event(atoi(perfdata_file_processing_interval), npcdmod_file_roller, NULL);
+ 
+ 	/* register to be notified of certain events... */
+ 	neb_register_callback(NEBCALLBACK_HOST_CHECK_DATA, npcdmod_module_handle,
+@@ -152,7 +148,7 @@
+ }
+ 
+ /* gets called every X seconds by an event in the scheduling queue */
+-void npcdmod_file_roller() {
++static void npcdmod_file_roller(struct nm_event_execution_properties *evprop) {
+ 	char temp_buffer[1024];
+ 	char spool_file[1024];
+ 	int result = 0;
+@@ -177,6 +173,7 @@
+ 		write_to_all_logs(temp_buffer, NSLOG_INFO_MESSAGE);
+ 	}
+ 
++	schedule_event(atoi(perfdata_file_processing_interval), npcdmod_file_roller, NULL);
+ 	return;
+ }
+ 

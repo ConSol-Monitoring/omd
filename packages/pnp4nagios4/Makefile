@@ -5,12 +5,16 @@ include ../pnp4nagios/Makefile
 
 build:
 	tar xzf ../pnp4nagios/$(DIR).tar.gz
+	set -e; \
 	for p in patches/*.patch ; do \
 	    echo "applying $$p..." ; \
 	    ( cd $(DIR) ; patch -p1 ) < $$p || exit 1; \
 	done
 	find $(DIR) -name \*.orig -exec rm {} \;
-	cd $(DIR) ; ./configure $(CONFIGUREOPTS)
+	cd $(DIR) ; \
+		LIBS="$(shell PKG_CONFIG_PATH="`ls -d1 ../naemon/naemon-*/.`" pkg-config --libs-only-L naemon-uninstalled)" \
+		CFLAGS="$(shell PKG_CONFIG_PATH="`ls -d1 ../naemon/naemon-*/.`" pkg-config --cflags naemon-uninstalled)" \
+		./configure $(CONFIGUREOPTS)
 	cd $(DIR) && mv include include.orig && cp -rp ../../naemon/naemon-*/src/naemon include
 	cd $(DIR) && cp -rp ../../naemon/naemon-*/lib include/
 	cd $(DIR)/include && cp ../../../naemon/naemon-*/config.h .

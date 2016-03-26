@@ -1,0 +1,10 @@
+--- a/src/naemon/utils.c	2016-03-26 16:31:32.496907829 +0100
++++ b/src/naemon/utils.c	2016-03-26 16:31:59.178242565 +0100
+@@ -467,6 +467,7 @@
+ /******************************************************************/
+ static int set_working_directory(void)
+ {
++	return (OK);
+ 	/*
+ 	 * we shouldn't block the unmounting of
+ 	 * filesystems, so chdir() to the root

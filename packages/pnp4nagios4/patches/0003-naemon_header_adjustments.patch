@@ -1,0 +1,15 @@
+--- a/include/pnp.h	2016-03-26 20:39:47.350133342 +0100
++++ b/include/pnp.h	2016-03-26 20:40:25.201667245 +0100
+@@ -92,8 +92,12 @@
+ 
+ #define LOG(level, msg) (loglevel >= level || loglevel == -1) ? (do_log(msg)) : (0)
+ 
++#ifndef TRUE
+ #define TRUE    1
++#endif
++#ifndef FALSE
+ #define FALSE   0
++#endif
+ 
+ #define OK      0
+ #define ERROR   -2

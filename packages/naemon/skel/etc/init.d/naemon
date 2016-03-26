@@ -45,7 +45,6 @@ STATUS_FILE=###ROOT###/tmp/naemon/status.dat
 CMD_FILE=###ROOT###/tmp/run/naemon.cmd
 PID_FILE=###ROOT###/tmp/lock/naemon.lock
 STATUS_DAT=###ROOT###/tmp/naemon/status.dat
-CHECKRESULTS_DIR=###ROOT###/tmp/naemon/checkresults
 USR=###SITE###
 GRP=###SITE###
 
@@ -117,7 +116,6 @@ prep_start() {
     fi
     touch $PID_FILE
     chown $USR:$GRP $PID_FILE
-    rm -f $CHECKRESULTS_DIR/*
 }
 
 naemon_wait_stop() {
