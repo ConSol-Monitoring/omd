@@ -6,6 +6,7 @@
 	DumpFile = "###ROOT###/var/log/nagflux/nagflux.dump"
 	NagfluxSpoolfileFolder = "###ROOT###/var/nagflux"
 	FieldSeparator = "&"
+	BufferSize = 1000
 
 [Log]
 	#leave empty for stdout
@@ -17,6 +18,18 @@
 	#leave empty to disable
 	#WebserverPort = ":7000"
 	WebserverPort = ""
+
+[ModGearman]
+	Enabled = false
+	Address = "127.0.0.1:4730"
+	Queue = "perfdata"
+	# Leave Secret and SecretFile empty to disable encryption
+	# If both are filled the the Secret will be used
+	# Secret to encrypt the gearman jobs
+	Secret = ""
+	# Path to a file which holds the secret to encrypt the gearman jobs
+	SecretFile = "###ROOT###/etc/mod-gearman/secret.key"
+	Worker = 1
 
 [Influx]
 	Enabled = true
