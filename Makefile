@@ -48,7 +48,8 @@ PACKAGES=freetds \
          patch \
          nail \
          notifications-tt \
-	 coshsh
+         ansible \
+         coshsh
 
 include Makefile.omd
 

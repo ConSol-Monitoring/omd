@@ -1,4 +1,4 @@
-DISTRO_CODE       = jessie
+DISTRO_CODE       = debian8
 BUILD_PACKAGES    =
 BUILD_PACKAGES   += build-essential
 BUILD_PACKAGES   += dpatch

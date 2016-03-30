@@ -1,4 +1,4 @@
-DISTRO_CODE     = maverick
+DISTRO_CODE     = ubuntu10.10
 BUILD_PACKAGES  =
 BUILD_PACKAGES += build-essential
 BUILD_PACKAGES += dpatch

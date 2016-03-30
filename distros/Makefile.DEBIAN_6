@@ -1,4 +1,4 @@
-DISTRO_CODE       = squeeze
+DISTRO_CODE       = debian6
 BUILD_PACKAGES    =
 BUILD_PACKAGES   += build-essential
 BUILD_PACKAGES   += dpatch

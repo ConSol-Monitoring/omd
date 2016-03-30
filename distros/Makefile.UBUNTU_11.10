@@ -1,4 +1,4 @@
-DISTRO_CODE     = oneiric
+DISTRO_CODE     = ubuntu11.10
 BUILD_PACKAGES  =
 BUILD_PACKAGES += build-essential
 BUILD_PACKAGES += dpatch

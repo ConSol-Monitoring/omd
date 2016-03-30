@@ -1,4 +1,4 @@
-DISTRO_CODE     = lucid
+DISTRO_CODE     = ubuntu10.04
 BUILD_PACKAGES  =
 BUILD_PACKAGES += build-essential
 BUILD_PACKAGES += dpatch
