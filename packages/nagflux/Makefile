@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 NAME        = nagflux
-VERSION     = 0.2.0
+VERSION     = 0.2.1
 SRC         = $(NAME)-$(VERSION).tar.gz
 GOVERSION   = 1.5
 GOPATH      = go
@@ -31,5 +31,5 @@ package: clean
 		git clone --depth=1 --branch "v$(VERSION)" https://github.com/griesbacher/nagflux && \
 		go get ./... && \
 		cd $(PWD) && \
-		tar zcf $(SRC) $(GOPATH)/src/ --exclude=.git
+		tar zcf $(SRC) $(GOPATH)/src/ --exclude=.git --exclude=*_test.go
 
