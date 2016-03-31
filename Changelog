@@ -60,6 +60,7 @@ next:
           - Thruk: Update to 2.06
           - Added build support for SLES 12 SP1
           - Added build support for Fedora 23
+          - nsca: Update to 2.9.1
 
 1.30     Oct 01 2015
           - omd:

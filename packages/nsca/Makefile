@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 NAME = nsca
-VERSION = 2.7.2
+VERSION = 2.9.1
 DIR = $(NAME)-$(VERSION)
 
 .PHONY: skel
@@ -13,6 +13,10 @@ CONFIGUREOPTS = ""
 
 build:
 	tar xzf $(DIR).tar.gz
+	for p in patches/*.diff ; do \
+          echo "applying $$p..." ; \
+          ( cd $(DIR) ; patch -p1 -b ) < $$p ; \
+        done
 	cd $(DIR) ; ./configure $(CONFIGUREOPTS)
 	$(MAKE) -C $(DIR) all
 
