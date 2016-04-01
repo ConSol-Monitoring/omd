@@ -1,10 +1,10 @@
 include ../../Makefile.omd
 
 NAME       = grafana
-VERSION    = 2.6.0
+VERSION    = 3.0-beta1
 SRC        = $(NAME)-$(VERSION).tar.gz
 GOPATH     = go
-GOVERSION  = 1.4
+GOVERSION  = 1.5
 PWD        = $(shell pwd)
 GO         = export GOROOT=$(PWD)/../go-$(GOVERSION)/go-$(GOVERSION)/ && export GOPATH=$(PWD)/$(GOPATH)/ && PATH=$$GOROOT/bin:$$PATH && go
 
@@ -35,6 +35,8 @@ install:
 	install -m 644 defaults.ini $(DESTDIR)$(OMD_ROOT)/share/grafana/conf/
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/grafana/vendor/
 	cp -rp go/src/github.com/grafana/grafana/vendor/phantomjs $(DESTDIR)$(OMD_ROOT)/share/grafana/vendor/
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/var/grafana/plugins
+	tar zxf plugins.tar.gz -C $(DESTDIR)$(OMD_ROOT)/var/grafana/plugins
 
 skel:
 	sed -i -e 's|###APACHE_MODULE_DIR###|$(MODULE_DIR)|g' \
@@ -62,8 +64,17 @@ package: public
 	wget --no-check-certificate "https://github.com/grafana/grafana/raw/master/conf/defaults.ini" -O defaults.ini
 
 public:
-	wget --no-check-certificate https://grafanarel.s3.amazonaws.com/builds/grafana-$(VERSION).linux-x64.tar.gz
-	tar zxf grafana-$(VERSION).linux-x64.tar.gz
+	#TODO: revert this after beta
+	#wget --no-check-certificate https://grafanarel.s3.amazonaws.com/builds/grafana-$(VERSION).linux-x64.tar.gz
+	#tar zxf grafana-$(VERSION).linux-x64.tar.gz
+	wget --no-check-certificate https://grafanarel.s3.amazonaws.com/builds/grafana-3.0.0-beta11459429091.linux-x64.tar.gz
+	tar zxf grafana-3.0.0-beta11459429091.linux-x64.tar.gz
 	cd grafana-*/. && tar cfz ../public.tar.gz public
-	rm grafana-$(VERSION).linux-x64.tar.gz
+	#rm grafana-$(VERSION).linux-x64.tar.gz
+	rm grafana-3.0.0-beta11459429091.linux-x64.tar.gz
 	rm -rf grafana-*/
+
+plugins:
+	git clone --depth=1 https://github.com/grafana/piechart-panel.git
+	tar zcf plugins.tar.gz piechart-panel --exclude=.git
+	rm -rf piechart-panel
