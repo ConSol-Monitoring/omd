@@ -6,13 +6,14 @@
 To: [% CONTACTEMAIL %]
 #FROM: omd@domain.com
 #REPLY-TO: support@domain.com
+Subject: *** [% NOTIFICATIONTYPE %] *** [% HOSTNAME %] / [% SERVICEDESC %] is [% SERVICESTATE %]
 MIME-Version: 1.0
 Content-Type: multipart/alternative;
                 boundary="----=_alternative_mail"
-Subject: *** [% NOTIFICATIONTYPE %] *** [% HOSTNAME %] / [% SERVICEDESC %] is [% SERVICESTATE %]
 
+This is a multi-part message in MIME format.
 ------=_alternative_mail
-Content-Type: text/plain; charset="iso-8859-1"
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 
 --SERVICE-ALERT-------------------
@@ -44,8 +45,7 @@ Content-Type: multipart/related;
                 boundary="----=_alternative_html"
 
 ------=_alternative_html
-Content-Type: text/html;
-                charset=utf-8
+Content-Type: text/html; charset=utf-8
 Content-Transfer-Encoding: base64
 
 [%+ mailtext = BLOCK %]
@@ -103,6 +103,7 @@ a:hover {
         [% SERVICEDESC %] is [% SERVICESTATE %]
      [% IF BASEURL != "" %]</a>[% END %]
     </div>
+    [% IF BASEURL != "" %]<div style="text-align: center; font-size: 12px; padding-top: 25px;"><a href="[% BASEURL %]thruk/" style="border-bottom: 0;">monitored by [% BASEURL.replace("^https?://", "").replace("/[^/]+/$", "") %]</a></div>[% END %]
    </td>
   </tr>
   <tr><td>Hostname:</td><td>[% HOSTNAME %]</td></tr>

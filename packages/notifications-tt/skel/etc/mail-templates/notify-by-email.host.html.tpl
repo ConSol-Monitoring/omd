@@ -6,10 +6,10 @@
 To: [% CONTACTEMAIL %]
 #FROM: omd@domain.com
 #REPLY-TO: support@domain.com
+Subject: *** [% NOTIFICATIONTYPE %] *** [% HOSTNAME %] is [% HOSTSTATE %]
 MIME-Version: 1.0
 Content-Type: multipart/alternative;
                 boundary="----=_alternative_mail"
-Subject: *** [% NOTIFICATIONTYPE %] *** [% HOSTNAME %] is [% HOSTSTATE %]
 
 ------=_alternative_mail
 Content-Type: text/plain; charset="iso-8859-1"
@@ -101,6 +101,7 @@ a:hover {
         [% HOSTNAME %] is [% HOSTSTATE %]
      [% IF BASEURL != "" %]</a>[% END %]
     </div>
+    [% IF BASEURL != "" %]<div style="text-align: center; font-size: 12px; padding-top: 25px;"><a href="[% BASEURL %]thruk/" style="border-bottom: 0;">monitored by [% BASEURL.replace("^https?://", "").replace("/[^/]+/$", "") %]</a></div>[% END %]
    </td>
   </tr>
   <tr><td>Hostname:</td><td>[% HOSTNAME %]</td></tr>
