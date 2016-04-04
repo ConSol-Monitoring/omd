@@ -1,12 +1,11 @@
---- a/src/github.com/grafana/grafana/pkg/api/index.go	2015-09-07 14:11:48.000000000 +0200
-+++ b/src/github.com/grafana/grafana/pkg/api/index.go	2015-09-16 15:01:48.391165169 +0200
-@@ -38,6 +38,9 @@
- 		currentUser.LightTheme = true
- 	}
- 
-+	/* OMD: make it always light for OMD which fits better into existing tools and reports  */
-+	currentUser.LightTheme = true
+--- a/src/github.com/grafana/grafana/pkg/api/index.go    2016-04-04 11:28:28.728000000 +0200
++++ b/src/github.com/grafana/grafana/pkg/api/index.go    2016-04-04 11:28:06.448000000 +0200
+@@ -47,7 +47,7 @@
+        if themeUrlParam == "light" {
+                data.User.LightTheme = true
+        }
+-       data.User.LightTheme = true
 +
- 	c.Data["User"] = currentUser
- 	c.Data["Settings"] = settings
- 	c.Data["AppUrl"] = setting.AppUrl
+        dashboardChildNavs := []*dtos.NavLink{
+                {Text: "Home", Url: setting.AppSubUrl + "/"},
+                {Text: "Playlists", Url: setting.AppSubUrl + "/playlists"},

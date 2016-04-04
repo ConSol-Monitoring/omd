@@ -60,7 +60,6 @@ package: public
 		$(GO) run build.go setup
 	echo "packageing"
 	tar zcf $(SRC) $(GOPATH)/src/ --exclude=.git
-	rm -rf $(GOPATH)
 	wget --no-check-certificate "https://github.com/grafana/grafana/raw/master/conf/defaults.ini" -O defaults.ini
 
 public:
