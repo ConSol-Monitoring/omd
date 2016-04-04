@@ -22,13 +22,13 @@ build:
 	    ( cd $(GOPATH) ; patch -p1 ) < $$p ; \
 	done
 	export GOROOT=$(PWD)/../go-$(GOVERSION)/go-$(GOVERSION)/ && export GOPATH=$(PWD)/$(GOPATH)/ && PATH=$$GOROOT/bin:$$PATH && \
-		cd $(GOPATH)/src/github.com/grafana && \
-		go build ./... && \
-		go install ./...
+		cd $(GOPATH)/src/github.com/grafana/grafana && \
+		go run build.go build
 
 install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/bin
-	install -m 755 $(GOPATH)/bin/grafana  $(DESTDIR)$(OMD_ROOT)/bin
+	install -m 755 $(GOPATH)/src/github.com/grafana/grafana/bin/grafana-server  $(DESTDIR)$(OMD_ROOT)/bin/grafana
+	install -m 755 $(GOPATH)/src/github.com/grafana/grafana/bin/grafana-cli  $(DESTDIR)$(OMD_ROOT)/bin/grafana-cli
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/grafana
 	tar zxf public.tar.gz -C $(DESTDIR)$(OMD_ROOT)/share/grafana
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/grafana/conf
@@ -55,6 +55,8 @@ package: public
 	echo "Get everything"
 	-cd $(GOPATH)/src/github.com/grafana/grafana && \
 		$(GO) get -u -f -v ./...
+	cd $(GOPATH)/src/github.com/grafana/grafana && \
+		$(GO) get github.com/go-macaron/binding
 	echo "build app"
 	cd $(GOPATH)/src/github.com/grafana/grafana && \
 		$(GO) run build.go setup
