@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 NAME       = grafana
-VERSION    = 3.0-beta1
+VERSION    = 3.0-beta2
 SRC        = $(NAME)-$(VERSION).tar.gz
 GOPATH     = go
 GOVERSION  = 1.5
@@ -62,17 +62,16 @@ package: public
 		$(GO) run build.go setup
 	echo "packageing"
 	tar zcf $(SRC) $(GOPATH)/src/ --exclude=.git
-	wget --no-check-certificate "https://github.com/grafana/grafana/raw/master/conf/defaults.ini" -O defaults.ini
 
 public:
 	#TODO: revert this after beta
 	#wget --no-check-certificate https://grafanarel.s3.amazonaws.com/builds/grafana-$(VERSION).linux-x64.tar.gz
 	#tar zxf grafana-$(VERSION).linux-x64.tar.gz
-	wget --no-check-certificate https://grafanarel.s3.amazonaws.com/builds/grafana-3.0.0-beta11459429091.linux-x64.tar.gz
-	tar zxf grafana-3.0.0-beta11459429091.linux-x64.tar.gz
+	wget --no-check-certificate https://grafanarel.s3.amazonaws.com/builds/grafana-3.0.0-beta21459801392.linux-x64.tar.gz
+	tar zxf grafana-3.0.0-beta21459801392.linux-x64.tar.gz
 	cd grafana-*/. && tar cfz ../public.tar.gz public
 	#rm grafana-$(VERSION).linux-x64.tar.gz
-	rm grafana-3.0.0-beta11459429091.linux-x64.tar.gz
+	rm grafana-3.0.0-beta21459801392.linux-x64.tar.gz
 	rm -rf grafana-*/
 
 plugins:
