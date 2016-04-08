@@ -35,12 +35,12 @@ install:
 	install -m 644 defaults.ini $(DESTDIR)$(OMD_ROOT)/share/grafana/conf/
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/grafana/vendor/
 	cp -rp go/src/github.com/grafana/grafana/vendor/phantomjs $(DESTDIR)$(OMD_ROOT)/share/grafana/vendor/
-	mkdir -p $(DESTDIR)$(OMD_ROOT)/var/grafana/plugins
-	tar zxf plugins.tar.gz -C $(DESTDIR)$(OMD_ROOT)/var/grafana/plugins
 
 skel:
 	sed -i -e 's|###APACHE_MODULE_DIR###|$(MODULE_DIR)|g' \
 	       $(SKEL)/etc/apache/conf.d/grafana.conf
+	mkdir -p $(SKEL)/var/grafana/plugins
+	tar zxf plugins.tar.gz -C $(SKEL)/var/grafana/plugins
 
 clean:
 	rm -rf $(GOPATH)
@@ -73,6 +73,7 @@ public:
 	#rm grafana-$(VERSION).linux-x64.tar.gz
 	rm grafana-3.0.0-beta21459801392.linux-x64.tar.gz
 	rm -rf grafana-*/
+	wget --no-check-certificate "https://github.com/grafana/grafana/raw/master/conf/defaults.ini" -O defaults.ini
 
 plugins:
 	git clone --depth=1 https://github.com/grafana/piechart-panel.git
