@@ -39,7 +39,7 @@ neue Farben 05/2013
 
 #search-results {
 /*  background:#f5f8fc;*/
-  background:#ffde00;
+  background:#ffcc00;
 }
 
 #splashpage #mainfooter {
@@ -129,7 +129,7 @@ DIV.infoMessage {
 
 .navsectiontitle {
 /*	background-color:#06507f;*/
-	background-color:#ffde00;
+	background-color:#ffcc00;
 	font-size:14px;
 	height:30px;
 	line-height:30px;
@@ -138,7 +138,7 @@ DIV.infoMessage {
 	border-top-width: 2px;
 	border-top-style: solid;
 /*	border-top-color: #06507f;*/
-	border-top-color: #ffde00;
+	border-top-color: #ffcc00;
 	cursor: pointer;
 }
 
@@ -329,35 +329,35 @@ DIV.dataTitle {
 	font-size:18px;
 	font-weight:bold;
 /*	color: #738EB5;*/
-	color: #494949;
+	color: #2e2d2c;
 }
 
 DIV.commentTitle {
 	font-size:18px;
 	font-weight:bold;
 /*	color: #738EB5;*/
-	color: #494949;
+	color: #2e2d2c;
 }
 
 DIV.downtimeTitle {
 	font-size:18px;
 	font-weight:bold;
 /*	color: #738EB5;*/
-	color: #494949;
+	color: #2e2d2c;
 }
 
 DIV.reportSelectTitle {
 	font-size:18px;
 	font-weight:bold;
 /*	color: #738EB5;*/
-	color: #494949;
+	color: #2e2d2c;
 }
 
 DIV.statusTitle {
 	font-weight: bold;
 	font-size: 18px;
 /*	color: #738EB5;*/
-	color: #494949;
+	color: #2e2d2c;
 }
 
 TABLE.cmd_pane {
@@ -760,7 +760,7 @@ TD.miniStatusUP,TD.miniStatusOK {
 }
 
 TD.miniStatusWARNING {
-  background-color:#FFDE00;
+  background-color:#ffcc00;
   font-weight:bold;
   padding:2px;
   text-align:center;
@@ -769,7 +769,7 @@ TD.miniStatusWARNING {
 TD.navBoxItem,TD.navBoxDate,TD.optBoxItem,TD.optBoxRequiredItem {
 	font-size:11px;
 	font-weight:bold;
-	background-color: #f5f8fc;
+	/*background-color: #f5f8fc;*/
 }
 
 TD.optBoxRequiredItem {
@@ -791,7 +791,7 @@ TD.notificationsOK,TD.notificationsHOSTUP {
 }
 
 TD.notificationsWARNING {
-  background-color:#FFDE00;
+  background-color:#ffcc00;
   height:22px;
   padding:1px;
 }
@@ -867,7 +867,7 @@ TD.statusOdd.tableRowSelected, TD.statusEven.tableRowSelected, TD.tableRowSelect
 }
 
 .statusWARNING,.serviceWarning {
-  background-color:#FFDE00;
+  background-color:#ffcc00;
   height:22px;
 }
 
@@ -916,7 +916,7 @@ TR.command > TD {
 
 a {
 /*  color:#06507f;*/
-  color:#494949;
+  color:#2e2d2c;
   text-decoration:none;
 }
 
@@ -929,7 +929,7 @@ body {
   background:#fff url(../images/bg.png) repeat-x;
   background-attachment:fixed;
 /*  color:#06507f;*/
-  color:#494949;
+  color:#2e2d2c;
   font-family: sans-serif;
   font-size:11px;
   line-height:18px;
@@ -961,7 +961,7 @@ div.navbar li {
  color: #385F96;
 }
 div.navsectiontitle {
-  color:#494949;
+  color:#2e2d2c;
 }
 
 div.navsection {
@@ -1042,7 +1042,7 @@ ul.navsectionlinks li.navbarsearch:hover,ul.navsectionlinks li ul li:hover,li.na
 
 ul.navsectionlinks li:hover {
 /*  background:#8ca3c2;*/
-  background:#ffde00;
+  background:#ffcc00;
 }
 
 ul.navsectionlinks li:active {
@@ -1303,15 +1303,15 @@ body.avail TD.dataOdd, body.avail TD.dataEven {
 }
 
 .mainlogo {
-  width:  246px;
-  height: 246px;
+  width:  487px;
+  height: 164px;
 }
 
 .nav_small_logo {
-  margin: 10px;
+  margin: 15px 10px 10px 10px;
   padding: 0px;
-  width:  128px;
-  height: 30px;
+  width:  130px;
+  height: 40px;
 }
 
 DIV.health_bar_bg {
@@ -1322,8 +1322,8 @@ DIV.health_bar_bg {
 
 input.top_nav_pref_button, button.top_nav_pref_button {
 /*	color:#ffffff;*/
-	color:#494949;
-	background-color:#ffde00;
+	color:#2e2d2c;
+	background-color:#ffcc00;
 /*	background-color:#174484;*/
 	border-style:double;
 	border-color:#e6ebf2;
