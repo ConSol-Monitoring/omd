@@ -29,7 +29,7 @@ case "$1" in
             BIND_IP=${SELECTED_PORT%%:*}
             SELECTED_PORT=${SELECTED_PORT##*:}
         fi
-        PORT=$($OMD_ROOT/lib/omd/port_is_used MONGODB_TCP_PORT 27017)
+        PORT=$($OMD_ROOT/lib/omd/port_is_used MONGODB_TCP_PORT $SELECTED_PORT)
         CHECK_PORT=${PORT##*:}
         if [ "$CHECK_PORT" != "$SELECTED_PORT" ] ; then
             echo "MongoDB port $SELECTED_PORT is in use. I've choosen $PORT instead." >&2
