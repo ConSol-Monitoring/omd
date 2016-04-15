@@ -30,7 +30,8 @@ ifeq ($(DISTRO_INFO),CENTOS 6)
 CONFIGUREOPTS+=-DBoost_NO_BOOST_CMAKE=ON
 endif
 
-ifeq ($(DISTRO_INFO),SLES 11SP3)
+ifneq (,$(findstring SLES 11SP,$(DISTRO_INFO)))
+EXTRA_BUILD_DEPS=build_env_for_sles11
 CONFIGUREOPTS+=-DCMAKE_EXE_LINKER_FLAGS=-lrt
 CONFIGUREOPTS+=-DBoost_NO_BOOST_CMAKE=ON
 CONFIGUREOPTS+=-DBoost_NO_SYSTEM_PATHS=ON
@@ -40,11 +41,12 @@ CONFIGUREOPTS+=-DBOOST_INCLUDEDIR=$(BOOSTDEST)/include
 CONFIGUREOPTS+=-DBOOST_LIBRARYDIR=$(BOOSTDEST)/lib
 CONFIGUREOPTS+=-DBoost_DEBUG=ON
 CMAKE=$(CMAKEDEST)/bin/cmake
+else
+EXTRA_BUILD_DEPS=
 endif
 
 
-build:
-	if [ "$(DISTRO_INFO)" = "SLES 11SP3" ] ; then $(MAKE) build_env_for_sles11sp3; fi
+build: $(EXTRA_BUILD_DEPS)
 	tar xzf $(DIR).tar.gz
 	mkdir -p $(DIR)/build
 	for p in patches/*.patch ; do \
@@ -56,7 +58,7 @@ build:
 		$(CMAKE) .. $(CONFIGUREOPTS) && \
 		make -j1
 
-build_env_for_sles11sp3:
+build_env_for_sles11:
 	tar xzf $(CMAKEDIR).tar.gz
 	cd $(CMAKEDIR) && \
 		./configure --prefix=$(CMAKEDEST) && \

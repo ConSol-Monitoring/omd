@@ -22,6 +22,7 @@ export PYTHONPATH
 
 build:
 	( tar xzf $(ANSIBLE).tar.gz )
+	( cd $(ANSIBLE) ; python setup.py build )
 
 install:
 	rm -rf $(TMP_DISTU)
@@ -40,6 +41,7 @@ repairdistutils:
 installansible:
 	( cd $(ANSIBLE) ; python setup.py install \
 		--home=$(DESTDIR)$(OMD_ROOT) \
+		--prefix='' \
 		--install-purelib=$(LOCALPYTHONDIR) \
 		--install-platlib=$(LOCALPYTHONDIR) \
 		--install-scripts=$(DESTDIR)$(OMD_ROOT)/bin \
