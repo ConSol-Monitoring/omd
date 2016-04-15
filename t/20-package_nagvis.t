@@ -382,7 +382,7 @@ TestUtils::test_url(
 # 2. Match the member list
 TestUtils::test_url(
     api_url_list({ url  => '/nagvis/server/core/ajax_handler.php?mod=Map&act=getObjectStates&show=demo-germany&ty=state&i[]=d99295',
-                   like => [ '/{"state":/', '/"members":\[{"/' ]})
+                   like => [ '/{"state":/', '/"members":\[\{"/' ]})
 );
 
 ###############################################################################

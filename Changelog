@@ -7,6 +7,7 @@ This file documents the revision history for the Open Monitoring Distribution
                    to restore invalid backup files
             - FIX: Added missing but documented --conflict flag to "omd restore"
             - FIX: Skipping partially created sites during omd start/stop/restart
+	    - FIX: Set correct shell environment for cronjobs
             - omd backup: Can use --no-rrds,--no-logs or --no-past now to
               exclude RRDs and/or the monitoring history from the backup. These
               options can be used to make the backup/restore procedure faster
@@ -31,9 +32,10 @@ This file documents the revision history for the Open Monitoring Distribution
           - NagVis:
             - Update to version 1.9b3
           - Icinga: Update to 1.13.3
-          - Thruk: Update to 2.04
+          - Thruk: Update to 2.06
           - Added build support for SLES 12 SP1
           - Added build support for Fedora 23
+          - nsca: Update to 2.9.1
 
 1.30     Oct 01 2015
           - omd:
