@@ -7,6 +7,7 @@ This file documents the revision history for the Open Monitoring Distribution
                    to restore invalid backup files
             - FIX: Added missing but documented --conflict flag to "omd restore"
             - FIX: Skipping partially created sites during omd start/stop/restart
+	    - FIX: Set correct shell environment for cronjobs
             - omd backup: Can use --no-rrds,--no-logs or --no-past now to
               exclude RRDs and/or the monitoring history from the backup. These
               options can be used to make the backup/restore procedure faster

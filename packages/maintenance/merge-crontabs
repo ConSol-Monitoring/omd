@@ -13,10 +13,12 @@ sys.stdout.write("""#
 # is started or reloaded.
 #
 # execute 'omd reload crontab'
-# to rebuild this file out of %s/etc/cron.d/*
+# to rebuild this file out of %(omd_root)s/etc/cron.d/*
 #
 # --ENVIRONMENT------------------------------------------------
-""" % os.environ['OMD_ROOT'])
+SHELL=/bin/bash
+BASH_ENV=%(omd_root)s/.profile
+""" % {"omd_root": os.environ['OMD_ROOT']})
 
 sys.stdout.write("OMD_ROOT=%s\n" % os.environ['OMD_ROOT'])
 sys.stdout.write("OMD_SITE=%s\n" % os.environ['OMD_SITE'])
