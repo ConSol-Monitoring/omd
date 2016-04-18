@@ -21,6 +21,10 @@ install:
 	install -m 755 $(PWD)/$(GOPATH)/bin/influxd $(DESTDIR)$(OMD_ROOT)/bin
 	install -m 755 $(PWD)/$(GOPATH)/bin/influx_tsm  $(DESTDIR)$(OMD_ROOT)/bin
 	install -m 755 $(PWD)/$(GOPATH)/bin/influx_stress  $(DESTDIR)$(OMD_ROOT)/bin
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins
+	install -m 755 $(PWD)/check_influxdb.pl $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/histou/templates/default/
+	install -m 644 $(PWD)/influxdb.simple $(DESTDIR)$(OMD_ROOT)/share/histou/templates/default/influxdb.simple
 
 skel:
 

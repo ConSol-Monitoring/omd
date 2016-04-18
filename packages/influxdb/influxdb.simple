@@ -1,0 +1,1120 @@
+#The following lines are the ruleset, if a match on the higher lines matches than the rule wins
+#perfLabel is a list of regex, each for one performanceLabel
+host = *
+service = *
+command = *
+perfLabel = total, data, meta, wal, metrics, messages
+
+#Copy the grafana dashboard below:
+{
+  "id": 1,
+  "title": "Influxdb",
+  "originalTitle": "Influxdb",
+  "tags": [],
+  "style": "dark",
+  "timezone": "browser",
+  "editable": true,
+  "hideControls": false,
+  "sharedCrosshair": true,
+  "rows": [
+    {
+      "collapse": false,
+      "editable": true,
+      "height": "400px",
+      "panels": [
+        {
+          "aliasColors": {
+            "downtime": "#EEE",
+            "Critcal": "#FF3727",
+            "Total": "#085DFF",
+            "Warning": "#FFFC15"
+          },
+          "bars": false,
+          "datasource": "-- Mixed --",
+          "editable": true,
+          "fill": 0,
+          "grid": {
+            "threshold1": null,
+            "threshold1Color": "rgba(216, 200, 27, 0.27)",
+            "threshold2": null,
+            "threshold2Color": "rgba(234, 112, 112, 0.22)"
+          },
+          "id": 1,
+          "legend": {
+            "alignAsTable": false,
+            "avg": false,
+            "current": false,
+            "hideEmpty": true,
+            "hideZero": true,
+            "max": false,
+            "min": false,
+            "rightSide": false,
+            "show": true,
+            "total": false,
+            "values": false
+          },
+          "lines": true,
+          "linewidth": 2,
+          "links": [],
+          "nullPointMode": "connected",
+          "percentage": false,
+          "pointradius": 5,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [
+            {
+              "alias": "downtime",
+              "fill": 3,
+              "legend": false,
+              "lines": true,
+              "linewidth": 3
+            },
+            {
+              "alias": "Total",
+              "fill": 2,
+              "stack": false
+            },
+            {
+              "alias": "Warning",
+              "legend": false,
+              "stack": false
+            },
+            {
+              "alias": "Critical",
+              "legend": false,
+              "stack": false
+            },
+            {
+              "alias": "Meta",
+              "stack": true
+            },
+            {
+              "alias": "Data",
+              "stack": true
+            },
+            {
+              "alias": "Wal",
+              "stack": true
+            }
+          ],
+          "span": 12,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+              "alias": "$col",
+              "datasource": "nagflux",
+              "dsType": "influxdb",
+              "groupBy": [
+                {
+                  "params": [
+                    "$interval"
+                  ],
+                  "type": "time"
+                },
+                {
+                  "params": [
+                    "null"
+                  ],
+                  "type": "fill"
+                }
+              ],
+              "measurement": "metrics",
+              "policy": "default",
+              "refId": "A",
+              "resultFormat": "time_series",
+              "select": [
+                [
+                  {
+                    "params": [
+                      "value"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "mean"
+                  },
+                  {
+                    "params": [
+                      "Total"
+                    ],
+                    "type": "alias"
+                  }
+                ],
+                [
+                  {
+                    "params": [
+                      "warn"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "mean"
+                  },
+                  {
+                    "params": [
+                      "Warning"
+                    ],
+                    "type": "alias"
+                  }
+                ],
+                [
+                  {
+                    "params": [
+                      "warn-min"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "mean"
+                  },
+                  {
+                    "params": [
+                      "total-warn-min"
+                    ],
+                    "type": "alias"
+                  }
+                ],
+                [
+                  {
+                    "params": [
+                      "warn-max"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "mean"
+                  },
+                  {
+                    "params": [
+                      "total-warn-max"
+                    ],
+                    "type": "alias"
+                  }
+                ],
+                [
+                  {
+                    "params": [
+                      "crit"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "mean"
+                  },
+                  {
+                    "params": [
+                      "Critical"
+                    ],
+                    "type": "alias"
+                  }
+                ],
+                [
+                  {
+                    "params": [
+                      "crit-min"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "mean"
+                  },
+                  {
+                    "params": [
+                      "total-crit-min"
+                    ],
+                    "type": "alias"
+                  }
+                ],
+                [
+                  {
+                    "params": [
+                      "crit-max"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "mean"
+                  },
+                  {
+                    "params": [
+                      "total-crit-max"
+                    ],
+                    "type": "alias"
+                  }
+                ]
+              ],
+              "tags": [
+                {
+                  "key": "host",
+                  "operator": "=",
+                  "value": "mo.nierlein.de"
+                },
+                {
+                  "condition": "AND",
+                  "key": "service",
+                  "operator": "=",
+                  "value": "influxdb"
+                },
+                {
+                  "condition": "AND",
+                  "key": "command",
+                  "operator": "=",
+                  "value": "check_omd_influxdb"
+                },
+                {
+                  "condition": "AND",
+                  "key": "performanceLabel",
+                  "operator": "=",
+                  "value": "total"
+                }
+              ]
+            },
+            {
+              "alias": "$col",
+              "datasource": "nagflux",
+              "dsType": "influxdb",
+              "groupBy": [
+                {
+                  "params": [
+                    "$interval"
+                  ],
+                  "type": "time"
+                },
+                {
+                  "params": [
+                    "null"
+                  ],
+                  "type": "fill"
+                }
+              ],
+              "measurement": "metrics",
+              "policy": "default",
+              "refId": "B",
+              "resultFormat": "time_series",
+              "select": [
+                [
+                  {
+                    "params": [
+                      "value"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "mean"
+                  },
+                  {
+                    "params": [
+                      "downtime"
+                    ],
+                    "type": "alias"
+                  }
+                ]
+              ],
+              "tags": [
+                {
+                  "key": "host",
+                  "operator": "=",
+                  "value": "mo.nierlein.de"
+                },
+                {
+                  "condition": "AND",
+                  "key": "service",
+                  "operator": "=",
+                  "value": "influxdb"
+                },
+                {
+                  "condition": "AND",
+                  "key": "command",
+                  "operator": "=",
+                  "value": "check_omd_influxdb"
+                },
+                {
+                  "condition": "AND",
+                  "key": "performanceLabel",
+                  "operator": "=",
+                  "value": "total"
+                },
+                {
+                  "condition": "AND",
+                  "key": "downtime",
+                  "operator": "=",
+                  "value": "true"
+                }
+              ]
+            },
+            {
+              "alias": "Meta",
+              "datasource": "nagflux",
+              "dsType": "influxdb",
+              "groupBy": [
+                {
+                  "params": [
+                    "$interval"
+                  ],
+                  "type": "time"
+                },
+                {
+                  "params": [
+                    "null"
+                  ],
+                  "type": "fill"
+                }
+              ],
+              "measurement": "metrics",
+              "policy": "default",
+              "refId": "E",
+              "resultFormat": "time_series",
+              "select": [
+                [
+                  {
+                    "params": [
+                      "value"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "mean"
+                  }
+                ]
+              ],
+              "tags": [
+                {
+                  "key": "host",
+                  "operator": "=",
+                  "value": "mo.nierlein.de"
+                },
+                {
+                  "condition": "AND",
+                  "key": "service",
+                  "operator": "=",
+                  "value": "influxdb"
+                },
+                {
+                  "condition": "AND",
+                  "key": "command",
+                  "operator": "=",
+                  "value": "check_omd_influxdb"
+                },
+                {
+                  "condition": "AND",
+                  "key": "performanceLabel",
+                  "operator": "=",
+                  "value": "meta"
+                }
+              ]
+            },
+            {
+              "alias": "Data",
+              "datasource": "nagflux",
+              "dsType": "influxdb",
+              "groupBy": [
+                {
+                  "params": [
+                    "$interval"
+                  ],
+                  "type": "time"
+                },
+                {
+                  "params": [
+                    "null"
+                  ],
+                  "type": "fill"
+                }
+              ],
+              "measurement": "metrics",
+              "policy": "default",
+              "refId": "C",
+              "resultFormat": "time_series",
+              "select": [
+                [
+                  {
+                    "params": [
+                      "value"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "mean"
+                  }
+                ]
+              ],
+              "tags": [
+                {
+                  "key": "host",
+                  "operator": "=",
+                  "value": "mo.nierlein.de"
+                },
+                {
+                  "condition": "AND",
+                  "key": "service",
+                  "operator": "=",
+                  "value": "influxdb"
+                },
+                {
+                  "condition": "AND",
+                  "key": "command",
+                  "operator": "=",
+                  "value": "check_omd_influxdb"
+                },
+                {
+                  "condition": "AND",
+                  "key": "performanceLabel",
+                  "operator": "=",
+                  "value": "data"
+                }
+              ]
+            },
+            {
+              "alias": "Wal",
+              "datasource": "nagflux",
+              "dsType": "influxdb",
+              "groupBy": [
+                {
+                  "params": [
+                    "$interval"
+                  ],
+                  "type": "time"
+                },
+                {
+                  "params": [
+                    "null"
+                  ],
+                  "type": "fill"
+                }
+              ],
+              "measurement": "metrics",
+              "policy": "default",
+              "refId": "D",
+              "resultFormat": "time_series",
+              "select": [
+                [
+                  {
+                    "params": [
+                      "value"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "mean"
+                  }
+                ]
+              ],
+              "tags": [
+                {
+                  "key": "host",
+                  "operator": "=",
+                  "value": "mo.nierlein.de"
+                },
+                {
+                  "condition": "AND",
+                  "key": "service",
+                  "operator": "=",
+                  "value": "influxdb"
+                },
+                {
+                  "condition": "AND",
+                  "key": "command",
+                  "operator": "=",
+                  "value": "check_omd_influxdb"
+                },
+                {
+                  "condition": "AND",
+                  "key": "performanceLabel",
+                  "operator": "=",
+                  "value": "wal"
+                }
+              ]
+            }
+          ],
+          "timeFrom": null,
+          "timeShift": null,
+          "title": "Diskspace",
+          "tooltip": {
+            "avg": false,
+            "current": false,
+            "max": false,
+            "min": false,
+            "msResolution": false,
+            "shared": true,
+            "show": false,
+            "total": false,
+            "value_type": "individual",
+            "values": false
+          },
+          "type": "graph",
+          "xaxis": {
+            "show": false
+          },
+          "yaxes": [
+            {
+              "format": "bytes",
+              "label": "Diskspace Details",
+              "min": 0,
+              "show": true
+            },
+            {
+              "format": "none",
+              "label": "",
+              "min": null,
+              "show": false
+            }
+          ],
+          "transparent": false,
+          "percent": false
+        },
+        {
+          "aliasColors": {
+            "Disk Usage": "#085DFF"
+          },
+          "bars": false,
+          "datasource": null,
+          "editable": true,
+          "fill": 0,
+          "grid": {
+            "threshold1": null,
+            "threshold1Color": "rgba(216, 200, 27, 0.27)",
+            "threshold2": null,
+            "threshold2Color": "rgba(234, 112, 112, 0.22)"
+          },
+          "id": 3,
+          "legend": {
+            "alignAsTable": false,
+            "avg": false,
+            "current": false,
+            "hideEmpty": false,
+            "hideZero": false,
+            "max": false,
+            "min": false,
+            "rightSide": false,
+            "show": true,
+            "total": false,
+            "values": false
+          },
+          "lines": true,
+          "linewidth": 2,
+          "links": [],
+          "nullPointMode": "connected",
+          "percentage": false,
+          "pointradius": 5,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [
+            {
+              "alias": "Metrics",
+              "fill": 2
+            },
+            {
+              "alias": "Disk Usage",
+              "yaxis": 2
+            }
+          ],
+          "span": 12,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+              "alias": "Metrics",
+              "dsType": "influxdb",
+              "groupBy": [
+                {
+                  "params": [
+                    "$interval"
+                  ],
+                  "type": "time"
+                },
+                {
+                  "params": [
+                    "null"
+                  ],
+                  "type": "fill"
+                }
+              ],
+              "measurement": "metrics",
+              "policy": "default",
+              "refId": "F",
+              "resultFormat": "time_series",
+              "select": [
+                [
+                  {
+                    "params": [
+                      "value"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "mean"
+                  }
+                ]
+              ],
+              "tags": [
+                {
+                  "key": "host",
+                  "operator": "=",
+                  "value": "mo.nierlein.de"
+                },
+                {
+                  "condition": "AND",
+                  "key": "service",
+                  "operator": "=",
+                  "value": "influxdb"
+                },
+                {
+                  "condition": "AND",
+                  "key": "command",
+                  "operator": "=",
+                  "value": "check_omd_influxdb"
+                },
+                {
+                  "condition": "AND",
+                  "key": "performanceLabel",
+                  "operator": "=",
+                  "value": "metrics"
+                }
+              ]
+            },
+            {
+              "policy": "default",
+              "dsType": "influxdb",
+              "resultFormat": "time_series",
+              "tags": [
+                {
+                  "key": "host",
+                  "operator": "=",
+                  "value": "mo.nierlein.de"
+                },
+                {
+                  "condition": "AND",
+                  "key": "service",
+                  "operator": "=",
+                  "value": "influxdb"
+                },
+                {
+                  "condition": "AND",
+                  "key": "command",
+                  "operator": "=",
+                  "value": "check_omd_influxdb"
+                },
+                {
+                  "condition": "AND",
+                  "key": "performanceLabel",
+                  "operator": "=",
+                  "value": "total"
+                }
+              ],
+              "groupBy": [
+                {
+                  "type": "time",
+                  "params": [
+                    "$interval"
+                  ]
+                },
+                {
+                  "type": "fill",
+                  "params": [
+                    "null"
+                  ]
+                }
+              ],
+              "select": [
+                [
+                  {
+                    "type": "field",
+                    "params": [
+                      "value"
+                    ]
+                  },
+                  {
+                    "type": "mean",
+                    "params": []
+                  }
+                ]
+              ],
+              "refId": "A",
+              "measurement": "metrics",
+              "alias": "Disk Usage"
+            }
+          ],
+          "timeFrom": null,
+          "timeShift": null,
+          "title": "Metrics",
+          "tooltip": {
+            "avg": false,
+            "current": false,
+            "max": false,
+            "min": false,
+            "msResolution": false,
+            "shared": true,
+            "show": false,
+            "total": false,
+            "value_type": "cumulative",
+            "values": false
+          },
+          "type": "graph",
+          "xaxis": {
+            "show": false
+          },
+          "yaxes": [
+            {
+              "format": "short",
+              "label": "Metrics",
+              "min": 0,
+              "show": true
+            },
+            {
+              "format": "bytes",
+              "label": "",
+              "min": 0,
+              "show": false
+            }
+          ],
+          "transparent": false
+        }
+      ],
+      "title": "mo.nierlein.de influxdb check_omd_influxdb"
+    },
+    {
+      "title": "New row",
+      "height": "250px",
+      "editable": true,
+      "collapse": false,
+      "panels": [
+        {
+          "title": "Diskspace",
+          "error": false,
+          "span": 12,
+          "editable": true,
+          "type": "grafana-piechart-panel",
+          "isNew": true,
+          "id": 2,
+          "targets": [
+            {
+              "policy": "default",
+              "dsType": "influxdb",
+              "resultFormat": "time_series",
+              "tags": [
+                {
+                  "key": "host",
+                  "operator": "=",
+                  "value": "mo.nierlein.de"
+                },
+                {
+                  "condition": "AND",
+                  "key": "service",
+                  "operator": "=",
+                  "value": "influxdb"
+                },
+                {
+                  "condition": "AND",
+                  "key": "command",
+                  "operator": "=",
+                  "value": "check_omd_influxdb"
+                },
+                {
+                  "condition": "AND",
+                  "key": "performanceLabel",
+                  "operator": "=",
+                  "value": "data"
+                }
+              ],
+              "groupBy": [
+                {
+                  "type": "time",
+                  "params": [
+                    "$interval"
+                  ]
+                },
+                {
+                  "type": "fill",
+                  "params": [
+                    "null"
+                  ]
+                }
+              ],
+              "select": [
+                [
+                  {
+                    "type": "field",
+                    "params": [
+                      "value"
+                    ]
+                  },
+                  {
+                    "type": "mean",
+                    "params": []
+                  }
+                ]
+              ],
+              "refId": "A",
+              "measurement": "metrics",
+              "alias": "Data"
+            },
+            {
+              "refId": "B",
+              "policy": "default",
+              "dsType": "influxdb",
+              "resultFormat": "time_series",
+              "tags": [
+                {
+                  "key": "host",
+                  "operator": "=",
+                  "value": "mo.nierlein.de"
+                },
+                {
+                  "condition": "AND",
+                  "key": "service",
+                  "operator": "=",
+                  "value": "influxdb"
+                },
+                {
+                  "condition": "AND",
+                  "key": "command",
+                  "operator": "=",
+                  "value": "check_omd_influxdb"
+                },
+                {
+                  "condition": "AND",
+                  "key": "performanceLabel",
+                  "operator": "=",
+                  "value": "meta"
+                }
+              ],
+              "groupBy": [
+                {
+                  "type": "time",
+                  "params": [
+                    "$interval"
+                  ]
+                },
+                {
+                  "type": "fill",
+                  "params": [
+                    "null"
+                  ]
+                }
+              ],
+              "select": [
+                [
+                  {
+                    "type": "field",
+                    "params": [
+                      "value"
+                    ]
+                  },
+                  {
+                    "type": "mean",
+                    "params": []
+                  }
+                ]
+              ],
+              "measurement": "metrics",
+              "alias": "Meta"
+            },
+            {
+              "refId": "C",
+              "policy": "default",
+              "dsType": "influxdb",
+              "resultFormat": "time_series",
+              "tags": [
+                {
+                  "key": "host",
+                  "operator": "=",
+                  "value": "mo.nierlein.de"
+                },
+                {
+                  "condition": "AND",
+                  "key": "service",
+                  "operator": "=",
+                  "value": "influxdb"
+                },
+                {
+                  "condition": "AND",
+                  "key": "command",
+                  "operator": "=",
+                  "value": "check_omd_influxdb"
+                },
+                {
+                  "condition": "AND",
+                  "key": "performanceLabel",
+                  "operator": "=",
+                  "value": "wal"
+                }
+              ],
+              "groupBy": [
+                {
+                  "type": "time",
+                  "params": [
+                    "$interval"
+                  ]
+                },
+                {
+                  "type": "fill",
+                  "params": [
+                    "null"
+                  ]
+                }
+              ],
+              "select": [
+                [
+                  {
+                    "type": "field",
+                    "params": [
+                      "value"
+                    ]
+                  },
+                  {
+                    "type": "mean",
+                    "params": []
+                  }
+                ]
+              ],
+              "measurement": "metrics",
+              "alias": "Wal"
+            }
+          ],
+          "pieType": "pie",
+          "legend": {
+            "show": true,
+            "values": false,
+            "min": false,
+            "max": false,
+            "current": false,
+            "total": false,
+            "avg": false
+          },
+          "links": [],
+          "datasource": null,
+          "maxDataPoints": 3,
+          "interval": null,
+          "cacheTimeout": null,
+          "nullText": null,
+          "nullPointMode": "connected",
+          "legendType": "On graph",
+          "format": "bytes"
+        }
+      ]
+    }
+  ],
+  "time": {
+    "from": "2016-04-12T04:24:15.000Z",
+    "to": "2016-04-18T10:24:15.000Z"
+  },
+  "timepicker": {
+    "collapse": false,
+    "enable": true,
+    "notice": false,
+    "now": true,
+    "refresh_intervals": [
+      "5s",
+      "10s",
+      "30s",
+      "1m",
+      "5m",
+      "15m",
+      "30m",
+      "1h",
+      "2h",
+      "1d"
+    ],
+    "time_options": [
+      "5m",
+      "15m",
+      "1h",
+      "6h",
+      "12h",
+      "24h",
+      "2d",
+      "7d",
+      "30d"
+    ],
+    "type": "timepicker"
+  },
+  "templating": {
+    "list": []
+  },
+  "annotations": {
+    "list": [
+      {
+        "datasource": "nagflux",
+        "enable": false,
+        "iconColor": "#751975",
+        "iconSize": 13,
+        "lineColor": "#751975",
+        "name": "host_notification",
+        "query": "SELECT * FROM messages WHERE type = 'host_notification' AND host = 'mo.nierlein.de' AND service = 'influxdb' AND $timeFilter",
+        "showLine": true,
+        "tagsColumn": "author",
+        "textColumn": "message",
+        "titleColumn": "type"
+      },
+      {
+        "datasource": "nagflux",
+        "enable": false,
+        "iconColor": "#198c19",
+        "iconSize": 13,
+        "lineColor": "#198c19",
+        "name": "service_notification",
+        "query": "SELECT * FROM messages WHERE type = 'service_notification' AND host = 'mo.nierlein.de' AND service = 'influxdb' AND $timeFilter",
+        "showLine": true,
+        "tagsColumn": "author",
+        "textColumn": "message",
+        "titleColumn": "type"
+      },
+      {
+        "datasource": "nagflux",
+        "enable": false,
+        "iconColor": "#008080",
+        "iconSize": 13,
+        "lineColor": "#008080",
+        "name": "comment",
+        "query": "SELECT * FROM messages WHERE type = 'comment' AND host = 'mo.nierlein.de' AND service = 'influxdb' AND $timeFilter",
+        "showLine": true,
+        "tagsColumn": "author",
+        "textColumn": "message",
+        "titleColumn": "type"
+      },
+      {
+        "datasource": "nagflux",
+        "enable": false,
+        "iconColor": "#ff64d0",
+        "iconSize": 13,
+        "lineColor": "#ff64d0",
+        "name": "acknowledgement",
+        "query": "SELECT * FROM messages WHERE type = 'acknowledgement' AND host = 'mo.nierlein.de' AND service = 'influxdb' AND $timeFilter",
+        "showLine": true,
+        "tagsColumn": "author",
+        "textColumn": "message",
+        "titleColumn": "type"
+      },
+      {
+        "datasource": "nagflux",
+        "enable": false,
+        "iconColor": "#A218E8",
+        "iconSize": 13,
+        "lineColor": "#A218E8",
+        "name": "downtime",
+        "query": "SELECT * FROM messages WHERE type = 'downtime' AND host = 'mo.nierlein.de' AND service = 'influxdb' AND $timeFilter",
+        "showLine": true,
+        "tagsColumn": "author",
+        "textColumn": "message",
+        "titleColumn": "type"
+      }
+    ]
+  },
+  "refresh": "30s",
+  "schemaVersion": 12,
+  "version": 2,
+  "links": []
+}
