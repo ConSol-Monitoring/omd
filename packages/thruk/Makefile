@@ -36,6 +36,7 @@ install:
 			ARCH='x86_64'; \
 		elif [ `uname -m` = 'armv7l' ]; then \
 			ARCH='armv7l'; \
+			PHANTOM_VERSION='1.9.1'; \
 		fi; \
 		if [ $(DISTRO_NAME) = "SLES" ] && [ $(DISTRO_VERSION) = "11SP1" ]; then \
 			PHANTOM_VERSION='1.9.1'; \
