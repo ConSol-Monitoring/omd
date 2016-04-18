@@ -31,13 +31,17 @@ install:
 	mv $(DESTDIR)$(OMD_ROOT)/share/thruk/script/thruk $(DESTDIR)$(OMD_ROOT)/bin/thruk
 	chmod 755 $(DESTDIR)$(OMD_ROOT)/bin/thruk
 	chmod 755 $(DESTDIR)$(OMD_ROOT)/bin/naglint
-	if [ `uname -m` = 'x86_64' ]; then \
-		cp -p phantomjs-x86_64 $(DESTDIR)$(OMD_ROOT)/bin/phantomjs; \
-	elif [ `uname -m` = 'armv7l' ]; then \
-		cp -p phantomjs-armv7l   $(DESTDIR)$(OMD_ROOT)/bin/phantomjs; \
-	else \
-		cp -p phantomjs-i686   $(DESTDIR)$(OMD_ROOT)/bin/phantomjs; \
-	fi
+	PHANTOM_VERSION='2.1.1'; ARCH='i686'; \
+		if [ `uname -m` = 'x86_64' ]; then \
+			ARCH='x86_64'; \
+		elif [ `uname -m` = 'armv7l' ]; then \
+			ARCH='armv7l'; \
+			PHANTOM_VERSION='1.9.1'; \
+		fi; \
+		if [ $(DISTRO_NAME) = "SLES" ] && [ $(DISTRO_VERSION) = "11SP1" ]; then \
+			PHANTOM_VERSION='1.9.1'; \
+		fi; \
+		cp -p phantomjs-$$PHANTOM_VERSION-$$ARCH $(DESTDIR)$(OMD_ROOT)/bin/phantomjs;
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/omd/scripts/post-update
 	install -m 755 thruk.post-update $(DESTDIR)$(OMD_ROOT)/lib/omd/scripts/post-update/thruk
 
