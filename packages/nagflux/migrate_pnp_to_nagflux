@@ -1,0 +1,116 @@
+#!/usr/bin/env perl
+
+use strict;
+use warnings;
+use XML::Simple;
+use File::Temp qw/tempfile/;
+use File::Copy qw/move/;
+use XML::LibXML;
+use Term::ReadKey;
+
+if($ARGV[0] && ($ARGV[0] eq '-h' || $ARGV[0] eq '--help')) {
+    print STDERR "usage: $0 [<pnp xml files>]";
+    exit(1);
+}
+
+if(!$ENV{'OMD_ROOT'}) {
+    die("OMD_ROOT not set, this script is designed to run in an OMD environment");
+}
+
+chdir($ENV{'OMD_ROOT'});
+my @xml_files = glob("var/pnp4nagios/perfdata/*/*.xml");
+if(scalar @ARGV > 0) {
+    @xml_files = @ARGV;
+}
+my $num           = scalar @xml_files;
+my $pnp_spool     = $ENV{OMD_ROOT}.'/var/pnp4nagios/spool';
+my $nagflux_spool = `grep NagiosSpoolfileFolder etc/nagflux/config.gcfg`;
+$nagflux_spool    =~ s/^.*?"(.*)".*?$/$1/sgmx;
+chomp($nagflux_spool);
+
+print STDERR "Ready to start import of ".$num." files to ".$nagflux_spool.".\n";
+if($nagflux_spool eq $pnp_spool) {
+    print STDERR "Make sure pnp4nagios is stopped or does not read from that spool folder.\n";
+}
+print STDERR "Press Ctrl+C to cancel.";
+ReadMode('cbreak');
+ReadKey(0);
+ReadMode('normal');
+print "\n\n";
+
+my $x = 0;
+for my $xml_file (@xml_files) {
+    $x++;
+    my ($fh, $filename) = tempfile();
+    printf(STDERR "%02i/%02i exporting from %s\n", $x, $num, $xml_file);
+    my $xml     = XMLin($xml_file);
+    my $host    = $xml->{'NAGIOS_DISP_HOSTNAME'};
+    my $service = $xml->{'NAGIOS_DISP_SERVICEDESC'};
+    my $cmd     = $xml->{'NAGIOS_CHECK_COMMAND'};
+    my $type    = 'SERVICEPERFDATA';
+    if($service eq '_HOST_') {
+        $service = '';
+        $type    = 'HOSTPERFDATA';
+    }
+    if(ref $xml->{DATASOURCE} ne 'ARRAY') {
+        $xml->{DATASOURCE} = [$xml->{DATASOURCE}];
+    }
+
+    for my $ds (@{$xml->{DATASOURCE}}) {
+        die("the only supported storage type is MULTIPLE, this is: ".$ds->{'RRD_STORAGE_TYPE'}) if $ds->{'RRD_STORAGE_TYPE'} ne 'MULTIPLE';
+        my $rrd_file = $ds->{'RRDFILE'};
+        my $rrd_ds   = $ds->{'DS'};
+        for my $key (qw/WARN_MIN WARN_MAX CRIT_MIN CRIT_MAX UNIT MIN MAX WARN CRIT/) {
+            if(ref $ds->{$key} eq 'HASH' && scalar keys %{$ds->{$key}} == 0) {
+                $ds->{$key} = '';
+            }
+        }
+        if($ds->{'WARN_MIN'} || $ds->{'WARN_MAX'} || $ds->{'CRIT_MIN'} || $ds->{'CRIT_MAX'}) {
+            use Data::Dumper; print STDERR Dumper($ds);
+            die("ranges not supported yet");
+        }
+        print STDERR "  -> $rrd_file\n";
+        `rrdtool flushcached --daemon unix:tmp/run/rrdcached.sock $rrd_file >/dev/null 2>&1`;
+        my $raw = `rrdtool dump $rrd_file`;
+        my $parser = XML::LibXML->new();
+        my $doc = XML::LibXML->load_xml(string => $raw);
+        # import in reverse order, otherwise values from fine granular rrds would be overwritten from large ones
+        for my $rra (reverse $doc->findnodes('/rrd/rra')) {
+            my($cf) = $rra->findnodes('./cf');
+            next if $cf->to_literal ne 'AVERAGE';
+            my($data) = $rra->findnodes('./database');
+            for my $row (split/\n/mx, $data) {
+                my($timet, $val);
+                if($row =~ m|^\s*\Q<!-- \E[^/]+/\ (\d+)\Q --> <row><v>\E(.*)\Q</v></row>\E$|mx) {
+                    ($timet, $val) = ($1, $2);
+                }
+                next unless defined $val;
+                next if $val eq 'NaN';
+                if($val =~ m/^([\d\.]+)+e([+\-\d]+)$/mx) {
+                    $val = $1 * (10 ** $2);
+                }
+                if($type eq 'HOSTPERFDATA') {
+                    printf($fh "DATATYPE::%s\tTIMET::%i\tHOSTNAME::%s\tHOSTPERFDATA::%s=%s%s;%s;%s;%s;%s\tHOSTCHECKCOMMAND::%s\tHOSTSTATE::UP\tHOSTSTATETYPE::HARD\n",
+                           $type,
+                           $timet,
+                           $host,
+                           $ds->{'LABEL'}, $val, $ds->{'UNIT'}, $ds->{'WARN'}, $ds->{'CRIT'}, $ds->{'MIN'}, $ds->{'MAX'},
+                           $cmd,
+                          );
+                } else {
+                    printf($fh "DATATYPE::%s\tTIMET::%i\tHOSTNAME::%s\tSERVICEDESC::%s\tSERVICEPERFDATA::%s=%s%s;%s;%s;%s;%s\tSERVICECHECKCOMMAND::%s\tHOSTSTATE::UP\tHOSTSTATETYPE::HARD\tSERVICESTATE::OK\tSERVICESTATETYPE::HARD\n",
+                           $type,
+                           $timet,
+                           $host,
+                           $service,
+                           $ds->{'LABEL'}, $val, $ds->{'UNIT'}, $ds->{'WARN'}, $ds->{'CRIT'}, $ds->{'MIN'}, $ds->{'MAX'},
+                           $cmd,
+                          );
+                }
+            }
+        }
+    }
+    close($fh);
+    move($filename, $nagflux_spool.'/service-perfdata'.$x.time());
+}
+print STDERR "\n\nfinished\n";
