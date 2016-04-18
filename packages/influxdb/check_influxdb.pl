@@ -51,16 +51,21 @@ for my $row (split/\n/mx, $data) {
 
 chomp(my $influxdb_http_tcp_port = `grep CONFIG_INFLUXDB_HTTP_TCP_PORT ./etc/omd/site.conf`);
 $influxdb_http_tcp_port =~ s/^.*'(\d+)'.*$/$1/mx;
-my $cmd = 'curl -s -G "http://localhost:'.$influxdb_http_tcp_port.'/query?db='.$db.'&u=root&p=root&pretty=true" --data-urlencode "q=SELECT COUNT(value) FROM /./"';
+my $cmd = 'curl -s -S -G "http://localhost:'.$influxdb_http_tcp_port.'/query?db='.$db.'&u=root&p=root&pretty=true" --data-urlencode "q=SELECT COUNT(value) FROM /./" 2>&1';
 my $entrie_json = `$cmd`;
-my $entries = decode_json($entrie_json);
-for my $series (@{$entries->{'results'}->[0]->{'series'}}) {
-    my %values;
-    @values{@{$series->{'columns'}}} = @{$series->{'values'}->[0]};
-    $np->add_perfdata(
-        label => $series->{'name'},
-        value => $values{'count'},
-    );
+if($? != 0) {
+    $np->plugin_exit(CRITICAL, $entrie_json);
+}
+else {
+    my $entries = decode_json($entrie_json);
+    for my $series (@{$entries->{'results'}->[0]->{'series'}}) {
+        my %values;
+        @values{@{$series->{'columns'}}} = @{$series->{'values'}->[0]};
+        $np->add_perfdata(
+            label => $series->{'name'},
+            value => $values{'count'},
+        );
+    }
 }
 
 
