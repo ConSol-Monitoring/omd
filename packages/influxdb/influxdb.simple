@@ -576,6 +576,7 @@ perfLabel = total, data, meta, wal, metrics, messages
         },
         {
           "aliasColors": {
+            "Metrics": "#7eb26d",
             "Disk Usage": "#085DFF"
           },
           "bars": false,
@@ -613,7 +614,7 @@ perfLabel = total, data, meta, wal, metrics, messages
           "seriesOverrides": [
             {
               "alias": "Metrics",
-              "fill": 2
+              "fill": 5
             },
             {
               "alias": "Disk Usage",
@@ -624,67 +625,6 @@ perfLabel = total, data, meta, wal, metrics, messages
           "stack": false,
           "steppedLine": false,
           "targets": [
-            {
-              "alias": "Metrics",
-              "dsType": "influxdb",
-              "groupBy": [
-                {
-                  "params": [
-                    "$interval"
-                  ],
-                  "type": "time"
-                },
-                {
-                  "params": [
-                    "null"
-                  ],
-                  "type": "fill"
-                }
-              ],
-              "measurement": "metrics",
-              "policy": "default",
-              "refId": "F",
-              "resultFormat": "time_series",
-              "select": [
-                [
-                  {
-                    "params": [
-                      "value"
-                    ],
-                    "type": "field"
-                  },
-                  {
-                    "params": [],
-                    "type": "mean"
-                  }
-                ]
-              ],
-              "tags": [
-                {
-                  "key": "host",
-                  "operator": "=",
-                  "value": "mo.nierlein.de"
-                },
-                {
-                  "condition": "AND",
-                  "key": "service",
-                  "operator": "=",
-                  "value": "influxdb"
-                },
-                {
-                  "condition": "AND",
-                  "key": "command",
-                  "operator": "=",
-                  "value": "check_omd_influxdb"
-                },
-                {
-                  "condition": "AND",
-                  "key": "performanceLabel",
-                  "operator": "=",
-                  "value": "metrics"
-                }
-              ]
-            },
             {
               "policy": "default",
               "dsType": "influxdb",
@@ -745,6 +685,67 @@ perfLabel = total, data, meta, wal, metrics, messages
               "refId": "A",
               "measurement": "metrics",
               "alias": "Disk Usage"
+            },
+            {
+              "alias": "Metrics",
+              "dsType": "influxdb",
+              "groupBy": [
+                {
+                  "params": [
+                    "$interval"
+                  ],
+                  "type": "time"
+                },
+                {
+                  "params": [
+                    "null"
+                  ],
+                  "type": "fill"
+                }
+              ],
+              "measurement": "metrics",
+              "policy": "default",
+              "refId": "F",
+              "resultFormat": "time_series",
+              "select": [
+                [
+                  {
+                    "params": [
+                      "value"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "mean"
+                  }
+                ]
+              ],
+              "tags": [
+                {
+                  "key": "host",
+                  "operator": "=",
+                  "value": "mo.nierlein.de"
+                },
+                {
+                  "condition": "AND",
+                  "key": "service",
+                  "operator": "=",
+                  "value": "influxdb"
+                },
+                {
+                  "condition": "AND",
+                  "key": "command",
+                  "operator": "=",
+                  "value": "check_omd_influxdb"
+                },
+                {
+                  "condition": "AND",
+                  "key": "performanceLabel",
+                  "operator": "=",
+                  "value": "metrics"
+                }
+              ]
             }
           ],
           "timeFrom": null,
@@ -1008,8 +1009,8 @@ perfLabel = total, data, meta, wal, metrics, messages
     }
   ],
   "time": {
-    "from": "2016-04-12T04:24:15.000Z",
-    "to": "2016-04-18T10:24:15.000Z"
+    "from": "2016-03-17T13:38:35.000Z",
+    "to": "2016-04-18T13:38:35.000Z"
   },
   "timepicker": {
     "collapse": false,
