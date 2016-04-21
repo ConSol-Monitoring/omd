@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 NAME = icinga2
-VERSION = 2.4.3
+VERSION = 2.4.6
 DIR = $(NAME)-$(VERSION)
 BOOSTDIR=boost_1_60_0
 BOOSTDEST=$(shell pwd)/$(BOOSTDIR)-dest
@@ -144,7 +144,7 @@ upstream:
 	rm -rf icinga2-master
 
 githubrelease:
-	git rm *.gz
+	git rm icinga2-*.tar.gz
 	wget "https://github.com/Icinga/icinga2/archive/v$(VERSION).tar.gz"
 	mv v$(VERSION).tar.gz icinga2-$(VERSION).tar.gz
 	git add *.gz
