@@ -12,7 +12,7 @@ if [ -z $OMD_ROOT ]; then
     cd ~
 fi
 alias cpan='cpan.wrapper'
-alias influx='influx -port $(omd config show INFLUXDB_HTTP_TCP_PORT)'
+alias influx='influx -port $(omd config show INFLUXDB_HTTP_TCP_PORT) -precision rfc3339'
 
 # pointless unless running interactively
 if [ "$PS1" ]; then
