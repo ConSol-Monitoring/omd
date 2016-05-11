@@ -40,7 +40,8 @@ skel:
 	sed -i -e 's|###APACHE_MODULE_DIR###|$(MODULE_DIR)|g' \
 	       $(SKEL)/etc/apache/conf.d/grafana.conf
 	mkdir -p $(SKEL)/var/grafana/plugins
-	tar zxf plugins.tar.gz -C $(SKEL)/var/grafana/plugins
+	tar zxf piechart-panel-plugin-1.0.0.tar.gz -C $(SKEL)/var/grafana/plugins
+	tar zxf clock-panel-plugin-0.0.7.tar.gz    -C $(SKEL)/var/grafana/plugins
 
 clean:
 	rm -rf $(GOPATH)
