@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 NAME = check_mysql_health
-VERSION = 2.2
+VERSION = 2.2.2
 DIR = $(NAME)-$(VERSION)
 
 .PHONY: skel
