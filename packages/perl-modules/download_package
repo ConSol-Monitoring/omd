@@ -7,7 +7,7 @@ use BuildHelper;
 
 BEGIN {
     for my $val (qw/PERL5LIB PERL_MB_OPT PERL_LOCAL_LIB_ROOT PERL_MM_OPT/) {
-        undef $ENV{$val} if defined $ENV{$val};
+        delete $ENV{$val} if defined $ENV{$val};
     }
 };
 
