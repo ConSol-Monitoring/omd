@@ -4,7 +4,7 @@ next:
           - OMD
             - use distro version numbers in package names for debian and ubuntu too
             - add html mail notification templates
-          - Icinga update to 2.4.1
+          - Icinga update to 2.4.8
           - Influxdb update to 0.10.0
           - Grafana update to 2.6.0
           - Core
