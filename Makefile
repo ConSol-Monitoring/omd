@@ -5,6 +5,7 @@ PACKAGES=freetds \
          perl-modules \
          go-1.4 \
          go-1.5 \
+         go-1.6 \
          influxdb \
          grafana \
          histou \
