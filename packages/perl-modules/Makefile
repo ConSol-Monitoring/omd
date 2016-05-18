@@ -106,7 +106,7 @@ MODULES = \
           Attribute-Handlers-0.96.tar.gz \
           Bit-Vector-7.4.tar.gz \
           CPAN-Meta-YAML-0.012.tar.gz \
-          DBD-mysql-4.031.tar.gz \
+          DBD-mysql-4.033.tar.gz \
           Date-Calc-6.4.tar.gz \
           Date-Calc-XS-6.4.tar.gz \
           Encode-2.68.tar.gz \
