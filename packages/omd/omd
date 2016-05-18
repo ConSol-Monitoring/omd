@@ -28,7 +28,7 @@ import sys, os, shutil, pwd, grp, re, time, pprint, tty, termios, traceback
 import tarfile, fnmatch
 from subprocess import *
 
-OMD_VERSION = "1.31.20160518"
+OMD_VERSION = "1.30"
 
 # Some global variables
 opt_verbose     = False
