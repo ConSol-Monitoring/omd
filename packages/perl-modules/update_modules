@@ -58,6 +58,10 @@ for my $file (@modules) {
         print "skipped\n";
         next;
     }
+    if($file =~ m/^ExtUtils\-Manifest\-/mx) {
+        print "skipped, broken symlinks in make distcheck\n";
+        next;
+    }
 
     my($modname,$modversion) = BuildHelper::file_to_module($file);
     my $urlpath = BuildHelper::get_url_for_module($modname);

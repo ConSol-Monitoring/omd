@@ -189,8 +189,9 @@ MODULES = \
 
 build:
 	mkdir -p $(P5TMPDIST)/dest
-	rm -rf $(P5TMPDIST)/src
-	ln -s ../src $(P5TMPDIST)/src
+	mkdir -p $(P5TMPDIST)/src
+	rsync -a src/. $(P5TMPDIST)/src/.
+	rsync -a build_module.pl lib $(P5TMPDIST)/src/.
 	echo "install --install_base $(P5TMPDIST)/dest" > $(P5TMPDIST)/dest/.modulebuildrc
 	unset LANG; \
 	unset PERL5LIB; \
