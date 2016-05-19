@@ -1926,7 +1926,7 @@ def config_set(args):
 
 
 def config_set_all():
-    for hook_name, value in g_site_conf.items():
+    for hook_name, value in sorted(g_site_conf.items(), key=lambda x: x[0]):
         # Hooks might vanish after and up- or downdate
         if hook_exists(hook_name):
             exitcode, output = call_hook(hook_name, [ "set", value ])
