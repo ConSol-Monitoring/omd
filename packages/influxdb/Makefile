@@ -1,19 +1,19 @@
 include ../../Makefile.omd
 
 NAME       = influxdb
-VERSION    = 0.10.3
+VERSION    = 0.13.0
 SRC        = $(NAME)-$(VERSION).tar.gz
 GOPATH     = go
-GOVERSION  = 1.4
+GOVERSION  = 1.6
 PWD        = $(shell pwd)
 DATE       = $(shell date -u '+%Y-%m-%d_%I:%M:%S%p')
 
 build:
 	tar zxf $(SRC)
 	export GOROOT=$(PWD)/../go-$(GOVERSION)/go-$(GOVERSION)/ && export GOPATH=$(PWD)/$(GOPATH)/ && PATH=$$GOROOT/bin:$$PATH && \
-		cd $(GOPATH)/src/github.com/influxdb && \
+		cd $(GOPATH)/src/github.com/influxdata && \
 		go build ./... && \
-		go install -ldflags "-X main.version $(VERSION) -X main.buildTime $(DATE)" ./...
+		go install -ldflags "-X main.version=$(VERSION) -X main.buildTime=$(DATE)" ./...
 
 install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/bin
@@ -34,9 +34,9 @@ clean:
 package: clean
 	mkdir -p $(GOPATH)
 	export GOROOT=$(PWD)/../go-$(GOVERSION)/go-$(GOVERSION)/ && export GOPATH=$(PWD)/$(GOPATH)/ && PATH=$$GOROOT/bin:$$PATH && \
-		mkdir -p $(GOPATH)/src/github.com/influxdb/ && \
-		cd $(GOPATH)/src/github.com/influxdb && \
-		git clone --depth=1 --branch "v$(VERSION)" https://github.com/influxdb/influxdb.git && \
+		mkdir -p $(GOPATH)/src/github.com/influxdata/ && \
+		cd $(GOPATH)/src/github.com/influxdata && \
+		git clone --depth=1 --branch "v$(VERSION)" https://github.com/influxdata/influxdb.git && \
 		cd influxdb && \
 		git branch master && \
 		git checkout master && \

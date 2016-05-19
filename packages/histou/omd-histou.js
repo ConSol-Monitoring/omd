@@ -13,7 +13,7 @@ return function(callback) {
     }
 
     var site = window.location.href.match(/(https?:\/\/.*?\/.*?)\/grafana\/.*/);
-    if(site.length > 1){
+    if(site && site.length > 1){
         url = site[1]+'/histou/';
     }
 

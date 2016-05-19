@@ -8,6 +8,7 @@ use JSON::XS;
 chdir($ENV{'OMD_ROOT'});
 my $np     = Monitoring::Plugin->new(shortname => "INFLUXDB SIZE",
                                      usage => "Usage: %s [ -v|--verbose ]  [-t <timeout>] "
+                                             ."[ -m|--metrics ]"
                                              ."[ -c|--critical=<threshold> ] [ -w|--warning=<threshold> ]",
 );
 my $folder = 'var/influxdb/';
@@ -23,6 +24,10 @@ $np->add_arg(
     help    => '-c, --critical=INTEGER:INTEGER.',
     default => '2GB',
 );
+$np->add_arg(
+    spec    => 'metrics|m',
+    help    => '-m, --metrics',
+);
 $np->getopts();
 $np->set_thresholds(warning  => _expand($np->opts->warning),
                     critical => _expand($np->opts->critical));
@@ -31,6 +36,7 @@ my $total;
 my $data = `du -b -d1 -t 1 $folder`;
 for my $row (split/\n/mx, $data) {
     my($size,$path) = split(/\s+/mx, $row, 2);
+    next if $size < 100; # skip empty folders
     $path =~ s|^.*/||mx;
     if($path) {
         $np->add_perfdata(
@@ -49,22 +55,24 @@ for my $row (split/\n/mx, $data) {
     }
 }
 
-chomp(my $influxdb_http_tcp_port = `grep CONFIG_INFLUXDB_HTTP_TCP_PORT ./etc/omd/site.conf`);
-$influxdb_http_tcp_port =~ s/^.*'(\d+)'.*$/$1/mx;
-my $cmd = 'curl -s -S -G "http://localhost:'.$influxdb_http_tcp_port.'/query?db='.$db.'&u=root&p=root&pretty=true" --data-urlencode "q=SELECT COUNT(value) FROM /./" 2>&1';
-my $entrie_json = `$cmd`;
-if($? != 0) {
-    $np->plugin_exit(CRITICAL, $entrie_json);
-}
-else {
-    my $entries = decode_json($entrie_json);
-    for my $series (@{$entries->{'results'}->[0]->{'series'}}) {
-        my %values;
-        @values{@{$series->{'columns'}}} = @{$series->{'values'}->[0]};
-        $np->add_perfdata(
-            label => $series->{'name'},
-            value => $values{'count'},
-        );
+if($np->opts->metrics) {
+    chomp(my $influxdb_http_tcp_port = `grep CONFIG_INFLUXDB_HTTP_TCP_PORT ./etc/omd/site.conf`);
+    $influxdb_http_tcp_port =~ s/^.*'(\d+)'.*$/$1/mx;
+    my $cmd = 'curl -s -S -G "http://localhost:'.$influxdb_http_tcp_port.'/query?db='.$db.'&u=root&p=root&pretty=true" --data-urlencode "q=SELECT COUNT(value) FROM /./" 2>&1';
+    my $entrie_json = `$cmd`;
+    if($? != 0) {
+        $np->plugin_exit(CRITICAL, $entrie_json);
+    }
+    else {
+        my $entries = decode_json($entrie_json);
+        for my $series (@{$entries->{'results'}->[0]->{'series'}}) {
+            my %values;
+            @values{@{$series->{'columns'}}} = @{$series->{'values'}->[0]};
+            $np->add_perfdata(
+                label => $series->{'name'},
+                value => $values{'count'},
+            );
+        }
     }
 }
 

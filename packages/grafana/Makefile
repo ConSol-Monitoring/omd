@@ -1,7 +1,8 @@
 include ../../Makefile.omd
 
 NAME       = grafana
-VERSION    = 3.0-beta2
+VERSION    = 3.0.2
+TIMESTAMP  = 1463383025
 SRC        = $(NAME)-$(VERSION).tar.gz
 GOPATH     = go
 GOVERSION  = 1.5
@@ -40,7 +41,8 @@ skel:
 	sed -i -e 's|###APACHE_MODULE_DIR###|$(MODULE_DIR)|g' \
 	       $(SKEL)/etc/apache/conf.d/grafana.conf
 	mkdir -p $(SKEL)/var/grafana/plugins
-	tar zxf plugins.tar.gz -C $(SKEL)/var/grafana/plugins
+	tar zxf piechart-panel-plugin-1.0.0.tar.gz -C $(SKEL)/var/grafana/plugins
+	tar zxf clock-panel-plugin-0.0.7.tar.gz    -C $(SKEL)/var/grafana/plugins
 
 clean:
 	rm -rf $(GOPATH)
@@ -64,14 +66,10 @@ package: public
 	tar zcf $(SRC) $(GOPATH)/src/ --exclude=.git
 
 public:
-	#TODO: revert this after beta
-	#wget --no-check-certificate https://grafanarel.s3.amazonaws.com/builds/grafana-$(VERSION).linux-x64.tar.gz
-	#tar zxf grafana-$(VERSION).linux-x64.tar.gz
-	wget --no-check-certificate https://grafanarel.s3.amazonaws.com/builds/grafana-3.0.0-beta21459801392.linux-x64.tar.gz
-	tar zxf grafana-3.0.0-beta21459801392.linux-x64.tar.gz
+	wget --no-check-certificate https://grafanarel.s3.amazonaws.com/builds/grafana-$(VERSION)-$(TIMESTAMP).linux-x64.tar.gz
+	tar zxf grafana-$(VERSION)-$(TIMESTAMP).linux-x64.tar.gz
 	cd grafana-*/. && tar cfz ../public.tar.gz public
-	#rm grafana-$(VERSION).linux-x64.tar.gz
-	rm grafana-3.0.0-beta21459801392.linux-x64.tar.gz
+	rm grafana-$(VERSION)-$(TIMESTAMP).linux-x64.tar.gz
 	rm -rf grafana-*/
 	wget --no-check-certificate "https://github.com/grafana/grafana/raw/master/conf/defaults.ini" -O defaults.ini
 

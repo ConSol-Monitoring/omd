@@ -11,6 +11,7 @@ easier to test the new cores with Thruk and Mod-Gearman.
 What OMD-Labs contains in addition
 ----------------------------------
 
+  * SSL Webserver
   * Grafana
   * Influxdb
   * Icinga 2
