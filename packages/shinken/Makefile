@@ -1,5 +1,6 @@
 include ../../Makefile.omd
 
+PYTHON=$(shell realpath $$(pwd)/../python/tmp.python27/bin/python)
 
 SHINKEN=shinken-1.4.1
 SHINKEN_FILE=$(SHINKEN).tar.gz
@@ -93,7 +94,7 @@ LOCALPYTHONDIR=$(DESTDIR)$(OMD_ROOT)/lib/python
 # Find the directory where python distutils are located
 PYTHONPATH=
 export PYTHONPATH
-DISTUTILS=$(shell python -c "import sys; import os; print [os.path.join(p, 'distutils') for p in sys.path if os.path.exists(os.path.join(p, 'distutils'))][0]")
+DISTUTILS=$(shell $(PYTHON) -c "import sys; import os; print [os.path.join(p, 'distutils') for p in sys.path if os.path.exists(os.path.join(p, 'distutils'))][0]")
 # This is where the distutils module is temporary copied to
 TMP_DISTU=$(shell pwd)/temp_distutils
 PYTHONPATH=$(TMP_DISTU):$(LOCALPYTHONDIR)
@@ -190,7 +191,7 @@ repairdistutils:
 
 
 installstools:
-	( cd $(STOOLS) ; python setup.py install \
+	( cd $(STOOLS) ; $(PYTHON) setup.py install \
 		--prefix="" \
 		--home=$(DESTDIR)$(OMD_ROOT) \
 		--install-platlib=$(LOCALPYTHONDIR) \
@@ -200,7 +201,7 @@ installstools:
   
 
 installpyro:
-	( cd $(PYRO) ; python setup.py install \
+	( cd $(PYRO) ; $(PYTHON) setup.py install \
 		--prefix="" \
 		--home=$(DESTDIR)$(OMD_ROOT) \
 		--install-platlib=$(LOCALPYTHONDIR) \
@@ -210,7 +211,7 @@ installpyro:
 
 
 installmp:
-	( cd $(MP) ; python setup.py install \
+	( cd $(MP) ; $(PYTHON) setup.py install \
 		--prefix="" \
 		--home=$(DESTDIR)$(OMD_ROOT) \
 		--install-platlib=$(LOCALPYTHONDIR) \
@@ -219,7 +220,7 @@ installmp:
 
 
 installsqlite:
-	( cd $(SQLITE) ; python setup.py install \
+	( cd $(SQLITE) ; $(PYTHON) setup.py install \
 		--home=$(DESTDIR)$(OMD_ROOT) \
 		--install-platlib=$(LOCALPYTHONDIR) \
 		--install-scripts=$(DESTDIR)$(OMD_ROOT)/tmp \
@@ -227,7 +228,7 @@ installsqlite:
 
 
 installjson:
-	( cd $(SJSON) ; python setup.py install \
+	( cd $(SJSON) ; $(PYTHON) setup.py install \
 		--prefix="" \
 		--home=$(DESTDIR)$(OMD_ROOT) \
 		--install-platlib=$(LOCALPYTHONDIR) \
@@ -236,14 +237,14 @@ installjson:
 
 
 installctypes:
-	( cd $(CTYPES) ; python setup.py install \
+	( cd $(CTYPES) ; $(PYTHON) setup.py install \
 		--home=$(DESTDIR)$(OMD_ROOT) \
 		--install-platlib=$(LOCALPYTHONDIR) \
 		--install-scripts=$(DESTDIR)$(OMD_ROOT)/tmp \
 		--install-data=$(DESTDIR)$(OMD_ROOT)/tmp )
 
 installpymongo:
-	( cd $(PYMONGO) ; python setup.py install \
+	( cd $(PYMONGO) ; $(PYTHON) setup.py install \
 		--prefix="" \
 		--home=$(DESTDIR)$(OMD_ROOT) \
 		--install-platlib=$(LOCALPYTHONDIR) \
@@ -251,7 +252,7 @@ installpymongo:
 		--install-data=$(DESTDIR)$(OMD_ROOT)/tmp )
 
 installhashlib:
-	( cd $(HASHLIB) ; python setup.py install \
+	( cd $(HASHLIB) ; $(PYTHON) setup.py install \
 		--home=$(DESTDIR)$(OMD_ROOT) \
 		--install-platlib=$(LOCALPYTHONDIR) \
 		--install-scripts=$(DESTDIR)$(OMD_ROOT)/tmp \

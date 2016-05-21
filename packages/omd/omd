@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/omd/versions/###OMD_VERSION###/bin/python
 # -*- encoding: utf-8; py-indent-offset: 4 -*-
 # vim: tabstop=8 expandtab shiftwidth=4 softtabstop=4
 #

@@ -18,4 +18,5 @@ echo $OLD_VERSION
 
 echo "Keeping version number in /usr/bin/omd at $OLD_VERSION"
 sudo cp -v omd /omd/versions/default/bin/omd
+sudo sed -i "s|###OMD_VERSION###|$OLD_VERSION|g" /omd/versions/default/bin/omd
 sudo sed -i "s/OMD_VERSION =.*/OMD_VERSION = "'"'"$OLD_VERSION"'"/' /omd/versions/default/bin/omd

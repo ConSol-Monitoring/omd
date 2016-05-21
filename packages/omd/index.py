@@ -1,5 +1,3 @@
-#!/usr/bin/python
-
 from mod_python import apache,util
 import os, pwd, re
 

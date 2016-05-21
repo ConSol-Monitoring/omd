@@ -3,6 +3,7 @@ include ../../Makefile.omd
 NAME = rrdtool
 VERSION = 1.5.4
 DIR = $(NAME)-$(VERSION)
+PYTHON = $(shell pwd)/../python/tmp.python27/bin/python
 
 CONFIGUREOPTS = \
 	--prefix=$(OMD_ROOT) \
@@ -33,30 +34,33 @@ build:
 	  $(MAKE) all
 	
 	# Python binding
-	cd $(DIR)/bindings/python && python setup.py build
+	cd $(DIR)/bindings/python && $(PYTHON) setup.py build
 
 install:
 	export PERL5LIB=$(P5TMPDIST)/dest/lib/perl5; \
 	$(MAKE) DESTDIR=$(DESTDIR) -C $(DIR) install
 	
 	# clean up perl man pages which end up in wrong location
-	rm -fr $(DESTDIR)/usr/local
 	# clean up systemd init files
-	rm -fr $(DESTDIR)/lib
+	if [ -n "$(DESTDIR)" ]; then \
+	    rm -fr $(DESTDIR)/usr/local ; \
+	    rm -fr $(DESTDIR)/lib ; \
+	fi
 	
-	mkdir $(DESTDIR)$(OMD_ROOT)/share/doc/rrdtool
+	mkdir $(DESTDIR)$(OMD_ROOT)/share/doc/rrdtool || true
 	install -m 644 $(DIR)/COPYRIGHT $(DESTDIR)$(OMD_ROOT)/share/doc/rrdtool
 	install -m 644 $(DIR)/CONTRIBUTORS $(DESTDIR)$(OMD_ROOT)/share/doc/rrdtool
 	
 	# Python binding
-	cd $(DIR)/bindings/python && python setup.py install --root=$(DESTDIR)/$(OMD_ROOT) --home ""
+	export PYTHONPATH=$$PYTHONPATH:$(DESTDIR)$(OMD_ROOT)/lib/python && \
+	cd $(DIR)/bindings/python && \
+	    $(PYTHON) setup.py install --home=$(DESTDIR)/$(OMD_ROOT) --prefix "" \
+		--install-platlib=$(DESTDIR)$(OMD_ROOT)/lib/python \
+		--install-purelib=$(DESTDIR)$(OMD_ROOT)/lib/python \
+	
 	if [ -n "$(DESTDIR)$(OMD_ROOT)" -a -d "$(DESTDIR)$(OMD_ROOT)/lib64" ] ; then \
 	    rsync -avh $(DESTDIR)$(OMD_ROOT)/lib64/* $(DESTDIR)$(OMD_ROOT)/lib/ ; \
 	    rm -rf $(DESTDIR)$(OMD_ROOT)/lib64 ; \
-	fi
-	# Cleanup files below lib/python2*. The real stuff is in lib/python
-	if ls $(DESTDIR)$(OMD_ROOT)/lib/python2* >/dev/null 2>&1; then \
-	    rm -rf $(DESTDIR)$(OMD_ROOT)/lib/python2* ; \
 	fi
 
 skel:

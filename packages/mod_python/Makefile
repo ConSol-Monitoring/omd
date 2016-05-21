@@ -1,11 +1,13 @@
 include ../../Makefile.omd
 
-NAME = mod_python
-VERSION = 3.3.1
-DIR = $(NAME)-$(VERSION)
+NAME     = mod_python
+VERSION  = 3.3.1
+DIR      = $(NAME)-$(VERSION)
+PYTHON   = $(shell realpath $$(pwd)/../python/tmp.python27/bin/python)
 
 CONFIGUREOPTS = \
-    --prefix=$(OMD_ROOT)
+    --prefix=$(OMD_ROOT) \
+    --with-python=$(PYTHON)
 
 APACHE_VERSION      = $(shell $(APACHE_BIN) -v | awk '/version/ {print $$3}' | awk -F/ '{print $$2}')
 APACHE_VERSION_MAIN = $(word 1, $(subst ., ,$(APACHE_VERSION)))
@@ -18,11 +20,13 @@ build:
 	    echo "applying $$p..." ; \
 	    ( cd $(DIR) ; patch -p1 -b ) < $$p ; \
 	done
+
 	# Apply special patch for apache >= 2.4
 	if [ $(APACHE_VERSION_MAIN) -ge 2 -a $(APACHE_VERSION_SUB) -ge 4 ]; then \
 	    echo "applying patches/0008-apache24.patch..." ; \
 	    ( cd $(DIR) ; patch -p1 -b ) < patches/0008-apache24.patch ; \
 	fi
+
 	cd $(DIR) ; ./configure $(CONFIGUREOPTS) 
 	echo '#define OMD_VERSION "$(OMD_VERSION)"' > $(DIR)/src/omd_version.h
 	$(MAKE) -C $(DIR) all
@@ -48,4 +52,3 @@ skel:
 
 clean:
 	rm -rf $(NAME)-*.*.[0-9] tmp.root
-
