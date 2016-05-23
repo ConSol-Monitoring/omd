@@ -29,4 +29,4 @@ for file in $(grep 'tar.gz' Makefile | awk '{ print $1 }' | tr -d ';'); do
 done
 
 echo "checking orphaned files..."
-./orphaned_modules ../thruk/Makefile.PL 2>&1 | grep -v Perl::Critic:: | grep -v CatalystX::LeakChecker | grep -v FCGI::ProcManager
+./orphaned_modules ../thruk/Makefile.PL

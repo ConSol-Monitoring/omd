@@ -3,10 +3,9 @@ package BuildHelper;
 use warnings;
 use strict;
 use Config;
-use POSIX;
 use Data::Dumper;
 use Storable qw/lock_store lock_retrieve/;
-use Cwd qw/cwd/;
+use Cwd;
 
 ####################################
 # Settings
@@ -379,8 +378,6 @@ sub install_module {
     die("error: $file does not exist in ".`pwd`) unless -e $file;
     die("error: module name missing") unless defined $file;
 
-    my ($sysname, $nodename, $release, $version, $machine) = POSIX::uname;
-
     my $LOG = "install.log";
     printf("*** (%3s/%s) ", $x, $max);
     printf("%-55s", $file);
@@ -433,7 +430,7 @@ sub install_module {
 
     eval {
         local $SIG{ALRM} = sub { die "timeout on: $file\n" };
-        alarm($machine =~ /armv/ ? 600 : 180); # single module should not take longer than 1 minute
+        alarm(120); # single module should not take longer than 1 minute
         if( -f "Build.PL" ) {
             `$PERL Build.PL >> $LOG 2>&1 && $PERL ./Build >> $LOG 2>&1 && $PERL ./Build install >> $LOG 2>&1`;
             if($? != 0 ) { die("error: rc $?\n".`cat $LOG`."\n"); }
@@ -469,7 +466,7 @@ sub install_module {
     system("grep 'is installed, but we need version' $LOG | grep ' ! ' | $grepv"); # or die('dependency error');
     system("grep 'is not a known MakeMaker parameter' $LOG | grep INSTALL_BASE | $grepv") or die('build error');
     chdir($cwd);
-    if($duration > ($machine =~ /armv/ ? 600 : 60)) {
+    if($duration > 60) {
         chomp(my $pwd = `pwd`);
         print "installation took too long, see $pwd/$dir/$LOG for details\n";
     } else {

@@ -1,1 +1,1 @@
-../../../../packages/perl-modules/src/lib/BuildHelper.pm
+../../../../packages/perl-modules/lib/BuildHelper.pm

@@ -109,7 +109,7 @@ MODULES = \
           Attribute-Handlers-0.96.tar.gz \
           Bit-Vector-7.4.tar.gz \
           CPAN-Meta-YAML-0.012.tar.gz \
-          DBD-mysql-4.031.tar.gz \
+          DBD-mysql-4.033.tar.gz \
           Date-Calc-6.4.tar.gz \
           Date-Calc-XS-6.4.tar.gz \
           Encode-2.68.tar.gz \
@@ -193,8 +193,9 @@ MODULES = \
 
 build:
 	mkdir -p $(P5TMPDIST)/dest
-	rm -rf $(P5TMPDIST)/src
-	ln -s ../src $(P5TMPDIST)/src
+	mkdir -p $(P5TMPDIST)/src
+	rsync -a src/. $(P5TMPDIST)/src/.
+	rsync -a build_module.pl lib $(P5TMPDIST)/src/.
 	echo "install --install_base $(P5TMPDIST)/dest" > $(P5TMPDIST)/dest/.modulebuildrc
 	unset LANG; \
 	unset PERL5LIB; \
