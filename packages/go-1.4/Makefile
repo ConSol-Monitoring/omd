@@ -1,17 +1,14 @@
 include ../../Makefile.omd
 #Downloadlink for tars: https://golang.org/dl/
-NAME     = go
-VERSION  = 1.4
-DIR      = $(NAME)-$(VERSION)
+VERSION  = 1.4.3
 
 build: clean
-	mkdir $(DIR)
-	tar xzf $(DIR)*.tar.gz -C $(DIR)
-	cd $(DIR)/src/ && ./make.bash
+	tar xzf go$(VERSION).src.tar.gz
+	cd go/src/ && ./make.bash
 
 install:
 
 skel:
 
 clean:
-	rm -rf $(DIR)
+	rm -rf go
