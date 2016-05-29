@@ -20,6 +20,7 @@ PACKAGES=freetds \
          check_oracle_health \
          check_mssql_health \
          check_nwc_health \
+         check_sap_health \
          check_webinject \
          dokuwiki \
          example \
