@@ -4,7 +4,7 @@ VERSION  = 1.4.3
 
 build: clean
 	tar xzf go$(VERSION).src.tar.gz
-	cd go/src/ && ./make.bash
+	cd go/src/ && CGO_ENABLED=0 ./make.bash
 
 install:
 
