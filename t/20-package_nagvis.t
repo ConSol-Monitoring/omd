@@ -12,6 +12,8 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
+use utf8;
+
 my $sitename  = "testsite";
 
 my $num_tests = 351;
@@ -177,7 +179,7 @@ my $urls = [
   
     # Language switch
     url({ url  => "/nagvis/frontend/nagvis-js/index.php?lang=de_DE",
-          like => '/Sprache w&auml;hlen/'}),
+          like => '/Sprache wählen/'}),
   
     # Language switch back
     url({ url  => "/nagvis/frontend/nagvis-js/index.php?lang=en_US",
@@ -411,7 +413,7 @@ TestUtils::test_url(
 ###############################################################################
 # Language switch
 TestUtils::test_url(url({ url  => "/nagvis/frontend/nagvis-js/index.php?lang=de_DE",
-                          like => '/Sprache w&auml;hlen/'}));
+                          like => '/Sprache wählen/'}));
 
 # Check profile file
 site_match_file($site, 'var/nagvis/profiles/omdadmin.profile', '/"language":"de_DE"/');
