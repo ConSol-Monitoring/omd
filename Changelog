@@ -55,6 +55,14 @@ next:
               it will be changed to own mode during update. You might need
               to reload/restart your system apache manually once to apply
               the change.
+          - Debian: Harmonized default version handling with RPM based distros.
+            Previous OMD installations were leaving previously set default version
+            untouched during installation of a new OMD package on Debian based
+            distributions. This was handled differently on Debian and RPM based
+            distributions and lead to confusions when using both platforms.
+            We decided to unify the behaviour on all distributins and make OMD
+            automatically set the default version to the new one during
+            installation of a new package.
           - FIX: PHP-Sessions were not cleaned up during run time. The sessions
             were only cleared on system boot.
             Added a cron job to the sites that runs on a daily base at 0:10
