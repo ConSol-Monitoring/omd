@@ -3,7 +3,8 @@ include ../../Makefile.omd
 NAME     = python-modules
 VERSION  = $(OMD_VERSION)
 DISTRO   = $(shell ../../distro)
-PYTHON   = $(shell pwd)/../python/tmp.python27/bin/python
+PYTHON   = LD_LIBRARY_PATH=$(shell pwd)/../python/tmp.python27/lib \
+	   $(shell pwd)/../python/tmp.python27/bin/python
 
 MODULES =
 # Modules really needed on all platforms
@@ -14,7 +15,19 @@ MODULES += pysnmp-4.2.4.tar.gz
 
 # Modules needed because of own packed python (would be available in OS)
 MODULES += setuptools-22.0.5.tar.gz  # needed by rrdtool bindings
-MODULES += python-ldap-2.4.25.tar.gz # used for cmk ldap sync
+
+LEGACY_LDAP=0
+ifeq ($(DISTRO_CODE),el5)
+    LEGACY_LDAP=1
+endif
+
+ifeq ($(LEGACY_LDAP), 1)
+    MODULES += python-ldap-2.3.13.tar.gz
+    SKIP_PATCH=patches/0001-python-ldap-2.4.25-disable-sasl.dif
+else
+    MODULES += python-ldap-2.4.25.tar.gz
+    SKIP_PATCH=patches/0001-python-ldap-2.3.13-disable-sasl.dif
+endif
 
 build: check-python
 	mkdir -p dest
@@ -29,12 +42,15 @@ build: check-python
 	    done
 	
 	set -e ; for p in patches/*.dif ; do \
-	    echo "applying $$p..." ; \
-	    ( cd dest ; patch -p1 -b ) < $$p ; \
+	    if [ $$p != $(SKIP_PATCH) ]; then \
+	        echo "applying $$p..." ; \
+	        ( cd dest ; patch -p1 -b ) < $$p ; \
+	    fi ; \
 	done
 	set -e ; cd dest && \
 	    export PYTHONPATH=$$PYTHONPATH:$(DESTDIR)$(OMD_ROOT)/lib/python ; \
 	    export PYTHONPATH=$$PYTHONPATH:$(shell pwd)/../python/tmp.python27/lib/python2.7 ; \
+	    export LDFLAGS="-L$(shell pwd)/../python/tmp.python27/lib -L$(shell pwd)/../python/tmp.python27/lib/python2.7/config" ; \
 	    for M in $$(ls); do \
 		echo "Building $$M..." ; \
 		cd $$M ; \
