@@ -42,6 +42,7 @@ check-python:
 install:
 	# Use 'make install' of mod_python into a temporary file.
 	# mod_python does not honor --prefix, so we move the stuff over...
+	export LD_LIBRARY_PATH=$(shell pwd)/../python/tmp.python27/lib ; \
 	make DESTDIR=$$(pwd)/tmp.root -C $(DIR) install
 	
 	# Installation directories vary much

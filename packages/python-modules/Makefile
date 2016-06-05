@@ -48,6 +48,9 @@ build: check-python
 	    fi ; \
 	done
 	set -e ; cd dest && \
+	    TMP_INSTALL_PATH=$(shell pwd)/tmp.python ; \
+	    mkdir $$TMP_INSTALL_PATH/lib || true; \
+	    export PYTHONPATH=$$PYTHONPATH:$$TMP_INSTALL_PATH/lib ; \
 	    export PYTHONPATH=$$PYTHONPATH:$(DESTDIR)$(OMD_ROOT)/lib/python ; \
 	    export PYTHONPATH=$$PYTHONPATH:$(shell pwd)/../python/tmp.python27/lib/python2.7 ; \
 	    export LDFLAGS="-L$(shell pwd)/../python/tmp.python27/lib -L$(shell pwd)/../python/tmp.python27/lib/python2.7/config" ; \
@@ -55,6 +58,10 @@ build: check-python
 		echo "Building $$M..." ; \
 		cd $$M ; \
 	        $(PYTHON) setup.py build ; \
+	        $(PYTHON) setup.py install --home=$$TMP_INSTALL_PATH \
+	            --prefix='' \
+	            --install-platlib=$$TMP_INSTALL_PATH/lib \
+	            --install-purelib=$$TMP_INSTALL_PATH/lib ; \
 	        cd .. ; \
 	    done
 
@@ -87,4 +94,4 @@ install:
 skel:
 
 clean:
-	rm -rf dest
+	rm -rf dest tmp.python
