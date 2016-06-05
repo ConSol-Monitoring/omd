@@ -3,7 +3,7 @@ include ../../Makefile.omd
 NAME     = python-modules
 VERSION  = $(OMD_VERSION)
 DISTRO   = $(shell ../../distro)
-PYTHON   = $(shell realpath $$(pwd)/../python/tmp.python27/bin/python)
+PYTHON   = $(shell pwd)/../python/tmp.python27/bin/python
 
 MODULES =
 # Modules really needed on all platforms
@@ -33,7 +33,8 @@ build: check-python
 	    ( cd dest ; patch -p1 -b ) < $$p ; \
 	done
 	set -e ; cd dest && \
-	    export PYTHONPATH=$$PYTHONPATH:$(DESTDIR)$(OMD_ROOT)/lib/python:$(shell realpath $$(pwd)/../python/tmp.python27/lib/python2.7) ; \
+	    export PYTHONPATH=$$PYTHONPATH:$(DESTDIR)$(OMD_ROOT)/lib/python ; \
+	    export PYTHONPATH=$$PYTHONPATH:$(shell pwd)/../python/tmp.python27/lib/python2.7 ; \
 	    for M in $$(ls); do \
 		echo "Building $$M..." ; \
 		cd $$M ; \

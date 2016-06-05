@@ -3,7 +3,7 @@ include ../../Makefile.omd
 NAME = rrdtool
 VERSION = 1.5.4
 DIR = $(NAME)-$(VERSION)
-PYTHON = $(shell realpath $$(pwd)/../python/tmp.python27/bin/python)
+PYTHON = $(shell pwd)/../python/tmp.python27/bin/python
 
 CONFIGUREOPTS = \
 	--prefix=$(OMD_ROOT) \

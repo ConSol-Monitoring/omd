@@ -1,6 +1,6 @@
 include ../../Makefile.omd
 
-PYTHON=$(shell realpath $$(pwd)/../python/tmp.python27/bin/python)
+PYTHON=$(shell pwd)/../python/tmp.python27/bin/python
 
 SHINKEN=shinken-1.4.1
 SHINKEN_FILE=$(SHINKEN).tar.gz
