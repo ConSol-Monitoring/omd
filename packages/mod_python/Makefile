@@ -25,10 +25,13 @@ build: check-python
 	    echo "applying patches/0008-apache24.patch..." ; \
 	    ( cd $(DIR) ; patch -p1 -b ) < patches/0008-apache24.patch ; \
 	fi
-
-	cd $(DIR) ; ./configure $(CONFIGUREOPTS) 
-	echo '#define OMD_VERSION "$(OMD_VERSION)"' > $(DIR)/src/omd_version.h
-	$(MAKE) -C $(DIR) all
+	
+	export LD_LIBRARY_PATH=$(shell pwd)/../python/tmp.python27/lib ; \
+	export LDFLAGS="-L$(shell pwd)/../python/tmp.python27/lib -L$(shell pwd)/../python/tmp.python27/lib/python2.7/config" ; \
+	cd $(DIR) ; \
+	./configure $(CONFIGUREOPTS) ; \
+	echo '#define OMD_VERSION "$(OMD_VERSION)"' > src/omd_version.h ; \
+	$(MAKE) all
 
 check-python:
 	@if [ ! -d ../python/tmp.python27 ]; then \
