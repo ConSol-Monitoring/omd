@@ -16,10 +16,11 @@ MODULES += pysnmp-4.2.4.tar.gz
 MODULES += setuptools-22.0.5.tar.gz  # needed by rrdtool bindings
 MODULES += python-ldap-2.4.25.tar.gz # used for cmk ldap sync
 
-build:
+build: check-python
 	mkdir -p dest
 	cd dest && \
 	    for M in $(MODULES); do \
+		echo "Unpacking $$M..." ; \
 		if echo $$M | grep .tar.gz; then \
 		    tar xvzf ../src/$$M ; \
 		else \
@@ -31,21 +32,27 @@ build:
 	    echo "applying $$p..." ; \
 	    ( cd dest ; patch -p1 -b ) < $$p ; \
 	done
-	
 	set -e ; cd dest && \
 	    export PYTHONPATH=$$PYTHONPATH:$(DESTDIR)$(OMD_ROOT)/lib/python:$(shell realpath $$(pwd)/../python/tmp.python27/lib/python2.7) ; \
-	    env ; \
 	    for M in $$(ls); do \
+		echo "Building $$M..." ; \
 		cd $$M ; \
 	        $(PYTHON) setup.py build ; \
 	        cd .. ; \
 	    done
+
+check-python:
+	@if [ ! -d ../python/tmp.python27 ]; then \
+	    echo "ERROR: You need to build the \"python\" package first" ; \
+	    exit 1 ; \
+	fi
 
 install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/python
 	cd dest && \
 	    export PYTHONPATH=$$PYTHONPATH:$(DESTDIR)$(OMD_ROOT)/lib/python ; \
 	    for M in $$(ls); do \
+		echo "Installing $$M..." ; \
 		cd $$M ; \
 	        $(PYTHON) setup.py install --home=$(DESTDIR)$(OMD_ROOT) \
 	            --prefix='' \

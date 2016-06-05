@@ -3,7 +3,7 @@ include ../../Makefile.omd
 NAME = rrdtool
 VERSION = 1.5.4
 DIR = $(NAME)-$(VERSION)
-PYTHON = $(shell pwd)/../python/tmp.python27/bin/python
+PYTHON = $(shell realpath $$(pwd)/../python/tmp.python27/bin/python)
 
 CONFIGUREOPTS = \
 	--prefix=$(OMD_ROOT) \
@@ -15,7 +15,7 @@ CONFIGUREOPTS = \
 	--disable-rrdcgi \
 	--with-perl-options="LIB=$(DESTDIR)$(OMD_ROOT)/lib/perl5/lib/perl5"
 
-build:
+build: check-python
 	if [ -d $(DIR) ]; then rm -rf $(DIR); fi
 	tar xzf $(DIR).tar.gz
 	for p in patches/*.diff ; do \
@@ -35,6 +35,12 @@ build:
 	
 	# Python binding
 	cd $(DIR)/bindings/python && $(PYTHON) setup.py build
+
+check-python:
+	@if [ ! -d ../python/tmp.python27 ]; then \
+	    echo "ERROR: You need to build the \"python\" package first" ; \
+	    exit 1 ; \
+	fi
 
 install:
 	export PERL5LIB=$(P5TMPDIST)/dest/lib/perl5; \

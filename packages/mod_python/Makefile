@@ -13,8 +13,7 @@ APACHE_VERSION      = $(shell $(APACHE_BIN) -v | awk '/version/ {print $$3}' | a
 APACHE_VERSION_MAIN = $(word 1, $(subst ., ,$(APACHE_VERSION)))
 APACHE_VERSION_SUB  = $(word 2, $(subst ., ,$(APACHE_VERSION)))
 
-
-build:
+build: check-python
 	tar xzf $(DIR).tar.gz
 	set -e ; for p in patches/*.dif ; do \
 	    echo "applying $$p..." ; \
@@ -30,6 +29,12 @@ build:
 	cd $(DIR) ; ./configure $(CONFIGUREOPTS) 
 	echo '#define OMD_VERSION "$(OMD_VERSION)"' > $(DIR)/src/omd_version.h
 	$(MAKE) -C $(DIR) all
+
+check-python:
+	@if [ ! -d ../python/tmp.python27 ]; then \
+	    echo "ERROR: You need to build the \"python\" package first" ; \
+	    exit 1 ; \
+	fi
 
 install:
 	# Use 'make install' of mod_python into a temporary file.
