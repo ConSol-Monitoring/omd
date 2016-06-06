@@ -49,14 +49,19 @@ build: check-python
 	done
 	set -e ; cd dest && \
 	    TMP_INSTALL_PATH=$(shell pwd)/tmp.python ; \
-	    mkdir $$TMP_INSTALL_PATH/lib || true; \
+	    mkdir -p $$TMP_INSTALL_PATH/lib || true; \
 	    export PYTHONPATH=$$PYTHONPATH:$$TMP_INSTALL_PATH/lib ; \
 	    export PYTHONPATH=$$PYTHONPATH:$(DESTDIR)$(OMD_ROOT)/lib/python ; \
 	    export PYTHONPATH=$$PYTHONPATH:$(shell pwd)/../python/tmp.python27/lib/python2.7 ; \
 	    export LDFLAGS="-L$(shell pwd)/../python/tmp.python27/lib -L$(shell pwd)/../python/tmp.python27/lib/python2.7/config" ; \
 	    for M in $$(ls); do \
 		echo "Building $$M..." ; \
-		cd $$M ; \
+		PKG=$${M//.tar.gz/} ; \
+		PKG=$${PKG//.zip/} ; \
+		if [ $$PKG = pysnmp-git ]; then \
+		    PKG=pysnmp-master ; \
+		fi ; \
+		cd $$PKG ; \
 	        $(PYTHON) setup.py build ; \
 	        $(PYTHON) setup.py install --home=$$TMP_INSTALL_PATH \
 	            --prefix='' \
