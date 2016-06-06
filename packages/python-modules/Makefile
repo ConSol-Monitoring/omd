@@ -54,7 +54,7 @@ build: check-python
 	    export PYTHONPATH=$$PYTHONPATH:$(DESTDIR)$(OMD_ROOT)/lib/python ; \
 	    export PYTHONPATH=$$PYTHONPATH:$(shell pwd)/../python/tmp.python27/lib/python2.7 ; \
 	    export LDFLAGS="-L$(shell pwd)/../python/tmp.python27/lib -L$(shell pwd)/../python/tmp.python27/lib/python2.7/config" ; \
-	    for M in $$(ls); do \
+	    for M in $(MODULES); do \
 		echo "Building $$M..." ; \
 		PKG=$${M//.tar.gz/} ; \
 		PKG=$${PKG//.zip/} ; \
