@@ -79,7 +79,7 @@ check-python:
 
 install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/python
-	cd dest && \
+	set -e ; cd dest && \
 	    export PYTHONPATH=$$PYTHONPATH:$(DESTDIR)$(OMD_ROOT)/lib/python ; \
 	    for M in $$(ls); do \
 		echo "Installing $$M..." ; \
