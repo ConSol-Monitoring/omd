@@ -6,6 +6,7 @@ VERSION  = $(OMD_VERSION)
 DISTRO   = $(shell ../../distro)
 PYTHON   = LD_LIBRARY_PATH=$(shell pwd)/../python/tmp.python27/lib \
 	   $(shell pwd)/../python/tmp.python27/bin/python
+TMP_INSTALL_PATH = $(shell pwd)/tmp.python
 
 MODULES =
 # Modules really needed on all platforms
@@ -49,9 +50,8 @@ build: check-python
 	    fi ; \
 	done
 	set -e ; cd dest && \
-	    TMP_INSTALL_PATH=$(shell pwd)/tmp.python ; \
-	    mkdir -p $$TMP_INSTALL_PATH/lib || true; \
-	    export PYTHONPATH=$$PYTHONPATH:$$TMP_INSTALL_PATH/lib ; \
+	    mkdir -p $(TMP_INSTALL_PATH)/lib || true; \
+	    export PYTHONPATH=$$PYTHONPATH:$(TMP_INSTALL_PATH)/lib ; \
 	    export PYTHONPATH=$$PYTHONPATH:$(DESTDIR)$(OMD_ROOT)/lib/python ; \
 	    export PYTHONPATH=$$PYTHONPATH:$(shell pwd)/../python/tmp.python27/lib/python2.7 ; \
 	    export LDFLAGS="-L$(shell pwd)/../python/tmp.python27/lib -L$(shell pwd)/../python/tmp.python27/lib/python2.7/config" ; \
@@ -64,10 +64,10 @@ build: check-python
 		fi ; \
 		cd $$PKG ; \
 	        $(PYTHON) setup.py build ; \
-	        $(PYTHON) setup.py install --home=$$TMP_INSTALL_PATH \
+	        $(PYTHON) setup.py install --home=$(TMP_INSTALL_PATH) \
 	            --prefix='' \
-	            --install-platlib=$$TMP_INSTALL_PATH/lib \
-	            --install-purelib=$$TMP_INSTALL_PATH/lib ; \
+	            --install-platlib=$(TMP_INSTALL_PATH)/lib \
+	            --install-purelib=$(TMP_INSTALL_PATH)/lib ; \
 	        cd .. ; \
 	    done
 
@@ -80,7 +80,9 @@ check-python:
 install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/python
 	set -e ; cd dest && \
+	    export PYTHONPATH=$$PYTHONPATH:$(TMP_INSTALL_PATH)/lib ; \
 	    export PYTHONPATH=$$PYTHONPATH:$(DESTDIR)$(OMD_ROOT)/lib/python ; \
+	    export PYTHONPATH=$$PYTHONPATH:$(shell pwd)/../python/tmp.python27/lib/python2.7 ; \
 	    for M in $$(ls); do \
 		echo "Installing $$M..." ; \
 		cd $$M ; \
