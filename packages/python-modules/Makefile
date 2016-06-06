@@ -1,6 +1,7 @@
 include ../../Makefile.omd
 
 NAME     = python-modules
+SHELL    = /bin/bash
 VERSION  = $(OMD_VERSION)
 DISTRO   = $(shell ../../distro)
 PYTHON   = LD_LIBRARY_PATH=$(shell pwd)/../python/tmp.python27/lib \
