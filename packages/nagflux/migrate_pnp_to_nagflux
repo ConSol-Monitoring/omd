@@ -57,7 +57,6 @@ for my $xml_file (@xml_files) {
     }
 
     for my $ds (@{$xml->{DATASOURCE}}) {
-        die("the only supported storage type is MULTIPLE, this is: ".$ds->{'RRD_STORAGE_TYPE'}) if $ds->{'RRD_STORAGE_TYPE'} ne 'MULTIPLE';
         my $rrd_file = $ds->{'RRDFILE'};
         my $rrd_ds   = $ds->{'DS'};
         for my $key (qw/WARN_MIN WARN_MAX CRIT_MIN CRIT_MAX UNIT MIN MAX WARN CRIT/) {
@@ -81,8 +80,10 @@ for my $xml_file (@xml_files) {
             my($data) = $rra->findnodes('./database');
             for my $row (split/\n/mx, $data) {
                 my($timet, $val);
-                if($row =~ m|^\s*\Q<!-- \E[^/]+/\ (\d+)\Q --> <row><v>\E(.*)\Q</v></row>\E$|mx) {
-                    ($timet, $val) = ($1, $2);
+                if($row =~ m|^\s*\Q<!-- \E[^/]+/\ (\d+)\Q --> <row>\E(.*?)\Q</row>\E$|mx) {
+                    $timet = $1;
+                    my @values = $2 =~ m|<v>([^<]*)</v>|gmx;
+                    $val = $values[$rrd_ds-1];
                 }
                 next unless defined $val;
                 next if $val eq 'NaN';
