@@ -64,11 +64,15 @@ for my $xml_file (@xml_files) {
                 $ds->{$key} = '';
             }
         }
+        print STDERR "  -> $rrd_file\n";
+        if(!-s $rrd_file) {
+            print STDERR "    -> skipped, file does not exist\n";
+            next;
+        }
         if($ds->{'WARN_MIN'} || $ds->{'WARN_MAX'} || $ds->{'CRIT_MIN'} || $ds->{'CRIT_MAX'}) {
             use Data::Dumper; print STDERR Dumper($ds);
             die("ranges not supported yet");
         }
-        print STDERR "  -> $rrd_file\n";
         `rrdtool flushcached --daemon unix:tmp/run/rrdcached.sock $rrd_file >/dev/null 2>&1`;
         my $raw = `rrdtool dump $rrd_file`;
         my $parser = XML::LibXML->new();
