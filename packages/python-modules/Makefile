@@ -93,11 +93,22 @@ install:
 	        cd .. ; \
 	    done
 	
+	# Cleanup some unwanted files (example scripts)
+	rm -f $(DESTDIR)$(OMD_ROOT)/bin/*.py || true
+	
 	# Fix python interpreter for kept scripts
-	sed -i "1s|^#!.*python|#!$(OMD_ROOT)/bin/python|" \
-	    $(DESTDIR)$(OMD_ROOT)/bin/easy_install \
-	    $(DESTDIR)$(OMD_ROOT)/bin/easy_install-2.7 \
-	    $(DESTDIR)$(OMD_ROOT)/bin/libsmi2pysnmp
+	for F in $(DESTDIR)$(OMD_ROOT)/bin/easy_install \
+		 $(DESTDIR)$(OMD_ROOT)/bin/easy_install-2.7 \
+		 $(DESTDIR)$(OMD_ROOT)/bin/libsmi2pysnmp \
+		 $(DESTDIR)$(OMD_ROOT)/bin/pip \
+		; do \
+	    if [ -f $$F ]; then \
+		sed -i "1s|^#!.*python|#!/usr/bin/env python|" $$F; \
+	    fi ; \
+	done
+	
+	# Cleanup build time paths in easy-install.pth
+	sed -i 's|^/.*/\(.*\.egg\)$$|./\1|g' $(DESTDIR)$(OMD_ROOT)/lib/python/easy-install.pth
 
 skel:
 
