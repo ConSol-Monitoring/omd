@@ -57,10 +57,6 @@ stop_grafana() {
 
 case "$1" in
   start)
-        test -f $OMD_ROOT/var/grafana/data/grafana.db
-        FIRST_START=$?
-        test -f $OMD_ROOT/influxportupdated
-        PORT_UPDATED=$?
         printf '%s' "Starting $NAME..."
 
         if get_status > /dev/null ; then
@@ -74,47 +70,12 @@ case "$1" in
         nohup $DAEMON $OPTIONS >>$LOGFILE 2>&1 &
         if [ $? -eq 0 ]; then
             echo "OK"
-            if [ $FIRST_START -eq 1 ]; then
-                echo "first start, trying to create datasource"
-                for x in $(seq 120); do
-                    curl "$APIURL/datasources" \
-                            --silent \
-			    -H 'X-WEBAUTH-USER: omdadmin'
-                    [ $? == 0 ] && break;
-                    printf "."
-                    sleep 0.5;
+            # packages using Grafana register themselves through installer files
+            if ls $OMD_ROOT/etc/grafana/*_installer >/dev/null 2>&1; then
+                for client in $OMD_ROOT/etc/grafana/*_installer
+                do
+                    $client
                 done
-                curl "$APIURL/datasources" \
-                        --silent \
-                        --show-error \
-                        -X POST \
-			-H 'X-WEBAUTH-USER: omdadmin' \
-                        -H 'Content-Type: application/json;charset=UTF-8' \
-                        --data-binary '{"name":"nagflux","type":"influxdb","url":"http://127.0.0.1:'$CONFIG_INFLUXDB_HTTP_TCP_PORT'","access":"proxy","isDefault":true,"database":"nagflux", "user": "root", "password":"root"}' \
-                        2>&1
-                echo ""
-            fi
-            if [ $PORT_UPDATED -eq 0 ]; then
-                echo "influxdb port has changed, trying to update datasource"
-                for x in $(seq 60); do
-                    curl "$APIURL/datasources" \
-                            --silent \
-			    -H 'X-WEBAUTH-USER: omdadmin'
-                    [ $? == 0 ] && break;
-                    printf "."
-                    sleep 0.5;
-                done
-                # use first data source
-                curl "$APIURL/datasources/1" \
-                        --silent \
-                        --show-error \
-                        -X PUT \
-			-H 'X-WEBAUTH-USER: omdadmin' \
-                        -H 'Content-Type: application/json;charset=UTF-8' \
-                        --data-binary '{"name":"nagflux","type":"influxdb","url":"http://127.0.0.1:'$CONFIG_INFLUXDB_HTTP_TCP_PORT'","access":"proxy","isDefault":true,"database":"nagflux", "user": "root", "password":"root"}' \
-                        2>&1
-                echo ""
-                rm -f $OMD_ROOT/influxportupdated
             fi
             exit 0;
         else

@@ -1,1 +1,2 @@
 etc/init.d/influxdb 0775
+etc/influxdb/grafana_installer 0755

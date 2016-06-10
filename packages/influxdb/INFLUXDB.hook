@@ -16,7 +16,14 @@ case "$1" in
     set)
        if [ "$2" == "off" ]
        then
+           rm -f $OMD_ROOT/etc/grafana/influxdb_installer
            rm -f $OMD_ROOT/influxportupdated
+       fi
+       if [ "$2" == "on" ]
+       then
+           rm -f $OMD_ROOT/etc/grafana/influxdb_installer
+           ln -s $OMD_ROOT/etc/prometheus/grafana_installer \
+               $OMD_ROOT/etc/grafana/influxdb_installer
        fi
     ;;
 esac
