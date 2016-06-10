@@ -17,7 +17,7 @@ case "$1" in
        if [ "$2" == "off" ]
        then
            rm -f $OMD_ROOT/etc/grafana/influxdb_installer
-           rm -f $OMD_ROOT/influxportupdated
+           rm -f $OMD_ROOT/var/tmp/influxportupdated
        fi
        if [ "$2" == "on" ]
        then

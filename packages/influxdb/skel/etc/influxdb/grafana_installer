@@ -12,7 +12,7 @@ from grafana_utils import Grafana
 """
 
 datasource_name = "nagflux"
-port_changed_flag = os.path.join(os.environ['OMD_ROOT'], 'influxportupdated')
+port_changed_flag = os.path.join(os.environ['OMD_ROOT'], 'var', 'tmp', 'influxportupdated')
 
 if not Grafana.ping():
     sys.exit(2)
