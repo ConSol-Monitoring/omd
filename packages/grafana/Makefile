@@ -36,6 +36,7 @@ install:
 	install -m 644 defaults.ini $(DESTDIR)$(OMD_ROOT)/share/grafana/conf/
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/grafana/vendor/
 	cp -rp go/src/github.com/grafana/grafana/vendor/phantomjs $(DESTDIR)$(OMD_ROOT)/share/grafana/vendor/
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/python
 	install -m 755 grafana_utils.py $(DESTDIR)$(OMD_ROOT)/lib/python/grafana_utils.py
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/var/tmp
 
