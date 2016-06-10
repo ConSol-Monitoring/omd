@@ -14,7 +14,13 @@ if($ARGV[0] && ($ARGV[0] eq '-h' || $ARGV[0] eq '--help')) {
 }
 
 if(!$ENV{'OMD_ROOT'}) {
-    die("OMD_ROOT not set, this script is designed to run in an OMD environment");
+    print  STDERR "ERROR: OMD_ROOT not set, this script is designed to run in an OMD environment.";
+    exit 1;
+}
+
+if(!-e "etc/nagflux/config.gcfg") {
+    print STDERR "ERROR: cannot read etc/nagflux/config.gcfg, this script requires nagflux to work.\n";
+    exit 1;
 }
 
 chdir($ENV{'OMD_ROOT'});
@@ -27,6 +33,11 @@ my $pnp_spool     = $ENV{OMD_ROOT}.'/var/pnp4nagios/spool';
 my $nagflux_spool = `grep NagiosSpoolfileFolder etc/nagflux/config.gcfg`;
 $nagflux_spool    =~ s/^.*?"(.*)".*?$/$1/sgmx;
 chomp($nagflux_spool);
+
+if(!-d $nagflux_spool) {
+    print STDERR "ERROR: nagflux spool folder $nagflux_spool does not exist.\n";
+    exit 1;
+}
 
 print STDERR "Ready to start import of ".$num." files to ".$nagflux_spool.".\n";
 if($nagflux_spool eq $pnp_spool) {
@@ -64,14 +75,21 @@ for my $xml_file (@xml_files) {
                 $ds->{$key} = '';
             }
         }
-        print STDERR "  -> $rrd_file\n";
+        print STDERR "  -> ".Encode::encode_utf8($rrd_file)."\n";
         if(!-s $rrd_file) {
             print STDERR "    -> skipped, file does not exist\n";
             next;
         }
-        if($ds->{'WARN_MIN'} || $ds->{'WARN_MAX'} || $ds->{'CRIT_MIN'} || $ds->{'CRIT_MAX'}) {
-            use Data::Dumper; print STDERR Dumper($ds);
-            die("ranges not supported yet");
+        my $warning  = $ds->{'WARN'};
+        my $critical = $ds->{'CRIT'};
+        for my $type (qw/WARN CRIT/) {
+            if($ds->{$type.'_MIN'} || $ds->{$type.'_MAX'}) {
+                if($ds->{$type.'_RANGE_TYPE'} eq 'outside') {
+                    $warning = $ds->{$type.'_MIN'}.':'.$ds->{$type.'_MAX'};
+                } else {
+                    $warning = '@'.$ds->{$type.'_MIN'}.':'.$ds->{$type.'_MAX'};
+                }
+            }
         }
         `rrdtool flushcached --daemon unix:tmp/run/rrdcached.sock $rrd_file >/dev/null 2>&1`;
         my $raw = `rrdtool dump $rrd_file`;
@@ -95,22 +113,24 @@ for my $xml_file (@xml_files) {
                     $val = $1 * (10 ** $2);
                 }
                 if($type eq 'HOSTPERFDATA') {
-                    printf($fh "DATATYPE::%s\tTIMET::%i\tHOSTNAME::%s\tHOSTPERFDATA::%s=%s%s;%s;%s;%s;%s\tHOSTCHECKCOMMAND::%s\tHOSTSTATE::UP\tHOSTSTATETYPE::HARD\n",
-                           $type,
-                           $timet,
-                           $host,
-                           $ds->{'LABEL'}, $val, $ds->{'UNIT'}, $ds->{'WARN'}, $ds->{'CRIT'}, $ds->{'MIN'}, $ds->{'MAX'},
-                           $cmd,
-                          );
+                    my $txt = sprintf("DATATYPE::%s\tTIMET::%i\tHOSTNAME::%s\tHOSTPERFDATA::%s=%s%s;%s;%s;%s;%s\tHOSTCHECKCOMMAND::%s\tHOSTSTATE::UP\tHOSTSTATETYPE::HARD\n",
+                                $type,
+                                $timet,
+                                $host,
+                                $ds->{'LABEL'}, $val, $ds->{'UNIT'}, $warning, $critical, $ds->{'MIN'}, $ds->{'MAX'},
+                                $cmd,
+                    );
+                    print($fh Encode::encode_utf8($txt));
                 } else {
-                    printf($fh "DATATYPE::%s\tTIMET::%i\tHOSTNAME::%s\tSERVICEDESC::%s\tSERVICEPERFDATA::%s=%s%s;%s;%s;%s;%s\tSERVICECHECKCOMMAND::%s\tHOSTSTATE::UP\tHOSTSTATETYPE::HARD\tSERVICESTATE::OK\tSERVICESTATETYPE::HARD\n",
-                           $type,
-                           $timet,
-                           $host,
-                           $service,
-                           $ds->{'LABEL'}, $val, $ds->{'UNIT'}, $ds->{'WARN'}, $ds->{'CRIT'}, $ds->{'MIN'}, $ds->{'MAX'},
-                           $cmd,
-                          );
+                    my $txt = sprintf("DATATYPE::%s\tTIMET::%i\tHOSTNAME::%s\tSERVICEDESC::%s\tSERVICEPERFDATA::%s=%s%s;%s;%s;%s;%s\tSERVICECHECKCOMMAND::%s\tHOSTSTATE::UP\tHOSTSTATETYPE::HARD\tSERVICESTATE::OK\tSERVICESTATETYPE::HARD\n",
+                                $type,
+                                $timet,
+                                $host,
+                                $service,
+                                $ds->{'LABEL'}, $val, $ds->{'UNIT'}, $warning, $critical, $ds->{'MIN'}, $ds->{'MAX'},
+                                $cmd,
+                    );
+                    print($fh Encode::encode_utf8($txt));
                 }
             }
         }
