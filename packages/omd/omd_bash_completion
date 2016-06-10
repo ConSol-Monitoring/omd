@@ -1,0 +1,61 @@
+# Bash completion script for "omd"
+#
+
+_omd()
+{
+    local cur prev opts
+    COMPREPLY=()
+    cur="${COMP_WORDS[COMP_CWORD]}"
+    prev="${COMP_WORDS[COMP_CWORD-1]}"
+    prev2="${COMP_WORDS[COMP_CWORD-2]}"
+    prev3="${COMP_WORDS[COMP_CWORD-3]}"
+    opts=""
+
+    # Fill in the sites for these commands
+    if [ $EUID -eq 0 ]; then
+        # completions for the root user
+        if [[ $prev =~ start|stop|restart|reload|status|rm|mv|cp|update|config|disable|enable ]]; then
+            # complete with site names
+            opts=$(omd sites --bare)
+        elif [[ $prev2 =~ start|stop|restart|reload|status ]]; then
+            # complete with service names
+            opts=$(env ls -1 /omd/sites/$prev/etc/init.d/ 2>/dev/null)
+        elif [[ $prev =~ omd ]]; then
+            # complete with omd root and site commands
+            opts="create rm cp mv update start stop restart reload status sites versions version config"
+        elif [[ $prev2 =~ config ]]; then
+            opts="set show"
+        elif [[ $prev3 = config ]]; then
+            # complete with omd config options
+            opts=$(cat /omd/sites/$prev2/etc/omd/site.conf | awk -F= '{ print $1 }' | sed 's/^CONFIG_//')
+        elif [[ ${COMP_WORDS[COMP_CWORD-4]} = config ]] && [[ $prev2 = set ]]; then
+            # complete with omd config option choices
+            opts=$(su - $prev3 ./lib/omd/hooks/$prev choices | awk -F: '{ print $1 }')
+        fi
+    else
+        # completions for the site user
+        if [[ $prev =~ start|stop|restart|reload|status ]]; then
+            # complete with service names
+            opts=$(env ls -1 $OMD_ROOT/etc/init.d/ 2>/dev/null)
+        elif [[ $prev =~ omd ]]; then
+            # complete with omd site commands
+            opts="update start stop restart reload status sites versions version config"
+        elif [[ $prev =~ config ]]; then
+            opts="set show"
+        elif [[ $prev2 = config ]]; then
+            # complete with omd config options
+            opts=$(cat etc/omd/site.conf | awk -F= '{ print $1 }' | sed 's/^CONFIG_//')
+        elif [[ $prev3 = config ]] && [[ $prev2 = set ]]; then
+            # complete with omd config option choices
+            opts=$(lib/omd/hooks/$prev choices | awk -F: '{ print $1 }')
+        fi
+    fi
+
+
+    if [ "x$opts" != "x" ]; then
+        COMPREPLY=( $(compgen -W "${opts}" -- ${cur}) )
+        return 0
+    fi
+}
+
+complete -F _omd omd
