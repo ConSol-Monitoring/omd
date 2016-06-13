@@ -27,6 +27,7 @@ if ds == None:
         url=influxdb_url,
         access='proxy',
         isDefault=True,
+        database='nagflux',
         user='root',
         password='root'
     )
