@@ -102,6 +102,7 @@ sub get_omd_bin {
     exit    => expected exit code (set to undef to ignore exit code verification)
     like    => (list of) regular expressions which have to match stdout
     errlike => (list of) regular expressions which have to match stderr, default: empty
+    unlike  => (list of) regular expressions which must not match stdout
     sleep   => time to wait after executing the command
   }
 
@@ -140,6 +141,13 @@ sub test_command {
     if(defined $test->{'like'}) {
         for my $expr (ref $test->{'like'} eq 'ARRAY' ? @{$test->{'like'}} : $test->{'like'} ) {
             like($t->stdout, $expr, "stdout like ".$expr) or do { diag("\ncmd: '".$test->{'cmd'}."' failed\n"); $return = 0 };
+        }
+    }
+
+    # unlike matches on stdout?
+    if(defined $test->{'unlike'}) {
+        for my $expr (ref $test->{'unlike'} eq 'ARRAY' ? @{$test->{'unlike'}} : $test->{'unlike'} ) {
+            unlike($t->stdout, $expr, "stdout unlike ".$expr) or do { diag("\ncmd: '".$test->{'cmd'}."' failed\n"); $return = 0 };
         }
     }
 

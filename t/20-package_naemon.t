@@ -12,7 +12,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 30 );
+plan( tests => 34 );
 
 ##################################################
 # create our test site
@@ -30,6 +30,7 @@ my $tests = [
   { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -H localhost -a omdadmin:omd -u /$site/nagios -e 301'",  like => '/HTTP OK:/' },
   { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -H localhost -a omdadmin:omd -u /$site/nagios/ -e 200'", like => '/HTTP OK:/' },
 
+  { cmd => $omd_bin." stop $site naemon", unlike => '/kill/i' },
   { cmd => $omd_bin." stop $site" },
 ];
 for my $test (@{$tests}) {
