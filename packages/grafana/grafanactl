@@ -1,0 +1,235 @@
+#!/usr/bin/env perl
+
+use strict;
+use 5.010;
+use LWP;
+use JSON;
+use URI::Escape;
+use HTTP::Request::Common;
+use Log::Log4perl qw(:easy);
+
+Log::Log4perl->easy_init({
+    level   => ($ENV{LOGLEVEL} // "ERROR"),
+    file    => "STDERR",
+});
+
+chomp(my $grafana_port = qx(omd config show GRAFANA_TCP_PORT));
+my $API_URL="http://127.0.0.1:${grafana_port}/api";
+DEBUG "API_URL is $API_URL";
+
+my $ua = LWP::UserAgent->new;
+$ua->add_handler( request_prepare => \&request_handler );
+
+if($ARGV[0] && $ARGV[0] eq 'user') {
+    if($ARGV[1] && $ARGV[1] eq 'list') {
+        my $grafana_users = grafana_get_users($ua);
+        for my $name (sort keys %{$grafana_users}) {
+            my $u = $grafana_users->{$name};
+            printf("login: %-20s id:%-5s email:%-30s isAdmin:%s\n", $u->{'login'}, $u->{'id'}, $u->{'email'}, $u->{'isAdmin'} ? "yes" : "no");
+        }
+        exit;
+    }
+    if($ARGV[1] && $ARGV[1] eq 'add') {
+        my $name  = $ARGV[2];
+        my $email = $ARGV[3];
+        my $role  = $ARGV[4];
+        my $org   = $ARGV[5];
+        if(!$org || !$role || !$email || !$name) {
+            print STDERR "Usage: grafanactl user add <name> <email> <role> <org>\n";
+            exit 1;
+        }
+        if($role ne 'Admin' && $role ne 'Editor' && $role ne 'Viewer') {
+            print STDERR "Error: supported roles are: Admin, Editor and Viewer\n";
+            exit 1;
+        }
+        my $org_id = grafana_get_org_by_name($ua, $org);
+        my $grafana_users = grafana_get_users($ua);
+        my $grafana_user = $grafana_users->{$name};
+        if(!$grafana_user) {
+            my $grafana_user_id = grafana_create_user($ua, { name => $name, email => $email });
+            $grafana_user       = grafana_get_user($ua, $grafana_user_id);
+        }
+        grafana_add_user_to_org($ua, $grafana_user, $org_id->{'id'}, $role);
+        print "user $name added successfully\n";
+        exit;
+    }
+    if($ARGV[1] && $ARGV[1] eq 'delete') {
+        my $name  = $ARGV[2];
+        my $org   = $ARGV[3];
+        if(!$name) {
+            print STDERR "Usage: grafanactl user delete <name> [<org>]\n";
+            exit 1;
+        }
+        my $grafana_users = grafana_get_users($ua);
+        if(!$grafana_users->{$name}) {
+            print "User $name does not exist.\n";
+            exit 1;
+        }
+        if($org) {
+            my $org_id = grafana_get_org_by_name($ua, $org);
+            my $j = grafana_delete_user_org($ua, $grafana_users->{$name}->{id}, $org_id->{'id'});
+            if($j) {
+                print "user $name deleted successfully from $org\n";
+            }
+        } else {
+            # remove user completly
+            my $j = grafana_delete_user($ua, $grafana_users->{$name}->{id});
+            if($j) {
+                print "user $name deleted successfully\n";
+            }
+        }
+        exit;
+    }
+}
+if($ARGV[0] && $ARGV[0] eq 'org') {
+    if($ARGV[1] && $ARGV[1] eq 'list') {
+        my $orgs = grafana_get_orgs($ua);
+        for my $name (sort keys %{$orgs}) {
+            my $o = $orgs->{$name};
+            printf("name: %-20s id:%-5s\n", $o->{'name'}, $o->{'id'});
+            my $users = grafana_get_org_users($ua, $o->{'id'});
+            for my $username (sort keys %{$users}) {
+                my $u = $users->{$username};
+                printf("    login: %-20s id:%-5s email:%-30s role:%s\n", $u->{'login'}, $u->{'userId'}, $u->{'email'}, $u->{'role'});
+            }
+        }
+        exit;
+    }
+}
+
+print STDERR <<EOT;
+Usage: grafanactl <command> <options>
+
+User commands:
+       grafanactl user list
+       grafanactl user add <name> <email> <role> <org>
+       grafanactl user delete <name> [<org>]
+
+Organization commands:
+       grafanactl org list
+EOT
+exit 1;
+
+################################################################################
+sub grafana_get_orgs {
+    my ($ua) = @_;
+    my $r = $ua->request(GET "$API_URL/orgs");
+    LOGDIE($r->status_line) unless $r->is_success;
+    my $j = parse_json($r);
+    my $orgs = {};
+    for my $o (@$j) {
+        $orgs->{$o->{name}} = $o;
+    }
+    return $orgs;
+}
+
+sub grafana_get_org_by_name {
+    my ($ua, $name) = @_;
+    my $r = $ua->request(GET "$API_URL/orgs/name/".uri_escape($name));
+    LOGDIE($r->status_line) unless $r->is_success;
+    parse_json($r);
+}
+
+sub grafana_get_org_users {
+    my ($ua, $org_id) = @_;
+    my $r = $ua->get("$API_URL/orgs/${org_id}/users");
+    LOGDIE($r->status_line) unless $r->is_success;
+    my $j = parse_json($r);
+    my $users = {};
+    for my $u (@$j) {
+        $users->{$u->{login}} = $u;
+    }
+    return $users;
+}
+
+sub grafana_add_user_to_org {
+    my ($ua, $user, $org_id, $role) = @_;
+
+    # Is user already in org?
+    my $user_exists_in_org = defined grafana_get_org_users($ua, $org_id)->{$user->{'login'}};
+    unless($user_exists_in_org) {
+        DEBUG "User $user->{login} is not member of org/$org_id, add her";
+        my $req = POST "$API_URL/orgs/${org_id}/users", Content=>JSON->new->encode({
+            loginOrEmail => $user->{login},
+            role         => $role,
+        });
+        my $r = $ua->request($req);
+        LOGDIE($r->as_string) unless $r->is_success;
+    }
+
+    DEBUG "ensure that $user->{login} has the correct role";
+    # User exists in org, edit role in org
+    my $req = HTTP::Request->new("PATCH", "$API_URL/orgs/$org_id/users/$user->{id}");
+    $req->content(JSON->new->encode({ role => $role }));
+    my $r = $ua->request($req);
+    LOGDIE($r->as_string) unless $r->is_success;
+}
+
+sub grafana_get_users {
+    my $ua = shift;
+    my $j = parse_json($ua->get("${API_URL}/users"));
+    my $users = {};
+    for my $u (@$j) {
+        $users->{$u->{login}} = $u;
+    }
+    return $users;
+}
+
+sub grafana_get_user {
+    my ($ua, $id) = @_;
+    my $r = $ua->get("${API_URL}/users/${id}");
+    LOGDIE $r->status_line unless $r->is_success;
+    parse_json($r);
+}
+
+sub grafana_create_user {
+    my ($ua, $user) = @_;
+    my $req = POST "${API_URL}/admin/users",
+        Content => JSON->new->encode({
+            name     => ($user->{alias} // $user->{name}),
+            email    => $user->{email} // $user->{name},
+            login    => $user->{name},
+            password => "..........", # is required by the API, but still useless for us
+        });
+    my $r = $ua->request($req);
+    unless($r->is_success) {
+        LOGDIE $r->status_line," - ",$r->content
+    }
+    return parse_json($r)->{id};
+}
+
+sub grafana_delete_user {
+    my ($ua, $user_id) = @_;
+    my $grafana_users = grafana_get_users($ua);
+    my $r = $ua->delete("${API_URL}/admin/users/".$user_id);
+    unless($r->is_success) {
+        LOGDIE $r->status_line," - ",$r->content
+    }
+    return parse_json($r);
+}
+
+sub grafana_delete_user_org {
+    my ($ua, $user_id, $org_id) = @_;
+    my $grafana_users = grafana_get_users($ua);
+    my $r = $ua->delete("${API_URL}/orgs/".$org_id."/users/".$user_id);
+    unless($r->is_success) {
+        LOGDIE $r->status_line," - ",$r->content
+    }
+    return parse_json($r);
+}
+
+sub request_handler {
+    my($request, $ua, $h) = @_;
+    $request->header("Content-Type" => "application/json");
+    $request->header("Accept" => "application/json");
+    $request->header("X-WEBAUTH-USER" => "omdadmin");
+    $request;
+}
+
+
+sub parse_json {
+    my $r = shift;
+    LOGDIE $r->status_line unless $r->is_success;
+    my $content = $r->decoded_content;
+    JSON->new->decode($content);
+}
