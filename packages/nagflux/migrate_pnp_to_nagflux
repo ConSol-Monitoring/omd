@@ -52,8 +52,12 @@ print "\n\n";
 my $x = 0;
 for my $xml_file (@xml_files) {
     $x++;
-    my ($fh, $filename) = tempfile();
     printf(STDERR "%02i/%02i exporting from %s\n", $x, $num, $xml_file);
+    if(!-s $xml_file) {
+        print STDERR "  -> skipped, file does not exist or is empty\n";
+        next;
+    }
+    my ($fh, $filename) = tempfile();
     my $xml     = XMLin($xml_file);
     my $host    = $xml->{'NAGIOS_DISP_HOSTNAME'};
     my $service = $xml->{'NAGIOS_DISP_SERVICEDESC'};
@@ -77,7 +81,7 @@ for my $xml_file (@xml_files) {
         }
         print STDERR "  -> ".Encode::encode_utf8($rrd_file)."\n";
         if(!-s $rrd_file) {
-            print STDERR "    -> skipped, file does not exist\n";
+            print STDERR "    -> skipped, file does not exist or is empty\n";
             next;
         }
         my $warning  = $ds->{'WARN'};
