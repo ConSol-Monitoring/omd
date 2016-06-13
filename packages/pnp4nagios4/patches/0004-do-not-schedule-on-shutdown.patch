@@ -1,0 +1,13 @@
+--- a/src/npcdmod.c	2016-06-13 16:44:54.500196267 +0200
++++ b/src/npcdmod.c	2016-06-13 16:45:16.200196267 +0200
+@@ -173,7 +173,9 @@
+ 		write_to_all_logs(temp_buffer, NSLOG_INFO_MESSAGE);
+ 	}
+ 
+-	schedule_event(atoi(perfdata_file_processing_interval), npcdmod_file_roller, NULL);
++	if(!sigshutdown) {
++		schedule_event(atoi(perfdata_file_processing_interval), npcdmod_file_roller, NULL);
++	}
+ 	return;
+ }
+ 
