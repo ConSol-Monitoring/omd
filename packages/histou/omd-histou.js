@@ -20,7 +20,7 @@ return function(callback) {
     var flotAddons = url + 'flotAddons.js';
     $.getScript(flotAddons, function(){});
 
-    var configUrl = url+'index.php?host='+host+'&service='+service+'&height='+height+'&legend='+legend+debug;
+    var configUrl = url+'index.php?host='+host+'&service='+service+'&height='+height+'&legend='+legend+debug+'&annotations='+annotations;
 
     $.ajax({
         method: 'GET',
@@ -106,6 +106,12 @@ function parseArgs() {
         legend = ARGS.legend;
     }else{
         legend = true;
+    }
+
+    if (!_.isUndefined(ARGS.annotations)) {
+        annotations = ARGS.annotations;
+    } else {
+        annotations = false;
     }
 }
 
