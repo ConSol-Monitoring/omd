@@ -764,6 +764,7 @@ sub _get_url {
 sub _clean_stderr {
     my $text = shift || '';
     $text =~ s/[\w\-]+: Could not reliably determine the server's fully qualified domain name, using .*? for ServerName//g;
+    $text =~ s/\[[^]]+\] \[warn\] _default_ VirtualHost overlap on port 443, the first has precedence//g;
     $text =~ s/\[warn\] module \w+ is already loaded, skipping//g;
     $text =~ s/Syntax OK//g;
     $text =~ s/no crontab for \w+//g;
