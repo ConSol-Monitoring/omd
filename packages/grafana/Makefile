@@ -39,6 +39,7 @@ install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/python
 	install -m 755 grafana_utils.py $(DESTDIR)$(OMD_ROOT)/lib/python/grafana_utils.py
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/var/tmp
+	install -m 755 grafanactl $(DESTDIR)$(OMD_ROOT)/bin/
 
 skel:
 	sed -i -e 's|###APACHE_MODULE_DIR###|$(MODULE_DIR)|g' \

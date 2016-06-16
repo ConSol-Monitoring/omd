@@ -17,13 +17,13 @@ if(!$ENV{'OMD_ROOT'}) {
     print  STDERR "ERROR: OMD_ROOT not set, this script is designed to run in an OMD environment.";
     exit 1;
 }
+chdir($ENV{'OMD_ROOT'});
 
 if(!-e "etc/nagflux/config.gcfg") {
     print STDERR "ERROR: cannot read etc/nagflux/config.gcfg, this script requires nagflux to work.\n";
     exit 1;
 }
 
-chdir($ENV{'OMD_ROOT'});
 my @xml_files = glob("var/pnp4nagios/perfdata/*/*.xml");
 if(scalar @ARGV > 0) {
     @xml_files = @ARGV;
