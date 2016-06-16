@@ -27,6 +27,7 @@ PACKAGES=freetds \
 	 check_mailbox_health \
 	 check_rittal_health \
 	 check_wut_health \
+	 check_hpasm \
          check_webinject \
          dokuwiki \
          example \
