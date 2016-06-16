@@ -21,6 +21,12 @@ PACKAGES=freetds \
          check_mssql_health \
          check_nwc_health \
          check_sap_health \
+	 check_pdu_health \
+	 check_tl_health \
+	 check_ups_health \
+	 check_mailbox_health \
+	 check_rittal_health \
+	 check_wut_health \
          check_webinject \
          dokuwiki \
          example \
