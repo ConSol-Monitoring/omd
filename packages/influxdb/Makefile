@@ -4,13 +4,14 @@ NAME       = influxdb
 VERSION    = 0.13.0
 SRC        = $(NAME)-$(VERSION).tar.gz
 GOPATH     = go
-GOVERSION  = 1.6
+GOPKG      = 1.6
+GOVERSION  = $(shell grep ^VERSION ../go-${GOPKG}/Makefile | awk '{ print $$3 }')
 PWD        = $(shell pwd)
 DATE       = $(shell date -u '+%Y-%m-%d_%I:%M:%S%p')
 
 build:
 	tar zxf $(SRC)
-	export GOROOT=$(PWD)/../go-$(GOVERSION)/go-$(GOVERSION)/ && export GOPATH=$(PWD)/$(GOPATH)/ && PATH=$$GOROOT/bin:$$PATH && \
+	export GOROOT=$(PWD)/../go-$(GOPKG)/go-$(GOVERSION) && export GOPATH=$(PWD)/$(GOPATH)/ && PATH=$$GOROOT/bin:$$PATH && \
 		cd $(GOPATH)/src/github.com/influxdata && \
 		go build ./... && \
 		go install -ldflags "-X main.version=$(VERSION) -X main.buildTime=$(DATE)" ./...
@@ -33,7 +34,7 @@ clean:
 
 package: clean
 	mkdir -p $(GOPATH)
-	export GOROOT=$(PWD)/../go-$(GOVERSION)/go-$(GOVERSION)/ && export GOPATH=$(PWD)/$(GOPATH)/ && PATH=$$GOROOT/bin:$$PATH && \
+	export GOROOT=$(PWD)/../go-$(GOPKG)/go-$(GOVERSION) && export GOPATH=$(PWD)/$(GOPATH)/ && PATH=$$GOROOT/bin:$$PATH && \
 		mkdir -p $(GOPATH)/src/github.com/influxdata/ && \
 		cd $(GOPATH)/src/github.com/influxdata && \
 		git clone --depth=1 --branch "v$(VERSION)" https://github.com/influxdata/influxdb.git && \

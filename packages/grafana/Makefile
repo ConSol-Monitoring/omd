@@ -5,9 +5,10 @@ VERSION    = 3.0.2
 TIMESTAMP  = 1463383025
 SRC        = $(NAME)-$(VERSION).tar.gz
 GOPATH     = go
-GOVERSION  = 1.5
+GOPKG      = 1.5
+GOVERSION  = $(shell grep ^VERSION ../go-${GOPKG}/Makefile | awk '{ print $$3 }')
 PWD        = $(shell pwd)
-GO         = export GOROOT=$(PWD)/../go-$(GOVERSION)/go-$(GOVERSION)/ && export GOPATH=$(PWD)/$(GOPATH)/ && PATH=$$GOROOT/bin:$$PATH && go
+GO         = export GOROOT=$(PWD)/../go-$(GOPKG)/go-$(GOVERSION) && export GOPATH=$(PWD)/$(GOPATH)/ && PATH=$$GOROOT/bin:$$PATH && go
 
 MODULE_DIR=$(APACHE_MODULE_DIR)
 ifeq ($(shell uname -m),x86_64)
@@ -22,7 +23,7 @@ build:
 	    echo "applying $$p..." ; \
 	    ( cd $(GOPATH) ; patch -p1 ) < $$p ; \
 	done
-	export GOROOT=$(PWD)/../go-$(GOVERSION)/go-$(GOVERSION)/ && export GOPATH=$(PWD)/$(GOPATH)/ && PATH=$$GOROOT/bin:$$PATH && \
+	export GOROOT=$(PWD)/../go-$(GOPKG)/go-$(GOVERSION) && export GOPATH=$(PWD)/$(GOPATH)/ && PATH=$$GOROOT/bin:$$PATH && \
 		cd $(GOPATH)/src/github.com/grafana/grafana && \
 		go run build.go build
 
