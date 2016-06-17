@@ -6,7 +6,7 @@ DIR = $(NAME)-$(VERSION)
 
 .PHONY: skel
 
-CONFIGUREOPTS = "--disable-standalone"
+CONFIGUREOPTS = ""
 
 build:
 	tar xzf $(DIR).tar.gz
