@@ -3,14 +3,15 @@ include ../../Makefile.omd
 NAME        = nagflux
 VERSION     = 0.2.2
 SRC         = $(NAME)-$(VERSION).tar.gz
-GOVERSION   = 1.5
+GOPKG       = 1.5
+GOVERSION   = $(shell grep ^VERSION ../go-${GOPKG}/Makefile | awk '{ print $$3 }')
 GOPATH      = go
 PWD         = $(shell pwd)
 CONFIG_FILE = $(DESTDIR)$(OMD_ROOT)/etc/nagflux/config.gcfg
 
 build:
 	tar zxf $(SRC)
-	export GOROOT=$(PWD)/../go-$(GOVERSION)/go-$(GOVERSION)/ && export GOPATH=$(PWD)/$(GOPATH)/ && PATH=$$GOROOT/bin:$$PATH && \
+	export GOROOT=$(PWD)/../go-$(GOPKG)/go-$(GOVERSION)/ && export GOPATH=$(PWD)/$(GOPATH)/ && PATH=$$GOROOT/bin:$$PATH && \
 	go install github.com/griesbacher/nagflux
 
 install:
@@ -26,7 +27,7 @@ clean:
 
 package: clean
 	mkdir -p $(GOPATH)
-	export GOROOT=$(PWD)/../go-$(GOVERSION)/go-$(GOVERSION)/ && export GOPATH=$(PWD)/$(GOPATH)/ && PATH=$$GOROOT/bin:$$PATH && \
+	export GOROOT=$(PWD)/../go-$(GOPKG)/go-$(GOVERSION)/ && export GOPATH=$(PWD)/$(GOPATH)/ && PATH=$$GOROOT/bin:$$PATH && \
 		mkdir -p $(GOPATH)/src/github.com/griesbacher && \
 		cd $(GOPATH)/src/github.com/griesbacher && \
 		git clone --depth=1 --branch "v$(VERSION)" https://github.com/griesbacher/nagflux && \
