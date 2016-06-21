@@ -832,10 +832,16 @@ sub _diag_cmd {
 
 =cut
 sub _diag_request {
-    my $test  = shift;
-    my $page  = shift;
+    my($test, $page) = @_;
 
     diag(Dumper($page->{'response'}));
+
+    if($page->{'content'} =~ m/\Qsubject=Thruk%20Error%20Report&amp;body=\E(.*?)">/smx) {
+        require URI::Escape;
+        diag($1);
+        my $error = URI::Escape::uri_unescape($1);
+        diag($error);
+    }
 
     $test->{'url'} =~ m/localhost\/(\w+)\//;
     my $site = $1;
