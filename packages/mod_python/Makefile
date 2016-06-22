@@ -1,35 +1,48 @@
 include ../../Makefile.omd
 
-NAME = mod_python
-VERSION = 3.3.1
-DIR = $(NAME)-$(VERSION)
+NAME     = mod_python
+VERSION  = 3.3.1
+DIR      = $(NAME)-$(VERSION)
+PYTHON   = $(shell pwd)/../python/tmp.python27/bin/python
 
 CONFIGUREOPTS = \
-    --prefix=$(OMD_ROOT)
+    --prefix=$(OMD_ROOT) \
+    --with-python=$(PYTHON)
 
 APACHE_VERSION      = $(shell $(APACHE_BIN) -v | awk '/version/ {print $$3}' | awk -F/ '{print $$2}')
 APACHE_VERSION_MAIN = $(word 1, $(subst ., ,$(APACHE_VERSION)))
 APACHE_VERSION_SUB  = $(word 2, $(subst ., ,$(APACHE_VERSION)))
 
-
-build:
+build: check-python
 	tar xzf $(DIR).tar.gz
 	set -e ; for p in patches/*.dif ; do \
 	    echo "applying $$p..." ; \
 	    ( cd $(DIR) ; patch -p1 -b ) < $$p ; \
 	done
+
 	# Apply special patch for apache >= 2.4
 	if [ $(APACHE_VERSION_MAIN) -ge 2 -a $(APACHE_VERSION_SUB) -ge 4 ]; then \
 	    echo "applying patches/0008-apache24.patch..." ; \
 	    ( cd $(DIR) ; patch -p1 -b ) < patches/0008-apache24.patch ; \
 	fi
-	cd $(DIR) ; ./configure $(CONFIGUREOPTS) 
-	echo '#define OMD_VERSION "$(OMD_VERSION)"' > $(DIR)/src/omd_version.h
-	$(MAKE) -C $(DIR) all
+	
+	export LD_LIBRARY_PATH=$(shell pwd)/../python/tmp.python27/lib ; \
+	export LDFLAGS="-L$(shell pwd)/../python/tmp.python27/lib -L$(shell pwd)/../python/tmp.python27/lib/python2.7/config" ; \
+	cd $(DIR) ; \
+	./configure $(CONFIGUREOPTS) ; \
+	echo '#define OMD_VERSION "$(OMD_VERSION)"' > src/omd_version.h ; \
+	$(MAKE) all
+
+check-python:
+	@if [ ! -d ../python/tmp.python27 ]; then \
+	    echo "ERROR: You need to build the \"python\" package first" ; \
+	    exit 1 ; \
+	fi
 
 install:
 	# Use 'make install' of mod_python into a temporary file.
 	# mod_python does not honor --prefix, so we move the stuff over...
+	export LD_LIBRARY_PATH=$(shell pwd)/../python/tmp.python27/lib ; \
 	make DESTDIR=$$(pwd)/tmp.root -C $(DIR) install
 	
 	# Installation directories vary much
@@ -48,4 +61,3 @@ skel:
 
 clean:
 	rm -rf $(NAME)-*.*.[0-9] tmp.root
-

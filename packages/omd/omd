@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/omd/versions/###OMD_VERSION###/bin/python
 # -*- encoding: utf-8; py-indent-offset: 4 -*-
 # vim: tabstop=8 expandtab shiftwidth=4 softtabstop=4
 #
@@ -1789,10 +1789,13 @@ def create_config_environment():
 # TODO: RENAME
 def save_site_conf():
     confdir = g_sitedir + "/etc/omd"
+
     if not os.path.exists(confdir):
         os.mkdir(confdir)
+
     f = file(g_sitedir + "/etc/omd/site.conf", "w")
-    for hook_name, value in g_site_conf.items():
+
+    for hook_name, value in sorted(g_site_conf.items(), key=lambda x: x[0]):
         f.write("CONFIG_%s='%s'\n" % (hook_name, value))
 
 
@@ -1923,7 +1926,7 @@ def config_set(args):
 
 
 def config_set_all():
-    for hook_name, value in g_site_conf.items():
+    for hook_name, value in sorted(g_site_conf.items(), key=lambda x: x[0]):
         # Hooks might vanish after and up- or downdate
         if hook_exists(hook_name):
             exitcode, output = call_hook(hook_name, [ "set", value ])

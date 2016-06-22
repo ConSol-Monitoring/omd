@@ -8,12 +8,21 @@ This file documents the revision history for the Open Monitoring Distribution
             - FIX: Added missing but documented --conflict flag to "omd restore"
             - FIX: Skipping partially created sites during omd start/stop/restart
             - FIX: Set correct shell environment for cronjobs
+            - FIX: Fixed possible "omd create" issue when APACHE_TCP_ADDR hook
+                   was executed after APACHE_TCP_PORT
             - omd backup: Can use --no-rrds,--no-logs or --no-past now to
               exclude RRDs and/or the monitoring history from the backup. These
               options can be used to make the backup/restore procedure faster
               and reduces the size of the backup, but it is not a complete backup.
             - Improved error message when trying omd action as non site user
             - Printing usage info in case of unknown command
+          - Python: OMD is now shipping with own Python 2.7.11 interpreter. This
+              step has been made to make Python based components, like Check_MK,
+              be able to rely on one single Python version independent of the
+              distibution OMD is being installed on.
+              Python scripts should use "#!/usr/bin/env python" as shebang to be
+              working within OMD without change. Something like "#!/usr/bin/python"
+              would not use the interpreter shipped with OMD.
           - Apache:
             - Removed the shared mode (only one system wide apache process).
               This mode was not used widely and it was a pain to maintain it,
@@ -21,6 +30,14 @@ This file documents the revision history for the Open Monitoring Distribution
               it will be changed to own mode during update. You might need
               to reload/restart your system apache manually once to apply
               the change.
+          - Debian: Harmonized default version handling with RPM based distros.
+            Previous OMD installations were leaving previously set default version
+            untouched during installation of a new OMD package on Debian based
+            distributions. This was handled differently on Debian and RPM based
+            distributions and lead to confusions when using both platforms.
+            We decided to unify the behaviour on all distributins and make OMD
+            automatically set the default version to the new one during
+            installation of a new package.
           - FIX: PHP-Sessions were not cleaned up during run time. The sessions
             were only cleared on system boot.
             Added a cron job to the sites that runs on a daily base at 0:10
