@@ -254,6 +254,27 @@ sub create_test_site {
 
 ##################################################
 
+=head2 create_fake_cookie_login
+
+  creates a fake cookie login
+
+=cut
+sub create_fake_cookie_login {
+    my $site = $_[0] || "testsite";
+    my $sessionid   = '8e87a0aff175849ba1335f6383b85050';
+    my $sessiondir  = '/omd/sites/'.$site.'/var/thruk/sessions/';
+    my $sessionfile = $sessiondir.'/'.$sessionid;
+    `mkdir -p $sessiondir`;
+    open(my $fh, '>', $sessionfile) or die("cannot write $sessionfile: $!");
+    print $fh "b21kYWRtaW46b21k~~~127.0.0.1~~~omdadmin\n";
+    close($fh);
+    `chown -R $site: $sessiondir`;
+    return($sessionid);
+}
+
+
+##################################################
+
 =head2 remove_test_site
 
   removes a test site
@@ -811,10 +832,16 @@ sub _diag_cmd {
 
 =cut
 sub _diag_request {
-    my $test  = shift;
-    my $page  = shift;
+    my($test, $page) = @_;
 
     diag(Dumper($page->{'response'}));
+
+    if($page->{'content'} =~ m/\Qsubject=Thruk%20Error%20Report&amp;body=\E(.*?)">/smx) {
+        require URI::Escape;
+        diag($1);
+        my $error = URI::Escape::uri_unescape($1);
+        diag($error);
+    }
 
     $test->{'url'} =~ m/localhost\/(\w+)\//;
     my $site = $1;
