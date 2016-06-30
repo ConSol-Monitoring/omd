@@ -39,7 +39,7 @@ MODULES = pysphere-0.1.7.zip \
           paramiko-1.12.2.tar.gz \
           pysnmp-4.2.3.tar.gz \
           pywbem-0.7.0.tar.gz \
-	  requests-2.10.0
+	  requests-2.10.0.tar.gz
 
 
 build:
