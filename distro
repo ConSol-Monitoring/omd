@@ -28,7 +28,7 @@ then
     if [ "${VERSION:0:6}" = "jessie" ] ; then
         VERSION="8"
     fi
-    if [ "${VERSION: -3}" = "sid" ] ; then
+    if [ "${VERSION:0:7}" = "stretch" ] ; then
         VERSION="9"
     fi
     echo "DEBIAN$SEP$VERSION"
