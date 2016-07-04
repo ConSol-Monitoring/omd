@@ -13,6 +13,9 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
+my $php_version = `php -v`;
+$php_version =~ s%^PHP\ (\d\.\d).*%$1%gmsx;
+plan( skip_all => 'histou requires at least php 5.3') if $php_version < 5.3;
 plan( tests => 53 );
 
 ##################################################
