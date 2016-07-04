@@ -72,6 +72,8 @@ next:
           - Added build support for Fedora 23
           - Added build support for Ubuntu 16.04
           - nsca: Update to 2.9.1
+          - Dokuwiki
+            - Updated to Version 2016-06-26a
 
 1.30     Oct 01 2015
           - omd:
