@@ -1,21 +1,24 @@
 include ../../Makefile.omd
 
-NAME = check_mssql_health
-CHECK_MSSQL_HEALTH_VERSION = 2.6.3.1
-CHECK_MSSQL_HEALTH_DIR = check_mssql_health-$(CHECK_MSSQL_HEALTH_VERSION)
-SHELL = /bin/bash
+PLUGIN = check_mssql_health
+PLUGIN_VERSION = 2.6.3.1
+PLUGIN_DIR = $(PLUGIN)-$(PLUGIN_VERSION)
 
 build:
-	tar xf check_mssql_health-$(CHECK_MSSQL_HEALTH_VERSION).tar.gz
-	cd $(CHECK_MSSQL_HEALTH_DIR) && \
-	./configure --disable-standalone && \
+	tar xf $(PLUGIN)-$(PLUGIN_VERSION).tar.gz
+	cd $(PLUGIN_DIR) && \
+	./configure && \
 	$(MAKE)
+	sed -e '1s|.*|#!/usr/bin/env perl|g' -i $(PLUGIN_DIR)/plugins-scripts/$(PLUGIN)
+	sed -e 's|#!\ */usr/bin/perl|#!/usr/bin/env perl|g' -i $(PLUGIN_DIR)/plugins-scripts/$(PLUGIN)
+	sed -e 's|#\ */usr/bin/perl|# /usr/bin/env perl|g' -i $(PLUGIN_DIR)/plugins-scripts/$(PLUGIN)
 
 install:
 	[ -d $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins ] || mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins
-	install -m 755 $(CHECK_MSSQL_HEALTH_DIR)/plugins-scripts/check_mssql_health $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins
+	install -m 755 $(PLUGIN_DIR)/plugins-scripts/$(PLUGIN) $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins
 
 skel:
 
 clean:
-	rm -rf $(CHECK_MSSQL_HEALTH_DIR)
+	rm -rf $(PLUGIN_DIR)
+
