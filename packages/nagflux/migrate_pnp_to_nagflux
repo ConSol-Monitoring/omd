@@ -14,7 +14,7 @@ if($ARGV[0] && ($ARGV[0] eq '-h' || $ARGV[0] eq '--help')) {
 }
 
 if(!$ENV{'OMD_ROOT'}) {
-    print  STDERR "ERROR: OMD_ROOT not set, this script is designed to run in an OMD environment.";
+    print  STDERR "ERROR: OMD_ROOT not set, this script is designed to run in an OMD environment.\n";
     exit 1;
 }
 chdir($ENV{'OMD_ROOT'});

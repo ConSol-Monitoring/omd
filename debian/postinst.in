@@ -99,8 +99,13 @@ case "$1" in
     # -- default for init
     DEFAULT=/etc/default/omd
     if ! test -e $DEFAULT ; then
-      echo "AUTOSTART=1" > $DEFAULT
+        echo "Activating init script /etc/init.d/omd"
+        echo "AUTOSTART=1" > $DEFAULT
     fi
+
+    echo "New default version is ###OMD_VERSION###."
+    update-alternatives --set omd /omd/versions/###OMD_VERSION###
+
     ;;
 
   abort-upgrade|abort-remove|abort-deconfigure)

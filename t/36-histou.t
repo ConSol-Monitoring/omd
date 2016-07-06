@@ -13,6 +13,9 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
+my $php_version = `php -v`;
+$php_version =~ s%^PHP\ (\d\.\d).*%$1%gmsx;
+plan( skip_all => 'histou requires at least php 5.3') if $php_version < 5.3;
 plan( tests => 53 );
 
 ##################################################
@@ -29,12 +32,12 @@ TestUtils::test_command({ cmd => $omd_bin." config $site set PNP4NAGIOS off" });
 TestUtils::test_command({ cmd => $omd_bin." config $site set GRAFANA on" });
 TestUtils::test_command({ cmd => $omd_bin." config $site set CORE icinga2" });
 TestUtils::test_command({ cmd => "/bin/su - $site -c 'icinga2 feature enable perfdata'", like => '/Enabling feature perfdata./' });
-TestUtils::test_command({ cmd => "/bin/su - $site -c 'rm etc/icinga2/conf.d/pnp4nagios.conf'", like => '//' });
-TestUtils::test_command({ cmd => "/bin/su - $site -c 'sed -i etc/icinga2/conf.d/histou.conf -e \'s/-perf/-pnp/g\''", like => '//' });
+TestUtils::test_command({ cmd => "/bin/su - $site -c 'rm etc/icinga2/conf.d/pnp4nagios.conf'", like => '/^\s*$/' });
+TestUtils::test_command({ cmd => "/bin/su - $site -c 'sed -i etc/icinga2/conf.d/histou.conf -e \'s/-perf/-pnp/g\''", like => '/^\s*$/' });
 
 TestUtils::test_command({ cmd => $omd_bin." start $site", like => '/Starting influxdb\.+OK/' });
 
-TestUtils::test_command({ cmd => "/bin/su - $site -c 'echo \"COMMAND [".time()."] SCHEDULE_FORCED_SVC_CHECK;$host;$service;".time()."\" | lq'", like => '//' });
+TestUtils::test_command({ cmd => "/bin/su - $site -c 'echo \"COMMAND [".time()."] SCHEDULE_FORCED_SVC_CHECK;$host;$service;".time()."\" | lq'", like => '/^\s*$/' });
 
 my $test = {
     url            => "http://localhost/$site/histou/index.php?host=$host&service=$service",
