@@ -12,7 +12,7 @@ build:
 	( cd $(ANSIBLE) ; python setup.py build )
 
 install:
-	mkdir -p $(LOCALPYTHONDIR)
+	mkdir -p $(DESTDIR)/$(LOCALPYTHONDIR)
 	export PYTHONPATH=$$PYTHONPATH:$(LOCALPYTHONDIR); \
 	cd $(ANSIBLE) ; python setup.py  install \
 		--home=$(OMD_ROOT) \
