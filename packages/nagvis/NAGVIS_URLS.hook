@@ -56,12 +56,14 @@ case "$1" in
             SERVICEURL="[htmlcgi]/view.py?view_name=service&site=&host=[host_name]&service=[service_description]"
             HOSTGROUPURL="[htmlcgi]/view.py?view_name=hostgroup&site=&hostgroup=[hostgroup_name]"
             SERVICEGROUPURL="[htmlcgi]/view.py?view_name=servicegroup&site=&servicegroup=[servicegroup_name]"
+            ACTION_URLS="host_downtime_url=\"\"\nhost_ack_url=\"\"\nservice_downtime_url=\"\"\nservice_ack_url=\"\"\n"
         else
             HTMLCGI="/$OMD_SITE/$GUI/cgi-bin"
             HOSTURL="[htmlcgi]/status.cgi?host=[host_name]"
             HOSTGROUPURL="[htmlcgi]/status.cgi?hostgroup=[hostgroup_name]"
             SERVICEURL="[htmlcgi]/extinfo.cgi?type=2&host=[host_name]&service=[service_description]"
             SERVICEGROUPURL="[htmlcgi]/status.cgi?servicegroup=[servicegroup_name]&style=detail"
+            ACTION_URLS=""
         fi
 
         # Now write the NagVis configuration. This is a dedicated file so we can easily write it out here
@@ -80,6 +82,7 @@ hostgroupurl="$HOSTGROUPURL"
 serviceurl="$SERVICEURL"
 servicegroupurl="$SERVICEGROUPURL"
 EOF
+        echo -ne "$ACTION_URLS" >> $CFG_FILE
     ;;
 
 esac
