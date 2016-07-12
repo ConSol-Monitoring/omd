@@ -30,6 +30,18 @@ if test -e "$CACHE_FILE"; then
             rm -f "$file.tmp"
         fi
     done
+
+    # The version is hard coded in OMD Python binary, fix that.
+    if [ $SRC = python ]; then
+        BIN_RPATH=$(strings python/tmp.python27/bin/python2.7 | grep ^/omd/versions)
+        NEW_RPATH=/omd/versions/$OMD_VERSION/lib
+        if [ ${#BIN_RPATH} -ne ${#NEW_RPATH} ]; then
+            echo "python: Can't replace rpath (different length: $BIN_RPATH, $NEW_RPATH). Use chrpath or patchelf to fix this."
+            exit 1
+        fi
+        sed -i "s%$BIN_RPATH%$NEW_RPATH%g" python/tmp.python27/bin/python2.7
+    fi
+
     exit 0
 fi
 EXCLUDES_FILE=$(mktemp)
