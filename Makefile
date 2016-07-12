@@ -26,6 +26,7 @@ PACKAGES=freetds \
 	 check_ups_health \
 	 check_mailbox_health \
 	 check_rittal_health \
+	 check_sqlbase_health \
 	 check_wut_health \
 	 check_hpasm \
          check_webinject \
