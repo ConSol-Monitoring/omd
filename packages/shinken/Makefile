@@ -6,21 +6,9 @@ SHINKEN_FILE=$(SHINKEN).tar.gz
 SHINKEN_URL=http://shinken-monitoring.org/pub/$(SHINKEN).tar.gz
 #
 # Python Remote Objects
-ifeq ($(DISTRO_NAME),CENTOS)
-  ifeq ($(DISTRO_VERSION),5)
-    PYRO=Pyro-3.12
-    PYRO_FILE=$(PYRO).tar.gz
-    PYRO_URL=https://pypi.python.org/packages/source/P/Pyro/$(PYRO_FILE)
-  else
-    PYRO=Pyro4-4.18
-    PYRO_FILE=$(PYRO).tar.gz
-    PYRO_URL=https://pypi.python.org/packages/source/P/Pyro4/$(PYRO_FILE)
-  endif
-else
-    PYRO=Pyro4-4.18
-    PYRO_FILE=$(PYRO).tar.gz
-    PYRO_URL=https://pypi.python.org/packages/source/P/Pyro4/$(PYRO_FILE)
-endif
+PYRO=Pyro4-4.18
+PYRO_FILE=$(PYRO).tar.gz
+PYRO_URL=https://pypi.python.org/packages/source/P/Pyro4/$(PYRO_FILE)
 #
 # Python Multiprocessing
 MP=multiprocessing-2.6.2.1
@@ -28,15 +16,7 @@ MP_FILE=$(MP).tar.gz
 MP_URL=http://pypi.python.org/packages/source/m/multiprocessing/$(MP_FILE)
 #
 # Simple JSON (not included in CentOS' python2.4)
-ifeq ($(DISTRO_NAME),CENTOS)
-  ifeq ($(DISTRO_VERSION),5)
-    SJSON=simplejson-2.1.2
-  else
-    SJSON=simplejson-3.3.0
-  endif
-else
-  SJSON=simplejson-3.3.0
-endif
+SJSON=simplejson-3.3.0
 SJSON_FILE=$(SJSON).tar.gz
 SJSON_URL=http://pypi.python.org/packages/source/s/simplejson/$(SJSON_FILE)
 #
@@ -44,11 +24,6 @@ SJSON_URL=http://pypi.python.org/packages/source/s/simplejson/$(SJSON_FILE)
 STOOLS=setuptools-0.6c11
 STOOLS_FILE=$(STOOLS).tar.gz
 STOOLS_URL=http://pypi.python.org/packages/source/s/setuptools/$(STOOLS_FILE)
-#
-# ctypes is only needed for CentOS and it's Python 2.4
-CTYPES=ctypes-1.0.2
-CTYPES_FILE=$(CTYPES).tar.gz
-CTYPES_URL=http://downloads.sourceforge.net/project/ctypes/ctypes/1.0.2/$(CTYPES_FILE)
 #
 # Hopefully this is never needed
 SQLITE=pysqlite-2.6.0
@@ -70,22 +45,9 @@ MONGODB_FILE=$(MONGODB).tgz
 MONGODB_URL=http://fastdl.mongodb.org/linux/$(MONGODB_FILE)
 #
 # Python bindings for MongoDB
-ifeq ($(DISTRO_NAME),CENTOS)
-  ifeq ($(DISTRO_VERSION),5)
-    PYMONGO=pymongo-2.1.1
-  else
-    PYMONGO=pymongo-2.5.2
-  endif
-else
-  PYMONGO=pymongo-2.5.2
-endif
+PYMONGO=pymongo-2.5.2
 PYMONGO_FILE=$(PYMONGO).tar.gz
 PYMONGO_URL=http://pypi.python.org/packages/source/p/pymongo/$(PYMONGO_FILE)
-#
-# Hashlib (for Python 2.4)
-HASHLIB=hashlib-20081119
-HASHLIB_FILE=$(HASHLIB).tar.gz
-HASHLIB_URL=http://code.krypto.org/python/hashlib/$(HASHLIB_FILE)
 #
 # This is where the python modules are going to be installed to
 LOCALPYTHONDIR=$(DESTDIR)$(OMD_ROOT)/lib/python
@@ -144,10 +106,6 @@ install:
 	$(MAKE) installpymongo
 	$(MAKE) installmongodb
 	echo "distro is " $(DISTRO_NAME)
-	if [ $(DISTRO_NAME) = "CENTOS" ] && [ $(DISTRO_VERSION) = "5" ]; then \
-		$(MAKE) installctypes; \
-		$(MAKE) installhashlib; \
-	fi
 	#$(MAKE) installsqlite
 	rm -rf $(TMP_DISTU)
 	# cleanup the tmp directory
@@ -235,23 +193,9 @@ installjson:
 		--install-data=$(DESTDIR)$(OMD_ROOT)/tmp )
 
 
-installctypes:
-	( cd $(CTYPES) ; python setup.py install \
-		--home=$(DESTDIR)$(OMD_ROOT) \
-		--install-platlib=$(LOCALPYTHONDIR) \
-		--install-scripts=$(DESTDIR)$(OMD_ROOT)/tmp \
-		--install-data=$(DESTDIR)$(OMD_ROOT)/tmp )
-
 installpymongo:
 	( cd $(PYMONGO) ; python setup.py install \
 		--prefix="" \
-		--home=$(DESTDIR)$(OMD_ROOT) \
-		--install-platlib=$(LOCALPYTHONDIR) \
-		--install-scripts=$(DESTDIR)$(OMD_ROOT)/tmp \
-		--install-data=$(DESTDIR)$(OMD_ROOT)/tmp )
-
-installhashlib:
-	( cd $(HASHLIB) ; python setup.py install \
 		--home=$(DESTDIR)$(OMD_ROOT) \
 		--install-platlib=$(LOCALPYTHONDIR) \
 		--install-scripts=$(DESTDIR)$(OMD_ROOT)/tmp \
