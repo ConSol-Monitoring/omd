@@ -5,21 +5,6 @@ SHINKEN=shinken-1.4.1
 SHINKEN_FILE=$(SHINKEN).tar.gz
 SHINKEN_URL=http://shinken-monitoring.org/pub/$(SHINKEN).tar.gz
 #
-# Python Multiprocessing
-MP=multiprocessing-2.6.2.1
-MP_FILE=$(MP).tar.gz
-MP_URL=http://pypi.python.org/packages/source/m/multiprocessing/$(MP_FILE)
-#
-# Simple JSON (not included in CentOS' python2.4)
-SJSON=simplejson-3.3.0
-SJSON_FILE=$(SJSON).tar.gz
-SJSON_URL=http://pypi.python.org/packages/source/s/simplejson/$(SJSON_FILE)
-#
-# Hopefully this is never needed
-SQLITE=pysqlite-2.6.0
-SQLITE_FILE=$(SQLITE).tar.gz
-SQLITE_URL=http://pysqlite.googlecode.com/files/$(SQLITE_FILE)
-#
 # MongoDB
 ifeq ($(shell uname -m),x86_64)
   MONGODB=mongodb-linux-x86_64-2.4.1
@@ -33,11 +18,6 @@ else ifeq ($(shell uname -m),armv6l)
 endif
 MONGODB_FILE=$(MONGODB).tgz
 MONGODB_URL=http://fastdl.mongodb.org/linux/$(MONGODB_FILE)
-#
-# Python bindings for MongoDB
-PYMONGO=pymongo-2.5.2
-PYMONGO_FILE=$(PYMONGO).tar.gz
-PYMONGO_URL=http://pypi.python.org/packages/source/p/pymongo/$(PYMONGO_FILE)
 #
 # This is where the python modules are going to be installed to
 LOCALPYTHONDIR=$(DESTDIR)$(OMD_ROOT)/lib/python
@@ -58,16 +38,8 @@ build:
 	#    echo "applying $$p..." ; \
 	#    ( cd $(SHINKEN) ; patch -p1 -b ) < $$p ; \
 	#done
-	test -f $(MP_FILE) || wget $(MP_URL)
-	tar xzf $(MP_FILE)
-	test -f $(SJSON_FILE) || wget $(SJSON_URL)
-	tar xzf $(SJSON_FILE)
-	test -f $(PYMONGO_FILE) || wget $(PYMONGO_URL)
-	tar xzf $(PYMONGO_FILE)
 	test -f $(MONGODB_FILE) || wget $(MONGODB_URL)
 	tar xzf $(MONGODB_FILE)
-	#test -f $(SQLITE_FILE) || wget $(SQLITE_URL)
-	#tar xzf $(SQLITE_FILE)
 	if [ $(DISTRO_NAME) = "CENTOS" ] && [ $(DISTRO_VERSION) = "5" ]; then \
 		echo it is a centos 5; \
 		echo which has python 2.4; \
@@ -80,13 +52,8 @@ install:
 	rm -rf $(TMP_DISTU)
 	mkdir -p $(LOCALPYTHONDIR)
 	$(MAKE) installshinken
-	$(MAKE) repairdistutils
-	$(MAKE) installmp
-	$(MAKE) installjson
-	$(MAKE) installpymongo
 	$(MAKE) installmongodb
 	echo "distro is " $(DISTRO_NAME)
-	#$(MAKE) installsqlite
 	rm -rf $(TMP_DISTU)
 	# cleanup the tmp directory
 	for tmpfile in $(DESTDIR)$(OMD_ROOT)/tmp/easy_install* ; do \
@@ -119,48 +86,6 @@ installshinken:
 	install -m 755 merge-shinken-specific-config $(DESTDIR)$(OMD_ROOT)/bin
 
 
-repairdistutils:
-	mkdir -p $(TMP_DISTU)
-	cp -r $(DISTUTILS) $(TMP_DISTU)
-	# SuSE prevents installation of modules to private locations
-	rm -f /tmp/temp_distutils/distutils/distutils.cfg
-	# No longer...
-
-
-installmp:
-	( cd $(MP) ; python setup.py install \
-		--prefix="" \
-		--home=$(DESTDIR)$(OMD_ROOT) \
-		--install-platlib=$(LOCALPYTHONDIR) \
-		--install-scripts=$(DESTDIR)$(OMD_ROOT)/tmp \
-		--install-data=$(DESTDIR)$(OMD_ROOT)/tmp )
-
-
-installsqlite:
-	( cd $(SQLITE) ; python setup.py install \
-		--home=$(DESTDIR)$(OMD_ROOT) \
-		--install-platlib=$(LOCALPYTHONDIR) \
-		--install-scripts=$(DESTDIR)$(OMD_ROOT)/tmp \
-		--install-data=$(DESTDIR)$(OMD_ROOT)/tmp )
-
-
-installjson:
-	( cd $(SJSON) ; python setup.py install \
-		--prefix="" \
-		--home=$(DESTDIR)$(OMD_ROOT) \
-		--install-platlib=$(LOCALPYTHONDIR) \
-		--install-scripts=$(DESTDIR)$(OMD_ROOT)/tmp \
-		--install-data=$(DESTDIR)$(OMD_ROOT)/tmp )
-
-
-installpymongo:
-	( cd $(PYMONGO) ; python setup.py install \
-		--prefix="" \
-		--home=$(DESTDIR)$(OMD_ROOT) \
-		--install-platlib=$(LOCALPYTHONDIR) \
-		--install-scripts=$(DESTDIR)$(OMD_ROOT)/tmp \
-		--install-data=$(DESTDIR)$(OMD_ROOT)/tmp )
-
 installmongodb:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/bin
 	install -m 755 $(MONGODB)/bin/mongod $(DESTDIR)$(OMD_ROOT)/bin
@@ -169,10 +94,4 @@ installmongodb:
 
 clean:
 	rm -rf $(SHINKEN)
-	rm -rf $(MP)
-	rm -rf $(SJSON)
-	rm -rf $(CTYPES)
-	rm -rf $(SQLITE)
-	rm -rf $(PYMONGO)
 	rm -rf $(MONGODB)
-	rm -rf $(HASHLIB)

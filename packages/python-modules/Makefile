@@ -7,7 +7,14 @@ DISTRO   = $(shell ../../distro)
 # This is where the python modules are going to be installed to
 LOCALPYTHONDIR=$(DESTDIR)$(OMD_ROOT)/lib/python
 
-MODULES = setuptools-24.2.0.tar.gz \
+MODULES =
+
+ifeq ($(shell ./python_greater_2.6.sh),0)
+    MODULES += multiprocessing-2.6.2.1.tar.gz
+endif
+
+MODULES += setuptools-24.2.0.tar.gz \
+          simplejson-3.8.2.tar.gz \
           pysphere-0.1.7.zip \
           texttable-0.8.4.tar.gz \
           ordereddict-1.1.tar.gz \
