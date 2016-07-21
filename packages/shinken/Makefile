@@ -15,11 +15,6 @@ SJSON=simplejson-3.3.0
 SJSON_FILE=$(SJSON).tar.gz
 SJSON_URL=http://pypi.python.org/packages/source/s/simplejson/$(SJSON_FILE)
 #
-# Setup-Tools (needed to install Pyro on CentOS)
-STOOLS=setuptools-0.6c11
-STOOLS_FILE=$(STOOLS).tar.gz
-STOOLS_URL=http://pypi.python.org/packages/source/s/setuptools/$(STOOLS_FILE)
-#
 # Hopefully this is never needed
 SQLITE=pysqlite-2.6.0
 SQLITE_FILE=$(SQLITE).tar.gz
@@ -67,16 +62,10 @@ build:
 	tar xzf $(MP_FILE)
 	test -f $(SJSON_FILE) || wget $(SJSON_URL)
 	tar xzf $(SJSON_FILE)
-	test -f $(STOOLS_FILE) || wget $(STOOLS_URL)
-	tar xzf $(STOOLS_FILE)
-	test -f $(CTYPES_FILE) || wget $(CTYPES_URL)
-	tar xzf $(CTYPES_FILE)
 	test -f $(PYMONGO_FILE) || wget $(PYMONGO_URL)
 	tar xzf $(PYMONGO_FILE)
 	test -f $(MONGODB_FILE) || wget $(MONGODB_URL)
 	tar xzf $(MONGODB_FILE)
-	test -f $(HASHLIB_FILE) || wget $(HASHLIB_URL)
-	tar xzf $(HASHLIB_FILE)
 	#test -f $(SQLITE_FILE) || wget $(SQLITE_URL)
 	#tar xzf $(SQLITE_FILE)
 	if [ $(DISTRO_NAME) = "CENTOS" ] && [ $(DISTRO_VERSION) = "5" ]; then \
@@ -140,16 +129,6 @@ repairdistutils:
 	# No longer...
 
 
-installstools:
-	( cd $(STOOLS) ; python setup.py install \
-		--prefix="" \
-		--home=$(DESTDIR)$(OMD_ROOT) \
-		--install-platlib=$(LOCALPYTHONDIR) \
-		--install-purelib=$(LOCALPYTHONDIR) \
-		--install-scripts=$(DESTDIR)$(OMD_ROOT)/tmp \
-		--install-data=$(DESTDIR)$(OMD_ROOT)/tmp )
-  
-
 installmp:
 	( cd $(MP) ; python setup.py install \
 		--prefix="" \
@@ -194,7 +173,6 @@ clean:
 	rm -rf $(SHINKEN)
 	rm -rf $(MP)
 	rm -rf $(SJSON)
-	rm -rf $(STOOLS)
 	rm -rf $(CTYPES)
 	rm -rf $(SQLITE)
 	rm -rf $(PYMONGO)
