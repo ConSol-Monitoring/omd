@@ -81,8 +81,6 @@ install:
 	mkdir -p $(LOCALPYTHONDIR)
 	$(MAKE) installshinken
 	$(MAKE) repairdistutils
-	$(MAKE) installstools
-	$(MAKE) installpyro
 	$(MAKE) installmp
 	$(MAKE) installjson
 	$(MAKE) installpymongo
