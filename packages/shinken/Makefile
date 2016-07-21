@@ -5,11 +5,6 @@ SHINKEN=shinken-1.4.1
 SHINKEN_FILE=$(SHINKEN).tar.gz
 SHINKEN_URL=http://shinken-monitoring.org/pub/$(SHINKEN).tar.gz
 #
-# Python Remote Objects
-PYRO=Pyro4-4.18
-PYRO_FILE=$(PYRO).tar.gz
-PYRO_URL=https://pypi.python.org/packages/source/P/Pyro4/$(PYRO_FILE)
-#
 # Python Multiprocessing
 MP=multiprocessing-2.6.2.1
 MP_FILE=$(MP).tar.gz
@@ -68,8 +63,6 @@ build:
 	#    echo "applying $$p..." ; \
 	#    ( cd $(SHINKEN) ; patch -p1 -b ) < $$p ; \
 	#done
-	test -f $(PYRO_FILE) || wget $(PYRO_URL)
-	tar xzf $(PYRO_FILE)
 	test -f $(MP_FILE) || wget $(MP_URL)
 	tar xzf $(MP_FILE)
 	test -f $(SJSON_FILE) || wget $(SJSON_URL)
@@ -157,16 +150,6 @@ installstools:
 		--install-data=$(DESTDIR)$(OMD_ROOT)/tmp )
   
 
-installpyro:
-	( cd $(PYRO) ; python setup.py install \
-		--prefix="" \
-		--home=$(DESTDIR)$(OMD_ROOT) \
-		--install-platlib=$(LOCALPYTHONDIR) \
-		--install-purelib=$(LOCALPYTHONDIR) \
-		--install-scripts=$(DESTDIR)$(OMD_ROOT)/tmp \
-		--install-data=$(DESTDIR)$(OMD_ROOT)/tmp )
-
-
 installmp:
 	( cd $(MP) ; python setup.py install \
 		--prefix="" \
@@ -209,7 +192,6 @@ installmongodb:
 
 clean:
 	rm -rf $(SHINKEN)
-	rm -rf $(PYRO)
 	rm -rf $(MP)
 	rm -rf $(SJSON)
 	rm -rf $(STOOLS)
