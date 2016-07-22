@@ -9,46 +9,49 @@ LOCALPYTHONDIR=$(DESTDIR)$(OMD_ROOT)/lib/python
 
 MODULES =
 
+# Shinken
+MODULES += setuptools-24.2.0.tar.gz
 ifeq ($(shell ./python_greater_2.6.sh),0)
     MODULES += multiprocessing-2.6.2.1.tar.gz
 endif
+MODULES += simplejson-3.8.2.tar.gz
+MODULES += pysphere-0.1.7.zip
+MODULES += Pyro4-4.18.tar.gz
+MODULES += pymongo-2.5.2.tar.gz
+# end of shinken
 
-MODULES += setuptools-24.2.0.tar.gz \
-          simplejson-3.8.2.tar.gz \
-          pysphere-0.1.7.zip \
-          texttable-0.8.4.tar.gz \
-          ordereddict-1.1.tar.gz \
-          pyexcel-io-0.1.0.tar.gz \
-          pyexcel-0.2.0.tar.gz \
-          odfpy-0.9.6.tar.gz \
-          pyexcel-ods-0.1.0.tar.gz \
-          jdcal-1.2.tar.gz \
-          openpyxl-2.2.2.tar.gz \
-          importlib-1.0.3.zip \
-          argparse-1.4.0.tar.gz \
-          future-0.15.2.tar.gz \
-          xlwt-future-0.8.0.tar.gz \
-          xlrd-0.9.4.tar.gz \
-          pyexcel-xlsx-0.1.0.tar.gz \
-          pyexcel-xls-0.1.0.tar.gz \
-          MarkupSafe-0.23.tar.gz \
-          Jinja2-2.8.tar.gz \
-          wstools-0.4.tar.gz \
-          fpconst-0.7.2.tar.gz \
-          docutils-0.12.tar.gz \
-          SOAPpy-0.12.5.tar.gz \
-          PyYAML-3.10.tar.gz \
-          ecdsa-0.10.tar.gz \
-          gearman-2.0.2.tar.gz \
-          six-1.10.0.tar.gz \
-          orderedmultidict-0.7.5.tar.gz \
-          pyasn1-0.1.4.tar.gz \
-          pycrypto-2.6.1.tar.gz \
-          paramiko-1.12.2.tar.gz \
-          pysnmp-4.2.3.tar.gz \
-          pywbem-0.7.0.tar.gz \
-	      requests-2.10.0.tar.gz \
-	      Pyro4-4.18.tar.gz
+MODULES += texttable-0.8.4.tar.gz
+MODULES += ordereddict-1.1.tar.gz
+MODULES += pyexcel-io-0.1.0.tar.gz
+MODULES += pyexcel-0.2.0.tar.gz
+MODULES += odfpy-0.9.6.tar.gz
+MODULES += pyexcel-ods-0.1.0.tar.gz
+MODULES += jdcal-1.2.tar.gz
+MODULES += openpyxl-2.2.2.tar.gz
+MODULES += importlib-1.0.3.zip
+MODULES += argparse-1.4.0.tar.gz
+MODULES += future-0.15.2.tar.gz
+MODULES += xlwt-future-0.8.0.tar.gz
+MODULES += xlrd-0.9.4.tar.gz
+MODULES += pyexcel-xlsx-0.1.0.tar.gz
+MODULES += pyexcel-xls-0.1.0.tar.gz
+MODULES += MarkupSafe-0.23.tar.gz
+MODULES += Jinja2-2.8.tar.gz
+MODULES += wstools-0.4.tar.gz
+MODULES += fpconst-0.7.2.tar.gz
+MODULES += docutils-0.12.tar.gz
+MODULES += SOAPpy-0.12.5.tar.gz
+MODULES += PyYAML-3.10.tar.gz
+MODULES += ecdsa-0.10.tar.gz
+MODULES += gearman-2.0.2.tar.gz
+MODULES += six-1.10.0.tar.gz
+MODULES += orderedmultidict-0.7.5.tar.gz
+MODULES += pyasn1-0.1.4.tar.gz
+MODULES += pycrypto-2.6.1.tar.gz
+MODULES += paramiko-1.12.2.tar.gz
+MODULES += pysnmp-4.2.3.tar.gz
+MODULES += pywbem-0.7.0.tar.gz
+MODULES += requests-2.10.0.tar.gz
 
 
 build:
