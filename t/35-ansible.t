@@ -34,8 +34,8 @@ TestUtils::test_command({ cmd => "/bin/su - $site -c 'chmod 600 .ssh/config'", l
 TestUtils::test_command({ cmd => "/bin/su - $site -c 'ssh localhost bin/omd status'", like => '/Overall state:/', errlike => '//', exit => 1 });
 
 TestUtils::test_command({ cmd => "/bin/su - $site -c 'echo \"localhost\n\" > inventory'", like => '/^$/' });
-TestUtils::test_command({ cmd => "/bin/su - $site -c 'ansible all -m ping -i inventory'", like => '/localhost \| success/' });
-TestUtils::test_command({ cmd => "/bin/su - $site -c 'ansible -i inventory -a \"omd status\" localhost'", like => '/localhost \| FAILED \| rc=1/', exit => 2 });
+TestUtils::test_command({ cmd => "/bin/su - $site -c 'ansible all -m ping -i inventory'", like => '/localhost \| (?i:success)/' });
+TestUtils::test_command({ cmd => "/bin/su - $site -c 'ansible -i inventory -a \"omd status\" localhost'", like => '/localhost \| (?i:FAILED) \| rc=1/', exit => 2 });
 
 TestUtils::test_command({ cmd => $omd_bin." stop $site" });
 TestUtils::remove_test_site($site);
