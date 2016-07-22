@@ -23,4 +23,4 @@ if [ ! -e "ansible-${version}" ] ; then
 fi
 
 find "ansible-${version}" \( -name .git\* -prune \) -o -print0 \
-| tar --null -T - --no-recursion -cf - | xz --best > ansible-${version}.tar.xz
+| tar --null -T - --no-recursion -cf - | gzip --best > ansible-${version}.tar.gz

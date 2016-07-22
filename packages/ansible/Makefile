@@ -8,7 +8,7 @@ LOCALPYTHONDIR=$(OMD_ROOT)/lib/python
 
 
 build:
-	( xz -d < $(ANSIBLE).tar.xz | tar xf - )
+	( gzip -d < $(ANSIBLE).tar.gz | tar xf - )
 	( cd $(ANSIBLE) ; python setup.py build )
 
 install:
