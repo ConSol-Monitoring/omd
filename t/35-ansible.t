@@ -16,8 +16,6 @@ chomp(my $os = qx(./distro));
 
 plan( skip_all => qq{ansible doesn't work on $os}) if $os =~ /SLES 11SP[12]/;
 
-plan( tests => 60 );
-
 ##################################################
 # create our test site
 my $omd_bin = TestUtils::get_omd_bin();
@@ -37,9 +35,13 @@ TestUtils::test_command({ cmd => "/bin/su - $site -c 'chmod 600 .ssh/config'", l
 TestUtils::test_command({ cmd => "/bin/su - $site -c 'ssh localhost bin/omd status'", like => '/Overall state:/', errlike => '//', exit => 1 });
 
 TestUtils::test_command({ cmd => "/bin/su - $site -c 'echo \"localhost\n\" > inventory'", like => '/^$/' });
+if($os =~ /centos 6/i) {
+    TestUtils::test_command({ cmd => qq{/bin/su - $site -c 'printf "[ssh_connection]\nssh_args = -o ControlMaster=no -o ControlPath=none -o ControlPersist=no\n" > .ansible.cfg'}, like => '/^$/'});
+}
 TestUtils::test_command({ cmd => "/bin/su - $site -c 'ansible all -m ping -i inventory'", like => '/localhost \| (?i:success)/' });
 TestUtils::test_command({ cmd => "/bin/su - $site -c 'ansible -i inventory -a \"omd status\" localhost'", like => '/localhost \| (?i:FAILED) \| rc=1/', exit => 2 });
 
 TestUtils::test_command({ cmd => $omd_bin." stop $site" });
 TestUtils::remove_test_site($site);
 
+done_testing();
