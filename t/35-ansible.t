@@ -12,6 +12,9 @@ BEGIN {
     use FindBin;
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
+chomp(my $os = qx(./distro));
+
+plan( skip_all => qq{ansible doesn't work on $os}) if $os =~ /SLES 11SP[12]/;
 
 plan( tests => 60 );
 
