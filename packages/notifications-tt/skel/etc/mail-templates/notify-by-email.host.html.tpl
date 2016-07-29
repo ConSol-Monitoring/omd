@@ -124,16 +124,9 @@ a:hover {
   <tr><td>Comment:</td><td>[% NOTIFICATIONCOMMENT %]</td></tr>
 [% END %]
 [% TRY; graphimg = PERL %]
-use MIME::Base64;
-use File::Slurp;
 my $end   = time();
 my $start = $end-86400;
-print `~/share/thruk/script/pnp_export.sh '[% HOSTNAME %]' '_HOST_' 900 200 $start $end '' ~/tmp/graph.png.$$ 0 2>&1`;
-my $data = read_file(glob("~/tmp/graph.png.$$"));
-if($data =~ m/PNG/) {
-    print encode_base64($data);
-}
-unlink(glob("~/tmp/graph.png.$$"));
+print `~/bin/thruk --local -a graph --host='[% HOSTNAME %]' --service='_HOST_' --width=900 --height=200 --start=$start --end=$end --format=base64`;
 [% END %]
 [% CATCH %]
   <tr>
