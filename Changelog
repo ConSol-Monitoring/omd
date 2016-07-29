@@ -5,6 +5,7 @@ next:
             - use distro version numbers in package names for debian and ubuntu too
             - add html mail notification templates
             - add bash completion
+          - Added build support for Fedora 24
           - Monitoring-Plugins update to 2.1.2
           - Icinga update to 2.4.10
           - Influxdb update to 0.13.0
