@@ -64,7 +64,7 @@ include Makefile.omd
 
 # If you just want to test package building, you can reduce the
 # number of packages to just "omd" - to speed up your tests.
-# PACKAGES="omd"
+# PACKAGES=omd
 
 # This file is kept by 'make config' and also may override
 # the list of packages

@@ -1,27 +1,32 @@
 include ../../Makefile.omd
 
-ANSIBLE=ansible-1.9.5
+ANSIBLE_VERSION=2.1.0.0-1
+ANSIBLE=ansible-$(ANSIBLE_VERSION)
 
 # This is where the python modules are going to be installed to
-LOCALPYTHONDIR=$(DESTDIR)$(OMD_ROOT)/lib/python
+LOCALPYTHONDIR=$(OMD_ROOT)/lib/python
 
 
 build:
-	( tar xzf $(ANSIBLE).tar.gz )
+	( gzip -d < $(ANSIBLE).tar.gz | tar xf - )
 	( cd $(ANSIBLE) ; python setup.py build )
 
 install:
-	mkdir -p $(LOCALPYTHONDIR)
+	mkdir -p $(DESTDIR)/$(LOCALPYTHONDIR)
 	export PYTHONPATH=$$PYTHONPATH:$(LOCALPYTHONDIR); \
-	cd $(ANSIBLE) ; python setup.py install \
-		--home=$(DESTDIR)$(OMD_ROOT) \
+	cd $(ANSIBLE) ; python setup.py  install \
+		--home=$(OMD_ROOT) \
+		--root=$(DESTDIR) \
 		--prefix='' \
 		--install-purelib=$(LOCALPYTHONDIR) \
 		--install-platlib=$(LOCALPYTHONDIR) \
-		--install-scripts=$(DESTDIR)$(OMD_ROOT)/bin \
-		--install-data=$(DESTDIR)$(OMD_ROOT)/tmp
+		--install-scripts=$(OMD_ROOT)/bin \
+		--install-data=$(OMD_ROOT)/tmp
 
 skel:
 
 clean:
-	rm -rf $(ANSIBLE)
+	rm -rf ansible-*/
+
+tarball:
+	./maketarball $(ANSIBLE_VERSION)
