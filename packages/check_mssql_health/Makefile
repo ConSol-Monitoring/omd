@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 PLUGIN = check_mssql_health
-PLUGIN_VERSION = 2.6.3.1
+PLUGIN_VERSION = 2.6.4.1
 PLUGIN_DIR = $(PLUGIN)-$(PLUGIN_VERSION)
 
 build:
