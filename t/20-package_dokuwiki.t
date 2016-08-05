@@ -12,6 +12,9 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
+my $php_version = `php -v`;
+$php_version =~ s%^PHP\ (\d\.\d).*%$1%gmsx;
+plan( skip_all => 'dokuwiki requires at least php 5.3') if $php_version < 5.3;
 plan( tests => 35 );
 
 ##################################################
@@ -28,7 +31,7 @@ my $tests = [
   { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -H localhost -a omdadmin:omd -u /$site/wiki -e 301'",          like => '/HTTP OK:/' },
   { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -H localhost -a omdadmin:omd -u /$site/wiki/ -e 302'",         like => '/HTTP OK:/' },
   { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -H localhost -a omdadmin:omd -u /$site/wiki/doku.php -e 200'", like => '/HTTP OK:/' },
-  { cmd => "/bin/su - $site -c 'test -h var/dokuwiki/lib/plugins/acl'", like => '//' },
+  { cmd => "/bin/su - $site -c 'test -h var/dokuwiki/lib/plugins/acl'", like => '/^\s*$/' },
 
   { cmd => $omd_bin." stop $site" },
 ];

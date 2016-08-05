@@ -10,6 +10,8 @@ else
     DEFAULT_RUNLEVELS=2 3 4 5
 endif
 
+.PHONY: skel
+
 build:
 
 install:

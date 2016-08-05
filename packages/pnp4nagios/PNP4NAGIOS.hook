@@ -64,7 +64,7 @@ case "$1" in
                ln -sfn ../../pnp4nagios/nagios_npcd.cfg $OMD_ROOT/etc/naemon/naemon.d/pnp4nagios.cfg
            fi
            if [ -e $OMD_ROOT/etc/icinga2/features-enabled/ ] ; then
-               ln -sfn ../features-available/perfdata.conf $OMD_ROOT/etc/icinga2/features-enabled/perfdata.conf
+               ln -sfn ../features-available/perfdata.conf $OMD_ROOT/etc/icinga2/features-enabled/omd_pnp_perfdata.conf
            fi
            ln -sfn ../../pnp4nagios/apache.conf $OMD_ROOT/etc/apache/conf.d/pnp4nagios.conf
        else
@@ -72,7 +72,7 @@ case "$1" in
            rm -f $OMD_ROOT/etc/icinga/icinga.d/pnp4nagios.cfg
            rm -f $OMD_ROOT/etc/naemon/naemon.d/pnp4nagios.cfg
            rm -f $OMD_ROOT/etc/apache/conf.d/pnp4nagios.conf
-           rm -f $OMD_ROOT/etc/icinga2/features-enabled/perfdata.conf
+           rm -f $OMD_ROOT/etc/icinga2/features-enabled/omd_pnp_perfdata.conf
            if [ -s $OMD_ROOT/etc/mod-gearman/perfdata.conf ]; then
                sed -i -e 's/^perfdata=.*$/perfdata=no/' $OMD_ROOT/etc/mod-gearman/perfdata.conf
            fi

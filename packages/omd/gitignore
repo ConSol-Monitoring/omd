@@ -19,3 +19,12 @@ dead.letter
 .spamassassin
 .ssh/
 .viminfo
+.local
+influxportupdated
+.influx_history
+.Xauthority
+.vnc
+.config
+.java
+.sqlite_history
+.dbus
