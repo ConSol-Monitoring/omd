@@ -1,0 +1,11 @@
+ALERT DailyTest
+  IF vector(1) > 0
+  FOR 1m
+  LABELS {
+    job = "dailytest",
+  }
+  ANNOTATIONS {
+    summary = "daily alert test",
+    description = "daily alert test",
+  }
+

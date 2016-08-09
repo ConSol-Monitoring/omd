@@ -1,0 +1,32 @@
+# my global config
+global:
+  scrape_interval:     15s # By default, scrape targets every 15 seconds.
+  evaluation_interval: 15s # By default, scrape targets every 15 seconds.
+  # scrape_timeout is set to the global default (10s).
+
+  # Attach these labels to any time series or alerts when communicating with
+  # external systems (federation, remote storage, Alertmanager).
+  external_labels:
+      monitor: '###SITE###'
+
+# Load and evaluate rules in this file every 'evaluation_interval' seconds.
+rule_files:
+  # - start of rule files
+  # - "first.rules"
+  # - "second.rules"
+  # - end of rule files
+
+# A scrape configuration containing exactly one endpoint to scrape:
+# Here it's Prometheus itself.
+scrape_configs:
+  # The job name is added as a label `job=<job_name>` to any timeseries scraped from this config.
+  # - start of scrape configs
+  # - end of scrape configs
+
+  - job_name: 'default'
+
+    file_sd_configs:
+      - files:
+        - '###ROOT###/etc/prometheus/conf.d/dynamic/*.json'
+        - '###ROOT###/etc/prometheus/conf.d/custom/*.json'
+

@@ -17,6 +17,7 @@ next:
           - added ansible 1.9.5
           - Histou / Nagflux update - new Layout
             - see https://github.com/Griesbacher/nagflux/releases/tag/v0.2.0
+          - Added Prometheus, Alertmanager, BlackboxExporter and PushGateway
 
 2.10     Nov 12 2015
           - Icinga update to 2.3.11

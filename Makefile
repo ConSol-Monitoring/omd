@@ -58,7 +58,11 @@ PACKAGES=freetds \
          nail \
          notifications-tt \
          ansible \
-         coshsh
+         coshsh \
+	 prometheus \
+	 alertmanager \
+	 blackbox \
+	 pushgateway
 
 include Makefile.omd
 

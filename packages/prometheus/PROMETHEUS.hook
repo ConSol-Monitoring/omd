@@ -1,0 +1,36 @@
+#!/bin/bash
+
+# Alias: Start site-local Prometheus Daemon
+# Menu: Addons
+# Description:
+#  If you want to use Prometheus as a companion to your
+#  monitoring core, then you can activate
+#  this option and a site specific Prometheus daemon will be started.
+
+case "$1" in
+    default)
+        echo "off"
+    ;;
+    choices)
+        echo "on: enable"
+        echo "off: disable"
+    ;;
+    set)
+        if [ "$2" == "off" ]
+        then
+            rm -f $OMD_ROOT/etc/prometheus/apache.conf
+            rm -f $OMD_ROOT/etc/apache/conf.d/prometheus.conf
+            rm -f $OMD_ROOT/prometheusportupdated
+            rm -f $OMD_ROOT/etc/grafana/prometheus_installer
+        fi
+        if [ "$2" == "on" ]
+        then
+            rm -f $OMD_ROOT/etc/apache/conf.d/prometheus.conf
+            ln -s $OMD_ROOT/etc/prometheus/apache.conf \
+                $OMD_ROOT/etc/apache/conf.d/prometheus.conf
+            rm -f $OMD_ROOT/etc/grafana/prometheus_installer
+            ln -s $OMD_ROOT/etc/prometheus/grafana_installer \
+                $OMD_ROOT/etc/grafana/prometheus_installer
+        fi
+    ;;
+esac

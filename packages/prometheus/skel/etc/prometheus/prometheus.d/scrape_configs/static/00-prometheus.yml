@@ -1,0 +1,13 @@
+  - job_name: 'prometheus'
+
+    # Override the global default and scrape targets from this job every 5 seconds.
+    scrape_interval: 5s
+
+    # metrics_path defaults to '/metrics', but here we use the omd-prefix
+    # scheme defaults to 'http'.
+    metrics_path: /###SITE###/prometheus/metrics
+
+    static_configs:
+      - targets: ['###PROMETHEUS_TCP_ADDR###:###PROMETHEUS_TCP_PORT###']
+
+

@@ -1,0 +1,54 @@
+#!/bin/bash
+
+# Alias: TCP port number for Prometheus
+# Menu: Addons
+# Description:
+#  Configure the TCP port used for the Prometheus
+#  process of this site.
+#
+
+if [ -f $OMD_ROOT/etc/omd/site.conf ]; then
+    . $OMD_ROOT/etc/omd/site.conf
+else
+    CONFIG_PROMETHEUS_TCP_ADDR=127.0.0.1
+fi
+
+case "$1" in
+    default)
+        # Scan for a free port number by looking at the
+        # configuration of the other sites...
+        PORT=$($OMD_ROOT/lib/omd/port_is_used PROMETHEUS_TCP_PORT 9090)
+        echo "$PORT"
+    ;;
+    choices)
+        echo "[1-9][0-9]{0,4}"
+    ;;
+    set)
+        PORT=$($OMD_ROOT/lib/omd/port_is_used PROMETHEUS_TCP_PORT $2)
+        if [ "$PORT" != "$2" ] ; then
+            echo "Prometheus port $2 is in use. I've choosen $PORT instead." >&2
+            echo "$PORT"
+        fi
+        touch $OMD_ROOT/prometheusportupdated
+        cat <<EOF > $OMD_ROOT/etc/prometheus/apache.conf
+# This file is managed by 'omd config set PROMETHEUS_TCP_ADDR/PROMETHEUS_TCP_PORT'.
+# Better do not edit manually
+<IfModule !mod_proxy.c>
+    LoadModule proxy_module /usr/lib64/httpd/modules/mod_proxy.so
+</IfModule>
+<IfModule !mod_proxy_http.c>
+    LoadModule proxy_http_module /usr/lib64/httpd/modules/mod_proxy_http.so
+</IfModule>
+
+<Location "/$OMD_SITE/prometheus">
+    ProxyPass http://$CONFIG_PROMETHEUS_TCP_ADDR:$PORT/$OMD_SITE/prometheus retry=0 disablereuse=On
+    #ProxyPassReverse http://$CONFIG_PROMETHEUS_TCP_ADDR:$PORT/$OMD_SITE/prometheus
+    ProxyPassReverse http://$CONFIG_PROMETHEUS_TCP_ADDR:$PORT/
+    RequestHeader set X-WEBAUTH-USER %{REMOTE_USER}e
+</Location>
+EOF
+    ;;
+    depends)
+        [ "$CONFIG_PROMETHEUS" = on ]
+    ;;
+esac
