@@ -1,0 +1,18 @@
+#!/bin/bash
+
+# Alias: DataScryer Daemon
+# Menu: Addons
+# Description:
+#  DataScryer is an open-source, time series analyser.
+
+case "$1" in
+    default)
+        echo "off"
+    ;;
+    choices)
+        echo "on: enable dataScryer"
+        echo "off: disable dataScryer"
+    ;;
+    set)
+    ;;
+esac
