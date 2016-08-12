@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 PLUGIN = check_sqlbase_health
-PLUGIN_VERSION = 1.0
+PLUGIN_VERSION = 1.0.0.3
 PLUGIN_DIR = $(PLUGIN)-$(PLUGIN_VERSION)
 
 build:
