@@ -59,6 +59,7 @@ SETUPMODULES += vcversioner-2.16.0.0.tar.gz
 
 build:
 	mkdir -p dest
+	mkdir -p $(LOCALPYTHONDIR)
 	set -e ; cd dest && \
 	    export PYTHONPATH=$$PYTHONPATH:$(LOCALPYTHONDIR); \
 	    for M in $(SETUPMODULES); do \
