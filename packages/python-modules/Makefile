@@ -54,11 +54,29 @@ MODULES += pywbem-0.7.0.tar.gz
 MODULES += requests-2.10.0.tar.gz
 MODULES += jsonschema-2.5.1.tar.gz
 
+SETUPMODULES =
+SETUPMODULES += vcversioner-2.16.0.0.tar.gz
 
 build:
 	mkdir -p dest
 	set -e ; cd dest && \
 	    export PYTHONPATH=$$PYTHONPATH:$(LOCALPYTHONDIR); \
+	    for M in $(SETUPMODULES); do \
+	        if echo $$M | grep .tar.gz; then \
+	            tar xzf ../src/$$M ; \
+	        else \
+	            unzip -o ../src/$$M ; \
+	        fi; \
+	        MDIR=$$(echo $$M | sed -e 's/.tar.gz//g' -e 's/.zip//g') ; \
+	        cd $$MDIR; \
+	        echo PYTHONBUILD $$M ; \
+	        python setup.py build ; \
+	        python setup.py install --home=$(DESTDIR)$(OMD_ROOT) \
+	            --prefix='' \
+	            --install-platlib=$(LOCALPYTHONDIR) \
+	            --install-purelib=$(LOCALPYTHONDIR) ; \
+	        cd .. ; \
+	    done; \
 	    for M in $(MODULES); do \
 	        if echo $$M | grep .tar.gz; then \
 	            tar xzf ../src/$$M ; \
