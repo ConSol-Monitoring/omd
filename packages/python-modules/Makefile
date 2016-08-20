@@ -59,7 +59,7 @@ SETUPMODULES += vcversioner-2.16.0.0.tar.gz
 
 build:
 	mkdir -p dest
-	mkdir -p $(LOCALPYTHONDIR)
+	mkdir -p /opt/$(LOCALPYTHONDIR)
 	set -e ; cd dest && \
 	    export PYTHONPATH=$$PYTHONPATH:$(LOCALPYTHONDIR); \
 	    for M in $(SETUPMODULES); do \
@@ -72,10 +72,10 @@ build:
 	        cd $$MDIR; \
 	        echo PYTHONBUILD $$M ; \
 	        python setup.py build ; \
-	        python setup.py install --home=$(DESTDIR)$(OMD_ROOT) \
+	        python setup.py install --home=/opt/$(DESTDIR)$(OMD_ROOT) \
 	            --prefix='' \
-	            --install-platlib=$(LOCALPYTHONDIR) \
-	            --install-purelib=$(LOCALPYTHONDIR) ; \
+	            --install-platlib=/opt/$(LOCALPYTHONDIR) \
+	            --install-purelib=/opt/$(LOCALPYTHONDIR) ; \
 	        cd .. ; \
 	    done; \
 	    for M in $(MODULES); do \
