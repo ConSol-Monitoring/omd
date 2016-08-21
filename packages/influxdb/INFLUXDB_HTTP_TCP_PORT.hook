@@ -18,8 +18,10 @@ case "$1" in
         sed -e '/^\[http\]/,/^\[/{s/bind-address = .*$/bind-address = ":'$PORT'"/}' -i $OMD_ROOT/etc/influxdb/influxdb.conf
         sed -e 's%^	Address = "http.*$%Address = "http://127.0.0.1:'$PORT'"%' -i $OMD_ROOT/etc/nagflux/config.gcfg
         sed -e 's%^url = "http.*/query?db=nagflux"$%url = "http://localhost:'$PORT'/query?db=nagflux"%' -i $OMD_ROOT/etc/histou/histou.ini
-        sed -e 's%^Address_Read = http.*$%Address_Read = http://127.0.0.1:'$PORT'%' -i $OMD_ROOT/etc/dataScryer/config.ini
-        sed -e 's%^Address_Write = http.*$%Address_Write = http://127.0.0.1:'$PORT'%' -i $OMD_ROOT/etc/dataScryer/config.ini
+        test-e $OMD_ROOT/etc/dataScryer/config.ini && \
+	    sed -e 's%^Address_Read = http.*$%Address_Read = http://127.0.0.1:'$PORT'%' -i $OMD_ROOT/etc/dataScryer/config.ini
+        test-e $OMD_ROOT/etc/dataScryer/config.ini && \
+            sed -e 's%^Address_Write = http.*$%Address_Write = http://127.0.0.1:'$PORT'%' -i $OMD_ROOT/etc/dataScryer/config.ini
         touch $OMD_ROOT/var/tmp/influxportupdated
         if [ "$PORT" != "$2" ] ; then
             echo "$PORT"
