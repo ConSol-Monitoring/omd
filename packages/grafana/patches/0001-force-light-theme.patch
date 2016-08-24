@@ -1,10 +1,11 @@
---- go/src/github.com/grafana/grafana/pkg/api/index.go	2016-04-01 14:05:45.000000000 +0200
-+++ go/src/github.com/grafana/grafana/pkg/api/index.go	2016-04-04 12:36:03.948000000 +0200
-@@ -47,6 +47,7 @@
- 	if themeUrlParam == "light" {
+--- go/src/github.com/grafana/grafana/pkg/api/index.go	2016-08-24 09:58:50.777341974 +0200
++++ go/src/github.com/grafana/grafana/pkg/api/index.go	2016-08-24 09:59:36.916953973 +0200
+@@ -56,7 +56,7 @@
+ 	}
+ 
+ 	themeUrlParam := c.Query("theme")
+-	if themeUrlParam == "light" {
++	if themeUrlParam != "dark" {
  		data.User.LightTheme = true
  	}
-+	data.User.LightTheme = true
  
- 	dashboardChildNavs := []*dtos.NavLink{
- 		{Text: "Home", Url: setting.AppSubUrl + "/"},
