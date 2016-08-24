@@ -52,10 +52,10 @@ MODULES += paramiko-1.12.2.tar.gz
 MODULES += pysnmp-4.2.3.tar.gz
 MODULES += pywbem-0.7.0.tar.gz
 MODULES += requests-2.10.0.tar.gz
-#datascryer#MODULES += jsonschema-2.5.1.tar.gz
 
-SETUPMODULES =
-SETUPMODULES += vcversioner-2.16.0.0.tar.gz
+# DataScryer:
+MODULES += vcversioner-2.16.0.0.tar.gz
+MODULES += jsonschema-2.5.1.tar.gz
 
 build:
 	mkdir -p dest
