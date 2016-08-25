@@ -62,8 +62,9 @@ PACKAGES=freetds \
 	 prometheus \
 	 alertmanager \
 	 blackbox \
-	 pushgateway \
-	 dataScryer
+	 pushgateway
+#	 pushgateway \
+#	 dataScryer
 
 include Makefile.omd
 
