@@ -49,7 +49,7 @@ This file documents the revision history for the Open Monitoring Distribution
           - NagVis:
             - Update to version 1.9b3
           - Icinga: Update to 1.13.3
-          - Thruk: Update to 2.08
+          - Thruk: Update to 2.10
             - Phantomjs: Update to 2.1.1
           - Added build support for SLES 12 SP1
           - Added build support for Fedora 23
