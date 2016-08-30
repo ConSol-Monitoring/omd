@@ -1,4 +1,4 @@
-###ROOT###/var/log/nagflux.log {
+###ROOT###/var/log/nagflux/nagflux.log {
 	missingok
 	rotate 52
 	compress
