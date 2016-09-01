@@ -20,6 +20,9 @@ install:
                 --install-scripts=$(DESTDIR)$(OMD_ROOT)/bin \
                 --install-data=$(DESTDIR)$(OMD_ROOT)/share/dataScryer
 
+package:
+	curl -s https://pypi.python.org/simple/datascryer/ | sed -n 's/.*href="\([^"]*\).*/\1/p' | grep $(DATASCRYER).tar.gz | awk '{print "https://pypi.python.org/simple/datascryer/"$$1}' | xargs -L 1 wget
+
 skel:
 
 clean:
