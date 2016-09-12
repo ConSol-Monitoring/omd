@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 NAME       = influxdb
-VERSION    = 0.13.0
+VERSION    = 1.0.0
 SRC        = $(NAME)-$(VERSION).tar.gz
 GOPATH     = go
 GOPKG      = 1.6
@@ -41,6 +41,8 @@ package: clean
 		cd influxdb && \
 		git branch master && \
 		git checkout master && \
+		go get github.com/sparrc/gdm && \
+		$(PWD)/$(GOPATH)/bin/gdm restore && \
 		go fmt ./... && \
 		cd .. && \
 		go get ./... && \
