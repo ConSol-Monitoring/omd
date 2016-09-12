@@ -1,6 +1,6 @@
 include ../../Makefile.omd
 
-PROMETHEUS=prometheus-1.0.1
+PROMETHEUS=prometheus-1.1.2
 NODEEXPORTER=node_exporter-0.12.0
 
 .PHONY: skel
