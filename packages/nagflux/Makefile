@@ -1,9 +1,9 @@
 include ../../Makefile.omd
 
 NAME        = nagflux
-VERSION     = 0.2.2
+VERSION     = 0.2.3
 SRC         = $(NAME)-$(VERSION).tar.gz
-GOPKG       = 1.5
+GOPKG       = 1.6
 GOVERSION   = $(shell grep ^VERSION ../go-${GOPKG}/Makefile | awk '{ print $$3 }')
 GOPATH      = go
 PWD         = $(shell pwd)
