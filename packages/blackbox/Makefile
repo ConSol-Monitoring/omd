@@ -9,11 +9,11 @@ build:
 
 install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/bin
-	install -m 755 blackbox_exporter $(DESTDIR)$(OMD_ROOT)/bin
+	install -m 755 $(BLACKBOX).linux-amd64/blackbox_exporter $(DESTDIR)$(OMD_ROOT)/bin
 
 skel:
 	mkdir -p $(SKEL)/etc/blackbox_exporter
-	#cp $(PROMETHEUS).linux-amd64/blackbox_exporter.yml $(SKEL)/etc/blackbox_exporter
+	cp $(PROMETHEUS).linux-amd64/blackbox.yml $(SKEL)/etc/blackbox_exporter
 	#mkdir -p $(SKEL)/etc/blackbox_exporter/conf.d/custom
 	#echo "Use this dir for your hand-crafted configs." > $(SKEL)/etc/blackbox_exporter/conf.d/custom/README
 	#mkdir -p $(SKEL)/etc/blackbox_exporter/conf.d/dynamic
