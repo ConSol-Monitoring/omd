@@ -13,7 +13,7 @@ install:
 
 skel:
 	mkdir -p $(SKEL)/etc/blackbox_exporter
-	cp $(PROMETHEUS).linux-amd64/blackbox.yml $(SKEL)/etc/blackbox_exporter
+	cp $(BLACKBOX).linux-amd64/blackbox.yml $(SKEL)/etc/blackbox_exporter
 	#mkdir -p $(SKEL)/etc/blackbox_exporter/conf.d/custom
 	#echo "Use this dir for your hand-crafted configs." > $(SKEL)/etc/blackbox_exporter/conf.d/custom/README
 	#mkdir -p $(SKEL)/etc/blackbox_exporter/conf.d/dynamic
