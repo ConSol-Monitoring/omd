@@ -1,6 +1,6 @@
 include ../../Makefile.omd
 
-DATASCRYER=DataScryer-0.0.3
+DATASCRYER=DataScryer-0.0.4
 
 build:
 	tar xvzf $(DATASCRYER).tar.gz
