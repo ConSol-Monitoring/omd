@@ -1,16 +1,16 @@
 include ../../Makefile.omd
 
+PATH=/usr/sbin:/usr/bin:/bin:/sbin
 NAME = mod_python
 VERSION = 3.3.1
 DIR = $(NAME)-$(VERSION)
 
 CONFIGUREOPTS = \
     --prefix=$(OMD_ROOT)
-
+    
 APACHE_VERSION      = $(shell $(APACHE_BIN) -v | awk '/version/ {print $$3}' | awk -F/ '{print $$2}')
 APACHE_VERSION_MAIN = $(word 1, $(subst ., ,$(APACHE_VERSION)))
 APACHE_VERSION_SUB  = $(word 2, $(subst ., ,$(APACHE_VERSION)))
-
 
 build:
 	tar xzf $(DIR).tar.gz
