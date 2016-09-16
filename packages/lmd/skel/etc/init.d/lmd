@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+
+# description: LMD - Livestatus Multitool Daemon
+
+# This init script just shutdowns LMD on a omd stop, for example before updates
+# or on complete stops
+if [ "$1" != "stop" ] ; then
+    exit 5
+fi
+
+PID_FILE=$OMD_ROOT/tmp/thruk/lmd/lmd.pid
+pid=$( cat $PID_FILE 2>/dev/null )
+if [ -n "$pid" ]; then
+  kill $pid >/dev/null 2>&1
+fi
+exit 0

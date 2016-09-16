@@ -11,6 +11,8 @@ PWD         = $(shell pwd)
 GITURL      = github.com/sni/lmd
 BRANCH      = master
 
+.PHONY: skel
+
 build:
 	tar zxf $(SRC)
 	export GOROOT=$(PWD)/../go-$(GOPKG)/go-$(GOVERSION)/ && export GOPATH=$(PWD)/$(GOPATH)/ && PATH=$$GOROOT/bin:$$PATH && \
