@@ -14,5 +14,15 @@ case "$1" in
         echo "off: disable dataScryer"
     ;;
     set)
+       if [ "$2" == "off" ]
+       then
+           rm -f $OMD_ROOT/etc/grafana/dataScryer_installer
+       fi
+       if [ "$2" == "on" ]
+       then
+           rm -f $OMD_ROOT/etc/grafana/dataScryer_installer
+           ln -s $OMD_ROOT/etc/dataScryer/grafana_installer \
+               $OMD_ROOT/etc/grafana/dataScryer_installer
+       fi
     ;;
 esac
