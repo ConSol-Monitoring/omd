@@ -428,6 +428,11 @@ sub install_module {
         system("sed -i 's|-Wformat=0||g' Makefile.PL");
     }
 
+    # add pkg src folder to lib, some packages like Compress-Raw-Bzip2 have a ./private/MakeUtils.pm in their
+    local $ENV{'PERL5LIB'} = $ENV{'PERL5LIB'}.":." if -e 'private/';
+    local $ENV{'PERL5LIB'} = $ENV{'PERL5LIB'}.":." if -e 'inc/';
+    local $ENV{'PERL5LIB'} = $ENV{'PERL5LIB'}.":." if -e 'Configure.pm';
+
     eval {
         local $SIG{ALRM} = sub { die "timeout on: $file\n" };
         alarm(120); # single module should not take longer than 1 minute
