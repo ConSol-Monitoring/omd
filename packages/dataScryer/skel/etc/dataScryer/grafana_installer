@@ -18,7 +18,7 @@ grafana = Grafana()
 influxdb_url = 'http://127.0.0.1:%s' % (Grafana.omd_settings['CONFIG_INFLUXDB_HTTP_TCP_PORT'],)
 port_changed_flag = os.path.join(os.environ['OMD_ROOT'], 'var', 'tmp', 'influxportupdated')
 
-names = ["nagflux", "_internal", "sakuli"]
+names = ["nagflux_forecast", "nagflux_anomaly"]
 
 for datasource_name in names:
     ds = grafana.get_datasource(datasource_name)

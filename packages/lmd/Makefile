@@ -1,24 +1,26 @@
 include ../../Makefile.omd
 
-NAME        = nagflux
-VERSION     = 0.2.4
+NAME        = lmd
+VERSION     = 0.0.2
 SRC         = $(NAME)-$(VERSION).tar.gz
 GOPKG       = 1.6
 GOVERSION   = $(shell grep ^VERSION ../go-${GOPKG}/Makefile | awk '{ print $$3 }')
 GOPATH      = go
 PWD         = $(shell pwd)
-CONFIG_FILE = $(DESTDIR)$(OMD_ROOT)/etc/nagflux/config.gcfg
+#BRANCH      = v$(VERSION)
+GITURL      = github.com/sni/lmd
+BRANCH      = master
+
+.PHONY: skel
 
 build:
 	tar zxf $(SRC)
 	export GOROOT=$(PWD)/../go-$(GOPKG)/go-$(GOVERSION)/ && export GOPATH=$(PWD)/$(GOPATH)/ && PATH=$$GOROOT/bin:$$PATH && \
-	go install github.com/griesbacher/nagflux
+	go install -ldflags "-X main.Build=$(OMD_VERSION)" $(GITURL)/lmd
 
 install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/bin
-	install -m 755 $(PWD)/$(GOPATH)/bin/nagflux  $(DESTDIR)$(OMD_ROOT)/bin
-	mkdir -p $(DESTDIR)$(OMD_ROOT)/var/nagflux
-	install -m 755 $(PWD)/migrate_pnp_to_nagflux $(DESTDIR)$(OMD_ROOT)/bin
+	install -m 755 $(PWD)/$(GOPATH)/bin/lmd  $(DESTDIR)$(OMD_ROOT)/bin
 
 skel:
 
@@ -28,9 +30,10 @@ clean:
 package: clean
 	mkdir -p $(GOPATH)
 	export GOROOT=$(PWD)/../go-$(GOPKG)/go-$(GOVERSION)/ && export GOPATH=$(PWD)/$(GOPATH)/ && PATH=$$GOROOT/bin:$$PATH && \
-		mkdir -p $(GOPATH)/src/github.com/griesbacher && \
-		cd $(GOPATH)/src/github.com/griesbacher && \
-		git clone --depth=1 --branch "v$(VERSION)" https://github.com/griesbacher/nagflux && \
+		mkdir -p $(GOPATH)/src/github.com/sni && \
+		cd $(GOPATH)/src/github.com/sni && \
+		git clone --depth=1 --branch "$(BRANCH)" https://$(GITURL) && \
+		go get ./... && \
 		cd $(PWD) && \
 		tar zcf $(SRC) $(GOPATH)/src/ --exclude=.git --exclude=*_test.go
 

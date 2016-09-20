@@ -59,6 +59,7 @@ PACKAGES=freetds \
          notifications-tt \
          ansible \
          coshsh \
+         lmd \
 	 prometheus \
 	 alertmanager \
 	 blackbox \
