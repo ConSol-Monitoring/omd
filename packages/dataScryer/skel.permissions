@@ -1,1 +1,2 @@
 etc/init.d/dataScryer 0775
+etc/dataScryer/grafana_installer 0755
