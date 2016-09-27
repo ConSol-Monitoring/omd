@@ -10,6 +10,7 @@ PACKAGES=freetds \
          grafana \
          histou \
          nagflux \
+         check_influxdb \
          python-modules \
          apache-omd \
          mod_python \
