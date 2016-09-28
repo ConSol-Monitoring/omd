@@ -76,7 +76,7 @@ case "$1" in
         nohup $DAEMON $OPTIONS >>$LOGFILE 2>&1 &
         if [ $? -eq 0 ]; then
             for x in $(seq 50); do
-                [ $(netstat -an | grep LISTEN | grep -c :$CONFIG_INFLUXDB_HTTP_TCP_PORT) -eq 1 ] && break;
+                $OMD_ROOT/lib/nagios/plugins/check_influxdb m ping --address http://127.0.0.1:$CONFIG_INFLUXDB_HTTP_TCP_PORT > /dev/null && break;
                 printf "."
                 sleep 0.2
             done

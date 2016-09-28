@@ -36,9 +36,10 @@ stop_nagflux() {
         echo ". Not running."
     else
         ps -p $pid > /dev/null 2>&1 && kill $pid
-        for x in 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5; do
+        for x in $(seq 50); do
             printf "."
-            ps -p $pid > /dev/null 2>&1 && sleep 0.2;
+            ps -p $pid > /dev/null 2>&1 || break
+            sleep 0.2;
         done
         if ! ps -p $pid > /dev/null 2>&1 ; then
             echo "OK"

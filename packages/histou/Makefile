@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 NAME        = histou
-VERSION     = 0.3.4.1
+VERSION     = 0.3.5
 SRC         = $(NAME)-$(VERSION).tar.gz
 PWD         = $(shell pwd)
 
