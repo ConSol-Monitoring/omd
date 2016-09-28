@@ -14,8 +14,8 @@ build:
 	go install github.com/griesbacher/check_influxdb
 
 install:
-	mkdir -p $(DESTDIR)$(OMD_ROOT)/bin
-	install -m 755 $(PWD)/$(GOPATH)/bin/check_influxdb  $(DESTDIR)$(OMD_ROOT)/bin
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins
+	install -m 755 $(PWD)/$(GOPATH)/bin/check_influxdb $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins
 
 skel:
 
