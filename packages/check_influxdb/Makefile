@@ -3,7 +3,7 @@ include ../../Makefile.omd
 NAME        = check_influxdb
 VERSION     = 0.0.2
 SRC         = $(NAME)-$(VERSION).tar.gz
-GOPKG       = 1.6
+GOPKG       = 1.7
 GOVERSION   = $(shell grep ^VERSION ../go-${GOPKG}/Makefile | awk '{ print $$3 }')
 GOPATH      = go
 PWD         = $(shell pwd)
