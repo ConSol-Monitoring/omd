@@ -18,7 +18,7 @@ next:
           - Histou / Nagflux update - new Layout
             - see https://github.com/Griesbacher/nagflux/releases/tag/v0.2.0
           - Added Prometheus, Alertmanager, BlackboxExporter and PushGateway
-          - added Livestatus Multitool Daemon (LMD) 0.0.2
+          - added Livestatus Multitool Daemon (LMD) 0.0.3
 
 2.10     Nov 12 2015
           - Icinga update to 2.3.11
