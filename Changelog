@@ -19,6 +19,7 @@ next:
             - see https://github.com/Griesbacher/nagflux/releases/tag/v0.2.0
           - Added Prometheus, Alertmanager, BlackboxExporter and PushGateway
           - added Livestatus Multitool Daemon (LMD) 0.0.3
+          - Thruk: Update to 2.10-2
 
 2.10     Nov 12 2015
           - Icinga update to 2.3.11
