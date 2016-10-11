@@ -10,7 +10,7 @@ next:
           - Added build support for Fedora 24
           - Monitoring-Plugins update to 2.1.2
           - Icinga update to 2.4.10
-          - Influxdb update to 1.0
+          - Influxdb update to 1.0.2
             - see https://docs.influxdata.com/influxdb/v1.0/administration/upgrading/
           - Grafana update to 3.1.1
             - add grafanactl for command line user management
