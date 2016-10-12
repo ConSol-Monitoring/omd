@@ -81,6 +81,8 @@ case "$1" in
                 sleep 0.2
             done
             if get_status > /dev/null ; then
+                # apply retention policy
+                echo "ALTER RETENTION POLICY default ON nagflux DURATION ${CONFIG_INFLUXDB_RETENTION}w DEFAULT" | influx >/dev/null
                 echo "OK"
                 exit 0;
             else

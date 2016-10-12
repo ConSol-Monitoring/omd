@@ -12,6 +12,7 @@ next:
           - Icinga update to 2.4.10
           - Influxdb update to 1.0.2
             - see https://docs.influxdata.com/influxdb/v1.0/administration/upgrading/
+            - add default retention policy of 2years and add omd config option to set policy.
           - Grafana update to 3.1.1
             - add grafanactl for command line user management
           - Core
