@@ -31,6 +31,9 @@ sub _dispatch_command {
     if($cmd =~ /^users?$/mx) {
         _dispatch_command_user(@args);
     }
+    if($cmd =~ /^user_org?$/mx) {
+        _dispatch_command_user_org(@args);
+    }
     if($cmd =~ /^orgs?$/mx) {
         _dispatch_command_orgs(@args);
     }
@@ -48,20 +51,99 @@ sub _dispatch_command_user {
         for my $name (sort keys %{$grafana_users}) {
             my $u    = $grafana_users->{$name};
             my $orgs = grafana_get_user_orgs($ua, $u->{'id'});
-            printf("login: %-20s id:%-5s email:%-30s isAdmin:%-5s orgs: %s\n",
+            printf("login: %-20s id: %-5s email: %-30s GrafanaAdmin: %-5s  orgs: %s\n",
                     $u->{'login'},
                     $u->{'id'},
                     $u->{'email'},
                     $u->{'isAdmin'} ? "yes" : "no",
-                    join(",", map( { $_->{'name'} } @{$orgs})),
+                    join(", ", map( { $_->{'name'} } @{$orgs})),
             );
         }
         exit;
     }
     if($action eq 'add') {
-        my($name, $email, $role, $org) = @args;
-        if(!$org || !$role || !$email || !$name) {
-            print STDERR "Usage: grafanactl user add <name> <email> <role> <org>\n";
+        my($name, $email, $isAdmin) = @args;
+        if(!$email || !$name) {
+            print STDERR "Usage: grafanactl user add <name> <email> [<grafanaAdmin>]\n";
+            exit 1;
+        }
+        my $grafana_users = grafana_get_users($ua);
+        my $grafana_user = $grafana_users->{$name};
+        if($grafana_user) {
+            print STDERR "User $name does already exist.\n";
+            exit 1;
+        }
+        my $grafana_user_id = grafana_create_user($ua, { name => $name, email => $email });
+        print "user $name added successfully\n";
+        exit;
+    }
+    if($action eq 'change') {
+        my($name, $email, $isAdmin) = @args;
+        if(!$email || !$name) {
+            print STDERR "Usage: grafanactl user change <name> <email> [<grafanaAdmin>]\n";
+            exit 1;
+        }
+        my $grafana_users = grafana_get_users($ua);
+        my $grafana_user = $grafana_users->{$name};
+        if(!$grafana_user) {
+            print STDERR "User $name does not exist.\n";
+            exit 1;
+        }
+        grafana_change_user($ua, { id => $grafana_user->{id}, name => $name, email => $email });
+        if(defined $isAdmin) {
+            grafana_set_user_is_admin($ua, $grafana_user, $isAdmin);
+        }
+        print "user $name changed successfully\n";
+        exit;
+    }
+    if($action eq 'delete') {
+        my($name) = @args;
+        if(!$name) {
+            print STDERR "Usage: grafanactl user delete <name>\n";
+            exit 1;
+        }
+        my $grafana_users = grafana_get_users($ua);
+        if(!$grafana_users->{$name}) {
+            print "User $name does not exist.\n";
+            exit 1;
+        }
+        # remove user completly
+        my $j = grafana_delete_user($ua, $grafana_users->{$name}->{id});
+        if($j) {
+            print "user $name deleted successfully\n";
+        }
+        exit;
+    }
+}
+
+################################################################################
+sub _dispatch_command_user_org {
+    my($action, @args) = @_;
+
+    if($action eq 'list') {
+        my($name) = @args;
+        my $grafana_users = grafana_get_users($ua);
+        my $grafana_user = $grafana_users->{$name};
+        if(!$grafana_user) {
+            print STDERR "User $name does not exist.\n";
+            exit 1;
+        }
+        my $orgs = grafana_get_user_orgs($ua, $grafana_user->{'id'});
+        for my $org (@{$orgs}) {
+            my $u    = $grafana_users->{$name};
+            my $orgs = grafana_get_user_orgs($ua, $u->{'id'});
+            printf("org: %-20s id: %-5s role: %s\n",
+                    $org->{'name'},
+                    $org->{'orgId'},
+                    $org->{'role'},
+            );
+        }
+        exit;
+    }
+    if($action eq 'add') {
+        my($name, $role, $org) = @args;
+        if(!$org || !$role) {
+            print STDERR "Usage: grafanactl user_org add <name> <role> <org>\n";
             exit 1;
         }
         if($role ne 'Admin' && $role ne 'Editor' && $role ne 'Viewer') {
@@ -72,17 +154,38 @@ sub _dispatch_command_user {
         my $grafana_users = grafana_get_users($ua);
         my $grafana_user = $grafana_users->{$name};
         if(!$grafana_user) {
-            my $grafana_user_id = grafana_create_user($ua, { name => $name, email => $email });
-            $grafana_user       = grafana_get_user($ua, $grafana_user_id);
+            print STDERR "User $name does not exist.\n";
+            exit 1;
         }
         grafana_add_user_to_org($ua, $grafana_user, $org_id->{'id'}, $role);
-        print "user $name added successfully\n";
+        print "user $name added successfully to org $org as $role\n";
+        exit;
+    }
+    if($action eq 'change') {
+        my($name, $role, $org) = @args;
+        if(!$org || !$role) {
+            print STDERR "Usage: grafanactl user_org change <name> <role> <org>\n";
+            exit 1;
+        }
+        if($role ne 'Admin' && $role ne 'Editor' && $role ne 'Viewer') {
+            print STDERR "Error: supported roles are: Admin, Editor and Viewer\n";
+            exit 1;
+        }
+        my $org_id = grafana_get_org_by_name($ua, $org);
+        my $grafana_users = grafana_get_users($ua);
+        my $grafana_user = $grafana_users->{$name};
+        if(!$grafana_user) {
+            print STDERR "User $name does not exist.\n";
+            exit 1;
+        }
+        grafana_add_user_to_org($ua, $grafana_user, $org_id->{'id'}, $role);
+        print "user $name change successfully to org $org as $role\n";
         exit;
     }
     if($action eq 'delete') {
         my($name, $org) = @args;
-        if(!$name) {
-            print STDERR "Usage: grafanactl user delete <name> [<org>]\n";
+        if(!$name || !$org) {
+            print STDERR "Usage: grafanactl user_org delete <name> <org>\n";
             exit 1;
         }
         my $grafana_users = grafana_get_users($ua);
@@ -90,18 +193,15 @@ sub _dispatch_command_user {
             print "User $name does not exist.\n";
             exit 1;
         }
-        if($org) {
-            my $org_id = grafana_get_org_by_name($ua, $org);
-            my $j = grafana_delete_user_org($ua, $grafana_users->{$name}->{id}, $org_id->{'id'});
-            if($j) {
-                print "user $name deleted successfully from $org\n";
-            }
-        } else {
-            # remove user completly
-            my $j = grafana_delete_user($ua, $grafana_users->{$name}->{id});
-            if($j) {
-                print "user $name deleted successfully\n";
-            }
+        my $orgs = grafana_get_orgs($ua);
+        if(!$orgs->{$org}) {
+            print "Org $org does not exist.\n";
+            exit 1;
+        }
+        my $org_id = grafana_get_org_by_name($ua, $org);
+        my $j = grafana_delete_user_org($ua, $grafana_users->{$name}->{id}, $org_id->{'id'});
+        if($j) {
+            print "user $name deleted successfully from $org\n";
         }
         exit;
     }
@@ -151,9 +251,16 @@ Usage: grafanactl <command> <options>
 
 Users:
        grafanactl user [list]
-       grafanactl user add <name> <email> <role> <org>
+       grafanactl user add <name> <email> [<grafanaAdmin>]
+       grafanactl user change <name> <email> [<grafanaAdmin>]
+       grafanactl user delete <name>
+
+Users in Organizations:
+       grafanactl user_org list <username>
+       grafanactl user_org add <username> <role> <org>
             # Role can be Admin, Editor or Viewer
-       grafanactl user delete <name> [<org>]
+       grafanactl user_org change <username> <role> <org>
+       grafanactl user_org delete <username> [<org>]
 
 Organizations:
        grafanactl org [list]
@@ -223,6 +330,17 @@ sub grafana_add_user_to_org {
 }
 
 ################################################################################
+sub grafana_set_user_is_admin {
+    my($ua, $grafana_user, $isAdmin) = @_;
+
+    my $req = PUT "$API_URL/admin/users/".$grafana_user->{'id'}."/permissions", Content=>JSON->new->encode({
+        isGrafanaAdmin => $isAdmin ? JSON::XS::true : JSON::XS::false,
+    });
+    my $r = $ua->request($req);
+    LOGDIE($r->as_string) unless $r->is_success;
+}
+
+################################################################################
 sub grafana_get_users {
     my $ua = shift;
     my $j = _parse_json($ua->get("${API_URL}/users"));
@@ -261,6 +379,23 @@ sub grafana_create_user {
         });
     my $r = $ua->request($req);
     unless($r->is_success) {
+        LOGDIE $r->status_line," - ",$r->content
+    }
+    return _parse_json($r)->{id};
+}
+
+################################################################################
+sub grafana_change_user {
+    my ($ua, $user) = @_;
+    my $req = PUT "${API_URL}/users/".$user->{id},
+        Content => JSON->new->encode({
+            name     => ($user->{alias} // $user->{name}),
+            email    => $user->{email} // $user->{name},
+            login    => $user->{name},
+        });
+    my $r = $ua->request($req);
+    unless($r->is_success) {
+        use Data::Dumper; print STDERR Dumper($r);
         LOGDIE $r->status_line," - ",$r->content
     }
     return _parse_json($r)->{id};
