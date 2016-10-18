@@ -11,6 +11,7 @@ BUILD_PACKAGES   += flex   # icinga 2
 BUILD_PACKAGES   += cmake  # icinga 2
 BUILD_PACKAGES   += gcc
 BUILD_PACKAGES   += gcc-c++
+BUILD_PACKAGES   += glibc-devel
 BUILD_PACKAGES   += gperf
 BUILD_PACKAGES   += help2man    # required by naemon
 BUILD_PACKAGES   += libevent-devel         # RHEL Server Optional
