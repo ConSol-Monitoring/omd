@@ -16,7 +16,7 @@ BRANCH      = v0.2.0
 build:
 	tar zxf $(SRC)
 	export GOROOT=$(PWD)/../go-$(GOPKG)/go-$(GOVERSION)/ && export GOPATH=$(PWD)/$(GOPATH)/ && PATH=$$GOROOT/bin:$$PATH && \
-	go build $(NAME).go
+	CGO_ENABLED=0 go build $(NAME).go
 
 install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins
