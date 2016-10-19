@@ -10,8 +10,9 @@ next:
           - Added build support for Fedora 24
           - Monitoring-Plugins update to 2.1.2
           - Icinga update to 2.4.10
-          - Influxdb update to 1.0
+          - Influxdb update to 1.0.2
             - see https://docs.influxdata.com/influxdb/v1.0/administration/upgrading/
+            - add default retention policy of 2years and add omd config option to set policy.
           - Grafana update to 3.1.1
             - add grafanactl for command line user management
           - Core
@@ -20,7 +21,7 @@ next:
           - Histou / Nagflux update - new Layout
             - see https://github.com/Griesbacher/nagflux/releases/tag/v0.2.0
           - Added Prometheus, Alertmanager, BlackboxExporter and PushGateway
-          - added Livestatus Multitool Daemon (LMD) 1.0.0
+          - added Livestatus Multitool Daemon (LMD) 1.0.1
           - Thruk: Update to 2.10-2
 
 2.10     Nov 12 2015

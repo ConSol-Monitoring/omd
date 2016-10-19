@@ -42,6 +42,7 @@ PACKAGES=freetds \
          monitoring-plugins \
          naemon \
          nagvis \
+		 nscrestc \
          nrpe \
          nsca \
          omd \
