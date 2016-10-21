@@ -51,6 +51,7 @@ PACKAGES=freetds \
          rrdtool \
          shinken \
          thruk \
+         thruk-plugins \
          thruk-consol-theme \
          maintenance \
          gearmand \
