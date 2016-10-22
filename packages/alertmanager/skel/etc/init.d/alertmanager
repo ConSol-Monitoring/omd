@@ -52,6 +52,8 @@ DATA_DIR=###ROOT###/var/alertmanager/data
 USR=###SITE###
 GRP=###SITE###
 
+EXTERNAL_FQDN=${OMD_EXTERNAL_FQDN:-$(hostname --fqdn)}
+
 unset LANG
 export LC_ALL=C
 
@@ -72,7 +74,7 @@ case "$1" in start|restart|reload|checkconfig|check)
     sed -ri "s/###ALERTMANAGER_TCP_ADDR###/$CONFIG_ALERTMANAGER_TCP_ADDR/g" $CFG_FILE
 esac
 
-OPTIONS="-config.file $CFG_FILE -web.listen-address=$CONFIG_ALERTMANAGER_TCP_ADDR:$CONFIG_ALERTMANAGER_TCP_PORT -web.external-url=http://desjucktkoasauwosdosteht/###SITE###/alertmanager -storage.path=$DATA_DIR"
+OPTIONS="-config.file $CFG_FILE -web.listen-address=$CONFIG_ALERTMANAGER_TCP_ADDR:$CONFIG_ALERTMANAGER_TCP_PORT -web.external-url=http://${EXTERNAL_FQDN}/###SITE###/alertmanager -storage.path=$DATA_DIR"
 
 # Fetches the pid of the currently running alertmanager process of the given
 # user.
