@@ -27,7 +27,7 @@ if [ ! -z "$OMD_PACKAGE" ]; then
     # Debian / Ubuntu
     if [ -x /usr/bin/apt-get  ]; then
         VERSION=`dpkg-deb -W --showformat='${Package}\n' $OMD_PACKAGE | sed -e 's/^omd-//'`
-        DEPENDS=`dpkg-deb -W --showformat='${Depends}\n' $OMD_PACKAGE | sed -e 's/debconf.*debconf-2.0,//' | tr -d ','`
+        DEPENDS=`dpkg-deb -W --showformat='${Depends}\n' $OMD_PACKAGE | sed -e 's/debconf.*debconf-2.0,//' | tr -d ',' | sed -e 's/ [|] [a-z-]* / /g'`
         apt-get -qq update && \
         DEBIAN_FRONTEND=noninteractive apt-get -q -y --no-install-recommends install $DEPENDS && \
         dpkg -i $OMD_PACKAGE && \
