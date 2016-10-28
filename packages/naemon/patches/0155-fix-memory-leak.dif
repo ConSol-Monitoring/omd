@@ -1,0 +1,35 @@
+From 2a85148c01df9fbee9b2cdd593e55ffece462d32 Mon Sep 17 00:00:00 2001
+From: Sven Nierlein <sven@nierlein.de>
+Date: Mon, 31 Oct 2016 15:36:22 +0100
+Subject: [PATCH] fix memory leak in broker_notification_data
+
+broker_notification_data returns a neb_resultset which needs to be freed, even if we
+don't use it.
+---
+ src/naemon/notifications.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/src/naemon/notifications.c b/src/naemon/notifications.c
+index 6359754..1e085c5 100644
+--- a/src/naemon/notifications.c
++++ b/src/naemon/notifications.c
+@@ -570,7 +570,8 @@ int service_notification(service *svc, int type, char *not_author, char *not_dat
+ 	/* get the time we finished */
+ 	gettimeofday(&end_time, NULL);
+ 
+-	broker_notification_data(NEBTYPE_NOTIFICATION_END, NEBFLAG_NONE, NEBATTR_NONE, SERVICE_NOTIFICATION, type, start_time, end_time, (void *)svc, not_author, not_data, escalated, contacts_notified);
++	neb_resultset = broker_notification_data(NEBTYPE_NOTIFICATION_END, NEBFLAG_NONE, NEBATTR_NONE, SERVICE_NOTIFICATION, type, start_time, end_time, (void *)svc, not_author, not_data, escalated, contacts_notified);
++	neb_cb_resultset_destroy(neb_resultset);
+ 
+ 	/* update the status log with the service information */
+ 	update_service_status(svc, FALSE);
+@@ -1449,7 +1450,8 @@ int host_notification(host *hst, int type, char *not_author, char *not_data, int
+ 	/* get the time we finished */
+ 	gettimeofday(&end_time, NULL);
+ 
+-	broker_notification_data(NEBTYPE_NOTIFICATION_END, NEBFLAG_NONE, NEBATTR_NONE, HOST_NOTIFICATION, type, start_time, end_time, (void *)hst, not_author, not_data, escalated, contacts_notified);
++	neb_resultset = broker_notification_data(NEBTYPE_NOTIFICATION_END, NEBFLAG_NONE, NEBATTR_NONE, HOST_NOTIFICATION, type, start_time, end_time, (void *)hst, not_author, not_data, escalated, contacts_notified);
++	neb_cb_resultset_destroy(neb_resultset);
+ 
+ 	/* update the status log with the host info */
+ 	update_host_status(hst, FALSE);
