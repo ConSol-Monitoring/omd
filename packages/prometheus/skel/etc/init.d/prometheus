@@ -12,7 +12,7 @@
 # Description:    Prometheus network monitoring daemon
 ### END INIT INFO
 
-# Author: Lars Michelsen <lm@mathias-kettner.de>
+# Author: Gerhard Lausser <gerhard.lausser@consol.de>
 
 # Notes for OMD init script requirements
 # - Must handle omd config options like daemon enabling/disabling
