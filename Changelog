@@ -23,6 +23,7 @@ next:
           - Added Prometheus, Alertmanager, BlackboxExporter and PushGateway
           - added Livestatus Multitool Daemon (LMD) 1.0.1
           - Thruk: Update to 2.10-2
+          - Mod-Gearman: Update 3.0.0
 
 2.10     Nov 12 2015
           - Icinga update to 2.3.11
