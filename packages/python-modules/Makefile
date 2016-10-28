@@ -67,6 +67,7 @@ build:
 	mkdir -p dest
 	set -e ; cd dest && \
 	    export PYTHONPATH=$$PYTHONPATH:$(LOCALPYTHONDIR); \
+	    export PYMSSQL_BUILD_WITH_BUNDLED_FREETDS=1; \
 	    for M in $(MODULES); do \
 	        if echo $$M | grep .tar.gz; then \
 	            tar xzf ../src/$$M ; \
