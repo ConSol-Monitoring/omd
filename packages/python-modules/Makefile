@@ -53,6 +53,10 @@ MODULES += pysnmp-4.2.3.tar.gz
 MODULES += pywbem-0.7.0.tar.gz
 MODULES += requests-2.10.0.tar.gz
 
+# More datasources for coshsh
+MODULES += MySQL-python-1.2.5.zip
+MODULES += pymssql-2.1.3.tar.gz
+
 # DataScryer:
 #MODULES += functools32-3.2.3-2.tar.gz
 #MODULES += vcversioner-2.16.0.0.tar.gz
