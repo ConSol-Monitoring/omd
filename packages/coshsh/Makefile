@@ -1,6 +1,6 @@
 include ../../Makefile.omd
 
-COSHSH=coshsh-3.2.3
+COSHSH=coshsh-3.2.4
 
 build:
 	tar xvzf $(COSHSH).tar.gz
