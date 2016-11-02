@@ -39,8 +39,8 @@
 	CreateDatabaseIfNotExists = true
 	# Replace '\ ' because the InfluxDB has still a problem with theses characters to parse: https://github.com/influxdata/influxdb/issues/4865
 	# This can result in different Performancedata, most commen in Windowspaths
-	NastyString = "\\ "
-	NastyStringToReplace = " "
+	NastyString = ""
+	NastyStringToReplace = ""
 	HostcheckAlias = "hostcheck"
 
 [Livestatus]
