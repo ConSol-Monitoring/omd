@@ -1,0 +1,39 @@
+From 722dc85f19a19d7ad56181537a51cf6d6fbf66df Mon Sep 17 00:00:00 2001
+From: Sven Nierlein <sven@nierlein.de>
+Date: Fri, 4 Nov 2016 17:16:43 +0100
+Subject: [PATCH] fix segfault on receiving host result for non-existing host
+ with naemon core
+
+---
+ Changes                    | 3 +++
+ neb_module/result_thread.c | 4 +++-
+ 2 files changed, 6 insertions(+), 1 deletion(-)
+
+diff --git a/Changes b/Changes
+index 6d71226..e8b4ed0 100644
+--- a/Changes
++++ b/Changes
+@@ -1,5 +1,8 @@
+ This file documents the revision history for mod_gearman.
+ 
++next:
++          - fix segfault on receiving host result for non-existing host with naemon core
++
+ 3.0.0 Mon Sun Oct 30 19:49:24 CET 2016
+           - introduce configure options --enable-naemon-neb-module, --enable-nagios3-neb-module and --enable-nagios4-neb-module
+             to determine which neb module to build. This obsoletes mod-gearman 1.x and 2.x and
+diff --git a/neb_module/result_thread.c b/neb_module/result_thread.c
+index 056d6ac..db660c4 100644
+--- a/neb_module/result_thread.c
++++ b/neb_module/result_thread.c
+@@ -332,7 +332,9 @@ void *get_results( gearman_job_st *job, void *context, size_t *result_size, gear
+ #if defined(USENAEMON)
+         if(active_check) {
+             host * hst = find_host( chk_result->host_name );
+-            hst->is_executing = FALSE;
++            if(hst != NULL) {
++                hst->is_executing = FALSE;
++            }
+         }
+ #endif
+         gm_log( GM_LOG_DEBUG, "host job completed: %s: %d\n", chk_result->host_name, chk_result->return_code );
