@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 NAME        = lmd
-VERSION     = 1.0.1
+VERSION     = 1.0.2
 SRC         = $(NAME)-$(VERSION).tar.gz
 GOPKG       = 1.7
 GOVERSION   = $(shell grep ^VERSION ../go-${GOPKG}/Makefile | awk '{ print $$3 }')

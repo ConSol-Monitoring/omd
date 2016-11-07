@@ -21,7 +21,7 @@ next:
           - Histou / Nagflux update - new Layout
             - see https://github.com/Griesbacher/nagflux/releases/tag/v0.2.0
           - Added Prometheus, Alertmanager, BlackboxExporter and PushGateway
-          - added Livestatus Multitool Daemon (LMD) 1.0.1
+          - added Livestatus Multitool Daemon (LMD) 1.0.2
           - Thruk: Update to 2.10-2
           - Mod-Gearman: Update 3.0.0
           - Naemon update to 1.0.6
