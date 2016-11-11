@@ -136,6 +136,10 @@ naemon_wait_stop() {
         # check plugins which are currently running
         kill -TERM -$pid
         while kill -0 $pid  >/dev/null 2>&1;  do
+            if [ $I = '30' ]; then
+                # we likely have to kill naemon, so at least give the core 30 seconds to write the retention.dat
+                printf "[%lu] SAVE_STATE_INFORMATION;\n" `date +%s` > $OMD_ROOT/tmp/run/naemon.cmd
+            fi
             if [ $I = '60' ]; then
                 echo -ne "\nsending SIGKILL"
                 kill -9 $pid
