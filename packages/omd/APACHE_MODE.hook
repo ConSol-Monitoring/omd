@@ -7,7 +7,7 @@
 #  will start an individual Apache process for this site, running as site
 #  user. No root priviledges are required to administer it. The main
 #  Apache redirects request for this site to it via mod_proxy. When
-#  switching to ssl, the system apache has the be restarted.
+#  switching to ssl, the system apache has to be restarted.
 #
 #  The value "none" will not start a webserver nor create a configuration
 #  for the global Apache.
