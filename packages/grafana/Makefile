@@ -25,7 +25,7 @@ build:
 	done
 	export GOROOT=$(PWD)/../go-$(GOPKG)/go-$(GOVERSION) && export GOPATH=$(PWD)/$(GOPATH)/ && PATH=$$GOROOT/bin:$$PATH && \
 		cd $(GOPATH)/src/github.com/grafana/grafana && \
-		go run build.go build
+		PATH=$(PWD)/build_bin:$$PATH go run build.go build
 
 install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/bin

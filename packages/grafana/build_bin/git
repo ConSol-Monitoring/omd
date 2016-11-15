@@ -1,0 +1,8 @@
+#!/bin/bash
+
+if [ "$1" = "describe" ]; then
+  grep ^OMD_VERSION $(dirname $0)/../../../Makefile.omd | awk '{print $3}'
+fi
+if [ "$1" = "show" ]; then
+  date +%s
+fi
