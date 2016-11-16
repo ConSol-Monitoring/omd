@@ -1,5 +1,5 @@
---- a/etc/thruk/thruk.conf	2015-06-07 12:22:03.853792726 +0200
-+++ b/etc/thruk/thruk.conf	2015-06-07 12:22:13.005795391 +0200
+--- a/etc/thruk/thruk.conf	2016-11-16 11:39:04.291824757 +0100
++++ b/etc/thruk/thruk.conf	2016-11-16 11:40:21.031514097 +0100
 @@ -13,7 +13,7 @@
  
  ######################################
@@ -81,7 +81,7 @@
  
  ######################################
  # use paged data instead of all data in one huge page
-@@ -324,7 +324,7 @@
+@@ -334,7 +334,7 @@
  # Instead of using a general resource_file, you could define one file
  # per peer in your peer config.
  #
@@ -90,7 +90,7 @@
  
  # enable a performance bar inside the status/host list which
  # create a graph from the performance data of the plugin output. Available
-@@ -450,6 +450,7 @@
+@@ -474,6 +474,7 @@
  # check should be rescheduled instead of the passive check.
  # Have a look at the documentation for a detailed description.
  #command_reschedule_alias = servicename_or_commandname_pattern;agent_service_name
@@ -98,7 +98,7 @@
  
  ######################################
  # Time Format Settings
-@@ -500,23 +501,23 @@
+@@ -524,23 +525,23 @@
  # Specifiy a file which is then completly under the control of Thruk.
  # It will be used to store cronjobs, ex. for reports. The file has to
  # be writable by Thruk.
@@ -127,7 +127,7 @@
  
  # Set first day of week. Used in reports.
  # Sunday: 0
-@@ -580,8 +581,8 @@
+@@ -614,8 +615,8 @@
  # COOKIE AUTH
  # cookie auth requires additional webserver settings, see the documentation
  # for detailed instructions.
@@ -137,8 +137,8 @@
 +cookie_auth_restricted_url        = http://localhost/###SITE###/thruk/cgi-bin/restricted.cgi
  cookie_auth_session_timeout       = 604800
  cookie_auth_session_cache_timeout = 5
- #cookie_auth_domain               = .domain.com
-@@ -625,42 +626,19 @@
+ cookie_auth_direct_agents         = (wget|curl)
+@@ -699,42 +700,19 @@
  ######################################
  # Backend Configuration, enter your backends here
  <Component Thruk::Backend>
@@ -194,7 +194,7 @@
  </Component>
  
  
-@@ -677,9 +655,9 @@
+@@ -751,9 +729,9 @@
  <Component Thruk::Plugin::ConfigTool>
      show_plugin_syntax_helper = 1
  
@@ -207,7 +207,7 @@
  
      #pre_obj_save_cmd   =
      #post_obj_save_cmd  =
-@@ -728,7 +706,7 @@
+@@ -812,7 +790,7 @@
      #report_base_url=http://host.local/thruk/cgi-bin/
  
      # phantomjs is used to convert html pages into pdf
@@ -216,7 +216,7 @@
  
      # pnp export script is used to export pnp graphs into reports
      #pnp_export = /path/to/pnp_export.sh
-@@ -764,21 +742,21 @@
+@@ -848,24 +826,24 @@
  <Component Thruk::Plugin::BP>
      # Results will be send back by using the spool folder.
      # This folder should point to the 'check_result_path' of your core.
@@ -232,11 +232,14 @@
 -    #objects_save_file = /etc/naemon/conf.d/thruk_bp_generated.cfg
 +    objects_save_file = ###ROOT###/etc/nagios/conf.d/thruk_bp_generated.cfg
  
+     # Save format can be either 'nagios' or 'icinga2'.
+     #objects_save_format = nagios
+ 
      # User maintained file containing templates used for business process services.
 -    #objects_templates_file = /etc/naemon/conf.d/thruk_templates.cfg
 +    objects_templates_file = ###ROOT###/etc/nagios/conf.d/thruk_templates.cfg
  
-     # Command to apply changes to the objects_save_file. If no set and
+     # Command to apply changes to the objects_save_file. If not set and
      # and result_backend is used, the restart will be triggered as external command.
 -    #objects_reload_cmd = /etc/init.d/naemon reload
 +    objects_reload_cmd = ###ROOT###/etc/init.d/core reload
