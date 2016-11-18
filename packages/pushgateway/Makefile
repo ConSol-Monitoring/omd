@@ -1,6 +1,6 @@
 include ../../Makefile.omd
 
-PUSHGATEWAY=pushgateway-0.3.0
+PUSHGATEWAY=pushgateway-0.3.1
 
 .PHONY: skel
 

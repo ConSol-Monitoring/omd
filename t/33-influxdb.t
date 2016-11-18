@@ -13,7 +13,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 43 );
+plan( tests => 39 );
 
 ##################################################
 # create our test site
@@ -25,8 +25,6 @@ TestUtils::test_command({ cmd => $omd_bin." config $site set INFLUXDB on" });
 TestUtils::test_command({ cmd => $omd_bin." start $site", like => '/Starting influxdb\.+OK/' });
 sleep(2); # influxdb api returns 404 when accessed directly after first start
 
-#admin interface
-TestUtils::test_command({ cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -t 60 -H localhost -p 8083 -s \"<title>InfluxDB - Admin Interface</title>\"'", like => '/HTTP OK:/' });
 #http api
 #create database
 TestUtils::test_command({ cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -t 60 -H localhost -p 8086 -u \"/query\" -P \"q=CREATE%20DATABASE%20mydb\" -s \"{\\\"results\\\":[{}]}\"'", like => '/HTTP OK:/' });

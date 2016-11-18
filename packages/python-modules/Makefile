@@ -52,6 +52,7 @@ MODULES += paramiko-1.12.2.tar.gz
 MODULES += pysnmp-4.2.3.tar.gz
 MODULES += pywbem-0.7.0.tar.gz
 MODULES += requests-2.10.0.tar.gz
+MODULES += prometheus_client-0.0.17.tar.gz
 
 # More datasources for coshsh
 MODULES += MySQL-python-1.2.5.zip

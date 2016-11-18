@@ -59,6 +59,8 @@ skel:
 	cp $(DIR)/support/thruk.init $(SKEL)/etc/init.d/thruk
 	mkdir -p $(SKEL)/etc/nagios/conf.d
 	cp $(DIR)/support/thruk_templates.cfg $(SKEL)/etc/nagios/conf.d/
+	mkdir -p $(SKEL)/etc/icinga2/conf.d/thruk_bp_templates.conf
+	cp $(DIR)/support/thruk_templates_icinga2.conf $(SKEL)/etc/icinga2/conf.d/thruk_bp_templates.conf
 	cp $(DIR)/support/fcgid_env.sh $(SKEL)/etc/thruk/fcgid_env.sh
 	cp $(DIR)/thruk.conf $(SKEL)/etc/thruk/thruk.conf
 	cp -rp $(DIR)/root/thruk/usercontent $(SKEL)/etc/thruk

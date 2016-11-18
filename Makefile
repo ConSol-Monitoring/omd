@@ -4,7 +4,6 @@ SHELL = /bin/bash
 PACKAGES=freetds \
          perl-modules \
          go-1.4 \
-         go-1.6 \
          go-1.7 \
          influxdb \
          grafana \

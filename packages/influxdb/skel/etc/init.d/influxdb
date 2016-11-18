@@ -73,9 +73,13 @@ case "$1" in
             exit 0;
         fi
 
+        # remove memory limits which cause startup problems
+        ulimit -m unlimited >/dev/null 2>&1
+        ulimit -v unlimited >/dev/null 2>&1
+
         nohup $DAEMON $OPTIONS >>$LOGFILE 2>&1 &
         if [ $? -eq 0 ]; then
-            for x in $(seq 50); do
+            for x in $(seq 100); do
                 $OMD_ROOT/lib/nagios/plugins/check_influxdb m ping --address http://127.0.0.1:$CONFIG_INFLUXDB_HTTP_TCP_PORT > /dev/null && break;
                 printf "."
                 sleep 0.2

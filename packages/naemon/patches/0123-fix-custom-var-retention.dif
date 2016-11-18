@@ -1,0 +1,41 @@
+From 52e3c976bdb008d62cd57874f4302ab00324306c Mon Sep 17 00:00:00 2001
+From: Julien Thomas <jthomas@pom-monitoring.com>
+Date: Tue, 26 Jan 2016 17:24:01 +0100
+Subject: [PATCH] xrddefault: Fix custom variables persistence accros restarts
+
+This fix is not Naemon specific, it is also applicable to Nagios.
+---
+ src/naemon/xrddefault.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/src/naemon/xrddefault.c b/src/naemon/xrddefault.c
+index a00f2da..05d54d8 100644
+--- a/src/naemon/xrddefault.c
++++ b/src/naemon/xrddefault.c
+@@ -1196,7 +1196,7 @@ int xrddefault_read_state_information(void)
+ 
+ 								for (temp_customvariablesmember = temp_host->custom_variables; temp_customvariablesmember != NULL; temp_customvariablesmember = temp_customvariablesmember->next) {
+ 									if (!strcmp(customvarname, temp_customvariablesmember->variable_name)) {
+-										if ((x = atoi(val)) > 0 && strlen(val) > 3) {
++										if ((x = atoi(val)) > 0 && strlen(val) >= 2) {
+ 											nm_free(temp_customvariablesmember->variable_value);
+ 											temp_customvariablesmember->variable_value = nm_strdup(val + 2);
+ 											temp_customvariablesmember->has_been_modified = (x > 0) ? TRUE : FALSE;
+@@ -1458,7 +1458,7 @@ int xrddefault_read_state_information(void)
+ 								customvarname = nm_strdup(var + 1);
+ 								for (temp_customvariablesmember = temp_service->custom_variables; temp_customvariablesmember != NULL; temp_customvariablesmember = temp_customvariablesmember->next) {
+ 									if (!strcmp(customvarname, temp_customvariablesmember->variable_name)) {
+-										if ((x = atoi(val)) > 0 && strlen(val) > 3) {
++										if ((x = atoi(val)) > 0 && strlen(val) >= 2) {
+ 											nm_free(temp_customvariablesmember->variable_value);
+ 											temp_customvariablesmember->variable_value = nm_strdup(val + 2);
+ 											temp_customvariablesmember->has_been_modified = (x > 0) ? TRUE : FALSE;
+@@ -1566,7 +1566,7 @@ int xrddefault_read_state_information(void)
+ 								customvarname = nm_strdup(var + 1);
+ 								for (temp_customvariablesmember = temp_contact->custom_variables; temp_customvariablesmember != NULL; temp_customvariablesmember = temp_customvariablesmember->next) {
+ 									if (!strcmp(customvarname, temp_customvariablesmember->variable_name)) {
+-										if ((x = atoi(val)) > 0 && strlen(val) > 3) {
++										if ((x = atoi(val)) > 0 && strlen(val) >= 2) {
+ 											nm_free(temp_customvariablesmember->variable_value);
+ 											temp_customvariablesmember->variable_value = nm_strdup(val + 2);
+ 											temp_customvariablesmember->has_been_modified = (x > 0) ? TRUE : FALSE;
