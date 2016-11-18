@@ -69,6 +69,9 @@ build:
 	set -e ; cd dest && \
 	    export PYTHONPATH=$$PYTHONPATH:$(LOCALPYTHONDIR); \
 	    export PYMSSQL_BUILD_WITH_BUNDLED_FREETDS=1; \
+	    unset http_proxy; \
+	    unset https_proxy; \
+	    unset ftp_proxy; \
 	    for M in $(MODULES); do \
 	        if echo $$M | grep .tar.gz; then \
 	            tar xzf ../src/$$M ; \
@@ -86,6 +89,9 @@ install:
 	mkdir -p $(LOCALPYTHONDIR)
 	set -e ; cd dest && \
 	    export PYTHONPATH=$$PYTHONPATH:$(LOCALPYTHONDIR); \
+	    unset http_proxy; \
+	    unset https_proxy; \
+	    unset ftp_proxy; \
 	    for M in $(MODULES); do \
 	        MDIR=$$(echo $$M | sed -e 's/.tar.gz//g' -e 's/.zip//g') ; \
 	        MNAME=$$(echo $$MDIR | sed -e 's/\-[0-9\.]*$//g' | tr 'A-Z' 'a-z' ) ; \
