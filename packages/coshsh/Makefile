@@ -21,6 +21,18 @@ install:
                 --install-purelib=$(DESTDIR)$(OMD_ROOT)/lib/python \
                 --install-scripts=$(DESTDIR)$(OMD_ROOT)/bin \
                 --install-data=$(DESTDIR)$(OMD_ROOT)/share/coshsh
+	cp datasource_snmptt.py \
+	    $(DESTDIR)$(OMD_ROOT)/share/coshsh/recipes/default/classes
+	cp datarecipient_atomic.py \
+	    $(DESTDIR)$(OMD_ROOT)/share/coshsh/recipes/default/classes
+	cp app_snmptrapdlog.py \
+	    $(DESTDIR)$(OMD_ROOT)/share/coshsh/recipes/default/classes
+	cp app_snmptrapdlog_default.tpl \
+	    $(DESTDIR)$(OMD_ROOT)/share/coshsh/recipes/default/templates
+	cp common_traps.tpl \
+	    $(DESTDIR)$(OMD_ROOT)/share/coshsh/recipes/default/templates
+	cp check_logfiles_snmptt.tpl \
+	    $(DESTDIR)$(OMD_ROOT)/share/coshsh/recipes/default/templates
 
 skel:
 
