@@ -5,7 +5,7 @@
  	}
  
 -	schedule_event(atoi(perfdata_file_processing_interval), npcdmod_file_roller, NULL);
-+	if(!sigshutdown) {
++	if(!sigshutdown && !sigrestart) {
 +		schedule_event(atoi(perfdata_file_processing_interval), npcdmod_file_roller, NULL);
 +	}
  	return;
