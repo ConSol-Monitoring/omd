@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
-NAME        = nscrestc
-VERSION     = 0.3.0
+NAME        = check_nsc_web
+VERSION     = 0.4.0
 SRC         = $(NAME)-$(VERSION).tar.gz
 GOPKG       = 1.7
 GOVERSION   = $(shell grep ^VERSION ../go-${GOPKG}/Makefile | awk '{ print $$3 }')
@@ -9,7 +9,7 @@ GOPATH      = go
 PWD         = $(shell pwd)
 #BRANCH      = v$(VERSION)
 GITURL      = github.com/m-kraus
-BRANCH      = v0.3.0
+BRANCH      = v0.4.0
 
 .PHONY: skel
 
