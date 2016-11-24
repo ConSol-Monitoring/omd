@@ -27,6 +27,7 @@ MODULES = \
           Digest-Perl-MD5-1.9.tar.gz \
           Digest-SHA1-2.13.tar.gz \
           Email-Date-Format-1.005.tar.gz \
+		  Email-MIME-1.937.tar.gz \
           Encode-Locale-1.04.tar.gz \
           Exporter-5.70.tar.gz \
           Exporter-Tiny-0.042.tar.gz \
@@ -60,6 +61,7 @@ MODULES = \
           Module-Find-0.12.tar.gz \
           Module-Load-0.32.tar.gz \
           Mozilla-CA-20141217.tar.gz \
+		  Net-IMAP-Simple-1.2207.tar.gz \
           OLE-Storage_Lite-0.19.tar.gz \
           Package-Stash-XS-0.28.tar.gz \
           Params-Check-0.38.tar.gz \
