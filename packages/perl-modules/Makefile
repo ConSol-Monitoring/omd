@@ -27,7 +27,6 @@ MODULES = \
           Digest-Perl-MD5-1.9.tar.gz \
           Digest-SHA1-2.13.tar.gz \
           Email-Date-Format-1.005.tar.gz \
-		  Email-MIME-1.937.tar.gz \
           Encode-Locale-1.04.tar.gz \
           Exporter-5.70.tar.gz \
           Exporter-Tiny-0.042.tar.gz \
@@ -188,7 +187,9 @@ MODULES = \
           Nagios-Plugin-0.36.tar.gz \
           namespace-clean-0.25.tar.gz \
           DateTime-1.18.tar.gz \
-	  Monitoring-GLPlugin-2.3.5.tar.gz
+		  Email-Simple-2.211.tar.gz \
+		  Email-MIME-1.937.tar.gz \
+		  Monitoring-GLPlugin-2.3.5.tar.gz
 
 
 
