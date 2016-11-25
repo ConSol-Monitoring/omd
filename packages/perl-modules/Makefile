@@ -60,6 +60,7 @@ MODULES = \
           Module-Find-0.12.tar.gz \
           Module-Load-0.32.tar.gz \
           Mozilla-CA-20141217.tar.gz \
+		  Net-IMAP-Simple-1.2207.tar.gz \
           OLE-Storage_Lite-0.19.tar.gz \
           Package-Stash-XS-0.28.tar.gz \
           Params-Check-0.38.tar.gz \
@@ -186,7 +187,14 @@ MODULES = \
           Nagios-Plugin-0.36.tar.gz \
           namespace-clean-0.25.tar.gz \
           DateTime-1.18.tar.gz \
-	  Monitoring-GLPlugin-2.3.5.tar.gz
+          Email-Address-1.908.tar.gz \
+          Email-MIME-ContentType-1.018.tar.gz \
+          Email-MIME-Encodings-1.315.tar.gz \
+          Email-MessageID-1.406.tar.gz \
+          MIME-Types-2.13.tar.gz \
+		  Email-Simple-2.211.tar.gz \
+		  Email-MIME-1.937.tar.gz \
+		  Monitoring-GLPlugin-2.3.5.tar.gz
 
 
 
