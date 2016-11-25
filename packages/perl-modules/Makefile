@@ -187,6 +187,11 @@ MODULES = \
           Nagios-Plugin-0.36.tar.gz \
           namespace-clean-0.25.tar.gz \
           DateTime-1.18.tar.gz \
+          Email-Address-1.908.tar.gz \
+          Email-MIME-ContentType-1.018.tar.gz \
+          Email-MIME-Encodings-1.315.tar.gz \
+          Email-MessageID-1.406.tar.gz \
+          MIME-Types-2.13.tar.gz \
 		  Email-Simple-2.211.tar.gz \
 		  Email-MIME-1.937.tar.gz \
 		  Monitoring-GLPlugin-2.3.5.tar.gz
