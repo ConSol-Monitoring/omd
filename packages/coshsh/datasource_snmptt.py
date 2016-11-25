@@ -35,7 +35,7 @@ class MIB(coshsh.item.Item):
     id = 100
     template_rules = [
         TemplateRule(needsattr=None,
-            template="check_logfiles",
+            template="check_logfiles_snmptt",
             self_name="mib",
             unique_attr="mib", unique_config="%s"),
     ]
@@ -231,30 +231,41 @@ class SNMPTT(coshsh.datasource.Datasource):
             # Details muessen resolved werden, denn es kann z.b. ein Detail bgp:True geben, welches
             # dazu fuehrt, dass in wemustrepeat noch eine Mib an implements_mibs angehaengt wird
             application.resolve_monitoring_details()
-            trap_events = {}
+            if hasattr(application, 'implements_mibs'):
+                trap_events = {}
+                unalias_mib = {}
 
-            for mib in mib_traps:
-                if hasattr(application, 'implements_mibs') and mib in application.implements_mibs:
-                    trap_events[mib] = [e for e in self.get('mibconfigs', mib).events]
-
-            if trap_events:
-                application.monitoring_details.append(MonitoringDetail({
-                    'host_name': application.host_name,
-                    'application_name': application.name,
-                    'application_type': application.type,
-                    'monitoring_type': 'KEYVALUES',
-                    'monitoring_0': 'trap_events',
-                    'monitoring_1': trap_events,
-                }))
-                if not hasattr(application, 'trap_service_prefix'):
-                    setattr(application, 'trap_service_prefix', str(application.__module__).split('.')[0])
-                i.combinations.append({
-                    'address': self.get('hosts', application.host_name).address,
-                    'host_name': application.host_name,
-                    'trap_service_prefix': application.trap_service_prefix,
-                    'mibs': application.implements_mibs,
-                })
-
+                for mib in mib_traps:
+                    # Aufsplitten von Aliasmib:Filenamemib
+                    if mib in [m.split(':')[0] for m in application.implements_mibs if ':' in m]:
+                        alias, mib = [m.split(':') for m in application.implements_mibs if m.split(':')[0] == mib][0]
+                        unalias_mib[alias] = mib
+                        trap_events[alias] = [e for e in self.get('mibconfigs', mib).events]
+                    elif mib in application.implements_mibs:
+                        trap_events[mib] = [e for e in self.get('mibconfigs', mib).events]
+                # Bereinigen, so dass ggf. Aliase in der implements_mibs stehen.
+                # In trap_events sind die tatsaechlichen Events aus der 
+                # Original-MIB
+                application.implements_mibs = [m.split(':')[0] for m in application.implements_mibs]
+                if trap_events:
+                    application.monitoring_details.append(MonitoringDetail({
+                        'host_name': application.host_name,
+                        'application_name': application.name,
+                        'application_type': application.type,
+                        'monitoring_type': 'KEYVALUES',
+                        'monitoring_0': 'trap_events',
+                        'monitoring_1': trap_events,
+                    }))
+                    if not hasattr(application, 'trap_service_prefix'):
+                        setattr(application, 'trap_service_prefix', str(application.__module__).split('.')[0])
+                    i.combinations.append({
+                        'address': self.get('hosts', application.host_name).address,
+                        'host_name': application.host_name,
+                        'trap_service_prefix': application.trap_service_prefix,
+                        'mibs': application.implements_mibs,
+                        'unalias_mib': unalias_mib,
+                    })
+    
         self.add('infos', i)
 
         
