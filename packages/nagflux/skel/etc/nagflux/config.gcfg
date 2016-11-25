@@ -19,7 +19,7 @@
 	#PrometheusAddress = "127.0.0.1:8080"
 	PrometheusAddress = ""
 
-[ModGearman]
+[ModGearman "example"] #copy this block and rename it to add a second ModGearman queue
 	Enabled = false
 	Address = "127.0.0.1:4730"
 	Queue = "perfdata"
@@ -48,6 +48,8 @@
 	Type = "file"
 	#tcp: 127.0.0.1:6557 or file /var/run/live
 	Address = "###ROOT###/tmp/run/live"
+	# The amount to minutes to wait for livestatus to come up, if set to 0 the detection is disabled
+	MinutesToWait = 3
 
 [Elasticsearch]
 	Enabled = false
