@@ -5,45 +5,28 @@ use Monitoring::Trap::Hostinfo;
 my $VERBOSE = 0;
 our @commands = ();
 
-eval "require Monitoring::Trap::{{ mib.miblabel }};";
-if (defined(&Monitoring::Trap::{{ mib.miblabel }}::nagios_severity_mapping)) {
-  import Monitoring::Trap::{{ mib.miblabel }}::nagios_severity_mapping;
-}
-
-sub severity_map {
-  my ($text) = @_;
-{% if mib.severity_mapping %}
-  # mapmap
-  return Monitoring::Trap::{{ mib.miblabel }}::nagios_severity_mapping($text);
-  return 2;
-{% else %}
-  return 2;
-{% endif %}
-}
-
 sub prepare_submit_command {
   my ($address, $mib, $trap, $severity, $text) = @_;
   $text =~ s/[^[:ascii:]]//g;
   $trap =~ s/[^[:ascii:]]//g;;
   if (my $info = Monitoring::Trap::Hostinfo::get_host_from_ip($address, $mib)) {
+{#
+    Sowas ist moeglich. Der Host implementiert die alte Mib, seine Traps werden also
+    vom trapfile-Scanner ISILON-TRAP-2014-MIB entdeckt.
+    Seine Services lauten aber ...traps_ISILON-TRAP-MIB_..., daher muss get_host_from_ip
+    auch die Alias-Mib [2] liefern.
+    '10.145.60.67' => {
+        'ISILON-TRAP-2014-MIB' => ['itaemc01c1.bmwgroup.net', 'os_isilon', 'ISILON-TRAP-MIB'],
+    },
+
+#}
     my $command = sprintf "COMMAND [%d] PROCESS_SERVICE_CHECK_RESULT;%s;%s;%d;%s",
         time, $info->[0],
-        $info->[1].'_traps_'.$mib.'_'.$trap,
+        $info->[1].'_traps_'.$info->[2].'_'.$trap,
         $severity,
         $text;
     push(@commands, $command);
   }
-  return $text;
-}
-
-sub smarts_resolve {
-  my ($sys, $text, $subtraps) = @_;
-  #my @subtraps = map { /^[\d\.]+\s+"*(.*?)"*$/; $1; } split(/____/, $subtraps);
-  my @subtraps = map { /^[\d\.]+\s+(.*)$/; $1; } split(/____/, $subtraps);
-  foreach my $index (1..scalar(@subtraps)) {
-    $text =~ s/\$V$index\$/$subtraps[$index-1]/g;
-  }
-  $text =~ s/\$SYS\$/$sys/g;
   return $text;
 }
 
@@ -78,6 +61,12 @@ sub match_matches {
   foreach my $rule (@rules) {
     if ($rule =~ /^\$(\d+):\s*(\w+)/) {
       $rulehits +=1 if $subtraps[$1-1] eq $2;
+    } elsif ($rule =~ /^\$(\d+):\s*\((.*)\)\s*$/) {
+      $rulehits += 1 if $subtraps[$1-1] =~ /$2/;
+    } elsif ($rule =~ /^\$(\d+):\s*\((.*)\)\s*i\s*$/) {
+      $rulehits += 1 if $subtraps[$1-1] =~ /$2/i;
+    } else {
+printf STDERR "unknown rule __%s__\n", $rule;
     }
   }
   return 1 if $mode eq 'and' && $rulehits == scalar(@rules); # all of them
@@ -103,7 +92,6 @@ $options = 'report=long,supersmartpostscript';
 {%   for match in event.matches %}
 {%     if loop.first %}
     if (match_matches('{{ match[1] }}', '{{ match[2] }}', $flat_trap)) {
-printf STDERR "in 1loop, now resolve\n";
         $resolved_text = snmptt_resolve($address, '{{ match[3] }}', $flat_trap)." - match {{ match[2].replace('$', 'DLR') }}";
         $severity = {{ match[0] }};
 {%     else %}
@@ -119,7 +107,7 @@ printf STDERR "in 1loop, now resolve\n";
     if (! defined $severity) {
       # there are no sub-events at all or none of them matched
       $resolved_text = snmptt_resolve($address, '{{ event.text }}', $flat_trap);
-      $severity = severity_map($resolved_text);
+      $severity = {{ event.nagioslevel }}
     }
     my $sub =  prepare_submit_command($address, '{{ mib.mib }}', '{{ event.name }}', $severity, $resolved_text);
     printf "sub %s\n", $sub;
@@ -157,19 +145,20 @@ printf STDERR "in 1loop, now resolve\n";
 $postscript = sub {
   if (@commands) {
     my $submitted = 0;
+    open SPOOL, ">".$ENV{OMD_ROOT}.'/tmp/{{ mib.mib }}.cmds';
+    foreach (map { /COMMAND (.*)/; $1; } @commands) {
+      printf SPOOL "%s\n", $_;
+      $submitted++;
+    }
+    close SPOOL;
     #open CMD, ">".$ENV{OMD_ROOT}.'/tmp/run/live';
     open CMD, ">".$ENV{OMD_ROOT}.'/tmp/run/nagios.cmd';
     #open CMD, ">>/tmp/test_neues_check_logfiles.log";
-    foreach (map { /COMMAND (.*)/; $1; } @commands) {
-      my $mapping = severity_map($_);
-      if ($mapping ne "HARMLESS" || $VERBOSE) {
-        printf CMD $_." ... $mapping\n" if ! ($mapping eq "HARMLESS" && ! $VERBOSE);
-        $submitted++ if $mapping ne "HARMLESS";
-      }
-    }
+    printf CMD "[%lu] PROCESS_FILE;%s;1\n", time, $ENV{OMD_ROOT}.'/tmp/{{ mib.mib }}.cmds';
     close CMD;
     if ($submitted) {
       printf "OK - found %d traps (%d submitted)\n", scalar(@commands), $submitted;
+      printf "%s\n", join("\n", @commands);
       return 0;
     } else {
       printf "OK - found %d traps, all of them were harmless\n", scalar(@commands);

@@ -118,7 +118,7 @@ class SNMPTT(coshsh.datasource.Datasource):
                                     'oid': last_oid,
                                     'text': last_eventtext,
                                     'match': last_match,
-                                    'matchmode': last_matchmode,
+                                    'nagioslevel': last_nagios,
                                 })
                             except Exception:
                                 mib_traps[mib] = [{
@@ -126,12 +126,12 @@ class SNMPTT(coshsh.datasource.Datasource):
                                     'oid': last_oid,
                                     'text': last_eventtext,
                                     'match': last_match,
-                                    'matchmode': last_matchmode,
+                                    'nagioslevel': last_nagios,
                                 }]
                         last_eventname = eventname_m.group(1).replace(' ', '')
                         last_oid = eventname_m.group(2)
                         last_nagios = {
-                            'Normal': 0,
+                            'Normal': -1,
                             'OK': 0,
                             'WARNING': 1,
                             'CRITICAL': 2,
@@ -157,7 +157,7 @@ class SNMPTT(coshsh.datasource.Datasource):
                             'oid': last_oid,
                             'text': last_eventtext,
                             'match': last_match,
-                            'matchmode': last_matchmode,
+                            'nagioslevel': last_nagios,
                         })
                     except Exception:
                         mib_traps[mib] = [{
@@ -165,10 +165,12 @@ class SNMPTT(coshsh.datasource.Datasource):
                             'oid': last_oid,
                             'text': last_eventtext,
                             'match': last_match,
-                            'matchmode': last_matchmode,
+                            'nagioslevel': last_nagios,
                         }]
 
         for mib in mib_traps:
+            if "CLAR" in mib:
+                pp.pprint(mib_traps[mib])
             m = MIB(mib=mib, miblabel=mib.replace('-', ''), events=[])
             unique_names = {}
             for event in mib_traps[mib]:
@@ -188,9 +190,7 @@ class SNMPTT(coshsh.datasource.Datasource):
             # welches die genauer spezifizierten Sub-Events aufnimmt.
             # 
             matches = {}
-            matchmodes = {}
             for event in mib_traps[mib]:
-                event['trapdesc'] = event['name']
                 event['oid'] = event['oid'].replace('.', '\.').replace('*', '.*?')
                 event['mib'] = mib
                 if event['match']:
@@ -206,7 +206,8 @@ class SNMPTT(coshsh.datasource.Datasource):
             # Jetzt haben wir:
             # - Events, die nur einmal vorkommen, sind in MIB.events
             # - Events mit einer MATCH-Regel sind in matches[eventname]
-            for event in mib_traps[mib]:
+            for event in reversed(mib_traps[mib]):
+                # Rueckwaerts, denn jetzt brauchen wir den Sammelevent bzw. dessen nagioslevel
                 if unique_names[event['name']] > 0:
                     unique_names[event['name']] = 0
                     event['matches'] = [] if not event['name'] in matches else [match for match in matches[event['name']]]
@@ -216,11 +217,6 @@ class SNMPTT(coshsh.datasource.Datasource):
             # Jetzt haben wir:
             # - Events, die mehrfach vorkommen, sind auch in MIB.events
             #   und haben ein Attribut "matches" mit den Sub-Events
-                
-            #for mapping in [mapp for mapp in self.getall('severitymappings') if mapp.mib == mib]:
-            #    # optionales mapping-objekt, hinter dem ein Perl-Modul steckt
-            #    m.severity_mapping = mapping
-                
             self.add('mibconfigs', m)
 
         i = HostInfoObj(combinations=[])
