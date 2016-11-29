@@ -1,5 +1,12 @@
 This file documents the revision history for the Open Monitoring Distribution (Labs Edition)
 
+2.22     Nov 28 2016
+          - Thruk: Update to 2.12-2
+          - histou: update 0.3.10
+          - nagflux: update 0.2.8
+          - coshsh: update 3.2.4.3
+          - Monitoring-Plugins: update to 2.2
+
 2.20     Nov 18 2016
           - OMD
             - use distro version numbers in package names for debian and ubuntu too
