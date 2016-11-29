@@ -192,9 +192,9 @@ MODULES = \
           Email-MIME-Encodings-1.315.tar.gz \
           Email-MessageID-1.406.tar.gz \
           MIME-Types-2.13.tar.gz \
-		  Email-Simple-2.211.tar.gz \
-		  Email-MIME-1.937.tar.gz \
-		  Monitoring-GLPlugin-2.3.5.tar.gz
+	  Email-Simple-2.211.tar.gz \
+	  Email-MIME-1.937.tar.gz \
+	  Monitoring-GLPlugin-2.3.7.tar.gz
 
 
 
