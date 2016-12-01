@@ -1,6 +1,6 @@
 include ../../Makefile.omd
 
-ALERTMANAGER=alertmanager-0.4.2
+ALERTMANAGER=alertmanager-0.5.1
 
 .PHONY: skel
 
