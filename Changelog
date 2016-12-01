@@ -7,6 +7,7 @@ This file documents the revision history for the Open Monitoring Distribution (L
           - coshsh: update 3.2.4.3
           - Monitoring-Plugins: update to 2.2
           - Icinga update to 2.5.4
+          - Grafana update to 4.0.0
 
 2.20     Nov 18 2016
           - OMD
