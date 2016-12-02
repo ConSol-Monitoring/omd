@@ -3,11 +3,10 @@
 # Alias: Monitoring core
 # Menu: Basic
 # Description:
-#  Here you can choose your monitoring core to run. Currently available
-#  are Nagios and Shinken. You also can decide to run no monitoring core in
-#  this instance. This can be useful for instances running a GUI such
-#  as Check_MK Multisite or Thruk which can connect to other monitoring
-#  sites via Livestatus.
+#  Here you can choose your monitoring core to run. Currently available are
+#  Naemon, Icinga, Nagios and Shinken. You also can decide to run no monitoring
+#  core in this instance. This can be useful for instances running only a GUI such
+#  as Thruk which can connect to other monitoring sites via Livestatus.
 
 # Helper function that creates a symlink only if the
 # target of the link exists
@@ -51,12 +50,14 @@ case "$1" in
             rm -f $OMD_ROOT/etc/apache/conf.d/icinga.conf
         fi
         rm -f $OMD_ROOT/etc/init.d/core
+        make_link ../nagios/livestatus.log $OMD_ROOT/var/log/livestatus.log
         # now setup the new selection
         if [ "$2" == "nagios" -o "$2" == "naemon" ]
         then
             make_link ../../nagios/apache.conf $OMD_ROOT/etc/apache/conf.d/nagios.conf
             make_link ../../icinga/apache.conf $OMD_ROOT/etc/apache/conf.d/icinga.conf
             make_link nagios $OMD_ROOT/etc/init.d/core
+            make_link ../$2/livestatus.log $OMD_ROOT/var/log/livestatus.log
             # Beware: do not change the number of spaces before '='. Otherwise we will get severe
             # merge conflicts at 'omd mv'
             sed -i -e "s|^nagios_binary[[:space:]]*=.*$|nagios_binary               = '$OMD_ROOT/bin/$2'|" $OMD_ROOT/etc/check_mk/defaults

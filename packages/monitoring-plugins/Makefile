@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 NAME = monitoring-plugins
-VERSION = 2.1.2
+VERSION = 2.2
 DIR = $(NAME)-$(VERSION)
 
 CONFIGUREOPTS = \
