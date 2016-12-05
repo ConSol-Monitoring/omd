@@ -1,0 +1,25 @@
+#!/bin/bash
+
+# Alias: UDP port the snmptrapd daemon listens on
+# Menu: Addons
+# Description:
+#  If you enabled snmptrapd, this is the
+#  listening port of the daemon.
+
+case "$1" in
+    default)
+        echo 9162
+    ;;
+    choices)
+        echo "[0-9]{1,4}"
+    ;;
+    set)
+        PORT=$($OMD_ROOT/lib/omd/port_is_used SNMPTRAPD_UDP_PORT $2)
+        if [ "$PORT" != "$2" ] ; then
+            echo "$PORT"
+        fi
+    ;;
+    depends)
+    [ "$CONFIG_SNMPTRAPD" = "on" ]
+    ;;
+esac
