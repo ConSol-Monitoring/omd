@@ -15,6 +15,7 @@ BUILD_PACKAGES += help2man    # required by naemon
 BUILD_PACKAGES += libboost-all-dev
 BUILD_PACKAGES += libcloog-ppl1
 BUILD_PACKAGES += libcurl4-openssl-dev # needed by perl modules / thruk
+BUILD_PACKAGES += libdbi-dev
 BUILD_PACKAGES += libevent-dev
 BUILD_PACKAGES += libgd-dev
 BUILD_PACKAGES += libglib2.0-dev
