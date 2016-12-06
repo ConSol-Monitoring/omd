@@ -40,6 +40,9 @@ sub _dispatch_command {
     if($cmd =~ /^datasources?|ds$/mx) {
         _dispatch_command_datasource(@args);
     }
+    if($cmd =~ /^check?|c$/mx) {
+        _dispatch_command_check(@args);
+    }
 }
 
 ################################################################################
@@ -245,6 +248,25 @@ sub _dispatch_command_datasource {
 }
 
 ################################################################################
+sub _dispatch_command_check {
+    my($action, @args) = @_;
+
+    my $r = $ua->get("${API_URL}/metrics");
+    unless ( $r->is_success ){
+        print "CRITICAL - " . $r->status_line;
+        exit 2;
+    };
+
+    my $data = _parse_json($r);
+    my $perf_data = "";
+    foreach my $k (keys %$data){
+        $perf_data .= sprintf("'$k'=%dc;;;; ", $data->{$k}->{count} )
+    }
+    print "OK - " . $r->status_line . " | $perf_data";
+    exit 0;
+}
+
+################################################################################
 sub _usage {
     print STDERR <<EOT;
 Usage: grafanactl <command> <options>
@@ -267,6 +289,10 @@ Organizations:
 
 Datasources:
        grafanactl datasource [list]
+
+Monitoring:
+       grafanactl check
+
 EOT
     exit 1;
 }
