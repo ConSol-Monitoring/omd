@@ -35,7 +35,7 @@
 	Enabled = true
 	Version = 0.10
 	Address = "http://127.0.0.1:8086"
-	Arguments = "precision=ms&db=nagflux"
+	Arguments = "precision=ms&db=nagflux&u=omdadmin&p=omd"
 	CreateDatabaseIfNotExists = true
 	# Replace '\ ' because the InfluxDB has still a problem with theses characters to parse: https://github.com/influxdata/influxdb/issues/4865
 	# This can result in different Performancedata, most commen in Windowspaths

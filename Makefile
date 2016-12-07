@@ -66,7 +66,8 @@ PACKAGES=freetds \
 	 alertmanager \
 	 blackbox \
 	 pushgateway \
-	 dataScryer
+	 dataScryer \
+	 snmptrapd
 
 include Makefile.omd
 

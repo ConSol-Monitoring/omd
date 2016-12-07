@@ -4,22 +4,22 @@
 # description: snmptrapd
 #
 # processname: /usr/sbin/snmptrapd
-# pidfile: /omd/sites/vstest/var/run/snmptrapd.pid
+# pidfile: /omd/sites/###SITE###/var/run/snmptrapd.pid
 
 # source function library
 #. /etc/rc.status
 
 . $OMD_ROOT/etc/omd/site.conf
-#if [ "$CONFIG_SNMPTRAPD" != "on" ] ; then
-#  exit 5
-#fi
+if [ "$CONFIG_SNMPTRAPD" != "on" ] ; then
+  exit 5
+fi
 
 NAME="snmptrapd"
 PROG="/usr/sbin/snmptrapd"
 LOGDIR="/omd/sites/$OMD_SITE/var/log/snmp"
 LOG="$LOGDIR/snmptrapd.log"
 PIDFILE="$OMD_ROOT/var/run/snmptrapd.pid"
-OPTIONS="-ObentU -C -c $OMD_ROOT/etc/snmptrapd.conf -A -Lf $LOG -p $PIDFILE udp:9999"
+OPTIONS="-ObentU -C -c $OMD_ROOT/etc/snmptrapd.conf -A -Lf $LOG -p $PIDFILE udp:$CONFIG_SNMPTRAPD_UDP_PORT"
 
 mkdir -p $LOGDIR
 mkdir -p "$OMD_ROOT/var/run"

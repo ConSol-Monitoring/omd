@@ -7,21 +7,17 @@ build:
 	cd $(SAMPLICATOR) && \
 	    ./autogen.sh; \
 	    ./configure; \
-	    mak
+	    make; \
+	    strip samplicate
 
 install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/bin
-	cd $(COSHSH) && \
-	    export PYTHONPATH=$$PYTHONPATH:$(DESTDIR)$(OMD_ROOT)/lib/python ; \
-	    python setup.py install \
-	        --prefix= \
-	        --home=$(DESTDIR)$(OMD_ROOT) \
-                --install-platlib=$(DESTDIR)$(OMD_ROOT)/lib/python \
-                --install-purelib=$(DESTDIR)$(OMD_ROOT)/lib/python \
-                --install-scripts=$(DESTDIR)$(OMD_ROOT)/bin \
-                --install-data=$(DESTDIR)$(OMD_ROOT)/share/coshsh
 	cp snmptrap_logger.sh \
 	    $(DESTDIR)$(OMD_ROOT)/bin
+	cp $(SAMPLICATOR)/samplicate $(DESTDIR)$(OMD_ROOT)/bin
+	# missing: samplicate init-script
+	# missing: samplicate cronjob which restarts on site changes
+	# SNMPTRAPD hook
 
 skel:
 
