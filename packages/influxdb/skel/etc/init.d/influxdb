@@ -23,6 +23,15 @@ PIDFILE="$OMD_ROOT/tmp/run/influxdb.pid"
 LOGFILE="$OMD_ROOT/var/log/influxdb.log"
 OPTIONS="run -config $OMD_ROOT/etc/influxdb/influxdb.conf -pidfile $PIDFILE"
 
+#### Logindata:
+# Admin:
+USER="omdadmin"
+PASS="omd"
+# Grafana(only read):
+GRAFANA_USER="grafana"
+GRAFANA_PASS="grafana"
+####
+
 # create state dir
 mkdir -p $OMD_ROOT/tmp/run \
          $OMD_ROOT/var/influxdb/db \
@@ -85,8 +94,14 @@ case "$1" in
                 sleep 0.2
             done
             if get_status > /dev/null ; then
+                # set admin user
+                echo "CREATE USER $USER WITH PASSWORD '$PASS' WITH ALL PRIVILEGES" | influx >/dev/null
+                # set grafana user
+                echo "CREATE USER $GRAFANA_USER WITH PASSWORD '$GRAFANA_PASS'" | influx -username $USER -password $PASS >/dev/null
+                echo "CREATE DATABASE nagflux" | influx -username $USER -password $PASS >/dev/null
+                echo "GRANT READ ON nagflux TO $GRAFANA_USER" | influx -username $USER -password $PASS >/dev/null
                 # apply retention policy
-                echo "ALTER RETENTION POLICY default ON nagflux DURATION ${CONFIG_INFLUXDB_RETENTION}w DEFAULT" | influx >/dev/null
+                echo "ALTER RETENTION POLICY default ON nagflux DURATION ${CONFIG_INFLUXDB_RETENTION}w DEFAULT" | influx -username $USER -password $PASS >/dev/null
                 echo "OK"
                 exit 0;
             else

@@ -31,8 +31,8 @@ for datasource_name in names:
             access='proxy',
             isDefault=default,
             database=datasource_name,
-            user='root',
-            password='root'
+            user='grafana',
+            password='grafana'
         )
         print "OK" if ds else "FAIL"
 
