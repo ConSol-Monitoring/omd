@@ -7,8 +7,8 @@ var window, document, ARGS, $, jQuery, moment, kbn;
 parseArgs()
 
 
-return function(callback) {
-    if(window.location.href.search('/dashboard-solo/') != -1){
+return function (callback) {
+    if (window.location.href.search('/dashboard-solo/') != -1) {
         document.documentElement.style.background = '#FFF';
     }
 
@@ -16,113 +16,174 @@ return function(callback) {
     if(site && site.length > 1){
         url = site[1]+'/histou/';
     }
+    var configUrl = url+'index.php?host='+host+'&service='+service+'&height='+height+'&legend='+legend+debug+disablePanelTitel+disablePerfdataLookup+specificTemplate+'&annotations='+annotations;
 
     var flotAddons = url + 'flotAddons.js';
-    $.getScript(flotAddons, function(){});
+    $.getScript(flotAddons, function (){});
+	
+	cssLoaded = false;
+	jQuery('body').on('DOMNodeInserted', 'DIV.drop-popover', function (e) {
+		var cssUrl = url+'lightbox/css/light.css'
+		if (!cssLoaded) {
+			$('head').append('<link rel="stylesheet" href="'+url+'lightbox/css/light.css" type="text/css" />');
+			$.getScript(url+'lightbox/js/light.js', function(){});
+			cssLoaded = true;
+		}
 
-    var configUrl = url+'index.php?host='+host+'&service='+service+'&height='+height+'&legend='+legend+debug+'&annotations='+annotations;
+		var box = $( e.currentTarget ).find( "DIV.sakuli-popup" );
+		if (box.length > 0 ){
+		$(box[0]).attr('class', 'sakuli-image');
+		var sakuliUrl = site[1] + box[0].innerHTML;
+		$.get( sakuliUrl + "output.txt").always(function(data ,state) {
+			if (state != "success" ) {
+				data = "Could not find outputfile!"
+			}
+			console.log(data);
+			data = $("<div>").text(data).html().replace(/['"]+/g, '');
+			console.log(data);
+			box[0].innerHTML = '<a href="' + sakuliUrl  + 'screenshot.jpg" data-lightbox="sakuli" data-title="'+ data +'"><img src="'+ sakuliUrl +'screenshot.jpg" alt="Sakuli error image" width=250px /></a>';
+		});
+		}
+	});
 
-    $.ajax({
-        method: 'GET',
-        url: configUrl,
-        dataType: "jsonp",
-    }).done(function(result) {
-        console.log(result);
-        callback(result);
-    }).fail(function(result) {
-        console.log(result);
-        console.log(configUrl);
-        if(result.status == 200){
-            callback(createErrorDashboard('# HTTP code: '+result.status+'\n# Message: '+result.statusText+'\n# Url: '+configUrl+'\n# Probably the output is not valid json, because the returncode is 200!'));
-        }else{
-            callback(createErrorDashboard('# HTTP code: '+result.status+'\n# Message: '+result.statusText+'\n# Url: '+configUrl));
+
+    $.ajax(
+        {
+            method: 'GET',
+            url: configUrl,
+            dataType: "jsonp",
         }
-    });
+    ).done(
+        function (result) {
+                console.log(result);
+                callback(result);
+        }
+    ).fail(
+        function (result) {
+                console.log(result);
+                console.log(configUrl);
+            if (result.status == 200) {
+                callback(createErrorDashboard('# HTTP code: '+result.status+'\n# Message: '+result.statusText+'\n# Url: '+configUrl+'\n# Probably the output is not valid json, because the returncode is 200!'));
+            } else {
+                callback(createErrorDashboard('# HTTP code: '+result.status+'\n# Message: '+result.statusText+'\n# Url: '+configUrl));
+            }
+        }
+    );
 }
 
-function createErrorDashboard(message) {
+function createErrorDashboard(message)
+{
     return {
-            rows : [{
-                title: 'Chart',
-                height: '300px',
-                panels : [{
-                    title: 'Error Message below',
-                    type: 'text',
-                    span: 12,
-                    fill: 1,
-                    content: message,
-                  }]
-            }],
-            services : {},
-            title : 'JS Error / HTTP Error'
-        };
+        rows : [{
+            title: 'Chart',
+            height: '300px',
+            panels : [{
+                title: 'Error Message below',
+                type: 'text',
+                span: 12,
+                fill: 1,
+                content: message,
+            }]
+        }],
+        services : {},
+        title : 'JS Error / HTTP Error'
+    };
 }
 
-function parseArgs() {
-    if(!_.isUndefined(ARGS.reduce)) {
+function parseArgs()
+{
+    if (!_.isUndefined(ARGS.reduce)) {
         $('head').append('<style>.panel-fullscreen {top:0}</style>');
 
         //change ui to our needs
-        clearUi()
+        clearUi();
     }
 
-    if(!_.isUndefined(ARGS.host)) {
+    if (!_.isUndefined(ARGS.dynUnit)) {
+        dynUnit = true;
+    } else {
+        dynUnit = false;
+    }
+
+    if (!_.isUndefined(ARGS.host)) {
         host = ARGS.host;
-    }else{
-        host = "Host0";
+    } else {
+        host = "";
     }
 
-    if(!_.isUndefined(ARGS.service)) {
+    if (!_.isUndefined(ARGS.service)) {
         service = ARGS.service;
-    }else{
+    } else {
         service = "";
     }
 
-    if(!_.isUndefined(ARGS.command)) {
+    if (!_.isUndefined(ARGS.command)) {
         command = ARGS.command;
-    }else{
+    } else {
         command = "";
     }
 
-    if(!_.isUndefined(ARGS.perf)) {
+    if (!_.isUndefined(ARGS.perf)) {
         perf = ARGS.perf;
-    }else{
+    } else {
         perf = "";
     }
 
-    if(!_.isUndefined(ARGS.height)) {
+    if (!_.isUndefined(ARGS.height)) {
         height = ARGS.height;
-    }else{
+    } else {
         height = "";
     }
 
-    if(_.isUndefined(ARGS.debug)) {
+    if (_.isUndefined(ARGS.debug)) {
         debug = '';
-    }else{
+    } else {
         debug = "&debug";
     }
 
-    if(!_.isUndefined(ARGS.legend)) {
+    if (!_.isUndefined(ARGS.legend)) {
         legend = ARGS.legend;
-    }else{
+    } else {
         legend = true;
     }
-
+	
     if (!_.isUndefined(ARGS.annotations)) {
         annotations = ARGS.annotations;
     } else {
         annotations = false;
     }
+
+    if(_.isUndefined(ARGS.disablePanelTitle)) {
+        disablePanelTitle = '';
+    }else{
+        disablePanelTitle = "&disablePanelTitle";
+    }
+	
+    if(_.isUndefined(ARGS.disablePerfdataLookup)) {
+        disablePerfdataLookup = '';
+    }else{
+        disablePerfdataLookup = "&disablePerfdataLookup";
+    }
+
+    if(_.isUndefined(ARGS.specificTemplate)) {
+        specificTemplate = '';
+    }else{
+        specificTemplate = "&specificTemplate="+ARGS.specificTemplate;
+    }
 }
 
-function clearUi() {
+function clearUi()
+{
     //removes white space
-    var checkExist = setInterval(function() {
-         if ($('.panel-content').length) {
-            clearInterval(checkExist);
-            document.getElementsByClassName("panel-content")[0].style.paddingBottom = '0px';
-         }
-    }, 100);
+    var checkExist = setInterval(
+        function () {
+            if ($('.panel-content').length) {
+                clearInterval(checkExist);
+                document.getElementsByClassName("panel-content")[0].style.paddingBottom = '0px';
+            }
+        },
+        100
+    );
     /*
         .panel-header removes the headline of the graphs
         .navbar-static-top removes the menubar on the top
@@ -133,13 +194,16 @@ function clearUi() {
     for (index = 0; index < divs.length; index++) {
         waitForDivAndDeleteIt(divs[index]);
     }
-    function waitForDivAndDeleteIt(div){
-        var checkExist = setInterval(function() {
-            if ($(div).length) {
-                clearInterval(checkExist);
-                $(div).remove();
-            }
-        }, 100);
+    function waitForDivAndDeleteIt(div)
+    {
+        var checkExist = setInterval(
+            function () {
+                if ($(div).length) {
+                    clearInterval(checkExist);
+                    $(div).remove();
+                }
+            },
+            100
+        );
     }
 }
-
