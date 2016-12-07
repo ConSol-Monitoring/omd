@@ -4,7 +4,7 @@
 # description: snmptrapd
 #
 # processname: /usr/sbin/snmptrapd
-# pidfile: /omd/sites/vstest/var/run/snmptrapd.pid
+# pidfile: /omd/sites/###SITE###/var/run/snmptrapd.pid
 
 # source function library
 #. /etc/rc.status
