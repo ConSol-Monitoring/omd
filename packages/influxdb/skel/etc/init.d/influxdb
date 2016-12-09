@@ -95,11 +95,12 @@ case "$1" in
             done
             if get_status > /dev/null ; then
                 # set admin user
-                echo "CREATE USER $USER WITH PASSWORD '$PASS' WITH ALL PRIVILEGES" | influx >/dev/null
+                echo "CREATE USER $USER WITH PASSWORD '$PASS' WITH ALL PRIVILEGES" | influx -port $CONFIG_INFLUXDB_HTTP_TCP_PORT >/dev/null
                 # set grafana user
-                echo "CREATE USER $GRAFANA_USER WITH PASSWORD '$GRAFANA_PASS'" | influx -username $USER -password $PASS >/dev/null
-                echo "CREATE DATABASE nagflux" | influx -username $USER -password $PASS >/dev/null
-                echo "GRANT READ ON nagflux TO $GRAFANA_USER" | influx -username $USER -password $PASS >/dev/null
+                echo "CREATE USER $GRAFANA_USER WITH PASSWORD '$GRAFANA_PASS'" | influx -port $CONFIG_INFLUXDB_HTTP_TCP_PORT -username $USER -password $PASS >/dev/null
+                echo "CREATE DATABASE nagflux" | influx -port $CONFIG_INFLUXDB_HTTP_TCP_PORT -username $USER -password $PASS >/dev/null
+                echo "GRANT READ ON nagflux TO $GRAFANA_USER" | influx -port $CONFIG_INFLUXDB_HTTP_TCP_PORT -username $USER -password $PASS >/dev/null
+                echo "GRANT READ ON _internal TO $GRAFANA_USER" | influx -port $CONFIG_INFLUXDB_HTTP_TCP_PORT -username $USER -password $PASS >/dev/null
                 # apply retention policy
 		echo 'SHOW RETENTION POLICIES ON nagflux' | influx -port $CONFIG_INFLUXDB_HTTP_TCP_PORT -username $USER -password $PASS 2>/dev/null | grep -q ^default
 		if [ $? -ne 0 ]; then
