@@ -101,7 +101,12 @@ case "$1" in
                 echo "CREATE DATABASE nagflux" | influx -username $USER -password $PASS >/dev/null
                 echo "GRANT READ ON nagflux TO $GRAFANA_USER" | influx -username $USER -password $PASS >/dev/null
                 # apply retention policy
-                echo "ALTER RETENTION POLICY default ON nagflux DURATION ${CONFIG_INFLUXDB_RETENTION}w DEFAULT" | influx -port $CONFIG_INFLUXDB_HTTP_TCP_PORT -username $USER -password $PASS >/dev/null
+		echo 'SHOW RETENTION POLICIES ON nagflux' | influx -port $CONFIG_INFLUXDB_HTTP_TCP_PORT -username $USER -password $PASS 2>/dev/null | grep -q ^default
+		if [ $? -ne 0 ]; then
+			echo 'CREATE RETENTION POLICY "default" ON "nagflux" DURATION '${CONFIG_INFLUXDB_RETENTION}w' REPLICATION 1 DEFAULT' | influx -port $CONFIG_INFLUXDB_HTTP_TCP_PORT -username $USER -password $PASS >/dev/null
+		else
+			echo 'ALTER RETENTION POLICY "default" ON "nagflux" DURATION '${CONFIG_INFLUXDB_RETENTION}w' DEFAULT' | influx -port $CONFIG_INFLUXDB_HTTP_TCP_PORT -username $USER -password $PASS >/dev/null
+		fi
                 echo "OK"
                 exit 0;
             else
