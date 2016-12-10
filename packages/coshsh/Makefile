@@ -33,6 +33,8 @@ install:
 	    $(DESTDIR)$(OMD_ROOT)/share/coshsh/recipes/default/templates
 	cp check_logfiles_snmptt.tpl \
 	    $(DESTDIR)$(OMD_ROOT)/share/coshsh/recipes/default/templates
+	cp HostSNMPTrapinfo.tpl \
+	    $(DESTDIR)$(OMD_ROOT)/share/coshsh/recipes/default/templates
 
 skel:
 
