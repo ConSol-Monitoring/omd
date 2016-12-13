@@ -15,14 +15,16 @@ my $data     = '';
 my $output   = '';
 my $mail     = $ENV{'OMD_ROOT'}.'/bin/mail -t';
 my $verbose  = 0;
+my @vars;
 
 GetOptions (
-	'option|o=s'   => \%macro,
-	'type=s'       => \%macro,
-	'template=s'   => \$template,
-	'mail=s'       => \$mail,
-	'verbose'      => \$verbose,
-	);
+        'option|o=s'   => \%macro,
+        'type=s'       => \%macro,
+        'template=s'   => \$template,
+        'mail=s'       => \$mail,
+        'verbose'      => \$verbose,
+        'mailvar=s'    => \@vars,
+);
 
 if ( $template eq '' ){
 	print "Template not given\n";
@@ -55,6 +57,7 @@ sub process_template {
 }
 
 sub send_mail {
+	$mail .= ' ' . join ' ',map { "-S".$_ } @vars;
 	open (MAIL,"|$mail $macro{'CONTACTEMAIL'}") || die("Couldn't open $mail: $!");
 	print MAIL $output;
 	close MAIL;
@@ -63,7 +66,7 @@ sub send_mail {
 sub usage {
 	print "
 Usage:
-$0 --template=<path to template> -o <MACRO>=<VALUE> -o ....
+$0 --template=<path to template> -o <MACRO>=<VALUE> -o .... --mailvar='from=Firstname Lastname <email\@address.org>'
 
 ";
 }
