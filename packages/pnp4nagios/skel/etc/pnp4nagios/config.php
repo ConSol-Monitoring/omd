@@ -84,7 +84,7 @@ $conf['temp'] = "###ROOT###/tmp";
 #
 # Link back to Nagios or Thruk ( www.thruk.org ) 
 #
-$conf['nagios_base'] = "/###SITE###/nagios/cgi-bin";
+$conf['nagios_base'] = "/###SITE###/thruk/cgi-bin";
 
 #
 # Link back to check_mk´s multisite ( http://mathias-kettner.de/checkmk_multisite.html )
