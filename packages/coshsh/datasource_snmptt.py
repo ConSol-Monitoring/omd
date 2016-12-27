@@ -85,7 +85,7 @@ class SNMPTT(coshsh.datasource.Datasource):
 
         mib_traps = {}
         snmpttfiles = [f for f in listdir(self.dir) if isfile(join(self.dir, f)) and f.endswith('.snmptt')]
-        eventname_pat = re.compile(r'^EVENT (.*) ([\.\d]+) .*?(\w+)$')
+        eventname_pat = re.compile(r'^EVENT (.*) ([\.\d]+) .*?([\-\w]+)$')
         eventtext_pat = re.compile(r'^FORMAT (.*)')
         match_pat = re.compile(r'^MATCH (\$.*)')
         matchmode_pat = re.compile(r'^MATCH MODE=(.*)')
@@ -130,13 +130,27 @@ class SNMPTT(coshsh.datasource.Datasource):
                                 }]
                         last_eventname = eventname_m.group(1).replace(' ', '')
                         last_oid = eventname_m.group(2)
-                        last_nagios = {
-                            'Normal': -1,
-                            'OK': 0,
-                            'WARNING': 1,
-                            'CRITICAL': 2,
-                            'UNKNOWN': 3,
-                        }[eventname_m.group(3)]
+                        last_severity = eventname_m.group(3).upper()
+                        try:
+                            last_nagios = {
+                                'NORMAL': 0, # return to normal state
+                                # some Mibs have --#SEVERITY hints
+                                'INFORMATIONAL': 0,
+                                'WARNING': 1,
+                                'MINOR': 1,
+                                'MAJOR': 2,
+                                'CRITICAL': 2,
+                                'FATAL': 2,
+                                'NON-RECOVERABLE': 2,
+                                # manually edited severities. The best you can do
+                                'OK': 0,
+                                'WARNING': 1,
+                                'CRITICAL': 2,
+                                'UNKNOWN': 3,
+                            }[last_severity]
+                        except Exception, e:
+                            logger.debug('trap severity %s unknown' %  eventname_m.group(3))
+                            last_nagios = 2
                         last_eventtext = None
                         last_match = None
                     elif eventtext_m:
