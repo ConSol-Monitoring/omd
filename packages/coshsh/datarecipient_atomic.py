@@ -11,8 +11,10 @@ import logging
 import shutil
 import tempfile
 from copy import copy
+import subprocess
 import coshsh
 from coshsh.datasource import Datasource, DatasourceNotAvailable
+from coshsh.datarecipient import Datarecipient, DatarecipientNotAvailable
 from coshsh.host import Host
 from coshsh.application import Application
 from coshsh.contactgroup import ContactGroup
@@ -25,6 +27,8 @@ logger = logging.getLogger('coshsh')
 def __ds_ident__(params={}):
     if compare_attr("type", params, "atomic"):
         return AtomicRecipient
+    if compare_attr("type", params, "remote_atomic"):
+        return RemoteAtomicRecipient
 
 
 class AtomicRecipient(coshsh.datarecipient.Datarecipient):
@@ -35,8 +39,10 @@ class AtomicRecipient(coshsh.datarecipient.Datarecipient):
 
     def inventory(self):
         logger.info('count items')
-        for key in self.objects:
-            logger.info('count %d %s' % (len(self.objects[key]), key))
+        if self.items:
+            for item in self.items.split(','):
+                if item in self.objects:
+                    logger.info('count %d %s' % (len(self.objects[item]), item))
 
     def prepare_target_dir(self):
         logger.info("recipient %s objects_dir %s" % (self.name, self.objects_dir))
@@ -60,7 +66,6 @@ class AtomicRecipient(coshsh.datarecipient.Datarecipient):
                     logger.info("writing %s atomic ..." % item)
                     for itemobj in self.objects[item].values():
                         self.item_write_config(itemobj, self.objects_dir, '')
-#, 'mibs')
         self.count_after_objects()
 
     def item_write_config(self, obj, dynamic_dir, objtype):
@@ -74,3 +79,66 @@ class AtomicRecipient(coshsh.datarecipient.Datarecipient):
                 f.write(content)
                 os.fsync(f)
             os.rename(my_target_file+'_coshshtmp', my_target_file)
+
+class RemoteAtomicRecipient(AtomicRecipient):
+    def __init__(self, **kwargs):
+        self.name = kwargs["name"]
+        self.objects_dir = kwargs["objects_dir"]
+        self.items = kwargs.get("items", None)
+        self.remote = kwargs.get("hostname", None)
+
+    def prepare_target_dir(self):
+        logger.info("recipient %s objects_dir %s" % (self.name, self.objects_dir))
+        status, stdout, stderr = self.process("ssh -q %s mkdir -p %s" % (self.remote, self.objects_dir))
+        if not status:
+            raise DatarecipientNotAvailable
+        # sollte ueberfluessig sein, da rsync atomic genug ist
+        #status, stdout, stderr = self.remote("ssh -q %s mktemp" % (self.remote, self.objects_dir)):
+        #if not status:
+        #    raise DatarecipientNotAvailable
+        #else:
+        #    self.rem_tempdir = stdout
+
+    def output(self, filter=None, objects={}):
+        if filter:
+            for f in [filt.strip() for filt in filter.split(',')]:
+                if f.startswith('hostname='):
+                    self.trapdest = f.replace("hostname=", "")
+        if self.remote == None:
+            logger.error('remote atomic needs a valid hostname')
+            raise DatarecipientNotAvailable
+
+        local_tempdir = tempfile.mkdtemp()
+        logger.info('write items to temporary local object_dir %s' % local_tempdir)
+        self.inventory()
+        if self.items:
+            for item in self.items.split(','):
+                if item in self.objects:
+                    logger.info("writing %s atomic ..." % item)
+                    for itemobj in self.objects[item].values():
+                        self.item_write_config(itemobj, local_tempdir, '')
+        logger.info('copy items to object_dir %s:%s' % (self.remote, self.objects_dir))
+        status, stdout, stderr = self.process("rsync -ac %s/ %s:%s" % (local_tempdir, self.remote, self.objects_dir))
+        if not status:
+            shutil.rmtree(local_tempdir)
+            raise DatarecipientNotAvailable
+        else:
+            shutil.rmtree(local_tempdir)
+
+    def process(self, command):
+        try:
+            stdout = "connecting..."
+            stderr = "connecting..."
+            process = subprocess.Popen(command,
+                shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            stdout, stderr = process.communicate()
+            status = process.poll()
+            if status != 0:
+                raise DatarecipientNotAvailable
+        except Exception, e:
+            logger.error("output stdout " + stdout)
+            logger.error("output stderr " + stderr)
+            return False, stdout, stderr
+        else:
+            return True, stdout, stderr
+

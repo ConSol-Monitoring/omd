@@ -53,7 +53,7 @@ class HostInfoObj(coshsh.item.Item):
     id = 120
     template_rules = [
         TemplateRule(
-            template="HostSNMPTrapinfo",
+            template="Hostinfo",
             self_name="info",
             suffix="pm"),
     ]
@@ -71,6 +71,7 @@ class SNMPTT(coshsh.datasource.Datasource):
         super(self.__class__, self).__init__(**kwargs)
         self.name = kwargs["name"]
         self.dir = kwargs["dir"]
+        self.trapdest = kwargs.get("trapdest", "trapdest")
         self.objects = {}
 
     def open(self):
@@ -82,8 +83,14 @@ class SNMPTT(coshsh.datasource.Datasource):
     def read(self, filter=None, objects={}, force=False, **kwargs):
         pp = pprint.PrettyPrinter(indent=4)
         self.objects = objects
+        if filter:
+            for f in [filt.strip() for filt in filter.split(',')]:
+                if f.startswith('trapdest='):
+                    self.trapdest = f.replace("trapdest=", "")
 
         mib_traps = {}
+        # empty_mibs lists snmptt files without trap definitions
+        empty_mibs = []
         snmpttfiles = [f for f in listdir(self.dir) if isfile(join(self.dir, f)) and f.endswith('.snmptt')]
         eventname_pat = re.compile(r'^EVENT (.*) ([\.\d]+) .*?([\-\w]+)$')
         eventtext_pat = re.compile(r'^FORMAT (.*)')
@@ -181,10 +188,13 @@ class SNMPTT(coshsh.datasource.Datasource):
                             'match': last_match,
                             'nagioslevel': last_nagios,
                         }]
+            try:
+                logger.debug('mib %s counts %d traps' % (mib, len(mib_traps[mib])))
+            except Exception, e:
+                logger.debug('mib %s counts 0 traps' % mib)
+                empty_mibs.append(mib)
 
         for mib in mib_traps:
-            if "CLAR" in mib:
-                pp.pprint(mib_traps[mib])
             m = MIB(mib=mib, miblabel=mib.replace('-', ''), events=[])
             unique_names = {}
             for event in mib_traps[mib]:
@@ -242,6 +252,13 @@ class SNMPTT(coshsh.datasource.Datasource):
             # dazu fuehrt, dass in wemustrepeat noch eine Mib an implements_mibs angehaengt wird
             application.resolve_monitoring_details()
             if hasattr(application, 'implements_mibs'):
+                logger.debug("app %s implements %s" % (application.fingerprint(), application.implements_mibs))
+                # list of mibs where aliases (the real filenames)
+                # have precedence over the symbolic mib names
+                application_mib_files = [m.split(':')[1] if ':' in m else m for m in application.implements_mibs]
+                application_mib_unknown = [m for m in application_mib_files if m not in mib_traps and m not in empty_mibs]
+                #if application_mib_unknown:
+                #    logger.error('application %s implements unknown mibs %s' % (application.fingerprint(), ', '.join(application_mib_unknown)))
                 trap_events = {}
                 unalias_mib = {}
 
@@ -282,21 +299,21 @@ class SNMPTT(coshsh.datasource.Datasource):
         # An diesem Host werden die scan-Services fuer
         # var/log/snmp/traps.log festgemacht.
         trapdest = Host({
-            'host_name': 'trapdest',
+            'host_name': self.trapdest,
             'address': '127.0.0.1',
         })
         self.add('hosts', trapdest)
         trapdest.templates.append('generic-host')
         # Die Applikation snmptrapdlog bekommt einen Service pro Mib.
         snmptrapdlog = Application({
-            'host_name': 'trapdest',
+            'host_name': self.trapdest,
             'name': 'snmptrapdlog',
             'type': 'snmptrapdlog',
         })
         self.add('applications', snmptrapdlog)
         snmptrapdlog.monitoring_details.append(
             MonitoringDetail({
-                'host_name': 'trapdest',
+                'host_name': self.trapdest,
                 'name': 'snmptrapdlog',
                 'type': 'snmptrapdlog',
                 'monitoring_type': 'KEYVALUES',
