@@ -105,6 +105,9 @@ my $urls = [
 		like => [
 			'/Service details omd-check_multi.*disk_root/',
 		],
+		skip_link_check => [
+			'\/testsite\/thruk\/cgi-bin\/avail.cgi\?show_log_entries=&host=omd-check_multi&service=disk_root',
+		],
 	},
 #	{
 #		url => "/nagios/cgi-bin/extinfo.cgi?type=2&host=$host&service=statusdat",
