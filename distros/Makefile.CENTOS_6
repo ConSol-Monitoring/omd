@@ -48,6 +48,7 @@ BUILD_PACKAGES   += perl-Time-HiRes
 BUILD_PACKAGES   += rsync
 BUILD_PACKAGES   += freeradius-devel
 BUILD_PACKAGES   += groff                  # Is needed by rrdtool docs
+BUILD_PACKAGES   += libstdc++-static
 OS_PACKAGES       =
 OS_PACKAGES      += time # needed for mk-job
 OS_PACKAGES      += traceroute # needed for Check_MK parent scan
