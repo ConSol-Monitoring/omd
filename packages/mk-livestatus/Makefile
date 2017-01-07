@@ -7,7 +7,10 @@ DIR = $(NAME)-$(VERSION)
 CONFIGUREOPTS = \
     --prefix=$(OMD_ROOT)
 
-ifneq (,$(findstring SLES 11SP,$(DISTRO_INFO)))
+ifneq (,$(findstring SLES 11SP4,$(DISTRO_INFO)))
+export CC := gcc-4.8
+export CXX := g++-4.8
+else ifneq (,$(findstring SLES 11SP,$(DISTRO_INFO)))
 export CC := gcc-4.7
 export CXX := g++-4.7
 endif
