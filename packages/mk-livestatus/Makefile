@@ -23,6 +23,20 @@ export PATH := $(TMPGCC)/bin/:$(PATH)
 export LD_LIBRARY_PATH := $(TMPGCC)/lib64:$(LD_LIBRARY_PATH)
 EXTRA_BUILD_DEPS=build_env_for_centos6
 .PHONY: build_env_for_centos6_gmp build_env_for_centos6_mpfr build_env_for_centos6_mpc build_env_for_centos6_gcc build_env_for_centos6
+else ifneq (,$(findstring FEDORA 23,$(DISTRO_INFO)))
+$(info compile with gcc 4.7.2 from source)
+TMPGCC = /tmp/gcc
+export PATH := $(TMPGCC)/bin/:$(PATH)
+export LD_LIBRARY_PATH := $(TMPGCC)/lib64:$(LD_LIBRARY_PATH)
+EXTRA_BUILD_DEPS=build_env_for_centos6
+.PHONY: build_env_for_centos6_gmp build_env_for_centos6_mpfr build_env_for_centos6_mpc build_env_for_centos6_gcc build_env_for_centos6
+else ifneq (,$(findstring FEDORA 24,$(DISTRO_INFO)))
+$(info compile with gcc 4.7.2 from source)
+TMPGCC = /tmp/gcc
+export PATH := $(TMPGCC)/bin/:$(PATH)
+export LD_LIBRARY_PATH := $(TMPGCC)/lib64:$(LD_LIBRARY_PATH)
+EXTRA_BUILD_DEPS=build_env_for_centos6
+.PHONY: build_env_for_centos6_gmp build_env_for_centos6_mpfr build_env_for_centos6_mpc build_env_for_centos6_gcc build_env_for_centos6
 endif
 
 build: $(EXTRA_BUILD_DEPS)
