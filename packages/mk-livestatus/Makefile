@@ -7,13 +7,17 @@ DIR = $(NAME)-$(VERSION)
 CONFIGUREOPTS = \
     --prefix=$(OMD_ROOT)
 
+$(info checking special compile settings for distro $(DISTRO_INFO))
 ifneq (,$(findstring SLES 11SP4,$(DISTRO_INFO)))
+$(info compile with gcc 4.8)
 export CC := gcc-4.8
 export CXX := g++-4.8
 else ifneq (,$(findstring SLES 11SP,$(DISTRO_INFO)))
+$(info compile with gcc 4.7)
 export CC := gcc-4.7
 export CXX := g++-4.7
 else ifneq (,$(findstring CENTOS 6,$(DISTRO_INFO)))
+$(info compile with gcc 4.7.2 from source)
 TMPGCC = /tmp/gcc
 export PATH := $(TMPGCC)/bin/:$(PATH)
 export LD_LIBRARY_PATH := $(TMPGCC)/lib64:$(LD_LIBRARY_PATH)
