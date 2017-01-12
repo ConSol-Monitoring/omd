@@ -34,7 +34,14 @@
 [Influx]
 	Enabled = true
 	Version = 0.10
+	##############
+	# The address is controlled by omd itself. Do not change it here.
+	# Instead use 'omd config INFLUXDB_HTTP_TCP_PORT set <port>'
+	#
 	Address = "http://127.0.0.1:8086"
+	#
+	# also keep this comments to reduce the merge conflicts during updates
+	##############
 	Arguments = "precision=ms&db=nagflux&u=omdadmin&p=omd"
 	CreateDatabaseIfNotExists = true
 	# Replace '\ ' because the InfluxDB has still a problem with theses characters to parse: https://github.com/influxdata/influxdb/issues/4865

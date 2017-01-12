@@ -28,8 +28,8 @@ case "$1" in
         if [ "$PORT" != "$2" ] ; then
             echo "Prometheus port $2 is in use. I've choosen $PORT instead." >&2
             echo "$PORT"
+            touch $OMD_ROOT/prometheusportupdated
         fi
-        touch $OMD_ROOT/prometheusportupdated
         cat <<EOF > $OMD_ROOT/etc/prometheus/apache.conf
 # This file is managed by 'omd config set PROMETHEUS_TCP_ADDR/PROMETHEUS_TCP_PORT'.
 # Better do not edit manually
