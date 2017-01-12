@@ -1,8 +1,8 @@
 include ../../Makefile.omd
 
 NAME = icinga
-VERSION = 1.13.3
-DIR = $(NAME)-$(VERSION)
+VERSION = 1.14.0
+DIR = icinga-core-$(VERSION)
 
 # Configure options for Icinga. Since we want to compile
 # as non-root, we use our own user and group for compiling.
@@ -22,7 +22,7 @@ CONFIGUREOPTS = \
     --enable-idoutils=no \
 
 build:
-	tar xzf $(DIR).tar.gz
+	tar xzf v$(VERSION).tar.gz
 
 	set -e ; for p in patches/*.dif ; do \
 	        echo "applying $$p..." ; \
