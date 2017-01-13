@@ -18,6 +18,7 @@ BUILD_PACKAGES += libevent-dev
 BUILD_PACKAGES += libgd2-xpm-dev
 BUILD_PACKAGES += libglib2.0-dev
 BUILD_PACKAGES += libgnutls-dev
+BUILD_PACKAGES += libdbi-dev
 BUILD_PACKAGES += libicu-dev
 BUILD_PACKAGES += libldap2-dev
 BUILD_PACKAGES += libltdl-dev
