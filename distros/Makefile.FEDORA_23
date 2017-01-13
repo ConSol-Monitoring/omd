@@ -16,6 +16,7 @@ BUILD_PACKAGES   += help2man    # required by naemon
 BUILD_PACKAGES   += libevent-devel         # RHEL Server Optional
 BUILD_PACKAGES   += libtool-ltdl-devel     # RHEL Server Optional 
 BUILD_PACKAGES   += libtool-ltdl           # needed by libtool-ltdl-devel
+BUILD_PACKAGES   += libstdc++-static       # required by mk-livestatus
 BUILD_PACKAGES   += gd-devel               # RHEL Server Optional
 BUILD_PACKAGES   += libXpm-devel           # needed by gd-devel
 BUILD_PACKAGES   += libjpeg-devel          # needed by gd-devel
