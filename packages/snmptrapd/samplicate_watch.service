@@ -1,0 +1,13 @@
+[Unit]
+Description=Watch the OMD sites for changing SNMPTRAPD settings
+# writes /tmp/samplicate_targets.env
+
+[Service]
+#Type=oneshot
+ExecStart=/opt/omd/versions/default/bin/samplicate_watch start
+ExecStop=/opt/omd/versions/default/bin/samplicate_watch stop
+
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

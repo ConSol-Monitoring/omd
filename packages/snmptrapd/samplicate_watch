@@ -1,0 +1,45 @@
+#! /bin/bash
+
+start() {
+  logger starting samplicate_watch
+  inventory
+  while [ 1 ]; do
+    sleep 60
+    inventory
+  done
+}
+
+inventory() {
+  PORTS=""
+  ACTIVE_PORTS=$(ps -ef | grep /opt/omd/versions/default/bin/samplicate | grep samplicate.pid | sed -e 's/.*-f //g')
+  if [ -x /usr/bin/omd ]; then
+    for site in $(omd sites | awk '$1 != "SITE" { print $1 }'); do
+      if [ "$(omd config $site show SNMPTRAPD)" == "on" ]; then
+        PORTS="$PORTS 127.0.0.1/$(omd config $site show SNMPTRAPD_UDP_PORT)"
+      fi
+    done
+    if [ -z "$PORTS" ]; then
+      logger samplicate_watch stops samplicate
+      service samplicate stop
+    elif [ "$PORTS" != " $ACTIVE_PORTS" ]; then
+      logger samplicate_watch restarts samplicate $(printf "PP(%s)" "$PORTS")
+      logger samplicate_watch restarts samplicate $(printf "AP(%s)" "$ACTIVE_PORTS")
+      printf "SAMPLICATE_TARGETS=\"%s\"\n" "$PORTS" > /tmp/samplicate_targets.env
+      service samplicate restart
+      rm /tmp/samplicate_targets.env
+    else
+      logger samplicate_watch ignores samplicate
+    fi
+  fi
+}
+
+stop() {
+  # endless loop. we will never stop
+  logger stopping samplicate_watch
+}
+
+
+case $1 in
+  start|stop) "$1" ;;
+esac
+

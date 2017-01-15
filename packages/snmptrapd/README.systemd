@@ -1,0 +1,4 @@
+systemctl enable samplicate
+systemctl restart samplicate
+systemctl enable samplicate_watch
+systemctl restart samplicate_watch
