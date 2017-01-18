@@ -107,12 +107,14 @@ then
     a2enflag SSL 2>/dev/null || true
     # prepare ssl webserver
     serverkey=/etc/apache2/ssl.key/server.key
-    if ! test -f /etc/apache2/vhosts.d/vhost-ssl.conf && ! test -f /etc/apache2/vhosts.d/vhost-ssl-omd.conf && ( ! test -f $serverkey || grep -q 'THIS FILE HAS TO BE REPLACED' $serverkey ) ; then
+    if ! test -f /etc/apache2/vhosts.d/vhost-ssl.conf && ! test -f /etc/apache2/vhosts.d/vhost-ssl-omd.conf; then
         cp /etc/apache2/vhosts.d/vhost-ssl.template /etc/apache2/vhosts.d/vhost-ssl-omd.conf
+        sed -i -e 's|vhost-example.crt|server.crt|g' -e 's|vhost-example.key|server.key|g' /etc/apache2/vhosts.d/vhost-ssl-omd.conf
+    fi
+    if ! test -f $serverkey || grep -q 'THIS FILE HAS TO BE REPLACED' $serverkey; then
         openssl req -new -config /omd/versions/%{version}/share/omd/openssl.cnf -keyout /etc/apache2/privkey.pem -batch > /etc/apache2/ssl.csr/omd.csr 2>/dev/null
         openssl rsa -in /etc/apache2/privkey.pem -out $serverkey -passin pass:selfsigned 2> /dev/null
         openssl x509 -in /etc/apache2/ssl.csr/omd.csr -out /etc/apache2/ssl.crt/server.crt -req -signkey $serverkey -days 3650 2> /dev/null
-        sed -i -e 's|vhost-example.crt|server.crt|g' -e 's|vhost-example.key|server.key|g' /etc/apache2/vhosts.d/vhost-ssl-omd.conf
     fi
 %endif
 fi

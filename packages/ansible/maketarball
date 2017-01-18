@@ -18,7 +18,7 @@ if [ ! -e "ansible-${version}" ] ; then
     (
         cd "ansible-${version}"
         git checkout -b "b$version" "$tag"
-        git submodule update --recursive
+        git submodule update --init --recursive
     )
 fi
 
