@@ -13,7 +13,12 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 212 );
+chomp(my $os = qx(./distro));
+
+#plan( tests => 212 );
+plan( skip_all => "this distribution does not run with systemd" ) if ! -x "/bin/systemctl";
+my $snmptrap = -x "/bin/snmptrap" ? "/bin/snmptrap" : -x "/usr/bin/snmptrap" ? "/usr/bin/snmptrap" : undef;
+plan( skip_all => "this server cannot send traps" ) if ! defined $snmptrap;
 
 ##################################################
 # create our test sites
@@ -29,8 +34,8 @@ TestUtils::test_command({ cmd => "/bin/cp /opt/omd/versions/default/share/sampli
 TestUtils::test_command({ cmd => "/bin/sed -ri 's/60/10/g' /opt/omd/versions/default/bin/samplicate_watch" });
 
 # register the services
-TestUtils::test_command({ cmd => "$systemctl enable samplicate_watch", errlike => '/Created/' });
-TestUtils::test_command({ cmd => "$systemctl enable samplicate", errlike => '/Created/' });
+TestUtils::test_command({ cmd => "$systemctl enable samplicate_watch", errlike => $os =~ /SLES 12/ ? undef : '/Created/' });
+TestUtils::test_command({ cmd => "$systemctl enable samplicate", errlike => $os =~ /SLES 12/ ? undef : '/Created/' });
 TestUtils::test_command({ cmd => "$systemctl status samplicate_watch", like => '/inactive/', exit => 3 });
 
 # start the watchdog service
@@ -78,10 +83,10 @@ TestUtils::test_command({ cmd => '/bin/ps -ef | grep samplicate', like => '/samp
 
 
 # predefined communities are sitename & public
-TestUtils::test_command({ cmd => "/bin/snmptrap -v 2c -c $site1 127.0.0.1 '' 1.3.6.1.4.1.8072.2.3.0.1 1.3.6.1.4.1.8072.2.3.2.1 i 11111" });
-TestUtils::test_command({ cmd => "/bin/snmptrap -v 2c -c $site2 127.0.0.1 '' 1.3.6.1.4.1.8072.2.3.0.1 1.3.6.1.4.1.8072.2.3.2.1 i 22222" });
-TestUtils::test_command({ cmd => "/bin/snmptrap -v 2c -c public 127.0.0.1 '' 1.3.6.1.4.1.8072.2.3.0.1 1.3.6.1.4.1.8072.2.3.2.1 i 33333" });
-TestUtils::test_command({ cmd => "/bin/snmptrap -v 2c -c gsjcuh 127.0.0.1 '' 1.3.6.1.4.1.8072.2.3.0.1 1.3.6.1.4.1.8072.2.3.2.1 i 44444" });
+TestUtils::test_command({ cmd => "$snmptrap -v 2c -c $site1 127.0.0.1 '' 1.3.6.1.4.1.8072.2.3.0.1 1.3.6.1.4.1.8072.2.3.2.1 i 11111" });
+TestUtils::test_command({ cmd => "$snmptrap -v 2c -c $site2 127.0.0.1 '' 1.3.6.1.4.1.8072.2.3.0.1 1.3.6.1.4.1.8072.2.3.2.1 i 22222" });
+TestUtils::test_command({ cmd => "$snmptrap -v 2c -c public 127.0.0.1 '' 1.3.6.1.4.1.8072.2.3.0.1 1.3.6.1.4.1.8072.2.3.2.1 i 33333" });
+TestUtils::test_command({ cmd => "$snmptrap -v 2c -c gsjcuh 127.0.0.1 '' 1.3.6.1.4.1.8072.2.3.0.1 1.3.6.1.4.1.8072.2.3.2.1 i 44444" });
 
 TestUtils::test_command({ cmd => "/bin/grep 11111 /omd/sites/$site1/var/log/snmp/traps.log", like => '/____.1.3.6.1.4.1.8072.2.3.2.1 11111/', exit => undef });
 TestUtils::test_command({ cmd => "/bin/grep 11111 /omd/sites/$site2/var/log/snmp/traps.log", unlike => '/____.1.3.6.1.4.1.8072.2.3.2.1 11111/', exit => undef });
@@ -122,8 +127,8 @@ TestUtils::remove_test_site($site2);
 #
 TestUtils::test_command({ cmd => "$systemctl stop samplicate_watch" });
 TestUtils::test_command({ cmd => "$systemctl stop samplicate" });
-TestUtils::test_command({ cmd => "$systemctl disable samplicate_watch", errlike => '/Removed/' });
-TestUtils::test_command({ cmd => "$systemctl disable samplicate", errlike => '/Removed/' });
+TestUtils::test_command({ cmd => "$systemctl disable samplicate_watch", errlike => $os =~ /SLES 12/ ? undef : '/Removed/' });
+TestUtils::test_command({ cmd => "$systemctl disable samplicate", errlike => $os =~ /SLES 12/ ? undef : '/Removed/' });
 TestUtils::test_command({ cmd => "/bin/rm -f /etc/systemd/system/samplicate_watch.service" });
 TestUtils::test_command({ cmd => "/bin/rm -f /etc/systemd/system/samplicate.service" });
 
