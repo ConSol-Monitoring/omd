@@ -132,3 +132,4 @@ TestUtils::test_command({ cmd => "$systemctl disable samplicate", errlike => $os
 TestUtils::test_command({ cmd => "/bin/rm -f /etc/systemd/system/samplicate_watch.service" });
 TestUtils::test_command({ cmd => "/bin/rm -f /etc/systemd/system/samplicate.service" });
 
+done_testing();
