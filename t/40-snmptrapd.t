@@ -19,6 +19,8 @@ chomp(my $os = qx(./distro));
 plan( skip_all => "this distribution does not run with systemd" ) if ! -x "/bin/systemctl";
 my $snmptrap = -x "/bin/snmptrap" ? "/bin/snmptrap" : -x "/usr/bin/snmptrap" ? "/usr/bin/snmptrap" : undef;
 plan( skip_all => "this server cannot send traps" ) if ! defined $snmptrap;
+my $snmptrapd = -x "/usr/sbin/snmptrapd" ? "/usr/sbin/snmptrapd" : -x "/usr/bin/snmptrapd" ? "/usr/bin/snmptrapd" : undef;
+plan( skip_all => "this server cannot receive traps" ) if ! defined $snmptrapd;
 
 ##################################################
 # create our test sites

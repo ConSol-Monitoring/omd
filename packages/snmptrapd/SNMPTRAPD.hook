@@ -14,5 +14,13 @@ case "$1" in
         echo "off: disable snmptrapd"
     ;;
     set)
+        if [ "$2" == "on" ] && ! test -x /usr/sbin/snmptrapd; then
+            echo Could not find a snmptrapd binary. Please install the package >&2
+            echo off
+        elif [ "$2" == "on" ]; then
+            echo on
+        else
+            echo off
+        fi
     ;;
 esac
