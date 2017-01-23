@@ -24,6 +24,7 @@ MODULES = \
           DBD-Sybase-1.15.tar.gz \
           Data-Dumper-2.154.tar.gz \
           Digest-1.17.tar.gz \
+	  Digest-HMAC-1.03.tar.gz \
           Digest-MD5-2.54.tar.gz \
           Digest-Perl-MD5-1.9.tar.gz \
           Digest-SHA1-2.13.tar.gz \
