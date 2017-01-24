@@ -1,7 +1,8 @@
 This file documents the revision history for the Open Monitoring Distribution (Labs Edition)
 
 next:
-          - Thruk: Update to 2.12-2
+          - Thruk: update to 2.12-2
+          - Naemon update to 1.0.6
           - histou: update 0.4.1
           - nagflux: update 0.3.0
           - coshsh: update 3.2.4.3
@@ -36,7 +37,7 @@ next:
           - added Livestatus Multitool Daemon (LMD) 1.0.2
           - Thruk: Update to 2.12
           - Mod-Gearman: Update 3.0.0
-          - Naemon update to 1.0.6
+          - Naemon update to 1.0.5
 
 2.10     Nov 12 2015
           - Icinga update to 2.3.11
