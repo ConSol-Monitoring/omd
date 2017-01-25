@@ -1,6 +1,6 @@
 include ../../Makefile.omd
 
-BLACKBOX=blackbox_exporter-0.2.0
+BLACKBOX=blackbox_exporter-0.4.0
 
 .PHONY: skel
 
