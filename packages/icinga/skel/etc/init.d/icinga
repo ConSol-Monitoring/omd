@@ -5,8 +5,8 @@
 
 ### BEGIN INIT INFO
 # Provides:       icinga
-# Required-Start: 
-# Required-Stop:  
+# Required-Start:
+# Required-Stop:
 # Default-Start:  2 3 5
 # Default-Stop:
 # Description:    Icinga network monitoring daemon
@@ -54,7 +54,9 @@ case "$1" in start|restart|reload|checkconfig|check)
     merge-icinga-config \
        ###ROOT###/etc/icinga/icinga.d/*.cfg \
        ###ROOT###/etc/icinga/icinga.cfg \
-       > $CFG_FILE || rm -f $CFG_FILE 
+       > $CFG_FILE || rm -f $CFG_FILE
+       rm -f $OMD_ROOT/tmp/nagios/nagios.cfg
+       ln -sfn $CFG_FILE $OMD_ROOT/tmp/nagios/nagios.cfg
     if [ $? -ne 0 ]; then exit 1; fi
 esac
 

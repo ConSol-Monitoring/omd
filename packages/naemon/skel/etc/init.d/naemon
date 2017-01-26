@@ -66,6 +66,8 @@ case "$1" in start|restart|reload|checkconfig|check)
        ###ROOT###/etc/naemon/naemon.d/*.cfg \
        ###ROOT###/etc/naemon/naemon.cfg \
        > $CFG_FILE || rm -f $CFG_FILE
+       rm -f $OMD_ROOT/tmp/nagios/nagios.cfg
+       ln -sfn $CFG_FILE $OMD_ROOT/tmp/nagios/nagios.cfg
 esac
 
 OPTIONS="-ud"

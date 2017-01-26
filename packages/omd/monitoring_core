@@ -1,0 +1,14 @@
+#!/bin/bash
+
+. ~/etc/omd/site.conf
+
+if [ \
+     "$CONFIG_CORE" = "nagios" \
+  -o "$CONFIG_CORE" = "icinga" \
+  -o "$CONFIG_CORE" = "naemon" \
+]; then
+  exec ~/bin/$CONFIG_CORE "$@"
+fi
+
+echo "unknown core: $CONFIG_CORE"
+exit 3
