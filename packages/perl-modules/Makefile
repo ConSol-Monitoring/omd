@@ -17,12 +17,14 @@ MODULES = \
           Compress-Raw-Zlib-2.068.tar.gz \
           Config-General-2.56.tar.gz \
           Crypt-Blowfish_PP-1.12.tar.gz \
+          Crypt-DES-2.07.tar.gz \
           Crypt-RC4-2.02.tar.gz \
           Crypt-Rijndael-1.12.tar.gz \
           DBI-1.633.tar.gz \
           DBD-Sybase-1.15.tar.gz \
           Data-Dumper-2.154.tar.gz \
           Digest-1.17.tar.gz \
+	  Digest-HMAC-1.03.tar.gz \
           Digest-MD5-2.54.tar.gz \
           Digest-Perl-MD5-1.9.tar.gz \
           Digest-SHA1-2.13.tar.gz \
