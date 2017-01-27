@@ -7,6 +7,7 @@ use File::Temp qw/tempfile/;
 use File::Copy qw/move/;
 use XML::LibXML;
 use Term::ReadKey;
+use Parallel::ForkManager;
 
 if($ARGV[0] && ($ARGV[0] eq '-h' || $ARGV[0] eq '--help')) {
     print STDERR "usage: $0 [<pnp xml files>]";
@@ -49,9 +50,12 @@ ReadKey(0);
 ReadMode('normal');
 print "\n\n";
 
+my $pm = Parallel::ForkManager->new(30);
 my $x = 0;
+DATA:
 for my $xml_file (@xml_files) {
     $x++;
+    $pm->start and next DATA;
     printf(STDERR "%02i/%02i exporting from %s\n", $x, $num, $xml_file);
     if(!-s $xml_file) {
         print STDERR "  -> skipped, file does not exist or is empty\n";
@@ -141,5 +145,6 @@ for my $xml_file (@xml_files) {
     }
     close($fh);
     move($filename, $nagflux_spool.'/service-perfdata'.$x.time());
+    $pm->finish;
 }
 print STDERR "\n\nfinished\n";
