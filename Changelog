@@ -8,7 +8,8 @@ next:
           - Monitoring-Plugins: update to 2.2
           - Icinga2 update to 2.5.4
           - Icinga1 update to 1.14.0
-          - Grafana update to 4.0.2
+          - Grafana update to 4.1.1
+          - InfluxDb update to 1.2.0
           - apply fixes for CVE-2016-9566 in nagios3, icinga1 and naemon
 
 2.20     Nov 18 2016
