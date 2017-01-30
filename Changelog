@@ -2,7 +2,7 @@ This file documents the revision history for the Open Monitoring Distribution (L
 
 next:
           - Thruk: Update to 2.12-2
-          - histou: update 0.4.0
+          - histou: update 0.4.1
           - nagflux: update 0.3.0
           - coshsh: update 3.2.4.3
           - Monitoring-Plugins: update to 2.2
