@@ -155,6 +155,8 @@ fi
 
 
 %postun
+# sles12 sometimes does not remove some empty folders
+rm -rf /omd/versions/%{version}
 rm -f /omd/versions/default
 v=$(ls -A /omd/versions 2>/dev/null| sort -n | tail -n 1)
 if [ -n "$v" ]
