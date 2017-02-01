@@ -1,0 +1,179 @@
+#! /bin/bash
+
+#. $OMD_ROOT/.${OMD_LANDSCAPE}_profile
+OMD_LANDSCAPE=${OMD_LANDSCAPE:=${OMD_SITE}}
+OMD_GIT_BASE=${OMD_GIT_BASE:=${OMD_ROOT}/var/coshsh/configs}
+OMD_GIT_BASE_STATIC=${OMD_GIT_BASE_STATIC:=${OMD_GIT_BASE}/${OMD_LANDSCAPE}}
+OMD_GIT_BASE_DYNAMIC=${OMD_GIT_BASE_DYNAMIC:=${OMD_GIT_BASE}/${OMD_SITE}}
+
+# OMD_GIT_BASE ${OMD_ROOT}/var/coshsh/configs
+# OMD_GIT_BASE ${GIT_SERVER}:var/coshsh/configs
+# OMD_GIT_BASE ssh://${GIT_SERVER}/opt/omd/sites/xxxx/var/coshsh/configs
+# OMD_GIT_BASE https://${GIT_SERVER}/var/coshsh/configs
+
+CORE=$(omd config show CORE)
+if [ "$CORE" == "none" ];
+  echo this script is not intended to run with core $CORE
+  exit 1
+fi
+
+function logger {
+  level=$1
+  shift
+  msg=$*
+  logfile=${LOGFILE:-/tmp/log.log}
+  printf "%s %s: %s\n" "$(date +"%Y-%m-%d %H:%M:%S")" "$level" "$msg" >> $logfile
+}
+
+function logger_info {
+  logger INFO "$@"
+}
+
+function logger_error {
+  logger ERROR "$@"
+}
+
+function rotatelog {
+  maxmb=$1
+  filename=$2
+  if [ -f $filename ]; then
+    if [ $(stat --print "%s" $filename) -gt $(($maxmb * 1024 * 1024)) ]; then
+      mv $filename ${filename}.0
+      touch $filename
+    fi
+  fi
+}
+
+function set_lock {
+  lockfile=$1
+  mkdir -p $(dirname $lockfile)
+  if [ -f "$lockfile" ]; then
+    pid=$(<"$lockfile")
+    if kill -0 "$pid"; then
+      : "running normally"
+      logger_info "already running"
+      exit 0
+    else
+      : "terminated somehow"
+      rm -f "$lockfile"
+    fi
+  fi
+  echo $$ > $lockfile
+}
+
+function release_lock {
+  lockfile=$1
+  rm -f $lockfile
+}
+
+function remove_git_index_lock() {
+  dir=$1
+  cd $dir
+  if [ -f .git/index.lock ]; then
+    if git pull 2>&1 | grep -q "fatal: unable to create '.git/index.lock': File exists"; then
+      if lsof -V .git/index.lock | grep -q "no file use located"; then
+        rm -f .git/index.lock
+        logger_info removed a leftover .git/index.lock in $dir
+      fi
+    fi
+  fi
+}
+
+LOCKFILE="${OMD_ROOT}/tmp/run/check_git_updates.lock"
+LOGFILE=${OMD_ROOT}/var/log/check_git_updates.log
+
+rotatelog 20 $LOGFILE
+
+/usr/bin/tty -s
+if [ $? -eq 1 ]; then
+  # randomize, otherwise apache has peaks
+  sleep $((15 + $RANDOM / 3200))
+fi
+
+set_lock $LOCKFILE
+
+# use https, but allow self-signed certificates
+export GIT_SSL_NO_VERIFY=1
+
+
+test -d ${OMD_ROOT}/etc/${CORE}/conf.d/${OMD_LANDSCAPE}/${OMD_SITE} || mkdir -p ${OMD_ROOT}/etc/nagios/conf.d/${OMD_LANDSCAPE}/${OMD_SITE}
+if [ -d ${OMD_ROOT}/etc/${CORE}/conf.d/${OMD_LANDSCAPE}/${OMD_SITE}/static ]; then
+  pushd ${OMD_ROOT}/etc/${CORE}/conf.d/${OMD_LANDSCAPE}/${OMD_SITE}/static
+  git reset --hard
+  OLDSTATICREV=$(git rev-list --max-count=1 master)
+  git pull
+  gitexit=$?
+  NEWSTATICREV=$(git rev-list --max-count=1 master)
+  remove_git_index_lock $(pwd)
+  popd
+else
+  pushd ${OMD_ROOT}/etc/${CORE}/conf.d/${OMD_LANDSCAPE}/${OMD_SITE}
+  OLDSTATICREV=""
+  git clone ${OMD_GIT_BASE_STATIC}/static
+  gitexit=$?
+  cd static
+  NEWSTATICREV=$(git rev-list --max-count=1 master)
+  popd
+  MUSTRELOAD=1
+fi
+if [ -d ${OMD_ROOT}/etc/${CORE}/conf.d/${OMD_LANDSCAPE}/${OMD_SITE}/dynamic ]; then
+  pushd ${OMD_ROOT}/etc/${CORE}/conf.d/${OMD_LANDSCAPE}/${OMD_SITE}/dynamic
+  git reset --hard
+  OLDDYNAMICREV=$(git rev-list --max-count=1 master)
+  git pull
+  gitexit=$?
+  NEWDYNAMICREV=$(git rev-list --max-count=1 master)
+  remove_git_index_lock $(pwd)
+  popd
+else
+  pushd ${OMD_ROOT}/etc/${CORE}/conf.d/${OMD_LANDSCAPE}/${OMD_SITE}
+  OLDDYNAMICREV=""
+  git clone ${OMD_GIT_BASE_DYNAMIC}/dynamic
+  gitexit=$?
+  cd dynamic
+  NEWDYNAMICREV=$(git rev-list --max-count=1 master)
+  popd
+fi
+test ! -d ${OMD_ROOT}/etc/${CORE}/conf.d/${OMD_LANDSCAPE}/${OMD_SITE}/custom && mkdir -p ${OMD_ROOT}/etc/${CORE}/conf.d/${OMD_LANDSCAPE}/${OMD_SITE}/custom
+
+#
+# If changes in the static/dynamic repositories are detected, then run
+# a syntax check with nagios -v.
+# On success, reload nagios.
+# Otherwise discard the changes so we always run on the last valid config.
+#
+logger_info NEWDYNAMICREV $NEWDYNAMICREV
+logger_info OLDDYNAMICREV $OLDDYNAMICREV
+logger_info NEWSTATICREV $NEWSTATICREV
+logger_info OLDSTATICREV $OLDSTATICREV
+if [ "$NEWDYNAMICREV" != "$OLDDYNAMICREV" -o "$NEWSTATICREV" != "$OLDSTATICREV" ]; then
+  pushd ${OMD_ROOT}
+  if [ ! -f tmp/${CORE}/${CORE}.cfg ]; then
+    logger_info force creation of a ${CORE}.cfg
+    omd start ${CORE}
+    omd stop ${CORE}
+  fi
+  ${OMD_ROOT}/bin/${CORE} -v tmp/${CORE}/${CORE}.cfg >> $LOGFILE 2>&1
+  if [ $? -eq 0 ]; then
+    omd reload ${CORE}
+    logger_info ${CORE} was reloaded
+  else
+    logger_error ${CORE} exitcode was $?
+    logger_error configuration did not pass the test
+    if [ -n "$OLDSTATICREV" ]; then
+      pushd ${OMD_ROOT}/etc/${CORE}/conf.d/${OMD_LANDSCAPE}/${OMD_SITE}/static
+      git reset --hard $OLDSTATICREV
+      popd
+      logger_info static config was reset to $OLDSTATICREV
+    fi
+    if [ -n "$OLDDYNAMICREV" ]; then
+      pushd ${OMD_ROOT}/etc/${CORE}/conf.d/${OMD_LANDSCAPE}/${OMD_SITE}/dynamic
+      git reset --hard $OLDDYNAMICREV
+      popd
+      logger_info dynamic config was reset to $OLDDYNAMICREV
+    fi
+  fi
+fi
+
+release_lock $LOCKFILE
+

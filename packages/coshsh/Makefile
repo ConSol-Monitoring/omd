@@ -9,6 +9,7 @@ build:
 	    python setup.py build
 
 install:
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/bin
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/python
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/coshsh
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/var/coshsh
@@ -35,6 +36,9 @@ install:
 	    $(DESTDIR)$(OMD_ROOT)/share/coshsh/recipes/default/templates
 	cp HostSNMPTrapinfo.tpl \
 	    $(DESTDIR)$(OMD_ROOT)/share/coshsh/recipes/default/templates
+	cp check_git_updates \
+	    $(DESTDIR)$(OMD_ROOT)/bin
+	chmod 755 $(DESTDIR)$(OMD_ROOT)/bin/check_git_updates
 
 skel:
 
