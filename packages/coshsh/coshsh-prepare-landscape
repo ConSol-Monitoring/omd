@@ -1,0 +1,27 @@
+#! /bin/bash
+
+OMD_LANDSCAPE=${OMD_LANDSCAPE:=${OMD_SITE}}
+OMD_GIT_BASE=${OMD_GIT_BASE:=${OMD_ROOT}/var/coshsh/configs}
+OMD_GIT_BASE_STATIC=${OMD_GIT_BASE_STATIC:=${OMD_GIT_BASE}/${OMD_LANDSCAPE}}
+OMD_GIT_BASE_DYNAMIC=${OMD_GIT_BASE_DYNAMIC:=${OMD_GIT_BASE}/${OMD_SITE}}
+
+if [ ! -d ${OMD_ROOT}/var/coshsh/configs/${OMD_LANDSCAPE}/static ]; then
+  mkdir -p ${OMD_ROOT}/var/coshsh/configs/${OMD_LANDSCAPE}/static
+fi
+if [ ! -d ${OMD_ROOT}/var/coshsh/configs/${OMD_LANDSCAPE}/static/.git ]; then
+  mkdir -p ${OMD_ROOT}/var/coshsh/configs/${OMD_LANDSCAPE}/static
+  pushd ${OMD_ROOT}/var/coshsh/configs/${OMD_LANDSCAPE}/static
+  git init .
+  printf "define service {\n  name os\n  use generic-service\n  register 0\n}\n" > os.cfg
+  printf "define service {\n  name app\n  use generic-service\n  register 0\n}\n" > app.cfg
+  git add .
+  git commit -a -m "init"
+  popd
+fi
+
+for tpl in os_linux_default os_linux_fs os_linux_hw os_windows_default os_windows_fs os_windows_hw os_windows_svc
+do
+  coshsh-create-template-tree --cookbook etc/coshsh/conf.d/${OMD_LANDSCAPE}.cfg --recipe ${OMD_LANDSCAPE} --template $tpl
+done
+
+

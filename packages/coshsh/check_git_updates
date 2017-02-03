@@ -12,7 +12,7 @@ OMD_GIT_BASE_DYNAMIC=${OMD_GIT_BASE_DYNAMIC:=${OMD_GIT_BASE}/${OMD_SITE}}
 # OMD_GIT_BASE https://${GIT_SERVER}/var/coshsh/configs
 
 CORE=$(omd config show CORE)
-if [ "$CORE" == "none" ];
+if [ "$CORE" == "none" ]; then
   echo this script is not intended to run with core $CORE
   exit 1
 fi
