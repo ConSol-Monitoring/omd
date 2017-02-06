@@ -67,7 +67,8 @@ PACKAGES=freetds \
 	 blackbox \
 	 pushgateway \
 	 dataScryer \
-	 snmptrapd
+	 snmptrapd \
+	 downtime-api
 
 include Makefile.omd
 

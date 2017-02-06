@@ -1,0 +1,37 @@
+#!/bin/bash
+
+# Alias: Downtime API
+# Menu: Addons
+# Description:
+#  Set host downtimes via unauthorized GET-requests
+
+case "$1" in
+    default)
+        echo "off"
+    ;;
+    choices)
+        echo "on: enable downtime api"
+        echo "off: disable downtime api"
+    ;;
+    set)
+       APACHE_CFG=${OMD_ROOT}/etc/apache/conf.d/downtime_api.conf
+       if [ "$2" == "off" ]
+       then
+           rm -f $APACHE_CFG
+           cat > $APACHE_CFG <<EOF
+<LocationMatch ^/${OMD_SITE}/api/downtime>
+    ErrorDocument 404 "Downtime-API is not available. Enable it with omd config set DOWNTIMEAPI on."
+    Order allow,deny
+    Allow from all
+    Satisfy any
+</LocationMatch>
+EOF
+       fi
+       if [ "$2" == "on" ]
+       then
+           rm -f $APACHE_CFG
+           ln -s $OMD_ROOT/etc/downtime-api/apache.conf \
+               $APACHE_CFG
+       fi
+    ;;
+esac
