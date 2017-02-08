@@ -68,7 +68,8 @@ PACKAGES=freetds \
 	 pushgateway \
 	 dataScryer \
 	 snmptrapd \
-	 downtime-api
+	 downtime-api \
+	 check_ssh_controlmaster
 
 include Makefile.omd
 
