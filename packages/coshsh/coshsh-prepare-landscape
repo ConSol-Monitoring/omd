@@ -5,6 +5,9 @@ OMD_GIT_BASE=${OMD_GIT_BASE:=${OMD_ROOT}/var/coshsh/configs}
 OMD_GIT_BASE_STATIC=${OMD_GIT_BASE_STATIC:=${OMD_GIT_BASE}/${OMD_LANDSCAPE}}
 OMD_GIT_BASE_DYNAMIC=${OMD_GIT_BASE_DYNAMIC:=${OMD_GIT_BASE}/${OMD_SITE}}
 
+git config --global user.name "Coshsh Config Generator"
+git config --global user.email "${OMD_SITE}@$(hostname --fqdn)"
+
 if [ ! -d ${OMD_ROOT}/var/coshsh/configs/${OMD_LANDSCAPE}/static ]; then
   mkdir -p ${OMD_ROOT}/var/coshsh/configs/${OMD_LANDSCAPE}/static
 fi
@@ -14,9 +17,32 @@ if [ ! -d ${OMD_ROOT}/var/coshsh/configs/${OMD_LANDSCAPE}/static/.git ]; then
   git init .
   printf "define service {\n  name os\n  use generic-service\n  register 0\n}\n" > os.cfg
   printf "define service {\n  name app\n  use generic-service\n  register 0\n}\n" > app.cfg
+  cp ${OMD_ROOT}/share/coshsh/contrib/consol_commands.cfg commands.cfg
   git add .
   git commit -a -m "init"
   popd
+fi
+
+if [ ! -f etc/coshsh/conf.d/${OMD_LANDSCAPE}.cfg ]; then
+  cat > etc/coshsh/conf.d/${OMD_LANDSCAPE}.cfg <<EOCFG
+#
+# Datasources
+#
+
+#
+# Recipes
+#
+[recipe_${OMD_LANDSCAPE}]
+templates_dir = %OMD_ROOT%/etc/coshsh/recipes/${OMD_LANDSCAPE}/templates
+classes_dir = %OMD_ROOT%/etc/coshsh/recipes/${OMD_LANDSCAPE}/classes
+objects_dir = %OMD_ROOT%/var/coshsh/configs/${OMD_LANDSCAPE}
+#datasources = 
+
+[recipe_${OMD_SITE}]
+isa = recipe_${OMD_LANDSCAPE}
+objects_dir = %OMD_ROOT%/var/coshsh/configs/${OMD_SITE}
+
+EOCFG
 fi
 
 for tpl in os_linux_default os_linux_fs os_linux_hw os_windows_default os_windows_fs os_windows_hw os_windows_svc

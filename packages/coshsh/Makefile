@@ -1,6 +1,6 @@
 include ../../Makefile.omd
 
-COSHSH=coshsh-3.2.7
+COSHSH=coshsh-3.3
 
 build:
 	tar xvzf $(COSHSH).tar.gz
@@ -39,6 +39,12 @@ install:
 	cp check_git_updates \
 	    $(DESTDIR)$(OMD_ROOT)/bin
 	chmod 755 $(DESTDIR)$(OMD_ROOT)/bin/check_git_updates
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/coshsh/contrib
+	cp coshsh-prepare-landscape \
+	    $(DESTDIR)$(OMD_ROOT)/share/coshsh/contrib
+	cp consol_comands.cfg \
+	    $(DESTDIR)$(OMD_ROOT)/share/coshsh/contrib
+
 
 skel:
 
