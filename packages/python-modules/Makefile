@@ -22,6 +22,7 @@ MODULES += pymongo-2.5.2.tar.gz
 
 MODULES += texttable-0.8.7.tar.gz
 MODULES += ordereddict-1.1.tar.gz
+MODULES += weakrefset-1.0.0.tar.gz
 MODULES += pyexcel-io-0.3.2.tar.gz
 MODULES += pyexcel-0.4.3.tar.gz
 MODULES += odfpy-1.3.4.tar.gz
