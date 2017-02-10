@@ -1,0 +1,358 @@
+#! /bin/sh
+
+REMUSER=
+REMPORT=22
+REMHOST=
+REMPING=
+CMDIR=
+EXTIPHOST=
+SVCPERCM=5
+NUMSERVICES=
+mustrestart="n"
+MESSAGE=""
+NOW=$(date +'%s')
+if [ -x "/usr/bin/nc" ]; then
+  NC="/usr/bin/nc"
+else
+  NC="/usr/bin/netcat"
+fi
+CORE=127.0.0.1
+LSPORT=6557
+. $OMD_ROOT/etc/omd/site.conf
+
+# -l ${REMUSER} -H hostname/address -p 22
+# ->
+
+while getopts "l:H:p:c:m:s:Px" opt; do
+    case $opt in 
+    l)
+        REMUSER=$OPTARG
+        ;;
+    H)
+        REMHOST=$OPTARG
+        ;;
+    p)
+        REMPORT=$OPTARG
+        ;;
+    P)
+        REMPING="yes"
+        ;;
+    c)
+        CMDIR=$OPTARG
+        ;;
+    m)
+        SVCPERCM=$OPTARG
+        ;;
+    s)
+        NUMSERVICES=$OPTARG
+        ;;
+    x)
+        EXTIPHOST="yes"
+        # if set, then REMHOST is expected to be a ${HOSTADDR}_${HOSTNAME} combination
+        ;;
+    :)
+        echo "argment required"
+        exit 3
+        ;;
+    esac
+done
+
+if [ -z $REMHOST -a -z $REMUSER ]; then
+    echo "usage:"
+    exit 3
+fi
+if [ -n "$EXTIPHOST" ]; then
+    IFS='_' read REMHOSTADDR REMHOSTNAME <<< "$REMHOST"
+else
+    REMHOSTADDR=$REMHOST
+    REMHOSTNAME=$REMHOST
+fi
+
+CMOPTS="-o ControlMaster=yes \
+        -o UserKnownHostsFile=${CMDIR}/known_hosts \
+        -o IdentityFile=${HOME}/.ssh/id_rsa\
+        -o IdentitiesOnly=yes \
+        -o StrictHostKeyChecking=no \
+        -o PreferredAuthentications=publickey \
+        -o PasswordAuthentication=no"
+
+CMCOPTS="-o ControlMaster=no \
+        -o UserKnownHostsFile=${CMDIR}/known_hosts \
+        -o IdentityFile=${HOME}/.ssh/id_rsa\
+        -o IdentitiesOnly=yes \
+        -o StrictHostKeyChecking=no \
+        -o PreferredAuthentications=publickey \
+        -o PasswordAuthentication=no"
+
+
+CONTROLPATH=${CMDIR}/controlpath/ssh-${REMUSER}@${REMHOST}
+
+#
+# check basic reachability
+#
+if [ -n "$REMPING" ]; then
+  pingout=$($OMD_ROOT/lib/nagios/plugins/check_host $REMHOSTADDR > /dev/null 2>&1)
+  if [ $? != 0 ]; then
+      printf "CRITICAL - could not ping $REMHOST (%s)\n" "$pingout"
+      exit 2
+  fi
+fi
+
+#
+# check basic ssh connection
+#
+
+sshout=$($OMD_ROOT/lib/nagios/plugins/check_ssh -t15 -p$REMPORT $REMHOSTADDR > /dev/null 2>&1)
+if [ $? != 0 ]; then
+    printf "CRITICAL - no basic ssh session available (%s)\n" "$sshout"
+    exit 2
+fi
+
+#
+# count of services with check_by_ssh command per host
+#
+
+if [ -z "$NUMSERVICES" -a -n "$EXTIPHOST" ]; then
+  NUMSERVICES=$($NC $CORE $CONFIG_LIVESTATUS_TCP_PORT <<query
+GET services
+Filter: host_address = $REMHOSTADDR
+Filter: host_name ~ $REMHOSTNAME
+Filter: check_command ~ check_by_ssh
+Stats: sum check_command
+query
+)
+elif [ -z "$NUMSERVICES" ]; then
+  NUMSERVICES=$($NC $CORE $CONFIG_LIVESTATUS_TCP_PORT <<query
+GET services
+Filter: host_address = $REMHOSTADDR
+Filter: check_command ~ check_by_ssh
+Stats: sum check_command
+query
+)
+else
+  NUMSERVICES=5
+fi
+
+if [ ! -S "$CONTROLPATH" ]; then
+  if [ ! -d "$CMDIR" -o ! -d "${CMDIR}/controlpath" ]; then
+    mkdir -p "${CMDIR}/controlpath"
+    text="$EXPLANATION mkdir"
+  fi
+fi
+
+FORKS=$(((NUMSERVICES / SVCPERCM) + 1))
+# nur schreiben, wenn sich etwas aendert oder nach einer halben stunde
+if [ ! -f ${CONTROLPATH}.info ]; then
+  echo $FORKS > $CONTROLPATH.info
+fi
+INFOAGE=$(($NOW - $(stat -c "%Y" ${CONTROLPATH}.info)))
+INFOAGE=$(($INFOAGE + $RANDOM % 60))
+OLDFORKS=$(<${CONTROLPATH}.info)
+if [ $INFOAGE -gt 3600 -o $OLDFORKS != $FORKS ]; then
+  echo $FORKS > $CONTROLPATH.info
+fi
+
+function remoteid() {
+  host=$1
+  port=$2
+  user=$3
+  sshopts=$4
+  controlpath=$5
+  #/usr/bin/ssh -Ocheck -vvv -t -l $user -p $port $sshopts -o ControlPath=$controlpath $host id 2>&1
+  home=$(/usr/bin/ssh -vvv -t -l $user -p $port $sshopts -o ControlPath=$controlpath $host id 2>&1 </dev/null)
+  echo $home
+}
+
+function responding() {
+  host=$1
+  port=$2
+  user=$3
+  sshopts=$4
+  controlpath=$5
+  local reason=""
+  local restart="n"
+  # test if the connection is working
+  home=$(remoteid "$host" "$port" "$user" "$sshopts" "$controlpath")
+  if [[ "$home" =~ .*mux_client_request_session.* ]]; then
+    # ...session: session request failed: Session open refused by peer
+    # maybe kill longrunning processes
+    restart="n"
+    reason="MuxClientRequestSession"
+  elif [[ "$home" =~ .*Control.*socket.*connect.*Connection.*refused.* ]]; then
+    restart="y"
+    reason="Connectionrefused"
+  elif [[ "$home" =~ .*Shared.*connection.*closed.* ]]; then
+    restart="n"
+    reason="Connectionclosed"
+  elif [[ "$home" =~ .*ssh_exchange_identification.* ]]; then
+    USTrestart="n"
+    reason="SSHEx"
+  elif [[ "$home" =~ .*Connection.*timed.*out.* ]]; then
+    restart="n"
+    reason="ConnectionTimeout"
+  elif [[ "$home" =~ .*ermission.*denied.* ]]; then
+    restart="y"
+    reason="PermissionDenied"
+  elif [[ "$home" =~ .*Control.*socket.*does.*not.*exist ]]; then
+    restart="y"
+    reason="NoSuchFile"
+  elif [[ "$home" =~ .*Control.*socket.*connect.*No.*such.*file ]]; then
+    restart="y"
+    reason="NoSuchFile"
+  elif [[ "$home" =~ .*uid.*\(${REMUSER}\).* ]]; then
+    restart="n"
+    reason="Success"
+  elif [[ "$home" =~ .*\(${user}\).* ]]; then
+    restart="n"
+    reason="Success"
+  else
+    restart="y"
+    reason="UnknownError"
+  fi
+  test $DEBUG && echo responding $controlpath $restart $reason >1 >&2
+  echo "$restart $reason"
+}
+
+function pidof() {
+  host=$1
+  port=$2
+  user=$3
+  sshopts=$4
+  controlpath=$5
+  controlpath=${controlpath//\./\\.}
+  local pid=$(pgrep -U $UID -f ".*-l ${user}.*-p ${port}.*ControlMaster=yes.*ControlPath=${controlpath} .*-N $host")
+  test $DEBUG && echo pidof $controlpath $pid >1 >&2
+  echo $pid
+}
+
+function killcm() {
+  host=$1
+  port=$2
+  user=$3
+  sshopts=$4
+  controlpath=$5
+  local reason=""
+  local restart="n"
+  local pid=$(pidof "$host" "$port" "$user" "$sshopts" "$controlpath")
+  if [ -n "$pid" ]; then
+    test -e $controlpath && mv $controlpath ${controlpath}old
+    kill -9 $pid
+    sleep 1
+    test $DEBUG && echo killcm $controlpath $pid >1 >&2
+    echo "y killed"
+  else
+    test -e $controlpath && mv $controlpath ${controlpath}old
+    echo "n nopid"
+    test $DEBUG && echo killcm $controlpath nopid >1 >&2
+  fi
+}
+
+function restartcm() {
+  host=$1
+  port=$2
+  user=$3
+  sshopts=$4
+  controlpath=$5
+  test $DEBUG && echo restartcm $controlpath >1 >&2
+  nohup /usr/bin/ssh \
+      -t -l $user -p $port $sshopts -o ControlPath=$controlpath -N $host >/dev/null 2>&1 &
+  sleep 1
+  if ! kill -0 $! > /dev/null 2>&1; then
+    echo "y could not start controlmaster"
+    test $DEBUG && echo restartcm $controlpath nopid >1 >&2
+  else
+    echo "n started controlmaster"
+    test $DEBUG && echo restartcm $controlpath running >1 >&2
+  fi
+}
+
+#
+# Check or (re)start one leading process and n others.
+# The leading process will be checked every time, the others only
+# after the info file has changed or after a certain time.
+#
+
+CMIDX=$(($FORKS - 1))
+RUNNING=0
+
+for cm in $(seq 0 $CMIDX)
+do
+  CONTROLPATHX="$CONTROLPATH.$cm"
+  test $DEBUG && echo checking $CONTROLPATHX >1 >&2
+  if [ $cm -eq 0 ]; then
+    # check reachability
+    ret=$(responding "$REMHOSTADDR" "$REMPORT" "$REMUSER" "$CMCOPTS" "$CONTROLPATHX")
+    mustrestart=${ret%% *}
+    text=${ret#* }
+    if [ "$mustrestart" = "y" ]; then
+      ret=$(killcm "$REMHOSTADDR" "$REMPORT" "$REMUSER" "$CMOPTS" "$CONTROLPATHX")
+      ret=$(restartcm "$REMHOSTADDR" "$REMPORT" "$REMUSER" "$CMOPTS" "$CONTROLPATHX")
+      mustrestart=${ret%% *}
+      text=${ret#* }
+      if [ "$mustrestart" = "y" ]; then
+        echo "could not start controlmaster"
+        exit 1
+      fi
+      ret=$(responding "$REMHOSTADDR" "$REMPORT" "$REMUSER" "$CMCOPTS" "$CONTROLPATHX")
+      mustrestart=${ret%% *}
+      text=${ret#* }
+      if [ "$text" = "Success" ]; then
+        if [ "$MUSTRESTART" = "y" ]; then
+          echo "controlmaster restarted"
+        else
+          echo "controlmaster running"
+        fi
+        test $FORKS -eq 1 && exit 0
+        RUNNING=$(($RUNNING + 1))
+      elif [ "$text" = "PermissionDenied" ]; then
+        echo "permission denied"
+        exit 2
+      elif [ "$text" = "SSHEx" ]; then
+        echo "remote sshd refuses connection"
+        exit 2
+      elif [ "$text" = "ConnectionTimeout" ]; then
+        echo "remote sshd connection timed out"
+        exit 2
+      else
+        echo "controlmaster hangs"
+        exit 2
+      fi
+    else
+      RUNNING=$(($RUNNING + 1))
+    fi
+  else
+    # wenn info file juenger als 1 min ist, dann pruefen
+    INFOAGE=$(($NOW - $(stat -c "%Y" ${CONTROLPATH}.info)))
+    if [ $INFOAGE -lt 60 ]; then
+      # only if the info file was renewed (after 1/2h) we check. otherwise we trust in stabiluity
+      ret=$(responding "$REMHOSTADDR" "$REMPORT" "$REMUSER" "$CMCOPTS" "$CONTROLPATHX")
+      mustrestart=${ret%% *}
+      text=${ret#* }
+    else
+      mustrestart="n"
+    fi
+    if [ "$mustrestart" = "y" ]; then
+      ret=$(killcm "$REMHOSTADDR" "$REMPORT" "$REMUSER" "$CMOPTS" "$CONTROLPATHX")
+      ret=$(restartcm "$REMHOSTADDR" "$REMPORT" "$REMUSER" "$CMOPTS" "$CONTROLPATHX")
+      ret=$(responding "$REMHOSTADDR" "$REMPORT" "$REMUSER" "$CMCOPTS" "$CONTROLPATHX")
+      mustrestart=${ret%% *}
+      text=${ret#* }
+      if [ "$mustrestart" = "n" ]; then
+        RUNNING=$(($RUNNING + 1))
+      fi
+    else
+      RUNNING=$(($RUNNING + 1))
+    fi
+  fi
+done
+if [ $RUNNING -eq 0 ]; then
+  printf "CRITICAL - session could not be established\n"
+  exit 2
+elif [ $RUNNING -lt $FORKS ]; then
+  printf "WARNING - session partially established (%d of %d)\n" $RUNNING $FORKS
+  exit 1
+else
+  printf "OK - session established\n"
+  exit 0
+fi
+
