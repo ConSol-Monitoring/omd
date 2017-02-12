@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 NAME = check_sap_health
-VERSION = 1.7
+VERSION = 1.9.0.2
 DIR = $(NAME)-$(VERSION)
 
 .PHONY: skel
