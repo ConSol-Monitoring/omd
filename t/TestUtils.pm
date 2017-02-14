@@ -649,6 +649,7 @@ sub _diag_lint_errors_and_remove_some_exceptions {
             "Unknown\ attribute\ \"placeholder\"\ for\ tag\ <input>",
             "Unknown\ attribute\ \"autocomplete\"\ for\ tag\ <form>",
             "Unknown\ attribute\ \"autocomplete\"\ for\ tag\ <input>",
+            "Unknown\ attribute\ \"sizes\"\ for\ tag\ <link>",
         ) {
             next LINT_ERROR if($err_str =~ m/$exclude_pattern/i);
         }
