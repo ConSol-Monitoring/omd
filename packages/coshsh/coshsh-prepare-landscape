@@ -15,8 +15,9 @@ if [ ! -d ${OMD_ROOT}/var/coshsh/configs/${OMD_LANDSCAPE}/static/.git ]; then
   mkdir -p ${OMD_ROOT}/var/coshsh/configs/${OMD_LANDSCAPE}/static
   pushd ${OMD_ROOT}/var/coshsh/configs/${OMD_LANDSCAPE}/static
   git init .
-  printf "define service {\n  name os\n  use generic-service\n  register 0\n}\n" > os.cfg
-  printf "define service {\n  name app\n  use generic-service\n  register 0\n}\n" > app.cfg
+  mkdir service_templates
+  printf "define service {\n  name os\n  use generic-service\n  register 0\n  check_interval 5\n  retry_interval 1\n}\n" > service_templates/os.cfg
+  printf "define service {\n  name app\n  use generic-service\n  register 0\n  check_interval 5\n  retry_interval 1\n}\n" > service_templates/app.cfg
   cp ${OMD_ROOT}/share/coshsh/contrib/consol_commands.cfg commands.cfg
   git add .
   git commit -a -m "init"
