@@ -69,7 +69,8 @@ PACKAGES=freetds \
 	 dataScryer \
 	 snmptrapd \
 	 downtime-api \
-	 check_ssh_controlmaster
+	 check_ssh_controlmaster \
+	 grafana-pnp-datasource
 
 include Makefile.omd
 
