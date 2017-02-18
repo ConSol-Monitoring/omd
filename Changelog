@@ -13,6 +13,8 @@ next:
           - InfluxDb update to 1.2.0
           - Mod-Gearman: Update 3.0.1
           - apply fixes for CVE-2016-9566 in nagios3, icinga1 and naemon
+          - add process_performance_data=1 to default config files
+          - add grafana datasource for pnp rrd files
 
 2.20     Nov 18 2016
           - OMD
