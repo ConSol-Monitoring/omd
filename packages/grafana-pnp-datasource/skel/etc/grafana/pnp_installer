@@ -1,0 +1,43 @@
+#!/usr/bin/python
+
+import os.path, sys, time
+from grafana_utils import Grafana
+
+"""
+- get a list of all known datasources, get id of pnp datasource
+  if there is no pnp datasource
+      create one
+"""
+
+if not Grafana.ping():
+    sys.exit(2)
+
+grafana = Grafana()
+
+if Grafana.omd_settings['CONFIG_PNP4NAGIOS'] == 'off':
+    sys.exit(0)
+
+pnp_url = 'http%s://%s:%s/%s/pnp4nagios' % (('', 's')[Grafana.omd_settings['CONFIG_APACHE_MODE'] == 'ssl'], Grafana.omd_settings['CONFIG_APACHE_TCP_ADDR'], Grafana.omd_settings['CONFIG_APACHE_TCP_PORT'], os.environ['OMD_SITE'])
+
+names = ["pnp"]
+
+for datasource_name in names:
+    ds = grafana.get_datasource(datasource_name)
+    if ds == None:
+        print "creating datasource %s " % (datasource_name)
+
+        ds = grafana.create_datasource(name=datasource_name, type='pnp',
+            url=pnp_url,
+            access='proxy',
+            isDefault=False,
+            database=datasource_name,
+            basicAuth=True,
+            user='omdadmin',
+            password='omd'
+        )
+        print "OK" if ds else "FAIL"
+
+    else:
+        ds.update(url=pnp_url)
+
+sys.exit(0)
