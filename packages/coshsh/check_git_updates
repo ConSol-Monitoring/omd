@@ -95,6 +95,10 @@ set_lock $LOCKFILE
 # use https, but allow self-signed certificates
 export GIT_SSL_NO_VERIFY=1
 
+if [ -n "$OMD_PREPARE_CHECK_GIT_UPDATES" -a -x $OMD_PREPARE_CHECK_GIT_UPDATES ]
+then
+  $OMD_PREPARE_CHECK_GIT_UPDATES || exit $?
+fi
 
 test -d ${OMD_ROOT}/etc/${CORE}/conf.d/${OMD_LANDSCAPE}/${OMD_SITE} || mkdir -p ${OMD_ROOT}/etc/nagios/conf.d/${OMD_LANDSCAPE}/${OMD_SITE}
 if [ -d ${OMD_ROOT}/etc/${CORE}/conf.d/${OMD_LANDSCAPE}/${OMD_SITE}/static ]; then
