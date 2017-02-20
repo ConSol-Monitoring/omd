@@ -17,9 +17,9 @@ grafana = Grafana()
 if Grafana.omd_settings['CONFIG_PNP4NAGIOS'] == 'off':
     sys.exit(0)
 
-pnp_url = 'http%s://%s:%s/%s/pnp4nagios' % (('', 's')[Grafana.omd_settings['CONFIG_APACHE_MODE'] == 'ssl'], Grafana.omd_settings['CONFIG_APACHE_TCP_ADDR'], Grafana.omd_settings['CONFIG_APACHE_TCP_PORT'], os.environ['OMD_SITE'])
-
-names = ["pnp"]
+pnp_url   = 'http%s://%s:%s/%s/pnp4nagios' % (('', 's')[Grafana.omd_settings['CONFIG_APACHE_MODE'] == 'ssl'], Grafana.omd_settings['CONFIG_APACHE_TCP_ADDR'], Grafana.omd_settings['CONFIG_APACHE_TCP_PORT'], os.environ['OMD_SITE'])
+names     = ["pnp"]
+isDefault = True if len(Grafana.get('/datasources')) == 0 else False
 
 for datasource_name in names:
     ds = grafana.get_datasource(datasource_name)
@@ -29,7 +29,7 @@ for datasource_name in names:
         ds = grafana.create_datasource(name=datasource_name, type='pnp',
             url=pnp_url,
             access='proxy',
-            isDefault=False,
+            isDefault=isDefault,
             database=datasource_name,
             basicAuth=True,
             user='omdadmin',
