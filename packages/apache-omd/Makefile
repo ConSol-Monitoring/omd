@@ -4,6 +4,7 @@ NAME = apache-omd
 VERSION = 1.0
 DIR = $(NAME)-$(VERSION)
 FCGI_FILE="mod_fcgid-2.3.9"
+MOD_RPAF_VERSION="0.8"
 
 MODULE_DIR=$(APACHE_MODULE_DIR)
 ifeq ($(shell uname -m),x86_64)
@@ -15,8 +16,8 @@ APACHE_VERSION_MAIN = $(word 1, $(subst ., ,$(APACHE_VERSION)))
 APACHE_VERSION_SUB  = $(word 2, $(subst ., ,$(APACHE_VERSION)))
 APACHE_24_OR_NEWER  = $(shell [ $(APACHE_VERSION_MAIN) -ge 2 -a $(APACHE_VERSION_SUB) -ge 4 ] && echo 1 || echo 0)
 
-APACHE_MODULES=
-APACHE_MODULES_INSTALL=
+APACHE_MODULES=modrpaf
+APACHE_MODULES_INSTALL=modrpaf_install
 APACHE_FCGID_PATH=$(MODULE_DIR)/$(APACHE_FCGID_MODULE)
 CENTOS_WORKAROUND=0
 INSTALL_FCGID=0
@@ -53,8 +54,8 @@ ifeq ($(CENTOS_WORKAROUND), 1)
 endif
 
 ifeq ($(INSTALL_FCGID), 1)
-  APACHE_MODULES=modfcgid
-  APACHE_MODULES_INSTALL=modfcgid_install
+  APACHE_MODULES+=modfcgid
+  APACHE_MODULES_INSTALL+=modfcgid_install
   APACHE_FCGID_PATH=$(OMD_ROOT)/lib/apache/mod_fcgid.so
 endif
 
@@ -94,6 +95,7 @@ skel:
 
 	# Replace macros
 	sed -i -e 's|###APACHE_MODULE_DIR###|$(MODULE_DIR)|g' \
+	       $(SKEL)/etc/apache/conf.d/01_rpaf.conf \
 	       $(SKEL)/etc/apache/apache.conf \
 	       $(SKEL)/etc/apache/apache-ssl.conf
 
@@ -121,6 +123,7 @@ skel:
 clean:
 	# Remove files created by build/install
 	rm -rf $(FCGI_FILE) APACHE_TCP_ADDR.hook APACHE_TCP_PORT.hook
+	rm -rf mod_rpaf-$(MOD_RPAF_VERSION)
 
 modfcgid:
 	tar zxf $(FCGI_FILE).tar.gz
@@ -132,3 +135,11 @@ modfcgid:
 modfcgid_install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/apache
 	cp $(FCGI_FILE)/modules/fcgid/.libs/mod_fcgid.so $(DESTDIR)$(OMD_ROOT)/lib/apache/
+
+modrpaf:
+	tar zxf mod_rpaf-$(MOD_RPAF_VERSION).tar.gz
+	make -C mod_rpaf-$(MOD_RPAF_VERSION)
+
+modrpaf_install:
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/apache
+	cp mod_rpaf-$(MOD_RPAF_VERSION)/.libs/mod_rpaf.so $(DESTDIR)$(OMD_ROOT)/lib/apache/
