@@ -88,6 +88,9 @@ install:
 	    --strip-components 2 --wildcards --no-anchored treasures/active_checks/*
 	chmod 755 $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins/*
 
+    # do not break existing pnp installations
+	mv $(DESTDIR)$(OMD_ROOT)/share/check_mk/pnp-templates/default.php $(DESTDIR)$(OMD_ROOT)/share/check_mk/pnp-templates/check_mk-default.php
+
 skel:
 	rm -f $(SKEL)/etc/check_mk/main.mk-*
 	rm -f $(SKEL)/etc/check_mk/multisite.mk-*
