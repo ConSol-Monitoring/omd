@@ -912,6 +912,20 @@ sub restart_system_apache {
 
 ##################################################
 
+=head2 get_external_ip
+
+  returns the external ip
+
+=cut
+sub get_external_ip {
+    my $ip      = `ip a | grep inet | grep -v inet6 | grep -v 127.0.0 | grep global | head -n1 | awk '{print \$2}' | awk -F/ '{print \$1}'`;
+    chomp($ip);
+    ok($ip, "got external ip");
+    return($ip);
+}
+
+##################################################
+
 END {
     our($cookie_file);
     unlink($cookie_file) if $cookie_file;
