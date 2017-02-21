@@ -37,7 +37,7 @@ RewriteRule ^/pass/(.*)$             /\$1 [NS,PT,L,E=!REMOTE_USER]
 RewriteRule ^/redirect/(.*)$         /\$1 [NS,L,R=302]
 RewriteRule ^/loginok/([^/]+)/(.*)$  /\$2 [NS,PT,L,E=REMOTE_USER:\$1]
 
-<LocationMatch ^/\${OMD_SITE}/(?!thruk/cgi-bin/restricted.cgi)>
+<LocationMatch ^/\${OMD_SITE}/(?!(thruk/cgi-bin/restricted.cgi|pnp4nagios/index.php/api/))>
     Order allow,deny
     Allow from all
     Satisfy any
