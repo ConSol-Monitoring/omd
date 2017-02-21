@@ -20,7 +20,9 @@ CACHE_FILE="$BUILD_CACHE/${SRC}_${MD5}.tgz"
 # cache hit - just unpack the already built package
 if test -e "$CACHE_FILE"; then
     echo "md5sum matched, using cache from $CACHE_FILE"
+    set -e
     tar zxf "$CACHE_FILE"
+    set +e
     find "$SRC/" -type f | \
     while read file; do
         if grep -Ic "###BUILD_OMD_VERSION###" "$file" >/dev/null 2>&1; then
