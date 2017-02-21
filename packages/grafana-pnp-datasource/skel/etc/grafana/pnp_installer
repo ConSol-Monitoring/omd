@@ -24,7 +24,7 @@ isDefault = True if len(Grafana.get('/datasources')) == 0 else False
 for datasource_name in names:
     ds = grafana.get_datasource(datasource_name)
     if ds == None:
-        print "creating datasource %s " % (datasource_name)
+        print "creating datasource %s " % (datasource_name,),
 
         ds = grafana.create_datasource(name=datasource_name, type='pnp',
             url=pnp_url,
