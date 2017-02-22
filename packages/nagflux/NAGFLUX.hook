@@ -25,9 +25,6 @@ case "$1" in
            if [ -e $OMD_ROOT/etc/icinga/icinga.d ] ; then
                ln -sfn ../../nagflux/nagios_nagflux.cfg $OMD_ROOT/etc/icinga/icinga.d/nagflux.cfg
            fi
-           if [ -e $OMD_ROOT/etc/icinga2/conf.d ] ; then
-               ln -sfn ../../nagflux/icinga2_nagflux.conf $OMD_ROOT/etc/icinga2/conf.d/nagflux.conf
-           fi
            if [ -e $OMD_ROOT/etc/naemon/naemon.d ] ; then
                ln -sfn ../../nagflux/nagios_nagflux.cfg $OMD_ROOT/etc/naemon/naemon.d/nagflux.cfg
            fi
@@ -36,7 +33,6 @@ case "$1" in
            fi
        else
            rm -f $OMD_ROOT/etc/icinga2/features-enabled/omd_nagflux_perfdata.conf
-           rm -f $OMD_ROOT/etc/icinga2/conf.d/nagflux.conf
            rm -f $OMD_ROOT/etc/nagios/nagios.d/nagflux.cfg
            rm -f $OMD_ROOT/etc/icinga/icinga.d/nagflux.cfg
            rm -f $OMD_ROOT/etc/naemon/naemon.d/nagflux.cfg
