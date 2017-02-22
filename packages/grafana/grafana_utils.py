@@ -105,10 +105,6 @@ class Grafana(object):
         request = urllib2.Request(url=Grafana.api_url+url, headers=Grafana.content_header, data=data)
         request.get_method = lambda: 'PUT'
         try:
-            # TODO: next 3 lines are a temp fix for a grafana bug, should be removed as soon as possible
-            result = urllib2.urlopen(request).read()
-            if result == "<*api.NormalResponse Value>":
-                return {'message':'Datasource updated'}
             return json.loads(urllib2.urlopen(request).read())
         except Exception:
             return None
