@@ -13,13 +13,15 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 80 );
+plan( tests => 88 );
 
 ##################################################
 # create our test site
 my $omd_bin = TestUtils::get_omd_bin();
 my $site    = TestUtils::create_test_site() or TestUtils::bail_out_clean("no further testing without site");
 my $auth    = 'OMD Monitoring Site '.$site.':omdadmin:omd';
+my $curl    = '/usr/bin/curl -v --user omdadmin:omd ';
+my $ip      = TestUtils::get_external_ip();
 
 TestUtils::test_command({ cmd => $omd_bin." config $site set GRAFANA on" });
 TestUtils::test_command({ cmd => $omd_bin." start $site", like => '/Starting Grafana...OK/' });
@@ -51,6 +53,19 @@ TestUtils::restart_system_apache();
 TestUtils::test_command({ cmd => $omd_bin." start $site", like => '/Starting Grafana/' });
 TestUtils::test_command({ cmd => "/omd/sites/$site/lib/nagios/plugins/check_http -t 60 -H localhost -k 'Cookie: thruk_auth=$sessionid' -u '/$site/grafana/' -s '\"login\":\"omdadmin\"'", like => '/HTTP OK:/' });
 
+
+# make sure grafana listens to localhost only
+# first test against localhost and make sure it works
+TestUtils::test_command({ cmd => "/bin/su - $site -c '$curl \"http://localhost:8003/$site/grafana\" -H \"X-WEBAUTH-USER: omdadmin\" '",
+                          errlike => ['/Set-Cookie: grafana_sess/'], 
+                          like  => ['/"login":"omdadmin"/'],
+                       });
+# then test external ip and make sure it doesnt work
+TestUtils::test_command({ cmd => "/bin/su - $site -c '$curl \"http://$ip:8003/$site/grafana\" -H \"X-WEBAUTH-USER: omdadmin\" '",
+                          errlike => ['/Failed to connect/'], 
+                          unlike  => ['/"login":"omdadmin"/'],
+                          exit    => undef,
+                       });
 
 TestUtils::test_command({ cmd => $omd_bin." stop $site" });
 TestUtils::remove_test_site($site);
