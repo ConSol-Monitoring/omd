@@ -20,7 +20,7 @@ plan( tests => 88 );
 my $omd_bin = TestUtils::get_omd_bin();
 my $site    = TestUtils::create_test_site() or TestUtils::bail_out_clean("no further testing without site");
 my $auth    = 'OMD Monitoring Site '.$site.':omdadmin:omd';
-my $curl    = '/usr/bin/curl -v --user omdadmin:omd ';
+my $curl    = '/usr/bin/curl -v --user omdadmin:omd --noproxy \* ';
 my $ip      = TestUtils::get_external_ip();
 
 TestUtils::test_command({ cmd => $omd_bin." config $site set GRAFANA on" });
@@ -62,7 +62,7 @@ TestUtils::test_command({ cmd => "/bin/su - $site -c '$curl \"http://localhost:8
                        });
 # then test external ip and make sure it doesnt work
 TestUtils::test_command({ cmd => "/bin/su - $site -c '$curl \"http://$ip:8003/$site/grafana\" -H \"X-WEBAUTH-USER: omdadmin\" '",
-                          errlike => ['/Failed to connect/'], 
+                          errlike => ['/(Failed to connect|Connection refused)/'], 
                           unlike  => ['/"login":"omdadmin"/'],
                           exit    => undef,
                        });

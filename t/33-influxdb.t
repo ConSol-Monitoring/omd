@@ -19,7 +19,7 @@ plan( tests => 44 );
 # create our test site
 my $omd_bin = TestUtils::get_omd_bin();
 my $site    = TestUtils::create_test_site() or TestUtils::bail_out_clean("no further testing without site");
-my $curl    = '/usr/bin/curl -v --user omdadmin:omd ';
+my $curl    = '/usr/bin/curl -v --user omdadmin:omd --noproxy \* ';
 my $ip      = TestUtils::get_external_ip();
 
 TestUtils::test_command({ cmd => $omd_bin." config $site set INFLUXDB on" });
@@ -54,7 +54,7 @@ TestUtils::test_command({ cmd => "/bin/su - $site -c '$curl \"http://localhost:8
 
 # make sure influxdb listens to localhost only
 TestUtils::test_command({ cmd => "/bin/su - $site -c '$curl \"http://$ip:8086/query\" --data \"q=SHOW%20DATABASES\"'",
-                          errlike => ['/Failed to connect/'], 
+                          errlike => ['/(Failed to connect|Connection refused)/'], 
                           unlike  => ['/HTTP\/1\.1 200 OK/', '/"results":/'],
                           exit    => undef,
                        });
