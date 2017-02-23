@@ -23,17 +23,17 @@ if test -e "$CACHE_FILE"; then
     set -e
     tar zxf "$CACHE_FILE"
     set +e
-    find "$SRC/" -type f | \
+    grep -rlI '###BUILD_OMD_VERSION###' "$SRC/" | \
     while read file; do
-        if grep -Ic "###BUILD_OMD_VERSION###" "$file" >/dev/null 2>&1; then
-            cp -p "$file" "$file.tmp"
-            sed -e "s%###BUILD_OMD_VERSION###%$OMD_VERSION%g" -i "$file"
-            touch -r "$file.tmp" "$file"
-            rm -f "$file.tmp"
-        fi
+        cp -p "$file" "$file.tmp"
+        sed -e "s%###BUILD_OMD_VERSION###%$OMD_VERSION%g" -i "$file"
+        touch -r "$file.tmp" "$file"
+        rm -f "$file.tmp"
     done
     exit 0
 fi
+
+# exclude files from before the build
 EXCLUDES_FILE=$(mktemp)
 find "$SRC" -type f > $EXCLUDES_FILE
 
@@ -43,29 +43,27 @@ $MAKE -C "$SRC" build
 set +e
 
 # create cache file
-find "$SRC/" -type f | \
+grep -rlI "$OMD_VERSION" "$SRC/" | \
 while read file; do
-    if grep -Ic "$OMD_VERSION" "$file" >/dev/null 2>&1; then
-        cp -p "$file" "$file.tmp"
-        sed -e "s%$OMD_VERSION%###BUILD_OMD_VERSION###%g" -i "$file"
-        touch -r "$file.tmp" "$file"
-        rm -f "$file.tmp"
-    fi
+    cp -p "$file" "$file.tmp"
+    sed -e "s%$OMD_VERSION%###BUILD_OMD_VERSION###%g" -i "$file"
+    touch -r "$file.tmp" "$file"
+    rm -f "$file.tmp"
 done
 TARBALL_TMP=$(mktemp)
+set -e
 tar cfz $TARBALL_TMP "$SRC" --exclude-from=$EXCLUDES_FILE
 rm -f "$CACHE_FILE"
 mv $TARBALL_TMP "$CACHE_FILE"
+set +e
 echo "cache file $CACHE_FILE created"
 rm $EXCLUDES_FILE
-find "$SRC/" -type f | \
+grep -rlI '###BUILD_OMD_VERSION###' "$SRC/" | \
 while read file; do
-    if grep -Ic "###BUILD_OMD_VERSION###" "$file" >/dev/null 2>&1; then
-        cp -p "$file" "$file.tmp"
-        sed -e "s%###BUILD_OMD_VERSION###%$OMD_VERSION%g" -i "$file"
-        touch -r "$file.tmp" "$file"
-        rm -f "$file.tmp"
-    fi
+    cp -p "$file" "$file.tmp"
+    sed -e "s%###BUILD_OMD_VERSION###%$OMD_VERSION%g" -i "$file"
+    touch -r "$file.tmp" "$file"
+    rm -f "$file.tmp"
 done
 
 exit 0
