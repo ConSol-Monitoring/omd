@@ -13,7 +13,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 1477 );
+plan( tests => 1005 );
 
 ##################################################
 # create our test site
@@ -203,7 +203,7 @@ for my $url ( @{$urls}, @{$own_urls}, @{$cookie_urls} ) {
     }
 }
 
-for my $core (qw/nagios icinga shinken/) {
+for my $core (qw/nagios naemon/) {
     ##################################################
     # run our tests
     TestUtils::test_command({ cmd => $omd_bin." stop $site" });
