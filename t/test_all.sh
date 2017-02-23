@@ -69,4 +69,20 @@ if [ ! -z $1 ]; then
   TESTS=$*
   VERBOSE="1"
 fi
+
+if [ "x$TEST_TIMER" != "x" ]; then
+    for file in $TESTS; do
+        printf "%-60s" $file
+        output=$(OMD_BIN=$OMD_BIN PERL_DL_NONLAZY=1 /usr/bin/time -f %e /usr/bin/env perl "-MExtUtils::Command::MM" "-e" "test_harness($VERBOSE)" $file 2>&1)
+        if [ $? != 0 ]; then
+            printf "% 8s \n" "FAILED"
+            echo "$output"
+        else
+            time=$(echo "$output" | tail -n1)
+            printf "% 8ss\n" $time
+        fi
+    done
+    exit
+fi
+
 OMD_BIN=$OMD_BIN PERL_DL_NONLAZY=1 /usr/bin/env perl "-MExtUtils::Command::MM" "-e" "test_harness($VERBOSE)" $TESTS
