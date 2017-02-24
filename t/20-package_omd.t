@@ -12,7 +12,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 63 );
+plan( tests => 68 );
 
 ##################################################
 # create our test site
@@ -44,6 +44,7 @@ TestUtils::test_command({ cmd => "/bin/su - $site -c 'omd config set APACHE_MODE
 TestUtils::restart_system_apache();
 TestUtils::test_command({ cmd => "/bin/su - $site -c 'omd start'",  like => '/Starting dedicated Apache.*?OK/' });
 TestUtils::test_command({ cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -H localhost -S -a omdadmin:omd -u /$site/thruk/startup.html -e 200 -vvv'", like => ['/HTTP OK:/', '/Please stand by, Thruks FastCGI Daemon is warming/'] });
+TestUtils::test_command({ cmd => $omd_bin." diff $site",     unlike => '/Changed content/', like => '/^$/' });
 TestUtils::test_command({ cmd => "/bin/su - $site -c 'omd stop'",  like => '/Stopping dedicated Apache/' });
 
 ##################################################
