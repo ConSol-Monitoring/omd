@@ -28,26 +28,26 @@ sleep(5); # influxdb api returns 404 when accessed directly after first start
 
 #http api
 #create database
-TestUtils::test_command({ cmd     => "/bin/su - $site -c '$curl http://localhost:8086/query --data \"q=CREATE%20DATABASE%20mydb\"'",
+TestUtils::test_command({ cmd     => "/bin/su - $site -c '$curl http://127.0.0.1:8086/query --data \"q=CREATE%20DATABASE%20mydb\"'",
                           errlike => ['/HTTP\/1\.1 200 OK/'], 
                           like    => ['/\{"results":\[\{"statement_id":0\}\]\}/'],
                        });
 #write data
-TestUtils::test_command({ cmd     => "/bin/su - $site -c '$curl \"http://localhost:8086/write?db=mydb\" --data \"cpu_load_short,host=server01,region=us-west value=0.64 1434055562000000000\"'",
+TestUtils::test_command({ cmd     => "/bin/su - $site -c '$curl \"http://127.0.0.1:8086/write?db=mydb\" --data \"cpu_load_short,host=server01,region=us-west value=0.64 1434055562000000000\"'",
                           errlike => ['/HTTP\/1\.1 204 No Content/'],
                           like    => [ '/^$/' ],
                        });
 #read data
-TestUtils::test_command({ cmd     => "/bin/su - $site -c '$curl \"http://localhost:8086/query?db=mydb&q=SELECT%20*%20FROM%20cpu_load_short\"'",
+TestUtils::test_command({ cmd     => "/bin/su - $site -c '$curl \"http://127.0.0.1:8086/query?db=mydb&q=SELECT%20*%20FROM%20cpu_load_short\"'",
                           errlike => ['/HTTP\/1\.1 200 OK/'], 
                           like    => [ '/\{"results":\[\{"statement_id":0,"series":\[\{"name":"cpu_load_short","columns":\["time","host","region","value"\],"values":\[\["2015-06-11T20:46:02Z","server01","us-west",0.64\]\]\}\]\}\]\}/' ],
                        });
 #drop database
-TestUtils::test_command({ cmd     => "/bin/su - $site -c '$curl \"http://localhost:8086/query\" --data \"q=DROP%20DATABASE%20mydb\"'",
+TestUtils::test_command({ cmd     => "/bin/su - $site -c '$curl \"http://127.0.0.1:8086/query\" --data \"q=DROP%20DATABASE%20mydb\"'",
                           errlike => ['/HTTP\/1\.1 200 OK/'], 
                           like    => ['/\{"results":\[\{"statement_id":0\}\]\}/'],
                        });
-TestUtils::test_command({ cmd => "/bin/su - $site -c '$curl \"http://localhost:8086/query\" --data \"q=SHOW%20DATABASES\"'",
+TestUtils::test_command({ cmd => "/bin/su - $site -c '$curl \"http://127.0.0.1:8086/query\" --data \"q=SHOW%20DATABASES\"'",
                           errlike => ['/HTTP\/1\.1 200 OK/'], 
                           like    => ['/\{"results":\[\{"statement_id":0,"series":\[\{"name":"databases","columns":\["name"\],"values":/'],
                        });

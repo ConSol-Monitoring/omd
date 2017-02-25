@@ -31,6 +31,7 @@ PASS="omd"
 GRAFANA_USER="grafana"
 GRAFANA_PASS="grafana"
 ####
+CONNECT="-host 127.0.0.1 -port $CONFIG_INFLUXDB_HTTP_TCP_PORT"
 
 # create state dir
 mkdir -p $OMD_ROOT/tmp/run \
@@ -95,18 +96,18 @@ case "$1" in
             done
             if get_status > /dev/null ; then
                 # set admin user
-                echo "CREATE USER $USER WITH PASSWORD '$PASS' WITH ALL PRIVILEGES" | influx -port $CONFIG_INFLUXDB_HTTP_TCP_PORT >/dev/null
+                echo "CREATE USER $USER WITH PASSWORD '$PASS' WITH ALL PRIVILEGES" | influx $CONNECT >/dev/null
                 # set grafana user
-                echo "CREATE USER $GRAFANA_USER WITH PASSWORD '$GRAFANA_PASS'" | influx -port $CONFIG_INFLUXDB_HTTP_TCP_PORT -username $USER -password $PASS >/dev/null
-                echo "CREATE DATABASE nagflux" | influx -port $CONFIG_INFLUXDB_HTTP_TCP_PORT -username $USER -password $PASS >/dev/null
-                echo "GRANT READ ON nagflux TO $GRAFANA_USER" | influx -port $CONFIG_INFLUXDB_HTTP_TCP_PORT -username $USER -password $PASS >/dev/null
-                echo "GRANT READ ON _internal TO $GRAFANA_USER" | influx -port $CONFIG_INFLUXDB_HTTP_TCP_PORT -username $USER -password $PASS >/dev/null
+                echo "CREATE USER $GRAFANA_USER WITH PASSWORD '$GRAFANA_PASS'" | influx $CONNECT -username $USER -password $PASS >/dev/null
+                echo "CREATE DATABASE nagflux" | influx $CONNECT -username $USER -password $PASS >/dev/null
+                echo "GRANT READ ON nagflux TO $GRAFANA_USER" | influx $CONNECT -username $USER -password $PASS >/dev/null
+                echo "GRANT READ ON _internal TO $GRAFANA_USER" | influx $CONNECT -username $USER -password $PASS >/dev/null
                 # apply retention policy
-		echo 'SHOW RETENTION POLICIES ON nagflux' | influx -port $CONFIG_INFLUXDB_HTTP_TCP_PORT -username $USER -password $PASS 2>/dev/null | grep -q ^default
+		echo 'SHOW RETENTION POLICIES ON nagflux' | influx $CONNECT -username $USER -password $PASS 2>/dev/null | grep -q ^default
 		if [ $? -ne 0 ]; then
-			echo 'CREATE RETENTION POLICY "default" ON "nagflux" DURATION '${CONFIG_INFLUXDB_RETENTION}w' REPLICATION 1 DEFAULT' | influx -port $CONFIG_INFLUXDB_HTTP_TCP_PORT -username $USER -password $PASS >/dev/null
+			echo 'CREATE RETENTION POLICY "default" ON "nagflux" DURATION '${CONFIG_INFLUXDB_RETENTION}w' REPLICATION 1 DEFAULT' | influx $CONNECT -username $USER -password $PASS >/dev/null
 		else
-			echo 'ALTER RETENTION POLICY "default" ON "nagflux" DURATION '${CONFIG_INFLUXDB_RETENTION}w' DEFAULT' | influx -port $CONFIG_INFLUXDB_HTTP_TCP_PORT -username $USER -password $PASS >/dev/null
+			echo 'ALTER RETENTION POLICY "default" ON "nagflux" DURATION '${CONFIG_INFLUXDB_RETENTION}w' DEFAULT' | influx $CONNECT -username $USER -password $PASS >/dev/null
 		fi
                 echo "OK"
                 exit 0;
