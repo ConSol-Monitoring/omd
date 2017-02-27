@@ -1,0 +1,13 @@
+[Unit]
+Description=OMD
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/omd start
+ExecStop=/usr/bin/omd stop
+ExecReload=/usr/bin/omd reload
+RemainAfterExit=yes
+Restart=no
+
+[Install]
+WantedBy=multi-user.target
