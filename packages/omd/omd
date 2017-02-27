@@ -1815,7 +1815,6 @@ def load_config_hooks():
                     g_config_hooks[hook_name] = hook
         except:
             pass
-    load_hook_dependencies()
 
 def config_load_hook(hook_name):
     hook = { "name" : hook_name }
@@ -1971,6 +1970,7 @@ omd config set VAR VALUE - set VAR to VALUE
 """)
 
 def config_show(args):
+    load_hook_dependencies()
     if len(args) == 0:
         hook_names = g_config_hooks.keys()
         hook_names.sort()
@@ -1991,6 +1991,7 @@ def config_show(args):
         sys.stdout.write("\n")
 
 def config_configure():
+    load_hook_dependencies()
     hook_names = g_config_hooks.keys()
     hook_names.sort()
     current_hook_name = ""
