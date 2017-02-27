@@ -10,28 +10,110 @@ if [ "x$BUILD_CACHE" = "x" ] || ! test -d $BUILD_CACHE || [ ${#OMD_VERSION} -lt 
     exit $?
 fi
 
+replace_strings_in_binary() {
+    local FILE="$1"
+    local PATTERN="$2"
+    local REPLACEMENT="$3"
+
+    xxd -p -u ${FILE} | tr -d '\n' > ${FILE}.hex
+
+    # Find all unique strings in FILE that contain the pattern
+    strings --all ${FILE} | grep ${PATTERN} | sort -u -r | \
+    while read OLD_STRING; do
+        # Create the new string with a simple bash-replacement
+        NEW_STRING=${OLD_STRING//${PATTERN}/${REPLACEMENT}}
+
+        # Create null terminated ASCII HEX representations of the strings
+        OLD_STRING_HEX="$(echo -n ${OLD_STRING} | xxd -g 0 -u -ps -c 256 | tr -d '\n')00"
+        NEW_STRING_HEX="$(echo -n ${NEW_STRING} | xxd -g 0 -u -ps -c 256 | tr -d '\n')00"
+
+        if [ ${#NEW_STRING_HEX} -le ${#OLD_STRING_HEX} ] ; then
+            # Pad the replacement string with null terminations so the length matches the original string
+            while [ ${#NEW_STRING_HEX} -lt ${#OLD_STRING_HEX} ] ; do
+                NEW_STRING_HEX="${NEW_STRING_HEX}00"
+            done
+
+            sed -e "s%${OLD_STRING_HEX}%${NEW_STRING_HEX}%g" -i ${FILE}.hex
+        else
+            echo "ERROR: New string '${NEW_STRING}' is longer than old string '${OLD_STRING}'. Skipping."
+        fi
+    done
+
+    xxd -p -r ${FILE}.hex > ${FILE}.bin
+    chmod --reference ${FILE} ${FILE}.bin
+    touch -r ${FILE} ${FILE}.tmp2
+    mv ${FILE}.bin ${FILE}
+    rm ${FILE}.hex
+}
+
+replace_strings_in_ascii_file() {
+    local FILE="$1"
+    local PATTERN="$2"
+    local REPLACEMENT="$3"
+
+    sed -e "s%${PATTERN}%${REPLACEMENT}%g" ${FILE} > ${FILE}.tmp
+    chmod --reference ${FILE} ${FILE}.tmp
+    touch -r ${FILE} ${FILE}.tmp
+    mv ${FILE}.tmp ${FILE}
+}
+
+
 BUILD_CACHE=$BUILD_CACHE/$CACHESUBDIR
 mkdir -p $BUILD_CACHE
 
 $MAKE -C "$SRC" clean
-MD5=$(cd "$SRC" && find . -type f -exec md5sum {} \; | sort | md5sum | awk '{ print $1 }')
-CACHE_FILE="$BUILD_CACHE/${SRC}_${MD5}.tgz"
+MD5=$(cd "$SRC" && find . -exec md5sum {} \; 2>/dev/null | sort | md5sum | awk '{ print $1 }')
+CACHE_FILE="$BUILD_CACHE/${SRC}_${MD5}_v${OMD_VERSION}.tgz"
+CACHE_PATTERN="$BUILD_CACHE/${SRC}_${MD5}_v*.tgz"
 
 # cache hit - just unpack the already built package
-if test -e "$CACHE_FILE"; then
-    echo "md5sum matched, using cache from $CACHE_FILE"
-    set -e
-    tar zxf "$CACHE_FILE"
-    set +e
-    grep -rlI '###BUILD_OMD_VERSION###' "$SRC/" | \
-    while read file; do
-        cp -p "$file" "$file.tmp"
-        sed -e "s%###BUILD_OMD_VERSION###%$OMD_VERSION%g" -i "$file"
-        touch -r "$file.tmp" "$file"
-        rm -f "$file.tmp"
-    done
-    exit 0
+CACHED_FILE=$(ls -1 $CACHE_PATTERN 2>/dev/null)
+if [ "x$CACHED_FILE" != "x" ]; then
+    echo "md5sum matched, trying cache from $CACHED_FILE"
+    tar zxf "$CACHED_FILE" || exit 1
+
+    OLD_VERSION=$(echo $CACHED_FILE | sed -e 's/.*_v\(.*\)\.tgz/\1/')
+    if [ ${OMD_VERSION} = ${OLD_VERSION} ] ; then
+        # cache file from today, no need to replace anything
+        touch $CACHED_FILE
+        exit 0
+    elif [ ${#OMD_VERSION} -le ${#OLD_VERSION} ] ; then
+        touch $CACHED_FILE
+        # rename files and folders
+        find "$SRC/" -type d | grep $OLD_VERSION | sort | \
+        while read FILE; do
+          if test -e $FILE; then
+            NEW_FILE=${FILE//${OLD_VERSION}/${OMD_VERSION}}
+            mv "$FILE" "$NEW_FILE"
+          fi
+        done
+
+        # replace strings in ascii files
+        grep -rlI "$OLD_VERSION" "$SRC/" | \
+            while read FILE; do
+                replace_strings_in_ascii_file "$FILE" "$OLD_VERSION" "$OMD_VERSION"
+            done
+
+        # replace strings in binary files
+        grep -rla "$OLD_VERSION" "$SRC/" | \
+            while read FILE; do
+                replace_strings_in_binary "$FILE" "$OLD_VERSION" "$OMD_VERSION"
+            done
+
+        # make sure we got all occurences
+        MISSED=$(grep -rla "$OLD_VERSION" "$SRC/")
+        if [ "x$MISSED" != "x" ]; then
+            echo "ERROR: replace did not work, files $MISSING still contains old version."
+            exit 1
+        fi
+        exit 0
+    else
+        echo "cannot use $CACHED_FILE, version string $OMD_VERSION longer than $OLD_VERSION"
+    fi
+    $MAKE -C "$SRC" clean
 fi
+
+echo "no cached file found building from source and creating $CACHE_FILE"
 
 # exclude files from before the build
 EXCLUDES_FILE=$(mktemp)
@@ -43,27 +125,14 @@ $MAKE -C "$SRC" build
 set +e
 
 # create cache file
-grep -rlI "$OMD_VERSION" "$SRC/" | \
-while read file; do
-    cp -p "$file" "$file.tmp"
-    sed -e "s%$OMD_VERSION%###BUILD_OMD_VERSION###%g" -i "$file"
-    touch -r "$file.tmp" "$file"
-    rm -f "$file.tmp"
-done
 TARBALL_TMP=$(mktemp)
 set -e
-tar cfz $TARBALL_TMP "$SRC" --exclude-from=$EXCLUDES_FILE
+tar cfz $TARBALL_TMP "$SRC" --exclude=\*.orig --exclude-from=$EXCLUDES_FILE
 rm -f "$CACHE_FILE"
+rm -f $CACHE_PATTERN
 mv $TARBALL_TMP "$CACHE_FILE"
 set +e
 echo "cache file $CACHE_FILE created"
 rm $EXCLUDES_FILE
-grep -rlI '###BUILD_OMD_VERSION###' "$SRC/" | \
-while read file; do
-    cp -p "$file" "$file.tmp"
-    sed -e "s%###BUILD_OMD_VERSION###%$OMD_VERSION%g" -i "$file"
-    touch -r "$file.tmp" "$file"
-    rm -f "$file.tmp"
-done
 
 exit 0

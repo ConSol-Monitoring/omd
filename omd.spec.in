@@ -27,7 +27,14 @@ Thruk, Mod-Gearman, Nagvis, PNP4Nagios and many more...
 Maintained by http://labs.consol.de/omd/.
 
 %prep
-%setup -q -n omd-%{version}
+# make builds reproducable and cacheable by not changing build root every day
+rm -rf omd-%{version} omd
+ln -s omd-%{version} omd
+%setup -q -D -n omd
+cd ..
+rm omd
+mv omd-%{version} omd
+cd omd
 
 %build
 make -j 4
