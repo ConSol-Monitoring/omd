@@ -10,6 +10,11 @@ if [ $(id -u) -ne 0 ]; then
     exit 1
 fi
 
+if [ $1 = "-t" ]; then
+    TEST_TIMER=1
+    shift
+fi
+
 export PATH="$PATH:/usr/sbin"
 
 # do we install a package?
