@@ -61,9 +61,9 @@ kill_gearmand() {
     else
         # do a kill if still now down
         ps -p $pid > /dev/null 2>&1 && kill $pid
-        for x in 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5; do
-            printf "."
-            ps -p $pid > /dev/null 2>&1 && sleep 1;
+        for x in $(seq 150); do
+            [ $((I%5)) -eq 0 ] && printf "."
+            ps -p $pid > /dev/null 2>&1 && sleep 0.1;
         done
         if ! ps -p $pid > /dev/null 2>&1 ; then
             echo "OK"
@@ -121,11 +121,11 @@ case "$1" in
         else
             # do a shutdown
             if [ ! -z $NC ]; then
-                echo "shutdown" | $NC -w 1 -i 1 $LISTEN $PORT > /dev/null
-                x=$SHUTDOWN_TIME
+                echo "shutdown" | $NC -w 1 $LISTEN $PORT > /dev/null
+                x=$( expr $SHUTDOWN_TIME \* 10 )
                 while [ $x -gt 0 ]; do
-                    printf "."
-                    ps -p $pid > /dev/null 2>&1 && sleep 1 || x=0;
+                    [ $((x%5)) -eq 0 ] && printf "."
+                    ps -p $pid > /dev/null 2>&1 && sleep 0.1 || x=0;
                     x=$( expr $x - 1 )
                 done
 
