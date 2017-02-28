@@ -71,13 +71,13 @@ case "$1" in
             echo -n 'waiting for termination..'
 	    N=0
 	    while [ -d /proc/$PID ] ; do
-		echo -n .
-		if [ $N -ge 20 ] ; then
+		[ $((n%5)) -eq 0 ] && echo -n .
+		if [ $N -ge 200 ] ; then
 		    echo "still running after 20 secs!"
 		    exit 1
                 fi
 		N=$((N+1))
-		sleep 1 
+		sleep 0.1
 	    done    
 	    echo "OK"
         else
