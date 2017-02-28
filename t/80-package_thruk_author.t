@@ -48,7 +48,7 @@ for my $url ( @{$urls} ) {
     $url->{'unlike'} = [ '/internal server error/', '/"\/thruk\//', '/\'\/thruk\//' ];
 }
 
-for my $core (qw/nagios shinken/) {
+for my $core (qw/nagios naemon/) {
     ##################################################
     # run our tests
     TestUtils::test_command({ cmd => $omd_bin." stop $site" });

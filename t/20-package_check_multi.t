@@ -12,7 +12,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 140 );
+plan( tests => 134 );
 
 # create our test site
 my $omd_bin = TestUtils::get_omd_bin();
@@ -30,8 +30,6 @@ TestUtils::test_command({ cmd => "/bin/cp t/packages/check_multi/test/localhost.
 TestUtils::test_command({ cmd => "/usr/bin/test -d /omd/sites/$site/etc/check_multi || /bin/mkdir /omd/sites/$site/etc/check_multi" });
 TestUtils::test_command({ cmd => "/bin/cp t/packages/check_multi/test/* /omd/sites/$site/etc/check_multi" });
 TestUtils::test_command({ cmd => "/bin/sed -i -e 's/sleep_time = 15/sleep_time = 2/' -e 's/perfdata_file_processing_interval = 15/perfdata_file_processing_interval = 2/' /omd/sites/$site/etc/pnp4nagios/npcd.cfg" });
-TestUtils::test_command({ cmd => "/bin/sed -i -e 's/log_external_commands=0/log_external_commands=1/' /omd/sites/$site/etc/shinken/shinken.d/logging.cfg" });
-TestUtils::test_command({ cmd => "/bin/echo 'max_service_check_spread=1' >> /omd/sites/$site/etc/shinken/shinken.d/tuning.cfg" });
 TestUtils::test_command({ cmd => $omd_bin." start $site" })   or TestUtils::bail_out_clean("No need to test $package without proper startup");
 TestUtils::wait_for_file("/omd/sites/$site/tmp/run/live") or TestUtils::bail_out_clean("No need to test $package without livestatus connection");
 
@@ -151,7 +149,7 @@ for my $core (qw/nagios/) {
 	TestUtils::test_command({ cmd => $omd_bin." start $site" })         or TestUtils::bail_out_clean("No need to test $package without proper startup");
     TestUtils::wait_for_file("/omd/sites/$site/tmp/run/nagios.cmd") or TestUtils::bail_out_clean("No need to test $package without proper startup");;
 
-	#--- reschedule all checks and wait for result (note: shinken cmd.cgi is to be addressed via nagios CGIs)
+	#--- reschedule all checks and wait for result
 	#TestUtils::test_command({ cmd => "/bin/su - $site -c './lib/nagios/plugins/check_http -t 30 -H localhost -a omdadmin:omd -u /$site/nagios/cgi-bin/cmd.cgi -e 200 -P \"cmd_typ=17&host=$host&cmd_mod=2&start_time=2222-22-22:22%3A22%3A22&force_check=on&btnSubmit=Commit\" -r \"Your command request was successfully submitted\"'", like => '/HTTP OK:/' });
 	TestUtils::test_command({ cmd => "/bin/su - $site -c './lib/nagios/plugins/check_http -t 30 -H localhost -a omdadmin:omd -u /$site/nagios/cgi-bin/cmd.cgi -e 200 -P \"cmd_typ=7&cmd_mod=2&host=$host&service=nagios&start_time=2010-11-06+09%3A46%3A02&force_check=on&btnSubmit=Commit\" -r \"Your command request was successfully submitted\"'", like => '/HTTP OK:/' });
 	TestUtils::test_command({ cmd => "/bin/su - $site -c './lib/nagios/plugins/check_http -t 30 -H localhost -a omdadmin:omd -u /$site/nagios/cgi-bin/cmd.cgi -e 200 -P \"cmd_typ=7&cmd_mod=2&host=$host&service=pnp4nagios&start_time=2010-11-06+09%3A46%3A02&force_check=on&btnSubmit=Commit\" -r \"Your command request was successfully submitted\"'", like => '/HTTP OK:/' });

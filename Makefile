@@ -48,7 +48,6 @@ PACKAGES=freetds \
          pnp4nagios \
          pnp4nagios4 \
          rrdtool \
-         shinken \
          thruk \
          thruk-plugins \
          thruk-consol-theme \

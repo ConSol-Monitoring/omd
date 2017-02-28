@@ -19,6 +19,9 @@ next:
             - add mod_rpaf to set remote_addr to real address
           - omd:
             - add systemd service file, fixes reboot problem on centos
+            - removed old unmaintained packages:
+              - shinken
+              - mongodb
 
 2.20     Nov 18 2016
           - OMD
