@@ -27,6 +27,7 @@ install:
 	install -m 644 omd.8 $(DESTDIR)$(OMD_ROOT)/share/man/man8
 	gzip $(DESTDIR)$(OMD_ROOT)/share/man/man8/omd.8
 	install -m 755 omd.init $(DESTDIR)$(OMD_ROOT)/share/omd/omd.init
+	install -m 644 omd.service $(DESTDIR)$(OMD_ROOT)/share/omd/omd.service
 	sed -i 's|###DEFAULT_RUNLEVELS###|$(DEFAULT_RUNLEVELS)|g' $(DESTDIR)$(OMD_ROOT)/share/omd/omd.init
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/doc/$(NAME)
 	install -m 644 COPYING AUTHORS $(DESTDIR)$(OMD_ROOT)/share/doc/$(NAME)

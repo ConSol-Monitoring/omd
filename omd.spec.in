@@ -11,6 +11,9 @@ AutoReq:        off
 AutoProv:       off
 Provides:       omd
 Requires:
+%if 0%{?systemd_requires}
+BuildRequires: systemd
+%endif
 
 #%define _missing_doc_files_terminate_build 0
 #%define _unpackaged_files_terminate_build 0
@@ -27,7 +30,14 @@ Thruk, Mod-Gearman, Nagvis, PNP4Nagios and many more...
 Maintained by http://labs.consol.de/omd/.
 
 %prep
-%setup -q -n omd-%{version}
+# make builds reproducable and cacheable by not changing build root every day
+rm -rf omd-%{version} omd
+ln -s omd-%{version} omd
+%setup -q -D -n omd
+cd ..
+rm omd
+mv omd-%{version} omd
+cd omd
 
 %build
 make -j 4
@@ -85,6 +95,13 @@ ln -sfn /omd/versions/default/lib/omd/omd_bash_completion /etc/bash_completion.d
 if [ $ACTIVATE_INIT -eq 1 ]; then
     chkconfig --add omd
     chkconfig omd on
+%if 0%{?_unitdir:1}
+if test -e /omd/versions/default/share/omd/omd.service; then
+cp /omd/versions/default/share/omd/omd.service %{_unitdir}/omd.service
+%systemd_post omd.service
+systemctl enable omd.service
+fi
+%endif
 fi
 
 
@@ -152,17 +169,30 @@ if [ $1 = 0 ] ; then
         fi
     done
 fi
+%if 0%{?_unitdir:1}
+%systemd_preun omd.service
+%endif
 
 
 %postun
 # sles12 sometimes does not remove some empty folders
 rm -rf /omd/versions/%{version}
 rm -f /omd/versions/default
+%if 0%{?_unitdir:1}
+%systemd_postun omd.service
+%endif
 v=$(ls -A /omd/versions 2>/dev/null| sort -n | tail -n 1)
 if [ -n "$v" ]
 then
     echo "New default version is $v"
     ln -sfn "$v" /omd/versions/default
+%if 0%{?_unitdir:1}
+if test -e /omd/versions/default/share/omd/omd.service; then
+cp /omd/versions/default/share/omd/omd.service %{_unitdir}/omd.service
+%systemd_post omd.service
+systemctl enable omd.service
+fi
+%endif
 else
     echo "Removing system group 'omd'"
     groupdel omd

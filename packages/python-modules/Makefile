@@ -97,7 +97,6 @@ install:
 	    unset ftp_proxy; \
 	    for M in $(MODULES); do \
 	        MDIR=$$(echo $$M | sed -e 's/.tar.gz//g' -e 's/.zip//g') ; \
-	        MNAME=$$(echo $$MDIR | sed -e 's/\-[0-9\.]*$//g' | tr 'A-Z' 'a-z' ) ; \
 	        cd $$MDIR ; \
 	        echo PYTHONINSTALL $$M ; \
 	        python setup.py install --home=$(DESTDIR)$(OMD_ROOT) \

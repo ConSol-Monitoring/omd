@@ -28,7 +28,7 @@ TestUtils::test_command({ cmd => $omd_bin." start $site", like => '/Starting Gra
 
 #grafana interface
 TestUtils::test_url({ url => 'http://localhost/'.$site.'/grafana/', waitfor => '<title>Grafana<\/title>', auth => $auth });
-TestUtils::test_command({ cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -t 60 -H localhost -p 8003 -k \"X-WEBAUTH-USER: omdadmin\" -s \"<title>Grafana</title>\"'", like => '/HTTP OK:/' });
+TestUtils::test_command({ cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -t 60 -H 127.0.0.1 -p 8003 -k \"X-WEBAUTH-USER: omdadmin\" -s \"<title>Grafana</title>\"'", like => '/HTTP OK:/' });
 TestUtils::test_command({ cmd => "/omd/sites/$site/lib/nagios/plugins/check_http -t 60 -H localhost -a omdadmin:omd -u '/$site/grafana/' -s '\"login\":\"omdadmin\"'", like => '/HTTP OK:/' });
 
 #grafana interface with ssl
@@ -56,7 +56,7 @@ TestUtils::test_command({ cmd => "/omd/sites/$site/lib/nagios/plugins/check_http
 
 # make sure grafana listens to localhost only
 # first test against localhost and make sure it works
-TestUtils::test_command({ cmd => "/bin/su - $site -c '$curl \"http://localhost:8003/$site/grafana\" -H \"X-WEBAUTH-USER: omdadmin\" '",
+TestUtils::test_command({ cmd => "/bin/su - $site -c '$curl \"http://127.0.0.1:8003/$site/grafana\" -H \"X-WEBAUTH-USER: omdadmin\" '",
                           errlike => ['/Set-Cookie: grafana_sess/'], 
                           like  => ['/"login":"omdadmin"/'],
                        });
