@@ -100,7 +100,9 @@ omd: $(DEFAULT_BUILD)
 
 build-cached:
 	@set -e ; cd packages ; for p in $(PACKAGES) ; do \
+        NOW=$$(date +%s); \
 		OMD_VERSION="$(OMD_VERSION)" BUILD_CACHE="$(BUILD_CACHE)" ../build_cached "$(MAKE)" "$$p" "$(DISTRO_NAME)/$(DISTRO_VERSION)/$(shell uname -m)"; \
+        echo "build-cached: $$p (took $$(( $$(date +%s) - NOW ))s)"; \
         done
 
 
@@ -122,11 +124,13 @@ pack:
 	mkdir -p $(DESTDIR)$(OMD_PHYSICAL_BASE)
 	A="$(OMD_PHYSICAL_BASE)" ; ln -s $${A:1} $(DESTDIR)/omd
 	@set -e ; cd packages ; for p in $(PACKAGES) ; do \
+            NOW=$$(date +%s); \
             $(MAKE) -C $$p DESTDIR=$(DESTDIR) install ; \
             for hook in $$(cd $$p ; ls *.hook 2>/dev/null) ; do \
                 mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/omd/hooks ; \
                 install -m 755 $$p/$$hook $(DESTDIR)$(OMD_ROOT)/lib/omd/hooks/$${hook%.hook} ; \
             done ; \
+            echo "pack: $$p (took $$(( $$(date +%s) - NOW ))s)"; \
         done
 
 	# Repair packages that install with silly modes (such as Nagios)
