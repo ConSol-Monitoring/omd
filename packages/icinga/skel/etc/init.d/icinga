@@ -138,12 +138,12 @@ nagios_wait_stop() {
             # Send single kill per process
             kill $pid
             while kill -0 ${pid:-} >/dev/null 2>&1;  do
-                if [ $I = '60' ]; then
+                if [ $I = '600' ]; then
                     return 1
                 else
-                    echo -n "."
+                    [ $((I%5)) -eq 0 ] && echo -n "."
                     I=$(($I+1))
-                    sleep 1
+                    sleep 0.1
                 fi
             done
             # Is there another proc with ppid 1?

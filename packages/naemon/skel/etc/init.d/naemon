@@ -59,6 +59,7 @@ GRP=###SITE###
 # check_icmp outputs performance data with german
 # comma instead of dot and makes it unparsable.
 unset LANG
+export LC_ALL=C
 
 # OMD: create configuration file out of fragments
 case "$1" in start|restart|reload|checkconfig|check)
@@ -138,20 +139,20 @@ naemon_wait_stop() {
         # check plugins which are currently running
         kill -TERM -$pid
         while kill -0 $pid  >/dev/null 2>&1;  do
-            if [ $I = '30' ]; then
+            if [ $I = '300' ]; then
                 # we likely have to kill naemon, so at least give the core 30 seconds to write the retention.dat
                 printf "[%lu] SAVE_STATE_INFORMATION;\n" `date +%s` > $OMD_ROOT/tmp/run/naemon.cmd
             fi
-            if [ $I = '60' ]; then
+            if [ $I = '600' ]; then
                 echo -ne "\nsending SIGKILL"
                 kill -9 $pid
-            elif [ $I = '70' ]; then
+            elif [ $I = '700' ]; then
                 return 1
             fi
 
-            echo -n "."
+            [ $((I%5)) -eq 0 ] && echo -n "."
             I=$(($I+1))
-            sleep 1
+            sleep 0.1
         done
         # Is there another proc with ppid 1?
         pid=$(pidof_naemon) || break

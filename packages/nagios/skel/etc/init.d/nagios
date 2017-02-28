@@ -142,16 +142,16 @@ nagios_wait_stop() {
         # check plugins which are currently running
         kill -TERM -$pid
         while kill -0 $pid  >/dev/null 2>&1;  do
-            if [ $I = '60' ]; then
+            if [ $I = '600' ]; then
                 echo -ne "\nsending SIGKILL"
                 kill -9 $pid
-            elif [ $I = '70' ]; then
+            elif [ $I = '700' ]; then
                 return 1 
             fi
                 
-            echo -n "."
+            [ $((I%5)) -eq 0 ] && echo -n "."
             I=$(($I+1))
-            sleep 1
+            sleep 0.1
         done
         # Is there another proc with ppid 1?
         pid=$(pidof_nagios) || break
