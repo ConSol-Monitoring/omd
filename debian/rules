@@ -127,7 +127,7 @@ binary-arch: build install
 #	dh_undocumented
 	dh_installman
 	dh_link
-	dh_strip --exclude=wkhtmltopdf --exclude=waitmax --exclude agent_modbus
+	dh_strip --exclude=waitmax --exclude agent_modbus
 	dh_compress
 	dh_fixperms
 #	dh_perl
