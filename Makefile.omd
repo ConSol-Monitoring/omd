@@ -14,7 +14,8 @@ P5TMPDIST          = $(shell pwd)/../perl-modules/dist
 # from a package Makefile. There we do not know the path to the
 # 'distro' script. We simply try out both paths...
 
-DISTRO_INFO        = $(shell ./distro 2>/dev/null || ../../distro)
+ROOT_DIR          := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
+DISTRO_INFO        = $(shell $(ROOT_DIR)/distro 2>/dev/null || ./distro)
 DISTRO_NAME        = $(word 1, $(DISTRO_INFO))
 DISTRO_VERSION     = $(word 2, $(DISTRO_INFO))
 
@@ -22,10 +23,7 @@ DISTRO_VERSION     = $(word 2, $(DISTRO_INFO))
 # specific variables. Here the same problem appears again.
 # Maybe anyone has a simpler solution?
 
--include distros/Makefile.$(DISTRO_NAME)_$(DISTRO_VERSION)
-ifeq ($(OS_PACKAGES),)
-  include ../../distros/Makefile.$(DISTRO_NAME)_$(DISTRO_VERSION)
-endif
+include $(ROOT_DIR)/distros/Makefile.$(DISTRO_NAME)_$(DISTRO_VERSION)
 
 # Net result -> all Makefiles have now access to the linux distribution
 # specific settings

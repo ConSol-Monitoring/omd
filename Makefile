@@ -9,27 +9,13 @@ PACKAGES=freetds \
          grafana \
          histou \
          nagflux \
-         check_influxdb \
          python-modules \
          apache-omd \
          mod_python \
-         check_logfiles \
+         monitoring-plugins \
+         check_plugins \
          check_mk \
          check_multi \
-         check_mysql_health \
-         check_oracle_health \
-         check_mssql_health \
-         check_nwc_health \
-         check_sap_health \
-         check_pdu_health \
-         check_tl_health \
-         check_ups_health \
-         check_mailbox_health \
-         check_rittal_health \
-         check_sqlbase_health \
-         check_wut_health \
-         check_hpasm \
-         check_webinject \
          dokuwiki \
          example \
          jmx4perl \
@@ -38,10 +24,8 @@ PACKAGES=freetds \
          icinga \
          icinga2 \
          nagios \
-         monitoring-plugins \
          naemon \
          nagvis \
-         check_nsc_web \
          nrpe \
          nsca \
          omd \
@@ -68,7 +52,6 @@ PACKAGES=freetds \
          dataScryer \
          snmptrapd \
          downtime-api \
-         check_ssh_controlmaster \
          grafana-pnp-datasource
 
 include Makefile.omd
