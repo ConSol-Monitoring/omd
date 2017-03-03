@@ -12,8 +12,6 @@ PACKAGES=freetds \
          python-modules \
          apache-omd \
          mod_python \
-         monitoring-plugins \
-         check_plugins \
          check_mk \
          check_multi \
          dokuwiki \
@@ -29,6 +27,8 @@ PACKAGES=freetds \
          nrpe \
          nsca \
          omd \
+         monitoring-plugins \
+         check_plugins \
          pnp4nagios \
          pnp4nagios4 \
          rrdtool \

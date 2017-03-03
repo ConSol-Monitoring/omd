@@ -26,7 +26,7 @@ my $tests = [
 
   { cmd => $omd_bin." start $site" },
 
-  { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -H localhost -u /$site/nagios -e 401'",                  like => '/HTTP OK:/' },
+  { cmd => "/bin/su - $site -c 'lib/naemon/plugins/check_http -H localhost -u /$site/nagios -e 401'",                  like => '/HTTP OK:/' },
   { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -H localhost -a omdadmin:omd -u /$site/nagios -e 301'",  like => '/HTTP OK:/' },
   { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -H localhost -a omdadmin:omd -u /$site/nagios/ -e 200'", like => '/HTTP OK:/' },
 
