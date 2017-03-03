@@ -1,23 +1,11 @@
 include ../../Makefile.omd
 
 NAME     = python-modules
-VERSION  = $(OMD_VERSION)
-DISTRO   = $(shell ../../distro)
 SHELL    = /bin/bash
 
 MODULES =
-
-# Shinken
 MODULES += setuptools-24.2.0.tar.gz
-ifeq ($(shell ./python_greater_2.6.sh),0)
-    MODULES += multiprocessing-2.6.2.1.tar.gz
-endif
 MODULES += simplejson-3.8.2.tar.gz
-MODULES += pysphere-0.1.7.zip
-MODULES += Pyro4-4.18.tar.gz
-MODULES += pymongo-2.5.2.tar.gz
-# end of shinken
-
 MODULES += texttable-0.8.7.tar.gz
 MODULES += ordereddict-1.1.tar.gz
 MODULES += weakrefset-1.0.0.tar.gz
