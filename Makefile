@@ -23,6 +23,7 @@ PACKAGES=freetds \
          icinga2 \
          nagios \
          naemon \
+         naemon-livestatus \
          nagvis \
          nrpe \
          nsca \
@@ -38,7 +39,6 @@ PACKAGES=freetds \
          maintenance \
          gearmand \
          mod-gearman \
-         naemon-livestatus \
          patch \
          nail \
          notifications-tt \
