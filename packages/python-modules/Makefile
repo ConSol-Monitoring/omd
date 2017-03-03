@@ -3,9 +3,7 @@ include ../../Makefile.omd
 NAME     = python-modules
 VERSION  = $(OMD_VERSION)
 DISTRO   = $(shell ../../distro)
-
-# This is where the python modules are going to be installed to
-LOCALPYTHONDIR=$(DESTDIR)$(OMD_ROOT)/lib/python
+SHELL    = /bin/bash
 
 MODULES =
 
@@ -69,8 +67,10 @@ MODULES += pymssql-2.1.3.tar.gz
 
 build:
 	mkdir -p dest
+	LOCALPYTHONDIR=$(shell pwd)/dest$(OMD_ROOT)/lib/python; \
+	mkdir -p $$LOCALPYTHONDIR; \
 	set -e ; cd dest && \
-	    export PYTHONPATH=$$PYTHONPATH:$(LOCALPYTHONDIR); \
+	    export PYTHONPATH=$$PYTHONPATH:$$LOCALPYTHONDIR; \
 	    export PYMSSQL_BUILD_WITH_BUNDLED_FREETDS=1; \
 	    unset http_proxy; \
 	    unset https_proxy; \
@@ -84,27 +84,22 @@ build:
 	        MDIR=$$(echo $$M | sed -e 's/.tar.gz//g' -e 's/.zip//g') ; \
 	        cd $$MDIR; \
 	        echo PYTHONBUILD $$M ; \
-	        python setup.py build ; \
+	        python setup.py build; \
+	        python setup.py install --home=../$(OMD_ROOT) \
+	            --prefix='' \
+	            --install-platlib=$$LOCALPYTHONDIR \
+	            --install-purelib=$$LOCALPYTHONDIR ; \
 	        cd .. ; \
+	        rm -rf $$MDIR; \
 	    done
+	rm -rf dest/{bin,lib}
+	mv dest$(OMD_ROOT)/{bin,lib} dest/
+	rm -rf dest/omd
 
 install:
-	mkdir -p $(LOCALPYTHONDIR)
-	set -e ; cd dest && \
-	    export PYTHONPATH=$$PYTHONPATH:$(LOCALPYTHONDIR); \
-	    unset http_proxy; \
-	    unset https_proxy; \
-	    unset ftp_proxy; \
-	    for M in $(MODULES); do \
-	        MDIR=$$(echo $$M | sed -e 's/.tar.gz//g' -e 's/.zip//g') ; \
-	        cd $$MDIR ; \
-	        echo PYTHONINSTALL $$M ; \
-	        python setup.py install --home=$(DESTDIR)$(OMD_ROOT) \
-	            --prefix='' \
-	            --install-platlib=$(LOCALPYTHONDIR) \
-	            --install-purelib=$(LOCALPYTHONDIR) ; \
-	        cd .. ; \
-	    done
+	mkdir -p $(DESTDIR)$(OMD_ROOT)
+	rsync -a dest/bin $(DESTDIR)$(OMD_ROOT)/
+	rsync -a dest/lib $(DESTDIR)$(OMD_ROOT)/
 
 skel:
 
