@@ -21,14 +21,14 @@ PACKAGES=freetds \
          check_mssql_health \
          check_nwc_health \
          check_sap_health \
-	 check_pdu_health \
-	 check_tl_health \
-	 check_ups_health \
-	 check_mailbox_health \
-	 check_rittal_health \
-	 check_sqlbase_health \
-	 check_wut_health \
-	 check_hpasm \
+         check_pdu_health \
+         check_tl_health \
+         check_ups_health \
+         check_mailbox_health \
+         check_rittal_health \
+         check_sqlbase_health \
+         check_wut_health \
+         check_hpasm \
          check_webinject \
          dokuwiki \
          example \
@@ -41,7 +41,7 @@ PACKAGES=freetds \
          monitoring-plugins \
          naemon \
          nagvis \
-		 check_nsc_web \
+         check_nsc_web \
          nrpe \
          nsca \
          omd \
@@ -61,15 +61,15 @@ PACKAGES=freetds \
          ansible \
          coshsh \
          lmd \
-	 prometheus \
-	 alertmanager \
-	 blackbox \
-	 pushgateway \
-	 dataScryer \
-	 snmptrapd \
-	 downtime-api \
-	 check_ssh_controlmaster \
-	 grafana-pnp-datasource
+         prometheus \
+         alertmanager \
+         blackbox \
+         pushgateway \
+         dataScryer \
+         snmptrapd \
+         downtime-api \
+         check_ssh_controlmaster \
+         grafana-pnp-datasource
 
 include Makefile.omd
 
