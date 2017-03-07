@@ -96,7 +96,7 @@ case "$1" in
             done
             if get_status > /dev/null ; then
                 # set admin user
-                echo "CREATE USER $USER WITH PASSWORD '$PASS' WITH ALL PRIVILEGES" | influx $CONNECT >/dev/null
+                echo "CREATE USER $USER WITH PASSWORD '$PASS' WITH ALL PRIVILEGES" | influx $CONNECT -username $USER -password $PASS >/dev/null
                 # set grafana user
                 echo "CREATE USER $GRAFANA_USER WITH PASSWORD '$GRAFANA_PASS'" | influx $CONNECT -username $USER -password $PASS >/dev/null
                 echo "CREATE DATABASE nagflux" | influx $CONNECT -username $USER -password $PASS >/dev/null
