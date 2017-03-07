@@ -35,6 +35,10 @@ install:
 	if [ -d "$(DESTDIR)$(OMD_ROOT)/lib/icinga" ] ; then \
             cd $(DESTDIR)$(OMD_ROOT)/lib/icinga && ln -s ../nagios/plugins plugins ; \
 	fi
+	# link lib/nagios/plugins to lib/naemon/plugins
+	if [ -d "$(DESTDIR)$(OMD_ROOT)/lib/naemon" ] ; then \
+            cd $(DESTDIR)$(OMD_ROOT)/lib/naemon && ln -s ../nagios/plugins plugins ; \
+	fi
 
 skel:
 

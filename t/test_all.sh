@@ -10,7 +10,7 @@ if [ $(id -u) -ne 0 ]; then
     exit 1
 fi
 
-if [ $1 = "-t" ]; then
+if [ "$1" = "-t" ]; then
     TEST_TIMER=1
     shift
 fi
