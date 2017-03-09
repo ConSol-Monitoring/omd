@@ -13,8 +13,9 @@ CONFIGUREOPTS = ""
 
 build:
 	tar xzf $(DIR).tar.gz
-	cd $(DIR) ; ./configure $(CONFIGUREOPTS)
-	$(MAKE) -C $(DIR) all
+	cd $(DIR) ; patch -p0 < ../nrpe-0010-opensslv110-strict.patch.txt
+	cd $(DIR) ; CFLAGS=-DOPENSSL_NO_SSL2 ./configure $(CONFIGUREOPTS)
+	$(MAKE) -C $(DIR) check_nrpe
 
 install:
 	install -m 755 $(DIR)/src/check_nrpe $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins
