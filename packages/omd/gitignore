@@ -1,4 +1,4 @@
-# OMD gitignore
+# OMD gitignore, append your own settings at the end
 local/lib/perl5/
 tmp/
 var/
@@ -28,3 +28,7 @@ influxportupdated
 .java
 .sqlite_history
 .dbus
+prometheusportupdated
+
+# Append your own ignores after this comment to avoid conflicts
+
