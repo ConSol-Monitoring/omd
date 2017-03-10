@@ -1,20 +1,20 @@
-From 41dba3bc9e5085c0e228767ba3f2bc3b48ae57d6 Mon Sep 17 00:00:00 2001
+From 15fb30d4d46df543c7e7d179e53f8009a4b4ad55 Mon Sep 17 00:00:00 2001
 From: Sven Nierlein <sven@nierlein.de>
-Date: Fri, 10 Mar 2017 16:03:39 +0100
+Date: Fri, 10 Mar 2017 16:30:49 +0100
 Subject: [PATCH] use schedule_event for calculating timeperiod transitions
 
 the callback NEBCALLBACK_TIMED_EVENT_DATA is never triggerd anymore (maybe it
 should be deprecated or removed), so use schedule_event instead and trigger
 a event every second to check if the timeperiod transitions have to be recalculated.
 ---
- src/module.c | 11 +++++------
- 1 file changed, 5 insertions(+), 6 deletions(-)
+ src/module.c | 13 +++++++------
+ 1 file changed, 7 insertions(+), 6 deletions(-)
 
 diff --git a/src/module.c b/src/module.c
-index 24f3cc5..d768e2b 100644
+index 24f3cc5..3c01220 100644
 --- a/src/module.c
 +++ b/src/module.c
-@@ -351,12 +351,12 @@ int broker_program(int event_type __attribute__ ((__unused__)), void *data __att
+@@ -351,12 +351,14 @@ int broker_program(int event_type __attribute__ ((__unused__)), void *data __att
      return 0;
  }
  
@@ -26,12 +26,14 @@ index 24f3cc5..d768e2b 100644
 -    update_timeperiods_cache(ts->timestamp.tv_sec);
 -    return 0;
 +    update_timeperiods_cache(time(0));
-+    schedule_event(1, broker_event, NULL);
++    if(!sigshutdown && !sigrestart) {
++        schedule_event(1, broker_event, NULL);
++    }
 +    return;
  }
  
  int broker_process(int event_type __attribute__ ((__unused__)), void *data)
-@@ -443,7 +443,7 @@ void register_callbacks()
+@@ -443,7 +445,7 @@ void register_callbacks()
      neb_register_callback(NEBCALLBACK_STATE_CHANGE_DATA,     g_nagios_handle, 0, broker_state); // only for trigger 'state'
      neb_register_callback(NEBCALLBACK_ADAPTIVE_PROGRAM_DATA, g_nagios_handle, 0, broker_program); // only for trigger 'program'
      neb_register_callback(NEBCALLBACK_PROCESS_DATA,          g_nagios_handle, 0, broker_process); // used for starting threads
@@ -40,7 +42,7 @@ index 24f3cc5..d768e2b 100644
  }
  
  void deregister_callbacks()
-@@ -458,7 +458,6 @@ void deregister_callbacks()
+@@ -458,7 +460,6 @@ void deregister_callbacks()
      neb_deregister_callback(NEBCALLBACK_STATE_CHANGE_DATA,     broker_state);
      neb_deregister_callback(NEBCALLBACK_ADAPTIVE_PROGRAM_DATA, broker_program);
      neb_deregister_callback(NEBCALLBACK_PROCESS_DATA,          broker_program);
