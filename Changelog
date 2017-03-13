@@ -4,7 +4,7 @@ next:
           - Thruk: update to 2.12-2
           - Naemon update to 1.0.6
           - histou: update 0.4.1
-          - nagflux: update 0.3.0
+          - nagflux: update 0.3.1
           - coshsh: update 3.2.4.3
           - Monitoring-Plugins: update to 2.2
           - Icinga2 update to 2.5.4

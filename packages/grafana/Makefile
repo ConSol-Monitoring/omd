@@ -1,8 +1,8 @@
 include ../../Makefile.omd
 
 NAME       = grafana
-VERSION    = 4.1.1
-TIMESTAMP  = 1484211277
+VERSION    = 4.1.2
+TIMESTAMP  = 1486989747
 SRC        = $(NAME)-$(VERSION).tar.gz
 GOPATH     = go
 GOPKG      = 1.7
