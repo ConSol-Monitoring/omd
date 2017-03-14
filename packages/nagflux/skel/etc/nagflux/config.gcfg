@@ -7,7 +7,7 @@
 	NagfluxSpoolfileFolder = "###ROOT###/var/nagflux"
 	FieldSeparator = "&"
 	BufferSize = 1000
-    FileBufferSize = 65536
+	FileBufferSize = 65536
 
 [Log]
 	#leave empty for stdout
