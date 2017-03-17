@@ -8,6 +8,11 @@
 	FieldSeparator = "&"
 	BufferSize = 1000
 	FileBufferSize = 65536
+	# If the performancedata does not have a certain target set with NAGFLUX:TARGET.
+	# The following field will define the target for this data.
+	# "all" sends the data to all Targets(every Influxdb, Elasticsearch...)
+	# a certain name will direct the data to this certain target
+	DefaultTarget = "all"
 
 [Log]
 	#leave empty for stdout
@@ -32,24 +37,29 @@
 	SecretFile = "###ROOT###/etc/mod-gearman/secret.key"
 	Worker = 1
 
-[Influx]
-	Enabled = true
-	Version = 0.10
-	##############
-	# The address is controlled by omd itself. Do not change it here.
-	# Instead use 'omd config INFLUXDB_HTTP_TCP_PORT set <port>'
-	#
-	Address = "http://127.0.0.1:8086"
-	#
-	# also keep this comments to reduce the merge conflicts during updates
-	##############
-	Arguments = "precision=ms&db=nagflux&u=omdadmin&p=omd"
+[InfluxDBGlobal]
 	CreateDatabaseIfNotExists = true
 	# Replace '\ ' because the InfluxDB has still a problem with theses characters to parse: https://github.com/influxdata/influxdb/issues/4865
 	# This can result in different Performancedata, most commen in Windowspaths
 	NastyString = ""
 	NastyStringToReplace = ""
 	HostcheckAlias = "hostcheck"
+
+[InfluxDB "nagflux"]
+	Enabled = true
+	Version = 1.0
+	##############
+	# The address is controlled by omd itself. Do not change it here.
+	# Instead use 'omd config INFLUXDB_HTTP_TCP_PORT set <port>'
+	#
+	Address = "http://127.0.0.1:8086
+	#
+	# also keep this comments to reduce the merge conflicts during updates
+	##############
+	Arguments = "precision=ms&db=nagflux&u=omdadmin&p=omd"
+	# If set on true nagflux will not parse Spoolfiles if this Influxdb is not running
+	# Set it to false if you're using gearman, because gearman will probably not buffer your data
+	StopPullingDataIfDown = true
 
 [Livestatus]
 	#tcp or file
@@ -58,13 +68,26 @@
 	Address = "###ROOT###/tmp/run/live"
 	# The amount to minutes to wait for livestatus to come up, if set to 0 the detection is disabled
 	MinutesToWait = 3
+	# Set the Version of Livestatus. Allowed are Nagios, Icinga2, Naemon. If left empty Nagflux will try to detect it on it's own
+	Version = "Icinga2"
 
-[Elasticsearch]
+[JSONFileExport "json_one"]
+	Enabled = false
+	Path = "###ROOT###/tmp/nagflux/"
+	# Timeinterval  in Seconds till a new file will be used. 0 for no rotation.
+	# If no rotation is selected, the JSON Objects are appended line by line so, every single line is valid JSON but the whole file not.
+	# If rotation is selected every file as whole is valid JSON.
+	AutomaticFileRotation = "15"
+
+[ElasticsearchGlobal]
+	HostcheckAlias = "hostcheck"
+	NumberOfShards = 1
+	NumberOfReplicas = 1
+	# Sorts the indices "monthly" or "yearly"
+	IndexRotation = "monthly"
+
+[Elasticsearch "example"]
 	Enabled = false
 	Address = "http://localhost:9200"
 	Index = "nagflux"
 	Version = 2.1
-        HostcheckAlias = "hostcheck"
-        NumberOfShards = 5
-        NumberOfReplicas = 0
-        IndexRotation = "monthly"
