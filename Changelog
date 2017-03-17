@@ -23,6 +23,7 @@ next:
               - shinken
               - mongodb
           - NRPE: Update to 3.0.1
+          - LMD: Update 1.0.3
 
 2.20     Nov 18 2016
           - OMD
