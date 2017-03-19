@@ -12,3 +12,12 @@
     endscript
     create 0664 ###SITE### ###SITE###
 }
+
+###ROOT###/var/naemon/livestatus.log {
+	missingok
+	rotate 7
+	compress
+	delaycompress
+	notifempty
+	create 640 ###SITE### ###SITE###
+}
