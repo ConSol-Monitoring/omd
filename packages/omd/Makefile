@@ -38,6 +38,8 @@ install:
 	install -m 600 openssl.cnf $(DESTDIR)$(OMD_ROOT)/share/omd/
 	
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/omd/scripts/post-create
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/omd/scripts/pre-update
+	install -m 755 omd.pre-update $(DESTDIR)$(OMD_ROOT)/lib/omd/scripts/pre-update/omd
 
 skel:
 	install -m 644 gitignore $(SKEL)/.gitignore

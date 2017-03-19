@@ -3026,6 +3026,8 @@ def main_update(args, options={}):
 
     start_logging(g_sitedir + '/var/log/update.log')
 
+    call_scripts('pre-update')
+
     sys.stdout.write("%s - Updating site '%s' from version %s to %s...\n\n" %
             (time.strftime('%Y-%m-%d %H:%M:%S'), g_sitename, from_version, to_version))
 

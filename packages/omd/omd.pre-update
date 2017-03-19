@@ -1,0 +1,9 @@
+#!/bin/bash
+
+cd $OMD_ROOT
+
+# remove file created by hook to prevent update conflict
+rm -f etc/shinken/apache.conf
+
+# restore original file from skel to prevent update conflict
+test -e etc/mongodb/mongod.cfg && sed -e '/###ROOT###/'$OMD_ROOT'/g' version/skel/etc/mongodb/mongod.cfg > etc/mongodb/mongod.cfg
