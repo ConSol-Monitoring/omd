@@ -62,7 +62,7 @@ BUILD_CACHE=$BUILD_CACHE/$CACHESUBDIR
 mkdir -p $BUILD_CACHE
 
 $MAKE -C "$SRC" clean
-MD5=$(cd "$SRC" && find . -exec md5sum {} \; 2>/dev/null | sort | md5sum | awk '{ print $1 }')
+MD5=$(cd "$SRC" && find . -exec md5sum {} \; 2>&1 | sort | md5sum | awk '{ print $1 }')
 CACHE_FILE="$BUILD_CACHE/${SRC}_${MD5}_v${OMD_VERSION}.tgz"
 CACHE_PATTERN="$BUILD_CACHE/${SRC}_${MD5}_v*.tgz"
 
