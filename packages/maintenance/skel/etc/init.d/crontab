@@ -8,7 +8,7 @@ fi
 
 NAME="crontab"
 MERGECRONTABS="###ROOT###/bin/merge-crontabs"
-CROND="###ROOT###/etc/cron.d/*"
+CROND="###ROOT###/etc/cron.d/*[^~]"
 CRONTAB=`which crontab`          
 CRONTAB_OPTS=""
 USER="###SITE###"
