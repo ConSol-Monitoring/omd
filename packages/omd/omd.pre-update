@@ -1,9 +1,31 @@
 #!/bin/bash
+#
+# OMD - Pre Update Hook
+#
+# This script prepares the site to fix some know issues which causes update conflicts.
+# It will be run prior the update process with the new OMD, but the
 
 cd $OMD_ROOT
 
-# remove file created by hook to prevent update conflict
-rm -f etc/shinken/apache.conf
+VERSION=$(readlink version | sed 's%.*versions/\([0-9]*\.*[0-9]*\)[-\.].*$%\1%')
+# convert version to int so we can compare it in bash
+# version 2.20 becomes 220
+VERSION=$(( $(( ${VERSION%.*} * 100 )) + ${VERSION#*.} ))
 
-# restore original file from skel to prevent update conflict
-test -e etc/mongodb/mongod.cfg && sed -e '/###ROOT###/'$OMD_ROOT'/g' version/skel/etc/mongodb/mongod.cfg > etc/mongodb/mongod.cfg
+# apply some fixed to versions until 2.20
+if [ $VERSION -le 220 ]; then
+  # remove file created by hook to prevent update conflict
+  rm -f etc/shinken/apache.conf
+
+  # restore original file from skel to prevent update conflict
+  test -e etc/mongodb/mongod.cfg && sed -e 's%###ROOT###%'$OMD_ROOT'%g' version/skel/etc/mongodb/mongod.cfg > etc/mongodb/mongod.cfg
+  test -e etc/mongodb/mongod.d/port.conf && cat version/skel/etc/mongodb/mongod.d/port.conf > etc/mongodb/mongod.d/port.conf
+
+  # influxdb port conflicts: reset port to default port from skel, then update. After the update the hook will set the actual port
+  test -e etc/influxdb/influxdb.conf && sed -e "/^\[http\]/,/^\[/{s/.*bind-address = .*$/$(grep '^\[http\]' -A 10 version/skel/etc/influxdb/influxdb.conf | grep '^\s*bind-address')/}" -i etc/influxdb/influxdb.conf
+  test -e etc/nagflux/config.gcfg && sed -e "/^\[Influx/,/^\[/{s%^\s*Address = \"http.*$%$(grep '^\[Influx' -A 10 version/skel/etc/nagflux/config.gcfg | grep '^\s*Address')%}" -i etc/nagflux/config.gcfg
+  test -e etc/nagflux/config.gcfg && sed -e "/^\[Elasticsearch/,/^\[/{s%^\s*Address = \"http.*$%$(grep '^\[Elasticsearch' -A 10 version/skel/etc/nagflux/config.gcfg | grep '^\s*Address')%}" -i etc/nagflux/config.gcfg
+  test -e etc/influxdb/influxdb.conf && sed -e "1,/^\[/{s/^bind-address = .*$/$(grep '^bind-address' version/skel/etc/influxdb/influxdb.conf)/}" -i etc/influxdb/influxdb.conf
+fi
+
+exit 0
