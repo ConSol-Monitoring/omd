@@ -22,7 +22,13 @@ our $site    = TestUtils::create_test_site() or TestUtils::bail_out_clean("no fu
 my @subtests = glob("packages/check_plugins/*/*.t");
 for my $subtest (@subtests) {
     ok(1, "subtest: $subtest");
-    do $subtest;
+    local $/ = undef;
+    open(my $fh, $subtest) or die "Couldn't open file: $!";
+    binmode $fh;
+    my $data = <$fh>;
+    close $fh;
+    eval($data);
+    is($@, "", "error output is empty");
 }
 
 ##################################################
