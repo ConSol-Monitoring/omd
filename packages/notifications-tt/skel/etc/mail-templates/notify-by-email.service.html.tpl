@@ -114,7 +114,9 @@ a:hover {
   <tr><td>Service:</td><td>[% SERVICEDESC %]</td></tr>
   <tr><td>State:</td><td><div class="service[% SERVICESTATE %]" style="width:200px; text-align:center;">[% SERVICESTATE %]</span></td></tr>
   <tr><td>Date:</td><td>[% SHORTDATETIME %]</td></tr>
-[% IF LONGSERVICEOUTPUT %]
+[% IF LONGSERVICEOUTPUT && LONGSERVICEOUTPUT.match('base64,') %]
+  <tr><td valign="top">Output:</td><td>[% SERVICEOUTPUT %]<br/><img style="max-width: 100%; max-height: 100%;" src="cid:embedded.png@1" alt="embedded graph"></td></tr>
+[% ELSIF LONGSERVICEOUTPUT %]
   <tr><td valign="top">Output:</td><td><pre>[% SERVICEOUTPUT %]<br/>[% LONGSERVICEOUTPUT.trim().replace("\n", "<br/>") %]</pre></td></tr>
 [% ELSE %]
   <tr><td>Output:</td><td>[% SERVICEOUTPUT %]</td></tr>
@@ -391,5 +393,17 @@ Content-Disposition: inline; filename="graph.png"
 
 [%+ graphimg %]
 [% END %]
+
+[%+ IF LONGSERVICEOUTPUT && LONGSERVICEOUTPUT.match('base64,') %]
+------=_alternative_html
+Content-Type: image/png; name="embedded.png"
+Content-Transfer-Encoding: base64
+Content-ID: <embedded.png@1>
+Content-Disposition: inline, filename="embedded.png"
+
+[% graph = LONGSERVICEOUTPUT.remove('\n').match('base64,(.*)[\s"]') %]
+"[% graph.0.chunk(70).join("\n") %]"
+
+[%+ END %]
 ------=_alternative_html--
 ------=_alternative_mail--
