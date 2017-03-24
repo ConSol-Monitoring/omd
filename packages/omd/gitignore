@@ -29,6 +29,7 @@ influxportupdated
 .sqlite_history
 .dbus
 prometheusportupdated
+oradiag_*/
 
 # Append your own ignores after this comment to avoid conflicts
 
