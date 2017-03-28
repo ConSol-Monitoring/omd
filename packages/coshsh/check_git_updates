@@ -95,7 +95,7 @@ set_lock $LOCKFILE
 # use https, but allow self-signed certificates
 export GIT_SSL_NO_VERIFY=1
 
-if [ -n "$OMD_PREPARE_CHECK_GIT_UPDATES" -a -x $OMD_PREPARE_CHECK_GIT_UPDATES ]
+if [ -n "$OMD_PREPARE_CHECK_GIT_UPDATES" -a -x "$OMD_PREPARE_CHECK_GIT_UPDATES" ]
 then
   $OMD_PREPARE_CHECK_GIT_UPDATES || exit $?
 fi
