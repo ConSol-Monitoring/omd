@@ -10,6 +10,7 @@ next:
           - Icinga2 update to 2.5.4
           - Icinga1 update to 1.14.0
           - Grafana update to 4.1.1
+          - Go 1.8 added
           - InfluxDb update to 1.2.0
           - Mod-Gearman: Update 3.0.1
           - apply fixes for CVE-2016-9566 in nagios3, icinga1 and naemon
