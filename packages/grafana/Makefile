@@ -1,11 +1,10 @@
 include ../../Makefile.omd
 
 NAME       = grafana
-VERSION    = 4.1.2
-TIMESTAMP  = 1486989747
+VERSION    = 4.2.0
 SRC        = $(NAME)-$(VERSION).tar.gz
 GOPATH     = go
-GOPKG      = 1.7
+GOPKG      = 1.8
 GOVERSION  = $(shell grep ^VERSION ../go-${GOPKG}/Makefile | awk '{ print $$3 }')
 PWD        = $(shell pwd)
 GO         = export GOROOT=$(PWD)/../go-$(GOPKG)/go-$(GOVERSION) && export GOPATH=$(PWD)/$(GOPATH)/ && PATH=$$GOROOT/bin:$$PATH && go
@@ -72,10 +71,10 @@ package: public
 	tar zcf $(SRC) $(GOPATH)/src/ --exclude=.git
 
 public:
-	wget --no-check-certificate https://grafanarel.s3.amazonaws.com/builds/grafana-$(VERSION)-$(TIMESTAMP).linux-x64.tar.gz
-	tar zxf grafana-$(VERSION)-$(TIMESTAMP).linux-x64.tar.gz
+	wget --no-check-certificate https://s3-us-west-2.amazonaws.com/grafana-releases/release/grafana-$(VERSION).linux-x64.tar.gz
+	tar zxf grafana-$(VERSION).linux-x64.tar.gz
 	cd grafana-*/. && tar cfz ../public.tar.gz public
-	rm grafana-$(VERSION)-$(TIMESTAMP).linux-x64.tar.gz
+	rm grafana-$(VERSION).linux-x64.tar.gz
 	rm -rf grafana-*/
 	wget --no-check-certificate "https://github.com/grafana/grafana/raw/master/conf/defaults.ini" -O defaults.ini
 
