@@ -69,7 +69,7 @@
 	# The amount to minutes to wait for livestatus to come up, if set to 0 the detection is disabled
 	MinutesToWait = 3
 	# Set the Version of Livestatus. Allowed are Nagios, Icinga2, Naemon. If left empty Nagflux will try to detect it on it's own
-	Version = "Icinga2"
+	Version = ""
 
 [JSONFileExport "json_one"]
 	Enabled = false
