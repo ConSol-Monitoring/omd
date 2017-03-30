@@ -1,0 +1,26 @@
+From 45863cdd1080d4fa08287c4e3cae699756eb6600 Mon Sep 17 00:00:00 2001
+From: root <root@checkmk.main.htl-perg.at>
+Date: Thu, 30 Mar 2017 18:33:35 +0200
+Subject: [PATCH 1/1] Send null Response when Livestatus Column doesn't exist
+
+---
+ src/Query.cc | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/src/Query.cc b/src/Query.cc
+index f53fd28..3c331ca 100644
+--- a/src/Query.cc
++++ b/src/Query.cc
+@@ -573,8 +573,7 @@ void Query::parseColumnsLine(char *line)
+         if (column)
+             _columns.push_back(column);
+         else {
+-            _output->setError(RESPONSE_CODE_INVALID_HEADER,
+-                   "Table '%s' has no column '%s'", _table->name(), column_name);
++            logger(LOG_WARNING, "Replacing non-existing column '%s' with null column", column_name);
+             Column *col = createDummyColumn(column_name);
+             _columns.push_back(col);
+         }
+-- 
+2.7.4
+
