@@ -18,16 +18,16 @@ if [ "$CONFIG_MOD_GEARMAN" != "on" -o "$CONFIG_GEARMAND" != "on" ] ; then
 fi
 
 NAME=gearmand
-DAEMON="###ROOT###/version/sbin/gearmand"
-OPTIONS="--daemon --worker-wakeup=10 --retention-file=###ROOT###/var/gearmand.retention -q retention"
+DAEMON="$OMD_ROOT/version/sbin/gearmand"
+OPTIONS="--daemon --worker-wakeup=10 --retention-file=$OMD_ROOT/var/gearmand.retention -q retention"
 PORT=`echo $CONFIG_GEARMAND_PORT | awk -F: {'print $2'}`
 LISTEN=`echo $CONFIG_GEARMAND_PORT | awk -F: {'print $1'}`
 if [ -z "$LISTEN" ]; then
     LISTEN=0.0.0.0
 fi
-PIDFILE=###ROOT###/tmp/run/gearmand.pid
-LOGFILE=###ROOT###/var/log/gearman/gearmand.log
-USER=###SITE###
+PIDFILE=$OMD_ROOT/tmp/run/gearmand.pid
+LOGFILE=$OMD_ROOT/var/log/gearman/gearmand.log
+USER=$OMD_SITE
 SHUTDOWN_TIME=5
 LOGLEVEL="ERROR"
 
@@ -62,7 +62,7 @@ kill_gearmand() {
         # do a kill if still now down
         ps -p $pid > /dev/null 2>&1 && kill $pid
         for x in $(seq 150); do
-            [ $((I%5)) -eq 0 ] && printf "."
+            [ $((x%5)) -eq 0 ] && printf "."
             ps -p $pid > /dev/null 2>&1 && sleep 0.1;
         done
         if ! ps -p $pid > /dev/null 2>&1 ; then
@@ -79,7 +79,7 @@ WHO=$( whoami )
 case "$1" in
     start)
         printf '%s' "Starting $NAME..."
-        mkdir -p ###ROOT###/var/log/gearman
+        mkdir -p $OMD_ROOT/var/log/gearman
         if get_status > /dev/null ; then
             echo "failed"
             echo "$NAME already running"
