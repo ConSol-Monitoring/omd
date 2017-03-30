@@ -8,9 +8,26 @@ if [ "$1" != "stop" ] ; then
     exit 5
 fi
 
-PID_FILE=$OMD_ROOT/tmp/thruk/lmd/lmd.pid
+PID_FILE=$OMD_ROOT/tmp/thruk/lmd/pid
 pid=$( cat $PID_FILE 2>/dev/null )
 if [ -n "$pid" ]; then
-  kill $pid >/dev/null 2>&1
+  echo -n "Stopping LMD..."
+  kill -TERM $pid
+  I=0
+  while kill -0 $pid  >/dev/null 2>&1;  do
+    if [ $I = '600' ]; then
+      echo -ne "\nsending SIGKILL"
+      kill -9 $pid
+      rm -f $PID_FILE
+    elif [ $I = '700' ]; then
+      echo 'FAILED'
+      exit 1
+    fi
+
+    [ $((I%5)) -eq 0 ] && echo -n "."
+    I=$(($I+1))
+    sleep 0.1
+  done
+  echo 'OK'
 fi
 exit 0
