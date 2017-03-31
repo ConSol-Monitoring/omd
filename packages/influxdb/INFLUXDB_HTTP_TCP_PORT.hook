@@ -8,7 +8,7 @@
 
 case "$1" in
     default)
-        echo localhost:8086
+        echo 127.0.0.1:8086
     ;;
     choices)
         echo "[a-zA-Z0-9\.\-:]+"
