@@ -38,7 +38,6 @@ MODULES += ecdsa-0.10.tar.gz
 MODULES += gearman-2.0.2.tar.gz
 MODULES += six-1.10.0.tar.gz
 MODULES += orderedmultidict-0.7.5.tar.gz
-MODULES += pyasn1-0.1.4.tar.gz
 MODULES += pycrypto-2.6.1.tar.gz
 MODULES += paramiko-1.12.2.tar.gz
 MODULES += pyasn1-0.2.3.tar.gz
