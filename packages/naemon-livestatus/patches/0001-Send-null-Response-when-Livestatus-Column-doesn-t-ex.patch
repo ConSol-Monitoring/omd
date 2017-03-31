@@ -1,0 +1,26 @@
+From f20293ad44561dfe14bb2d3daaf4f04eb3c8dd23 Mon Sep 17 00:00:00 2001
+From: Firegore <firegore@users.noreply.github.com>
+Date: Fri, 31 Mar 2017 17:54:57 +0200
+Subject: [PATCH 1/1] Fix MK_Multisite unkown Column error
+
+---
+ src/Query.cc | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/src/Query.cc b/src/Query.cc
+index f53fd28..cb0187e 100644
+--- a/src/Query.cc
++++ b/src/Query.cc
+@@ -530,8 +530,7 @@ void Query::parseSortLine(char *line)
+     if( column_name != 0 ) {
+         Column *column = _table->column(column_name);
+         if (column == 0) {
+-            _output->setError(RESPONSE_CODE_INVALID_HEADER,
+-                   "Table '%s' has no column '%s'", _table->name(), column_name);
++            logger(LOG_DEBUG, "Replacing non-existing column '%s' with null column", column_name);
+             column = createDummyColumn(column_name);
+         }
+ 
+-- 
+2.7.4
+
