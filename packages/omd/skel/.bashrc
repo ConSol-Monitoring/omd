@@ -12,7 +12,7 @@ if [ -z $OMD_ROOT ]; then
     cd ~
 fi
 alias cpan='cpan.wrapper'
-alias influx='influx -host 127.0.0.1 -port $(omd config show INFLUXDB_HTTP_TCP_PORT) -precision rfc3339 -username omdadmin -password omd'
+alias influx="influx -host `echo $(omd config show INFLUXDB_HTTP_TCP_PORT) | perl -lne 'print $1 if /([a-zA-Z0-9\.\-]+)?:([0-9]+)/'` -port `echo $(omd config show INFLUXDB_HTTP_TCP_PORT) | perl -lne 'print $2 if /([a-zA-Z0-9\.\-]+)?:([0-9]+)/'` -precision rfc3339 -username omdadmin -password omd"
 
 # pointless unless running interactively
 if [ "$PS1" ]; then
