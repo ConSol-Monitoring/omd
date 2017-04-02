@@ -44,6 +44,7 @@ install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/coshsh/contrib
 	cp coshsh-prepare-landscape \
 	    $(DESTDIR)$(OMD_ROOT)/share/coshsh/contrib
+	chmod 755 $(DESTDIR)$(OMD_ROOT)/share/coshsh/contrib/coshsh-prepare-landscape
 	cp consol_commands.cfg \
 	    $(DESTDIR)$(OMD_ROOT)/share/coshsh/contrib
 
