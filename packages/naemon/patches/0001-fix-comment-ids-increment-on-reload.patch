@@ -1,0 +1,33 @@
+From ce8b4a7968e3326f8b99e0b13ab77d50d0c5fab7 Mon Sep 17 00:00:00 2001
+From: Sven Nierlein <sven@nierlein.de>
+Date: Tue, 4 Apr 2017 17:00:57 +0200
+Subject: [PATCH] fix comment ids increment on reload
+
+Comments related to downtimes are beeing added with persistance=false flag. This
+leads to the comment beeing removed during a reload. The downtime then immediatly
+adds the comment again but the id increments each reload. Furter this results in
+a warning from livestatus for each downtime on every reload:
+livestatus: Cannot delete non-existing downtime/comment
+
+Signed-off-by: Sven Nierlein <sven@nierlein.de>
+---
+ src/naemon/xrddefault.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/src/naemon/xrddefault.c b/src/naemon/xrddefault.c
+index d9f8bdc..9898ab8 100644
+--- a/src/naemon/xrddefault.c
++++ b/src/naemon/xrddefault.c
+@@ -739,6 +739,9 @@ int xrddefault_read_state_information(void)
+ 					if (ack == FALSE && persistent == FALSE)
+ 						force_remove = TRUE;
+ 				}
++				/* comments from downtimes don't get removed, they would be immediatly added again anyway, but with incremented id for each reload */
++				else if (entry_type == DOWNTIME_COMMENT) {
++				}
+ 				/* non-persistent comments don't last past restarts UNLESS they're acks (see above) */
+ 				else if (persistent == FALSE)
+ 					force_remove = TRUE;
+-- 
+2.1.4
+
