@@ -8,6 +8,7 @@ BUILD_PACKAGES   += dnsutils # nagios-plugins check_dns
 BUILD_PACKAGES   += bison  # icinga 2
 BUILD_PACKAGES   += flex   # icinga 2
 BUILD_PACKAGES   += cmake  # icinga 2
+BUILD_PACKAGES   += gawk
 BUILD_PACKAGES   += git-buildpackage
 BUILD_PACKAGES   += gperf
 BUILD_PACKAGES   += help2man    # required by naemon
