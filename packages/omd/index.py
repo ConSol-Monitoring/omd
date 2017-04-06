@@ -103,25 +103,25 @@ def page_welcome(req):
    the default GUI of OMD.</p>
     """ % get_version(site_name(req)))
 
-    for id, title, path, desc in [ ('nagios', 'Classic Nagios GUI', 
-                              'share/nagios/htdocs',
-                              'The classic Nagios GUI is based on CGI program written '
-                              'in C. It retrieves its status information from <tt>status.dat</tt>. '
-                              'This interface is not longer actively developed and does not perform '
-                              'well in large installations.'),
+    for id, title, path, desc in [
+                             ('thruk', 'Thruk Monitoring Webinterface',
+                              'share/thruk',
+                              'Thruk is a complete rework of the classic interface. '
+                              'It is designed for large installations and can handle '
+                              'multiple sites. SLA Reporting is included as well as comprehensive '
+                              'Dashboards.'),
                              ('check_mk', 'Check_MK Multisite',
                               'share/check_mk/web',
                               'Check_MK Multisite is a fast and flexible status GUI written '
                               'in Python. It supports user definable views and is able to '
                               'display the status of several sites in one combined view. It '
                               'uses MK Livestatus for getting the status data from the sites.'),
-                             ('thruk', 'Thruk Monitoring Webinterface',
-                              'share/thruk',
-                              'Thruk is a complete rework of the classic interface '
-                              'in Perl. While maintaining the original look and feel it '
-                              'brings lots of improvements and new features. Just as Multisite '
-                              'it uses MK Livestatus as backend and supports the visualization '
-                              'of multiple sites.'),
+                             ('nagios', 'Classic Nagios GUI', 
+                              'share/nagios/htdocs',
+                              'The classic Nagios GUI is based on CGI program written '
+                              'in C. It retrieves its status information from <tt>status.dat</tt>. '
+                              'This interface is not longer actively developed and does not perform '
+                              'well in large installations.'),
                              ('icinga', 'Classic Icinga GUI',
                               'share/icinga/htdocs',
                               'Icinga\'s "classical" GUI is a derivate of the classical Nagios GUI '
@@ -129,13 +129,6 @@ def page_welcome(req):
                               'CGI programs in C. It has its own look and feel and brings useful '
                               'improvements. It is not bound to Icinga and can be used with the '
                               'other monitoring cores as well.'),
-                             ('shinken', 'Shinken WebUI',
-                              'share/lib/shinken',
-                              'Shinken enhances the ok/non-ok concept of Nagios by adding '
-                              'root problems and impacts. Monitored objects also can get a rank '
-                              'identifying their importance to the business.'
-                              'The Shinken WebUI was designed to visualize these new concepts '
-                              'and can not be used with the other monitoring cores.'),
                              ('nagvis', 'NagVis - The visualization addon', 
                               'share/nagvis/htdocs',
                               '<p>NagVis is the leading visualization addon for Nagios.</p>'
