@@ -13,8 +13,10 @@ CONFIGUREOPTS = ""
 
 build:
 	tar xzf $(DIR).tar.gz
-	cd $(DIR) ; patch -p0 < ../nrpe-0010-opensslv110-strict.patch.txt
-	cd $(DIR) ; patch -p1 < ../0001-reduce-syslog-loglevels.patch
+	set -e ; for p in patches/*.patch ; do \
+	    echo "applying $$p..." ; \
+	    ( cd $(DIR) ; patch -p1 -b ) < $$p ; \
+	done
 	cd $(DIR) ; CFLAGS=-DOPENSSL_NO_SSL2 ./configure $(CONFIGUREOPTS)
 	$(MAKE) -C $(DIR) check_nrpe
 
