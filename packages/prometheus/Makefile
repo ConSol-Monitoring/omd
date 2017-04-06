@@ -1,19 +1,16 @@
 include ../../Makefile.omd
 
 PROMETHEUS=prometheus-1.5.2
-NODEEXPORTER=node_exporter-0.13.0
 
 .PHONY: skel
 
 build:
 	tar xzf $(PROMETHEUS).linux-amd64.tar.gz
-	tar xzf $(NODEEXPORTER).linux-amd64.tar.gz
 
 install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/bin
 	install -m 755 $(PROMETHEUS).linux-amd64/prometheus $(DESTDIR)$(OMD_ROOT)/bin
 	install -m 755 $(PROMETHEUS).linux-amd64/promtool $(DESTDIR)$(OMD_ROOT)/bin
-	install -m 755 $(NODEEXPORTER).linux-amd64/node_exporter $(DESTDIR)$(OMD_ROOT)/bin
 
 skel:
 	mkdir -p $(SKEL)/etc/prometheus
@@ -29,4 +26,3 @@ skel:
 
 clean:
 	rm -rf $(PROMETHEUS).linux-amd64
-	rm -rf $(NODEEXPORTER).linux-amd64
