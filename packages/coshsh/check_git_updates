@@ -138,7 +138,17 @@ else
   NEWDYNAMICREV=$(git rev-list --max-count=1 master)
   popd
 fi
-test ! -d ${OMD_ROOT}/etc/${CORE}/conf.d/${OMD_LANDSCAPE}/${OMD_SITE}/custom && mkdir -p ${OMD_ROOT}/etc/${CORE}/conf.d/${OMD_LANDSCAPE}/${OMD_SITE}/custom
+if [ ! -d ${OMD_ROOT}/etc/${CORE}/conf.d/${OMD_LANDSCAPE}/${OMD_SITE}/custom ]; then
+  mkdir -p ${OMD_ROOT}/etc/${CORE}/conf.d/${OMD_LANDSCAPE}/${OMD_SITE}/custom
+  pushd ${OMD_ROOT}/etc/${CORE}/conf.d/${OMD_LANDSCAPE}/${OMD_SITE}/custom
+  cat <<EOMSG > README
+This is a directory for your manually written config files. It's a git repository and you should use the revision control for your changes.
+EOMSG
+  git init .
+  git add .
+  git commit -a -m "initial commit"
+  popd
+fi
 
 #
 # If changes in the static/dynamic repositories are detected, then run
