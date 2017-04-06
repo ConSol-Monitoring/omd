@@ -15,10 +15,12 @@ if not Grafana.ping():
     sys.exit(2)
 
 grafana = Grafana()
-influxdb_url = 'http://%s' % (Grafana.omd_settings['CONFIG_INFLUXDB_HTTP_TCP_PORT'],)
+influxdb_url = 'http://%s' % (Grafana.omd_settings['CONFIG_INFLUXDB_HTTP_TCP_PORT'].replace('0.0.0.0:', '127.0.0.1:'),)
 port_changed_flag = os.path.join(os.environ['OMD_ROOT'], 'var', 'tmp', 'influxportupdated')
 
 names = ["nagflux", "_internal", "sakuli"]
+grafana_user='grafana'
+grafana_password='grafana'
 
 for datasource_name in names:
     ds = grafana.get_datasource(datasource_name)
@@ -31,15 +33,15 @@ for datasource_name in names:
             access='proxy',
             isDefault=default,
             database=datasource_name,
-            user='grafana',
-            password='grafana'
+            user=grafana_user,
+            password=grafana_password
         )
         print "OK" if ds else "FAIL"
 
     elif os.path.exists(port_changed_flag):
         print "influxdb port has changed, trying to update datasource ",
 
-        if ds.update(url=influxdb_url):
+        if ds.update(url=influxdb_url,user=grafana_user,password=grafana_password):
             print "OK"
             os.remove(port_changed_flag)
 

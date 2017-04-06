@@ -44,7 +44,20 @@ TestUtils::test_command({ cmd => "/bin/su - $site -c 'omd config set APACHE_MODE
 TestUtils::restart_system_apache();
 TestUtils::test_command({ cmd => "/bin/su - $site -c 'omd start'",  like => '/Starting dedicated Apache.*?OK/' });
 TestUtils::test_command({ cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -H localhost -S -a omdadmin:omd -u /$site/thruk/startup.html -e 200 -vvv'", like => ['/HTTP OK:/', '/Please stand by, Thruks FastCGI Daemon is warming/'] });
-TestUtils::test_command({ cmd => $omd_bin." diff $site",     unlike => '/Changed content/', like => '/^$/' });
+
+# omd diff should list no files after creating a site, otherwise hooks are wrong and create lots of conflicts on every update
+{
+    my $test = { cmd => $omd_bin." diff $site",     unlike => '/Changed content/', like => '/^$/' };
+    TestUtils::test_command($test);
+    my @failed = $test->{'stdout'} =~ m|^\s*\*\s+Changed\s+content\s+(.*)$|gmx;
+    for my $file (@failed) {
+        diag($file);
+        my $test = { cmd => $omd_bin." diff $site $file" };
+        TestUtils::test_command($test);
+        diag($test->{'stdout'});
+    }
+}
+
 TestUtils::test_command({ cmd => "/bin/su - $site -c 'omd stop'",  like => '/Stopping dedicated Apache/' });
 
 ##################################################

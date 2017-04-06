@@ -298,14 +298,7 @@ deb: deb-changelog
 			-iomd-bin-$(OMD_VERSION).tar.gz \
 			-Iomd-bin-$(OMD_VERSION).tar.gz \
 			-i.gitignore -I.gitignore \
-			-uc -us -rfakeroot
-	# -- renaming deb package to DISTRO_CODE dependend name
-	# arch=`dpkg-architecture -qDEB_HOST_ARCH` ; \
-	# build=`sed -e '1s/.*(\(.*\)).*/\1/;q' debian/changelog` ; \
-	# distro=`echo $$build | sed -e 's/build/$(DISTRO_CODE)/' ` ; \
-	# echo "$$arch $$build $$distro"; \
-	# mv "../omd-$(OMD_VERSION)_$${build}_$${arch}.deb" \
-	#  "../omd-$(OMD_VERSION)_$${distro}_$${arch}.deb" ;
+			-uc -us -rfakeroot -b
 
 deb-snap: deb-environment
 	make clean && git checkout -- Makefile.omd packages/omd/omd && \
