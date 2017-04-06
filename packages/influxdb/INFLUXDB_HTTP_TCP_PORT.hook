@@ -14,17 +14,29 @@ case "$1" in
         echo "[a-zA-Z0-9\.\-:]+"
     ;;
     set)
-        EXTRACTED_ADDRESS=$(echo $2 | perl -lne 'print $1 if /([a-zA-Z0-9\.\-]+:)?([0-9]+)/')
+        BEFORE=$2
+        EXTRACTED_ADDRESS=$(echo $2 | perl -lne 'print $1 if /^([a-zA-Z0-9\.\-]*:)?([0-9]+)/')
         EXTRACTED_PORT=$(echo $2 | perl -lne 'print $2 if /([a-zA-Z0-9\.\-]+:)?([0-9]+)/')
         PORT=$($OMD_ROOT/lib/omd/port_is_used INFLUXDB_HTTP_TCP_PORT $EXTRACTED_PORT)
+        if [ "$EXTRACTED_ADDRESS" = ":" ] ; then
+            EXTRACTED_ADDRESS="0.0.0.0:"
+        fi
+        if [ "$EXTRACTED_ADDRESS" = "" ] ; then
+            EXTRACTED_ADDRESS="127.0.0.1:"
+        fi
+        LOCAL_ADDRESS=$EXTRACTED_ADDRESS
+        if [ "$EXTRACTED_ADDRESS" = "0.0.0.0:" ] ; then
+            LOCAL_ADDRESS="127.0.0.1:"
+        fi
         sed -e '/^\[http\]/,/^\[/{s/bind-address = .*$/bind-address = "'$EXTRACTED_ADDRESS$PORT'"/}' -i $OMD_ROOT/etc/influxdb/influxdb.conf
-        sed -e '/^\[InfluxDB \"nagflux\"\]/,/^\[/{s%^\s*Address = "http.*$%\tAddress = "http://'$EXTRACTED_ADDRESS$PORT'"%}' -i $OMD_ROOT/etc/nagflux/config.gcfg
-        sed -e 's%^url = "http.*/query?\(.*$\)%url = "http://'$EXTRACTED_ADDRESS$PORT'/query?\1%' -i $OMD_ROOT/etc/histou/histou.ini
-        test -e $OMD_ROOT/etc/dataScryer/config.ini && \
-        sed -e 's%^Address_Read = http.*$%Address_Read = http://'$EXTRACTED_ADDRESS$PORT'%' -i $OMD_ROOT/etc/dataScryer/config.ini
-        test -e $OMD_ROOT/etc/dataScryer/config.ini && \
-            sed -e 's%^Address_Write = http.*$%Address_Write = http://'$EXTRACTED_ADDRESS$PORT'%' -i $OMD_ROOT/etc/dataScryer/config.ini
-        if [ "$PORT" != "$EXTRACTED_PORT" ] ; then
+        sed -e '/^\[InfluxDB \"nagflux\"\]/,/^\[/{s%^\s*Address = "http.*$%\tAddress = "http://'$LOCAL_ADDRESS$PORT'"%}' -i $OMD_ROOT/etc/nagflux/config.gcfg
+        sed -e 's%^url = "http.*/query?\(.*$\)%url = "http://'$LOCAL_ADDRESS$PORT'/query?\1%' -i $OMD_ROOT/etc/histou/histou.ini
+        if [ -e $OMD_ROOT/etc/dataScryer/config.ini ]; then
+            sed -i $OMD_ROOT/etc/dataScryer/config.ini \
+                -e 's%^Address_Read = http.*$%Address_Read = http://'$LOCAL_ADDRESS$PORT'%' \
+                -e 's%^Address_Write = http.*$%Address_Write = http://'$LOCAL_ADDRESS$PORT'%'
+        fi
+        if [ "$BEFORE" != "$EXTRACTED_ADDRESS$PORT" ] ; then
             touch $OMD_ROOT/var/tmp/influxportupdated
             echo "$EXTRACTED_ADDRESS$PORT"
         fi
