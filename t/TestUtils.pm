@@ -243,6 +243,7 @@ sub create_test_site {
     if(test_command({ cmd => TestUtils::get_omd_bin()." create $site" })) {
         # disable cookie auth for tests
         my $omd_bin = TestUtils::get_omd_bin();
+        print `mv /omd/sites/$site/etc/apache/conf.d/disable_nagios.conf /omd/sites/$site/etc/apache/conf.d/disable_nagios.off`;
         print `$omd_bin config $site set THRUK_COOKIE_AUTH off`;
         print `$omd_bin config $site set APACHE_MODE own`;
         restart_system_apache();

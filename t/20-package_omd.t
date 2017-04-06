@@ -12,12 +12,13 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 68 );
+plan( tests => 78 );
 
 ##################################################
 # create our test site
 my $omd_bin = TestUtils::get_omd_bin();
 my $site    = TestUtils::create_test_site() or TestUtils::bail_out_clean("no further testing without site");
+print `mv /omd/sites/$site/etc/apache/conf.d/disable_nagios.off /omd/sites/$site/etc/apache/conf.d/disable_nagios.conf`;
 
 # not started site should give a nice error
 TestUtils::test_command({ cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -H localhost -u /$site -e 503 -r \"OMD: Site Not Started\"'",  like => '/HTTP OK:/' });
@@ -58,6 +59,12 @@ TestUtils::test_command({ cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_h
     }
 }
 
+##################################################
+# test if nagios cgis are no longer in place
+TestUtils::test_command({ cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -H localhost -S -a omdadmin:omd -u /$site/nagios/ -e 403 -vvv'", like => ['/HTTP OK:/', '/OMD: Disabled/'] });
+TestUtils::test_command({ cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -H localhost -S -a omdadmin:omd -u /$site/nagios/images/logos/debian.png -e 200 -v'", like => ['/HTTP OK:/', '/png/'] });
+
+##################################################
 TestUtils::test_command({ cmd => "/bin/su - $site -c 'omd stop'",  like => '/Stopping dedicated Apache/' });
 
 ##################################################
