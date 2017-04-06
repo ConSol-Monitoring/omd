@@ -7,8 +7,6 @@ PACKAGES=freetds \
          go-1.7 \
          go-1.8 \
          influxdb \
-         grafana \
-         histou \
          nagflux \
          python-modules \
          apache-omd \
@@ -37,6 +35,8 @@ PACKAGES=freetds \
          thruk \
          thruk-plugins \
          thruk-consol-theme \
+         grafana \
+         histou \
          maintenance \
          gearmand \
          mod-gearman \
@@ -47,6 +47,8 @@ PACKAGES=freetds \
          coshsh \
          lmd \
          prometheus \
+         prometheus_snmp_exporter \
+         prometheus_node_exporter \
          alertmanager \
          blackbox \
          pushgateway \
