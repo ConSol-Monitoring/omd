@@ -104,6 +104,10 @@ case $1 in
             __init_hook $0 $1 post 1
             exit 1
         fi
+        # create thruk logcache database
+        if [ -e $OMD_ROOT/etc/thruk/thruk_local.d/omd_logcache.conf -a $(grep -c ^logcache $OMD_ROOT/etc/thruk/thruk_local.d/omd_logcache.conf) -eq 1 ]; then
+            echo "CREATE DATABASE IF NOT EXISTS thruk_logs" | mysql
+        fi
     ;;
     stop)
         echo -n "Stopping MySQL... "
