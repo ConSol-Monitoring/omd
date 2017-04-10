@@ -104,6 +104,7 @@ sub get_omd_bin {
     errlike => (list of) regular expressions which have to match stderr, default: empty
     unlike  => (list of) regular expressions which must not match stdout
     sleep   => time to wait after executing the command
+    waitfor => wait till regex occurs (max 120sec)
   }
 
 =cut
@@ -117,6 +118,45 @@ sub test_command {
 
     my($prg,$arg) = split(/\s+/, $test->{'cmd'}, 2);
     my $t = Test::Cmd->new(prog => $prg, workdir => '') or die($!);
+
+    # wait for something?
+    if(defined $test->{'waitfor'}) {
+        my $start   = time();
+        my $now     = time();
+        my $waitfor = $test->{'waitfor'};
+        my $found   = 0;
+        local $test->{'exit'}    = undef;
+        local $test->{'like'}    = '/.*/';
+        local $test->{'errlike'} = '/.*/';
+        my $expr = '';
+        while($now < $start + 30) {
+            alarm(15);
+            $expr = $waitfor;
+            eval {
+                local $SIG{ALRM} = sub { die "timeout on cmd: ".$test->{'cmd'}."\n" };
+                $t->run(args => $arg, stdin => $test->{'stdin'});
+            };
+            alarm(0);
+
+            if($waitfor =~ m/^\!/) {
+                $expr =~ s/^\!//mx;
+                if($t->stdout !~ m/$expr/mx) {
+                    ok(1, "content ".$expr." disappeared after ".($now - $start)."seconds");
+                    $found = 1;
+                    last;
+                }
+            }
+            elsif($t->stdout =~ m/$waitfor/mx) {
+                ok(1, "content ".$expr." found after ".($now - $start)."seconds");
+                $found = 1;
+                last;
+            }
+            sleep(1);
+            $now = time();
+        }
+        fail("content ".$expr." did not occur within 120 seconds") unless $found;
+    }
+
     alarm(300);
     eval {
         local $SIG{ALRM} = sub { die "timeout on cmd: ".$test->{'cmd'}."\n" };
@@ -288,7 +328,8 @@ sub create_fake_cookie_login {
 sub remove_test_site {
     my $site = shift;
     # kill all processes, sometimes checks are still running and prevent us from removing the site
-    test_command({ cmd => "/usr/bin/pkill -2 -U $site; sleep 1;".TestUtils::get_omd_bin()." rm $site", stdin => "yes\n" });
+    `if [ \$(ps -fu $site | wc -l) -gt 0 ]; then /usr/bin/pkill -2 -U $site; sleep 1; fi`;
+    test_command({ cmd => TestUtils::get_omd_bin()." rm $site", stdin => "yes\n" });
     return;
 }
 
