@@ -33,7 +33,7 @@ my $systemctl = "/bin/systemctl";
 # according to /opt/omd/versions/default/share/samplicate/README.systemd...
 TestUtils::test_command({ cmd => "/bin/cp /opt/omd/versions/default/share/samplicate/*.service /etc/systemd/system" });
 # reduce sleep. just for the tests
-TestUtils::test_command({ cmd => "/bin/sed -ri 's/60/10/g' /opt/omd/versions/default/bin/samplicate_watch" });
+TestUtils::test_command({ cmd => "/bin/sed -ri 's/60/3/g' /opt/omd/versions/default/bin/samplicate_watch" });
 
 # register the services
 TestUtils::test_command({ cmd => "$systemctl enable samplicate_watch", errlike => $os =~ /SLES 12/ ? undef : '/Created/' });
@@ -53,21 +53,19 @@ my $site1port = { cmd => $omd_bin." config $site1 show SNMPTRAPD_UDP_PORT", like
 TestUtils::test_command($site1port);
 $site1port = $site1port->{stdout};
 chomp $site1port;
-# now wait 10s, then samplicate_watch must have found the SNMPTRAPD_UDP_PORT, add 5s for service restart
-sleep 15;
+
 # now the watchdow must have started the samplicate service
-TestUtils::test_command({ cmd => "$systemctl status samplicate", like => '/running/' });
+TestUtils::test_command({ cmd => "$systemctl status samplicate", like => '/running/', waitfor => 'running' });
 # the samplicate process must send traps to site1's listening port
-TestUtils::test_command({ cmd => '/bin/ps -ef | grep samplicate', like => '/samplicate.pid -S.+127\.0\.0\.1\/'.$site1port.'/' });
+TestUtils::test_command({ cmd => '/bin/ps -ef | grep samplicate', like => '/samplicate.pid -S.+127\.0\.0\.1\/'.$site1port.'/', waitfor => "samplicate.pid.*$site1port" });
 
 # now start site2 which has no snmptrapd
 TestUtils::test_command({ cmd => $omd_bin." config $site2 set SNMPTRAPD off" });
 TestUtils::test_command({ cmd => $omd_bin." start $site2" });
 
-sleep 15;
 # nothing should have changed
-TestUtils::test_command({ cmd => "$systemctl status samplicate", like => '/running/' });
-TestUtils::test_command({ cmd => '/bin/ps -ef | grep samplicate', like => '/samplicate.pid -S.+127\.0\.0\.1\/'.$site1port.'/' });
+TestUtils::test_command({ cmd => "$systemctl status samplicate", like => '/running/', waitfor => 'running' });
+TestUtils::test_command({ cmd => '/bin/ps -ef | grep samplicate', like => '/samplicate.pid -S.+127\.0\.0\.1\/'.$site1port.'/', waitfor => "samplicate.pid.*$site1port" });
 
 # now restart site2 but with an snmptrapd
 TestUtils::test_command({ cmd => $omd_bin." stop $site2" });
@@ -78,11 +76,10 @@ TestUtils::test_command($site2port);
 $site2port = $site2port->{stdout};
 chomp $site2port;
 
-sleep 15;
 # the watchdog has restarted the samplicate service which now has two targets
-TestUtils::test_command({ cmd => "$systemctl status samplicate", like => '/running/' });
-TestUtils::test_command({ cmd => '/bin/ps -ef | grep samplicate', like => '/samplicate.pid -S.+127\.0\.0\.1\/'.$site1port.'/' });
-TestUtils::test_command({ cmd => '/bin/ps -ef | grep samplicate', like => '/samplicate.pid -S.+127\.0\.0\.1\/'.$site2port.'/' });
+TestUtils::test_command({ cmd => "$systemctl status samplicate", like => '/running/', waitfor => 'running' });
+TestUtils::test_command({ cmd => '/bin/ps -ef | grep samplicate', like => '/samplicate.pid -S.+127\.0\.0\.1\/'.$site1port.'/', waitfor => "samplicate.pid.*$site1port" });
+TestUtils::test_command({ cmd => '/bin/ps -ef | grep samplicate', like => '/samplicate.pid -S.+127\.0\.0\.1\/'.$site2port.'/', waitfor => "samplicate.pid.*$site2port" });
 
 
 # predefined communities are sitename & public
@@ -103,20 +100,20 @@ TestUtils::test_command({ cmd => "/bin/grep 44444 /omd/sites/$site2/var/log/snmp
 TestUtils::test_command({ cmd => $omd_bin." stop $site1" });
 TestUtils::test_command({ cmd => $omd_bin." config $site1 set SNMPTRAPD off" });
 TestUtils::test_command({ cmd => $omd_bin." start $site1", unlike => '/Starting dedicated SNMPTrapd for site.+OK/' });
-sleep 15;
+
 # restart site1 without snmptrapd
-TestUtils::test_command({ cmd => "$systemctl status samplicate", like => '/running/' });
-# site1 is no linger a target
-TestUtils::test_command({ cmd => '/bin/ps -ef | grep samplicate', unlike => '/samplicate.pid -S.+127\.0\.0\.1\/'.$site1port.'/' });
-TestUtils::test_command({ cmd => '/bin/ps -ef | grep samplicate', like => '/samplicate.pid -S.+127\.0\.0\.1\/'.$site2port.'/' });
+TestUtils::test_command({ cmd => "$systemctl status samplicate", like => '/running/', waitfor => 'running' });
+# site1 is no longer a target
+TestUtils::test_command({ cmd => '/bin/ps -ef | grep samplicate', unlike => '/samplicate.pid -S.+127\.0\.0\.1\/'.$site1port.'/', waitfor => "!samplicate.pid.*$site1port" });
+TestUtils::test_command({ cmd => '/bin/ps -ef | grep samplicate', like => '/samplicate.pid -S.+127\.0\.0\.1\/'.$site2port.'/', waitfor => "samplicate.pid.*$site2port" });
 
 # restart site2 without snmptrapd
 TestUtils::test_command({ cmd => $omd_bin." stop $site2" });
 TestUtils::test_command({ cmd => $omd_bin." config $site2 set SNMPTRAPD off" });
 TestUtils::test_command({ cmd => $omd_bin." start $site2", unlike => '/Starting dedicated SNMPTrapd for site.+OK/' });
-sleep 15;
+
 # there are no more targets. the watchdog has stopped samplicate entirely
-TestUtils::test_command({ cmd => "$systemctl status samplicate", like => '/exited/', exit => 3 });
+TestUtils::test_command({ cmd => "$systemctl status samplicate", like => '/exited/', exit => 3, waitfor => 'inactive' });
 TestUtils::test_command({ cmd => '/bin/ps -ef | grep samplicate', unlike => '/samplicate.pid -S.+127\.0\.0\.1\/'.$site1port.'/' });
 TestUtils::test_command({ cmd => '/bin/ps -ef | grep samplicate', unlike => '/samplicate.pid -S.+127\.0\.0\.1\/'.$site2port.'/' });
 TestUtils::test_command({ cmd => '/bin/ps -ef | grep samplicate', unlike => '/samplicate.pid -S/' });
