@@ -240,7 +240,11 @@ sub file_contains {
 =cut
 sub create_test_site {
     my $site = $_[0] || "testsite";
-    if(test_command({ cmd => TestUtils::get_omd_bin()." create $site" })) {
+    my $errlike = '/^\s*$/';
+    if(scalar @{[glob('/omd/sites/*/.')]} >= 1) {
+        $errlike = '/is in use/';
+    }
+    if(test_command({ cmd => TestUtils::get_omd_bin()." create $site", errlike => $errlike })) {
         # disable cookie auth for tests
         my $omd_bin = TestUtils::get_omd_bin();
         print `mv /omd/sites/$site/etc/apache/conf.d/disable_nagios.conf /omd/sites/$site/etc/apache/conf.d/disable_nagios.off`;
