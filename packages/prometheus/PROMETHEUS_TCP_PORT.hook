@@ -15,15 +15,14 @@ fi
 
 case "$1" in
     default)
-        # Scan for a free port number by looking at the
-        # configuration of the other sites...
-        PORT=$($OMD_ROOT/lib/omd/port_is_used PROMETHEUS_TCP_PORT 9090)
-        echo "$PORT"
+        echo "9090"
     ;;
     choices)
         echo "[1-9][0-9]{0,4}"
     ;;
     set)
+        # Scan for a free port number by looking at the
+        # configuration of the other sites...
         PORT=$($OMD_ROOT/lib/omd/port_is_used PROMETHEUS_TCP_PORT $2)
         if [ "$PORT" != "$2" ] ; then
             echo "Prometheus port $2 is in use. I've choosen $PORT instead." >&2

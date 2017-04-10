@@ -19,10 +19,7 @@ fi
 
 case "$1" in
     default)
-        # Scan for a free port number by looking at the
-        # configuration of the other sites...
-        PORT=$($OMD_ROOT/lib/omd/port_is_used APACHE_TCP_PORT 5000)
-        echo "$PORT"
+        echo "5000"
     ;;
     choices)
         echo "[1-9][0-9]{0,4}"
@@ -32,6 +29,8 @@ case "$1" in
         if [ $CONFIG_APACHE_MODE = "ssl" ]; then
             PROTO="https"
         fi
+        # Scan for a free port number by looking at the
+        # configuration of the other sites...
         PORT=$($OMD_ROOT/lib/omd/port_is_used APACHE_TCP_PORT $2)
         cat <<EOF > $OMD_ROOT/etc/apache/listen-port.conf
 # This file is managed by 'omd config set APACHE_TCP_PORT' and 'omd config set APACHE_TCP_ADDR'.
