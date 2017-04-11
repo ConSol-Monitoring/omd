@@ -80,6 +80,18 @@ case "$1" in
             make_link ../../nagios/apache.conf $OMD_ROOT/etc/apache/conf.d/nagios.conf
             make_link ../../icinga/apache.conf $OMD_ROOT/etc/apache/conf.d/icinga.conf
             make_link icinga2 $OMD_ROOT/etc/init.d/core
+            THRUK_CFG=${OMD_ROOT}/etc/thruk/thruk_local.d/omd_core.conf
+            cat > $THRUK_CFG <<EOF
+#
+# this file will be overwritten by the CORE hook, do not change manually
+#
+<Component Thruk::Plugin::BP>
+    objects_save_format    = icinga2
+    objects_save_file      = $OMD_ROOT/etc/icinga2/conf.d/thruk_bp_generated.conf
+    objects_templates_file = $OMD_ROOT/etc/icinga2/conf.d/thruk_bp_templates.conf/thruk_templates_icinga2.conf
+    spool_dir              = $OMD_ROOT/tmp/icinga2/checkresults
+</Component>
+EOF
         fi
         if [ "$2" == "naemon"  ]; then
             make_link naemon $OMD_ROOT/etc/init.d/core
