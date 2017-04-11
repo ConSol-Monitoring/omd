@@ -26,11 +26,17 @@ case "$1" in
            # see https://thruk.org/documentation/logfile-cache.html
            if [ "$CONFIG_CORE" == "icinga2" ]; then
                cat > $THRUK_CFG <<EOF
+#
+# this file will be overwritten by the THRUK_LOGCACHE hook, do not change manually
+#
 logcache = mysql://root@tmp/run/mysqld/mysqld.sock/thruk_logs
 logcache_delta_updates = 0
 report_update_logcache = 0
 EOF
                cat > $THRUK_CRON <<'EOF'
+#
+# this file will be overwritten by the THRUK_LOGCACHE hook, do not change manually
+#
 # update logcache data
 * * * * * $OMD_ROOT/bin/thruk -a logcacheupdate var/icinga2/log/icinga2/compat/icinga.log >>$OMD_ROOT/var/log/thruk.log 2>&1
 5 0 * * * $OMD_ROOT/bin/thruk -a logcacheupdate $(ls -1tr var/icinga2/log/icinga2/compat/archives/*.log) >>$OMD_ROOT/var/log/thruk.log 2>&1
@@ -46,9 +52,15 @@ EOF
 EOF
            else
                cat > $THRUK_CFG <<EOF
+#
+# this file will be overwritten by the THRUK_LOGCACHE hook, do not change manually
+#
 logcache=mysql://root@tmp/run/mysqld/mysqld.sock/thruk_logs
 EOF
                cat > $THRUK_CRON <<'EOF'
+#
+# this file will be overwritten by the THRUK_LOGCACHE hook, do not change manually
+#
 # update logcache data
 * * * * * $OMD_ROOT/bin/thruk -a logcacheupdate       >>$OMD_ROOT/var/log/thruk.log 2>&1
 
