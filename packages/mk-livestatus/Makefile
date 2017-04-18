@@ -15,6 +15,11 @@ ifneq (,$(findstring SLES 11SP4,$(DISTRO_INFO)))
 $(info compile with gcc 4.8)
 export CC := gcc-4.8
 export CXX := g++-4.8
+else ifneq (,$(findstring SLES 11SP2,$(DISTRO_INFO)))
+$(info compile with gcc 4.7.2 from source)
+export PATH := $(TMPGCC)/bin/:$(PATH)
+export LD_LIBRARY_PATH := $(TMPGCC)/lib64:$(LD_LIBRARY_PATH)
+EXTRA_BUILD_DEPS=build_env_for_centos6
 else ifneq (,$(findstring SLES 11SP,$(DISTRO_INFO)))
 $(info compile with gcc 4.7)
 export CC := gcc-4.7
