@@ -145,19 +145,32 @@ $options = 'report=long,supersmartpostscript';
 $postscript = sub {
   if (@commands) {
     my $submitted = 0;
-    open SPOOL, ">".$ENV{OMD_ROOT}.'/tmp/{{ mib.mib }}.cmds';
-    foreach (map { /COMMAND (.*)/; $1; } @commands) {
-      printf SPOOL "%s\n", $_;
-      $submitted++;
+    my $last_command = "";
+    if (scalar(@commands)) {
+      open SPOOL, ">".$ENV{OMD_ROOT}.'/tmp/{{ mib.mib }}.cmds';
+      foreach (map { /COMMAND (.*)/; $1; } @commands) {
+        if ($_ eq $last_command) {
+          next;
+        } else {
+          printf SPOOL "%s\n", $_;
+          $submitted++;
+          $last_command = $_;
+        }
+      }
+      close SPOOL;
+      if ("{{ mib.extcmd }}" eq "nagios.cmd") {
+        open CMD, ">".$ENV{OMD_ROOT}.'/tmp/run/nagios.cmd';
+        printf CMD "[%lu] PROCESS_FILE;%s;1\n", time, $ENV{OMD_ROOT}.'/tmp/{{ mib.mib }}.cmds';
+        close CMD;
+      } elsif ("{{ mib.extcmd }}" eq "naemon.cmd") {
+        open CMD, ">".$ENV{OMD_ROOT}.'/tmp/run/naemon.cmd';
+        printf CMD "[%lu] PROCESS_FILE;%s;1\n", time, $ENV{OMD_ROOT}.'/tmp/{{ mib.mib }}.cmds';
+        close CMD;
+      }
+      #open CMD, ">".$ENV{OMD_ROOT}.'/tmp/run/live';
     }
-    close SPOOL;
-    #open CMD, ">".$ENV{OMD_ROOT}.'/tmp/run/live';
-    open CMD, ">".$ENV{OMD_ROOT}.'/tmp/run/nagios.cmd';
-    #open CMD, ">>/tmp/test_neues_check_logfiles.log";
-    printf CMD "[%lu] PROCESS_FILE;%s;1\n", time, $ENV{OMD_ROOT}.'/tmp/{{ mib.mib }}.cmds';
-    close CMD;
     if ($submitted) {
-      printf "OK - found %d traps (%d submitted)\n", scalar(@commands), $submitted;
+      printf "OK - found %d traps (%d submitted) | traps=%d submitted=%d\n", scalar(@commands), $submitted, scalar(@commands), $submitted;
       printf "%s\n", join("\n", @commands);
       return 0;
     } else {
@@ -165,7 +178,7 @@ $postscript = sub {
       return 0;
     }
   } else {
-    printf "OK - found no new traps\n";
+    printf "OK - found no new traps | traps=0 submitted=0\n";
     return 0;
   }
 };

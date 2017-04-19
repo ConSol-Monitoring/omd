@@ -44,6 +44,7 @@ class MIB(coshsh.item.Item):
         super(self.__class__, self).__init__(kwargs)
         self.mib = kwargs["mib"]
         self.events = kwargs["events"]
+        self.extcmd = kwargs.get("extcmd", "nagios.cmd")
 
     def fingerprint(self):
         return self.mib
@@ -72,6 +73,7 @@ class SNMPTT(coshsh.datasource.Datasource):
         self.name = kwargs["name"]
         self.dir = kwargs["dir"]
         self.trapdest = kwargs.get("trapdest", "trapdest")
+        self.extcmd = kwargs.get("extcmd", "nagios.cmd")
         self.objects = {}
 
     def open(self):
@@ -195,7 +197,7 @@ class SNMPTT(coshsh.datasource.Datasource):
                 empty_mibs.append(mib)
 
         for mib in mib_traps:
-            m = MIB(mib=mib, miblabel=mib.replace('-', ''), events=[])
+            m = MIB(mib=mib, miblabel=mib.replace('-', ''), extcmd=self.extcmd, events=[])
             unique_names = {}
             for event in mib_traps[mib]:
                 # search.name, search.oid, search.text
