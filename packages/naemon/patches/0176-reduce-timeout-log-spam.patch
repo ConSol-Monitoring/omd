@@ -1,6 +1,6 @@
-From d1c777ece0be8ae898ddffd1bf15701d3e6593ca Mon Sep 17 00:00:00 2001
+From e7cb0057b0365e9ceca58ce09d3034fcd7238c6e Mon Sep 17 00:00:00 2001
 From: Sven Nierlein <sven@nierlein.de>
-Date: Thu, 20 Apr 2017 15:17:20 +0200
+Date: Thu, 20 Apr 2017 15:36:10 +0200
 Subject: [PATCH] reduce log spam
 
 Do not log timeouts 3 times for each timeout. Timeouts are a normal thing in
@@ -10,51 +10,61 @@ the timeout is quite visible already and the extra logging does not add any valu
 
 Signed-off-by: Sven Nierlein <sven@nierlein.de>
 ---
- src/naemon/checks_host.c    | 4 ++--
- src/naemon/checks_service.c | 4 ++--
- src/worker/worker.c         | 2 +-
- 3 files changed, 5 insertions(+), 5 deletions(-)
+ src/naemon/checks_host.c    | 2 --
+ src/naemon/checks_service.c | 2 --
+ src/worker/worker.c         | 5 +----
+ 3 files changed, 1 insertion(+), 8 deletions(-)
 
 diff --git a/src/naemon/checks_host.c b/src/naemon/checks_host.c
-index be6995b..115ea7a 100644
+index be6995b..0370c6a 100644
 --- a/src/naemon/checks_host.c
 +++ b/src/naemon/checks_host.c
-@@ -408,8 +408,8 @@ int update_host_state_post_check(struct host *hst, struct check_result *cr)
+@@ -408,8 +408,6 @@ int update_host_state_post_check(struct host *hst, struct check_result *cr)
  	/* adjust return code (active checks only) */
  	if (cr->check_type == CHECK_TYPE_ACTIVE) {
  		if (cr->early_timeout) {
 -			nm_log(NSLOG_RUNTIME_WARNING,
 -			       "Warning: Check of host '%s' timed out after %.2lf seconds\n", hst->name, hst->execution_time);
-+			//nm_log(NSLOG_RUNTIME_WARNING,
-+			//       "Warning: Check of host '%s' timed out after %.2lf seconds\n", hst->name, hst->execution_time);
  			nm_free(hst->plugin_output);
  			nm_free(hst->long_plugin_output);
  			nm_free(hst->perf_data);
 diff --git a/src/naemon/checks_service.c b/src/naemon/checks_service.c
-index e55465a..fcbde18 100644
+index e55465a..2f8bf27 100644
 --- a/src/naemon/checks_service.c
 +++ b/src/naemon/checks_service.c
-@@ -437,8 +437,8 @@ int handle_async_service_check_result(service *temp_service, check_result *queue
+@@ -437,8 +437,6 @@ int handle_async_service_check_result(service *temp_service, check_result *queue
  	nm_free(temp_service->perf_data);
  
  	if (queued_check_result->early_timeout == TRUE) {
 -		nm_log(NSLOG_RUNTIME_WARNING,
 -		       "Warning: Check of service '%s' on host '%s' timed out after %.3fs!\n", temp_service->description, temp_service->host_name, temp_service->execution_time);
-+		//nm_log(NSLOG_RUNTIME_WARNING,
-+		//       "Warning: Check of service '%s' on host '%s' timed out after %.3fs!\n", temp_service->description, temp_service->host_name, temp_service->execution_time);
  		nm_asprintf(&temp_service->plugin_output, "(Service check timed out after %.2lf seconds)", temp_service->execution_time);
  		temp_service->current_state = service_check_timeout_state;
  	}
 diff --git a/src/worker/worker.c b/src/worker/worker.c
-index 8e2bac9..bf652d1 100644
+index 8e2bac9..49ad3f6 100644
 --- a/src/worker/worker.c
 +++ b/src/worker/worker.c
-@@ -270,7 +270,7 @@ static void kill_job(struct nm_event_execution_properties *event)
+@@ -252,13 +252,11 @@ static int finish_job(child_process *cp, int reason)
+ static void kill_job(struct nm_event_execution_properties *event)
+ {
+ 	child_process *cp = event->user_data;
+-	int pid, id, ret, status, reaped = 0;
++	int ret, status, reaped = 0;
+ 
+ 	g_return_if_fail(cp != NULL);
+ 	g_return_if_fail(cp->ei != NULL);
+ 
+-	pid = cp->ei->pid;
+-	id = cp->id;
+ 	if (event->execution_type == EVENT_EXEC_ABORTED) {
+ 		(void)kill(-cp->ei->pid, SIGKILL);
+ 		return;
+@@ -270,7 +268,6 @@ static void kill_job(struct nm_event_execution_properties *event)
  	 */
  	if (cp->ei->state != ESTALE) {
  		timeouts++;
 -		wlog("Killing job %d with pid %d due to timeout. timeouts=%u; started=%u", id, pid, timeouts, started);
-+		//wlog("Killing job %d with pid %d due to timeout. timeouts=%u; started=%u", id, pid, timeouts, started);
  	}
  
  	/* brutal but efficient */
