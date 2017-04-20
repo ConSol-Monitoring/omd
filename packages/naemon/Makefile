@@ -20,6 +20,7 @@ build:
 	    echo "applying $$p..." ; \
 	    ( cd $(DIR) ; patch -p1 -b ) < $$p ; \
 	done
+	sed -i $(DIR)/configure -e 's/$(VERSION)\-source/$(VERSION)-omd/g'
 	cd $(DIR) ; ./configure $(CONFIGUREOPTS)
 	$(MAKE) -C $(DIR) all
 
