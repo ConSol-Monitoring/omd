@@ -1,19 +1,22 @@
-From e7cb0057b0365e9ceca58ce09d3034fcd7238c6e Mon Sep 17 00:00:00 2001
+From 610ad5fd2b00e245bb24fbe518f6c1394de1f031 Mon Sep 17 00:00:00 2001
 From: Sven Nierlein <sven@nierlein.de>
-Date: Thu, 20 Apr 2017 15:36:10 +0200
-Subject: [PATCH] reduce log spam
+Date: Fri, 21 Apr 2017 18:01:10 +0200
+Subject: [PATCH] lower wproc: logging log level
 
 Do not log timeouts 3 times for each timeout. Timeouts are a normal thing in
 monitoring and state changes are logged already, there is no need to add 2
 extra log entries, one from wproc and one from the check handler. Especially since
 the timeout is quite visible already and the extra logging does not add any value.
+Since this is used in tests, we have to change the tests to check the debug logfile
+for the expected output.
 
 Signed-off-by: Sven Nierlein <sven@nierlein.de>
 ---
- src/naemon/checks_host.c    | 2 --
- src/naemon/checks_service.c | 2 --
- src/worker/worker.c         | 5 +----
- 3 files changed, 1 insertion(+), 8 deletions(-)
+ src/naemon/checks_host.c    |  2 --
+ src/naemon/checks_service.c |  2 --
+ src/naemon/workers.c        |  6 +++---
+ tests/test-worker.c         | 17 +++++++++++++----
+ 4 files changed, 16 insertions(+), 11 deletions(-)
 
 diff --git a/src/naemon/checks_host.c b/src/naemon/checks_host.c
 index be6995b..0370c6a 100644
@@ -41,30 +44,97 @@ index e55465a..2f8bf27 100644
  		nm_asprintf(&temp_service->plugin_output, "(Service check timed out after %.2lf seconds)", temp_service->execution_time);
  		temp_service->current_state = service_check_timeout_state;
  	}
-diff --git a/src/worker/worker.c b/src/worker/worker.c
-index 8e2bac9..49ad3f6 100644
---- a/src/worker/worker.c
-+++ b/src/worker/worker.c
-@@ -252,13 +252,11 @@ static int finish_job(child_process *cp, int reason)
- static void kill_job(struct nm_event_execution_properties *event)
- {
- 	child_process *cp = event->user_data;
--	int pid, id, ret, status, reaped = 0;
-+	int ret, status, reaped = 0;
+diff --git a/src/naemon/workers.c b/src/naemon/workers.c
+index 6aa46dd..52ea140 100644
+--- a/src/naemon/workers.c
++++ b/src/naemon/workers.c
+@@ -459,7 +459,7 @@ static int handle_worker_result(int sd, int events, void *arg)
  
- 	g_return_if_fail(cp != NULL);
- 	g_return_if_fail(cp->ei != NULL);
+ 		/* log messages are handled first */
+ 		if (size > 5 && !memcmp(buf, "log=", 4)) {
+-			nm_log(NSLOG_INFO_MESSAGE, "wproc: %s: %s\n", wp->name, buf + 4);
++			log_debug_info(DEBUGL_IPC, DEBUGV_BASIC, "wproc: %s: %s\n", wp->name, buf + 4);
+ 			nm_free(buf);
+ 			continue;
+ 		}
+@@ -544,7 +544,7 @@ static int register_worker(int sd, char *buf, unsigned int len)
  
--	pid = cp->ei->pid;
--	id = cp->id;
- 	if (event->execution_type == EVENT_EXEC_ABORTED) {
- 		(void)kill(-cp->ei->pid, SIGKILL);
- 		return;
-@@ -270,7 +268,6 @@ static void kill_job(struct nm_event_execution_properties *event)
+ 	g_return_val_if_fail(specialized_workers != NULL, ERROR);
+ 
+-	nm_log(NSLOG_INFO_MESSAGE, "wproc: Registry request: %s\n", buf);
++	log_debug_info(DEBUGL_IPC, DEBUGV_BASIC, "wproc: Registry request: %s\n", buf);
+ 	worker = nm_calloc(1, sizeof(*worker));
+ 	info = buf2kvvec(buf, len, '=', ';', 0);
+ 	if (info == NULL) {
+@@ -676,7 +676,7 @@ int init_workers(int desired_workers)
+ 			free, NULL
+ 			);
+ 	if (!qh_register_handler("wproc", "Worker process management and info", 0, wproc_query_handler)) {
+-		nm_log(NSLOG_INFO_MESSAGE, "wproc: Successfully registered manager as @wproc with query handler\n");
++		log_debug_info(DEBUGL_IPC, DEBUGV_BASIC, "wproc: Successfully registered manager as @wproc with query handler\n");
+ 	} else {
+ 		nm_log(NSLOG_RUNTIME_ERROR, "wproc: Failed to register manager with query handler\n");
+ 		return -1;
+diff --git a/tests/test-worker.c b/tests/test-worker.c
+index 355617c..f3e4621 100644
+--- a/tests/test-worker.c
++++ b/tests/test-worker.c
+@@ -82,13 +82,13 @@ static void run_worker_test(struct wrk_test *j) {
+ 	ck_assert_int_eq(1, completed_jobs);
+ }
+ 
+-static void test_log_content(int should_exist, const char *expect) {
++static void test_debug_log_content(int should_exist, const char *expect) {
+ 	char log_buffer[256*1024];
+ 	size_t len;
+ 	FILE *fp;
+ 	int found;
+ 
+-	fp = fopen(log_file, "r");
++	fp = fopen(debug_file, "r");
+ 	len = fread(log_buffer, 1, sizeof(log_buffer)-1, fp);
+ 	fclose(fp);
+ 	log_buffer[len] = '\0';
+@@ -164,7 +164,7 @@ START_TEST(worker_test_timeout)
+ 	 * Verify that the log is correct.
+ 	 * This is mostly to test the test environment for worker_test_no_timeout_log
  	 */
- 	if (cp->ei->state != ESTALE) {
- 		timeouts++;
--		wlog("Killing job %d with pid %d due to timeout. timeouts=%u; started=%u", id, pid, timeouts, started);
- 	}
+-	test_log_content(TRUE, "due to timeout");
++	test_debug_log_content(TRUE, "due to timeout");
+ }
+ END_TEST
  
- 	/* brutal but efficient */
+@@ -186,7 +186,7 @@ START_TEST(worker_test_no_timeout_log)
+ 	completed_jobs = 0; /* To let mainloop run */
+ 	run_main_loop(5);
+ 
+-	test_log_content(FALSE, "due to timeout");
++	test_debug_log_content(FALSE, "due to timeout");
+ }
+ END_TEST
+ 
+@@ -264,8 +264,13 @@ void worker_test_setup(void)
+ 
+ 	/* Set temporary log file */
+ 	log_file = strdup("/tmp/naemon-worker-test-log-XXXXXX");
++	debug_file = strdup("/tmp/naemon-worker-test-log-XXXXXX");
+ 	close(mkstemp(log_file));
++	close(mkstemp(debug_file));
+ 	logging_options = -1;
++	debug_level = DEBUGL_ALL;
++	debug_verbosity = DEBUGV_MORE;
++	open_debug_log();
+ 
+ 	init_iobroker();
+ 	enable_timing_point = 1;
+@@ -288,6 +293,10 @@ void worker_test_teardown(void)
+ 	qh_deinit(qh_socket_path);
+ 
+ 	/* We allocated a log file path earlier */
++	close_debug_log();
++	unlink(debug_file);
++	free(debug_file);
++	debug_file = NULL;
+ 	close_log_file();
+ 	unlink(log_file);
+ 	free(log_file);
