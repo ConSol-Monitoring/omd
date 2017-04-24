@@ -1,0 +1,52 @@
+#!/bin/bash
+
+# Alias: TCP port number for Alertmanager
+# Menu: Addons
+# Description:
+#  Configure the TCP port used for the Alertmanager
+#  process of this site.
+#
+
+if [ -f $OMD_ROOT/etc/omd/site.conf ]; then
+    . $OMD_ROOT/etc/omd/site.conf
+else
+    CONFIG_ALERTMANAGER_TCP_ADDR=127.0.0.1
+fi
+
+case "$1" in
+    default)
+        echo "9093"
+    ;;
+    choices)
+        echo "[1-9][0-9]{0,4}"
+    ;;
+    set)
+        # Scan for a free port number by looking at the
+        # configuration of the other sites...
+        PORT=$($OMD_ROOT/lib/omd/port_is_used ALERTMANAGER_TCP_PORT $2)
+        if [ "$PORT" != "$2" ] ; then
+            echo "Alertmanager port $2 is in use. I've choosen $PORT instead." >&2
+            echo "$PORT"
+        fi
+        cat <<EOF > $OMD_ROOT/etc/alertmanager/apache.conf
+# This file is managed by 'omd config set ALERTMANAGER_TCP_ADDR/ALERTMANAGER_TCP_PORT'.
+# Better do not edit manually
+<IfModule !mod_proxy.c>
+    LoadModule proxy_module /usr/lib64/httpd/modules/mod_proxy.so
+</IfModule>
+<IfModule !mod_proxy_http.c>
+    LoadModule proxy_http_module /usr/lib64/httpd/modules/mod_proxy_http.so
+</IfModule>
+
+<Location "/$OMD_SITE/alertmanager">
+    ProxyPass http://$CONFIG_ALERTMANAGER_TCP_ADDR:$PORT/$OMD_SITE/alertmanager retry=0 disablereuse=On
+    #ProxyPassReverse http://$CONFIG_ALERTMANAGER_TCP_ADDR:$PORT/$OMD_SITE/alertmanager
+    ProxyPassReverse http://$CONFIG_ALERTMANAGER_TCP_ADDR:$PORT/
+    RequestHeader set X-WEBAUTH-USER %{REMOTE_USER}e
+</Location>
+EOF
+    ;;
+    depends)
+        [ "$CONFIG_ALERTMANAGER" = on ]
+    ;;
+esac

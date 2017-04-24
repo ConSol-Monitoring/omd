@@ -1,6 +1,6 @@
 include ../../Makefile.omd
 
-PROMETHEUS=prometheus-1.5.2
+PROMETHEUS=prometheus-1.6.1
 
 .PHONY: skel
 

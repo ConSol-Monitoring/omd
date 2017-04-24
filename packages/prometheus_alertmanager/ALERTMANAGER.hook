@@ -1,0 +1,33 @@
+#!/bin/bash
+
+# Alias: Start site-local Alertmanager Daemon
+# Menu: Addons
+# Description:
+#  If you run Prometheus, then you can activate
+#  this option and a site specific Alertmanager daemon will be started.
+
+case "$1" in
+    default)
+        echo "off"
+    ;;
+    choices)
+        echo "on: enable"
+        echo "off: disable"
+    ;;
+    set)
+        if [ "$2" == "off" ]
+        then
+            rm -f $OMD_ROOT/etc/alertmanager/apache.conf
+            rm -f $OMD_ROOT/etc/apache/conf.d/alertmanager.conf
+        fi
+        if [ "$2" == "on" ]
+        then
+            rm -f $OMD_ROOT/etc/apache/conf.d/alertmanager.conf
+            ln -s $OMD_ROOT/etc/alertmanager/apache.conf \
+                $OMD_ROOT/etc/apache/conf.d/alertmanager.conf
+        fi
+    ;;
+    depends)
+        [ "$CONFIG_PROMETHEUS" = on ]
+    ;;
+esac

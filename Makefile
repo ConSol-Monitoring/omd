@@ -49,9 +49,9 @@ PACKAGES=freetds \
          prometheus \
          prometheus_snmp_exporter \
          prometheus_node_exporter \
-         alertmanager \
-         blackbox \
-         pushgateway \
+         prometheus_alertmanager \
+         prometheus_blackbox_exporter \
+         prometheus_pushgateway \
          dataScryer \
          snmptrapd \
          downtime-api \
