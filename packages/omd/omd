@@ -2742,10 +2742,16 @@ def get_exclude_patterns(options):
         excludes.append("var/rrdcached/*")
         excludes.append("var/pnp4nagios/states/*")
 
+    if "no-dbs" in options or "no-past" in options:
+        excludes.append("var/mysql/*")
+        excludes.append("var/influxdb/*")
+
     if "no-logs" in options or "no-past" in options:
         excludes.append("var/log/*/*")
         excludes.append("var/nagios/nagios.log")
-        excludes.append("var/nagios/archive/")
+        excludes.append("var/nagios/archive/*")
+        excludes.append("var/naemon/archive/*")
+        excludes.append("var/icinga/archive/*")
         excludes.append("var/pnp4nagios/log/*")
         excludes.append("var/pnp4nagios/perfdata.dump")
         excludes.append("var/mkeventd/history/*")
@@ -3371,6 +3377,7 @@ def main_restore(args, options={}):
 
 exclude_options = [
     ( "no-rrds", None, False, "do not copy RRD files (performance data"),
+    ( "no-dbs", None, False, "do not copy database data (mysql, influxdb)"),
     ( "no-logs", None, False, "do not copy log files"),
     ( "no-past", "N", False,  "do not copy RRD file and log files"),
 ]

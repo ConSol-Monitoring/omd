@@ -215,12 +215,15 @@ includes RRD and XML files created by PNP4Nagios as well as journal
 files from the RRD caching daemon. This option usually greatly speeds
 up the copying.
 
+\fB--no-dbs\fP Do not copy any database data. This includes mysql and
+influxdb data. This option usually greatly speeds up the copying.
+
 \fB--no-logs\fP Do not copy any logfiles from the past. This
 include the Nagios logfiles, which bear the historical events. While
 this does speed up the copying, the new site will have no history
 of past events.
 
-The option \fB-N\fP or \fB--no-past\fP combines both \fB--no-rrds\fP and \fB--no-logs\fP.
+The option \fB-N\fP or \fB--no-past\fP combines all \fB--no-rrds\fP, \fB--no-dbs\fP and \fB--no-logs\fP.
 This is very useful especially for copies that are created for testing
 purposes.
 
@@ -313,7 +316,7 @@ format.
 If you add the option \fB--auto\fP then only the status of those sites will
 be displayed, that are set to {AUTOSTART} = {on}.
 .TP
-.B omd config [-f, --force] [SITE] [set|show] [VARIABLE] [VALUE]
+.B omd [-f, --force] config [SITE] [set|show] [VARIABLE] [VALUE]
 This command is used to view and change the configuration of a site. Each
 site has a list of configuration variables. Those variables configure
 how the addons of the site should work together. Optional addons can be
@@ -380,12 +383,15 @@ includes RRD and XML files created by PNP4Nagios as well as journal
 files from the RRD caching daemon. This option usually greatly speeds
 up the copying.
 
+\fB--no-dbs\fP Do not copy any database data. This includes mysql and
+influxdb data. This option usually greatly speeds up the copying.
+
 \fB--no-logs\fP Do not copy any logfiles from the past. This
 include the Nagios logfiles, which bear the historical events. While
 this does speed up the copying, the new site will have no history
 of past events.
 
-The option \fB-N\fP or \fB--no-past\fP combines both \fB--no-rrds\fP and \fB--no-logs\fP.
+The option \fB-N\fP or \fB--no-past\fP combines all \fB--no-rrds\fP, \fB--no-dbs\fP and \fB--no-logs\fP.
 This is very useful especially for copies that are created for testing
 purposes.
 
