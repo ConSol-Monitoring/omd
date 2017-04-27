@@ -99,6 +99,7 @@ EOF
         # refresh some hooks
         [ "$CONFIG_PNP4NAGIOS" ]  && CONFIG_CORE="$2" $OMD_ROOT/lib/omd/hooks/PNP4NAGIOS  set "$CONFIG_PNP4NAGIOS"
         [ "$CONFIG_GEARMAN_NEB" ] && CONFIG_CORE="$2" $OMD_ROOT/lib/omd/hooks/GEARMAN_NEB set "$CONFIG_GEARMAN_NEB"
+        :
     ;;
 esac
 
