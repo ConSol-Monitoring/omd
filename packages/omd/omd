@@ -613,6 +613,10 @@ def read_skel_permissions():
 def load_skel_permissions(version):
     perms = {}
     file_path = "/omd/versions/%s/share/omd/skel.permissions" % version
+    return load_skel_permissions_for_path(file_path)
+
+def load_skel_permissions_for_path(file_path):
+    perms = {}
     try:
         for line in file(file_path):
             line = line.strip()
@@ -645,7 +649,7 @@ def get_file_owner(path):
 
 def create_version_symlink(sitename, version):
     linkname = site_dir(sitename) + "/version"
-    if os.path.exists(linkname):
+    if os.path.lexists(linkname):
         os.remove(linkname)
     os.symlink("../../versions/%s" % OMD_VERSION, linkname)
 
@@ -835,8 +839,9 @@ def walk_skel(root, handler, args, depth_first, exclude_if_in = None, relbase = 
 
 # Change site specific information in files originally create from
 # skeleton files. Skip files below tmp/
-def patch_skeleton_files(old, new):
-    skelroot = "/omd/versions/%s/skel" % OMD_VERSION
+def patch_skeleton_files(old, new, skelroot=None):
+    if not skelroot:
+        skelroot = "/omd/versions/%s/skel" % OMD_VERSION
     os.chdir(skelroot)  # make relative paths
     for dirpath, dirnames, filenames in os.walk("."):
         if dirpath.startswith("./"):
@@ -877,9 +882,12 @@ def patch_template_file(src, dst, old, new):
 
     # Now create a patch from old to new and immediately apply on
     # existing - possibly user modified - file.
+    patch = "%s/bin/patch" % site_dir(new)
+    if not os.path.exists(patch):
+        patch = "%s/patch" % os.path.dirname(os.path.realpath(__file__))
 
-    result = os.system("diff -u %s %s | %s/bin/patch --force --backup --forward --silent %s" %
-            (old_orig_path, new_orig_path, site_dir(new), dst))
+    result = os.system("diff -u %s %s | %s --force --backup --forward --silent %s" %
+            (old_orig_path, new_orig_path, patch, dst))
     try_chown(dst, new)
     try_chown(dst + ".rej", new)
     try_chown(dst + ".orig", new)
@@ -964,8 +972,10 @@ def patch_template_file(src, dst, old, new):
 
 # Try to merge changes from old->new version and
 # old->user version
-def merge_update_file(relpath, old_version, new_version):
+def merge_update_file(relpath, old_version, new_version, skel_path = None):
     fn = tty_bold + relpath + tty_normal
+    if not skel_path:
+        skel_path = "/omd/versions/%s/skel" % (version)
 
     replacements = {
         "###SITE###" : g_sitename,
@@ -977,7 +987,7 @@ def merge_update_file(relpath, old_version, new_version):
 
     def try_merge():
         for version in [ old_version, new_version ]:
-            p = "/omd/versions/%s/skel/%s" % (version, relpath)
+            p = "%s/%s" % (skel_path, relpath)
             while True:
                 try:
                     skel_content = file(p).read()
@@ -1137,8 +1147,9 @@ def file_status(source_path, target_path):
     return (changed_type, changed_content, changed)
 
 
-def update_file(relpath, old_version, new_version, userdir, old_perms):
-    old_skel = "/omd/versions/%s/skel" % old_version
+def update_file(relpath, old_version, new_version, userdir, old_perms, old_skel = None):
+    if not old_skel:
+        old_skel = "/omd/versions/%s/skel" % old_version
     new_skel = "/omd/versions/%s/skel" % new_version
 
     replacements = {
@@ -1290,7 +1301,7 @@ def update_file(relpath, old_version, new_version, userdir, old_perms):
     # 7) old, new and user are files. And all are different
     elif old_type == "file" and new_type == "file" and user_type == "file":
         try:
-            merge_update_file(relpath, old_version, new_version)
+            merge_update_file(relpath, old_version, new_version, old_skel)
         except KeyboardInterrupt:
             raise
         except Exception, e:
@@ -1669,15 +1680,15 @@ def check_status(sitename, display=True, daemon=None, bare=False):
         state = os.system("%s/%s status >/dev/null 2>&1" % (rc_dir, script)) >> 8
 
         if display and (state != 5 or opt_verbose):
-	    if bare:
-		sys.stdout.write(komponent + " ")
-	    else:
-		sys.stdout.write("%-16s" % (komponent + ":"))
-		sys.stdout.write(tty_bold)
+            if bare:
+                sys.stdout.write(komponent + " ")
+            else:
+                sys.stdout.write("%-16s" % (komponent + ":"))
+                sys.stdout.write(tty_bold)
 
-	if bare:
-	    if state != 5 or opt_verbose:
-		sys.stdout.write("%d\n" % state)
+        if bare:
+            if state != 5 or opt_verbose:
+                sys.stdout.write("%d\n" % state)
 
         if state == 0:
             if display and not bare:
@@ -1701,16 +1712,16 @@ def check_status(sitename, display=True, daemon=None, bare=False):
         exit_code = 0
         ovstate = tty_green + "running"
     elif num_running == 0 and num_stopped == 0:
-        exit_code = 0
+        exit_code = 1
         ovstate = tty_blue + "unused"
     else:
         exit_code = 2
         ovstate = tty_yellow + "partially running"
     if display:
-	if bare:
-	    sys.stdout.write("OVERALL %d\n" % exit_code)
-	else:
-	    sys.stdout.write("-----------------------\n")
+        if bare:
+            sys.stdout.write("OVERALL %d\n" % exit_code)
+        else:
+            sys.stdout.write("-----------------------\n")
             sys.stdout.write("Overall state:  %s\n" %
                 (tty_bold + ovstate + tty_normal))
     return exit_code
@@ -2613,6 +2624,8 @@ def init_site(config_settings = None, apache_reload = False):
 # running the appropriate hooks.
 def finalize_site(what, apache_reload):
 
+    am_root = os.getuid() == 0
+
     # Now we need to do a few things as site user. Note:
     # - We cannot use setuid() here, since we need to get back to root.
     # - We cannot use seteuid() here, since the id command call will then still
@@ -2624,7 +2637,8 @@ def finalize_site(what, apache_reload):
     if pid == 0:
         try:
             # From now on we run as normal site user!
-            switch_to_site_user()
+            if am_root:
+                switch_to_site_user()
 
             # Mount and create contents of tmpfs. This must be done as normal
             # user. We also could do this at 'omd start', but this might confuse
@@ -2649,11 +2663,12 @@ def finalize_site(what, apache_reload):
 
     # Finally reload global apache - with root permissions - and
     # create include-hook for Apache and reload apache
-    create_apache_hook(g_sitename)
-    if apache_reload:
-        reload_apache()
-    else:
-        restart_apache()
+    if am_root:
+        create_apache_hook(g_sitename)
+        if apache_reload:
+            reload_apache()
+        else:
+            restart_apache()
 
 
 def main_rm(args, options={}):
@@ -3058,7 +3073,6 @@ def main_update(args, options={}):
 
     from_skelroot = "/omd/versions/%s/skel" % from_version
     to_skelroot = "/omd/versions/%s/skel" % to_version
-    tmp = tmp_dir(g_sitename)
 
     # First walk through skeleton files of new version
     walk_skel(to_skelroot, update_file, (from_version, to_version, g_sitedir, old_perms), depth_first=False)
@@ -3210,6 +3224,9 @@ def backup_site_files_to_tarfile(tar, options):
                 return True # exclude this file
         return False
 
+    # add skel, it doesn't take much space and we can restore to any version with that information
+    tar.add(os.path.join(g_sitedir, 'version', 'skel'), g_sitename+"/.backup_meta/skel")
+    tar.add(os.path.join(g_sitedir, 'share', 'omd', 'skel.permissions'), g_sitename+"/.backup_meta/skel.permissions")
     if not exclude:
         tar.add(g_sitedir, g_sitename)
     else:
@@ -3262,7 +3279,6 @@ def main_backup(args, options={}):
 def main_restore(args, options={}):
     global g_sitename
     global g_sitedir
-
     set_conflict_option(options)
 
     if len(args) == 0:
@@ -3299,18 +3315,31 @@ def main_restore(args, options={}):
         bail_out("Failed to detect version of backed up site.")
 
     if not version_exists(version):
-        bail_out("You need to have version %s installed to be able to restore "
-                 "this backup." % version)
+        backup_skel_tarinfo = tar.next()
+        if backup_skel_tarinfo.name.find("/version/skel") == -1:
+            bail_out("This is an old incomplete backup and its version is not installed.\n"
+                     "Either install version %s or create the backup manually with this command:\n"
+                     "cd /omd/sites/ && tar cfz /tmp/$OMD_SITE.backup.tgz $OMD_SITE/version $OMD_SITE/version/skel $OMD_SITE/share/omd/skel.permissions $OMD_SITE\n"
+                     % version)
 
     # Restore site with its original name, or specify a new one
+    reuse = False
     new_sitename = sitename
     if len(args) == 2:
         new_sitename = args[0]
 
+    am_root = os.getuid() == 0
+    if not am_root:
+        if new_sitename != sitename:
+            bail_out("Only root can restore to a new site!")
+        reuse = True
+        new_sitename = site_name()
+        g_sitename = new_sitename
+        set_site_globals()
+
     g_sitename = new_sitename
     g_sitedir  = site_dir(new_sitename)
 
-    reuse = False
     if "reuse" in options:
         reuse = True
         if not user_verify(g_sitename, allow_populated=True):
@@ -3320,10 +3349,14 @@ def main_restore(args, options={}):
     sitename_must_be_valid(g_sitename, reuse)
 
     if reuse:
-        if not site_is_stopped(g_sitename) and not "kill" in options:
-            bail_out("Cannot restore '%s' while it is running." % (g_sitename))
-        else:
-            os.system('omd stop %s' % g_sitename)
+        if not site_is_stopped(g_sitename):
+            if not "kill" in options:
+                bail_out("Cannot restore '%s' while it is running." % (g_sitename))
+            else:
+                if am_root:
+                    os.system('omd stop %s' % g_sitename)
+                else:
+                    os.system('omd stop')
         unmount_tmpfs(g_sitename, kill = "kill" in options)
 
     sys.stdout.write("Restoring site %s from %s...\n" %
@@ -3335,20 +3368,26 @@ def main_restore(args, options={}):
         gid = options.get("gid")
         useradd(g_sitename, uid, gid) # None for uid/gid means: let Linux decide
     else:
-        sys.stdout.write("Deleting existing site data...\n")
-        shutil.rmtree(g_sitedir)
+        sys.stdout.write("Deleting existing site data...")
+        # remove site folder (when doing this as user, skip only on errors below the sitefolder itself)
+        shutil.rmtree(g_sitedir, onerror=lambda f,p,e: p != g_sitedir and not am_root and bail_out(str(e[1])))
         ok()
 
-    os.mkdir(g_sitedir)
+    if not os.path.exists(g_sitedir):
+        os.mkdir(g_sitedir)
 
     # Now extract all files
     for tarinfo in tar:
         # remove leading site name from paths
         tarinfo.name = '/'.join(tarinfo.name.split('/')[1:])
+        tarinfo.name = re.sub("^version/skel", ".backup_meta/skel", tarinfo.name)
+        tarinfo.name = re.sub("^share/omd/skel.permissions", ".backup_meta/skel.permissions", tarinfo.name)
         if opt_verbose:
             sys.stdout.write("Restoring %s...\n" % tarinfo.name)
         if tarinfo.issym() or tarinfo.islnk():
             parts = tarinfo.linkname.split('/')
+            if tarinfo.name == 'version' and tarinfo.linkname == sitename+'/version':
+                continue
             if parts[0] == sitename:
                 parts = parts[1:]
             tarinfo.linkname = '/'.join(parts)
@@ -3358,11 +3397,56 @@ def main_restore(args, options={}):
     load_site_conf()
 
     # give new user all files
-    chown_tree(g_sitedir, g_sitename)
+    if am_root:
+        chown_tree(g_sitedir, g_sitename)
 
     # Change config files from old to new site (see rename_site())
+    backup_skel_path = os.path.join(g_sitedir, ".backup_meta")
     if sitename != g_sitename:
-        patch_skeleton_files(sitename, g_sitename)
+        if os.path.exists(backup_skel_path):
+            patch_skeleton_files(sitename, g_sitename, backup_skel_path+'/skel')
+        else:
+            patch_skeleton_files(sitename, g_sitename)
+
+    # perform an update to current version
+    # this is neccessary if old restored omd version does not exist
+    # or there were platform specific changes, for example when restoring
+    # from a apache 2.2 system to a 2.4 system
+    if os.path.exists(backup_skel_path):
+        from_version = version
+        to_version = version
+        if not version_exists(version):
+            to_version = OMD_VERSION
+            sys.stdout.write("\nUpdating site %s from %s to version %s...\n" % (g_sitename, from_version, to_version))
+
+            if not call_scripts('pre-update', ("/omd/versions/%s" % to_version)):
+                sys.stdout.write("update canceled by pre-update script\n\n")
+                sys.exit(1)
+
+        # read permissions
+        read_skel_permissions()
+        old_perms = load_skel_permissions_for_path(backup_skel_path+'/skel.permissions')
+
+        from_skelroot = backup_skel_path+'/skel'
+        to_skelroot = "/omd/versions/%s/skel" % to_version
+
+        # First walk through skeleton files of new version
+        walk_skel(to_skelroot, update_file, (from_version, to_version, g_sitedir, old_perms, from_skelroot), depth_first=False)
+
+        # Now handle files present in old but not in new skel files
+        walk_skel(from_skelroot, update_file, (from_version, to_version, g_sitedir, old_perms, from_skelroot), depth_first=True, exclude_if_in = to_skelroot)
+
+        # Change symbolic link pointing to new version
+        create_version_symlink(g_sitename, to_version)
+
+        # Let hooks do their work and update configuration.
+        config_set_all()
+
+        if from_version != to_version:
+            call_scripts('post-update')
+
+    if os.path.exists(backup_skel_path):
+        shutil.rmtree(backup_skel_path)
 
     # Now switch over to the new site as currently active site
     os.chdir(g_sitedir)
@@ -3373,6 +3457,10 @@ def main_restore(args, options={}):
         add_to_fstab(g_sitename, tmpfs_size = options.get('tmpfs-size'))
 
     finalize_site("restore", "apache-reload" in options)
+
+    if not am_root:
+        sys.stdout.write("Restore completed as site user. "
+                         "You may have to manually restart Apache...\n")
 
 
 exclude_options = [
@@ -3567,12 +3655,12 @@ commands = [
     "Umount ramdisk volumes of site(s)",
     ""),
 
-  ( "backup", False, True, 1, 1, False, "SITE [-|ARCHIVE_PATH]", main_backup,
+  ( "backup", False, True, 1, 1, False, "[-|ARCHIVE_PATH]", main_backup,
     exclude_options,
     "Create a backup tarball of a site, writing it to a file or stdout",
     ""),
 
-  ( "restore", True, False, 0, 0, False, "[SITE] [-|ARCHIVE_PATH]", main_restore,
+  ( "restore", False, True, 0, 0, False, "[SITE] [-|ARCHIVE_PATH]", main_restore,
     [ ( "uid", "u", True, "create site user with UID ARG" ),
       ( "gid", "g", True, "create site group with GID ARG" ),
       ( "reuse", None, False, "do not create a site user, reuse existing one" ),
@@ -3751,7 +3839,7 @@ check_site_user(site_must_exist)
 # Commands operating on an existing site *must* run omd in
 # the same version as the site has! Sole exception: update.
 # That command must be run in the target version
-if g_sitename and site_must_exist and command != "update":
+if g_sitename and site_must_exist and command != "update" and command != "restore":
     v = site_version(g_sitename)
     if v == None: # Site has no homedirectory
         if command == "rm":

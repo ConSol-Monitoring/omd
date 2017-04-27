@@ -26,6 +26,7 @@ next:
             - removed old unmaintained packages:
               - shinken
               - mongodb
+            - support cross platform/cross version backup/restores
           - NRPE: Update to 3.0.1
           - LMD: Update 1.0.3
           - set log_initial_states=0 per default
