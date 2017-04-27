@@ -11,6 +11,11 @@ VERSION=$(readlink version | sed 's%.*versions/\([0-9]*\.*[0-9]*\)[-\.].*$%\1%')
 # convert version to int so we can compare it in bash
 # version 2.20 becomes 220
 VERSION=$(( $(( ${VERSION%.*} * 100 )) + ${VERSION#*.} ))
+SKEL=version/skel
+if [ -e ".backup_meta/skel" ]; then
+    # when restoring from an non-installed version, skel folder is here
+    SKEL=".backup_meta/skel"
+fi
 
 # apply some fixed to versions until 2.20
 if [ $VERSION -le 220 ]; then
@@ -18,14 +23,14 @@ if [ $VERSION -le 220 ]; then
   rm -f etc/shinken/apache.conf
 
   # restore original file from skel to prevent update conflict
-  test -e etc/mongodb/mongod.cfg && sed -e 's%###ROOT###%'$OMD_ROOT'%g' version/skel/etc/mongodb/mongod.cfg > etc/mongodb/mongod.cfg
-  test -e etc/mongodb/mongod.d/port.conf && cat version/skel/etc/mongodb/mongod.d/port.conf > etc/mongodb/mongod.d/port.conf
+  test -e etc/mongodb/mongod.cfg && sed -e 's%###ROOT###%'$OMD_ROOT'%g' $SKEL/etc/mongodb/mongod.cfg > etc/mongodb/mongod.cfg
+  test -e etc/mongodb/mongod.d/port.conf && cat $SKEL/etc/mongodb/mongod.d/port.conf > etc/mongodb/mongod.d/port.conf
 
   # influxdb port conflicts: reset port to default port from skel, then update. After the update the hook will set the actual port
-  test -e etc/influxdb/influxdb.conf && sed -e "/^\[http\]/,/^\[/{s/.*bind-address = .*$/$(grep '^\[http\]' -A 10 version/skel/etc/influxdb/influxdb.conf | grep '^\s*bind-address')/}" -i etc/influxdb/influxdb.conf
-  test -e etc/nagflux/config.gcfg && sed -e "/^\[Influx/,/^\[/{s%^\s*Address = \"http.*$%$(grep '^\[Influx' -A 10 version/skel/etc/nagflux/config.gcfg | grep '^\s*Address')%}" -i etc/nagflux/config.gcfg
-  test -e etc/nagflux/config.gcfg && sed -e "/^\[Elasticsearch/,/^\[/{s%^\s*Address = \"http.*$%$(grep '^\[Elasticsearch' -A 10 version/skel/etc/nagflux/config.gcfg | grep '^\s*Address')%}" -i etc/nagflux/config.gcfg
-  test -e etc/influxdb/influxdb.conf && sed -e "1,/^\[/{s/^bind-address = .*$/$(grep '^bind-address' version/skel/etc/influxdb/influxdb.conf)/}" -i etc/influxdb/influxdb.conf
+  test -e etc/influxdb/influxdb.conf && sed -e "/^\[http\]/,/^\[/{s/.*bind-address = .*$/$(grep '^\[http\]' -A 10 $SKEL/etc/influxdb/influxdb.conf | grep '^\s*bind-address')/}" -i etc/influxdb/influxdb.conf
+  test -e etc/nagflux/config.gcfg && sed -e "/^\[Influx/,/^\[/{s%^\s*Address = \"http.*$%$(grep '^\[Influx' -A 10 $SKEL/etc/nagflux/config.gcfg | grep '^\s*Address')%}" -i etc/nagflux/config.gcfg
+  test -e etc/nagflux/config.gcfg && sed -e "/^\[Elasticsearch/,/^\[/{s%^\s*Address = \"http.*$%$(grep '^\[Elasticsearch' -A 10 $SKEL/etc/nagflux/config.gcfg | grep '^\s*Address')%}" -i etc/nagflux/config.gcfg
+  test -e etc/influxdb/influxdb.conf && sed -e "1,/^\[/{s/^bind-address = .*$/$(grep '^bind-address' $SKEL/etc/influxdb/influxdb.conf)/}" -i etc/influxdb/influxdb.conf
 fi
 
 exit 0
