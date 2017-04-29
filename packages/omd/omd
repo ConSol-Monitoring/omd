@@ -699,7 +699,7 @@ def create_skeleton_file(skelbase, userbase, relpath, replacements):
     user_path = userbase + "/" + relpath
 
     # Remove old version, if existing (needed during update)
-    if os.path.exists(user_path):
+    if os.path.islink(user_path) and os.path.lexists(user_path) or os.path.exists(user_path):
         delete_user_file(user_path)
 
     # Create directories, symlinks and files
