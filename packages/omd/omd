@@ -3349,6 +3349,23 @@ def main_restore(args, options={}):
     sitename_must_be_valid(g_sitename, reuse)
 
     if reuse:
+        version_hint = ""
+        if not version_exists(version):
+            version_hint = (
+                "Since the version %s used in the backup is not installed, an "
+                "automatic update to version %s will be done. "
+                "This will include updating all of you configuration files and merging "
+                "changes in the default files with changes made by you. In case of conflicts "
+                "your help will be needed." % (version, OMD_VERSION)
+            )
+        if not opt_force and not dialog_yesno(
+            "You are going to restore the site %s from backup %s. "
+            "The site will be completly removed and restored! %s"
+            % (g_sitename, source, version_hint),
+            "Restore!", "Abort"):
+            bail_out("Aborted.")
+
+    if reuse:
         if not site_is_stopped(g_sitename):
             if not "kill" in options:
                 bail_out("Cannot restore '%s' while it is running." % (g_sitename))
@@ -3444,6 +3461,8 @@ def main_restore(args, options={}):
 
         if from_version != to_version:
             call_scripts('post-update')
+
+        sys.stdout.write('Finished update to version %s.\n' % OMD_VERSION)
 
     if os.path.exists(backup_skel_path):
         shutil.rmtree(backup_skel_path)

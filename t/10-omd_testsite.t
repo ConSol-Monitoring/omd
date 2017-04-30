@@ -99,7 +99,7 @@ my $tests = [
 
   # --restore
   { cmd => $omd_bin." restore /tmp/omd.backup.tgz", like => '/Restoring site testsite from /' },
-  { cmd => "/bin/su - $site -c 'omd restore /tmp/omd.backup.tgz'", like => '/Restore completed/' },
+  { cmd => "/bin/su - $site -c 'omd -f restore /tmp/omd.backup.tgz'", like => '/Restore completed/' },
   { cmd => $omd_bin." rm $site", like => '/Restarting Apache...\s*OK/', stdin => "yes\n" },
 ];
 
