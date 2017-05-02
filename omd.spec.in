@@ -171,9 +171,7 @@ if [ $1 = 0 ] ; then
         fi
     done
 fi
-%if 0%{?_unitdir:1}
-%systemd_preun omd.service
-%endif
+exit 0
 
 
 %postun
