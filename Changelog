@@ -9,7 +9,7 @@ next:
           - nagflux: update 0.3.1
           - coshsh: update 3.2.4.3
           - Monitoring-Plugins: update to 2.2
-          - Icinga2 update to 2.5.4
+          - Icinga2 update to 2.6.3
           - Icinga1 update to 1.14.0
           - Grafana update to 4.2
           - Go 1.8 added

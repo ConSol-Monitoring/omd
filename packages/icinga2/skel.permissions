@@ -1,5 +1,7 @@
 etc/init.d/icinga2 0755
 etc/icinga2 0750
+etc/icinga2/scripts/mail-host-notification.sh 0755
+etc/icinga2/scripts/mail-service-notification.sh 0755
 var/icinga2/log/icinga2 2751
 var/icinga2/log/icinga2/compat 2751
 var/icinga2/log/icinga2/compat/archives 2755
