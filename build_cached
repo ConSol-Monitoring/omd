@@ -135,4 +135,13 @@ set +e
 echo "cache file $CACHE_FILE created"
 rm $EXCLUDES_FILE
 
+# check md5 sum0
+$MAKE -C "$SRC" clean
+MD5_CHECK=$(cd "$SRC" && find . -exec md5sum {} \; 2>&1 | sort | md5sum | awk '{ print $1 }')
+if [ "$MD5" != "$MD5_CHECK" ]; then
+  echo "ERROR: make clean is broken and did not clean everything"
+  exit 1
+fi
+
+tar zxf "$CACHE_FILE" || exit 1
 exit 0
