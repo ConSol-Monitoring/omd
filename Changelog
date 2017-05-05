@@ -1,7 +1,7 @@
 This file documents the revision history for the Open Monitoring Distribution (Labs Edition)
 
 next:
-          - Thruk: update to 2.12-2
+          - Thruk: update to 2.14-2
             - add THRUK_LOGCACHE hook to simply enable the logcache
           - Naemon update to 1.0.6
           - Nagios: Update to 3.5.1
