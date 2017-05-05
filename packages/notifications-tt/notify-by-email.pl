@@ -36,6 +36,11 @@ if ( ! -e $template ){
 	exit 3;
 }
 
+# set macros from environment if available
+for my $key (qw/SERVICEOUTPUT LONGSERVICEOUTPUT HOSTOUTPUT LONGHOSTOUTPUT/) {
+    $macro{$key} = $ENV{'NAGIOS_'.$key} if defined $ENV{'NAGIOS_'.$key};
+}
+
 map($macro{$_} =~ s/\\n/\n/gmx, keys %macro);
 extract_ascii($macro{'LONGHOSTOUTPUT'});
 extract_ascii($macro{'LONGSERVICEOUTPUT'});
