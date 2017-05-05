@@ -6,7 +6,7 @@ next:
           - Naemon update to 1.0.6
           - Nagios: Update to 3.5.1
           - histou: update 0.4.1
-          - nagflux: update 0.3.1
+          - nagflux: update 0.4.0
           - coshsh: update 3.2.4.3
           - Monitoring-Plugins: update to 2.2
           - Icinga2 update to 2.6.3
