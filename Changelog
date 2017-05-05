@@ -14,7 +14,7 @@ next:
           - Grafana update to 4.2
           - Go 1.8 added
           - InfluxDb update to 1.2.0
-          - Mod-Gearman: Update 3.0.1
+          - Mod-Gearman: Update 3.0.2
           - apply fixes for CVE-2016-9566 in nagios3, icinga1 and naemon
           - apply fixes for CVE-2013-7205 in nagios3
           - add process_performance_data=1 to default config files
