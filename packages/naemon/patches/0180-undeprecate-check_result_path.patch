@@ -1,0 +1,53 @@
+From 5b79dfd41ab8d53ff781257df5adf3a1d936f807 Mon Sep 17 00:00:00 2001
+From: Sven Nierlein <sven@nierlein.de>
+Date: Fri, 5 May 2017 11:34:01 +0200
+Subject: [PATCH] undeprecate check_result_path
+
+Reading check results from disk is not a bad thing. Lot of addons use this for good reasons.
+Ex. Thruk submits business process results by spool folder. We could make check_result_path
+optional, but i don't recommend removing it. Therefor we remove the deprecation warning.
+
+Signed-off-by: Sven Nierlein <sven@nierlein.de>
+---
+ src/naemon/configuration.c | 7 -------
+ 1 file changed, 7 deletions(-)
+
+diff --git a/src/naemon/configuration.c b/src/naemon/configuration.c
+index 627433f..a2a8d3e 100644
+--- a/src/naemon/configuration.c
++++ b/src/naemon/configuration.c
+@@ -181,8 +181,6 @@ read_config_file(const char *main_config_file, nagios_macros *mac)
+ 		}
+ 
+ 		else if (!strcmp(variable, "check_result_path")) {
+-			obsoleted_warning(variable, "Support for processing check results from disk will be removed");
+-
+ 			if (strlen(value) > MAX_FILENAME_LENGTH - 1) {
+ 				nm_asprintf(&error_message, "Check result path is too long");
+ 				error = TRUE;
+@@ -205,7 +203,6 @@ read_config_file(const char *main_config_file, nagios_macros *mac)
+ 		}
+ 
+ 		else if (!strcmp(variable, "max_check_result_file_age")) {
+-			obsoleted_warning(variable, "Support for processing check results from disk will be removed");
+ 			max_check_result_file_age = strtoul(value, NULL, 0);
+ 		}
+ 
+@@ -666,8 +663,6 @@ read_config_file(const char *main_config_file, nagios_macros *mac)
+ 		}
+ 
+ 		else if (!strcmp(variable, "check_result_reaper_frequency") || !strcmp(variable, "service_reaper_frequency")) {
+-			obsoleted_warning(variable, "Support for processing check results from disk will be removed");
+-
+ 			check_reaper_interval = atoi(value);
+ 			if (check_reaper_interval < 1) {
+ 				nm_asprintf(&error_message, "Illegal value for check_result_reaper_frequency");
+@@ -677,8 +672,6 @@ read_config_file(const char *main_config_file, nagios_macros *mac)
+ 		}
+ 
+ 		else if (!strcmp(variable, "max_check_result_reaper_time")) {
+-			obsoleted_warning(variable, "Support for processing check results from disk will be removed");
+-
+ 			max_check_reaper_time = atoi(value);
+ 			if (max_check_reaper_time < 1) {
+ 				nm_asprintf(&error_message, "Illegal value for max_check_result_reaper_time");
