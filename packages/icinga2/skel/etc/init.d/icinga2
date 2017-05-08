@@ -79,6 +79,7 @@ prep_start() {
     fi
     touch $PID_FILE
     chown $USR:$GRP $PID_FILE
+    ln -sfn $OMD_ROOT/tmp/icinga2 $OMD_ROOT/tmp/core
 }
 
 icinga2_wait_stop() {

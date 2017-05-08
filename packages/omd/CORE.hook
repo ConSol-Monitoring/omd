@@ -24,62 +24,44 @@ case "$1" in
             elif [ -e $OMD_ROOT/bin/nagios ] ; then echo "nagios"
             elif [ -e $OMD_ROOT/bin/icinga ] ; then echo "icinga"
             elif [ -e $OMD_ROOT/bin/icinga2 ] ; then echo "icinga2"
-            elif [ -e $OMD_ROOT/bin/shinken-arbiter ] ; then echo "shinken"
             else echo "none"
             fi
     ;;
     choices)
-            [ ! -e $OMD_ROOT/bin/nagios ] || echo "nagios: Nagios 3"
             [ ! -e $OMD_ROOT/bin/naemon ] || echo "naemon: Naemon"
+            [ ! -e $OMD_ROOT/bin/nagios ] || echo "nagios: Nagios 3"
             [ ! -e $OMD_ROOT/bin/icinga ] || echo "icinga: Icinga 1"
             [ ! -e $OMD_ROOT/bin/icinga2 ] || echo "icinga2: Icinga 2"
-            [ ! -e $OMD_ROOT/bin/shinken-arbiter ] || echo "shinken: Shinken"
             echo "none: No monitoring core"
     ;;
     set)
         # cleanup the former selection
-        if [ "$2" != "nagios" -a "$2" != "naemon" ]
-        then
-            rm -f $OMD_ROOT/etc/apache/conf.d/nagios.conf
-            rm -f $OMD_ROOT/etc/apache/conf.d/icinga.conf
-        fi
-        if [ "$2" != "shinken" ]
-        then
-            rm -f $OMD_ROOT/etc/apache/conf.d/shinken.conf
-            rm -f $OMD_ROOT/etc/apache/conf.d/nagios.conf
-            rm -f $OMD_ROOT/etc/apache/conf.d/icinga.conf
-        fi
+        rm -f $OMD_ROOT/etc/apache/conf.d/nagios.conf
+        rm -f $OMD_ROOT/etc/apache/conf.d/icinga.conf
+        rm -f $OMD_ROOT/etc/apache/conf.d/shinken.conf
         rm -f $OMD_ROOT/etc/init.d/core
+        rm -f $OMD_ROOT/etc/core
+        rm -f $OMD_ROOT/var/core
+        rm -f $OMD_ROOT/tmp/core
         make_link ../nagios/livestatus.log $OMD_ROOT/var/log/livestatus.log
-        # now setup the new selection
-        if [ "$2" == "nagios" -o "$2" == "naemon" ]
-        then
-            make_link ../../nagios/apache.conf $OMD_ROOT/etc/apache/conf.d/nagios.conf
-            make_link ../../icinga/apache.conf $OMD_ROOT/etc/apache/conf.d/icinga.conf
-            make_link nagios $OMD_ROOT/etc/init.d/core
-            make_link ../$2/livestatus.log $OMD_ROOT/var/log/livestatus.log
-        elif [ "$2" == "icinga" ]
-        then
-            make_link ../../nagios/apache.conf $OMD_ROOT/etc/apache/conf.d/nagios.conf
-            make_link ../../icinga/apache.conf $OMD_ROOT/etc/apache/conf.d/icinga.conf
-            make_link icinga $OMD_ROOT/etc/init.d/core
-        elif [ "$2" == "shinken" ]
-        then
-            # Thruk is the default interface, but classic is possible
-            make_link ../../shinken/apache-cgi.conf $OMD_ROOT/etc/apache/conf.d/nagios.conf
-            make_link ../../icinga/apache.conf $OMD_ROOT/etc/apache/conf.d/icinga.conf
-            make_link ../../shinken/apache.conf $OMD_ROOT/etc/apache/conf.d/shinken.conf
-            make_link shinken $OMD_ROOT/etc/init.d/core
-        else
-            rm -f $OMD_ROOT/etc/apache/conf.d/nagios.conf
-            rm -f $OMD_ROOT/etc/apache/conf.d/icinga.conf
-            rm -f $OMD_ROOT/etc/apache/conf.d/shinken.conf
-        fi
 
-        if [ "$2" == "icinga2"  ]; then
+        # now setup the new selection
+        if [ "$2" == "nagios" -o "$2" == "naemon" -o "$2" == "icinga" ]; then
             make_link ../../nagios/apache.conf $OMD_ROOT/etc/apache/conf.d/nagios.conf
             make_link ../../icinga/apache.conf $OMD_ROOT/etc/apache/conf.d/icinga.conf
-            make_link icinga2 $OMD_ROOT/etc/init.d/core
+            make_link ../$2/livestatus.log     $OMD_ROOT/var/log/livestatus.log
+            make_link $2 $OMD_ROOT/etc/init.d/core
+            make_link $2 $OMD_ROOT/etc/core
+            make_link $2 $OMD_ROOT/var/core
+            make_link $2 $OMD_ROOT/tmp/core
+
+        elif [ "$2" == "icinga2"  ]; then
+            make_link ../../nagios/apache.conf $OMD_ROOT/etc/apache/conf.d/nagios.conf
+            make_link ../../icinga/apache.conf $OMD_ROOT/etc/apache/conf.d/icinga.conf
+            make_link $2 $OMD_ROOT/etc/init.d/core
+            make_link $2 $OMD_ROOT/etc/core
+            make_link $2 $OMD_ROOT/var/core
+            make_link $2 $OMD_ROOT/tmp/core
             THRUK_CFG=${OMD_ROOT}/etc/thruk/thruk_local.d/omd_core.conf
             cat > $THRUK_CFG <<EOF
 #
@@ -93,9 +75,7 @@ case "$1" in
 </Component>
 EOF
         fi
-        if [ "$2" == "naemon"  ]; then
-            make_link naemon $OMD_ROOT/etc/init.d/core
-        fi
+
         # refresh some hooks
         [ "$CONFIG_PNP4NAGIOS" ]  && CONFIG_CORE="$2" $OMD_ROOT/lib/omd/hooks/PNP4NAGIOS  set "$CONFIG_PNP4NAGIOS"
         [ "$CONFIG_GEARMAN_NEB" ] && CONFIG_CORE="$2" $OMD_ROOT/lib/omd/hooks/GEARMAN_NEB set "$CONFIG_GEARMAN_NEB"
