@@ -7,6 +7,9 @@ NAME     = downtime-api
 build:
 
 install:
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/bin
+	cp downtime.py \
+	    $(DESTDIR)$(OMD_ROOT)/bin
 
 skel:
 
