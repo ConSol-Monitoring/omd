@@ -63,6 +63,7 @@ export LC_ALL=C
 
 # OMD: create configuration file out of fragments
 case "$1" in start|restart|reload|checkconfig|check)
+    ln -sfn $OMD_ROOT/tmp/naemon $OMD_ROOT/tmp/core
     merge-nagios-config \
        ###ROOT###/etc/naemon/naemon.d/*.cfg \
        ###ROOT###/etc/naemon/naemon.cfg \
@@ -101,14 +102,14 @@ verify_config() {
     if [ $? -eq 0 ]; then
         if [ "$1" != "quiet" ]; then
             echo "done."
-            echo "$RESULT" >&2
+            echo "$RESULT"
         fi
         return 0
     else
         if [ "$1" != "quiet" ]; then
             echo "CONFIG ERROR! Aborted. Check your naemon configuration."
+            echo "$RESULT"
         fi
-        echo "$RESULT" >&2
         return 1
     fi
 }

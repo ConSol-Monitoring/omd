@@ -1,6 +1,0 @@
-#!/bin/bash
-
-echo '#define OMD_VERSION "$(omd versions | grep default | cut -d' ' -f1)"' > mod_python-*/src/omd_version.h
-make -C mod_python-* clean all
-make
-sudo make install OMD_ROOT=/omd/versions/default

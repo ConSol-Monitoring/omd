@@ -65,6 +65,7 @@ export LC_ALL=C
 
 # OMD: create configuration file out of fragments
 case "$1" in start|restart|reload|checkconfig|check)
+    ln -sfn $OMD_ROOT/tmp/nagios $OMD_ROOT/tmp/core
     rm -f $CFG_FILE
     merge-nagios-config \
        ###ROOT###/etc/nagios/nagios.d/*.cfg \

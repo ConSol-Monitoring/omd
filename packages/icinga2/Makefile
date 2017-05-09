@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 NAME = icinga2
-VERSION = 2.5.4
+VERSION = 2.6.3
 DIR = $(NAME)-$(VERSION)
 BOOSTDIR=boost_1_60_0
 BOOSTDEST=$(shell pwd)/$(BOOSTDIR)-dest
@@ -27,14 +27,17 @@ CONFIGUREOPTS = \
     -DICINGA2_WITH_TESTS=OFF \
     -DICINGA2_GROUP=root
 
-# workaround for https://bugzilla.redhat.com/show_bug.cgi?id=849791#c8
+BUILD_BOOST=
 ifeq ($(DISTRO_INFO),CENTOS 6)
-CONFIGUREOPTS+=-DBoost_NO_BOOST_CMAKE=ON
+BUILD_BOOST=1
 endif
-
 ifneq (,$(findstring SLES 11SP,$(DISTRO_INFO)))
+BUILD_BOOST=1
+endif
+ifdef BUILD_BOOST
 EXTRA_BUILD_DEPS=build_env_for_sles11
 CONFIGUREOPTS+=-DCMAKE_EXE_LINKER_FLAGS=-lrt
+# workaround for https://bugzilla.redhat.com/show_bug.cgi?id=849791#c8
 CONFIGUREOPTS+=-DBoost_NO_BOOST_CMAKE=ON
 CONFIGUREOPTS+=-DBoost_NO_SYSTEM_PATHS=ON
 CONFIGUREOPTS+=-DBoost_USE_STATIC_LIBS=ON
@@ -47,6 +50,22 @@ else
 EXTRA_BUILD_DEPS=
 endif
 
+TMPGCC = $(shell pwd)/../gcc/tmp_gcc
+export PATH := $(TMPGCC)/bin/:$(PATH)
+export LD_LIBRARY_PATH := $(TMPGCC)/lib64:$(LD_LIBRARY_PATH)
+ifneq (,$(findstring CENTOS 6,$(DISTRO_INFO)))
+export CC := gcc
+export CXX := g++
+else ifneq (,$(findstring SLES 11SP4,$(DISTRO_INFO)))
+export CC := gcc-4.8
+export CXX := g++-4.8
+else ifneq (,$(findstring SLES 11SP2,$(DISTRO_INFO)))
+export CC := gcc
+export CXX := g++
+else ifneq (,$(findstring SLES 11SP,$(DISTRO_INFO)))
+export CC := gcc-4.7
+export CXX := g++-4.7
+endif
 
 build: $(EXTRA_BUILD_DEPS)
 	tar xzf $(DIR).tar.gz

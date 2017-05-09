@@ -1,0 +1,46 @@
+From e975c55fbd46c8dac18726ab4265dbf5d4763fdb Mon Sep 17 00:00:00 2001
+From: Michael Friedrich <michael.friedrich@icinga.com>
+Date: Wed, 8 Feb 2017 13:00:51 +0100
+Subject: [PATCH] Fix wrong column in Livestatus hostgroups table
+
+fixes #4983
+---
+ lib/livestatus/hostgroupstable.cpp | 4 ++--
+ lib/livestatus/hostgroupstable.hpp | 2 +-
+ 2 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/lib/livestatus/hostgroupstable.cpp b/lib/livestatus/hostgroupstable.cpp
+index 5b05c36..d988d08 100644
+--- a/lib/livestatus/hostgroupstable.cpp
++++ b/lib/livestatus/hostgroupstable.cpp
+@@ -47,7 +47,7 @@ void HostGroupsTable::AddColumns(Table *table, const String& prefix,
+ 	table->AddColumn(prefix + "num_hosts_down", Column(&HostGroupsTable::NumHostsDownAccessor, objectAccessor));
+ 	table->AddColumn(prefix + "num_hosts_unreach", Column(&HostGroupsTable::NumHostsUnreachAccessor, objectAccessor));
+ 	table->AddColumn(prefix + "num_services", Column(&HostGroupsTable::NumServicesAccessor, objectAccessor));
+-	table->AddColumn(prefix + "worst_services_state", Column(&HostGroupsTable::WorstServicesStateAccessor, objectAccessor));
++	table->AddColumn(prefix + "worst_service_state", Column(&HostGroupsTable::WorstServiceStateAccessor, objectAccessor));
+ 	table->AddColumn(prefix + "num_services_pending", Column(&HostGroupsTable::NumServicesPendingAccessor, objectAccessor));
+ 	table->AddColumn(prefix + "num_services_ok", Column(&HostGroupsTable::NumServicesOkAccessor, objectAccessor));
+ 	table->AddColumn(prefix + "num_services_warn", Column(&HostGroupsTable::NumServicesWarnAccessor, objectAccessor));
+@@ -278,7 +278,7 @@ Value HostGroupsTable::NumServicesAccessor(const Value& row)
+ 	return num_services;
+ }
+ 
+-Value HostGroupsTable::WorstServicesStateAccessor(const Value& row)
++Value HostGroupsTable::WorstServiceStateAccessor(const Value& row)
+ {
+ 	HostGroup::Ptr hg = static_cast<HostGroup::Ptr>(row);
+ 
+diff --git a/lib/livestatus/hostgroupstable.hpp b/lib/livestatus/hostgroupstable.hpp
+index 73f9d56..409fafc 100644
+--- a/lib/livestatus/hostgroupstable.hpp
++++ b/lib/livestatus/hostgroupstable.hpp
+@@ -60,7 +60,7 @@ class I2_LIVESTATUS_API HostGroupsTable : public Table
+ 	static Value NumHostsDownAccessor(const Value& row);
+ 	static Value NumHostsUnreachAccessor(const Value& row);
+ 	static Value NumServicesAccessor(const Value& row);
+-	static Value WorstServicesStateAccessor(const Value& row);
++	static Value WorstServiceStateAccessor(const Value& row);
+ 	static Value NumServicesPendingAccessor(const Value& row);
+ 	static Value NumServicesOkAccessor(const Value& row);
+ 	static Value NumServicesWarnAccessor(const Value& row);

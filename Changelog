@@ -1,20 +1,20 @@
 This file documents the revision history for the Open Monitoring Distribution (Labs Edition)
 
 next:
-          - Thruk: update to 2.12-2
+          - Thruk: update to 2.14-2
             - add THRUK_LOGCACHE hook to simply enable the logcache
           - Naemon update to 1.0.6
           - Nagios: Update to 3.5.1
           - histou: update 0.4.1
-          - nagflux: update 0.3.1
+          - nagflux: update 0.4.0
           - coshsh: update 3.2.4.3
           - Monitoring-Plugins: update to 2.2
-          - Icinga2 update to 2.5.4
+          - Icinga2 update to 2.6.3
           - Icinga1 update to 1.14.0
           - Grafana update to 4.2
           - Go 1.8 added
           - InfluxDb update to 1.2.0
-          - Mod-Gearman: Update 3.0.1
+          - Mod-Gearman: Update 3.0.2
           - apply fixes for CVE-2016-9566 in nagios3, icinga1 and naemon
           - apply fixes for CVE-2013-7205 in nagios3
           - add process_performance_data=1 to default config files

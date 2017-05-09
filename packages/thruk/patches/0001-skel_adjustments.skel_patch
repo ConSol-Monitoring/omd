@@ -86,7 +86,7 @@
  # per peer in your peer config.
  #
 -#resource_file = path_to_your/resource.cfg
-+resource_file = ###ROOT###/etc/nagios/resource.cfg
++resource_file = ###ROOT###/etc/core/resource.cfg
  
  # enable a performance bar inside the status/host list which
  # create a graph from the performance data of the plugin output. Available
@@ -185,7 +185,7 @@
 +            peer = ###ROOT###/tmp/run/live
 +       </options>
 +       <configtool>
-+            core_conf      = ###ROOT###/tmp/nagios/nagios.cfg
++            core_conf      = ###ROOT###/tmp/core/core.cfg
 +            obj_check_cmd  = ###ROOT###/etc/init.d/core check
 +            obj_reload_cmd = ###ROOT###/etc/init.d/core reload
 +            obj_readonly   = check_mk_objects\.cfg
@@ -221,7 +221,7 @@
      # Results will be send back by using the spool folder.
      # This folder should point to the 'check_result_path' of your core.
 -    #spool_dir = /var/naemon/rw/check_results
-+    spool_dir = ###ROOT###/tmp/nagios/checkresults
++    spool_dir = ###ROOT###/tmp/core/checkresults
  
      # as alternative to the spool_dir, a livestatus connection can be used
      # to send results to the core.
@@ -230,14 +230,14 @@
  
      # Save objects to this file. Content will be overwritten.
 -    #objects_save_file = /etc/naemon/conf.d/thruk_bp_generated.cfg
-+    objects_save_file = ###ROOT###/etc/nagios/conf.d/thruk_bp_generated.cfg
++    objects_save_file = ###ROOT###/etc/core/conf.d/thruk_bp_generated.cfg
  
      # Save format can be either 'nagios' or 'icinga2'.
      #objects_save_format = nagios
  
      # User maintained file containing templates used for business process services.
 -    #objects_templates_file = /etc/naemon/conf.d/thruk_templates.cfg
-+    objects_templates_file = ###ROOT###/etc/nagios/conf.d/thruk_templates.cfg
++    objects_templates_file = ###ROOT###/etc/core/conf.d/thruk_templates.cfg
  
      # Command to apply changes to the objects_save_file. If not set and
      # and result_backend is used, the restart will be triggered as external command.

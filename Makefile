@@ -3,6 +3,7 @@ SHELL = /bin/bash
 # variale, e.g. make PACKAGES='nagios rrdtool' pack
 PACKAGES=freetds \
          perl-modules \
+         gcc \
          go-1.4 \
          go-1.7 \
          go-1.8 \
