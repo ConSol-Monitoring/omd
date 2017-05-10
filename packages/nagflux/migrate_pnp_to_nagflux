@@ -98,7 +98,7 @@ for my $xml_file (@xml_files) {
         `rrdtool flushcached --daemon unix:tmp/run/rrdcached.sock $rrd_file >/dev/null 2>&1`;
         my $raw = `rrdtool dump $rrd_file`;
         my $parser = XML::LibXML->new();
-        my $doc = XML::LibXML->load_xml(string => $raw);
+        my $doc = XML::LibXML->load_xml(string => $raw, load_ext_dtd => 0);
         # import in reverse order, otherwise values from fine granular rrds would be overwritten from large ones
         for my $rra (reverse $doc->findnodes('/rrd/rra')) {
             my($cf) = $rra->findnodes('./cf');
