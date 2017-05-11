@@ -26,7 +26,7 @@ my $site    = TestUtils::create_test_site() or TestUtils::bail_out_clean("no fur
 
 # find out the ip address of this vm
 my $this_ip = TestUtils::get_external_ip();
-diag("ip of this test omd is ".$this_ip);
+#diag("ip of this test omd is ".$this_ip);
 # create test host/service
 TestUtils::prepare_obj_config('t/data/omd/testconf1', '/omd/sites/'.$site.'/etc/nagios/conf.d', $site);
 ok(copy("t/data/downtime/test_conf1.cfg", "/omd/sites/$site/etc/nagios/conf.d/test.cfg"), "copy test config to site dir");
@@ -59,7 +59,7 @@ $query = $ml->selectall_arrayref("GET hosts\nFilter: host_name = down1\nColumns:
 ok($query->[0]->[0] == 0);
 
 my $dturl = "/$site/api/downtime?host=down1&comment=bla1&duration=1";
-diag("downtime command is ".$dturl);
+#diag("downtime command is ".$dturl);
 
 # downtime 1 minute for down1 -> must succeed with 200
 TestUtils::test_command({ cmd => sprintf("/bin/su - %s -c \"lib/nagios/plugins/check_http -t 60 -H %s --onredirect=follow -u '%s' --ssl\"", $site, $this_ip, $dturl), like => '/HTTP OK:/' });
@@ -75,7 +75,7 @@ $query = $ml->selectall_arrayref("GET hosts\nFilter: host_name = down1\nColumns:
 ok($query->[0]->[0] == 0);
 
 $dturl = "/$site/api/downtime?host=down2&comment=bla1&duration=1";
-diag("downtime command is ".$dturl);
+#diag("downtime command is ".$dturl);
 
 # downtime 1 minute for down2 -> must fail with 401
 TestUtils::test_command({ cmd => sprintf("/bin/su - %s -c \"lib/nagios/plugins/check_http -t 60 -H %s --onredirect=follow -u '%s' --ssl\"", $site, $this_ip, $dturl), like => '/HTTP WARNING:.* 401/', exit => 1 });
@@ -85,7 +85,7 @@ $query = $ml->selectall_arrayref("GET hosts\nFilter: host_name = down2\nColumns:
 ok($query->[0]->[0] == 0);
 
 $dturl = "/$site/api/downtime?host=down3&comment=bla1&duration=1&dtauthtoken=a62932a270b2e200d9ba21b80f8cff48";
-diag("downtime command is ".$dturl);
+#diag("downtime command is ".$dturl);
 
 # downtime 1 minute for down3 with correct token -> must succeed with 200
 TestUtils::test_command({ cmd => sprintf("/bin/su - %s -c \"lib/nagios/plugins/check_http -t 60 -H %s --onredirect=follow -u '%s' --ssl\"", $site, $this_ip, $dturl), like => '/HTTP OK:/' });
@@ -100,7 +100,7 @@ ok($query->[0]->[0] == 0);
 #
 
 $dturl = "/$site/api/downtime?host=down3&comment=bla1&duration=1&dtauthtoken=a62932a270bgeklauta21b80f8cff48";
-diag("downtime command is ".$dturl);
+#diag("downtime command is ".$dturl);
 
 
 # downtime 1 minute for down3 with invalid token -> must fail with 401
