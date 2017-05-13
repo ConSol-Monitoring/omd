@@ -33,6 +33,10 @@ GRAFANA_PASS="grafana"
 ####
 ADDRESS=$(echo $CONFIG_INFLUXDB_HTTP_TCP_PORT | perl -lne 'print $1 if /([a-zA-Z0-9\.\-]+)?:([0-9]+)/')
 PORT=$(echo $CONFIG_INFLUXDB_HTTP_TCP_PORT | perl -lne 'print $2 if /([a-zA-Z0-9\.\-]+)?:([0-9]+)/')
+if [ "x$PORT" = "x" ]; then
+ADDRESS=127.0.0.1
+PORT=$CONFIG_INFLUXDB_HTTP_TCP_PORT
+fi
 CONNECT="-host $ADDRESS -port $PORT"
 
 # create state dir
@@ -92,7 +96,7 @@ case "$1" in
         nohup $DAEMON $OPTIONS >>$LOGFILE 2>&1 &
         if [ $? -eq 0 ]; then
             for x in $(seq 100); do
-                $OMD_ROOT/lib/nagios/plugins/check_influxdb m ping --address http://$CONFIG_INFLUXDB_HTTP_TCP_PORT > /dev/null && break;
+                $OMD_ROOT/lib/nagios/plugins/check_influxdb m ping --address http://$ADDRESS:$PORT > /dev/null && break;
                 printf "."
                 sleep 0.2
             done
@@ -147,7 +151,8 @@ case "$1" in
         exit $?;
     ;;
     restart)
-        $0 stop && sleep 1 && $0 start
+        $0 stop && sleep 1
+        $0 start
         exit $?
         ;;
     *)
