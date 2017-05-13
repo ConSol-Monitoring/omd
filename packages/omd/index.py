@@ -168,9 +168,9 @@ omd start
 </pre>
 </div>
 <p class="footer">
-Copyright (c) 2010-2011 OMD Team and Contributors - 
-<a href="http://omdistro.org/" title="Official OMD Homepage"
-target="_blank">omdistro.org</a>
+Copyright (c) 2010-2017 OMD Team and Contributors - 
+<a href="https://labs.consol.de/omd/" title="Official OMD-Labs Homepage"
+target="_blank">labs.consol.de/omd/</a>
 </p>
 </div>
 </body>

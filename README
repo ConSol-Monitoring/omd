@@ -1,11 +1,8 @@
-WARNING: this is not a official OMD release!
+OMD-Labs - the Open Monitoring Distribution (Labs Edition)
+    <http://labs.consol.de/omd/>
 
-   OMD - the Open Monitoring Distribution (Labs Edition)
-      <http://labs.consol.de/omd/> - <http://omdistro.org/>
-
-OMD with 2 new Cores: Naemon and Icinga 2. APIs have changed, new
-Livestatus implementations have been build, so this build makes it
-easier to test the new cores with Thruk and Mod-Gearman.
+OMD-Labs is based on OMD with some additional software packages
+and best practices applied.
 
 
 What OMD-Labs contains in addition
@@ -37,5 +34,6 @@ those packages for details on their licensing.
 
 Further information
 -------------------
-Information about OMD-Labs can be found at https://github.com/ConSol/omd/tree/labs
+Information about OMD-Labs can be found at https://github.com/ConSol/omd
+and http://labs.consol.de/omd/
 The original OMD homepage is located at http://omdistro.org.

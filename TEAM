@@ -1,32 +1,3 @@
-Entwicklerdoku (Arbeit am OMD) - 
-README fuer Quellcode          - 
-Doku fuer OMD user             -
-Laufzeitsystem (bin/omd)       - Mathias Kettner
-
-Homepage & Bugtracking         - Wolfgang Barth
-Hosting                        - MK 
-Defaultkonfiguration Nagios    - 
-Presse & Sonstiges             - MK
-RPM/DEB-Pakete                 
-  Debian
-  Ubuntu (LTS)
-  RedHat / CentOS
-  SLES
-GIT, Mailingliste              - MK
-
-Pakete:
-  Check_MK + Multisite         - Mathias Kettner
-  Livestatus                   - Mathias Kettner
-  NagVis                       - Lars Michelsen
-  PNP4Nagios                   - Joerg Linge
-  DokuWiki                     - Stefan Hoesl
-  Merlin                       - Wolfgang Barth (geplant)
-  mysql                        - Lars Michelsen
-  apache                       - Lars Michelsen
-  Perl                         - Sven Nierlein
-  Thruk                        - Sven Nierlein
-  check_oracle/mysql/logfiles  - Gerhard Lausser
-  Jmx4Perl                     - Roland Huss
-  Nagios (plus Patches)        - 
-  Nagios Plugins               - 
-
+OMD contains a lot of open source software. The licensing and copyright
+of each package be found in
+/opt/omd/versions/default/usr/share/doc/<package-name>

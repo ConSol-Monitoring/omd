@@ -14,7 +14,6 @@ CRONTAB_OPTS=""
 USER="###SITE###"
 
 # check for root
-# Workaround for http://omdistro.org/issues/157
 if [ `id -u` -eq "0" ]; then
 	CRONTAB_OPTS="-u ###SITE###"
 fi

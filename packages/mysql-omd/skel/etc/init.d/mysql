@@ -84,7 +84,7 @@ check_install_db() {
         mysql_install_db --defaults-file=$MYSQL_CNF > $OMD_ROOT/var/log/omd.log 2>&1
         if [ $? != 0 ]; then
             echo "failed: please have a look at $OMD_ROOT/var/log/omd.log"
-            echo "and http://omdistro.org/wiki/omd/FAQ"
+            echo "and https://labs.consol.de/omd/packages/mariadb/"
             exit 1
         fi
     fi

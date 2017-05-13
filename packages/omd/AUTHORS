@@ -1,4 +1,7 @@
-The program omd was mainly written by Mathias Kettner <mk@mathias-kettner.de>,
+OMD contains a lot of open source software. The licensing and copyright
+of each package be found in
+/opt/omd/versions/default/usr/share/doc/<package-name>
+
+The program omd was initially written by Mathias Kettner <mk@mathias-kettner.de>,
 who also had the initial idea and concept of the whole OpenSource Monitoring
-Distribution. Many others have helped. Please have a look at omdistro.org
-for full details.
+Distribution. Many others have helped. 
