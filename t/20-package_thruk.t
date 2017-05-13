@@ -13,7 +13,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 1005 );
+plan( tests => 1379 );
 
 ##################################################
 # create our test site
@@ -242,6 +242,22 @@ for my $core (qw/nagios naemon/) {
     is(-s $tlog, 0, "log is empty") or diag(Dumper(`cat $log`));
     unlink($tlog);
 }
+
+##################################################
+# lmd
+TestUtils::test_command({ cmd => "/usr/bin/env sed -i -e 's/^#use_lmd_core=1/use_lmd_core=1/g' -e 's/^#lmd/lmd/g' /opt/omd/sites/$site/etc/thruk/thruk_local.d/lmd.conf" });
+TestUtils::test_command({ cmd => $omd_bin." restart $site thruk", like => '/OK/' });
+for my $url ( @{$urls} ) {
+    TestUtils::test_url($url);
+}
+is(-S "/omd/sites/$site/tmp/thruk/lmd/live.sock", 1, "lmd socket exists");
+my $log  = "/omd/sites/$site/tmp/thruk/lmd/lmd.log";
+my $tlog = '/tmp/thruk_test_error.log';
+is(-f $log, 1, "lmd log exists");
+# grep out commands
+`/bin/cat $log | /bin/grep -i 'error' > $tlog 2>&1`;
+is(-s $tlog, 0, "lmd log contains no errors") or diag(Dumper(`cat $log`));
+unlink($tlog);
 
 ##################################################
 # enable cookie auth
