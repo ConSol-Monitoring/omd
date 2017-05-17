@@ -1,7 +1,8 @@
 This file documents the revision history for the Open Monitoring Distribution (Labs Edition)
 
 next:
-          - Go update to 1.8.1 
+          - Go update to 1.8.1
+          - Prometheus update to 1.6.2
 
 2.40     May 13 2019
           - Thruk: update to 2.14-2
