@@ -34,7 +34,6 @@ install:
 skel:
 	mkdir -p $(SKEL)/etc/prometheus
 	mkdir -p $(SKEL)/etc/prometheus/conf.d/custom
-	ls -ltra $(SKEL)/etc/prometheus
 	echo "Use this dir for your hand-crafted configs." > $(SKEL)/etc/prometheus/conf.d/custom/README
 	mkdir -p $(SKEL)/etc/prometheus/conf.d/dynamic
 	echo "Use this dir for your automatically created configs. Use coshsh" > $(SKEL)/etc/prometheus/conf.d/dynamic/README
