@@ -1,7 +1,7 @@
 include ../../../Makefile.omd
 
 NAME = check_nwc_health
-VERSION = 6.2.1.5
+VERSION = 6.2.2
 DIR = $(NAME)-$(VERSION)
 
 .PHONY: skel
