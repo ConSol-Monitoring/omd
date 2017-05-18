@@ -135,7 +135,7 @@ MODULES = \
           HTTP-Message-6.06.tar.gz \
           HTTP-Negotiate-6.01.tar.gz \
           Module-Load-Conditional-0.64.tar.gz \
-          Monitoring-Livestatus-0.74.tar.gz \
+          Monitoring-Livestatus-0.78.tar.gz \
           Net-HTTP-6.07.tar.gz \
           Term-ProgressBar-2.17.tar.gz \
           XML-LibXML-2.0117.tar.gz \
