@@ -5,7 +5,6 @@ PACKAGES=freetds \
          perl-modules \
          gcc \
          go-1.4 \
-         go-1.7 \
          go-1.8 \
          influxdb \
          nagflux \
