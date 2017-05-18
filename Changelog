@@ -3,6 +3,7 @@ This file documents the revision history for the Open Monitoring Distribution (L
 next:
           - Go update to 1.8.1
           - Prometheus update to 1.6.2
+          - InfluxDb update to 1.2.4
 
 2.40     May 13 2019
           - Thruk: update to 2.14-2

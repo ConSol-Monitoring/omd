@@ -1,11 +1,11 @@
 include ../../Makefile.omd
 
 NAME       = influxdb
-VERSION    = 1.2.1
+VERSION    = 1.2.4
 BRANCH     = 1.2
 SRC        = $(NAME)-$(VERSION).tar.gz
 GOPATH     = go
-GOPKG      = 1.7
+GOPKG      = 1.8
 GOVERSION  = $(shell grep ^VERSION ../go-${GOPKG}/Makefile | awk '{ print $$3 }')
 PWD        = $(shell pwd)
 DATE       = $(shell date -u '+%Y-%m-%d_%I:%M:%S%p')
