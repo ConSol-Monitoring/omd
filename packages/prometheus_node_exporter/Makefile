@@ -1,31 +1,34 @@
 include ../../Makefile.omd
 
-NAME       = prometheus_node_expoter
+.PHONY: skel
+
+NAME       = node_exporter
 VERSION    = 0.14.0
 BRANCH     = master
 SRC        = $(NAME)-$(VERSION).tar.gz
-GOPATH     = go
 GOPKG      = 1.8
 GOVERSION  = $(shell grep ^VERSION ../go-${GOPKG}/Makefile | awk '{ print $$3 }')
 PWD        = $(shell pwd)
-DATE       = $(shell date -u '+%Y-%m-%d_%I:%M:%S%p')
+GOFOLDER   = go
+GOPATH     = $(PWD)/$(GOFOLDER)/
+GOROOT     = $(PWD)/../go-$(GOPKG)/go-$(GOVERSION)
+DATE       = $(shell date -u '+%Y-%m-%d_%H:%M:%S%p')
 LDFLAGS    = "\
--X github.com/prometheus/node_exporter/vendor/github.com/prometheus/common/version.Version=$(VERSION) \
--X github.com/prometheus/node_exporter/vendor/github.com/prometheus/common/version.Revision=OMD-Labs \
--X github.com/prometheus/node_exporter/vendor/github.com/prometheus/common/version.Branch=$(BRANCH) \
--X github.com/prometheus/node_exporter/vendor/github.com/prometheus/common/version.BuildUser=OMD-Labs \
--X github.com/prometheus/node_exporter/vendor/github.com/prometheus/common/version.BuildDate=$(DATE) \
+-X github.com/prometheus/$(NAME)/vendor/github.com/prometheus/common/version.Version=$(VERSION) \
+-X github.com/prometheus/$(NAME)/vendor/github.com/prometheus/common/version.Revision=OMD-Labs \
+-X github.com/prometheus/$(NAME)/vendor/github.com/prometheus/common/version.Branch=$(BRANCH) \
+-X github.com/prometheus/$(NAME)/vendor/github.com/prometheus/common/version.BuildUser=OMD-Labs \
+-X github.com/prometheus/$(NAME)/vendor/github.com/prometheus/common/version.BuildDate=$(DATE) \
 "
 
 build:
 	tar zxf $(SRC)
-	export GOROOT=$(PWD)/../go-$(GOPKG)/go-$(GOVERSION) && export GOPATH=$(PWD)/$(GOPATH)/ && PATH=$$GOROOT/bin:$$PATH && \
-		cd $(GOPATH)/src/github.com/prometheus/node_exporter && \
-		go install -ldflags $(LDFLAGS)
+	export GOROOT=$(GOROOT) && export GOPATH=$(GOPATH) && PATH=$$GOROOT/bin:$$PATH && \
+		go install -ldflags $(LDFLAGS) github.com/prometheus/$(NAME)
 
 install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/bin
-	install -m 755 $(PWD)/$(GOPATH)/bin/node_exporter  $(DESTDIR)$(OMD_ROOT)/bin
+	install -m 755 $(GOPATH)/bin/$(NAME) $(DESTDIR)$(OMD_ROOT)/bin
 
 skel:
 
@@ -33,14 +36,11 @@ clean:
 	rm -rf $(GOPATH)
 
 package: clean
-	mkdir -p $(GOPATH)
-	export GOROOT=$(PWD)/../go-$(GOPKG)/go-$(GOVERSION) && export GOPATH=$(PWD)/$(GOPATH)/ && PATH=$$GOROOT/bin:$$PATH && \
-		mkdir -p $(GOPATH)/src/github.com/prometheus/node_exporter && \
+	export GOROOT=$(GOROOT) && export GOPATH=$(GOPATH) && PATH=$$GOROOT/bin:$$PATH && \
+		mkdir -p $(GOPATH)/src/github.com/prometheus/ && \
 		cd $(GOPATH)/src/github.com/prometheus/ && \
-		git clone --depth=1 --branch "v$(VERSION)" https://github.com/prometheus/node_exporter.git && \
-		cd node_exporter && \
-		cd .. && \
-		go get -d ./... && \
+		git clone --depth=1 --branch "v$(VERSION)" https://github.com/prometheus/$(NAME).git && \
+		cd $(NAME) && go get -d && \
 		cd $(PWD) && \
-		tar zcf $(SRC) $(GOPATH)/src/ --exclude=.git
+		tar zcf $(SRC) $(GOFOLDER)/src/ --exclude=.git
 
