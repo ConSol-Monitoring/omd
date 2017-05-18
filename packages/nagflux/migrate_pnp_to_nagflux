@@ -8,9 +8,17 @@ use File::Copy qw/move/;
 use XML::LibXML;
 use Term::ReadKey;
 
+my $ml;
+
 if($ARGV[0] && ($ARGV[0] eq '-h' || $ARGV[0] eq '--help')) {
-    print STDERR "usage: $0 [<pnp xml files>]";
+    print STDERR "usage: $0 [-l|--livestatus] [<pnp xml files>]";
     exit(1);
+}
+
+if ($ARGV[0] && ($ARGV[0] eq '-l' || $ARGV[0] eq '--livestatus')) {    
+    use Monitoring::Livestatus;
+    $ml = Monitoring::Livestatus->new( socket => "$ENV{OMD_ROOT}/tmp/run/live");
+    shift @ARGV; 
 }
 
 if(!$ENV{'OMD_ROOT'}) {
@@ -39,23 +47,52 @@ if(!-d $nagflux_spool) {
     exit 1;
 }
 
-print STDERR "Ready to start import of ".$num." files to ".$nagflux_spool.".\n";
+sub object_exists {
+	return 1 if (! defined $ml);
+	my $xml = shift; 
+	my ($h,$s) = $xml =~ m/.*\/(.*)\/(.*).xml$/;
+	my $res;
+	if ($s eq "_HOST_" ) {
+		$res = $ml->selectscalar_value(sprintf "GET hosts\nColumns: host_name\nFilter: host_name = $h");
+	} else {
+		$res = $ml->selectscalar_value(sprintf "GET services\nColumns: description\nFilter: host_name = $h\nFilter: description = $s");
+	}
+	return defined $res;
+}
+
+
+print STDERR "Ready to start the RRD perfdata import of ".$num." objects to ".$nagflux_spool.".\n";
+
+if(defined $ml) {
+    print STDERR "Import will be skipped for perfdata of non-existent objects in current oonfig.\n";
+}
 if($nagflux_spool eq $pnp_spool) {
     print STDERR "Make sure pnp4nagios is stopped or does not read from that spool folder.\n";
 }
-print STDERR "Press Ctrl+C to cancel.";
+
+print STDERR "Press any key to start or Ctrl+c to cancel.";
 ReadMode('cbreak');
 ReadKey(0);
 ReadMode('normal');
 print "\n\n";
 
 my $x = 0;
+my $skipped_noxml = 0;
+my $skipped_noobject = 0;
+my $skipped_norrd = 0;
+
 for my $xml_file (@xml_files) {
     $x++;
-    printf(STDERR "%02i/%02i exporting from %s\n", $x, $num, $xml_file);
+    printf(STDERR "%02i/%02i reading from %s\n", $x, $num, $xml_file);
     if(!-s $xml_file) {
-        print STDERR "  -> skipped, file does not exist or is empty\n";
+        print STDERR "  !! SKIPPED, file does not exist or is empty\n";
+	$skipped_noxml++;
         next;
+    }
+    if (! object_exists($xml_file)) {
+        print STDERR "  !! SKIPPED, object does not exist in current config\n";
+	$skipped_noobject++;
+	next; 
     }
     my ($fh, $filename) = tempfile();
     my $xml     = XMLin($xml_file);
@@ -81,7 +118,8 @@ for my $xml_file (@xml_files) {
         }
         print STDERR "  -> ".Encode::encode_utf8($rrd_file)."\n";
         if(!-s $rrd_file) {
-            print STDERR "    -> skipped, file does not exist or is empty\n";
+            print STDERR "    !! SKIPPED, file does not exist or is empty\n";
+	    $skipped_norrd++;
             next;
         }
         my $warning  = $ds->{'WARN'};
@@ -142,4 +180,11 @@ for my $xml_file (@xml_files) {
     close($fh);
     move($filename, $nagflux_spool.'/service-perfdata'.$x.time());
 }
-print STDERR "\n\nfinished\n";
+my $processed =  $num - $skipped_noxml - $skipped_noobject;
+print STDERR "\n\nfinished:\n";
+print STDERR "  Imported objects: $processed ($skipped_norrd RRD files were not found)\n";
+print STDERR "  Skipped objects (no XML): $skipped_noxml\n";
+print STDERR "  Skipped objects (no object in cfg): $skipped_noobject\n";
+
+
+
