@@ -10,6 +10,10 @@ EDIR = mkeventd-$(VERSION)
 
 build:
 	tar xzf $(DIR).tar.gz
+	set -e ; for p in patches/*.dif ; do \
+		echo "applying $$p..." ; \
+		( cd $(DIR) ; patch -p1 -b ) < $$p ; \
+	done
 	tar xzf $(EDIR).tar.gz
 	cd $(EDIR)/src ; make
 	cd $(EDIR)/lib ; make
