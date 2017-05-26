@@ -50,14 +50,18 @@ if(!-d $nagflux_spool) {
 sub object_exists {
 	return 1 if (! defined $ml);
 	my $xml = shift; 
-	my ($h,$s) = $xml =~ m/.*\/(.*)\/(.*).xml$/;
+
+	my ($h) = `grep NAGIOS_AUTH_HOSTNAME $xml | sed -e 's/.*>\(.*\)<.*/\1/'`  =~ m/.*>(.*)<.*/ ;
+	my ($s) = `grep NAGIOS_AUTH_SERVICEDESC $xml | sed -e 's/.*>\(.*\)<.*/\1/'`  =~ m/.*>(.*)<.*/ ;
 	my $res;
-	if ($s eq "_HOST_" ) {
+	if ($s eq "Host Perfdata" ) {
 		$res = $ml->selectscalar_value(sprintf "GET hosts\nColumns: host_name\nFilter: host_name = $h");
+		$s = "";
 	} else {
-		$res = $ml->selectscalar_value(sprintf "GET services\nColumns: description\nFilter: host_name = $h\nFilter: description = $s");
+		$res = $ml->selectscalar_value(sprintf "GET services\nColumns: host_name description\nFilter: host_name = $h\nFilter: description = $s");
+		$s = "/$s";
 	}
-	return defined $res;
+	return (defined($res), sprintf ("%s%s",$h,$s) );
 }
 
 
@@ -89,8 +93,9 @@ for my $xml_file (@xml_files) {
 	$skipped_noxml++;
         next;
     }
-    if (! object_exists($xml_file)) {
-        print STDERR "  !! SKIPPED, object does not exist in current config\n";
+    my @exists = object_exists($xml_file);
+    if (!  $exists[0]) {
+        print STDERR "  !! SKIPPED, object $exists[1] does not exist in current config\n";
 	$skipped_noobject++;
 	next; 
     }
