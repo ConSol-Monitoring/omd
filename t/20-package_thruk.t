@@ -217,7 +217,7 @@ for my $core (qw/nagios naemon/) {
     unlink("/omd/sites/$site/var/thruk/obj_retention.dat");
 
     TestUtils::test_command({ cmd => "/bin/su - $site -c './bin/thruk -A omdadmin \"cmd.cgi?cmd_typ=7&cmd_mod=2&host=omd-$site&service=Dummy+Service&start_time=now&force_check=on&btnSubmit=Commit\" --local'", like => '/Command request successfully submitted/', errlike => '/cmd: COMMAND/' });
-    TestUtils::wait_for_file("/omd/sites/$site/var/pnp4nagios/perfdata/omd-$site/Dummy_Service_omd-dummy.rrd") or TestUtils::bail_out_clean("No need to test Thruk without working pnp");;
+    TestUtils::wait_for_file("/omd/sites/$site/var/pnp4nagios/perfdata/omd-$site/Dummy_Service_omd-dummy.rrd", 240) or TestUtils::bail_out_clean("No need to test Thruk without working pnp");;
 
     for my $test (@{$tests}) {
         TestUtils::test_command($test);
