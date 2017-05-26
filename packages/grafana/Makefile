@@ -48,7 +48,6 @@ skel:
 	sed -i -e 's|###APACHE_MODULE_DIR###|$(MODULE_DIR)|g' \
 	       $(SKEL)/etc/apache/conf.d/grafana.conf
 	mkdir -p $(SKEL)/var/grafana/plugins
-	tar zxf histogram-panel-plugin-0.1.6.tar.gz -C $(SKEL)/var/grafana/plugins
 	tar zxf clock-panel-plugin-0.0.8.tar.gz -C $(SKEL)/var/grafana/plugins
 	tar zxf piechart-panel-plugin-1.1.4.tar.gz -C $(SKEL)/var/grafana/plugins
 
