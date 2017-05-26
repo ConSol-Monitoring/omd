@@ -2,6 +2,7 @@ include ../../Makefile.omd
 
 NAME     = python-modules
 SHELL    = /bin/bash
+FREETDS  = $(shell readlink -m ../freetds/tmpinstall$(OMD_ROOT))
 
 # This is where the python modules are going to be installed to
 LOCALPYTHONDIR=$(DESTDIR)$(OMD_ROOT)/lib/python
@@ -34,12 +35,12 @@ MODULES += fpconst-0.7.2.tar.gz
 MODULES += docutils-0.12.tar.gz
 MODULES += SOAPpy-0.12.5.tar.gz
 MODULES += PyYAML-3.10.tar.gz
-MODULES += ecdsa-0.13.tar.gz
+MODULES += ecdsa-0.10.tar.gz
 MODULES += gearman-2.0.2.tar.gz
 MODULES += six-1.10.0.tar.gz
 MODULES += orderedmultidict-0.7.5.tar.gz
 MODULES += pycrypto-2.6.1.tar.gz
-MODULES += paramiko-1.18.2.tar.gz
+MODULES += paramiko-1.12.2.tar.gz
 MODULES += pyasn1-0.2.3.tar.gz
 MODULES += ply-3.10.tar.gz
 MODULES += pysmi-0.1.1.tar.gz
@@ -63,7 +64,11 @@ build:
 	mkdir -p dest
 	set -e ; cd dest && \
 	    export PYTHONPATH=$$PYTHONPATH:$(LOCALPYTHONDIR); \
-	    export PYMSSQL_BUILD_WITH_BUNDLED_FREETDS=1; \
+	    if [ `uname -m` = 'armv7l' ]; then \
+		export PYMSSQL_DONT_BUILD_WITH_BUNDLED_FREETDS=1; \
+	    else \
+		export PYMSSQL_BUILD_WITH_BUNDLED_FREETDS=1; \
+	    fi; \
 	    unset http_proxy; \
 	    unset https_proxy; \
 	    unset ftp_proxy; \
@@ -76,7 +81,11 @@ build:
 	        MDIR=$$(echo $$M | sed -e 's/.tar.gz//g' -e 's/.zip//g') ; \
 	        cd $$MDIR; \
 	        echo PYTHONBUILD $$M ; \
-	        python setup.py build ; \
+		if [ `uname -m` = 'armv7l' ] && [[ "$$M" =~ .*pymssql.* ]]; then \
+	            python setup.py build_ext -I $(FREETDS)/include -L $(FREETDS)/lib ; \
+		else \
+	            python setup.py build ; \
+		fi ; \
 	        cd .. ; \
 	    done
 
