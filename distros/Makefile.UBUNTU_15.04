@@ -44,6 +44,7 @@ BUILD_PACKAGES += libpcap-dev # needed for CMC
 BUILD_PACKAGES += gettext # needed for german l10n
 BUILD_PACKAGES += libfreeradius-dev
 BUILD_PACKAGES += snmpd
+BUILD_PACKAGES += libyaml-dev
 OS_PACKAGES     =
 OS_PACKAGES    += time # needed for mk-job
 OS_PACKAGES    += traceroute # needed for Check_MK parent scan

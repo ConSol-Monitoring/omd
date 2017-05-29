@@ -37,6 +37,7 @@ BUILD_PACKAGES   += rpm-build
 BUILD_PACKAGES   += uuid-devel
 BUILD_PACKAGES   += which
 BUILD_PACKAGES   += radiusclient-ng-devel
+BUILD_PACKAGES   += libyaml-devel
 OS_PACKAGES       =
 OS_PACKAGES      += time # needed for mk-job
 OS_PACKAGES      += traceroute # needed for Check_MK parent scan

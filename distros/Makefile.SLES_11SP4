@@ -40,6 +40,7 @@ BUILD_PACKAGES += readline-devel
 BUILD_PACKAGES += apache2-devel
 BUILD_PACKAGES += freeradius-client-devel
 BUILD_PACKAGES += libtool # needed for gearman
+BUILD_PACKAGES += libyaml-devel
 OS_PACKAGES     =
 OS_PACKAGES      += net-tools # traceroute is needed for Check_MK parent scan
 OS_PACKAGES    += apache2
