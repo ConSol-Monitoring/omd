@@ -68,17 +68,20 @@ class AtomicRecipient(coshsh.datarecipient.Datarecipient):
                         self.item_write_config(itemobj, self.objects_dir, '')
         self.count_after_objects()
 
-    def item_write_config(self, obj, dynamic_dir, objtype):
+    def item_write_config(self, obj, dynamic_dir, objtype, want_tool=None):
         my_target_dir = os.path.join(dynamic_dir, objtype)
         if not os.path.exists(my_target_dir):
             os.makedirs(my_target_dir)
-        for file in obj.config_files:
-            content = obj.config_files[file]
-            my_target_file = os.path.join(my_target_dir, file)
-            with open(my_target_file+'_coshshtmp', "w") as f:
-                f.write(content)
-                os.fsync(f)
-            os.rename(my_target_file+'_coshshtmp', my_target_file)
+        for tool in obj.config_files:
+            if not want_tool or want_tool == tool:
+                for file in obj.config_files[tool]:
+                    content = obj.config_files[tool][file]
+                    my_target_file = os.path.join(my_target_dir, file)
+                    with open(my_target_file+'_coshshtmp', "w") as f:
+                        f.write(content)
+                        os.fsync(f)
+                    os.rename(my_target_file+'_coshshtmp', my_target_file)
+
 
 class RemoteAtomicRecipient(AtomicRecipient):
     def __init__(self, **kwargs):
