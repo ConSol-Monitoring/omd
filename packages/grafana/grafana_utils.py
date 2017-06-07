@@ -30,15 +30,13 @@ class Grafana(object):
         except Exception:
             self.dashboards = []
         
-
     @staticmethod
-    def ping():
-        for i in range(10):
+    def ping(sec=5):
+        for i in range(sec):
             if Grafana.answers():
                 return True
-            time.sleep(0.5)
+            time.sleep(1)
         return False
-
 
     @staticmethod
     def answers():

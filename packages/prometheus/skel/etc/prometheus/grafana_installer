@@ -15,7 +15,7 @@ from grafana_utils import Grafana
 datasource_name = "Prometheus"
 port_changed_flag = os.path.join(os.environ['OMD_ROOT'], 'prometheusportupdated')
 
-if not Grafana.ping():
+if not Grafana.ping(10):
     sys.exit(2)
 
 grafana = Grafana()
