@@ -11,7 +11,7 @@ from grafana_utils import Grafana
       update the datasource url
 """
 
-if not Grafana.ping():
+if not Grafana.ping(10):
     sys.exit(2)
 
 grafana = Grafana()
