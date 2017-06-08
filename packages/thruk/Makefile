@@ -41,7 +41,7 @@ install:
 		if [ $(DISTRO_NAME) = "SLES" ] && [ $(DISTRO_VERSION) = "11SP1" ]; then \
 			PHANTOM_VERSION='1.9.1'; \
 		fi; \
-		cp -p phantomjs-$$PHANTOM_VERSION-$$ARCH $(DESTDIR)$(OMD_ROOT)/bin/phantomjs;
+		install -m 755 phantomjs-$$PHANTOM_VERSION-$$ARCH $(DESTDIR)$(OMD_ROOT)/bin/phantomjs;
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/omd/scripts/post-update
 	install -m 755 thruk.post-update $(DESTDIR)$(OMD_ROOT)/lib/omd/scripts/post-update/thruk
 
