@@ -9,7 +9,7 @@
  
  ######################################
  # Changes the path to your logo images. Default is
-@@ -23,13 +23,13 @@
+@@ -23,13 +23,14 @@
  # Like usual, paths starting with a / will be absolute from your
  # webserver root directory. Paths starting without a / will be relative
  # to the cgi directory.
@@ -21,6 +21,7 @@
  # the path relative to your webserver root directory and 'physical_logo_path' is
  # the corresponding filesystem path.
 -#physical_logo_path = /usr/local/share/icons
++physical_logo_path = ###ROOT###/share/nagios/htdocs/images/logos
 +physical_logo_path = ###ROOT###/local/share/nagios/htdocs/images/logos
  
  ######################################
