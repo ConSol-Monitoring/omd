@@ -38,7 +38,6 @@ BUILD_PACKAGES   += apache2-dev  # compiling mod_python
 BUILD_PACKAGES   += apache2      # compiling mod_python
 BUILD_PACKAGES   += libradiusclient-ng-dev
 BUILD_PACKAGES   += dietlibc-dev # is not really needed, but useful for cmk components
-BUILD_PACKAGES   += libyaml-dev
 OS_PACKAGES       =
 OS_PACKAGES      += time # needed for mk-job
 OS_PACKAGES      += traceroute # needed for Check_MK parent scan

@@ -46,7 +46,6 @@ BUILD_PACKAGES   += perl-Locale-Maketext-Simple
 BUILD_PACKAGES   += perl-IO-Zlib
 BUILD_PACKAGES   += rsync
 BUILD_PACKAGES   += freeradius-devel
-BUILD_PACKAGES   += libyaml-devel
 OS_PACKAGES       =
 OS_PACKAGES      += time # needed for mk-job
 OS_PACKAGES      += traceroute # needed for Check_MK parent scan
