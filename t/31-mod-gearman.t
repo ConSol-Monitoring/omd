@@ -14,7 +14,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 206 );
+plan( tests => 432 );
 
 ##################################################
 # get version strings
@@ -27,10 +27,16 @@ isnt($libgearman_version, '', "got libgearman_version") or BAIL_OUT("need lib-ge
 # create our test site
 my $omd_bin = TestUtils::get_omd_bin();
 
-for my $core (qw/nagios icinga/) {
-    my $site    = TestUtils::create_test_site() or TestUtils::bail_out_clean("no further testing without site");
-    my $host    = "omd-".$site;
-    my $service = "Dummy+Service";
+for my $core (qw/nagios icinga naemon/) {
+    my $site     = TestUtils::create_test_site() or TestUtils::bail_out_clean("no further testing without site");
+    my $host     = "omd-".$site;
+    my $service  = "Dummy Service";
+    my $core_url = $core;
+    my $module   = 'mod_gearman_nagios3.o';
+    if($core eq 'naemon') {
+        $core_url = 'thruk';
+        $module   = 'mod_gearman_naemon.o';
+    }
 
     # make tests more reliable
     TestUtils::test_command({ cmd => "/usr/bin/env sed -i -e 's/^idle-timeout=30/idle-timeout=300/g' /opt/omd/sites/$site/etc/mod-gearman/worker.cfg" });
@@ -61,8 +67,16 @@ for my $core (qw/nagios icinga/) {
       { cmd => "/bin/su - $site -c 'rm -f var/*/retention.dat'", like => '/^$/' },
       { cmd => $omd_bin." start $site", like => [ '/gearmand\.\.\.OK/', '/gearman_worker\.\.\.OK/'], sleep => 1 },
       { cmd => $omd_bin." status $site", like => [ '/gearmand:\s+running/', '/gearman_worker:\s*running/'] },
-      { cmd => "/bin/su - $site -c './lib/nagios/plugins/check_http -H localhost -a omdadmin:omd -u /$site/$core/cgi-bin/cmd.cgi -e 200 -P \"cmd_typ=7&cmd_mod=2&host=omd-$site&service=Dummy+Service&start_time=$now&force_check=on&btnSubmit=Commit\" -r \"successfully submitted\"'", like => '/HTTP OK:/' },
-      { cmd => "/bin/su - $site -c './lib/nagios/plugins/check_http -H localhost -a omdadmin:omd -u /$site/$core/cgi-bin/cmd.cgi -e 200 -P \"cmd_typ=7&cmd_mod=2&host=omd-$site&service=perl+test&start_time=$now&force_check=on&btnSubmit=Commit\" -r \"successfully submitted\"'", like => '/HTTP OK:/' },
+      { cmd => "/bin/su - $site -c './lib/$core/plugins/check_http -H localhost -a omdadmin:omd -u /$site/$core_url/cgi-bin/cmd.cgi -e 200 -P \"cmd_typ=7&cmd_mod=2&host=omd-$site&service=Dummy+Service&start_time=$now&force_check=on&btnSubmit=Commit\" -r \"successfully submitted\"'", like => '/HTTP OK:/' },
+      { cmd => "/bin/su - $site -c './lib/$core/plugins/check_http -H localhost -a omdadmin:omd -u /$site/$core_url/cgi-bin/cmd.cgi -e 200 -P \"cmd_typ=7&cmd_mod=2&host=omd-$site&service=perl+test&start_time=$now&force_check=on&btnSubmit=Commit\" -r \"successfully submitted\"'", like => '/HTTP OK:/' },
+      { cmd => $omd_bin." status $site", like => [
+                                                '/apache:\s*running/',
+                                                '/rrdcached:\s*running/',
+                                                '/gearman_worker:\s*running/',
+                                                "/$core:\\s*running/",
+                                                '/Overall state:\s*running/',
+                                               ]
+      },
     ];
     for my $test (@{$preps}) {
         TestUtils::test_command($test) or TestUtils::bail_out_clean("no further testing without proper preparation");
@@ -71,10 +85,10 @@ for my $core (qw/nagios icinga/) {
     ##################################################
     # execute some checks
     my $tests = [
-      { cmd => "/bin/grep 'Event broker module.*mod_gearman_nagios3.o.*initialized successfully' /omd/sites/$site/var/$core/$core.log", like => '/successfully/' },
+      { cmd => "/bin/grep 'Event broker module.*$module.*initialized successfully' /omd/sites/$site/var/$core/$core.log", like => '/successfully/' },
       { cmd => "/bin/grep 'mod_gearman: initialized version ".$modgearman_version." \(libgearman ".$libgearman_version."\)' /omd/sites/$site/var/$core/$core.log", like => '/initialized/' },
       { cmd => "/bin/su - $site -c 'bin/send_gearman --server=localhost:4730 --keyfile=etc/mod-gearman/secret.key --host=$host --message=test'" },
-      { cmd => "/bin/su - $site -c 'bin/send_gearman --server=localhost:4730 --keyfile=etc/mod-gearman/secret.key --host=$host --service=$service --message=test'" },
+      { cmd => "/bin/su - $site -c 'bin/send_gearman --server=localhost:4730 --keyfile=etc/mod-gearman/secret.key --host=$host --service=\"$service\" --message=test'" },
       { cmd => "/bin/grep -i 'mod_gearman: ERROR' /omd/sites/$site/var/$core/$core.log", 'exit' => 1, like => '/^\s*$/' },
       { cmd => "/bin/grep -i 'mod_gearman: WARN' /omd/sites/$site/var/$core/$core.log", 'exit' => 1, like => '/^\s*$/' },
       { cmd => "/bin/su - $site -c 'lib/$core/plugins/check_gearman -H localhost:4730'", like => '/check_gearman OK/' },
@@ -86,7 +100,7 @@ for my $core (qw/nagios icinga/) {
 
     #--- wait for all services being checked
     TestUtils::wait_for_content({
-        url => "http://localhost/$site/$core/cgi-bin/status.cgi?host=$host&servicestatustypes=1&hoststatustypes=15",
+        url => "http://localhost/$site/$core_url/cgi-bin/status.cgi?host=$host&servicestatustypes=1&hoststatustypes=15",
         auth    => "OMD Monitoring Site $site:omdadmin:omd",
         like    => [ "0 Matching Service" ],
         }
@@ -103,6 +117,31 @@ for my $core (qw/nagios icinga/) {
 
     TestUtils::file_contains({file => "/opt/omd/sites/$site/var/log/gearman/worker.log", like => ['/Using Embedded Perl interpreter for: .*check_webinject/', '/Embedded Perl successfully compiled/', '/^output=.*find\ any\ test/mx'], unlike => ['/\[ERROR\]/'] });
 
+    TestUtils::test_command({
+        cmd => $omd_bin." status $site", like => [
+                                                '/apache:\s*running/',
+                                                '/rrdcached:\s*running/',
+                                                '/gearman_worker:\s*running/',
+                                                "/$core:\\s*running/",
+                                                '/Overall state:\s*running/',
+                                         ]
+    });
+
+    # test check_source
+    if($core eq 'naemon') {
+        TestUtils::test_command({ cmd => "/bin/su - $site -c 'echo -e \"".'GET hosts\nColumns: name check_source\n'."\" | lq'", like => '/Mod-Gearman Worker @ /' });
+    }
+
+    # test host notifications
+    TestUtils::test_command({ cmd => "/bin/su - $site -c 'echo \"COMMAND [".time()."] SEND_CUSTOM_HOST_NOTIFICATION;$host;2;omdadmin;test hst notification\" | lq'", like => '/^\s*$/' });
+    TestUtils::test_command({ cmd => "/bin/su - $site -c 'grep NOTIFICATION: var/$core/$core.log'", waitfor => 'HOST\ NOTIFICATION:' });
+    TestUtils::file_contains({file => "/opt/omd/sites/$site/var/$core/$core.log", like => ['/HOST NOTIFICATION:.*;CUSTOM.*test hst notification/', '/EXTERNAL COMMAND: SEND_CUSTOM_HOST_NOTIFICATION/'], unlike => ['/SIGSEGV/'] });
+
+    # test service notifications
+    TestUtils::test_command({ cmd => "/bin/su - $site -c 'echo \"COMMAND [".time()."] SEND_CUSTOM_SVC_NOTIFICATION;$host;$service;2;omdadmin;test svc notification\" | lq'", like => '/^\s*$/' });
+    TestUtils::test_command({ cmd => "/bin/su - $site -c 'grep NOTIFICATION: var/$core/$core.log'", waitfor => 'SERVICE\ NOTIFICATION:' });
+    TestUtils::file_contains({file => "/opt/omd/sites/$site/var/$core/$core.log", like => ['/SERVICE NOTIFICATION:.*;CUSTOM.*test svc notification/', '/EXTERNAL COMMAND: SEND_CUSTOM_SVC_NOTIFICATION/'], unlike => ['/SIGSEGV/'] });
+ 
     ##################################################
     # cleanup test site
     TestUtils::test_command({ cmd => $omd_bin." stop $site" });
