@@ -59,12 +59,42 @@ sub match_matches {
   } split(/____/, $subtraps);
   my $rulehits = 0;
   foreach my $rule (@rules) {
-    if ($rule =~ /^\$(\d+):\s*(\w+)/) {
+    if ($rule =~ /^\$(\d+):\s*!\s*(\w+)/) {
+      # MATCH $x: ! n
+      $rulehits +=1 if $subtraps[$1-1] ne $2;
+    } elsif ($rule =~ /^\$(\d+):\s*(\w+)/) {
+      # MATCH $x: n
       $rulehits +=1 if $subtraps[$1-1] eq $2;
-    } elsif ($rule =~ /^\$(\d+):\s*\((.*)\)\s*$/) {
-      $rulehits += 1 if $subtraps[$1-1] =~ /$2/;
+    } elsif ($rule =~ /^\$(\d+):\s*!\s*\((.*)\)\s*i\*$/) {
+      # MATCH $x: ! (reg) i
+      $rulehits += 1 if $subtraps[$1-1] !~ /$2/i;
+    } elsif ($rule =~ /^\$(\d+):\s*!ş*\((.*)\)\s*$/) {
+      # MATCH $x: ! (reg)
+      $rulehits += 1 if $subtraps[$1-1] !~ /$2/;
     } elsif ($rule =~ /^\$(\d+):\s*\((.*)\)\s*i\s*$/) {
+      # MATCH $x: (reg) i
       $rulehits += 1 if $subtraps[$1-1] =~ /$2/i;
+    } elsif ($rule =~ /^\$(\d+):\s*\((.*)\)\s*$/) {
+      # MATCH $x: (reg)
+      $rulehits += 1 if $subtraps[$1-1] =~ /$2/;
+    } elsif ($rule =~ /^\$(\d+):\s*!\s*<\s*(\d+)\s*$/) {
+      # MATCH $x: ! < n
+      $rulehits += 1 if $subtraps[$1-1] >= $2;
+    } elsif ($rule =~ /^\$(\d+):\s*<\s*(\d+)\s*$/) {
+      # MATCH $x: < n
+      $rulehits += 1 if $subtraps[$1-1] < $2;
+    } elsif ($rule =~ /^\$(\d+):\s*!\s*>\s*(\d+)\s*$/) {
+      # MATCH $x: ! > n
+      $rulehits += 1 if $subtraps[$1-1] <= $2;
+    } elsif ($rule =~ /^\$(\d+):\s*>\s*(\d+)\s*$/) {
+      # MATCH $x: > n
+      $rulehits += 1 if $subtraps[$1-1] > $2;
+    } elsif ($rule =~ /^\$(\d+):\s*!\s*(\d+)-(\d+)\s*$/) {
+      # MATCH $x: ! n-n
+      $rulehits += 1 if $subtraps[$1-1] < $2 || $subtraps[$1-1] > $3;
+    } elsif ($rule =~ /^\$(\d+):\s*(\d+)-(\d+)\s*$/) {
+      # MATCH $x: n-n
+      $rulehits += 1 if $subtraps[$1-1] >= $2 && $subtraps[$1-1] <= $3;
     } else {
 printf STDERR "unknown rule __%s__\n", $rule;
     }
