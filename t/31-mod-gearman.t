@@ -14,7 +14,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 432 );
+plan( tests => 477 );
 
 ##################################################
 # get version strings
@@ -48,6 +48,7 @@ for my $core (qw/nagios icinga naemon/) {
 
     # create test host/service
     TestUtils::prepare_obj_config('t/data/omd/testconf1', '/omd/sites/'.$site.'/etc/'.$core.'/conf.d', $site);
+    TestUtils::test_command({ cmd => "/bin/cp t/data/mod-gearman/multi.cfg /omd/sites/$site/etc/$core/conf.d/multi.cfg" });
 
     ##################################################
     # decrease status update interval
@@ -69,6 +70,7 @@ for my $core (qw/nagios icinga naemon/) {
       { cmd => $omd_bin." status $site", like => [ '/gearmand:\s+running/', '/gearman_worker:\s*running/'] },
       { cmd => "/bin/su - $site -c './lib/$core/plugins/check_http -H localhost -a omdadmin:omd -u /$site/$core_url/cgi-bin/cmd.cgi -e 200 -P \"cmd_typ=7&cmd_mod=2&host=omd-$site&service=Dummy+Service&start_time=$now&force_check=on&btnSubmit=Commit\" -r \"successfully submitted\"'", like => '/HTTP OK:/' },
       { cmd => "/bin/su - $site -c './lib/$core/plugins/check_http -H localhost -a omdadmin:omd -u /$site/$core_url/cgi-bin/cmd.cgi -e 200 -P \"cmd_typ=7&cmd_mod=2&host=omd-$site&service=perl+test&start_time=$now&force_check=on&btnSubmit=Commit\" -r \"successfully submitted\"'", like => '/HTTP OK:/' },
+      { cmd => "/bin/su - $site -c './lib/$core/plugins/check_http -H localhost -a omdadmin:omd -u /$site/$core_url/cgi-bin/cmd.cgi -e 200 -P \"cmd_typ=7&cmd_mod=2&host=omd-$site&service=multiline&start_time=$now&force_check=on&btnSubmit=Commit\" -r \"successfully submitted\"'", like => '/HTTP OK:/' },
       { cmd => $omd_bin." status $site", like => [
                                                 '/apache:\s*running/',
                                                 '/rrdcached:\s*running/',
@@ -142,6 +144,9 @@ for my $core (qw/nagios icinga naemon/) {
     TestUtils::test_command({ cmd => "/bin/su - $site -c 'grep NOTIFICATION: var/$core/$core.log'", waitfor => 'SERVICE\ NOTIFICATION:' });
     TestUtils::file_contains({file => "/opt/omd/sites/$site/var/$core/$core.log", like => ['/SERVICE NOTIFICATION:.*;CUSTOM.*test svc notification/', '/EXTERNAL COMMAND: SEND_CUSTOM_SVC_NOTIFICATION/'], unlike => ['/SIGSEGV/'] });
  
+    TestUtils::test_command({ cmd => "/bin/su - $site -c 'echo -e \"".'GET services\nFilter: description = multiline\nColumns: plugin_output long_plugin_output\n'."\" | lq'", like => '/^OK - firstline;secondline\\\nthirdline\\\nCONFIG_CORE=\''.$core.'\'\\\n/' });
+    TestUtils::test_command({ cmd => "/bin/su - $site -c 'echo -e \"".'GET services\nFilter: description = multiline\nColumns: perf_data\n'."\" | lq'", like => '/^perf=1c$/' });
+
     ##################################################
     # cleanup test site
     TestUtils::test_command({ cmd => $omd_bin." stop $site" });
