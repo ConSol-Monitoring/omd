@@ -30,6 +30,8 @@ influxportupdated
 .dbus
 prometheusportupdated
 oradiag_*/
+*.tmp
+.rpmdb/
 
 # Append your own ignores after this comment to avoid conflicts
 
