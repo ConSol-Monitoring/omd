@@ -32,6 +32,9 @@ prometheusportupdated
 oradiag_*/
 *.tmp
 .rpmdb/
+.cache/
+.selected_editor
+*.orig
 
 # Append your own ignores after this comment to avoid conflicts
 
