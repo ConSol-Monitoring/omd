@@ -70,7 +70,7 @@ function remove_git_index_lock() {
   dir=$1
   cd $dir
   if [ -f .git/index.lock ]; then
-    if git pull 2>&1 | grep -q "fatal: unable to create '.git/index.lock': File exists"; then
+    if git pull 2>&1 | egrep -iq "fatal: unable to create .*.git/index.lock': File exists"; then
       if lsof -V .git/index.lock | grep -q "no file use located"; then
         rm -f .git/index.lock
         logger_info removed a leftover .git/index.lock in $dir
