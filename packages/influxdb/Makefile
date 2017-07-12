@@ -46,5 +46,6 @@ package: clean
 		cd .. && \
 		go get ./... && \
 		cd $(PWD) && \
+		find $(GOPATH)/src/ -name ".git*" -exec rm -R {} \; ; \
 		tar zcf $(SRC) $(GOPATH)/src/ --exclude=.git
 
