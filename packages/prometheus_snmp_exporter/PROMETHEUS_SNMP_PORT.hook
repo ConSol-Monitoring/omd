@@ -1,0 +1,35 @@
+#!/bin/bash
+
+# Alias: TCP port number for Prometheus SNMP Exporter
+# Menu: Addons
+# Description:
+#  Configure the TCP port used for the SNMP Exporter
+#  process of this site.
+#
+
+if [ -f $OMD_ROOT/etc/omd/site.conf ]; then
+    . $OMD_ROOT/etc/omd/site.conf
+else
+    CONFIG_PROMETHEUS_SNMP_ADDR=127.0.0.1
+fi
+
+case "$1" in
+    default)
+        echo "9116"
+    ;;
+    choices)
+        echo "[1-9][0-9]{0,4}"
+    ;;
+    set)
+        # Scan for a free port number by looking at the
+        # configuration of the other sites...
+        PORT=$($OMD_ROOT/lib/omd/port_is_used PROMETHEUS_SNMP_PORT $2)
+        if [ "$PORT" != "$2" ] ; then
+            echo "SNMP Exporter port $2 is in use. I've choosen $PORT instead." >&2
+        fi
+        echo "$PORT"
+    ;;
+    depends)
+        [ "$CONFIG_PROMETHEUS_SNMP_EXPORTER" = on ]
+    ;;
+esac

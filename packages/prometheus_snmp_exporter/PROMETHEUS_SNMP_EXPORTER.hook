@@ -1,0 +1,30 @@
+#!/bin/bash
+
+# Alias: Start site-local SNMP Exporter Daemon
+# Menu: Addons
+# Description:
+#  If you run Prometheus, then you can activate
+#  this option and a site specific SNMP Exporter daemon will be started.
+
+case "$1" in
+    default)
+        echo "off"
+    ;;
+    choices)
+        echo "on: enable"
+        echo "off: disable"
+    ;;
+    set)
+    #    if [ "$2" == "off" ]
+    #    then
+
+    #    fi
+    #    if [ "$2" == "on" ]
+    #    then
+
+    #    fi
+    ;;
+    depends)
+        [ "$CONFIG_PROMETHEUS" = on ]
+    ;;
+esac
