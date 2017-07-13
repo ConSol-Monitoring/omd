@@ -15,7 +15,7 @@ fi
 
 case "$1" in
     default)
-        echo "9116"
+        echo "9216"
     ;;
     choices)
         echo "[1-9][0-9]{0,4}"
