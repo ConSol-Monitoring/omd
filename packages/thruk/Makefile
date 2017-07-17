@@ -57,6 +57,8 @@ skel:
 	mkdir -p $(SKEL)/etc/thruk/themes-enabled
 	for link in `ls -1 $(DIR)/themes/themes-enabled/`; do cd $(SKEL)/etc/thruk/themes-enabled && ln -sfn ../../../share/thruk/themes/themes-available/$$link $$link; done
 	cp $(DIR)/support/thruk.init $(SKEL)/etc/init.d/thruk
+	mkdir -p $(SKEL)/etc/bash_completion.d
+	cp $(DIR)/support/thruk_bash_completion $(SKEL)/etc/bash_completion.d/thruk-base
 	mkdir -p $(SKEL)/etc/nagios/conf.d
 	cp $(DIR)/support/thruk_templates.cfg $(SKEL)/etc/nagios/conf.d/
 	mkdir -p $(SKEL)/etc/icinga2/conf.d/thruk_bp_templates.conf
