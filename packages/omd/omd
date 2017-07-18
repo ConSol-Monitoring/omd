@@ -3216,6 +3216,10 @@ def main_su(args, options={}):
 def backup_site_files_to_tarfile(tar, options):
     exclude = get_exclude_patterns(options)
 
+    # exclude tmp/* from hot backups
+    if not site_is_stopped(g_sitename):
+        exclude.append("tmp/*")
+
     def filter_files(filename):
         for glob_pattern in exclude:
             # patterns are relative to site dir, filename is full path.
@@ -3259,9 +3263,9 @@ def main_backup(args, options={}):
                  "file or \"-\" for backup to stdout.")
 
     if not site_is_stopped(g_sitename):
-        bail_out("Backup failed: The site needs to be stopped for a backup.")
+        sys.stdout.write("Warning: The site should be stopped for a backup.\n")
 
-    if tmpfs_mounted(g_sitename):
+    elif tmpfs_mounted(g_sitename):
         unmount_tmpfs(g_sitename, kill = "kill" in options)
 
     dest = args[0]

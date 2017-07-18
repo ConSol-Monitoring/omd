@@ -7,6 +7,8 @@ next:
           - Grafana update to 4.3.1
           - Mod-Gearman: Update 3.0.5
           - Added build support for Debian 10, Ubuntu 17.04
+          - omd:
+            - support hot backups without stopping the site
 
 2.40     May 13 2019
           - Thruk: update to 2.14-2
