@@ -55,7 +55,8 @@ PACKAGES=freetds \
          dataScryer \
          snmptrapd \
          downtime-api \
-         grafana-pnp-datasource
+         grafana-pnp-datasource \
+         sakuli
 
 include Makefile.omd
 

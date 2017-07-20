@@ -1,10 +1,10 @@
 include ../../Makefile.omd
 
-NAME     = sakuli-setup
-DIR = $(NAME)
+NAME = sakuli-setup
+DIR = setup
 
 build:
-	tar xzf $(DIR).tar.gz
+	tar xzf sakuli-setup.tgz
 
 install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/sakuli/
@@ -13,3 +13,4 @@ install:
 skel:
 
 clean:
+	rm -rf $(DIR)
