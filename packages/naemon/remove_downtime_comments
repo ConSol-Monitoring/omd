@@ -1,0 +1,48 @@
+#!/usr/bin/env perl
+
+use strict;
+use warnings;
+use Monitoring::Livestatus;
+
+my $ml = Monitoring::Livestatus->new( socket => "$ENV{OMD_ROOT}/tmp/run/live");
+my $hosts = $ml->selectall_hashref("GET hosts\nColumns: host_name host_downtimes host_comments\n", "host_name");
+my $downtimes = $ml->selectall_hashref("GET downtimes\nColumns: id host_comments entry_time", "id");
+
+foreach my $host (keys %{$hosts}) {
+  if (scalar(@{$hosts->{$host}->{host_downtimes}})) {
+    foreach my $dt_id (@{$hosts->{$host}->{host_downtimes}}) {
+      if (exists $downtimes->{$dt_id}) {
+        if (scalar(@{$downtimes->{$dt_id}->{host_comments}}) > 1) {
+          printf STDERR "%s downtime %d has %d comments\n", $host, $dt_id, scalar(@{$downtimes->{$dt_id}->{host_comments}});
+          my @comments = ();
+          my $favourite_comment = undef;
+          foreach my $hc_id (@{$downtimes->{$dt_id}->{host_comments}}) {
+            my $comment = $ml->selectrow_hashref(sprintf "GET comments\nFilter: id = %d\nColumns: author entry_time comment id\n", $hc_id);
+            if ($comment) {
+              push(@comments, $comment);
+              if ($comment->{entry_time} >= $downtimes->{$dt_id}->{entry_time} && $comment->{entry_time} <= $downtimes->{$dt_id}->{entry_time} + 10) {
+                # zehn sekunden nach dem eintragen der downtime, das duerfte der gewollte kommentar sein
+                $favourite_comment = $comment;
+              }
+            }
+          }
+          my $oldest_comment = (sort { $a->{entry_time} <=> $b->{entry_time} } @comments)[0];
+          if ($oldest_comment->{entry_time} == $favourite_comment->{entry_time}) {
+            # zur sicherheit pruefen, ob der gewollte kommentar auch der aelteste ist
+            # alle anderen loeschen
+            @comments = map { $_->{id}; } grep { $_->{id} != $oldest_comment->{id} } @comments;
+            foreach my $id (@comments) {
+              $ml->do(sprintf "COMMAND [%ld] DEL_HOST_COMMENT;%s\n", time, $id);
+              sleep 0.1;
+            }
+          }
+          sleep 0.2;
+        }
+      }
+    }
+  }
+}
+exit;
+
+
+
