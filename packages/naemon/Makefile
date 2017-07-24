@@ -17,10 +17,10 @@ build:
 	tar xzf naemon-core-$(VERSION).tar.gz
 	set -e ; for p in patches/*.patch ; do \
 	    echo "applying $$p..." ; \
-	    ( cd $(DIR) ; patch -p1 -b -F 5 ) < $$p ; \
+	    ( cd $(DIR) && patch -p1 -b -F 5 ) < $$p ; \
 	done
 	sed -i $(DIR)/configure -e 's/$(VERSION)\-source/$(VERSION)-omd/g'
-	cd $(DIR) ; ./configure $(CONFIGUREOPTS)
+	cd $(DIR) && ./configure $(CONFIGUREOPTS)
 	$(MAKE) -C $(DIR) all
 
 install:
