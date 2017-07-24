@@ -5,44 +5,70 @@ use warnings;
 use Monitoring::Livestatus;
 
 my $ml = Monitoring::Livestatus->new( socket => "$ENV{OMD_ROOT}/tmp/run/live");
-my $hosts = $ml->selectall_hashref("GET hosts\nColumns: host_name host_downtimes host_comments\n", "host_name");
-my $downtimes = $ml->selectall_hashref("GET downtimes\nColumns: id host_comments entry_time", "id");
+my $ls_downtimes = $ml->selectall_arrayref("GET downtimes\nColumns: id host_name service_description host_comments service_comments entry_time");
+my $ls_comments = $ml->selectall_arrayref("GET comments\nColumns: id host_name service_description comment entry_time");
 
-foreach my $host (keys %{$hosts}) {
-  if (scalar(@{$hosts->{$host}->{host_downtimes}})) {
-    foreach my $dt_id (@{$hosts->{$host}->{host_downtimes}}) {
-      if (exists $downtimes->{$dt_id}) {
-        if (scalar(@{$downtimes->{$dt_id}->{host_comments}}) > 1) {
-          printf STDERR "%s downtime %d has %d comments\n", $host, $dt_id, scalar(@{$downtimes->{$dt_id}->{host_comments}});
-          my @comments = ();
-          my $favourite_comment = undef;
-          foreach my $hc_id (@{$downtimes->{$dt_id}->{host_comments}}) {
-            my $comment = $ml->selectrow_hashref(sprintf "GET comments\nFilter: id = %d\nColumns: author entry_time comment id\n", $hc_id);
-            if ($comment) {
-              push(@comments, $comment);
-              if ($comment->{entry_time} >= $downtimes->{$dt_id}->{entry_time} && $comment->{entry_time} <= $downtimes->{$dt_id}->{entry_time} + 10) {
-                # zehn sekunden nach dem eintragen der downtime, das duerfte der gewollte kommentar sein
-                $favourite_comment = $comment;
-              }
-            }
-          }
-          my $oldest_comment = (sort { $a->{entry_time} <=> $b->{entry_time} } @comments)[0];
-          if ($oldest_comment->{entry_time} == $favourite_comment->{entry_time}) {
-            # zur sicherheit pruefen, ob der gewollte kommentar auch der aelteste ist
-            # alle anderen loeschen
-            @comments = map { $_->{id}; } grep { $_->{id} != $oldest_comment->{id} } @comments;
-            foreach my $id (@comments) {
-              $ml->do(sprintf "COMMAND [%ld] DEL_HOST_COMMENT;%s\n", time, $id);
-              sleep 0.1;
-            }
-          }
-          sleep 0.2;
-        }
+use Data::Dumper;
+
+my $downtimes = {};
+my $comments = {};
+foreach my $downtime (@$ls_downtimes) {
+  my $dt_id = $downtime->[0];
+  my $host_name = $downtime->[1];
+  my $service_description = $downtime->[2];
+  my $host_comment_ids = $downtime->[3];
+  my $service_comment_ids = $downtime->[4];
+  my $dt_entry_time = $downtime->[5];
+  $downtimes->{$dt_id}->{ident} = $service_description ? $host_name .'_'. $service_description : $host_name;
+  $downtimes->{$dt_id}->{type} = $service_description ? "SVC" : "HOST";
+  $downtimes->{$dt_id}->{comment_ids} = $service_description ? $service_comment_ids : $host_comment_ids;
+  $downtimes->{$dt_id}->{entry_time} =  $dt_entry_time;
+}
+foreach my $comment (@$ls_comments) {
+  my $ct_id = $comment->[0];
+  my $host_name = $comment->[1];
+  my $service_description = $comment->[2];
+  my $ct_comment = $comment->[3];
+  my $ct_entry_time = $comment->[4];
+  $comments->{$ct_id}->{ident} = $service_description ? $host_name .'_'. $service_description : $host_name;
+  $comments->{$ct_id}->{type} = $service_description ? "SVC" : "HOST";
+  $comments->{$ct_id}->{comment} = $ct_comment;
+  $comments->{$ct_id}->{entry_time} = $ct_entry_time;
+}
+
+my $good_comments = {};
+my $bad_comments = {};
+
+# loop through downtimes' comment-ids and find the comment which was initially
+# added when the downtime was created.
+foreach my $dt_id (keys %{$downtimes}) {
+  foreach my $ct_id (@{$downtimes->{$dt_id}->{comment_ids}}) {
+    if (exists $comments->{$ct_id} && $comments->{$ct_id}->{ident} eq $downtimes->{$dt_id}->{ident}) {
+      if ($comments->{$ct_id}->{entry_time} >=
+          $downtimes->{$dt_id}->{entry_time} &&
+          $comments->{$ct_id}->{entry_time} <
+          $downtimes->{$dt_id}->{entry_time} + 10) {
+        $good_comments->{$ct_id} = 1;
       }
     }
   }
 }
+
+# loop though all comments which are downtime-related and delete all of them which are
+# not the first comment of an existind downtime.
+foreach my $ct_id (keys %{$comments}) {
+  if (! exists $good_comments->{$ct_id} &&
+      $comments->{$ct_id}->{comment} =~ /This (host|service).*downtime/) {
+    $bad_comments->{$ct_id} = 1;
+  }
+}
+
+#printf "good %s\n", Data::Dumper::Dumper($good_comments);
+#printf "bad %s\n", Data::Dumper::Dumper($bad_comments);
+
+foreach my $id (keys %{$bad_comments}) {
+  $ml->do(sprintf "COMMAND [%ld] DEL_%s_COMMENT;%s\n", time, $comments->{$id}->{type}, $id);
+  sleep 0.1;
+}
+
 exit;
-
-
-
