@@ -1,0 +1,2365 @@
+From 0b4650143888e8caf91da066f1b2d6969d805a1c Mon Sep 17 00:00:00 2001
+From: Sven Nierlein <sven@nierlein.de>
+Date: Thu, 6 Jul 2017 15:35:36 +0200
+Subject: [PATCH] remove shadownaemon
+
+shadownaemon was meant to shadow a live copy of a real naemon process over livestatus. This has several unsolvable flaws, like timeperiods not working, etc...
+meanwhile there is the LMD project which solves most of the issues, so deprecate shadownaemon here and save some code.
+---
+ Makefile.am                     |   10 +-
+ src/naemon/.gitignore           |    2 -
+ src/shadownaemon/.gitignore     |    1 -
+ src/shadownaemon/shadownaemon.c | 2174 ---------------------------------------
+ src/shadownaemon/shadownaemon.h |   93 --
+ 5 files changed, 2 insertions(+), 2278 deletions(-)
+ delete mode 100644 src/shadownaemon/.gitignore
+ delete mode 100644 src/shadownaemon/shadownaemon.c
+ delete mode 100644 src/shadownaemon/shadownaemon.h
+
+diff --git a/Makefile.am b/Makefile.am
+index de831165..ba725d7b 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -124,15 +124,14 @@ common_sources = \
+ pkgconfigdir = $(libdir)/pkgconfig
+ pkgconfig_DATA = naemon.pc
+ 
+-bin_PROGRAMS = src/naemon/naemon src/naemonstats/naemonstats src/shadownaemon/shadownaemon
++bin_PROGRAMS = src/naemon/naemon src/naemonstats/naemonstats
+ manpages: $(bin_PROGRAMS)
+ 	$(HELP2MAN) --no-info --section=8 --help-option=-h -n "monitoring core"                          ./src/naemon/naemon       > naemon.8
+ 	$(HELP2MAN) --no-info --section=8 --help-option=-h -n "gather statistics from naemon core"       ./src/naemonstats/naemonstats  > naemonstats.8
+-	$(HELP2MAN) --no-info --section=8 --help-option=-h -n "shadow remote cores via livestatus"       ./src/shadownaemon/shadownaemon > shadownaemon.8
+ 
+ all-local: manpages
+ 
+-CLEANFILES = naemon-uninstalled.pc naemon.pc naemon.8 naemonstats.8 shadownaemon.8
++CLEANFILES = naemon-uninstalled.pc naemon.pc naemon.8 naemonstats.8
+ CLEANFILES += src/naemon/wpres-phash.h src/naemon/buildopts.h
+ CLEANFILES += $(CONFIG_FILES)
+ 
+@@ -142,9 +141,6 @@ src_naemon_naemon_LDFLAGS = -rdynamic
+ 
+ src_naemonstats_naemonstats_SOURCES = src/naemonstats/naemonstats.c src/naemon/buildopts.h src/naemon/common.h
+ 
+-src_shadownaemon_shadownaemon_SOURCES = src/shadownaemon/shadownaemon.c src/shadownaemon/shadownaemon.h
+-src_shadownaemon_shadownaemon_LDFLAGS = -rdynamic
+-
+ LDADD = libnaemon.la $(GLIB_LIBS) -lm -ldl
+ lib_LTLIBRARIES = libnaemon.la
+ 
+@@ -209,14 +205,12 @@ install-data-local:
+ 	mkdir -p $(DESTDIR)$(mandir)/man8/
+ 	install -m 644 naemon.8       $(DESTDIR)$(mandir)/man8/
+ 	install -m 644 naemonstats.8  $(DESTDIR)$(mandir)/man8/
+-	install -m 644 shadownaemon.8 $(DESTDIR)$(mandir)/man8/
+ 
+ uninstall-hook:
+ 	[ -z $(logrotatedir) ] || rm $(DESTDIR)$(logrotatedir)/naemon
+ 	[ -z $(initrddir) ]    || rm $(DESTDIR)$(initrddir)/naemon
+ 	rm $(DESTDIR)$(mandir)/man8/naemon.8
+ 	rm $(DESTDIR)$(mandir)/man8/naemonstats.8
+-	rm $(DESTDIR)$(mandir)/man8/shadownaemon.8
+ 	rm $(DESTDIR)$(pkgconfdir)/naemon.cfg
+ 	rm $(DESTDIR)$(pkgconfdir)/resource.cfg
+ 	rm -r $(DESTDIR)$(pkgconfdir)/conf.d
+diff --git a/src/naemon/.gitignore b/src/naemon/.gitignore
+index edf68696..2b02cf17 100644
+--- a/src/naemon/.gitignore
++++ b/src/naemon/.gitignore
+@@ -1,9 +1,7 @@
+ *.o
+ naemon
+ naemonstats
+-shadownaemon
+ wpres-phash.h
+ buildopts.h
+ naemon.8
+ naemonstats.8
+-shadownaemon.8
+diff --git a/src/shadownaemon/.gitignore b/src/shadownaemon/.gitignore
+deleted file mode 100644
+index 7fbab562..00000000
+--- a/src/shadownaemon/.gitignore
++++ /dev/null
+@@ -1 +0,0 @@
+-shadownaemon
+diff --git a/src/shadownaemon/shadownaemon.c b/src/shadownaemon/shadownaemon.c
+deleted file mode 100644
+index 92b6df27..00000000
+--- a/src/shadownaemon/shadownaemon.c
++++ /dev/null
+@@ -1,2174 +0,0 @@
+-/**
+- * shadownaemon is a livestatus cache proxy.
+- * It shadows a remote naemon core by fetching its current state by livestatus
+- * and provides a local (readonly) livestatus socket and therefore removes
+- * network latency for slow connections.
+- */
+-
+-#include "shadownaemon.h"
+-#include <naemon/nm_alloc.h>
+-#include <libgen.h>
+-#include <sys/time.h>
+-
+-static int verbose                         = FALSE;
+-static int daemonmode                      = FALSE;
+-static int max_number_of_executing_objects = 100;       /* if we have more currently executing objects than this number, we fetch everything. Otherwise the filter query would get too big */
+-static double short_shadow_update_interval =   3000000; /* refresh every 3 seconds when there are any requests */
+-static double long_shadow_update_interval  = 120000000; /* refresh every 120 seconds if there haven't been any requests for more than 10minutes */
+-static int should_write_config             = TRUE;
+-static char *program_version               = NULL;
+-static int livestatus_mode                 = -1;
+-static uint64_t last_request_count         = 0;
+-static time_t last_request                 = 0;
+-static time_t last_refresh                 = 0;
+-static time_t last_program_restart         = 0;
+-static time_t shadow_program_restart       = 0;
+-static int input_socket                    = -1;
+-static int full_refresh_required           = FALSE;
+-static char *output_folder;
+-static char *tmp_folder;
+-static char *archive_folder;
+-static char *cmds_pattern;
+-static char *output_socket_path;
+-static char *resource_config;
+-static char *objects_file;
+-static char *livestatus_log;
+-static char *livestatus_module;
+-static char *dummy_command;
+-static const char *self_name;
+-static const char *input_source;
+-
+-/* be nice an help people using this tool */
+-void usage(const char *fmt, ...) {
+-    printf("Shadownaemon is a livestatus cache proxy.\n");
+-    printf("It shadows a remote naemon core by fetching its current state by livestatus\n");
+-    printf("and provides a local (readonly) livestatus socket and therefore removes\n");
+-    printf("network latency for slow connections.\n");
+-    printf("Logfiles are not cached and supported, use Thruks Logfile\n");
+-    printf("Cache for example. Commands must be send to the original site.\n");
+-    printf("Shadownaemon may accept commands, but will not process them.\n");
+-    printf("\n");
+-    printf("Usage: %s -i <input source> -o <output folder>[options]\n", self_name);
+-    printf("\n");
+-    printf("Options:\n");
+-    printf("\n");
+-    printf("  -h, --help                        Display help and exit.\n");
+-    printf("  -V, --version                     Display version and exit.\n");
+-    printf("  -v, --verbose                     Be more verbose.\n");
+-    printf("  -d, --daemon                      Start in daemon mode.\n");
+-    printf("\n");
+-    printf("  -i, --input <connectionstring>    Livestatus input source. (local unix socket, tcp socket\n");
+-    printf("  -o, --output <folder>             Folder where all runtime data will be stored and the output socket will be created.\n");
+-    printf("  -l, --livestatus <modulepath>     Path to livestatus module, default: %s\n", get_default_livestatus_module());
+-    printf("  -r, --refresh <seconds>           Refresh Interval, default: 3 seconds.\n");
+-    printf("\n");
+-    printf("\n");
+-    printf("Example:\n");
+-    printf("  %%> %s -d -i remotehost:6557 -o /tmp/shadowcache/\n", self_name);
+-    printf("This will connect to the remote livestatus site on remotehost with port 6556 and\n");
+-    printf("provides a local livestatus socket in /tmp/shadowcache/live which can be queried.\n");
+-    printf("\n");
+-    if (fmt) {
+-        va_list ap;
+-        va_start(ap, fmt);
+-        vprintf(fmt, ap);
+-        va_end(ap);
+-    }
+-
+-    exit(2);
+-}
+-
+-/* main action */
+-int main(int argc, char **argv) {
+-    int c = 0;
+-    int option_index;
+-    char *cwd;
+-#ifdef HAVE_GETOPT_H
+-    struct option long_options[] = {
+-        {"help", no_argument, 0, 'h' },
+-        {"version", no_argument, 0, 'V' },
+-        {"verbose", required_argument, 0, 'v' },
+-        {"daemon", required_argument, 0, 'd' },
+-        {"input", required_argument, 0, 'i' },
+-        {"output", required_argument, 0, 'o' },
+-        {"refresh", required_argument, 0, 'r' },
+-    };
+-#define getopt(a, b, c) getopt_long(a, b, c, long_options, &option_index)
+-#endif
+-
+-    self_name = nm_strdup(basename(argv[0]));
+-    shadow_program_restart = time(NULL);
+-
+-    enable_timing_point = 0;
+-    for (;;) {
+-        c = getopt(argc, argv, "hVvdi:r:o:l:");
+-        if (c < 0 || c == EOF)
+-            break;
+-
+-        switch (c) {
+-            case 'V':
+-                printf("%s version " VERSION, self_name);
+-                exit(EXIT_SUCCESS);
+-            case 'h': case '?':
+-                usage(NULL);
+-                break;
+-            case 'v':
+-                verbose = TRUE;
+-                enable_timing_point = 1;
+-                break;
+-            case 'd':
+-                daemonmode = TRUE;
+-                break;
+-            case 'i':
+-                input_source = optarg;
+-                break;
+-            case 'o':
+-                output_folder = optarg;
+-                break;
+-            case 'l':
+-                livestatus_module = optarg;
+-                break;
+-            case 'r':
+-                short_shadow_update_interval = atof(optarg) * 1000000;
+-                if(short_shadow_update_interval <= 0) {
+-                    usage("refresh interval must be a positive number\n");
+-                    exit(EXIT_FAILURE);
+-                }
+-                break;
+-            default:
+-                usage("Unknown argument\n");
+-                exit(EXIT_FAILURE);
+-        }
+-    }
+-
+-    /* make sure we have all required information */
+-    if(input_source == NULL)
+-        usage("ERROR: input source (-i) missing\n\n");
+-
+-    if(output_folder == NULL)
+-        usage("ERROR: output folder missing\n\n");
+-
+-    if(livestatus_module == NULL)
+-        livestatus_module = get_default_livestatus_module();
+-    if(livestatus_module == NULL)
+-        usage("ERROR: livestatus module missing\n\n");
+-
+-    if(output_folder[(strlen(output_folder)-1)] == '/') {
+-        output_folder[(strlen(output_folder)-1)] = '\0';
+-    }
+-
+-    /* required before daemonizing, because we need full pid path */
+-    nm_free(output_socket_path);
+-    output_socket_path = nm_malloc(250);
+-    snprintf(output_socket_path, 249, "%s/%s", output_folder, "live");
+-    output_folder   = nspath_absolute_dirname(output_socket_path, NULL);
+-    config_file_dir = nspath_absolute_dirname(output_socket_path, NULL);
+-    nm_free(tmp_folder);
+-    tmp_folder = nm_malloc(250);
+-    snprintf(tmp_folder, 249, "%s/%s", output_folder, "tmp");
+-    nspath_mkdir_p(output_folder, 0700, 0);
+-    nspath_mkdir_p(tmp_folder, 0700, 0);
+-    nm_free(log_file);
+-    log_file = nm_malloc(250);
+-    snprintf(log_file, 249, "%s/%s", tmp_folder, "shadownaemon.log");
+-
+-    if(daemonmode == TRUE) {
+-        lock_file = nm_malloc(250);
+-        snprintf(lock_file, 249, "%s/shadownaemon.pid", tmp_folder);
+-        // daemon init changes to wrong folder otherwise
+-#ifdef HAVE_GET_CURRENT_DIR_NAME
+-        cwd = get_current_dir_name();
+-#else
+-        // Emulate get_current_dir_name() without relying on
+-        // getcwd(NULL, 0) to be working
+-        {
+-            size_t size = 50;
+-            errno = 0;
+-            do {
+-                cwd = nm_malloc(size);
+-                if (getcwd(cwd, size) == cwd) {
+-                    break;
+-                }
+-                if (errno != ERANGE) {
+-                    free(cwd);
+-                    goto error_out;
+-                }
+-                size *= 2;
+-            } while (1);
+-        }
+-#endif
+-        setenv("HOME", cwd, 1);
+-        free(cwd);
+-        if (daemon_init() == ERROR) {
+-#ifndef HAVE_GET_CURRENT_DIR_NAME
+-error_out:
+-#endif
+-            /* we had an error daemonizing, so bail... */
+-            nm_log(NSLOG_PROCESS_INFO | NSLOG_RUNTIME_ERROR, "Bailing out due to failure to daemonize. (PID=%d)", (int)getpid());
+-            cleanup();
+-            exit(EXIT_FAILURE);
+-        }
+-    }
+-
+-    /* determine livestatus mode */
+-    if(strstr(input_source, "http:") != NULL) {
+-        livestatus_mode = LIVESTATUS_MODE_HTTP;
+-    }
+-    else if(strstr(input_source, "https:") != NULL) {
+-        livestatus_mode = LIVESTATUS_MODE_HTTP;
+-    }
+-    else if(strstr(input_source, ":") != NULL) {
+-        livestatus_mode = LIVESTATUS_MODE_TCP;
+-    }
+-    else {
+-        livestatus_mode = LIVESTATUS_MODE_SOCKET;
+-    }
+-
+-    /* handle signals (interrupts) before we do any socket I/O */
+-    setup_sighandler();
+-    signal(SIGINT, sighandler);
+-
+-    while(sigshutdown == FALSE) {
+-        sigrestart           = FALSE;
+-        last_program_restart = 0;
+-        if(write_config_files() != OK) {
+-            nm_log(NSLOG_PROCESS_INFO | NSLOG_RUNTIME_ERROR, "remote site not available, waiting 30seconds");
+-            cleanup();
+-            sleep(30);
+-            continue;
+-        }
+-        run_refresh_loop();
+-        if(sigshutdown == FALSE && sigrestart == FALSE) {
+-            nm_log(NSLOG_PROCESS_INFO | NSLOG_RUNTIME_ERROR, "remote site went offline, waiting 30seconds");
+-            sleep(30);
+-        }
+-    }
+-
+-    iobroker_destroy(nagios_iobs, IOBROKER_CLOSE_SOCKETS);
+-    nagios_iobs = NULL;
+-
+-    /* clean up */
+-    clean_output_folder();
+-
+-    /* free some locations */
+-    nm_free(config_file);
+-    nm_free(tmp_folder);
+-    nm_free(log_file);
+-    nm_free(cmds_pattern);
+-    nm_free(output_socket_path);
+-    nm_free(resource_config);
+-    nm_free(objects_file);
+-    nm_free(retention_file);
+-    nm_free(archive_folder);
+-    nm_free(livestatus_log);
+-    nm_free(check_result_path);
+-
+-    unlink(lock_file);
+-    nm_free(lock_file);
+-
+-    /* exit */
+-    return EXIT_SUCCESS;
+-}
+-
+-/* return path to default livestatus */
+-char *get_default_livestatus_module() {
+-    char *livestatus_path = nm_malloc(250);
+-    struct stat st;
+-
+-    snprintf(livestatus_path, 249, "%s/lib/naemon/naemon-livestatus/livestatus.so", getenv("HOME"));
+-    if(stat(livestatus_path, &st) == 0) {
+-        return(livestatus_path);
+-    }
+-
+-    snprintf(livestatus_path, 249, "/usr/lib/naemon/naemon-livestatus/livestatus.so");
+-    if(stat(livestatus_path, &st) == 0) {
+-        return(livestatus_path);
+-    }
+-
+-    snprintf(livestatus_path, 249, "/usr/lib64/naemon/naemon-livestatus/livestatus.so");
+-    if(stat(livestatus_path, &st) == 0) {
+-        return(livestatus_path);
+-    }
+-
+-    snprintf(livestatus_path, 249, "%s/lib/naemon/livestatus.o", getenv("HOME"));
+-    if(stat(livestatus_path, &st) == 0) {
+-        return(livestatus_path);
+-    }
+-
+-    snprintf(livestatus_path, 249, "/usr/lib/naemon/livestatus.o");
+-    if(stat(livestatus_path, &st) == 0) {
+-        return(livestatus_path);
+-    }
+-
+-    snprintf(livestatus_path, 249, "/usr/lib64/naemon/livestatus.o");
+-    if(stat(livestatus_path, &st) == 0) {
+-        return(livestatus_path);
+-    }
+-    nm_free(livestatus_path);
+-    return(NULL);
+-}
+-
+-/* count number of characters */
+-int count_characters(char* haystack, char ch) {
+-    char * p;
+-    int cnt = 0;
+-    for(p = haystack; *p; p++) {
+-        if (*p == ch) cnt++;
+-    }
+-    return(cnt);
+-}
+-
+-/* remove all files from output folder */
+-int clean_output_folder() {
+-    unlink(output_socket_path);
+-    unlink(config_file);
+-    unlink(log_file);
+-    unlink(resource_config);
+-    unlink(retention_file);
+-    unlink(livestatus_log);
+-    unlink(objects_file);
+-    timing_point("output folder cleaned\n");
+-    return(OK);
+-}
+-
+-/* write all files required to start the core engine */
+-int write_config_files() {
+-    FILE *file;
+-    char *homedir  = getenv("HOME");
+-    char *omd_root = getenv("OMD_ROOT");
+-    char *omd_site = getenv("OMD_SITE");
+-
+-    reset_variables();
+-
+-    /* set our file locations */
+-    config_file_dir = nspath_absolute_dirname(output_socket_path, NULL);
+-    nm_free(config_file);
+-    config_file = nm_malloc(250);
+-    snprintf(config_file, 249, "%s/%s", tmp_folder, "naemon.cfg");
+-    nm_free(resource_config);
+-    resource_config = nm_malloc(250);
+-    snprintf(resource_config, 249, "%s/%s", tmp_folder, "resource.cfg");
+-    nm_free(objects_file);
+-    objects_file = nm_malloc(250);
+-    snprintf(objects_file, 249, "%s/%s", tmp_folder, "objects.cfg");
+-    nm_free(retention_file);
+-    retention_file = nm_malloc(250);
+-    snprintf(retention_file, 249, "%s/%s", tmp_folder, "retention.dat");
+-    nm_free(livestatus_log);
+-    livestatus_log = nm_malloc(250);
+-    snprintf(livestatus_log, 249, "%s/%s", tmp_folder, "livestatus.log");
+-    nm_free(check_result_path);
+-    check_result_path = nm_strdup(tmp_folder);
+-    nm_free(log_file);
+-    log_file = nm_malloc(250);
+-    snprintf(log_file, 249, "%s/%s", tmp_folder, "shadownaemon.log");
+-    nm_free(cmds_pattern);
+-    cmds_pattern = nm_malloc(250);
+-    snprintf(cmds_pattern, 249, "%s/*.cmds", tmp_folder);
+-    nm_free(archive_folder);
+-    archive_folder = nm_malloc(250);
+-    snprintf(archive_folder, 249, "%s/%s", tmp_folder, "archives");
+-
+-    if(should_write_config == FALSE) {
+-        should_write_config = TRUE;
+-        return(OK);
+-    }
+-
+-    /* never log anything anywhere */
+-    use_syslog = FALSE;
+-
+-    /* write out files */
+-    timing_point("writing configuration files\n");
+-    nspath_mkdir_p(output_folder, 0700, 0);
+-    if(verbose)
+-        nm_log(NSLOG_PROCESS_INFO, "writing configuration into: %s\n", output_folder);
+-    nspath_mkdir_p(tmp_folder, 0700, 0);
+-    nspath_mkdir_p(archive_folder, 0700, 0);
+-
+-    /* write minimal naemon.cfg */
+-    file = fopen(config_file, "w+");
+-    if(file == NULL) {
+-        nm_log(NSLOG_PROCESS_INFO | NSLOG_RUNTIME_ERROR, "cannot write %s: %s\n", config_file, strerror(errno));
+-        exit(EXIT_FAILURE);
+-    }
+-    fprintf(file,"lock_file=%s/shadownaemon.pid\n", tmp_folder);
+-    fprintf(file,"temp_file=%s/tmp.file\n", tmp_folder);
+-    fprintf(file,"temp_path=%s\n", tmp_folder);
+-    fprintf(file,"log_archive_path=%s\n", archive_folder);
+-    fprintf(file,"check_result_path=%s\n", check_result_path);
+-    fprintf(file,"state_retention_file=%s\n", retention_file);
+-    fprintf(file,"debug_file=%s/debug.log\n", tmp_folder);
+-    fprintf(file,"command_file=%s/naemon.cmd\n", tmp_folder);
+-    fprintf(file,"log_file=%s\n", log_file);
+-    fprintf(file,"use_syslog=0\n");
+-    fprintf(file,"object_cache_file=%s/objects.cache\n", tmp_folder);
+-    fprintf(file,"precached_object_file=%s/objects.precache\n", tmp_folder);
+-    fprintf(file,"resource_file=%s\n", resource_config);
+-    fprintf(file,"status_file=/dev/null\n");
+-    fprintf(file,"cfg_file=%s\n", objects_file);
+-    fprintf(file,"illegal_macro_output_chars=`~$&|'\"<>\n");
+-    fprintf(file,"event_broker_options=-1\n");
+-    fprintf(file,"broker_module=%s num_client_threads=20 debug=0 %s\n", livestatus_module, output_socket_path);
+-    fclose(file);
+-    timing_point("wrote %s\n", config_file);
+-
+-    /* write resource.cfg */
+-    file = fopen(resource_config, "w+");
+-    if(file == NULL) {
+-        nm_log(NSLOG_PROCESS_INFO | NSLOG_RUNTIME_ERROR, "cannot write %s: %s\n", resource_config, strerror(errno));
+-        exit(EXIT_FAILURE);
+-    }
+-    if(omd_site == NULL) {
+-        fprintf(file,"$USER1$=%s\n", homedir);
+-    } else {
+-        fprintf(file,"$USER1$=%s/lib/nagios/plugins\n", omd_root);
+-        fprintf(file,"$USER2$=%s/local/lib/nagios/plugins\n", omd_root);
+-        fprintf(file,"$USER3$=%s\n", omd_site);
+-        fprintf(file,"$USER4$=%s\n", omd_root);
+-    }
+-    fclose(file);
+-    timing_point("wrote %s\n", resource_config);
+-
+-    /* write objects */
+-    file = fopen(objects_file, "w+");
+-    if(file == NULL) {
+-        nm_log(NSLOG_PROCESS_INFO | NSLOG_RUNTIME_ERROR, "cannot write %s: %s\n", objects_file, strerror(errno));
+-        exit(EXIT_FAILURE);
+-    }
+-    if(write_commands_configuration(file) != OK) {
+-        fclose(file);
+-        return(ERROR);
+-    }
+-    write_timeperiods_configuration(file);
+-    write_contactgroups_configuration(file);
+-    write_hostgroups_configuration(file);
+-    write_servicegroups_configuration(file);
+-    write_contacts_configuration(file);
+-    write_hosts_configuration(file);
+-    write_services_configuration(file);
+-    fclose(file);
+-    timing_point("wrote %s\n", objects_file);
+-
+-    timing_point("wrote configuration files...\n");
+-
+-    return(OK);
+-}
+-
+-/* pretend to be a normal core and read objects and states */
+-int initialize_core() {
+-    int result, warnings = 0, errors = 0;
+-    void (*open_logfile)(void);
+-
+-	if (!(nagios_iobs = iobroker_create())) {
+-		nm_log(NSLOG_RUNTIME_ERROR, "Error: Failed to create IO broker set: %s\n",
+-		       strerror(errno));
+-		exit(EXIT_FAILURE);
+-	}
+-
+-    read_main_config_file(config_file);
+-
+-    /* read object config files */
+-    result = read_all_object_data(config_file);
+-    if (result != OK) {
+-        printf("Error processing object config files. Bailing out\n");
+-        exit(EXIT_FAILURE);
+-    }
+-
+-    timing_point("Config data read\n");
+-
+-    /* run object pre-flight checks only */
+-    if (pre_flight_object_check(&warnings, &errors) != OK) {
+-        printf("Pre-flight check failed. Bailing out\n");
+-        exit(EXIT_FAILURE);
+-    }
+-    timing_point("pre_flight_object_check ready\n");
+-    if (pre_flight_circular_check(&warnings, &errors) != OK) {
+-        printf("Pre-flight circular check failed. Bailing out\n");
+-        exit(EXIT_FAILURE);
+-    }
+-    timing_point("pre_flight_circular_check ready\n");
+-
+-
+-    /* initialize modules */
+-    neb_init_modules();
+-    neb_init_callback_list();
+-
+-    /* there was a problem reading the config files */
+-    if (result != OK) {
+-        nm_log(NSLOG_PROCESS_INFO | NSLOG_RUNTIME_ERROR | NSLOG_CONFIG_ERROR, "Bailing out due to one or more errors encountered in the configuration files. Run Naemon from the command line with the -v option to verify your config before restarting. (PID=%d)", (int)getpid());
+-        exit(EXIT_FAILURE);
+-    }
+-
+-    init_event_queue();
+-    timing_point("Event queue initialized\n");
+-
+-    /* let livestatus module reopen its logfile */
+-    *(void**)(&open_logfile) = dlsym(RTLD_DEFAULT, "open_logfile");
+-    if(open_logfile != NULL)
+-        (void)open_logfile();
+-
+-    /* load modules */
+-    if(verbose == FALSE)
+-        daemon_mode = TRUE; // prevents nebmods from loging to console
+-    if (neb_load_all_modules() != OK) {
+-        nm_log(NSLOG_CONFIG_ERROR, "Error: Module loading failed. Aborting.\n");
+-        exit(EXIT_FAILURE);
+-    }
+-    timing_point("Modules loaded\n");
+-
+-    broker_program_state(NEBTYPE_PROCESS_PRELAUNCH, NEBFLAG_NONE, NEBATTR_NONE);
+-    timing_point("First callback made\n");
+-
+-    /* run the pre-flight check to make sure everything looks okay*/
+-    if(verbose == TRUE) {
+-        if((result = pre_flight_check()) != OK) {
+-            nm_log(NSLOG_PROCESS_INFO | NSLOG_RUNTIME_ERROR | NSLOG_VERIFICATION_ERROR, "Bailing out due to errors encountered while running the pre-flight check.  Run Naemon from the command line with the -v option to verify your config before restarting. (PID=%d)\n", (int)getpid());
+-            exit(EXIT_FAILURE);
+-        }
+-        timing_point("Object configuration parsed and understood\n");
+-    }
+-
+-    broker_program_state(NEBTYPE_PROCESS_START, NEBFLAG_NONE, NEBATTR_NONE);
+-
+-    /* initialize scheduled downtime data */
+-    initialize_downtime_data();
+-    timing_point("Downtime data initialized\n");
+-
+-    /* read initial service and host state information  */
+-    initialize_retention_data();
+-    timing_point("Retention data initialized\n");
+-    read_initial_state_information();
+-    timing_point("Initial state information read\n");
+-
+-    /* initialize comment data */
+-    initialize_comment_data();
+-    timing_point("Comment data initialized\n");
+-
+-    /* initialize performance data */
+-    initialize_performance_data(config_file);
+-    timing_point("Performance data initialized\n");
+-
+-    /* initialize check statistics */
+-    init_check_stats();
+-    timing_point("check stats initialized\n");
+-
+-    /* update all status data (with retained information) */
+-    update_all_status_data();
+-    timing_point("Status data updated\n");
+-
+-    /* make core commands available*/
+-    registered_commands_init(200);
+-    register_core_commands();
+-
+-    return OK;
+-}
+-
+-/* cleanup memory and files */
+-int deinitialize_core() {
+-    int i;
+-
+-/* TODO: understand why cleanup segfaults because of empty macros */
+-    for (i = 0; i < MAX_USER_MACROS; i++) {
+-        macro_user[i] = NULL;
+-    }
+-
+-    /* remove core commands */
+-    registered_commands_deinit();
+-
+-    broker_program_state(NEBTYPE_PROCESS_EVENTLOOPEND, NEBFLAG_NONE, NEBATTR_NONE);
+-    if(sigrestart) {
+-        broker_program_state(NEBTYPE_PROCESS_RESTART, NEBFLAG_USER_INITIATED, NEBATTR_RESTART_NORMAL);
+-    } else {
+-        broker_program_state(NEBTYPE_PROCESS_SHUTDOWN, NEBFLAG_USER_INITIATED, NEBATTR_SHUTDOWN_NORMAL);
+-    }
+-
+-    cleanup_retention_data();
+-
+-    /* clean up performance data */
+-    cleanup_performance_data();
+-
+-    /* clean up the scheduled downtime data */
+-    cleanup_downtime_data();
+-
+-    /* clean up the status data unless we're restarting */
+-    cleanup_status_data(TRUE);
+-
+-    /* clean up after ourselves */
+-    verify_config   = FALSE;
+-    cleanup();
+-
+-    /* free misc memory */
+-    nm_free(config_file_dir);
+-    nm_free(naemon_binary_path);
+-
+-    return OK;
+-}
+-
+-/* do a livestatus query depending on the input source */
+-int livestatus_query(result_list **answer, char *source, char *query, char *columns[], int columnssize) {
+-    int result;
+-    switch(livestatus_mode) {
+-        case LIVESTATUS_MODE_SOCKET:
+-            result = livestatus_query_socket(answer, source, query, columns, columnssize);
+-            break;
+-        case LIVESTATUS_MODE_TCP:
+-            result = livestatus_query_socket(answer, source, query, columns, columnssize);
+-            break;
+-        case LIVESTATUS_MODE_HTTP:
+-            /* not implemented yet */
+-        default:
+-            nm_log(NSLOG_PROCESS_INFO | NSLOG_RUNTIME_ERROR, "no input method available for: %s\n", source);
+-            exit(EXIT_FAILURE);
+-            break;
+-    }
+-    timing_point("got %d rows\n", result);
+-    return result;
+-}
+-
+-/* fetch result from a local socket, return linked list with result */
+-int livestatus_query_socket(result_list **result, char *socket_path, char *query, char *columns[], int columnssize) {
+-    int x, columnslength, return_code, result_size, size, row_size, total_read;
+-    char buffer[14];
+-    char header[17];
+-    char *columnsheader = NULL;
+-    char *ptr;
+-    char *result_string, *result_string_c, *cell;
+-    result_list *curr;
+-    char *send_header = "ResponseHeader: fixed16\nKeepAlive: on\nSeparators: 1 2 5 6\n\n"; /* dataset sep, column sep, list sep, host/svc list sep */
+-
+-    row_size=0;
+-    curr = *result;
+-    curr->set  = NULL;
+-    curr->next = NULL;
+-
+-    if(input_socket == -1) {
+-        if(livestatus_mode == LIVESTATUS_MODE_SOCKET) {
+-            input_socket = open_local_socket(socket_path);
+-        } else {
+-            input_socket = open_tcp_socket(socket_path);
+-        }
+-        /* still no connection? */
+-        if(input_socket == -1) {
+-            return(-1);
+-        }
+-    }
+-
+-    if(verbose)
+-        nm_log(NSLOG_PROCESS_INFO, "query: %s\n", query);
+-    size = send(input_socket, query, strlen(query), 0);
+-    if( size <= 0) {
+-        nm_log(NSLOG_PROCESS_INFO | NSLOG_RUNTIME_ERROR, "sending to socket failed : %s\n", strerror(errno));
+-        close(input_socket);
+-        input_socket = -1;
+-        return(-1);
+-    }
+-    if(query[strlen(query)-1] != '\n') {
+-        send(input_socket, "\n", 1, 0);
+-    }
+-    columnslength = 0;
+-    for(x=0; x<columnssize; x++)
+-        columnslength += strlen(columns[x]);
+-    columnslength += 20 + columnssize;
+-    columnsheader = nm_malloc(columnslength);
+-    columnsheader[0] = '\0';
+-    strcat(columnsheader, "Columns: ");
+-    for(x=0; x<columnssize; x++) {
+-        strcat(columnsheader, columns[x]);
+-        if(x != columnssize)
+-            strcat(columnsheader, " ");
+-    }
+-    strcat(columnsheader, "\n");
+-    size = send(input_socket, columnsheader, strlen(columnsheader), 0);
+-    if(verbose)
+-        nm_log(NSLOG_PROCESS_INFO, "query: %s\n", columnsheader);
+-    size = send(input_socket, send_header, strlen(send_header), 0);
+-    if(verbose)
+-        nm_log(NSLOG_PROCESS_INFO, "query: %s\n", send_header);
+-    nm_free(columnsheader);
+-    size = read(input_socket, header, 16);
+-    if( size < 16) {
+-        nm_log(NSLOG_PROCESS_INFO | NSLOG_RUNTIME_ERROR, "reading socket failed (%d bytes read): %s\n", size, strerror(errno));
+-        if(size > 0)
+-            nm_log(NSLOG_PROCESS_INFO | NSLOG_RUNTIME_ERROR, "got header: '%s'\n", header);
+-        close(input_socket);
+-        input_socket = -1;
+-        return(-1);
+-    }
+-    header[size] = '\0';
+-    strncpy(buffer, header, 3);
+-    buffer[3] = '\0';
+-    return_code = atoi(buffer);
+-    if( return_code != 200) {
+-        nm_log(NSLOG_PROCESS_INFO | NSLOG_RUNTIME_ERROR, "query failed: %d\nquery:\n---\n%s\n---\n", return_code, query);
+-        close(input_socket);
+-        input_socket = -1;
+-        return(-1);
+-    }
+-
+-    strncpy(buffer, header+3, 13);
+-    result_size = atoi(buffer);
+-    if(result_size == 0) {
+-        return(row_size);
+-    }
+-
+-    result_string   = nm_malloc(sizeof(char*)*result_size+1);
+-    result_string_c = result_string;
+-    total_read      = 0;
+-    size            = 0;
+-    while(total_read < result_size) {
+-        size = read(input_socket, result_string+total_read, (result_size - total_read));
+-        total_read += size;
+-        if(size == 0)
+-            break;
+-    }
+-    if( size <= 0 || total_read != result_size) {
+-        nm_log(NSLOG_PROCESS_INFO | NSLOG_RUNTIME_ERROR, "reading socket failed (%d bytes read, expected %d): %s\n", total_read, result_size, strerror(errno));
+-        nm_free(result_string_c);
+-        close(input_socket);
+-        input_socket = -1;
+-        return(-1);
+-    }
+-    result_string[total_read] = '\0';
+-
+-    /* split result in arrays of arrays */
+-    while((ptr = strsep( &result_string, "\x1")) != NULL) {
+-        if(!strcmp(ptr, "")) break;
+-
+-        /* validate result row, otherwise we would error if there is a csv separator in the plugin output */
+-        if(count_characters(ptr, '\x2') != columnssize-1) {
+-            nm_log(NSLOG_PROCESS_INFO | NSLOG_RUNTIME_ERROR, "skipping corrupted result row: %s\n", ptr);
+-            continue;
+-        }
+-
+-        if(row_size > 0) {
+-            curr->next = nm_malloc(sizeof(result_list));
+-            curr = curr->next;
+-            curr->next = NULL;
+-        }
+-        curr->set  = nm_malloc(columnssize*sizeof(char*));
+-        for(x=0;x<columnssize;x++) {
+-            cell = strsep( &ptr, "\x2");
+-            curr->set[x] = nm_strdup(cell);
+-        }
+-        row_size++;
+-    }
+-    nm_free(result_string_c);
+-
+-    return(row_size);
+-}
+-
+-/* cleanup result set */
+-void free_livestatus_result(result_list * result, int datasize) {
+-    int x;
+-    result_list * curr = result;
+-    while(curr != NULL) {
+-        result = curr;
+-        curr   = curr->next;
+-        if(result->set != NULL) {
+-            for(x=0;x<datasize;x++) {
+-                nm_free(result->set[x]);
+-            }
+-            nm_free(result->set);
+-        }
+-        nm_free(result);
+-    }
+-}
+-
+-/* open local socket connection */
+-int open_local_socket(char *socket_path) {
+-    struct sockaddr_un address;
+-    struct stat st;
+-    struct timeval tv;
+-    tv.tv_sec  = 5;  /* 5 Secs Timeout */
+-    tv.tv_usec = 0;
+-
+-    if (0 != stat(socket_path, &st)) {
+-        nm_log(NSLOG_PROCESS_INFO | NSLOG_RUNTIME_ERROR, "no unix socket %s existing\n", socket_path);
+-        return(-1);
+-    }
+-
+-    if((input_socket=socket (PF_LOCAL, SOCK_STREAM, 0)) <= 0) {
+-        nm_log(NSLOG_PROCESS_INFO | NSLOG_RUNTIME_ERROR, "creating socket failed: %s\n", strerror(errno));
+-        return(-1);
+-    }
+-
+-    memset(&address, 0, sizeof(address));
+-    address.sun_family = AF_LOCAL;
+-    strcpy(address.sun_path, socket_path);
+-    setsockopt(input_socket, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
+-    setsockopt(input_socket, SOL_SOCKET, SO_SNDTIMEO, &tv, sizeof(tv));
+-
+-    if(connect(input_socket, (struct sockaddr *) &address, sizeof (address)) != 0) {
+-        nm_log(NSLOG_PROCESS_INFO | NSLOG_RUNTIME_ERROR, "connecting socket failed: %s\n", strerror(errno));
+-        close(input_socket);
+-        return(-1);
+-    }
+-    return(input_socket);
+-}
+-
+-/* open tcp network connection */
+-int open_tcp_socket(char *connection_string) {
+-    char * server, * server_c, * hostname, * port_val;
+-    struct sockaddr_in serveraddr;
+-    in_port_t port;
+-    struct hostent *hostp;
+-    struct timeval tv;
+-    tv.tv_sec  = 30;  /* 30 Secs Timeout */
+-    tv.tv_usec = 0;
+-
+-    server   = nm_strdup(connection_string);
+-    server_c = server;
+-    hostname = strsep(&server, ":");
+-    port_val = strsep(&server, "\x0");
+-    port     = (in_port_t) atoi(port_val);
+-
+-    if((input_socket = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+-        nm_log(NSLOG_PROCESS_INFO | NSLOG_RUNTIME_ERROR, "creating socket failed: %s\n", strerror(errno));
+-        return(-1);
+-    }
+-
+-    hostp = gethostbyname(hostname);
+-    if(hostp == (struct hostent *)NULL) {
+-        nm_log(NSLOG_PROCESS_INFO | NSLOG_RUNTIME_ERROR, "host %s not found: %s\n", hostname, hstrerror(h_errno));
+-        nm_free(server_c);
+-        close(input_socket);
+-        exit(EXIT_FAILURE);
+-    }
+-
+-    memset(&serveraddr, 0, sizeof(serveraddr));
+-    serveraddr.sin_family      = AF_INET;
+-    serveraddr.sin_port        = htons(port);
+-    bcopy((char *) hostp->h_addr,(char *)&serveraddr.sin_addr.s_addr,hostp->h_length);
+-
+-    setsockopt(input_socket, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
+-    setsockopt(input_socket, SOL_SOCKET, SO_SNDTIMEO, &tv, sizeof(tv));
+-
+-    if(connect(input_socket, (struct sockaddr *) &serveraddr, sizeof(serveraddr)) != 0) {
+-        nm_log(NSLOG_PROCESS_INFO | NSLOG_RUNTIME_ERROR, "connecting to %s:%d failed: %s\n", hostname, port, strerror(errno));
+-        close(input_socket);
+-        nm_free(server_c);
+-        return(-1);
+-    }
+-    nm_free(server_c);
+-    return(input_socket);
+-}
+-
+-/* updates program status based on remote sites data */
+-int update_program_status_data() {
+-    int num;
+-    result_list *answer = nm_malloc(sizeof(result_list));
+-    char *query = "GET status";
+-    char *columns[] = {"accept_passive_host_checks",        // 0
+-                       "accept_passive_service_checks",
+-                       "check_external_commands",
+-                       "check_host_freshness",
+-                       "check_service_freshness",
+-                       "enable_event_handlers",             // 5
+-                       "enable_flap_detection",
+-                       "enable_notifications",
+-                       "execute_host_checks",
+-                       "execute_service_checks",
+-                       "last_log_rotation",                 // 10
+-                       "nagios_pid",
+-                       "obsess_over_hosts",
+-                       "obsess_over_services",
+-                       "process_performance_data",
+-                       "program_start",                     // 15
+-                       "program_version",
+-                       "interval_length",
+-                       "connections",
+-                       "connections_rate",
+-                       "forks",                             // 20
+-                       "forks_rate",
+-                       "host_checks",
+-                       "host_checks_rate",
+-                       "neb_callbacks",
+-                       "neb_callbacks_rate",                // 25
+-                       "requests",
+-                       "requests_rate",
+-                       "service_checks",
+-                       "service_checks_rate",
+-                       "log_messages",                      // 30
+-                       "log_messages_rate",
+-                       "cached_log_messages",
+-                       "last_command_check",
+-    };
+-    int columns_size = sizeof(columns)/sizeof(columns[0]);
+-    uint64_t (*s_counters)[NUM_COUNTERS];
+-    uint64_t (*s_last_counter)[NUM_COUNTERS];
+-    double (*s_counter_rate)[NUM_COUNTERS];
+-    int *num_cached_log_messages;
+-    int *last_command_check;
+-
+-    *(void**)(&s_counters)              = dlsym(RTLD_DEFAULT, "g_counters");
+-    *(void**)(&s_last_counter)          = dlsym(RTLD_DEFAULT, "g_last_counter");
+-    *(void**)(&s_counter_rate)          = dlsym(RTLD_DEFAULT, "g_counter_rate");
+-    *(void**)(&num_cached_log_messages) = dlsym(RTLD_DEFAULT, "num_cached_log_messages");
+-    *(void**)(&last_command_check)      = dlsym(RTLD_DEFAULT, "last_command_check");
+-
+-    num = livestatus_query(&answer, (char*)input_source, query, columns, columns_size);
+-    if(num == 1) {
+-        if(last_program_restart != 0 && last_program_restart != program_start) {
+-            sigrestart = TRUE;
+-            full_refresh_required = TRUE;
+-            nm_log(NSLOG_INFO_MESSAGE, "remote site has restarted, need new config...\n");
+-        } else {
+-            last_program_restart = program_start;
+-
+-            /* update time of last request if we had one */
+-            get_delta_request_count();
+-
+-            accept_passive_host_checks      = atoi(answer->set[0]);
+-            accept_passive_service_checks   = atoi(answer->set[1]);
+-            check_external_commands         = atoi(answer->set[2]);
+-            check_host_freshness            = atoi(answer->set[3]);
+-            check_service_freshness         = atoi(answer->set[4]);
+-            enable_event_handlers           = atoi(answer->set[5]);
+-            enable_flap_detection           = atoi(answer->set[6]);
+-            enable_notifications            = atoi(answer->set[7]);
+-            execute_host_checks             = atoi(answer->set[8]);
+-            execute_service_checks          = atoi(answer->set[9]);
+-            last_log_rotation               = atoi(answer->set[10]);
+-            nagios_pid                      = atoi(answer->set[11]);
+-            obsess_over_hosts               = atoi(answer->set[12]);
+-            obsess_over_services            = atoi(answer->set[13]);
+-            process_performance_data        = atoi(answer->set[14]);
+-            program_start                   = atoi(answer->set[15]);
+-            if(program_version == NULL)
+-                program_version             = nm_strdup(answer->set[16]);
+-            interval_length                 = atoi(answer->set[17]);
+-
+-            /* update livestatus counter */
+-            (*s_counters)[COUNTER_SERVICE_CHECKS] = (uint64_t)atoll(answer->set[28]);
+-            (*s_counters)[COUNTER_HOST_CHECKS]    = (uint64_t)atoll(answer->set[22]);
+-            (*s_counters)[COUNTER_NEB_CALLBACKS]  = (uint64_t)atoll(answer->set[24]);
+-            (*s_counters)[COUNTER_REQUESTS]       = (uint64_t)atoll(answer->set[26]);
+-            (*s_counters)[COUNTER_CONNECTIONS]    = (uint64_t)atoll(answer->set[18]);
+-            (*s_counters)[COUNTER_FORKS]          = (uint64_t)atoll(answer->set[20]);
+-            (*s_counters)[COUNTER_LOG_MESSAGES]   = (uint64_t)atoll(answer->set[30]);
+-            last_request_count = (uint64_t)atoll(answer->set[26]);
+-
+-            (*s_last_counter)[COUNTER_SERVICE_CHECKS] = (uint64_t)atoll(answer->set[28]);
+-            (*s_last_counter)[COUNTER_HOST_CHECKS]    = (uint64_t)atoll(answer->set[22]);
+-            (*s_last_counter)[COUNTER_NEB_CALLBACKS]  = (uint64_t)atoll(answer->set[24]);
+-            (*s_last_counter)[COUNTER_REQUESTS]       = (uint64_t)atoll(answer->set[26]);
+-            (*s_last_counter)[COUNTER_CONNECTIONS]    = (uint64_t)atoll(answer->set[18]);
+-            (*s_last_counter)[COUNTER_FORKS]          = (uint64_t)atoll(answer->set[20]);
+-            (*s_last_counter)[COUNTER_LOG_MESSAGES]   = (uint64_t)atoll(answer->set[30]);
+-
+-            (*s_counter_rate)[COUNTER_HOST_CHECKS]    = (double)atof(answer->set[23]);
+-            (*s_counter_rate)[COUNTER_SERVICE_CHECKS] = (double)atof(answer->set[29]);
+-            (*s_counter_rate)[COUNTER_NEB_CALLBACKS]  = (double)atof(answer->set[25]);
+-            (*s_counter_rate)[COUNTER_REQUESTS]       = (double)atof(answer->set[27]);
+-            (*s_counter_rate)[COUNTER_CONNECTIONS]    = (double)atof(answer->set[19]);
+-            (*s_counter_rate)[COUNTER_FORKS]          = (double)atof(answer->set[21]);
+-            (*s_counter_rate)[COUNTER_LOG_MESSAGES]   = (double)atof(answer->set[31]);
+-
+-            *num_cached_log_messages = (uint64_t)atoll(answer->set[32]);
+-            *last_command_check      = (uint64_t)atoll(answer->set[33]);
+-
+-            /* send broker event to make wait headers work */
+-            broker_adaptive_program_data(NEBTYPE_ADAPTIVEPROGRAM_UPDATE, NEBFLAG_NONE, NEBATTR_NONE, CMD_NONE, MODATTR_NONE, MODATTR_NONE, MODATTR_NONE, MODATTR_NONE);
+-        }
+-    } else {
+-        nm_log(NSLOG_INFO_MESSAGE, "updating program status failed\n");
+-        return(ERROR);
+-    }
+-    free_livestatus_result(answer, columns_size);
+-    timing_point("updated program status\n");
+-    return(OK);
+-}
+-
+-/* updates host status based on remote sites data */
+-int update_host_status_data(char * host_name) {
+-    int num, running, len;
+-    host *hst = NULL;
+-    result_list *row = NULL;
+-    result_list *answer = nm_malloc(sizeof(result_list));
+-    char *query  = "GET hosts";
+-    char *filtered_query;
+-    char *columns[] = {"name",                          // 0
+-                       "accept_passive_checks",
+-                       "active_checks_enabled",
+-                       "check_options",
+-                       "check_type",
+-                       "current_attempt",               // 5
+-                       "current_notification_number",
+-                       "event_handler_enabled",
+-                       "execution_time",
+-                       "flap_detection_enabled",
+-                       "has_been_checked",              // 10
+-                       "is_executing",
+-                       "is_flapping",
+-                       "last_check",
+-                       "last_notification",
+-                       "last_state_change",             // 15
+-                       "latency",
+-                       "long_plugin_output",
+-                       "next_check",
+-                       "notifications_enabled",
+-                       "obsess_over_host",              // 20
+-                       "percent_state_change",
+-                       "perf_data",
+-                       "plugin_output",
+-                       "process_performance_data",
+-                       "scheduled_downtime_depth",      // 25
+-                       "state",
+-                       "state_type",
+-                       "modified_attributes",
+-                       "last_time_down",
+-                       "last_time_unreachable",         // 30
+-                       "last_time_up",
+-                       "acknowledged",
+-                       "acknowledgement_type",
+-                       "last_hard_state",
+-                       "last_hard_state_change",        // 35
+-                       "last_state",
+-    };
+-    int columns_size = sizeof(columns)/sizeof(columns[0]);
+-
+-    /* add filter by last_refresh and is_executing and all our hosts which are marked as currently running */
+-    filtered_query = nm_calloc(max_number_of_executing_objects, 500);
+-    if(host_name != NULL) {
+-        len = sprintf(filtered_query, "%s\nFilter: host_name = %s\n", query, host_name);
+-    } else {
+-        len = sprintf(filtered_query, "%s\nFilter: is_executing = 1\nFilter: last_check >= %d\nOr: 2\n", query, (int)last_refresh);
+-
+-        /* linear search to get all hosts currently running */
+-        running = 0;
+-        hst     = host_list;
+-        while(hst) {
+-            if(hst->is_executing) {
+-                len += sprintf(filtered_query+len, "Filter: name = %s\n", hst->name);
+-                running++;
+-                if(running > max_number_of_executing_objects)
+-                    break;
+-            }
+-            hst = hst->next;
+-        }
+-        if(running > 0) {
+-            len += sprintf(filtered_query+len, "Or: %d\nOr: 2\n", running);
+-        }
+-        /* too many running hosts would blow off our filter, so just fetch everything if we hit the limit */
+-        if(full_refresh_required || running > max_number_of_executing_objects) {
+-            nm_free(filtered_query);
+-            filtered_query = nm_strdup(query);
+-        }
+-    }
+-    num = livestatus_query(&answer, (char*)input_source, filtered_query, columns, columns_size);
+-    nm_free(filtered_query);
+-
+-    /* update our hosts */
+-    if(num > 0) {
+-        row = answer;
+-        while(row != NULL) {
+-            hst = find_host(row->set[0]);
+-            if(hst == NULL) {
+-                nm_log(NSLOG_INFO_MESSAGE, "host '%s' not found, something is seriously wrong\n", row->set[0]);
+-                exit(EXIT_FAILURE);
+-            }
+-            hst->accept_passive_checks          = atoi(row->set[1]);
+-            hst->checks_enabled                 = atoi(row->set[2]);
+-            hst->check_options                  = atoi(row->set[3]);
+-            hst->check_type                     = atoi(row->set[4]);
+-            hst->current_attempt                = atoi(row->set[5]);
+-            hst->current_notification_number    = atoi(row->set[6]);
+-            hst->event_handler_enabled          = atoi(row->set[7]);
+-            hst->execution_time                 = atof(row->set[8]);
+-            hst->flap_detection_enabled         = atoi(row->set[9]);
+-            hst->has_been_checked               = atoi(row->set[10]);
+-            hst->is_executing                   = atoi(row->set[11]);
+-            hst->is_flapping                    = atoi(row->set[12]);
+-            hst->last_check                     = atoi(row->set[13]);
+-            hst->last_notification              = atoi(row->set[14]);
+-            hst->last_state_change              = atoi(row->set[15]);
+-            hst->latency                        = atof(row->set[16]);
+-            nm_free(hst->long_plugin_output);
+-            hst->long_plugin_output             = nm_strdup(row->set[17]);
+-            hst->next_check                     = atoi(row->set[18]);
+-            hst->notifications_enabled          = atoi(row->set[19]);
+-            hst->obsess                         = atoi(row->set[20]);
+-            hst->percent_state_change           = atoi(row->set[21]);
+-            nm_free(hst->perf_data);
+-            hst->perf_data                      = nm_strdup(row->set[22]);
+-            nm_free(hst->plugin_output);
+-            hst->plugin_output                  = nm_strdup(row->set[23]);
+-            hst->process_performance_data       = atoi(row->set[24]);
+-            hst->scheduled_downtime_depth       = atoi(row->set[25]);
+-            hst->current_state                  = atoi(row->set[26]);
+-            hst->state_type                     = atoi(row->set[27]);
+-            hst->modified_attributes            = atol(row->set[28]);
+-            hst->last_time_down                 = atoi(row->set[29]);
+-            hst->last_time_unreachable          = atoi(row->set[30]);
+-            hst->last_time_up                   = atoi(row->set[31]);
+-            hst->problem_has_been_acknowledged  = atoi(row->set[32]);
+-            hst->acknowledgement_type           = atoi(row->set[33]);
+-            hst->last_hard_state                = atoi(row->set[34]);
+-            hst->last_hard_state_change         = atoi(row->set[35]);
+-            hst->last_state                     = atoi(row->set[36]);
+-            row = row->next;
+-        }
+-    }
+-    free_livestatus_result(answer, columns_size);
+-    if(num < 0) {
+-        nm_log(NSLOG_INFO_MESSAGE, "updating hosts status failed\n");
+-        return(ERROR);
+-    }
+-    timing_point("updated %d hosts\n", num);
+-    return(OK);
+-}
+-
+-/* updates service status based on remote sites data */
+-int update_service_status_data(char * host_name, char * service_description) {
+-    int num, running, len;
+-    service *svc = NULL;
+-    result_list *row = NULL;
+-    result_list *answer = nm_malloc(sizeof(result_list));
+-    char *query  = "GET services";
+-    char *filtered_query;
+-    char *columns[] = {"host_name",                     // 0
+-                       "description",
+-                       "accept_passive_checks",
+-                       "active_checks_enabled",
+-                       "check_options",
+-                       "check_type",                    // 5
+-                       "current_attempt",
+-                       "current_notification_number",
+-                       "event_handler_enabled",
+-                       "execution_time",
+-                       "flap_detection_enabled",        // 10
+-                       "has_been_checked",
+-                       "is_executing",
+-                       "is_flapping",
+-                       "last_check",
+-                       "last_notification",             // 15
+-                       "last_state_change",
+-                       "latency",
+-                       "long_plugin_output",
+-                       "next_check",
+-                       "notifications_enabled",         // 20
+-                       "obsess_over_service",
+-                       "percent_state_change",
+-                       "perf_data",
+-                       "plugin_output",
+-                       "process_performance_data",      // 25
+-                       "scheduled_downtime_depth",
+-                       "state",
+-                       "state_type",
+-                       "modified_attributes",
+-                       "last_time_ok",                  // 30
+-                       "last_time_warning",
+-                       "last_time_unknown",
+-                       "last_time_critical",
+-                       "acknowledged",
+-                       "acknowledgement_type",          // 35
+-                       "last_state",
+-                       "last_hard_state",
+-                       "last_hard_state_change",
+-    };
+-    int columns_size = sizeof(columns)/sizeof(columns[0]);
+-
+-    /* add filter by last_refresh and is_executing and all our services which are marked as currently running */
+-    filtered_query = nm_calloc(max_number_of_executing_objects, 1000);
+-    if(host_name != NULL && service_description != NULL) {
+-        len = sprintf(filtered_query, "%s\nFilter: host_name = %s\nFilter: description = %s\nAnd: 2\n", query, host_name, service_description);
+-    } else {
+-        len = sprintf(filtered_query, "%s\nFilter: is_executing = 1\nFilter: last_check >= %d\nOr: 2\n", query, (int)last_refresh);
+-
+-        /* linear search to get all services currently running */
+-        running = 0;
+-        svc     = service_list;
+-        while(svc) {
+-            if(svc->is_executing) {
+-                len += sprintf(filtered_query+len, "Filter: host_name = %s\nFilter: description = %s\nAnd: 2\n", svc->host_name, svc->description);
+-                running++;
+-                if(running > max_number_of_executing_objects)
+-                    break;
+-            }
+-            svc = svc->next;
+-        }
+-        if(running > 0) {
+-            len += sprintf(filtered_query+len, "Or: %d\nOr: 2\n", running);
+-        }
+-        /* too many running services would blow off our filter, so just fetch everything if we hit the limit */
+-        if(full_refresh_required || running > max_number_of_executing_objects) {
+-            nm_free(filtered_query);
+-            filtered_query = nm_strdup(query);
+-        }
+-    }
+-    num = livestatus_query(&answer, (char*)input_source, filtered_query, columns, columns_size);
+-    nm_free(filtered_query);
+-
+-    if(num > 0) {
+-        row = answer;
+-        while(row != NULL && row->set != NULL) {
+-            svc = find_service(row->set[0], row->set[1]);
+-            if(svc == NULL) {
+-                nm_log(NSLOG_INFO_MESSAGE, "service '%s' on hst '%s' not found, something is seriously wrong\n", row->set[1], row->set[0]);
+-                exit(EXIT_FAILURE);
+-            }
+-            svc->accept_passive_checks          = atoi(row->set[2]);
+-            svc->checks_enabled                 = atoi(row->set[3]);
+-            svc->check_options                  = atoi(row->set[4]);
+-            svc->check_type                     = atoi(row->set[5]);
+-            svc->current_attempt                = atoi(row->set[6]);
+-            svc->current_notification_number    = atoi(row->set[7]);
+-            svc->event_handler_enabled          = atoi(row->set[8]);
+-            svc->execution_time                 = atof(row->set[9]);
+-            svc->flap_detection_enabled         = atoi(row->set[10]);
+-            svc->has_been_checked               = atoi(row->set[11]);
+-            svc->is_executing                   = atoi(row->set[12]);
+-            svc->is_flapping                    = atoi(row->set[13]);
+-            svc->last_check                     = atoi(row->set[14]);
+-            svc->last_notification              = atoi(row->set[15]);
+-            svc->last_state_change              = atoi(row->set[16]);
+-            svc->latency                        = atof(row->set[17]);
+-            nm_free(svc->long_plugin_output);
+-            svc->long_plugin_output             = nm_strdup(row->set[18]);
+-            svc->next_check                     = atoi(row->set[19]);
+-            svc->notifications_enabled          = atoi(row->set[20]);
+-            svc->obsess                         = atoi(row->set[21]);
+-            svc->percent_state_change           = atoi(row->set[22]);
+-            nm_free(svc->perf_data);
+-            svc->perf_data                      = nm_strdup(row->set[23]);
+-            nm_free(svc->plugin_output);
+-            svc->plugin_output                  = nm_strdup(row->set[24]);
+-            svc->process_performance_data       = atoi(row->set[25]);
+-            svc->scheduled_downtime_depth       = atoi(row->set[26]);
+-            svc->current_state                  = atoi(row->set[27]);
+-            svc->state_type                     = atoi(row->set[28]);
+-            svc->modified_attributes            = atol(row->set[29]);
+-            svc->last_time_ok                   = atoi(row->set[30]);
+-            svc->last_time_warning              = atoi(row->set[31]);
+-            svc->last_time_unknown              = atoi(row->set[32]);
+-            svc->last_time_critical             = atoi(row->set[33]);
+-            svc->problem_has_been_acknowledged  = atoi(row->set[34]);
+-            svc->acknowledgement_type           = atoi(row->set[35]);
+-            svc->last_state                     = atoi(row->set[36]);
+-            svc->last_hard_state                = atoi(row->set[37]);
+-            svc->last_hard_state_change         = atoi(row->set[38]);
+-            row = row->next;
+-        }
+-    }
+-    free_livestatus_result(answer, columns_size);
+-    if(num < 0) {
+-        nm_log(NSLOG_INFO_MESSAGE, "updating service status failed\n");
+-        return(ERROR);
+-    }
+-    timing_point("updated %d services\n", num);
+-    return(OK);
+-}
+-
+-/* updates data from external commands, this helps reducing delay for external commands */
+-int update_external_commands() {
+-    glob_t globbuf;
+-    unsigned int i;
+-    struct stat st;
+-
+-    if(glob(cmds_pattern, 0, NULL, &globbuf) == 0) {
+-        for(i=0; i<globbuf.gl_pathc;i++) {
+-            process_external_commands_from_file(globbuf.gl_pathv[i], TRUE);
+-            timing_point("processed external commands from %s\n", globbuf.gl_pathv[i]);
+-            if(stat(globbuf.gl_pathv[i], &st) == 0 && !unlink(globbuf.gl_pathv[i])) {
+-                nm_log(NSLOG_INFO_MESSAGE, "cannot remove %s: %s\n", globbuf.gl_pathv[i], strerror(errno));
+-            }
+-        }
+-        globfree(&globbuf);
+-        full_refresh_required = TRUE;
+-    }
+-
+-    return(OK);
+-}
+-
+-/* updates downtimes based on remote sites data, use 0 id to fetch all downtimes */
+-int update_downtime_data_by_id(unsigned long id) {
+-    int num, result;
+-    result_list *row = NULL;
+-    result_list *answer = nm_malloc(sizeof(result_list));
+-    host *hst = NULL;
+-    service *svc = NULL;
+-    time_t now = time(NULL);
+-    char *query  = "GET downtimes";
+-    char *filtered_query;
+-    char *columns[] = {"id",                            // 0
+-                       "host_name",
+-                       "service_description",
+-                       "author",
+-                       "comment",
+-                       "entry_time",                    // 5
+-                       "start_time",
+-                       "end_time",
+-                       "triggered_by",
+-                       "type",
+-                       "duration",                      // 10
+-                       "fixed",
+-    };
+-    int columns_size = sizeof(columns)/sizeof(columns[0]);
+-
+-    /* add filter by downtime id */
+-    if(id > 0) {
+-        filtered_query = nm_malloc(1000);
+-        sprintf(filtered_query, "%s\nFilter: id = %lu\n", query, id);
+-    } else {
+-        filtered_query = nm_strdup(query);
+-    }
+-
+-    num = livestatus_query(&answer, (char*)input_source, filtered_query, columns, columns_size);
+-    nm_free(filtered_query);
+-
+-    if(num < 0) {
+-        free_livestatus_result(answer, columns_size);
+-        nm_log(NSLOG_INFO_MESSAGE, "updating downtimes failed\n");
+-        return(ERROR);
+-    }
+-
+-    if(num > 0) {
+-        row = answer;
+-        while(row != NULL) {
+-            /* host downtime */
+-            if(!strcmp(row->set[2], "")) {
+-                result = add_host_downtime(row->set[1],             // host_name
+-                                           atoi(row->set[5]),       // entry_time
+-                                           row->set[3],             // author
+-                                           row->set[4],             // comment_data
+-                                           atoi(row->set[6]),       // start_time
+-                                           0,                       // flex_downtime_start,
+-                                           atoi(row->set[7]),       // end_time
+-                                           atoi(row->set[11]),      // fixed
+-                                           atol(row->set[8]),       // triggered_by
+-                                           atol(row->set[10]),      // duration
+-                                           atoi(row->set[0]),       // id
+-                                           TRUE,                    // is_in_effect,
+-                                           FALSE                    // start_notification_sent
+-                                        );
+-                if(result != OK) {
+-                    nm_log(NSLOG_INFO_MESSAGE, "adding host downtime failed (id: %s, host: '%s'), something is seriously wrong\n", row->set[0], row->set[1]);
+-                    exit(EXIT_FAILURE);
+-                }
+-                update_host_status_data(row->set[1]);
+-                if(now > atoi(row->set[6])) {
+-                    hst    = find_host(row->set[1]);
+-                    hst->scheduled_downtime_depth++;
+-                }
+-            } else {
+-                /* service downtime */
+-                result = add_service_downtime(
+-                                           row->set[1],             // host_name
+-                                           row->set[2],             // svc_description
+-                                           atoi(row->set[5]),       // entry_time
+-                                           row->set[3],             // author
+-                                           row->set[4],             // comment_data
+-                                           atoi(row->set[6]),       // start_time
+-                                           0,                       // flex_downtime_start,
+-                                           atoi(row->set[7]),       // end_time
+-                                           atoi(row->set[11]),      // fixed
+-                                           atol(row->set[8]),       // triggered_by
+-                                           atol(row->set[10]),      // duration
+-                                           atoi(row->set[0]),       // id
+-                                           TRUE,                    // is_in_effect,
+-                                           FALSE                    // start_notification_sent
+-                                        );
+-                if(result != OK) {
+-                    nm_log(NSLOG_INFO_MESSAGE, "adding service downtime failed (id: %s, host: '%s', service: '%s'), something is seriously wrong\n", row->set[0], row->set[1], row->set[2]);
+-                    exit(EXIT_FAILURE);
+-                }
+-                update_service_status_data(row->set[1], row->set[2]);
+-                if(now > atoi(row->set[6])) {
+-                    svc    = find_service(row->set[1], row->set[2]);
+-                    svc->scheduled_downtime_depth++;
+-                }
+-            }
+-            row = row->next;
+-        }
+-    }
+-    free_livestatus_result(answer, columns_size);
+-    if(id == 0)
+-        timing_point("added %d new downtimes\n", num);
+-    return(OK);
+-}
+-
+-/* remove old downtimes */
+-int update_downtime_data() {
+-    int num, result, added, removed, found;
+-    unsigned long current_id;
+-    result_list *row = NULL;
+-    result_list *answer = nm_malloc(sizeof(result_list));
+-    scheduled_downtime *temp_downtime, *curr_downtime;
+-    char *query  = "GET downtimes";
+-    char *columns[] = {"id"};
+-    int columns_size = 1;
+-
+-    num = livestatus_query(&answer, (char*)input_source, query, columns, columns_size);
+-    if(num < 0) {
+-        free_livestatus_result(answer, columns_size);
+-        nm_log(NSLOG_INFO_MESSAGE, "removing old downtimes failed\n");
+-        return(ERROR);
+-    }
+-
+-    removed = 0;
+-    // iterate all our downtimes
+-    temp_downtime = scheduled_downtime_list;
+-    while(temp_downtime != NULL) {
+-        found = 0;
+-        row   = answer;
+-        // find it in our result
+-        while(row != NULL && row->set != NULL) {
+-            current_id = atol(row->set[0]);
+-            if(temp_downtime->downtime_id == current_id) {
+-                found = 1;
+-                break;
+-            }
+-            row = row->next;
+-        }
+-        curr_downtime = temp_downtime;
+-        temp_downtime = temp_downtime->next;
+-        if(found == 0) {
+-            // nothing found, remove
+-            current_id = curr_downtime->downtime_id;
+-            if(curr_downtime->service_description == NULL) {
+-                update_host_status_data(curr_downtime->host_name);
+-                result = unschedule_downtime(HOST_DOWNTIME, current_id);
+-            } else {
+-                update_service_status_data(curr_downtime->host_name, curr_downtime->service_description);
+-                result = unschedule_downtime(SERVICE_DOWNTIME, current_id);
+-            }
+-            if(result != OK) {
+-                nm_log(NSLOG_INFO_MESSAGE, "removing downtime failed (id: %lu), something is seriously wrong\n", current_id);
+-                exit(EXIT_FAILURE);
+-            } else {
+-                removed++;
+-            }
+-        }
+-    }
+-    timing_point("removed %d old downtimes\n", removed);
+-
+-    // add missing downtimes
+-    added = 0;
+-    row = answer;
+-    while(row != NULL && row->set != NULL) {
+-        found = FALSE;
+-        current_id = atol(row->set[0]);
+-        temp_downtime = scheduled_downtime_list;
+-        while(temp_downtime != NULL) {
+-            if(temp_downtime->downtime_id == current_id) {
+-                found = TRUE;
+-                break;
+-            }
+-            temp_downtime = temp_downtime->next;
+-        }
+-        if(!found) {
+-            if(update_downtime_data_by_id(current_id) != OK) {
+-                free_livestatus_result(answer, columns_size);
+-                return(ERROR);
+-            }
+-            added++;
+-        }
+-        row = row->next;
+-    }
+-    free_livestatus_result(answer, columns_size);
+-    timing_point("added %d downtimes comments\n", added);
+-    return(OK);
+-}
+-
+-/* updates comments based on remote sites data, use id=0 to fetch all comments */
+-int update_comment_data_by_id(unsigned long id) {
+-    int num, result;
+-    result_list *row = NULL;
+-    result_list *answer = nm_malloc(sizeof(result_list));
+-    char *query  = "GET comments";
+-    char *filtered_query;
+-    char *columns[] = {"id",                            // 0
+-                       "host_name",
+-                       "service_description",
+-                       "author",
+-                       "comment",
+-                       "entry_time",                    // 5
+-                       "entry_type",
+-                       "expire_time",
+-                       "expires",
+-                       "persistent",
+-                       "source",                        // 10
+-    };
+-    int columns_size = sizeof(columns)/sizeof(columns[0]);
+-
+-    /* add filter by comment id */
+-    if(id > 0) {
+-        filtered_query = nm_malloc(1000);
+-        sprintf(filtered_query, "%s\nFilter: id = %lu\n", query, id);
+-    } else {
+-        filtered_query = nm_strdup(query);
+-    }
+-
+-    num = livestatus_query(&answer, (char*)input_source, filtered_query, columns, columns_size);
+-    nm_free(filtered_query);
+-    if(num < 0) {
+-        free_livestatus_result(answer, columns_size);
+-        nm_log(NSLOG_INFO_MESSAGE, "adding comment failed\n");
+-        return(ERROR);
+-    }
+-
+-    if(num > 0) {
+-        row = answer;
+-        while(row != NULL) {
+-            /* host comments */
+-            if(!strcmp(row->set[2], "")) {
+-                result = add_host_comment(atoi(row->set[6]),    // entry_type
+-                                          row->set[1],          // host_name
+-                                          atoi(row->set[5]),    // entry_time
+-                                          row->set[3],          // author
+-                                          row->set[4],          // comment_data
+-                                          atoi(row->set[0]),    // comment_id
+-                                          atoi(row->set[9]),    // persistent
+-                                          atoi(row->set[8]),    // expires
+-                                          atoi(row->set[7]),    // expire_time
+-                                          atoi(row->set[10])    // source
+-                                        );
+-                if(result != OK) {
+-                    nm_log(NSLOG_INFO_MESSAGE, "adding host comment failed (id: %s, host: '%s'), something is seriously wrong\n", row->set[0], row->set[1]);
+-                    exit(EXIT_FAILURE);
+-                }
+-            } else {
+-                /* service comments */
+-                result = add_service_comment(
+-                                          atoi(row->set[6]),    // entry_type
+-                                          row->set[1],          // host_name
+-                                          row->set[2],          // svc_description
+-                                          atoi(row->set[5]),    // entry_time
+-                                          row->set[3],          // author
+-                                          row->set[4],          // comment_data
+-                                          atoi(row->set[0]),    // comment_id
+-                                          atoi(row->set[9]),    // persistent
+-                                          atoi(row->set[8]),    // expires
+-                                          atoi(row->set[7]),    // expire_time
+-                                          atoi(row->set[10])    // source
+-                                        );
+-                if(result != OK) {
+-                    nm_log(NSLOG_INFO_MESSAGE, "adding service comment failed (id: %s, host: '%s', service: '%s'), something is seriously wrong\n", row->set[0], row->set[1], row->set[2]);
+-                    exit(EXIT_FAILURE);
+-                }
+-            }
+-            row = row->next;
+-        }
+-    }
+-    free_livestatus_result(answer, columns_size);
+-    if(id == 0)
+-        timing_point("added %d new comments\n", num);
+-    return(OK);
+-}
+-
+-/* add new and remove old comments */
+-int update_comment_data() {
+-    int num, result, added, removed, found;
+-    unsigned long current_id;
+-    result_list *row = NULL;
+-    result_list *answer = nm_malloc(sizeof(result_list));
+-    comment *temp_comment, *curr_comment;
+-    char *query  = "GET comments";
+-    char *columns[] = {"id"};
+-    int columns_size = 1;
+-
+-    num = livestatus_query(&answer, (char*)input_source, query, columns, columns_size);
+-
+-    if(num < 0) {
+-        nm_log(NSLOG_INFO_MESSAGE, "removing old comments failed\n");
+-        free_livestatus_result(answer, columns_size);
+-        return(ERROR);
+-    }
+-
+-    removed = 0;
+-    // remove old comments
+-    temp_comment = comment_list;
+-    while(temp_comment != NULL) {
+-        found = FALSE;
+-        row   = answer;
+-        // find it in our result
+-        while(row != NULL && row->set != NULL) {
+-            current_id = atol(row->set[0]);
+-            if(temp_comment->comment_id == current_id) {
+-                found = TRUE;
+-                break;
+-            }
+-            row = row->next;
+-        }
+-        curr_comment = temp_comment;
+-        temp_comment = temp_comment->next;
+-        if(!found) {
+-            // nothing found, remove
+-            current_id = curr_comment->comment_id;
+-            if(curr_comment->service_description == NULL) {
+-                result = delete_host_comment(current_id);
+-            } else {
+-                result = delete_service_comment(current_id);
+-            }
+-            if(result != OK) {
+-                nm_log(NSLOG_INFO_MESSAGE, "removing comment failed (id: %lu), something is seriously wrong\n", current_id);
+-                exit(EXIT_FAILURE);
+-            } else {
+-                removed++;
+-            }
+-        }
+-    }
+-    timing_point("removed %d old comments\n", removed);
+-
+-    // add missing comments
+-    added = 0;
+-    row = answer;
+-    while(row != NULL && row->set != NULL) {
+-        found = FALSE;
+-        current_id = atol(row->set[0]);
+-        temp_comment = comment_list;
+-        while(temp_comment != NULL) {
+-            if(temp_comment->comment_id == current_id) {
+-                found = TRUE;
+-                break;
+-            }
+-            temp_comment = temp_comment->next;
+-        }
+-        if(!found) {
+-            if(update_comment_data_by_id(current_id) != OK) {
+-                free_livestatus_result(answer, columns_size);
+-                return(ERROR);
+-            }
+-            added++;
+-        }
+-        row = row->next;
+-    }
+-    timing_point("added %d new comments\n", added);
+-
+-    free_livestatus_result(answer, columns_size);
+-    return(OK);
+-}
+-
+-/* updates everything based on remote sites data */
+-int update_all_runtime_data() {
+-    if(update_program_status_data() != OK)
+-        return(ERROR);
+-
+-    /* directly return if our program status update results in a required restart */
+-    if(sigrestart == TRUE)
+-        return(OK);
+-
+-    if(update_external_commands() != OK)
+-        return(ERROR);
+-
+-    if(update_downtime_data() != OK)
+-        return(ERROR);
+-
+-    if(update_comment_data() != OK)
+-        return(ERROR);
+-
+-    if(update_host_status_data(NULL) != OK)
+-        return(ERROR);
+-
+-    if(update_service_status_data(NULL, NULL) != OK)
+-        return(ERROR);
+-
+-    // reset full refresh flag
+-    full_refresh_required = FALSE;
+-    return(OK);
+-}
+-
+-/* main refresh loop */
+-int run_refresh_loop() {
+-    int result = OK;
+-
+-    initialize_core();
+-
+-    /* fetch runtime data once before starting livestatus */
+-    if(update_downtime_data_by_id(0) != OK || update_comment_data_by_id(0) != OK || update_all_runtime_data() != OK) {
+-        deinitialize_core();
+-        return(ERROR);
+-    }
+-
+-    /* send program data to broker, which also starts livestatus */
+-    broker_program_state(NEBTYPE_PROCESS_EVENTLOOPSTART, NEBFLAG_NONE, NEBATTR_NONE);
+-
+-    /* main action, run broker... */
+-    daemon_mode = FALSE;
+-    if(verbose)
+-        nm_log(NSLOG_INFO_MESSAGE, "%s initialized with pid %d...\n", self_name, getpid());
+-    nm_log(NSLOG_PROCESS_INFO, "started caching %s to %s\n", input_source, output_socket_path);
+-
+-    /* sleep normal interval because we just have fetched all data */
+-    usleep(short_shadow_update_interval);
+-
+-    /* start event loop, which blocks till there is a sigshutdown or sigrestart */
+-    schedule_event(1, fetch_status_data, NULL);
+-
+-    while (!sigshutdown && !sigrestart) {
+-        if (event_poll())
+-            break;
+-    }
+-
+-    nm_free(dummy_command);
+-    dummy_command = NULL;
+-    deinitialize_core();
+-    nm_free(program_version);
+-
+-    timing_point("Done cleaning up.\n");
+-
+-    return(result);
+-}
+-
+-static void fetch_status_data(struct nm_event_execution_properties *evprop) {
+-    int errors = 0;
+-    int delta_requests = 0;
+-    struct timeval refresh_start, refresh_end;
+-    double duration, sleep_remaining;
+-
+-    gettimeofday(&refresh_start, NULL);
+-    if(update_all_runtime_data() != OK) {
+-        program_start = 0;
+-        // give remote site a chance to recover
+-        if(errors > 100) {
+-            sigrestart = TRUE;
+-            return;
+-        }
+-        errors++;
+-    } else {
+-        errors       = 0;
+-        last_refresh = refresh_start.tv_sec;
+-    }
+-    if(sigrestart == TRUE || sigshutdown == TRUE) {
+-        if(sigrestart == TRUE)
+-            write_config_files();
+-        should_write_config = FALSE;
+-        close(input_socket);
+-        input_socket = -1;
+-        return;
+-    }
+-
+-    gettimeofday(&refresh_end, NULL);
+-    duration = tv_delta_f(&refresh_start, &refresh_end);
+-
+-    /* decide wheter to use long or short sleep interval, start slow interval after 10min runtime and if there are no requests in 10minutes */
+-    if(errors == 0 && shadow_program_restart < refresh_end.tv_sec - 600 && last_request < refresh_end.tv_sec - 600) {
+-        /* no requests in last 10minutes, use slow interval */
+-        sleep_remaining   = long_shadow_update_interval - (duration*1000000);
+-        delta_requests = get_delta_request_count();
+-        while(sleep_remaining > 0 && delta_requests == 0 && sigshutdown == FALSE && sigrestart == FALSE) {
+-            gettimeofday(&refresh_end, NULL);
+-            duration = tv_delta_f(&refresh_start, &refresh_end);
+-            usleep(short_shadow_update_interval);
+-            sleep_remaining = long_shadow_update_interval - (duration*1000000);
+-            delta_requests = get_delta_request_count();
+-            if(verbose && delta_requests > 0)
+-                timing_point("had %d requests since last refresh\n", delta_requests);
+-        }
+-    } else {
+-        /* use fast interval otherwise */
+-        sleep_remaining = short_shadow_update_interval - (duration*1000000);
+-    }
+-    if(sigshutdown == TRUE || sigrestart == TRUE || sleep_remaining > short_shadow_update_interval)
+-        sleep_remaining = 0;
+-    if(sleep_remaining > 0)
+-        schedule_event(sleep_remaining/1000000, fetch_status_data, NULL);
+-    timing_point("refresh loop waiting...\n");
+-}
+-
+-/* write commands configuration */
+-int write_commands_configuration(FILE *file) {
+-    int num;
+-    result_list *row = NULL;
+-    result_list *answer = nm_malloc(sizeof(result_list));
+-    char *query = "GET commands";
+-    char *columns[] = {"name",
+-                       "line",
+-    };
+-    int columns_size = sizeof(columns)/sizeof(columns[0]);
+-    num = livestatus_query(&answer, (char*)input_source, query, columns, columns_size);
+-    if(num > 0) {
+-        /* create dummy command which will later be used as notification command
+-         * because the notification commands cannot be retrieved by livestatus
+-         * but are required for a valid configuration
+-         */
+-        if(dummy_command != NULL)
+-            nm_free(dummy_command);
+-        dummy_command = nm_strdup("dummy_shadownaemon_notification_command");
+-        fprintf(file,"define command {\n");
+-        fprintf(file,"    command_name          %s\n", dummy_command);
+-        fprintf(file,"    command_line          /bin/true\n");
+-        fprintf(file,"}\n");
+-
+-        row = answer;
+-        while(row != NULL) {
+-            fprintf(file,"define command {\n");
+-            fprintf(file,"    command_name          %s\n",   row->set[0]);
+-            fprintf(file,"    command_line          %s\n\n", row->set[1]); /* extra new line ensures trailing backslashes don't break anything */
+-            fprintf(file,"}\n");
+-            row = row->next;
+-        }
+-    } else {
+-        free_livestatus_result(answer, columns_size);
+-        return(ERROR);
+-    }
+-    free_livestatus_result(answer, columns_size);
+-    timing_point("wrote commands\n");
+-    return(OK);
+-}
+-
+-/* write timeperiods configuration */
+-int write_timeperiods_configuration(FILE *file) {
+-    int num;
+-    result_list *row = NULL;
+-    result_list *answer = nm_malloc(sizeof(result_list));
+-    char *query = "GET timeperiods";
+-    char *columns[] = {"name",
+-                       "alias",
+-    };
+-    int columns_size = sizeof(columns)/sizeof(columns[0]);
+-    num = livestatus_query(&answer, (char*)input_source, query, columns, columns_size);
+-    if(num > 0) {
+-        row = answer;
+-        while(row != NULL) {
+-            fprintf(file,"define timeperiod {\n");
+-            fprintf(file,"    timeperiod_name       %s\n", row->set[0]);
+-            fprintf(file,"    alias                 %s\n", row->set[1]);
+-            fprintf(file,"}\n");
+-            row = row->next;
+-        }
+-    }
+-    free_livestatus_result(answer, columns_size);
+-    timing_point("wrote timeperiods\n");
+-    return(OK);
+-}
+-
+-/* write contactgroups configuration */
+-int write_contactgroups_configuration(FILE *file) {
+-    int num;
+-    result_list *row = NULL;
+-    result_list *answer = nm_malloc(sizeof(result_list));
+-    char *query = "GET contactgroups";
+-    char *columns[] = {"name",
+-                       "alias",
+-                       "members",
+-    };
+-    int columns_size = sizeof(columns)/sizeof(columns[0]);
+-    num = livestatus_query(&answer, (char*)input_source, query, columns, columns_size);
+-    if(num > 0) {
+-        row = answer;
+-        while(row != NULL) {
+-            fprintf(file,"define contactgroup {\n");
+-            fprintf(file,"    contactgroup_name     %s\n", row->set[0]);
+-            fprintf(file,"    alias                 %s\n", row->set[1]);
+-            write_list_attribute(file, "members", row->set[2]);
+-            fprintf(file,"}\n");
+-            row = row->next;
+-        }
+-    }
+-    free_livestatus_result(answer, columns_size);
+-    timing_point("wrote contactgroups\n");
+-    return(OK);
+-}
+-
+-/* write hostgroups configuration */
+-int write_hostgroups_configuration(FILE *file) {
+-    int num;
+-    result_list *row = NULL;
+-    result_list *answer = nm_malloc(sizeof(result_list));
+-    char *query = "GET hostgroups";
+-    char *columns[] = {"name",
+-                       "alias",
+-                       "members",
+-                       "notes",
+-                       "notes_url",
+-                       "action_url",
+-    };
+-    int columns_size = sizeof(columns)/sizeof(columns[0]);
+-    num = livestatus_query(&answer, (char*)input_source, query, columns, columns_size);
+-    if(num > 0) {
+-        row = answer;
+-        while(row != NULL) {
+-            fprintf(file,"define hostgroup {\n");
+-            fprintf(file,"    hostgroup_name        %s\n", row->set[0]);
+-            fprintf(file,"    alias                 %s\n", row->set[1]);
+-            write_list_attribute(file, "members", row->set[2]);
+-            if(strcmp(row->set[3], ""))
+-                fprintf(file,"    notes                 %s\n", row->set[3]);
+-            if(strcmp(row->set[4], ""))
+-                fprintf(file,"    notes_url             %s\n", row->set[4]);
+-            if(strcmp(row->set[5], ""))
+-                fprintf(file,"    action_url            %s\n", row->set[5]);
+-            fprintf(file,"}\n");
+-            row = row->next;
+-        }
+-    }
+-    free_livestatus_result(answer, columns_size);
+-    timing_point("wrote hostgroups\n");
+-    return(OK);
+-}
+-
+-/* write servicegroups configuration */
+-int write_servicegroups_configuration(FILE *file) {
+-    int num;
+-    result_list *row = NULL;
+-    result_list *answer = nm_malloc(sizeof(result_list));
+-    char *query = "GET servicegroups";
+-    char *columns[] = {"name",
+-                       "alias",
+-                       "members",
+-                       "notes",
+-                       "notes_url",
+-                       "action_url",
+-    };
+-    int columns_size = sizeof(columns)/sizeof(columns[0]);
+-    num = livestatus_query(&answer, (char*)input_source, query, columns, columns_size);
+-    if(num > 0) {
+-        row = answer;
+-        while(row != NULL) {
+-            fprintf(file,"define servicegroup {\n");
+-            fprintf(file,"    servicegroup_name     %s\n", row->set[0]);
+-            fprintf(file,"    alias                 %s\n", row->set[1]);
+-            write_list_attribute(file, "members", row->set[2]);
+-            if(strcmp(row->set[3], ""))
+-                fprintf(file,"    notes                 %s\n", row->set[3]);
+-            if(strcmp(row->set[4], ""))
+-                fprintf(file,"    notes_url             %s\n", row->set[4]);
+-            if(strcmp(row->set[5], ""))
+-                fprintf(file,"    action_url            %s\n", row->set[5]);
+-            fprintf(file,"}\n");
+-            row = row->next;
+-        }
+-    }
+-    free_livestatus_result(answer, columns_size);
+-    timing_point("wrote servicegroups\n");
+-    return(OK);
+-}
+-
+-/* write contacts configuration */
+-int write_contacts_configuration(FILE *file) {
+-    int num;
+-    result_list *row = NULL;
+-    result_list *answer = nm_malloc(sizeof(result_list));
+-    char *query = "GET contacts";
+-    char *columns[] = {"name",
+-                       "alias",
+-                       "service_notification_period",
+-                       "host_notification_period",
+-                       "email",
+-                       "host_notifications_enabled",    // 5
+-                       "service_notifications_enabled",
+-                       "can_submit_commands",
+-                       "custom_variable_names",
+-                       "custom_variable_values"
+-    };
+-    int columns_size = sizeof(columns)/sizeof(columns[0]);
+-    num = livestatus_query(&answer, (char*)input_source, query, columns, columns_size);
+-    if(num > 0) {
+-        row = answer;
+-        while(row != NULL) {
+-            fprintf(file,"define contact {\n");
+-            fprintf(file,"    contact_name                  %s\n", row->set[0]);
+-            fprintf(file,"    alias                         %s\n", row->set[1]);
+-            fprintf(file,"    service_notification_period   %s\n", row->set[2]);
+-            fprintf(file,"    host_notification_period      %s\n", row->set[3]);
+-            fprintf(file,"    service_notification_commands %s\n", dummy_command);
+-            fprintf(file,"    host_notification_commands    %s\n", dummy_command);
+-            if(strcmp(row->set[4], ""))
+-                fprintf(file,"    email                         %s\n", row->set[4]);
+-            fprintf(file,"    host_notifications_enabled    %s\n", row->set[5]);
+-            fprintf(file,"    service_notifications_enabled %s\n", row->set[6]);
+-            fprintf(file,"    can_submit_commands           %s\n", row->set[7]);
+-            write_custom_variables(file, row->set[8], row->set[9]);
+-            fprintf(file,"}\n");
+-            row = row->next;
+-        }
+-    }
+-    free_livestatus_result(answer, columns_size);
+-    timing_point("wrote contacts\n");
+-    return(OK);
+-}
+-
+-/* write hosts configuration */
+-int write_hosts_configuration(FILE *file) {
+-    int num;
+-    result_list *row = NULL;
+-    result_list *answer = nm_malloc(sizeof(result_list));
+-    char *query = "GET hosts";
+-    char *columns[] = {"name",                      // 0
+-                       "alias",
+-                       "address",
+-                       "check_period",
+-                       "check_command",
+-                       "parents",                   // 5
+-                       "contacts",
+-                       "notification_period",
+-                       "check_interval",
+-                       "retry_interval",
+-                       "max_check_attempts",        // 10
+-                       "low_flap_threshold",
+-                       "high_flap_threshold",
+-                       "check_freshness",
+-                       "notification_interval",
+-                       "first_notification_delay",  // 15
+-                       "custom_variable_names",
+-                       "custom_variable_values",
+-                       "notes",
+-                       "notes_url",
+-                       "action_url",                // 20
+-                       "icon_image",
+-                       "icon_image_alt",
+-    };
+-    int columns_size = sizeof(columns)/sizeof(columns[0]);
+-    num = livestatus_query(&answer, (char*)input_source, query, columns, columns_size);
+-    if(num > 0) {
+-        row = answer;
+-        while(row != NULL) {
+-            fprintf(file,"define host {\n");
+-            fprintf(file,"    host_name                  %s\n", row->set[0]);
+-            fprintf(file,"    alias                      %s\n", row->set[1]);
+-            fprintf(file,"    address                    %s\n", row->set[2]);
+-            if(strcmp(row->set[3], ""))
+-                fprintf(file,"    check_period               %s\n", row->set[3]);
+-            if(strcmp(row->set[4], ""))
+-                fprintf(file,"    check_command              %s\n", row->set[4]);
+-            write_list_attribute(file, "parents", row->set[5]);
+-            write_list_attribute(file, "contacts", row->set[6]);
+-            if(strcmp(row->set[7], ""))
+-                fprintf(file,"    notification_period        %s\n", row->set[7]);
+-            fprintf(file,"    check_interval             %s\n", row->set[8]);
+-            fprintf(file,"    retry_interval             %s\n", row->set[9]);
+-            fprintf(file,"    max_check_attempts         %s\n", row->set[10]);
+-            fprintf(file,"    low_flap_threshold         %s\n", row->set[11]);
+-            fprintf(file,"    high_flap_threshold        %s\n", row->set[12]);
+-            fprintf(file,"    check_freshness            %s\n", row->set[13]);
+-            fprintf(file,"    notification_interval      %s\n", row->set[14]);
+-            fprintf(file,"    first_notification_delay   %s\n", row->set[15]);
+-            if(strcmp(row->set[18], ""))
+-                fprintf(file,"    notes                 %s\n", row->set[18]);
+-            if(strcmp(row->set[19], ""))
+-                fprintf(file,"    notes_url             %s\n", row->set[19]);
+-            if(strcmp(row->set[20], ""))
+-                fprintf(file,"    action_url            %s\n", row->set[20]);
+-            if(strcmp(row->set[21], ""))
+-                fprintf(file,"    icon_image            %s\n", row->set[21]);
+-            if(strcmp(row->set[22], ""))
+-                fprintf(file,"    icon_image_alt        %s\n", row->set[22]);
+-            write_custom_variables(file, row->set[16], row->set[17]);
+-            fprintf(file,"}\n");
+-            row = row->next;
+-        }
+-    }
+-    free_livestatus_result(answer, columns_size);
+-    timing_point("wrote hosts\n");
+-    return(OK);
+-}
+-
+-/* write services configuration */
+-int write_services_configuration(FILE *file) {
+-    int num;
+-    result_list *row = NULL;
+-    result_list *answer = nm_malloc(sizeof(result_list));
+-    char *query = "GET services";
+-    char *columns[] = {"host_name",                 // 0
+-                       "description",
+-                       "display_name",
+-                       "check_period",
+-                       "check_command",
+-                       "contacts",                  // 5
+-                       "notification_period",
+-                       "check_interval",
+-                       "retry_interval",
+-                       "max_check_attempts",
+-                       "low_flap_threshold",        // 10
+-                       "high_flap_threshold",
+-                       "check_freshness",
+-                       "notification_interval",
+-                       "first_notification_delay",
+-                       "custom_variable_names",     // 15
+-                       "custom_variable_values",
+-                       "notes",
+-                       "notes_url",
+-                       "action_url",
+-                       "icon_image",                // 20
+-                       "icon_image_alt",
+-
+-    };
+-    int columns_size = sizeof(columns)/sizeof(columns[0]);
+-    num = livestatus_query(&answer, (char*)input_source, query, columns, columns_size);
+-    if(num > 0) {
+-        row = answer;
+-        while(row != NULL) {
+-            fprintf(file,"define service {\n");
+-            fprintf(file,"    host_name                  %s\n", row->set[0]);
+-            fprintf(file,"    service_description        %s\n", row->set[1]);
+-            fprintf(file,"    display_name               %s\n", row->set[2]);
+-            fprintf(file,"    check_period               %s\n", row->set[3]);
+-            fprintf(file,"    check_command              %s\n", row->set[4]);
+-            write_list_attribute(file, "contacts", row->set[5]);
+-            fprintf(file,"    notification_period        %s\n", row->set[6]);
+-            fprintf(file,"    check_interval             %s\n", row->set[7]);
+-            fprintf(file,"    retry_interval             %s\n", row->set[8]);
+-            fprintf(file,"    max_check_attempts         %s\n", row->set[9]);
+-            fprintf(file,"    low_flap_threshold         %s\n", row->set[10]);
+-            fprintf(file,"    high_flap_threshold        %s\n", row->set[11]);
+-            fprintf(file,"    check_freshness            %s\n", row->set[12]);
+-            fprintf(file,"    notification_interval      %s\n", row->set[13]);
+-            fprintf(file,"    first_notification_delay   %s\n", row->set[14]);
+-            if(strcmp(row->set[17], ""))
+-                fprintf(file,"    notes                 %s\n", row->set[17]);
+-            if(strcmp(row->set[18], ""))
+-                fprintf(file,"    notes_url             %s\n", row->set[18]);
+-            if(strcmp(row->set[19], ""))
+-                fprintf(file,"    action_url            %s\n", row->set[19]);
+-            if(strcmp(row->set[20], ""))
+-                fprintf(file,"    icon_image            %s\n", row->set[20]);
+-            if(strcmp(row->set[21], ""))
+-                fprintf(file,"    icon_image_alt        %s\n", row->set[21]);
+-            write_custom_variables(file, row->set[15], row->set[16]);
+-            fprintf(file,"}\n");
+-            row = row->next;
+-        }
+-    }
+-    free_livestatus_result(answer, columns_size);
+-    timing_point("wrote services\n");
+-    return(OK);
+-}
+-
+-/* convert ls result char to list and write that into the given file */
+-/* just replaces listseperator char with comma */
+-int write_list_attribute(FILE *file, char* attr, char* rawlist) {
+-    char *tmpstr;
+-    int i = -1;
+-    if(!strcmp(rawlist, ""))
+-        return(OK);
+-    tmpstr = nm_strdup(rawlist);
+-    while(tmpstr[++i] != 0) {
+-        if(tmpstr[i] == 5 || tmpstr[i] == 6)
+-            tmpstr[i] = 44;
+-    }
+-    fprintf(file,"    %s %s\n", attr, tmpstr);
+-    nm_free(tmpstr);
+-    return(OK);
+-}
+-
+-/* write out custum variables */
+-int write_custom_variables(FILE *file, char* rawnames, char* rawvalues) {
+-    char *names, *name, *namesp, *values, *value, *valuesp;
+-    if(!strcmp(rawnames, ""))
+-        return(OK);
+-    names   = nm_strdup(rawnames);
+-    values  = nm_strdup(rawvalues);
+-    namesp  = names;
+-    valuesp = values;
+-    while((name = strsep(&names, "\x5")) != NULL) {
+-        value = strsep(&values, "\x5");
+-        fprintf(file,"    _%s %s\n", name, value);
+-    }
+-    nm_free(namesp);
+-    nm_free(valuesp);
+-    return(OK);
+-}
+-
+-/* returns number of requests since last check */
+-int get_delta_request_count() {
+-    int delta = 0;
+-    uint64_t (*s_counters)[NUM_COUNTERS];
+-    *(void**)(&s_counters) = dlsym(RTLD_DEFAULT, "g_counters");
+-    if(last_request_count != 0 && (*s_counters)[COUNTER_REQUESTS] != 0 && last_request_count != (*s_counters)[COUNTER_REQUESTS])
+-        delta = (int)((*s_counters)[COUNTER_REQUESTS]-last_request_count);
+-    if(delta > 0) {
+-        last_request = time(NULL);
+-    }
+-    return(delta);
+-}
+diff --git a/src/shadownaemon/shadownaemon.h b/src/shadownaemon/shadownaemon.h
+deleted file mode 100644
+index a5bc6b07..00000000
+--- a/src/shadownaemon/shadownaemon.h
++++ /dev/null
+@@ -1,93 +0,0 @@
+-#if !defined (_NAEMON_H_INSIDE) && !defined (NAEMON_COMPILATION)
+-#error "Only <naemon/naemon.h> can be included directly."
+-#endif
+-
+-#include "config.h"
+-#include <naemon/common.h>
+-#include <naemon/objects.h>
+-#include <naemon/comments.h>
+-#include <naemon/downtime.h>
+-#include <naemon/statusdata.h>
+-#include <naemon/macros.h>
+-#include <naemon/sretention.h>
+-#include <naemon/perfdata.h>
+-#include <naemon/broker.h>
+-#include <naemon/nebmods.h>
+-#include <naemon/nebmodules.h>
+-#include <naemon/workers.h>
+-#include <naemon/nerd.h>
+-#include <naemon/query-handler.h>
+-#include <naemon/configuration.h>
+-#include <naemon/commands.h>
+-#include <naemon/events.h>
+-#include <naemon/utils.h>
+-#include <naemon/defaults.h>
+-#include <naemon/globals.h>
+-#include <naemon/logging.h>
+-#include <dlfcn.h>
+-#include <getopt.h>
+-#include <glob.h>
+-#include <stdarg.h>
+-#include <string.h>
+-#include <arpa/inet.h>
+-#include <netinet/in.h>
+-#include <netdb.h>
+-#include <sys/socket.h>
+-#include <sys/types.h>
+-#include <sys/un.h>
+-
+-struct result_l {
+-    char **set;
+-    struct result_l * next;
+-};
+-typedef struct result_l result_list;
+-
+-#define LIVESTATUS_MODE_SOCKET 1
+-#define LIVESTATUS_MODE_TCP    2
+-#define LIVESTATUS_MODE_HTTP   3
+-
+-// from livestatus global_counters.h
+-#define COUNTER_NEB_CALLBACKS        0
+-#define COUNTER_REQUESTS             1
+-#define COUNTER_CONNECTIONS          2
+-#define COUNTER_SERVICE_CHECKS       3
+-#define COUNTER_HOST_CHECKS          4
+-#define COUNTER_FORKS                5
+-#define COUNTER_LOG_MESSAGES         6
+-#define COUNTER_COMMANDS             7
+-#define COUNTER_LIVECHECKS           8
+-#define COUNTER_LIVECHECK_OVERFLOWS  9
+-#define NUM_COUNTERS                10
+-
+-int main(int argc, char **argv);
+-void usage(const char *fmt, ...);
+-int initialize_core(void);
+-int deinitialize_core(void);
+-int livestatus_query(result_list **result, char *input_source, char *query, char *columns[], int columnssize);
+-int livestatus_query_socket(result_list **result, char *socket_path, char *query, char *columns[], int columnssize);
+-void free_livestatus_result(result_list * result, int datasize);
+-int update_all_runtime_data(void);
+-int update_program_status_data(void);
+-int update_external_commands(void);
+-int update_downtime_data(void);
+-int remove_old_downtimes(void);
+-int update_comment_data(void);
+-int remove_old_comments(void);
+-char *get_default_livestatus_module(void);
+-int clean_output_folder(void);
+-int write_config_files(void);
+-int write_commands_configuration(FILE *file);
+-int write_timeperiods_configuration(FILE *file);
+-int write_contactgroups_configuration(FILE *file);
+-int write_hostgroups_configuration(FILE *file);
+-int write_servicegroups_configuration(FILE *file);
+-int write_contacts_configuration(FILE *file);
+-int write_hosts_configuration(FILE *file);
+-int write_services_configuration(FILE *file);
+-int run_refresh_loop(void);
+-int open_local_socket(char *socket_path);
+-int open_tcp_socket(char *connection_string);
+-int write_list_attribute(FILE *file, char* attr, char* rawlist);
+-int write_custom_variables(FILE *file, char* rawnames, char* rawvalues);
+-int get_delta_request_count(void);
+-static void fetch_status_data(struct nm_event_execution_properties *evprop);

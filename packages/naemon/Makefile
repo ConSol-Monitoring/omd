@@ -9,7 +9,6 @@ DIR = $(NAME)-core-$(VERSION)
 # All files will be packaged as user 'root' later anyway.
 CONFIGUREOPTS = \
     --bindir=$(OMD_ROOT)/bin \
-    --enable-event-broker \
     --with-naemon-user=$$(id -un) \
     --with-naemon-group=$$(id -gn) \
     --without-tests
@@ -27,7 +26,6 @@ build:
 install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/bin
 	install -m 755 $(DIR)/src/naemon/.libs/naemon             $(DESTDIR)$(OMD_ROOT)/bin
-	install -m 755 $(DIR)/src/shadownaemon/.libs/shadownaemon $(DESTDIR)$(OMD_ROOT)/bin
 	install -m 755 $(DIR)/src/naemonstats/.libs/naemonstats   $(DESTDIR)$(OMD_ROOT)/bin
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib
 	install -m 755 $(DIR)/.libs/libnaemon*.so*                $(DESTDIR)$(OMD_ROOT)/lib
