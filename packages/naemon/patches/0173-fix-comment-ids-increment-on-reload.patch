@@ -1,0 +1,239 @@
+From fc84ae35cdc304312eba468e48353f9bce64a666 Mon Sep 17 00:00:00 2001
+From: Sven Nierlein <sven@nierlein.de>
+Date: Tue, 4 Apr 2017 17:00:57 +0200
+Subject: [PATCH 1/3] fix comment ids increment on reload
+
+Comments related to downtimes are beeing added with persistance=false flag. This
+leads to the comment beeing removed during a reload. The downtime then immediatly
+adds the comment again but the id increments each reload. Furter this results in
+a warning from livestatus for each downtime on every reload:
+livestatus: Cannot delete non-existing downtime/comment
+
+Signed-off-by: Sven Nierlein <sven@nierlein.de>
+---
+ src/naemon/xrddefault.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/src/naemon/xrddefault.c b/src/naemon/xrddefault.c
+index d9f8bdc5..9898ab85 100644
+--- a/src/naemon/xrddefault.c
++++ b/src/naemon/xrddefault.c
+@@ -739,6 +739,9 @@ int xrddefault_read_state_information(void)
+ 					if (ack == FALSE && persistent == FALSE)
+ 						force_remove = TRUE;
+ 				}
++				/* comments from downtimes don't get removed, they would be immediatly added again anyway, but with incremented id for each reload */
++				else if (entry_type == DOWNTIME_COMMENT) {
++				}
+ 				/* non-persistent comments don't last past restarts UNLESS they're acks (see above) */
+ 				else if (persistent == FALSE)
+ 					force_remove = TRUE;
+
+From f1317ee1bbdedf7774fa5b42798e66d46e77d8a6 Mon Sep 17 00:00:00 2001
+From: Sven Nierlein <sven@nierlein.de>
+Date: Mon, 24 Jul 2017 11:54:19 +0200
+Subject: [PATCH 2/3] fix duplicating comments
+
+Previous commit lead to duplicating comments on each reload. So we need to
+check the comment_id from the retention file and consider that one when
+registering the downtime.
+
+Signed-off-by: Sven Nierlein <sven@nierlein.de>
+---
+ src/naemon/downtime.c   | 26 +++++++++++++++-----------
+ src/naemon/downtime.h   |  6 +++---
+ src/naemon/xrddefault.c |  4 ++--
+ 3 files changed, 20 insertions(+), 16 deletions(-)
+
+diff --git a/src/naemon/downtime.c b/src/naemon/downtime.c
+index eaa1357d..b37b63a3 100644
+--- a/src/naemon/downtime.c
++++ b/src/naemon/downtime.c
+@@ -486,10 +486,12 @@ int register_downtime(int type, unsigned long downtime_id)
+ 
+ 
+ 	/* add a non-persistent comment to the host or service regarding the scheduled outage */
+-	if (temp_downtime->type == SERVICE_DOWNTIME)
+-		add_new_comment(SERVICE_COMMENT, DOWNTIME_COMMENT, svc->host_name, svc->description, time(NULL), (NULL == temp_downtime->author ? "(Nagios Process)" : temp_downtime->author), temp_buffer, 0, COMMENTSOURCE_INTERNAL, FALSE, (time_t)0, &(temp_downtime->comment_id));
+-	else
+-		add_new_comment(HOST_COMMENT, DOWNTIME_COMMENT, hst->name, NULL, time(NULL), (NULL == temp_downtime->author ? "(Nagios Process)" : temp_downtime->author), temp_buffer, 0, COMMENTSOURCE_INTERNAL, FALSE, (time_t)0, &(temp_downtime->comment_id));
++	if (temp_downtime->comment_id == 0) {
++		if (temp_downtime->type == SERVICE_DOWNTIME)
++			add_new_comment(SERVICE_COMMENT, DOWNTIME_COMMENT, svc->host_name, svc->description, time(NULL), (NULL == temp_downtime->author ? "(Nagios Process)" : temp_downtime->author), temp_buffer, 0, COMMENTSOURCE_INTERNAL, FALSE, (time_t)0, &(temp_downtime->comment_id));
++		else
++			add_new_comment(HOST_COMMENT, DOWNTIME_COMMENT, hst->name, NULL, time(NULL), (NULL == temp_downtime->author ? "(Nagios Process)" : temp_downtime->author), temp_buffer, 0, COMMENTSOURCE_INTERNAL, FALSE, (time_t)0, &(temp_downtime->comment_id));
++	}
+ 
+ 	nm_free(temp_buffer);
+ 	if (temp_downtime->is_in_effect) { /* in effect, so schedule a stop event*/
+@@ -978,7 +980,7 @@ int add_new_host_downtime(char *host_name, time_t entry_time, char *author, char
+ 	}
+ 
+ 	new_downtime_id = get_next_downtime_id();
+-	result = add_host_downtime(host_name, entry_time, author, comment_data, start_time, 0, end_time, fixed, triggered_by, duration, new_downtime_id, is_in_effect, start_notification_sent);
++	result = add_host_downtime(host_name, entry_time, author, comment_data, start_time, 0, end_time, fixed, triggered_by, duration, new_downtime_id, is_in_effect, start_notification_sent, NULL);
+ 
+ 	/* save downtime id */
+ 	if (downtime_id != NULL)
+@@ -1011,7 +1013,7 @@ int add_new_service_downtime(char *host_name, char *service_description, time_t
+ 	}
+ 
+ 	new_downtime_id = get_next_downtime_id();
+-	result = add_service_downtime(host_name, service_description, entry_time, author, comment_data, start_time, 0, end_time, fixed, triggered_by, duration, new_downtime_id, is_in_effect, start_notification_sent);
++	result = add_service_downtime(host_name, service_description, entry_time, author, comment_data, start_time, 0, end_time, fixed, triggered_by, duration, new_downtime_id, is_in_effect, start_notification_sent, NULL);
+ 
+ 	/* save downtime id */
+ 	if (downtime_id != NULL)
+@@ -1129,21 +1131,21 @@ int delete_downtime_by_hostname_service_description_start_time_comment(char *hos
+ /******************************************************************/
+ 
+ /* adds a host downtime entry to the list in memory */
+-int add_host_downtime(char *host_name, time_t entry_time, char *author, char *comment_data, time_t start_time, time_t flex_downtime_start, time_t end_time, int fixed, unsigned long triggered_by, unsigned long duration, unsigned long downtime_id, int is_in_effect, int start_notification_sent)
++int add_host_downtime(char *host_name, time_t entry_time, char *author, char *comment_data, time_t start_time, time_t flex_downtime_start, time_t end_time, int fixed, unsigned long triggered_by, unsigned long duration, unsigned long downtime_id, int is_in_effect, int start_notification_sent, unsigned long * comment_id)
+ {
+-	return add_downtime(HOST_DOWNTIME, host_name, NULL, entry_time, author, comment_data, start_time, flex_downtime_start, end_time, fixed, triggered_by, duration, downtime_id, is_in_effect, start_notification_sent);
++	return add_downtime(HOST_DOWNTIME, host_name, NULL, entry_time, author, comment_data, start_time, flex_downtime_start, end_time, fixed, triggered_by, duration, downtime_id, is_in_effect, start_notification_sent, comment_id);
+ }
+ 
+ 
+ /* adds a service downtime entry to the list in memory */
+-int add_service_downtime(char *host_name, char *svc_description, time_t entry_time, char *author, char *comment_data, time_t start_time, time_t flex_downtime_start, time_t end_time, int fixed, unsigned long triggered_by, unsigned long duration, unsigned long downtime_id, int is_in_effect, int start_notification_sent)
++int add_service_downtime(char *host_name, char *svc_description, time_t entry_time, char *author, char *comment_data, time_t start_time, time_t flex_downtime_start, time_t end_time, int fixed, unsigned long triggered_by, unsigned long duration, unsigned long downtime_id, int is_in_effect, int start_notification_sent, unsigned long * comment_id)
+ {
+-	return add_downtime(SERVICE_DOWNTIME, host_name, svc_description, entry_time, author, comment_data, start_time, flex_downtime_start, end_time, fixed, triggered_by, duration, downtime_id, is_in_effect, start_notification_sent);
++	return add_downtime(SERVICE_DOWNTIME, host_name, svc_description, entry_time, author, comment_data, start_time, flex_downtime_start, end_time, fixed, triggered_by, duration, downtime_id, is_in_effect, start_notification_sent, comment_id);
+ }
+ 
+ 
+ /* adds a host or service downtime entry to the list in memory */
+-int add_downtime(int downtime_type, char *host_name, char *svc_description, time_t entry_time, char *author, char *comment_data, time_t start_time, time_t flex_downtime_start, time_t end_time, int fixed, unsigned long triggered_by, unsigned long duration, unsigned long downtime_id, int is_in_effect, int start_notification_sent)
++int add_downtime(int downtime_type, char *host_name, char *svc_description, time_t entry_time, char *author, char *comment_data, time_t start_time, time_t flex_downtime_start, time_t end_time, int fixed, unsigned long triggered_by, unsigned long duration, unsigned long downtime_id, int is_in_effect, int start_notification_sent, unsigned long * comment_id)
+ {
+ 	scheduled_downtime *new_downtime = NULL;
+ 	int result = OK;
+@@ -1186,6 +1188,8 @@ int add_downtime(int downtime_type, char *host_name, char *svc_description, time
+ 	new_downtime->start_notification_sent = start_notification_sent;
+ 	new_downtime->start_event = (timed_event *)0;
+ 	new_downtime->stop_event = (timed_event *)0;
++	if (comment_id != NULL)
++		new_downtime->comment_id = *comment_id;
+ 	if (result != ERROR) {
+ 		result = downtime_add(new_downtime);
+ 		if (result) {
+diff --git a/src/naemon/downtime.h b/src/naemon/downtime.h
+index 7c1686ce..c7cfa230 100644
+--- a/src/naemon/downtime.h
++++ b/src/naemon/downtime.h
+@@ -60,15 +60,15 @@ int handle_scheduled_downtime_by_id(unsigned long);
+ int check_pending_flex_host_downtime(struct host *);
+ int check_pending_flex_service_downtime(struct service *);
+ 
+-int add_host_downtime(char *, time_t, char *, char *, time_t, time_t, time_t, int, unsigned long, unsigned long, unsigned long, int, int);
+-int add_service_downtime(char *, char *, time_t, char *, char *, time_t, time_t, time_t, int, unsigned long, unsigned long, unsigned long, int, int);
++int add_host_downtime(char *, time_t, char *, char *, time_t, time_t, time_t, int, unsigned long, unsigned long, unsigned long, int, int, unsigned long *);
++int add_service_downtime(char *, char *, time_t, char *, char *, time_t, time_t, time_t, int, unsigned long, unsigned long, unsigned long, int, int, unsigned long *);
+ 
+ /* If you are going to be adding a lot of downtime in sequence, set
+    defer_downtime_sorting to 1 before you start and then call
+    sort_downtime afterwards. Things will go MUCH faster. */
+ 
+ extern int defer_downtime_sorting;
+-int add_downtime(int, char *, char *, time_t, char *, char *, time_t, time_t, time_t, int, unsigned long, unsigned long, unsigned long, int, int);
++int add_downtime(int, char *, char *, time_t, char *, char *, time_t, time_t, time_t, int, unsigned long, unsigned long, unsigned long, int, int, unsigned long *);
+ int sort_downtime(void);
+ 
+ struct scheduled_downtime *find_downtime(int, unsigned long);
+diff --git a/src/naemon/xrddefault.c b/src/naemon/xrddefault.c
+index 9898ab85..d30b8ee8 100644
+--- a/src/naemon/xrddefault.c
++++ b/src/naemon/xrddefault.c
+@@ -810,7 +810,7 @@ int xrddefault_read_state_information(void)
+ 					/* add the downtime */
+ 					if (data_type == XRDDEFAULT_HOSTDOWNTIME_DATA) {
+ 						host *hst = NULL;
+-						add_host_downtime(host_name, entry_time, author, comment_data, start_time, flex_downtime_start, end_time, fixed, triggered_by, duration, downtime_id, is_in_effect, start_notification_sent);
++						add_host_downtime(host_name, entry_time, author, comment_data, start_time, flex_downtime_start, end_time, fixed, triggered_by, duration, downtime_id, is_in_effect, start_notification_sent, &comment_id);
+ 
+ 						if (is_in_effect && (hst = find_host(host_name)) != NULL ) {
+ 							hst->scheduled_downtime_depth++;
+@@ -818,7 +818,7 @@ int xrddefault_read_state_information(void)
+ 					}
+ 					else {
+ 						service *svc = NULL;
+-						add_service_downtime(host_name, service_description, entry_time, author, comment_data, start_time, flex_downtime_start, end_time, fixed, triggered_by, duration, downtime_id, is_in_effect, start_notification_sent);
++						add_service_downtime(host_name, service_description, entry_time, author, comment_data, start_time, flex_downtime_start, end_time, fixed, triggered_by, duration, downtime_id, is_in_effect, start_notification_sent, &comment_id);
+ 						if (is_in_effect && (svc = find_service(host_name, service_description)) != NULL ) {
+ 							svc->scheduled_downtime_depth++;
+ 						}
+
+From a982e4e593428bcb3a6e38c8cb986b8c2a0108fd Mon Sep 17 00:00:00 2001
+From: Sven Nierlein <sven@nierlein.de>
+Date: Mon, 24 Jul 2017 13:29:29 +0200
+Subject: [PATCH 3/3] add downtime reload test case
+
+Signed-off-by: Sven Nierlein <sven@nierlein.de>
+---
+ src/naemon/downtime.c            |  2 +-
+ tests/test-scheduled-downtimes.c | 29 +++++++++++++++++++++++++++++
+ 2 files changed, 30 insertions(+), 1 deletion(-)
+
+diff --git a/src/naemon/downtime.c b/src/naemon/downtime.c
+index b37b63a3..b3db876b 100644
+--- a/src/naemon/downtime.c
++++ b/src/naemon/downtime.c
+@@ -486,7 +486,7 @@ int register_downtime(int type, unsigned long downtime_id)
+ 
+ 
+ 	/* add a non-persistent comment to the host or service regarding the scheduled outage */
+-	if (temp_downtime->comment_id == 0) {
++	if (find_comment(temp_downtime->comment_id, HOST_COMMENT | SERVICE_COMMENT) == NULL) {
+ 		if (temp_downtime->type == SERVICE_DOWNTIME)
+ 			add_new_comment(SERVICE_COMMENT, DOWNTIME_COMMENT, svc->host_name, svc->description, time(NULL), (NULL == temp_downtime->author ? "(Nagios Process)" : temp_downtime->author), temp_buffer, 0, COMMENTSOURCE_INTERNAL, FALSE, (time_t)0, &(temp_downtime->comment_id));
+ 		else
+diff --git a/tests/test-scheduled-downtimes.c b/tests/test-scheduled-downtimes.c
+index e157c047..15fe4043 100644
+--- a/tests/test-scheduled-downtimes.c
++++ b/tests/test-scheduled-downtimes.c
+@@ -262,6 +262,34 @@ START_TEST(host_fixed_scheduled_downtime_depth_retained_across_reload)
+ }
+ END_TEST
+ 
++START_TEST(host_downtime_id_retained_across_reload)
++{
++	time_t now = time(NULL);
++	int fixed = 0;
++	unsigned long downtime_id;
++	unsigned long duration = 60;
++	unsigned long triggered_by = 0;
++	scheduled_downtime *dt = NULL;
++	unsigned long comment_id;
++
++	schedule_downtime(HOST_DOWNTIME, TARGET_HOST_NAME, NULL, now, "Some downtime author",
++			"Some downtime comment", now, now+duration,
++			fixed, triggered_by, duration, &downtime_id);
++
++	dt = find_downtime(ANY_DOWNTIME, downtime_id);
++	ck_assert(dt != NULL);
++	ck_assert(0 == dt->comment_id);
++
++	ck_assert(OK == handle_scheduled_downtime(dt));
++	comment_id = dt->comment_id;
++
++	simulate_naemon_reload();
++	dt = find_downtime(ANY_DOWNTIME, downtime_id);
++
++	ck_assert_int_eq(comment_id, dt->comment_id);
++}
++END_TEST
++
+ START_TEST(host_flexible_scheduled_downtime)
+ {
+ 	time_t now = time(NULL);
+@@ -558,6 +586,7 @@ scheduled_downtimes_suite(void)
+ 	tcase_add_test(tc_fixed_scheduled_downtimes, host_fixed_scheduled_downtime_cancelled);
+ 	tcase_add_test(tc_fixed_scheduled_downtimes, host_fixed_scheduled_downtime_stopped);
+ 	tcase_add_test(tc_fixed_scheduled_downtimes, host_fixed_scheduled_downtime_depth_retained_across_reload);
++	tcase_add_test(tc_fixed_scheduled_downtimes, host_downtime_id_retained_across_reload);
+ 	tcase_add_test(tc_fixed_scheduled_downtimes, host_multiple_fixed_scheduled_downtimes);
+ 	tcase_add_test(tc_fixed_scheduled_downtimes, host_multiple_fixed_scheduled_downtimes_one_cancelled_one_stopped);
+ 
