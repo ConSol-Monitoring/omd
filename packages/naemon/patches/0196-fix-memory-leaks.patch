@@ -1,18 +1,18 @@
-From d78eba71a69ce8ec96e6b4417a447ba0ad79c96d Mon Sep 17 00:00:00 2001
+From a1236a98a35de4af81b8dc09025588df2a1354fa Mon Sep 17 00:00:00 2001
 From: Sven Nierlein <sven@nierlein.de>
-Date: Mon, 24 Jul 2017 10:58:36 +0200
+Date: Mon, 24 Jul 2017 14:48:22 +0200
 Subject: [PATCH] cleanup minor memory leaks
 
 to make valgrind output a bit cleaner.
+
+Signed-off-by: Sven Nierlein <sven@nierlein.de>
 ---
- src/naemon/logging.c     |  3 +++
- src/naemon/logging.h     |  1 +
- src/naemon/naemon.c      |  2 +-
- src/naemon/sretention.c  |  4 ++++
- src/naemon/utils.c       |  9 +++++++++
- src/naemon/xodtemplate.c | 18 ++++++++++++++++++
- src/naemon/xodtemplate.h |  1 +
- 7 files changed, 37 insertions(+), 1 deletion(-)
+ src/naemon/logging.c    | 3 +++
+ src/naemon/logging.h    | 1 +
+ src/naemon/naemon.c     | 2 +-
+ src/naemon/sretention.c | 4 ++++
+ src/naemon/utils.c      | 7 +++++++
+ 5 files changed, 16 insertions(+), 1 deletion(-)
 
 diff --git a/src/naemon/logging.c b/src/naemon/logging.c
 index f1d93ed5..9a1ab047 100644
@@ -69,27 +69,10 @@ index 045d72e8..ce22a7bd 100644
  	return xrddefault_cleanup_retention_data();
  }
 diff --git a/src/naemon/utils.c b/src/naemon/utils.c
-index f903ef33..a489799c 100644
+index f903ef33..53588c67 100644
 --- a/src/naemon/utils.c
 +++ b/src/naemon/utils.c
-@@ -23,6 +23,7 @@
- #include "globals.h"
- #include "nm_alloc.h"
- #include "perfdata.h"
-+#include "xodtemplate.h"
- #include <assert.h>
- #include <limits.h>
- #include <sys/types.h>
-@@ -944,6 +945,8 @@ void cleanup(void)
- 		neb_deinit_modules();
- 	}
- 
-+	xodtemplate_destroy_trees();
-+
- 	/* free all allocated memory - including macros */
- 	free_memory(get_global_macros());
- 	close_log_file();
-@@ -1033,6 +1036,12 @@ void free_memory(nagios_macros *mac)
+@@ -1033,6 +1033,13 @@ void free_memory(nagios_macros *mac)
  	nm_free(mac->x[MACRO_RESOURCEFILE]);
  	nm_free(mac->x[MACRO_OBJECTCACHEFILE]);
  	nm_free(mac->x[MACRO_MAINCONFIGFILE]);
@@ -98,48 +81,8 @@ index f903ef33..a489799c 100644
 +	nm_free(mac->x[MACRO_PROCESSSTARTTIME]);
 +	nm_free(mac->x[MACRO_EVENTSTARTTIME]);
 +
-+	g_log_remove_handler("GLib", nm_g_log_handler_id);
++	if (nm_g_log_handler_id > 0)
++		g_log_remove_handler("GLib", nm_g_log_handler_id);
  
  	return;
  }
-diff --git a/src/naemon/xodtemplate.c b/src/naemon/xodtemplate.c
-index d5fd1cda..c21b4f40 100644
---- a/src/naemon/xodtemplate.c
-+++ b/src/naemon/xodtemplate.c
-@@ -694,6 +694,24 @@ static int xodtemplate_init_trees(void)
- 	return OK;
- }
- 
-+void xodtemplate_destroy_trees(void)
-+{
-+	g_tree_destroy(xobject_template_tree[OBJTYPE_HOST]);
-+	g_tree_destroy(xobject_template_tree[OBJTYPE_SERVICE]);
-+	g_tree_destroy(xobject_template_tree[OBJTYPE_COMMAND]);
-+	g_tree_destroy(xobject_template_tree[OBJTYPE_TIMEPERIOD]);
-+	g_tree_destroy(xobject_template_tree[OBJTYPE_CONTACT]);
-+	g_tree_destroy(xobject_template_tree[OBJTYPE_CONTACTGROUP]);
-+	g_tree_destroy(xobject_template_tree[OBJTYPE_HOSTGROUP]);
-+	g_tree_destroy(xobject_template_tree[OBJTYPE_SERVICEGROUP]);
-+	g_tree_destroy(xobject_template_tree[OBJTYPE_HOSTDEPENDENCY]);
-+	g_tree_destroy(xobject_template_tree[OBJTYPE_SERVICEDEPENDENCY]);
-+	g_tree_destroy(xobject_template_tree[OBJTYPE_HOSTESCALATION]);
-+	g_tree_destroy(xobject_template_tree[OBJTYPE_SERVICEESCALATION]);
-+	g_tree_destroy(xobject_template_tree[OBJTYPE_HOSTEXTINFO]);
-+	g_tree_destroy(xobject_template_tree[OBJTYPE_SERVICEEXTINFO]);
-+}
-+
- 
- /*
-  * all objects start the same way, so we can get rid of quite
-diff --git a/src/naemon/xodtemplate.h b/src/naemon/xodtemplate.h
-index f56c1247..d4130301 100644
---- a/src/naemon/xodtemplate.h
-+++ b/src/naemon/xodtemplate.h
-@@ -715,6 +715,7 @@ typedef struct xodtemplate_memberlist_struct {
- /********* FUNCTION DEFINITIONS **********/
- 
- int xodtemplate_read_config_data(const char *);    /* top-level routine processes all config files */
-+void xodtemplate_destroy_trees(void);
- 
- NAGIOS_END_DECL
- 
