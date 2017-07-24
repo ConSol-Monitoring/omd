@@ -629,11 +629,13 @@ def load_skel_permissions_for_path(file_path):
     except:
         return None
 
-def get_skel_permissions(version, perms, relpath):
+def get_skel_permissions(version, perms, relpath, skel_path = None):
+    if not skel_path:
+        skel_path = "/omd/versions/%s/skel" % (version)
     try:
         return perms[relpath]
     except:
-        return get_file_permissions("/omd/versions/%s/skel/%s" % (version, relpath))
+        return get_file_permissions("%s/%s" % (skel_path, relpath))
 
 def get_file_permissions(path):
     try:
@@ -1394,7 +1396,7 @@ def update_file(relpath, old_version, new_version, userdir, old_perms, old_skel 
     # something himself.
 
     user_type = filetype(user_path)
-    old_perm     = get_skel_permissions(old_version, old_perms, relpath)
+    old_perm     = get_skel_permissions(old_version, old_perms, relpath, old_skel)
     new_perm     = get_skel_permissions(new_version, g_skel_permissions, relpath)
     user_perm    = get_file_permissions(user_path)
 
@@ -3320,7 +3322,7 @@ def main_restore(args, options={}):
 
     if not version_exists(version):
         backup_skel_tarinfo = tar.next()
-        if backup_skel_tarinfo.name.find("/version/skel") == -1:
+        if backup_skel_tarinfo.name.find("/version/skel") == -1 and backup_skel_tarinfo.name.find("/.backup_meta/skel") == -1:
             bail_out("This is an old incomplete backup and its version is not installed.\n"
                      "Either install version %s or create the backup manually with this command:\n"
                      "cd /omd/sites/ && tar cfz /tmp/$OMD_SITE.backup.tgz $OMD_SITE/version $OMD_SITE/version/skel $OMD_SITE/share/omd/skel.permissions $OMD_SITE\n"
