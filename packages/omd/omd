@@ -2459,15 +2459,24 @@ def main_version(args, options={}):
     if "bare" in options:
         sys.stdout.write(version + "\n")
     else:
+        try:
+            version += (", Addons: " + ", ".join(os.listdir("/omd/versions/%s/addon/" % version)))
+        except:
+            pass
         sys.stdout.write("OMD - Open Monitoring Distribution Version %s\n" % version)
 
 
 def main_versions(args, options={}):
     for v in omd_versions():
+        addons=""
+        try:
+            addons = (", addons: " + ", ".join(os.listdir("/omd/versions/%s/addon/" % v)))
+        except:
+            pass
         if v == default_version() and not "bare" in options:
-            sys.stdout.write("%s (default)\n" % v)
+            sys.stdout.write("%s (default%s)\n" % (v, addons))
         else:
-            sys.stdout.write("%s\n" % v)
+            sys.stdout.write("%s%s\n" % (v,addons))
 
 def default_version():
     return os.path.basename(os.path.realpath("/omd/versions/default"))
@@ -2497,6 +2506,10 @@ def main_sites(args, options={}):
                 tags.append("default version")
             if disabled:
                 tags.append(tty_bold + tty_red + "disabled" + tty_normal)
+            try:
+                tags.append("addons: " + ", ".join(os.listdir("/omd/versions/%s/addon/" % v)))
+            except:
+                pass
             sys.stdout.write("%-16s %-16s %s " % (site, v, ", ".join(tags)))
             sys.stdout.write("\n")
 
