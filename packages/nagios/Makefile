@@ -78,9 +78,6 @@ install:
 	   install -m 644 $(DIR)/$$file $(DESTDIR)$(OMD_ROOT)/share/doc/$(NAME); \
 	done
 	
-	mkdir -p $(DESTDIR)$(OMD_ROOT)/bin
-	install -m 755 merge-nagios-config $(DESTDIR)$(OMD_ROOT)/bin
-	
 	# Install the diskspace cleanup plugin
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/diskspace
 	install -m 644 diskspace $(DESTDIR)$(OMD_ROOT)/share/diskspace/nagios
