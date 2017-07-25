@@ -1,0 +1,1 @@
+17 3 * * * . $OMD_ROOT/etc/omd/site.conf; [ "$CONFIG_CORE" == "naemon" ] && $OMD_ROOT/bin/purge_naemon
