@@ -990,6 +990,8 @@ def merge_update_file(relpath, old_version, new_version, skel_path = None):
     def try_merge():
         for version in [ old_version, new_version ]:
             p = "%s/%s" % (skel_path, relpath)
+            if version == new_version:
+                p = "/omd/versions/%s/skel/%s" % (new_version, relpath)
             while True:
                 try:
                     skel_content = file(p).read()
