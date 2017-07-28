@@ -2947,8 +2947,35 @@ def main_vimdiff(args, options={}):
 
     if len(args) == 0:
         bail_out("Sorry, 'omd vimdiff' requires a filename as argument.")
-    elif len(args) == 1 and os.path.isfile(args[0]):
-        diff_list(from_skelroot, g_sitedir, from_version, args[0], "vimdiff")
+
+    for arg in args:
+        diff_list(from_skelroot, g_sitedir, from_version, arg, "vimdiff")
+
+def main_reset(args, options={}):
+    from_version  = site_version(g_sitename)
+    from_skelroot = "/omd/versions/%s/skel" % from_version
+    sitedir = site_dir(g_sitename)
+
+    if len(args) == 0:
+        bail_out("Sorry, 'omd reset' requires a filename as argument.")
+
+    replacements = {
+        "###SITE###" : g_sitename,
+        "###ROOT###" : sitedir,
+    }
+    skelroot = "/omd/versions/%s/skel" % OMD_VERSION
+    read_skel_permissions()
+
+    for arg in args:
+        if not os.path.exists(skelroot + '/' + arg):
+            bail_out("file %s does not exist in skeleton"  % (arg))
+        try:
+            os.remove(arg)
+        except Exception, e:
+            pass
+        create_skeleton_file(skelroot, sitedir, arg, replacements)
+
+    config_set_all()
 
 
 def diff_list(from_skelroot, g_sitedir, from_version, orig_path, diff_binary = None):
@@ -3728,6 +3755,11 @@ commands = [
   ( "vimdiff",   False, False, 1, 1, False, "([RELBASE])", main_vimdiff,
     [],
     "Opens vimdiff with the current file and the default version of that file",
+    ""),
+
+  ( "reset",   False, False, 1, 1, False, "([RELBASE])", main_reset,
+    [],
+    "Reset file to default version from skeleton",
     ""),
 
   ( "su",     True, False, 1, 1, False, "", main_su,
