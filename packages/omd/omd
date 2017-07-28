@@ -901,6 +901,7 @@ def patch_template_file(src, dst, old, new):
             ( "diff",      "Show conversion patch, that I've tried to apply" ),
             ( "you",       "Show your changes compared with the original default version" ),
             ( "edit",      "Edit half-converted file (watch out for >>>> and <<<<)" ),
+            ( "vimdiff",   "Edit files with vimdiff to manually resolve conflicts" ),
             ( "try again", "Edit your original file and try again"),
             ( "keep",      "Keep half-converted version of the file" ),
             ( "restore",   "Restore your original version of the file" ),
@@ -930,6 +931,14 @@ def patch_template_file(src, dst, old, new):
                 os.system("%s '%s'" % (get_editor(), dst))
             elif choice == "diff":
                 os.system("diff -u %s %s%s" % (old_orig_path, new_orig_path, pipe_pager()))
+            elif choice == "vimdiff":
+                os.system("vimdiff %s %s" % (old_orig_path, new_orig_path))
+                if user_confirms("Is the conflict at " + old_orig_path + " resolved?",
+                        "Continue or start over",
+                        old_orig_path,
+                        "yes", "Continue",
+                        "no", "Start over"):
+                    break
             elif choice == "brute":
                 os.system("sed 's@/%s/@/%s/@g' %s.orig > %s" % (old, new, dst, dst))
                 changed = len([ l for l in os.popen("diff %s.orig %s" % (dst, dst)).readlines()
@@ -1047,6 +1056,7 @@ def merge_update_file(relpath, old_version, new_version, skel_path = None):
         options.append( ( "missing",   "Show which changes from the update have not been merged" ))
     options += [
         ( "edit",      "Edit half-merged file%s" % merge_message ),
+        ( "vimdiff",   "Edit files with vimdiff to manually resolve conflicts" ),
         ( "try again", "Edit your original file and try again"),
         ( "keep",      "Keep half-merged version of the file" ),
         ( "restore",   "Restore your original version of the file" ),
@@ -1074,6 +1084,17 @@ def merge_update_file(relpath, old_version, new_version, skel_path = None):
             os.system("%s '%s'" % (editor, user_path))
         elif choice == "diff":
             os.system("diff -u %s.orig %s-%s%s" % (user_path, user_path, new_version, pipe_pager()))
+        elif choice == "vimdiff":
+            # restore our version and call vimdiff
+            file(user_path, "w").write(file(user_path + ".orig").read())
+            os.chmod(user_path, permissions)
+            os.system("vimdiff %s %s-%s" % (user_path, user_path, new_version))
+            if user_confirms("Is the conflict at " + user_path + " resolved?",
+                    "Continue or start over",
+                    user_path,
+                    "yes", "Continue",
+                    "no", "Start over"):
+                break
         elif choice == "you":
             os.system("diff -u %s-%s %s.orig%s" % (user_path, old_version, user_path, pipe_pager()))
         elif choice == "new":
@@ -2915,8 +2936,22 @@ def main_diff(args, options={}):
         diff_list(from_skelroot, g_sitedir, from_version, arg)
 
 
+def main_vimdiff(args, options={}):
+    from_version  = site_version(g_sitename)
+    from_skelroot = "/omd/versions/%s/skel" % from_version
 
-def diff_list(from_skelroot, g_sitedir, from_version, orig_path):
+    global bare
+    bare = "" # sorry for the global variable here
+    global opt_verbose
+    opt_verbose = True
+
+    if len(args) == 0:
+        bail_out("Sorry, 'omd vimdiff' requires a filename as argument.")
+    elif len(args) == 1 and os.path.isfile(args[0]):
+        diff_list(from_skelroot, g_sitedir, from_version, args[0], "vimdiff")
+
+
+def diff_list(from_skelroot, g_sitedir, from_version, orig_path, diff_binary = None):
     # Compare a list of files/directories with the original state
     # and output differences. If opt_verbose then we output the complete
     # diff, otherwise just the state. Only files present in skel/ are
@@ -2956,7 +2991,7 @@ def diff_list(from_skelroot, g_sitedir, from_version, orig_path):
         bail_out("Sorry, 'omd diff' only works for files in the site's directory.")
 
     if not os.path.isdir(abs_path):
-        print_diff(rel_path, from_skelroot, g_sitedir, from_version, old_perms)
+        print_diff(rel_path, from_skelroot, g_sitedir, from_version, old_perms, diff_binary)
     else:
         if not rel_path:
             rel_path = "."
@@ -2964,7 +2999,7 @@ def diff_list(from_skelroot, g_sitedir, from_version, orig_path):
                   from_version, old_perms), depth_first=False, relbase = rel_path)
 
 
-def print_diff(rel_path, source_path, target_path, source_version, source_perms):
+def print_diff(rel_path, source_path, target_path, source_version, source_perms, diff_binary = None):
     source_file = source_path + '/' + rel_path
     target_file = target_path + '/' + rel_path
 
@@ -2995,7 +3030,13 @@ def print_diff(rel_path, source_path, target_path, source_version, source_perms)
                     diff = "colordiff"
                 else:
                     diff = "diff"
-                os.popen("bash -c \"%s -u <(cat) '%s'\"" % (diff, target_file), "w").write(source_content)
+                if diff_binary:
+                    skel_tmp_file = target_file + '.skel_default'
+                    file(skel_tmp_file, "w").write(source_content)
+                    os.system("%s %s %s" % (diff_binary, target_file, skel_tmp_file))
+                    os.remove(skel_tmp_file)
+                else:
+                    os.popen("bash -c \"%s -u <(cat) '%s'\"" % (diff, target_file), "w").write(source_content)
             elif status == 'p':
                 sys.stdout.write("    %s %s %s\n" % (source_perm, arrow, target_perm))
             elif 't' in status:
@@ -3682,6 +3723,11 @@ commands = [
   ( "diff",      False, False, 1, 1, False, "([RELBASE])", main_diff,
     [("bare", "b", False, "output plain diff format, no beautifying" )],
     "Shows differences compared to the original version files",
+    ""),
+
+  ( "vimdiff",   False, False, 1, 1, False, "([RELBASE])", main_vimdiff,
+    [],
+    "Opens vimdiff with the current file and the default version of that file",
     ""),
 
   ( "su",     True, False, 1, 1, False, "", main_su,
