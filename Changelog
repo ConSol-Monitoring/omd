@@ -8,6 +8,9 @@ next:
           - Mod-Gearman: Update 3.0.5
           - Added build support for Debian 10, Ubuntu 17.04
           - omd:
+            - add vimdiff option to resolve merge conflicts
+            - add vimdiff command to quickly compare config files
+            - add reset command to restore a skeleton file from default
             - support hot backups without stopping the site
 
 2.40     May 13 2019

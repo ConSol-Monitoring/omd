@@ -11,7 +11,7 @@ _omd_cmd_options() {
 _omd()
 {
     local GLOBALCMDS="sites|version|versions|help"
-    local SITECMDS="start|stop|restart|reload|status|update|config|backup|restore|diff"
+    local SITECMDS="start|stop|restart|reload|status|update|config|backup|restore|diff|reset|vimdiff"
     local ROOTCMDS="create|setversion"
     local ROOTSITECMDS="rm|mv|cp|disable|enable|init|su"
 
@@ -92,7 +92,7 @@ _omd()
         return 0
 
     # omd diff ...
-    elif [[ $subcmd = diff ]]; then
+    elif [[ $subcmd =~ diff|vimdiff|reset ]]; then
         if [ $EUID -eq 0 ]; then
             opts="$(_omd_cmd_options $subcmd) $(omd diff -b $site | awk '{print $2}')"
         else

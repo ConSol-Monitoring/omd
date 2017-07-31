@@ -12,7 +12,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 219 );
+plan( tests => 237 );
 
 my $omd_bin = TestUtils::get_omd_bin();
 
@@ -53,7 +53,7 @@ my $tests = [
                                                ]
   },
   { cmd => $omd_bin." stop $site",       like => '/Stopping naemon/' },
-  { cmd => $omd_bin." cp $site $site2",  like => '/Copying site '.$site.' to '.$site2.'.../', 
+  { cmd => $omd_bin." cp $site $site2",  like => '/Copying site '.$site.' to '.$site2.'.../',
                                          errlike => '/Apache port \d+ is in use\. I\'ve choosen \d+ instead\./' },
   { cmd => $omd_bin." config $site2 show APACHE_TCP_PORT",  like => '/^5001$/' },
   { cmd => "/usr/bin/find /omd/sites/$site2/ -not -user $site2 -ls",  like => '/^\s*$/' },
@@ -64,12 +64,12 @@ my $tests = [
   { cmd => "/bin/df -k /omd/sites/$site3/tmp/.", like => '/tmpfs/m' },
   { cmd => $omd_bin." rm $site3",        like => '/Restarting Apache...\s*OK/', stdin => "yes\n" },
   { cmd => $omd_bin." rm $site",         like => '/Restarting Apache...\s*OK/', stdin => "yes\n" },
-  { cmd => $omd_bin." create -u 7017 -g 7018 $site", 
+  { cmd => $omd_bin." create -u 7017 -g 7018 $site",
                                          like => '/Created new site '.$site.'./' },
   { cmd => "/usr/bin/id -u $site",       like => '/7017/' },
   { cmd => "/usr/bin/id -g $site",       like => '/7018/' },
-  { cmd => $omd_bin." cp -u 7019 -g 7020 $site $site2", 
-                                         like => '/Copying site '.$site.' to '.$site2.'.../', 
+  { cmd => $omd_bin." cp -u 7019 -g 7020 $site $site2",
+                                         like => '/Copying site '.$site.' to '.$site2.'.../',
                                          errlike => '/Apache port \d+ is in use\. I\'ve choosen \d+ instead\./' },
   { cmd => "/usr/bin/id -u $site2",      like => '/7019/' },
   { cmd => "/usr/bin/id -g $site2",      like => '/7020/' },
@@ -100,6 +100,15 @@ my $tests = [
   # --restore
   { cmd => $omd_bin." restore /tmp/omd.backup.tgz", like => '/Restoring site testsite from /' },
   { cmd => "/bin/su - $site -c 'omd -f restore /tmp/omd.backup.tgz'", like => '/Restore completed/' },
+
+  # --reset
+  { cmd => "/bin/sh -c \"echo '# test newline in profile' >> /omd/sites/$site/.profile\""},
+  { cmd => "/bin/sh -c \"rm /omd/sites/$site/etc/icinga/conf.d\""},
+  { cmd => "/bin/su - $site -c 'omd diff'", like => ['/Changed content .profile/', '/Deleted etc\/icinga\/conf.d/'] },
+  { cmd => "/bin/su - $site -c 'omd reset .profile etc/icinga/conf.d'"  },
+  { cmd => "/bin/su - $site -c 'omd diff'", like => ['/^$/'] },
+
+  # cleanup
   { cmd => $omd_bin." rm $site", like => '/Restarting Apache...\s*OK/', stdin => "yes\n" },
 ];
 
