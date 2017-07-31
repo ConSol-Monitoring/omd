@@ -209,3 +209,4 @@ else
     rmdir /opt/omd/sites 2>/dev/null || true
     rmdir /opt/omd 2>/dev/null || true
 fi
+
