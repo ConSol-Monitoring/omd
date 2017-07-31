@@ -56,7 +56,15 @@ class ThrukCli(object):
             host = []
         return host
 
-    def get_hosts(self):
+    def get_service(self, host, service):
+        try:
+            service = self.get('status.cgi?view_mode=json&host=%s&service=%s&style=servicedetail' % (host, service))
+            service = json.loads(service)
+        except Exception, e:
+            service = []
+        return service
+
+    def get_services(self):
         try:
             hosts = self.get('status.cgi?view_mode=json&host=all&style=hostdetail')
             self.hosts = json.loads(hosts)
@@ -108,6 +116,7 @@ try:
 
     params = cgi.FieldStorage()
     host_name = params.getfirst("host", None)
+    service_description = params.getfirst("service", None)
     comment = params.getfirst("comment", None)
     duration = params.getfirst("duration", None)
     dtauthtoken = params.getfirst("dtauthtoken", None)
@@ -153,11 +162,18 @@ try:
     elif backend:
         thruk.prefer_backend(backend)
 
-    hosts = thruk.get_host(host_name) # may exist many times
-    if len(hosts) < 1:
-        result["error"] = "Host not found"
-        status = 400
-        raise CGIAbort
+    if service_description:
+        services = thruk.get_service(host_name, service_description) # may exist many times
+        if len(services) < 1:
+            result["error"] = "Service not found"
+            status = 400
+            raise CGIAbort
+    else:
+        hosts = thruk.get_host(host_name) # may exist many times
+        if len(hosts) < 1:
+            result["error"] = "Host not found"
+            status = 400
+            raise CGIAbort
 
     if not backend:
         backends = [h["peer_name"] for h in hosts]
@@ -165,8 +181,6 @@ try:
         backends = [backend]
 
     real_hosts = []
-    ip_found = False
-    dttoken_found = False
     for host in hosts:
         if dtauthtoken:
             macros = dict(zip(host["custom_variable_names"], host["custom_variable_values"]))
