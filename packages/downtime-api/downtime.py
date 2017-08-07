@@ -6,8 +6,6 @@ import time
 import sys
 import subprocess
 import urllib
-
-
 try: import simplejson as json
 except ImportError: import json
 #cgi.enable()
@@ -30,8 +28,6 @@ class ThrukCli(object):
         self.active_backend = backend
 
     def get(self, url):
-        if backend:
-            url += '&backend=' + backend
         cmd = '%s -b %s -A omdadmin \'%s\'' % (self.thruk, self.active_backend, url)
         p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         output = p.stdout.read()
@@ -52,6 +48,10 @@ class ThrukCli(object):
         try:
             host = self.get('status.cgi?view_mode=json&host=%s&style=hostdetail' % host)
             host = json.loads(host)
+            for h in host:
+                # sometimes (with lmd?) peer_name is missing
+                if not "peer_name" in h and "peer_key" in h and h["peer_key"] in self.backends:
+                    h["peer_name"] = self.backends[h["peer_key"]]["peer_name"]
         except Exception, e:
             host = []
         return host
@@ -76,11 +76,15 @@ class ThrukCli(object):
         self.get('cmd.cgi?cmd_typ=55&cmd_mod=2&host=%s&com_author=%s&com_data=%s&fixed=1&childoptions=0&start_time=%s&end_time=%s' % (host, author, comment, start, end))
 
     def get_downtime(self, host, author, comment, start, end):
-        downtimes = self.get('extinfo.cgi?view_mode=json&type=6')
-        downtimes = json.loads(downtimes)
-        for downtime in downtimes["host"]:
-            if downtime["comment"] == comment and int(downtime["start_time"]) >= start and int(downtime["end_time"]) <= end + 10:
-                return True
+        max_attempts = 5
+        for attempt in range(max_attempts):
+            downtimes = self.get('extinfo.cgi?view_mode=json&type=6')
+            downtimes = json.loads(downtimes)
+            for downtime in downtimes["host"]:
+                if downtime["comment"] == comment and int(downtime["start_time"]) >= start and int(downtime["end_time"]) <= end + 10:
+                    return True
+            # in bigger environments it may take a while...
+            time.sleep(1)
         return False
                 
 
