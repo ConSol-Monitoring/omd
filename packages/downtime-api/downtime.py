@@ -188,7 +188,7 @@ try:
     for host in hosts:
         if dtauthtoken:
             macros = dict(zip(host["custom_variable_names"], host["custom_variable_values"]))
-            result["macros"] = macros
+            #result["macros"] = macros
             if "DTAUTHTOKEN" in macros and macros["DTAUTHTOKEN"] == dtauthtoken:
                 real_hosts.append(host)
         elif host["address"] == address:
