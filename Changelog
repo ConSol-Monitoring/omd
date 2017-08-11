@@ -1,6 +1,7 @@
 This file documents the revision history for the Open Monitoring Distribution (Labs Edition)
 
 next:
+          - Thruk: update to 2.16-1
           - Go update to 1.8.1
           - Prometheus update to 1.6.2
           - InfluxDb update to 1.2.4
