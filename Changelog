@@ -3,8 +3,14 @@ This file documents the revision history for the Open Monitoring Distribution (L
 next:
           - Thruk: update to 2.16-1
           - Go update to 1.8.1
-          - Prometheus update to 1.6.2
-          - InfluxDb update to 1.2.4
+          - Icinga2 update to 2.7.0
+          - Prometheus update to 1.7.1
+		  - Prometheus Alertmanager update to 0.8.0
+		  - Prometheus blackbox_exporter update to 0.8.1
+		  - Prometheus node_exporter update to 0.14.0
+		  - Prometheus Pushgateway update to 0.4.0
+		  - Prometheus snmp_exporter update to 0.4.0
+          - InfluxDb update to 1.3.3
           - Grafana update to 4.3.1
           - Mod-Gearman: Update 3.0.5
           - Added build support for Debian 10, Ubuntu 17.04
