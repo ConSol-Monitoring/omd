@@ -368,7 +368,10 @@ def find_processes_of_user(username):
         return []
 
 def groupdel(groupname):
-    os.system("groupdel " + groupname)
+    os.system("groupdel " + groupname + " >/dev/null 2>&1")
+    # -f is required on fc26 which fails otherwise: groupdel: cannot remove the primary group of user
+    # but -f is not available on every system
+    os.system("groupdel -f " + groupname + " >/dev/null 2>&1")
 
 def groupadd(groupname, gid = None):
     cmd = "groupadd "
