@@ -13,6 +13,7 @@ next:
           - InfluxDb update to 1.3.3
           - Grafana update to 4.3.1
           - Mod-Gearman: Update 3.0.5
+          - LMD: Update 1.1.2
           - Added build support for Debian 10, Ubuntu 17.04, Fedora 26
           - omd:
             - add vimdiff option to resolve merge conflicts
