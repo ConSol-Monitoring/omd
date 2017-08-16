@@ -13,6 +13,14 @@ CONFIGUREOPTS = \
     --with-naemon-group=$$(id -gn) \
     --without-tests
 
+CC = gcc
+GCCVERSIONGTEQ7 := $(shell expr `gcc -dumpversion | cut -f1 -d.` \>= 7)
+CFLAGS=
+
+ifeq "$(GCCVERSIONGTEQ7)" "1"
+  CFLAGS += -Wimplicit-fallthrough=0 -Werror=format-truncation=0
+endif
+
 build:
 	tar xzf naemon-core-$(VERSION).tar.gz
 	set -e ; for p in patches/*.patch ; do \
@@ -20,7 +28,7 @@ build:
 	    ( cd $(DIR) && patch -p1 -b -F 5 ) < $$p ; \
 	done
 	sed -i $(DIR)/configure -e 's/$(VERSION)\-source/$(VERSION)-omd/g'
-	cd $(DIR) && ./configure $(CONFIGUREOPTS)
+	cd $(DIR) && CFLAGS="$(CFLAGS)" ./configure $(CONFIGUREOPTS)
 	$(MAKE) -C $(DIR) all
 
 install:
