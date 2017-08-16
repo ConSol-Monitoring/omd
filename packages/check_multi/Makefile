@@ -76,6 +76,10 @@ CONFIGUREOPTS = \
 
 build:
 	tar xzf $(NAME)-latest-$(VERSION).tar.gz
+	for p in patches/*.patch ; do \
+	    echo "applying $$p..." ; \
+	    ( cd $(SRCDIR) ; patch -p1 ) < $$p || exit 1; \
+	done
 	cd $(SRCDIR) ; ./configure $(CONFIGUREOPTS)
 	$(MAKE) -C $(SRCDIR) all
 
