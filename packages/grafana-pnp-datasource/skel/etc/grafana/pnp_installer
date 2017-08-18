@@ -26,14 +26,14 @@ for datasource_name in names:
     if ds == None:
         print "creating datasource %s " % (datasource_name,),
 
-        ds = grafana.create_datasource(name=datasource_name, type='pnp',
+        ds = grafana.create_datasource(name=datasource_name, type='sni-pnp-datasource',
             url=pnp_url,
             access='proxy',
             isDefault=isDefault,
             database=datasource_name,
             basicAuth=True,
-            user='omdadmin',
-            password='omd'
+            basicAuthUser='omdadmin',
+            basicAuthPassword='omd'
         )
         print "OK" if ds else "FAIL"
 
