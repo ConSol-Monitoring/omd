@@ -21,7 +21,7 @@ This file documents the revision history for the Open Monitoring Distribution (L
             - add reset command to restore a skeleton file from default
             - support hot backups without stopping the site
 
-2.40     May 13 2019
+2.40     May 13 2017
           - Thruk: update to 2.14-2
             - add THRUK_LOGCACHE hook to simply enable the logcache
           - Naemon update to 1.0.6
