@@ -1,7 +1,7 @@
 This file documents the revision history for the Open Monitoring Distribution (Labs Edition)
 
-next:
-          - Thruk: update to 2.16-1
+2.60     Aug 20 2017
+          - Thruk: update to 2.16-2
           - Go update to 1.8.1
           - Icinga2 update to 2.7.0
           - Prometheus update to 1.7.1
