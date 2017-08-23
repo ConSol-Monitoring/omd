@@ -126,7 +126,7 @@ a:hover {
 [% TRY; graphimg = PERL %]
 my $end   = time();
 my $start = $end-86400;
-print `~/bin/thruk --local -a graph --host='[% HOSTNAME %]' --service='_HOST_' --width=900 --height=200 --start=$start --end=$end --format=base64`;
+print `~/bin/thruk --local -a graph --host='[% HOSTNAME %]' --service='' --width=900 --height=200 --start=$start --end=$end --format=base64`;
 [% END %]
 [% CATCH %]
   <tr>
