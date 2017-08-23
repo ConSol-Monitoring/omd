@@ -2918,6 +2918,7 @@ def main_mv_or_cp(what, args, options={}):
 
 
 def main_diff(args, options={}):
+    set_conflict_option(options)
     from_version  = site_version(g_sitename)
     from_skelroot = "/omd/versions/%s/skel" % from_version
 
@@ -2940,6 +2941,7 @@ def main_diff(args, options={}):
 
 
 def main_vimdiff(args, options={}):
+    set_conflict_option(options)
     from_version  = site_version(g_sitename)
     from_skelroot = "/omd/versions/%s/skel" % from_version
 
