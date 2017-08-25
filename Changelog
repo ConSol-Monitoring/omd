@@ -1,5 +1,8 @@
 This file documents the revision history for the Open Monitoring Distribution (Labs Edition)
 
+next
+          - Ansible: update to 2.3.2.0-1
+
 2.60     Aug 20 2017
           - Thruk: update to 2.16-2
           - Go update to 1.8.1
