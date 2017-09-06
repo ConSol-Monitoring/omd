@@ -1,5 +1,5 @@
---- a/etc/thruk/thruk.conf	2016-11-16 11:39:04.291824757 +0100
-+++ b/etc/thruk/thruk.conf	2016-11-16 11:40:21.031514097 +0100
+--- a/etc/thruk/thruk.conf	2017-09-05 17:09:16.126900202 +0200
++++ b/etc/thruk/thruk.conf	2017-09-05 17:10:04.906585192 +0200
 @@ -13,7 +13,7 @@
  
  ######################################
@@ -26,7 +26,7 @@
  
  ######################################
  # change path to your host / service action icons. You may use relative paths
-@@ -101,7 +101,7 @@
+@@ -101,7 +102,7 @@
  
  ######################################
  # location of your cgi.cfg
@@ -35,7 +35,7 @@
  
  ######################################
  # use frames, can be useful for addons
-@@ -207,11 +207,11 @@
+@@ -207,11 +208,11 @@
  
  ######################################
  # temporary directory, used for template cache...
@@ -49,7 +49,7 @@
  
  ######################################
  # mode used when creating or saving files
-@@ -225,31 +225,31 @@
+@@ -225,13 +226,13 @@
  
  ######################################
  # server side includes
@@ -65,9 +65,7 @@
  
  ######################################
  # url to fetch new plugins from
- #plugin_registry_url = https://api.thruk.org/v1/plugin/list.json
- 
- ######################################
+@@ -241,15 +242,15 @@
  # path to your themes
  # see documentation for further steps if
  # you change the themes path
@@ -86,7 +84,7 @@
  
  ######################################
  # use paged data instead of all data in one huge page
-@@ -334,7 +334,7 @@
+@@ -338,7 +339,7 @@
  # Instead of using a general resource_file, you could define one file
  # per peer in your peer config.
  #
@@ -95,7 +93,7 @@
  
  # enable a performance bar inside the status/host list which
  # create a graph from the performance data of the plugin output. Available
-@@ -474,6 +474,7 @@
+@@ -482,6 +483,7 @@
  # check should be rescheduled instead of the passive check.
  # Have a look at the documentation for a detailed description.
  #command_reschedule_alias = servicename_or_commandname_pattern;agent_service_name
@@ -103,7 +101,7 @@
  
  ######################################
  # Time Format Settings
-@@ -524,23 +525,23 @@
+@@ -532,23 +534,23 @@
  # Specifiy a file which is then completly under the control of Thruk.
  # It will be used to store cronjobs, ex. for reports. The file has to
  # be writable by Thruk.
@@ -132,7 +130,7 @@
  
  # Set first day of week. Used in reports.
  # Sunday: 0
-@@ -614,8 +615,8 @@
+@@ -625,8 +627,8 @@
  # COOKIE AUTH
  # cookie auth requires additional webserver settings, see the documentation
  # for detailed instructions.
@@ -142,8 +140,8 @@
 +cookie_auth_restricted_url        = http://localhost/###SITE###/thruk/cgi-bin/restricted.cgi
  cookie_auth_session_timeout       = 604800
  cookie_auth_session_cache_timeout = 5
- cookie_auth_direct_agents         = (wget|curl)
-@@ -699,42 +700,19 @@
+ cookie_auth_direct_agents         = (wget|curl|python|Go-http-client)
+@@ -710,42 +712,19 @@
  ######################################
  # Backend Configuration, enter your backends here
  <Component Thruk::Backend>
@@ -199,7 +197,7 @@
  </Component>
  
  
-@@ -751,9 +729,9 @@
+@@ -762,12 +741,12 @@
  <Component Thruk::Plugin::ConfigTool>
      show_plugin_syntax_helper = 1
  
@@ -210,9 +208,14 @@
 +    cgi.cfg  = ###ROOT###/etc/thruk/cgi.cfg
 +    htpasswd = ###ROOT###/etc/htpasswd
  
-     #pre_obj_save_cmd   =
-     #post_obj_save_cmd  =
-@@ -812,7 +790,7 @@
+-    #pre_obj_save_cmd    =
+-    #post_obj_save_cmd   =
++    #pre_obj_save_cmd    = ./share/thruk/examples/config_tool_git_checkin
++    #post_obj_save_cmd   = ./share/thruk/examples/config_tool_git_checkin
+     #git_base_dir        =
+     #show_summary_prompt = 1
+ 
+@@ -824,7 +803,7 @@
      #report_base_url=http://host.local/thruk/cgi-bin/
  
      # phantomjs is used to convert html pages into pdf
@@ -221,7 +224,7 @@
  
      # pnp export script is used to export pnp graphs into reports
      #pnp_export = /path/to/pnp_export.sh
-@@ -848,24 +826,24 @@
+@@ -860,24 +839,24 @@
  <Component Thruk::Plugin::BP>
      # Results will be send back by using the spool folder.
      # This folder should point to the 'check_result_path' of your core.
