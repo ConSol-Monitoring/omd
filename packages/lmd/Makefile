@@ -16,7 +16,7 @@ BRANCH      = master
 build:
 	tar zxf $(SRC)
 	export GOROOT=$(PWD)/../go-$(GOPKG)/go-$(GOVERSION)/ && export GOPATH=$(PWD)/$(GOPATH)/ && PATH=$$GOROOT/bin:$$PATH && \
-	go install -ldflags "-X main.Build=$(OMD_VERSION)" $(GITURL)/lmd
+	go install -ldflags "-s -w -X main.Build=$(OMD_VERSION)" $(GITURL)/lmd
 
 install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/bin
