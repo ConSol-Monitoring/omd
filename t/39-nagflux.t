@@ -17,9 +17,10 @@ plan( tests => 40 );
 
 ##################################################
 # create our test site
-my $omd_bin = TestUtils::get_omd_bin();
-my $site    = TestUtils::create_test_site() or TestUtils::bail_out_clean("no further testing without site");
-my $curl    = '/usr/bin/curl --user root:root';
+my $omd_bin   = TestUtils::get_omd_bin();
+my $site      = TestUtils::create_test_site() or TestUtils::bail_out_clean("no further testing without site");
+my $curl      = '/usr/bin/curl --user root:root';
+my $startTime = time-60;
 
 TestUtils::test_command({ cmd => $omd_bin." config $site set INFLUXDB on" });
 TestUtils::test_command({ cmd => $omd_bin." config $site set PNP4NAGIOS off" });
@@ -27,18 +28,18 @@ TestUtils::test_command({ cmd => $omd_bin." config $site set NAGFLUX on" });
 TestUtils::test_command({ cmd => $omd_bin." config $site set CORE nagios" });
 TestUtils::test_command({ cmd => $omd_bin." start $site", like => '/Starting Nagflux\.+OK/' });
 
-my $ranges = "<<END
-DATATYPE::SERVICEPERFDATA	TIMET::1441791000	HOSTNAME::xxx	SERVICEDESC::range	SERVICEPERFDATA::a used=4	SERVICECHECKCOMMAND::check_ranges!-w 3: -c 4: -g :46 -l :48 SERVICESTATE::0	SERVICESTATETYPE::1
-DATATYPE::SERVICEPERFDATA	TIMET::1441791001	HOSTNAME::xxx	SERVICEDESC::range	SERVICEPERFDATA::a used=4;2;10	SERVICECHECKCOMMAND::check_ranges!-w 3: -c 4: -g :46 -l :48 SERVICESTATE::0	SERVICESTATETYPE::1
-DATATYPE::SERVICEPERFDATA	TIMET::1441791002	HOSTNAME::xxx	SERVICEDESC::range	SERVICEPERFDATA::a used=4;2;10;1;4	SERVICECHECKCOMMAND::check_ranges!-w 3: -c 4: -g :46 -l :48 SERVICESTATE::0	SERVICESTATETYPE::1
-DATATYPE::SERVICEPERFDATA	TIMET::1441791003	HOSTNAME::xxx	SERVICEDESC::range	SERVICEPERFDATA::a used=4;2:4;8:10;1;4	SERVICECHECKCOMMAND::check_ranges!-w 3: -c 4: -g :46 -l :48 SERVICESTATE::0	SERVICESTATETYPE::1
-DATATYPE::SERVICEPERFDATA	TIMET::1441791004	HOSTNAME::xxx	SERVICEDESC::range	SERVICEPERFDATA::a used=4;\@2:4;\@8:10;1;4	SERVICECHECKCOMMAND::check_ranges!-w 3: -c 4: -g :46 -l :48 SERVICESTATE::0	SERVICESTATETYPE::1
-DATATYPE::SERVICEPERFDATA	TIMET::1441791005	HOSTNAME::xxx	SERVICEDESC::range	SERVICEPERFDATA::a used=4;2:;10:;1;4	SERVICECHECKCOMMAND::check_ranges!-w 3: -c 4: -g :46 -l :48 SERVICESTATE::0	SERVICESTATETYPE::1
-DATATYPE::SERVICEPERFDATA	TIMET::1441791006	HOSTNAME::xxx	SERVICEDESC::range	SERVICEPERFDATA::a used=4;:2;:10;1;4	SERVICECHECKCOMMAND::check_ranges!-w 3: -c 4: -g :46 -l :48 SERVICESTATE::0	SERVICESTATETYPE::1
-DATATYPE::SERVICEPERFDATA	TIMET::1441791007	HOSTNAME::xxx	SERVICEDESC::range	SERVICEPERFDATA::a used=4;~:2;10:~;1;4	SERVICECHECKCOMMAND::check_ranges!-w 3: -c 4: -g :46 -l :48 SERVICESTATE::0	SERVICESTATETYPE::1
+my $ranges = sprintf("<<END
+DATATYPE::SERVICEPERFDATA   TIMET::%d   HOSTNAME::xxx   SERVICEDESC::range  SERVICEPERFDATA::a used=4   SERVICECHECKCOMMAND::check_ranges!-w 3: -c 4: -g :46 -l :48 SERVICESTATE::0 SERVICESTATETYPE::1
+DATATYPE::SERVICEPERFDATA   TIMET::%d   HOSTNAME::xxx   SERVICEDESC::range  SERVICEPERFDATA::a used=4;2;10  SERVICECHECKCOMMAND::check_ranges!-w 3: -c 4: -g :46 -l :48 SERVICESTATE::0 SERVICESTATETYPE::1
+DATATYPE::SERVICEPERFDATA   TIMET::%d   HOSTNAME::xxx   SERVICEDESC::range  SERVICEPERFDATA::a used=4;2;10;1;4  SERVICECHECKCOMMAND::check_ranges!-w 3: -c 4: -g :46 -l :48 SERVICESTATE::0 SERVICESTATETYPE::1
+DATATYPE::SERVICEPERFDATA   TIMET::%d   HOSTNAME::xxx   SERVICEDESC::range  SERVICEPERFDATA::a used=4;2:4;8:10;1;4  SERVICECHECKCOMMAND::check_ranges!-w 3: -c 4: -g :46 -l :48 SERVICESTATE::0 SERVICESTATETYPE::1
+DATATYPE::SERVICEPERFDATA   TIMET::%d   HOSTNAME::xxx   SERVICEDESC::range  SERVICEPERFDATA::a used=4;\@2:4;\@8:10;1;4  SERVICECHECKCOMMAND::check_ranges!-w 3: -c 4: -g :46 -l :48 SERVICESTATE::0 SERVICESTATETYPE::1
+DATATYPE::SERVICEPERFDATA   TIMET::%d   HOSTNAME::xxx   SERVICEDESC::range  SERVICEPERFDATA::a used=4;2:;10:;1;4    SERVICECHECKCOMMAND::check_ranges!-w 3: -c 4: -g :46 -l :48 SERVICESTATE::0 SERVICESTATETYPE::1
+DATATYPE::SERVICEPERFDATA   TIMET::%d   HOSTNAME::xxx   SERVICEDESC::range  SERVICEPERFDATA::a used=4;:2;:10;1;4    SERVICECHECKCOMMAND::check_ranges!-w 3: -c 4: -g :46 -l :48 SERVICESTATE::0 SERVICESTATETYPE::1
+DATATYPE::SERVICEPERFDATA   TIMET::%d   HOSTNAME::xxx   SERVICEDESC::range  SERVICEPERFDATA::a used=4;~:2;10:~;1;4  SERVICECHECKCOMMAND::check_ranges!-w 3: -c 4: -g :46 -l :48 SERVICESTATE::0 SERVICESTATETYPE::1
 
 END
-";
+",$startTime,$startTime+1,$startTime+2,$startTime+3,$startTime+4,$startTime+5,$startTime+6,$startTime+7);
 
 #Mock Nagios and write spoolfiles
 TestUtils::test_command({ cmd => "/bin/su - $site -c 'cat > var/pnp4nagios/spool/ranges $ranges'"});
