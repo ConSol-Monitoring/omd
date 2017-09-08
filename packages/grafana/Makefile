@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 NAME       = grafana
-VERSION    = 4.4.1
+VERSION    = 4.4.3
 SRC        = $(NAME)-$(VERSION).tar.gz
 GOPATH     = go
 GOPKG      = 1.8
@@ -48,8 +48,8 @@ skel:
 	sed -i -e 's|###APACHE_MODULE_DIR###|$(MODULE_DIR)|g' \
 	       $(SKEL)/etc/apache/conf.d/grafana.conf
 	mkdir -p $(SKEL)/var/grafana/plugins
-	tar zxf clock-panel-plugin-0.0.8.tar.gz -C $(SKEL)/var/grafana/plugins
-	tar zxf piechart-panel-plugin-1.1.4.tar.gz -C $(SKEL)/var/grafana/plugins
+	tar zxf clock-panel-plugin-0.0.9.tar.gz -C $(SKEL)/var/grafana/plugins
+	tar zxf piechart-panel-plugin-1.1.5.tar.gz -C $(SKEL)/var/grafana/plugins
 
 clean:
 	rm -rf $(GOPATH)
