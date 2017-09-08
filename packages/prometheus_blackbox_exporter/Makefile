@@ -19,6 +19,7 @@ LDFLAGS    = "\
 -X github.com/prometheus/$(NAME)/vendor/github.com/prometheus/common/version.Branch=$(BRANCH) \
 -X github.com/prometheus/$(NAME)/vendor/github.com/prometheus/common/version.BuildUser=OMD-Labs \
 -X github.com/prometheus/$(NAME)/vendor/github.com/prometheus/common/version.BuildDate=$(DATE) \
+-s -w \
 "
 
 build:

@@ -14,8 +14,8 @@ build:
 	tar zxf $(SRC)
 	export GOROOT=$(PWD)/../go-$(GOPKG)/go-$(GOVERSION) && export GOPATH=$(PWD)/$(GOPATH)/ && PATH=$$GOROOT/bin:$$PATH && \
 		cd $(GOPATH)/src/github.com/influxdata && \
-		go build ./... && \
-		go install -ldflags "-X main.version=$(VERSION) -X main.buildTime=$(DATE)" ./...
+		go build -ldflags "-s -w" ./... && \
+		go install -ldflags "-X main.version=$(VERSION) -X main.buildTime=$(DATE) -s -w" ./...
 
 install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/bin

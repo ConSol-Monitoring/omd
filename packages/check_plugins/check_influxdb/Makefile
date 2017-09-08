@@ -11,7 +11,7 @@ PWD         = $(shell pwd)
 build:
 	tar zxf $(SRC)
 	export GOROOT=$(PWD)/../../go-$(GOPKG)/go-$(GOVERSION)/ && export GOPATH=$(PWD)/$(GOPATH)/ && PATH=$$GOROOT/bin:$$PATH && \
-	go install github.com/griesbacher/check_influxdb
+	go install -ldflags "-s -w" github.com/griesbacher/check_influxdb
 
 install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins
