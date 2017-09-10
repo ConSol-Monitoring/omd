@@ -3,7 +3,7 @@
 {{ application|service("app_snmptrapdlog_traps_" + mib + "_scan_logs") }}
   use                             os_linux_default
   host_name                       {{ application.host_name }}
-  check_command                   check_logfiles_mib_traps!60!$USER4$/etc/check_logfiles/snmptt/{{ mib }}.cfg
+  check_command                   snmptt_check_logfiles_mib_traps!60!$USER4$/etc/check_logfiles/snmptt/{{ mib }}.cfg
   notifications_enabled           0
   is_volatile                     1
   max_check_attempts              1
@@ -16,7 +16,7 @@
 {{ application|service("app_snmptrapdlog_default_check_traplog_alive") }}
   use                             srv-perf,os_linux_default
   host_name                       {{ application.host_name }}
-  check_command                   check_logfiles_config!60!$USER4$/etc/check_logfiles/check_traplog_alive.cfg
+  check_command                   snmptt_check_logfiles_config!60!$USER4$/etc/check_logfiles/check_traplog_alive.cfg
   notifications_enabled           0
   is_volatile                     0
   max_check_attempts              3
