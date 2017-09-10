@@ -1,6 +1,6 @@
 # {{ mib.mib }} {{ mib.miblabel }}
 
-use Monitoring::Trap::Hostinfo;
+use Monitoring::Trap::HostSNMPTrapinfo;
 
 my $VERBOSE = 0;
 our @commands = ();
