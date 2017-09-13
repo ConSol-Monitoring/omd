@@ -20,32 +20,35 @@ return function (callback) {
 
     var flotAddons = url + 'flotAddons.js';
     $.getScript(flotAddons, function (){});
+
+    if (!_.isUndefined(ARGS.customCSSFile)) {
+        $('head').append('<link rel="stylesheet" href="' + ARGS.customCSSFile + '" type="text/css" />');
+    }
 	
-	cssLoaded = false;
-	jQuery('body').on('DOMNodeInserted', 'DIV.drop-popover', function (e) {
-		var cssUrl = url+'lightbox/css/light.css'
-		if (!cssLoaded) {
-			$('head').append('<link rel="stylesheet" href="'+url+'lightbox/css/light.css" type="text/css" />');
-			$.getScript(url+'lightbox/js/light.js', function(){});
-			cssLoaded = true;
-		}
+    cssLoaded = false;
+    jQuery('body').on('DOMNodeInserted', 'DIV.drop-popover', function (e) {
+        var cssUrl = url+'lightbox/css/light.css'
+        if (!cssLoaded) {
+            $('head').append('<link rel="stylesheet" href="'+url+'lightbox/css/light.css" type="text/css" />');
+            $.getScript(url+'lightbox/js/light.js', function(){});
+            cssLoaded = true;
+        }
 
-		var box = $( e.currentTarget ).find( "DIV.sakuli-popup" );
-		if (box.length > 0 ){
-		$(box[0]).attr('class', 'sakuli-image');
-		var sakuliUrl = site[1] + box[0].innerHTML;
-		$.get( sakuliUrl + "output.txt").always(function(data ,state) {
-			if (state != "success" ) {
-				data = "Could not find outputfile!"
-			}
-			console.log(data);
-			data = $("<div>").text(data).html().replace(/['"]+/g, '');
-			console.log(data);
-			box[0].innerHTML = '<a href="' + sakuliUrl  + 'screenshot.jpg" data-lightbox="sakuli" data-title="'+ data +'"><img src="'+ sakuliUrl +'screenshot.jpg" alt="Sakuli error image" width=250px /></a>';
-		});
-		}
-	});
-
+        var box = $( e.currentTarget ).find( "DIV.sakuli-popup" );
+        if (box.length > 0 ){
+        $(box[0]).attr('class', 'sakuli-image');
+        var sakuliUrl = site[1] + box[0].innerHTML;
+        $.get( sakuliUrl + "output.txt").always(function(data ,state) {
+            if (state != "success" ) {
+                data = "Could not find outputfile!"
+            }
+            console.log(data);
+            data = $("<div>").text(data).html().replace(/['"]+/g, '');
+            console.log(data);
+            box[0].innerHTML = '<a href="' + sakuliUrl  + 'screenshot.jpg" data-lightbox="sakuli" data-title="'+ data +'"><img src="'+ sakuliUrl +'screenshot.jpg" alt="Sakuli error image" width=250px /></a>';
+        });
+        }
+    });
 
     $.ajax(
         {
@@ -146,7 +149,7 @@ function parseArgs()
     } else {
         legend = true;
     }
-	
+
     if (!_.isUndefined(ARGS.annotations)) {
         annotations = ARGS.annotations;
     } else {
@@ -158,7 +161,7 @@ function parseArgs()
     }else{
         disablePanelTitle = "&disablePanelTitle";
     }
-	
+
     if(_.isUndefined(ARGS.disablePerfdataLookup)) {
         disablePerfdataLookup = '';
     }else{
