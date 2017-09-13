@@ -54,7 +54,7 @@ class HostInfoObj(coshsh.item.Item):
     id = 120
     template_rules = [
         TemplateRule(
-            template="Hostinfo",
+            template="HostSNMPTrapinfo",
             self_name="info",
             suffix="pm"),
     ]

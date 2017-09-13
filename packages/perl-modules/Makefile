@@ -196,7 +196,7 @@ MODULES = \
           MIME-Types-2.13.tar.gz \
 	  Email-Simple-2.211.tar.gz \
 	  Email-MIME-1.937.tar.gz \
-	  Monitoring-GLPlugin-2.4.11.tar.gz
+	  Monitoring-GLPlugin-2.4.11.2.tar.gz
 
 
 

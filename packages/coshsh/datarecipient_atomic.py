@@ -24,7 +24,7 @@ from coshsh.util import compare_attr
 
 logger = logging.getLogger('coshsh')
 
-def __ds_ident__(params={}):
+def __dr_ident__(params={}):
     if compare_attr("type", params, "atomic"):
         return AtomicRecipient
     if compare_attr("type", params, "remote_atomic"):

@@ -1,4 +1,4 @@
-package Monitoring::Trap::Hostinfo;
+package Monitoring::Trap::HostSNMPTrapinfo;
 
 sub get_host_from_ip {
   my ($ip, $mib) = @_;

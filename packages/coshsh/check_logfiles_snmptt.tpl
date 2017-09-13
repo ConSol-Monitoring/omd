@@ -1,6 +1,6 @@
 # {{ mib.mib }} {{ mib.miblabel }}
 
-use Monitoring::Trap::Hostinfo;
+use Monitoring::Trap::HostSNMPTrapinfo;
 
 my $VERBOSE = 0;
 our @commands = ();
@@ -9,7 +9,7 @@ sub prepare_submit_command {
   my ($address, $mib, $trap, $severity, $text) = @_;
   $text =~ s/[^[:ascii:]]//g;
   $trap =~ s/[^[:ascii:]]//g;;
-  if (my $info = Monitoring::Trap::Hostinfo::get_host_from_ip($address, $mib)) {
+  if (my $info = Monitoring::Trap::HostSNMPTrapinfo::get_host_from_ip($address, $mib)) {
 {#
     Sowas ist moeglich. Der Host implementiert die alte Mib, seine Traps werden also
     vom trapfile-Scanner ISILON-TRAP-2014-MIB entdeckt.
@@ -160,7 +160,7 @@ $options = 'report=long,supersmartpostscript';
   script => sub {
     my $address = $ENV{CHECK_LOGFILES_CAPTURE_GROUP2};
     my $flat_trap = $ENV{CHECK_LOGFILES_CAPTURE_GROUP.$ENV{CHECK_LOGFILES_CAPTURE_GROUPS}};
-    if (my $info = Monitoring::Trap::Hostinfo::get_host_from_ip($address)) {
+    if (my $info = Monitoring::Trap::HostSNMPTrapinfo::get_host_from_ip($address)) {
       print $flat_trap;
       return 2;
     } else {
