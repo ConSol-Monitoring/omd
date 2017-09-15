@@ -6,6 +6,7 @@ next
           - Check_prometheus: added 0.0.1
           - Go: added 1.9
           - Grafana update to 4.4.3
+          - Histou update to 0.4.2
 
 2.60     Aug 20 2017
           - Thruk: update to 2.16-2

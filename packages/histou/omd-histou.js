@@ -20,11 +20,9 @@ return function (callback) {
 
     var flotAddons = url + 'flotAddons.js';
     $.getScript(flotAddons, function (){});
-
     if (!_.isUndefined(ARGS.customCSSFile)) {
         $('head').append('<link rel="stylesheet" href="' + ARGS.customCSSFile + '" type="text/css" />');
     }
-	
     cssLoaded = false;
     jQuery('body').on('DOMNodeInserted', 'DIV.drop-popover', function (e) {
         var cssUrl = url+'lightbox/css/light.css'
@@ -49,6 +47,7 @@ return function (callback) {
         });
         }
     });
+
 
     $.ajax(
         {
