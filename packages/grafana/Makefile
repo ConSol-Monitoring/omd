@@ -32,6 +32,10 @@ install:
 	install -m 755 $(GOPATH)/src/github.com/grafana/grafana/bin/grafana-cli  $(DESTDIR)$(OMD_ROOT)/bin/grafana-cli
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/grafana
 	tar zxf public.tar.gz -C $(DESTDIR)$(OMD_ROOT)/share/grafana
+	set -e ; for p in patches/*.public_patch ; do \
+	    echo "applying $$p..." ; \
+	    ( cd $(DESTDIR)$(OMD_ROOT)/share/grafana; patch -p1 ) < $$p ; \
+	done
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/grafana/conf
 	install -m 644 defaults.ini $(DESTDIR)$(OMD_ROOT)/share/grafana/conf/
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/grafana/vendor/
