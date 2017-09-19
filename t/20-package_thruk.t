@@ -239,7 +239,7 @@ for my $core (qw/nagios naemon/) {
     is(-f $log, 1, "log exists");
     # grep out commands
     `/bin/cat $log | /bin/grep -v 'cmd: COMMAND' | /bin/grep -v ' started ' | /bin/grep -v 'templates precompiled in' > $tlog 2>&1`;
-    is(-s $tlog, 0, "log is empty") or diag(Dumper(`cat $log`));
+    is(-s $tlog, 0, "log is empty") or diag(Dumper([`cat $log`]));
     unlink($tlog);
 }
 
