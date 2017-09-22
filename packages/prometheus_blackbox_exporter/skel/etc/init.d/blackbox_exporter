@@ -72,7 +72,7 @@ case "$1" in start|restart|reload|checkconfig|check)
     sed -ri "s/###BLACKBOX_EXPORTER_TCP_ADDR###/$CONFIG_BLACKBOX_EXPORTER_TCP_ADDR/g" $CFG_FILE
 esac
 
-OPTIONS="-config.file $CFG_FILE -web.listen-address=$CONFIG_BLACKBOX_EXPORTER_TCP_ADDR:$CONFIG_BLACKBOX_EXPORTER_TCP_PORT"
+OPTIONS="--config.file $CFG_FILE --web.listen-address=$CONFIG_BLACKBOX_EXPORTER_TCP_ADDR:$CONFIG_BLACKBOX_EXPORTER_TCP_PORT"
 
 # Fetches the pid of the currently running blackbox_exporter process of the given
 # user.

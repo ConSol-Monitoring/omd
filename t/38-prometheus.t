@@ -13,7 +13,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 74 );
+plan( tests => 78 );
 
 ##################################################
 # create our test site
@@ -24,7 +24,8 @@ TestUtils::test_command({ cmd => $omd_bin." config $site set APACHE_MODE ssl" })
 TestUtils::test_command({ cmd => $omd_bin." config $site set THRUK_COOKIE_AUTH off" });
 TestUtils::test_command({ cmd => $omd_bin." config $site set CORE none" });
 TestUtils::test_command({ cmd => $omd_bin." config $site set PROMETHEUS on" });
-TestUtils::test_command({ cmd => $omd_bin." start $site", like => '/Starting prometheus\.+OK/' });
+TestUtils::test_command({ cmd => $omd_bin." config $site set BLACKBOX_EXPORTER on" });
+TestUtils::test_command({ cmd => $omd_bin." start $site", like => ['/Starting prometheus\.+OK/', '/Starting blackbox_exporter\.+OK/'] });
 sleep(2);
 #admin interface
 TestUtils::test_command({ cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -t 60 -H 127.0.0.1 -p 9090 --onredirect=follow -s \"<title>Prometheus Time Series Collection and Processing Server</title>\"'", like => '/HTTP OK:/' });
