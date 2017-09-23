@@ -9,11 +9,6 @@ GOVERSION  = $(shell grep ^VERSION ../go-${GOPKG}/Makefile | awk '{ print $$3 }'
 PWD        = $(shell pwd)
 GO         = export GOROOT=$(PWD)/../go-$(GOPKG)/go-$(GOVERSION) && export GOPATH=$(PWD)/$(GOPATH)/ && PATH=$$GOROOT/bin:$$PATH && go
 
-MODULE_DIR=$(APACHE_MODULE_DIR)
-ifeq ($(shell uname -m),x86_64)
-  MODULE_DIR=$(APACHE_MODULE_DIR_64)
-endif
-
 .PHONY: skel
 
 build:

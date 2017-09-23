@@ -6,11 +6,6 @@ DIR = $(NAME)-$(VERSION)
 FCGI_FILE="mod_fcgid-2.3.9"
 MOD_RPAF_VERSION="0.8"
 
-MODULE_DIR=$(APACHE_MODULE_DIR)
-ifeq ($(shell uname -m),x86_64)
-  MODULE_DIR=$(APACHE_MODULE_DIR_64)
-endif
-
 APACHE_VERSION      = $(shell $(APACHE_BIN) -v | awk '/version/ {print $$3}' | awk -F/ '{print $$2}')
 APACHE_VERSION_MAIN = $(word 1, $(subst ., ,$(APACHE_VERSION)))
 APACHE_VERSION_SUB  = $(word 2, $(subst ., ,$(APACHE_VERSION)))
@@ -62,14 +57,6 @@ endif
 .PHONY: skel
 
 build: $(APACHE_MODULES)
-	# Unpack source code, apply patches, call configure, call make
-	cp APACHE_TCP_ADDR.hook.in APACHE_TCP_ADDR.hook
-	cp APACHE_TCP_PORT.hook.in APACHE_TCP_PORT.hook
-	sed -i -e 's|###APACHE_MODULE_DIR###|$(MODULE_DIR)|g' \
-	       APACHE_TCP_ADDR.hook \
-	       APACHE_TCP_PORT.hook
-
-
 
 install: $(APACHE_MODULES_INSTALL)
 	# Install software below $(DESTDIR)$(OMD_ROOT)/{bin,lib,share}
@@ -122,7 +109,7 @@ skel:
 
 clean:
 	# Remove files created by build/install
-	rm -rf $(FCGI_FILE) APACHE_TCP_ADDR.hook APACHE_TCP_PORT.hook
+	rm -rf $(FCGI_FILE)
 	rm -rf mod_rpaf-$(MOD_RPAF_VERSION)
 
 modfcgid:

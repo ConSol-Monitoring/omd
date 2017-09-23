@@ -121,6 +121,8 @@ pack:
             echo "pack: $$p (took $$(( $$(date +%s) - NOW ))s)"; \
         done
 
+	sed -i -e 's|###APACHE_MODULE_DIR###|$(MODULE_DIR)|g' $(DESTDIR)$(OMD_ROOT)/lib/omd/hooks/*
+
 	# Repair packages that install with silly modes (such as Nagios)
 	chmod -R o+Xr $(DESTDIR)$(OMD_ROOT)
 	$(MAKE) install-global

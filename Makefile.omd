@@ -27,3 +27,8 @@ include $(ROOT_DIR)/distros/Makefile.$(DISTRO_NAME)_$(DISTRO_VERSION)
 
 # Net result -> all Makefiles have now access to the linux distribution
 # specific settings
+
+MODULE_DIR=$(APACHE_MODULE_DIR)
+ifeq ($(shell uname -m),x86_64)
+  MODULE_DIR=$(APACHE_MODULE_DIR_64)
+endif
