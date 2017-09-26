@@ -131,7 +131,7 @@ for my $core (qw/nagios icinga naemon/) {
 
     # test check_source
     if($core eq 'naemon') {
-        TestUtils::test_command({ cmd => "/bin/su - $site -c 'echo -e \"".'GET hosts\nColumns: name check_source\n'."\" | lq'", like => '/Mod-Gearman Worker @ /' });
+        TestUtils::test_command({ cmd => "/bin/su - $site -c 'echo -e \"".'GET hosts\nColumns: name check_source\n'."\" | lq'", like => '/Mod-Gearman Worker/' });
     }
 
     # test host notifications
