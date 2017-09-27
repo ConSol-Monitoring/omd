@@ -1,6 +1,7 @@
 This file documents the revision history for the Open Monitoring Distribution (Labs Edition)
 
 next
+          - Prometheus update to 1.7.2
           - Icinga2 update to 2.7.1
           - InfluxDB: update to 1.3.5
           - Ansible: update to 2.4.0.0-1
