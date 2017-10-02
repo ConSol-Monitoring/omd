@@ -1,6 +1,7 @@
 This file documents the revision history for the Open Monitoring Distribution (Labs Edition)
 
 next
+		  - Prometheus Alertmanager update to 0.9.1
 		  - Prometheus blackbox_exporter update to 0.9.1
           - Prometheus update to 1.7.2
           - Icinga2 update to 2.7.1
