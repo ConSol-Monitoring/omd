@@ -108,14 +108,22 @@ case "$1" in
                 echo "CREATE DATABASE nagflux" | influx $CONNECT -username $USER -password $PASS >/dev/null
                 echo "GRANT READ ON nagflux TO $GRAFANA_USER" | influx $CONNECT -username $USER -password $PASS >/dev/null
                 echo "GRANT READ ON _internal TO $GRAFANA_USER" | influx $CONNECT -username $USER -password $PASS >/dev/null
-                # apply retention policy
-		echo 'SHOW RETENTION POLICIES ON nagflux' | influx $CONNECT -username $USER -password $PASS 2>/dev/null | grep -q ^default
-		if [ $? -ne 0 ]; then
-			echo 'CREATE RETENTION POLICY "default" ON "nagflux" DURATION '${CONFIG_INFLUXDB_RETENTION}w' REPLICATION 1 DEFAULT' | influx $CONNECT -username $USER -password $PASS >/dev/null
-		else
-			echo 'ALTER RETENTION POLICY "default" ON "nagflux" DURATION '${CONFIG_INFLUXDB_RETENTION}w' DEFAULT' | influx $CONNECT -username $USER -password $PASS >/dev/null
-		fi
-                echo "OK"
+                # check for default retention policy
+                echo 'SHOW RETENTION POLICIES ON nagflux' | influx $CONNECT -username $USER -password $PASS 2>/dev/null | grep -q '^autogen.*true'
+                if [ $? -eq 0 ]; then
+                        # autogen only exists on some databases; let's keep the data within this bucket
+                        # until https://github.com/influxdata/influxdb/issues/8351 is implemented 
+                        # which makes it possible to rename autogen to default
+                        echo 'ALTER RETENTION POLICY "autogen" ON "nagflux" DURATION '${CONFIG_INFLUXDB_RETENTION}w' DEFAULT' | influx $CONNECT -username $USER -password $PASS >/dev/null
+                else
+                        echo 'SHOW RETENTION POLICIES ON nagflux' | influx $CONNECT -username $USER -password $PASS 2>/dev/null | grep -q ^default
+                        if [ $? -ne 0 ]; then
+                                echo 'CREATE RETENTION POLICY "default" ON "nagflux" DURATION '${CONFIG_INFLUXDB_RETENTION}w' REPLICATION 1 DEFAULT' | influx $CONNECT -username $USER -password $PASS >/dev/null
+                        else
+                                echo 'ALTER RETENTION POLICY "default" ON "nagflux" DURATION '${CONFIG_INFLUXDB_RETENTION}w' DEFAULT' | influx $CONNECT -username $USER -password $PASS >/dev/null
+                        fi
+                fi
+                echo "OK"        
                 exit 0;
             else
                 echo "FAILED"
