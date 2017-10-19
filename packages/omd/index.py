@@ -140,6 +140,10 @@ def page_welcome(req):
                               'PNP is an addon to Nagios which analyzes performance data '
                               'provided by plugins and stores them automatically into '
                               'RRD-databases (Round Robin Databases, see RRDTool).'),
+                             ('grafana', 'Grafana',
+                              'share/grafana',
+                              'Grafana is an open source metric analytics & visualization suite. '
+                              'It is most commonly used for visualizing time series data from InfluxDB'),
                              ('wiki', 'DokuWiki',
                               'share/dokuwiki/htdocs',
                               'DokuWiki is a standards compliant, simple to use Wiki, '
