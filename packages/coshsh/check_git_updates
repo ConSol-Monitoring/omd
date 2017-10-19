@@ -113,7 +113,11 @@ if [ -d ${OMD_ROOT}/etc/${CORE}/conf.d/${OMD_LANDSCAPE}/${OMD_SITE}/static ]; th
 else
   pushd ${OMD_ROOT}/etc/${CORE}/conf.d/${OMD_LANDSCAPE}/${OMD_SITE}
   OLDSTATICREV=""
-  git clone ${OMD_GIT_BASE_STATIC}/static
+  if [[ ${OMD_GIT_BASE_STATIC} =~ ^http ]]; then
+    git clone ${OMD_GIT_BASE_STATIC}_static static
+  else
+    git clone ${OMD_GIT_BASE_STATIC}/static
+  fi
   gitexit=$?
   cd static
   NEWSTATICREV=$(git rev-list --max-count=1 master)
@@ -132,11 +136,16 @@ if [ -d ${OMD_ROOT}/etc/${CORE}/conf.d/${OMD_LANDSCAPE}/${OMD_SITE}/dynamic ]; t
 else
   pushd ${OMD_ROOT}/etc/${CORE}/conf.d/${OMD_LANDSCAPE}/${OMD_SITE}
   OLDDYNAMICREV=""
-  git clone ${OMD_GIT_BASE_DYNAMIC}/dynamic
+  if [[ ${OMD_GIT_BASE_DYNAMIC} =~ ^http ]]; then
+    git clone ${OMD_GIT_BASE_DYNAMIC}_dynamic dynamic
+  else
+    git clone ${OMD_GIT_BASE_DYNAMIC}/dynamic
+  fi
   gitexit=$?
   cd dynamic
   NEWDYNAMICREV=$(git rev-list --max-count=1 master)
   popd
+  MUSTRELOAD=1
 fi
 if [ ! -d ${OMD_ROOT}/etc/${CORE}/conf.d/${OMD_LANDSCAPE}/${OMD_SITE}/custom ]; then
   mkdir -p ${OMD_ROOT}/etc/${CORE}/conf.d/${OMD_LANDSCAPE}/${OMD_SITE}/custom
