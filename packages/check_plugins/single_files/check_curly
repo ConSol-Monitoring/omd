@@ -1,0 +1,426 @@
+#!/usr/bin/php -q
+<?php
+
+function Help($rc = 0){
+echo "
+check_curly
+Originally written by Vit Safar, extended by Michael Kraus
+
+ Syntax:
+    -u URL [http(s)://URL(:PORT)]
+    -c Critical page return time in seconds [TIME]
+    -w Warning page return time in seconds [TIME]
+    -t Plugin timeout in seconds (default 10) [TIME]
+
+    -f Follow redirects
+    -k Ignore SSL certificate errors
+
+    -e Expected HTTP response code [HTTP_RESPONSE_CODE]
+
+    --proxy Proxy [http://PROXY:PORT]
+    --agent Agent [USER_AGENT]
+       (default Mozilla/5.0 (compatible; MSIE 10.0; Windows NT 6.1; Trident/6.0))
+    --ntlm Set NTLM auth credentials [USER:PASSWORD]
+
+    -g Find string on page [STRING]
+
+    --sizebelowcritical Critical below page size in bytes [SIZE]
+    --sizeovercritical Critical over page size in bytes [SIZE]
+    --sizebelowwarning Warning below page size in bytes [SIZE]
+    --sizeoverwarning Warning over page size in bytes [SIZE]
+
+    --showheaders Show page headers
+    --showbody Show page body
+    --noperfdata Exclude performance data
+
+    --nullcookiejar Set cookie jar to /dev/null (workaround to prevent infinite loop when redirecting)
+
+    --debug Enable debug mode
+
+ Example:
+  check_curly -u http://test.example.net
+";
+exit($rc);
+}
+
+$DebugArgs=0;
+$Debug=0;
+$Agent='Mozilla/5.0 (compatible; MSIE 10.0; Windows NT 6.1; Trident/6.0)';
+$IncludePerf=1;
+$Msg='';
+$ShowPageHeaders=0;
+$ShowPageBody=0;
+$Timeout=10;
+
+$omd_root = getenv('OMD_ROOT');
+
+$ch = curl_init();
+curl_setopt($ch, CURLOPT_PROXY, "");
+
+$Pocet=count($argv);
+if ($Pocet>1){
+  for ($i=1;$i<$Pocet;$i++){
+    switch ($argv[$i]){
+      case '--debug':    
+        $Debug=1;
+	curl_setopt($ch, CURLOPT_VERBOSE, true);
+        if ($DebugArgs) echo "\nDEBUG: --debug";
+        break;
+
+      case '-u':    
+        if ($Pocet>$i+1){
+          $url = $argv[++$i];
+          if ($DebugArgs) echo "\nDEBUG: -u ".$url;
+          curl_setopt($ch, CURLOPT_URL, $url);
+        }else{
+          echo "ERROR in parsing argument -U: missing value";
+          Help(3);
+        }
+        break;
+
+      case '-w':    
+        if ($Pocet>$i+1){
+          $Tw=$argv[++$i];
+          if ($DebugArgs) echo "\nDEBUG: -w ".$Tw;
+        }else{
+          echo "ERROR in parsing argument -w: missing value";
+          Help(3);
+        }
+        break;
+
+      case '-c':    
+        if ($Pocet>$i+1){
+          $Tc=$argv[++$i];
+          if ($DebugArgs) echo "\nDEBUG: -c ".$Tc;
+        }else{
+          echo "ERROR in parsing argument -Tc: missing value";
+          Help(3);
+        }
+        break;
+
+      case '-t':    
+        if ($Pocet>$i+1){
+          $Timeout=$argv[++$i];
+          if ($DebugArgs) echo "\nDEBUG: -t ".$Timeout;
+        }else{
+          echo "ERROR in parsing argument -t: missing value";
+          Help(3);
+        }
+        break;
+
+      case '-f':    
+        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
+        if ($DebugArgs) echo "\nDEBUG: -f";
+        break;
+
+      case '-k':    
+        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST,  0);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER,  0);
+        if ($DebugArgs) echo "\nDEBUG: -k";
+        break;
+
+      case '-e':    
+        if ($Pocet>$i+1){
+          $Expected=$argv[++$i];
+          if ($DebugArgs) echo "\nDEBUG: -e ".$Expected;
+        }else{
+          echo "ERROR in parsing argument -e: missing value";
+          Help(3);
+        }
+        break;
+
+      case '--proxy':    
+        if ($Pocet>$i+1){
+          $Proxy=$argv[++$i];
+          curl_setopt($ch, CURLOPT_PROXY, $Proxy);
+          if ($DebugArgs) echo "\nDEBUG: --proxy ".$Proxy;
+        }else{
+          echo "ERROR in parsing argument --proxy: missing value";
+          Help(3);
+        }
+        break;
+
+      case '--agent':    
+        if ($Pocet>$i+1){
+          $Agent=$argv[++$i];
+          if ($DebugArgs) echo "\nDEBUG: --agent ".$Agent;
+        }else{
+          echo "ERROR in parsing argument --agent: missing value";
+          Help(3);
+        }
+        break;
+
+      case '--ntlm':    
+        if ($Pocet>$i+1){
+	  $Ntlm=$argv[++$i];
+          if ($DebugArgs) echo "\nDEBUG: --ntlm ".$Ntlm;
+          curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_NTLM);
+          curl_setopt($ch, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_1);
+          curl_setopt($ch, CURLOPT_UNRESTRICTED_AUTH, 1);
+          curl_setopt($ch, CURLOPT_USERPWD, $Ntlm);
+        }else{
+          echo "ERROR in parsing argument --ntlm: missing value";
+          Help(3);
+        }
+        break;
+
+      case '-g':    
+        if ($Pocet>$i+1){
+          $Grep=$argv[++$i];
+          if ($DebugArgs) echo "\nDEBUG: -g ".$Grep;
+        }else{
+          echo "ERROR in parsing argument -g: missing value";
+          Help(3);
+        }
+        break;
+
+      case '--sizebelowcritical':    
+        if ($Pocet>$i+1){
+          $Sbc=$argv[++$i];
+          if ($DebugArgs) echo "\nDEBUG: --sizebelowcritical ".$Sbc;
+        }else{
+          echo "ERROR in parsing argument --sizebelowcritical: missing value";
+          Help(3);
+        }
+        break;
+
+      case '--sizebelowwarning':    
+        if ($Pocet>$i+1){
+          $Sbw=$argv[++$i];
+          if ($DebugArgs) echo "\nDEBUG: --sizebelowwarning ".$Sbw;
+        }else{
+          echo "ERROR in parsing argument --sizebelowwarning: missing value";
+          Help(3);
+        }
+        break;
+
+      case '--sizeovercritical':    
+        if ($Pocet>$i+1){
+          $Soc=$argv[++$i];
+          if ($DebugArgs) echo "\nDEBUG: --sizeovercritical ".$Soc;
+        }else{
+          echo "ERROR in parsing argument --sizeovercritical: missing value";
+          Help(3);
+        }
+        break;
+
+      case '--sizeoverwarning':    
+        if ($Pocet>$i+1){
+          $Sow=$argv[++$i];
+          if ($DebugArgs) echo "\nDEBUG: --sizeoverwarning ".$Sow;
+        }else{
+          echo "ERROR in parsing argument --sizeoverwarning: missing value";
+          Help(3);
+        }
+        break;
+
+      case '--showheaders':    
+        $ShowPageHeaders=1;
+        if ($DebugArgs) echo "\nDEBUG: --showheaders";
+        break;
+
+      case '--showbody':    
+        $ShowPageBody=1;
+        if ($DebugArgs) echo "\nDEBUG: --showbody";
+        break;
+
+      case '--noperfdata':    
+        $IncludePerf=0;
+        if ($DebugArgs) echo "\nDEBUG: --noperfdata";
+        break;
+
+      case '--nullcookiejar':    
+        curl_setopt($ch, CURLOPT_COOKIEJAR, '/dev/null');
+        if ($DebugArgs) echo "\nDEBUG: --nullcookiejar";
+        break;
+
+      case '--help':
+      case '-h':
+        Help(0);
+        break; 
+
+      default:
+        echo "ERROR in argument parsing: ".$argv[$i];
+        Help(3);
+        break;
+    }
+  }
+
+  if (isset($Tc) and isset($Tw) and  ($Tw >= $Tc) ){
+    echo "UNKNOWN Argument -w ($Tw) >= -c ($Tc)";
+    Help(3);
+  } 
+  if (isset($Sbc) and isset($Sbw) and  ($Sbw < $Sbc) ){
+    echo "UNKNOWN Argument --sizebelowwarning ($Sbw) < --sizebelowcritical ($Sbc)";
+    Help(3);
+  } 
+  if (isset($Soc) and isset($Sow) and  ($Sow > $Soc) ){
+    echo "UNKNOWN Argument --sizeoverwarning ($Sow) > --sizeovercritical ($Soc)";
+    Help(3);
+  } 
+
+  if(isset($Tc)) { $pTc = $Tc; }else{ $pTc = ''; }
+  if(isset($Tw)) { $pTw = $Tw; }else{ $pTw = ''; }
+  if(isset($Sbc)) { $pSbc = $Sbc; }else{ $pSbc = ''; }
+  if(isset($Sbw)) { $pSbw = $Sbw; }else{ $pSbw = ''; }
+  if(isset($Soc)) { $pSoc = $Soc; }else{ $pSoc = ''; }
+  if(isset($Sow)) { $pSow = $Sow; }else{ $pSow = ''; }
+
+
+
+  curl_setopt($ch, CURLOPT_FRESH_CONNECT, 1);
+  curl_setopt($ch, CURLOPT_COOKIESESSION, 1);
+  curl_setopt($ch, CURLOPT_MAXREDIRS, 20);
+  curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+  curl_setopt($ch, CURLOPT_HEADER, 1);
+  curl_setopt($ch, CURLOPT_USERAGENT, $Agent );
+  curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, $Timeout);
+// Maybe cert path has to be configurable sometimes
+//  curl_setopt($ch, CURLOPT_CAPATH, "/etc/pki/tls/certs");
+//  curl_setopt($ch, CURLOPT_CAINFO, "ca-bundle.crt");
+//  curl_setopt($ch, CURLOPT_CAINFO, "$omd_root/etc/ca-bundle.crt");
+
+  $response=@curl_exec($ch);
+  $errnum=curl_errno($ch);
+
+  $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+  $total_time = number_format(curl_getinfo($ch, CURLINFO_TOTAL_TIME), 6);
+  $namelookup_time = number_format(curl_getinfo($ch, CURLINFO_NAMELOOKUP_TIME), 6);
+  $connect_time = number_format(curl_getinfo($ch, CURLINFO_CONNECT_TIME), 6);
+  $redirect_time = number_format(curl_getinfo($ch, CURLINFO_REDIRECT_TIME), 6);
+  $size_download = curl_getinfo($ch, CURLINFO_SIZE_DOWNLOAD);
+  $speed_download = curl_getinfo($ch, CURLINFO_SPEED_DOWNLOAD);
+  $request_size = curl_getinfo($ch, CURLINFO_REQUEST_SIZE);
+  $header_size = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
+  $effective_url = curl_getinfo($ch, CURLINFO_EFFECTIVE_URL);
+  $redirect_count = curl_getinfo($ch, CURLINFO_REDIRECT_COUNT);
+
+  $header = substr($response, 0, $header_size);
+  $body = substr($response, $header_size);
+
+  if ($Debug) {
+    echo "
+DEBUG INFORMATION
+
+CURL GET_INFO:
+CURLINFO_HTTP_CODE $http_code
+CURLINFO_TOTAL_TIME $total_time
+CURLINFO_NAMELOOKUP_TIME $namelookup_time
+CURLINFO_REDIRECT_TIME $redirect_time
+CURLINFO_CONNECT_TIME $connect_time
+CURLINFO_REDIRECT_COUNT $redirect_count
+CURLINFO_EFFECTIVE_URL $effective_url
+CURLINFO_REQUEST_SIZE $request_size
+CURLINFO_HEADER_SIZE $header_size
+CURLINFO_SIZE_DOWNLOAD $size_download
+CURLINFO_SPEED_DOWNLOAD $speed_download
+
+HEADER(s):
+$header
+
+BODY:
+$body
+";
+  }
+
+  if ($errnum){
+    if ($errnum==28){
+      // ran into curl timeout
+      if ($IncludePerf) {
+           echo 'CRITICAL Timeout '.$Timeout.'s exceeded. |total_time='.$Timeout.'.0s;'.$pTw.';'.$pTc.';; ';
+      } else {
+           echo 'CRITICAL Timeout '.$Timeout.'s exceeded.';
+      }
+      exit(2);
+    }else{
+      echo "CRITICAL curl returned error: ".curl_error($ch);
+      exit(2);
+    }
+  }
+
+  @curl_close($ch);
+
+  $Perf= '|page_size='.$size_download.'B;;;; total_time='.$total_time.'s;'.$pTw.';'.$pTc.';; namelookup_time='.$namelookup_time.'s;;;; connect_time='.$connect_time.'s;;;; redirect_time='.$redirect_time.'s;;;; ';
+  if (isset($Sbc) or isset($Sbw)){
+    $Perf.= 'page_size_below='.$size_download.'B;'.$pSbw.';'.$pSbc.';; ';
+  }
+  if (isset($Soc) or isset($Sow)){
+    $Perf.= 'page_size_over='.$size_download.'B;'.$pSow.';'.$pSoc.';; ';
+  }
+
+
+
+  if (isset($Expected)) {
+    if ($http_code != $Expected) {
+      $Msg.='CRITICAL http_response code '.$http_code.' does not match expected '.$Expected;
+      nagios_exit(2);
+    }
+  }else{
+    if ($http_code != 200) {
+      $Msg.='CRITICAL http_response code '.$http_code;
+      nagios_exit(2);
+    }
+  }
+  
+  if (isset($Tc) and ($total_time > $Tc)){
+    $Msg.='CRIITCAL Page time '.$total_time.'s exceeded time limit '.$Tc.'s';
+    nagios_exit(2);
+  }elseif (isset($Tw) and ($total_time > $Tw)){
+    $Msg.='WARNING Page time '.$total_time.'s exceeded time limit '.$Tw.'s';
+    nagios_exit(1);
+  }
+
+  if (isset($Grep)){
+    if (!strstr($body,$Grep)){
+      $Msg.='CIRITCAL String '.$Grep.' not found';
+      nagios_exit(2);
+    }
+  }
+
+  if (isset($Sbc) and ($size_download < $Sbc)){
+    $Msg.='CRITICAL Page size '.$size_download.'B below limit '.$Sbc.'B';
+    nagios_exit(2);
+  }elseif (isset($Sbw) and ($size_download < $Sbw)){
+    $Msg.='WARNING Page size '.$size_download.'B below limit '.$Sbw.'B';
+    nagios_exit(1);
+  }
+
+  if (isset($Soc) and ($size_download > $Soc)){
+    $Msg.='CRITICAL Page size '.$size_download.'B over limit '.$Soc.'B';
+    nagios_exit(2);
+  }elseif (isset($Sow) and ($size_download > $Sow)){
+    $Msg.='WARNING Page size '.$size_download.'B over limit '.$Sow.'B';
+    nagios_exit(1);
+  }
+
+  if (empty($Msg)) $Msg='OK';
+  
+  nagios_exit(0);
+    
+}else{
+  Help();
+}
+
+function nagios_exit($status) {
+  global $IncludePerf;
+  global $ShowPageHeaders;
+  global $ShowPageBody;
+  global $Msg;
+  global $Perf;
+  global $header;
+  global $body;
+  global $url;
+  global $effective_url;
+
+  $Msg .= ". Checked URL $url ($effective_url).";
+
+  if ($IncludePerf) $Msg.=$Perf;
+  echo "$Msg\n";
+
+  if ($ShowPageHeaders) echo "\n\n----------------------------- Page Headers ----------------------------\n\n".$header;
+  if ($ShowPageBody) echo "\n\n----------------------------- Page Body ----------------------------\n\n".$body;
+
+  exit($status);
+}
+
+?>
