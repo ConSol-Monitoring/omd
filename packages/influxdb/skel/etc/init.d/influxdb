@@ -95,10 +95,10 @@ case "$1" in
 
         nohup $DAEMON $OPTIONS >>$LOGFILE 2>&1 &
         if [ $? -eq 0 ]; then
-            for x in $(seq 100); do
+            for x in $(seq 60); do
                 $OMD_ROOT/lib/nagios/plugins/check_influxdb m ping --address http://$ADDRESS:$PORT > /dev/null && break;
                 printf "."
-                sleep 0.2
+                sleep 1
             done
             if get_status > /dev/null ; then
                 # set admin user
