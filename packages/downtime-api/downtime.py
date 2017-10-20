@@ -76,12 +76,12 @@ class ThrukCli(object):
         self.get('cmd.cgi?cmd_typ=55&cmd_mod=2&host=%s&com_author=%s&com_data=%s&fixed=1&childoptions=0&start_time=%s&end_time=%s' % (host, author, comment, start, end))
 
     def get_downtime(self, host, author, comment, start, end):
-        max_attempts = 5
+        max_attempts = 10
         for attempt in range(max_attempts):
             downtimes = self.get('extinfo.cgi?view_mode=json&type=6')
             downtimes = json.loads(downtimes)
             for downtime in downtimes["host"]:
-                if downtime["comment"] == comment and int(downtime["start_time"]) >= start and int(downtime["end_time"]) <= end + 10:
+                if downtime["comment"] == comment:
                     return True
             # in bigger environments it may take a while...
             time.sleep(1)
@@ -210,6 +210,7 @@ try:
    
     now = int(time.time())
     start_time = now
+    comment = comment + " apiset" + urllib.quote_plus(time.strftime("%s", time.localtime(start_time)))
     end_time = now + 60 * duration
     for host in real_hosts:
         thruk.prefer_backend(host["peer_name"])
