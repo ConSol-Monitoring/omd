@@ -34,17 +34,32 @@ return function (callback) {
 
         var box = $( e.currentTarget ).find( "DIV.sakuli-popup" );
         if (box.length > 0 ){
-        $(box[0]).attr('class', 'sakuli-image');
-        var sakuliUrl = site[1] + box[0].innerHTML;
-        $.get( sakuliUrl + "output.txt").always(function(data ,state) {
-            if (state != "success" ) {
-                data = "Could not find outputfile!"
-            }
-            console.log(data);
-            data = $("<div>").text(data).html().replace(/['"]+/g, '');
-            console.log(data);
-            box[0].innerHTML = '<a href="' + sakuliUrl  + 'screenshot.jpg" data-lightbox="sakuli" data-title="'+ data +'"><img src="'+ sakuliUrl +'screenshot.jpg" alt="Sakuli error image" width=250px /></a>';
-        });
+            $(box[0]).attr('class', 'sakuli-image');
+            var sakuliUrl = site[1] + box[0].innerHTML;
+            var svcoutput;
+            var imagename;
+            jQuery.when(
+                // fetch Sakuli serviceoutput file
+                $.get( sakuliUrl + "output.txt").always(function(data ,state) {
+                    if (state != "success" ) {
+                        data = "Could not find Sakuli service outputfile at " + sakuliUrl + "output.txt !"
+                    }
+                    console.log(data);
+                    svcoutput = $("<div>").text(data).html().replace(/['"]+/g, '');
+                    console.log("Sakuli service output: " + svcoutput);
+                }) &&
+                // fetch Sakuli screenshot (jpg/png)
+                $.get( sakuliUrl ).always(function(imgdata ,state) {
+                    if (state != "success" ) {
+                        imgdata = "Could not access screenshot list page at " + sakuliUrl + "!"
+                    }
+                    // the 3rd href on the apache index page contains the img name
+                    imagename = $(imgdata).find('a')[2].text.trim();
+                    console.log("Sakuli screenshot image name: " + imagename);
+                })
+            ).then ( function() {
+                box[0].innerHTML = '<a href="' + sakuliUrl  + imagename + '" data-lightbox="sakuli" data-title="'+ svcoutput +'"><img src="'+ sakuliUrl + imagename +'" alt="Sakuli error image" width=250px /></a>';
+            });
         }
     });
 
