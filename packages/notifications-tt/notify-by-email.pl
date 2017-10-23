@@ -8,6 +8,8 @@ use strict;
 use warnings;
 use Getopt::Long;
 use Template;
+use lib $ENV{'OMD_ROOT'}.'/share/thruk/lib/';
+use Monitoring::Livestatus::Class::Lite;
 
 my %macro;
 my $template = '';
@@ -15,6 +17,7 @@ my $data     = '';
 my $output   = '';
 my $mail     = $ENV{'OMD_ROOT'}.'/bin/mail -t';
 my $verbose  = 0;
+my $livestatus;
 my @vars;
 
 GetOptions (
@@ -22,8 +25,9 @@ GetOptions (
         'type=s'       => \%macro,
         'template=s'   => \$template,
         'mail=s'       => \$mail,
-        'verbose'      => \$verbose,
+        'v|verbose'    => \$verbose,
         'mailvar=s'    => \@vars,
+        'livestatus=s' => \$livestatus,
 );
 
 if ( $template eq '' ){
@@ -42,6 +46,16 @@ for my $key (qw/SERVICEOUTPUT LONGSERVICEOUTPUT HOSTOUTPUT LONGHOSTOUTPUT/) {
 }
 
 map($macro{$_} =~ s/\\n/\n/gmx, keys %macro);
+if($livestatus && -e $livestatus) {
+    alarm(5);
+    eval {
+        set_livestatus_macros();
+    };
+    if($@) {
+        print "fetching long plugin output from livestatus failed: $@\n";
+    }
+    alarm(0);
+}
 extract_ascii($macro{'LONGHOSTOUTPUT'});
 extract_ascii($macro{'LONGSERVICEOUTPUT'});
 process_template();
@@ -83,4 +97,25 @@ sub extract_ascii {
                \s*(.*)
                ASCII_NOTIFICATION_END$
                .*/$1/msx;
+}
+
+sub set_livestatus_macros {
+    my @data;
+    my $ls = Monitoring::Livestatus::Class::Lite->new($livestatus);
+
+    if($macro{'SERVICEDESC'}) {
+        @data = $ls->table('services')->columns(qw/long_plugin_output/)->filter(
+            { host_name   => $macro{'HOSTNAME'},
+              description => $macro{'SERVICEDESC'},
+            }
+        )->hashref_array();
+        $macro{'LONGSERVICEOUTPUT'} = $data[0]->{'long_plugin_output'};
+    } else {
+        @data = $ls->table('hosts')->columns(qw/long_plugin_output/)->filter(
+            { name   => $macro{'HOSTNAME'},
+            }
+        )->hashref_array();
+        $macro{'LONGHOSTOUTPUT'} = $data[0]->{'long_plugin_output'};
+    }
+    return;
 }

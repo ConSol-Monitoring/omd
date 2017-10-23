@@ -401,7 +401,7 @@ Content-Transfer-Encoding: base64
 Content-ID: <embedded.png@1>
 Content-Disposition: inline, filename="embedded.png"
 
-[% graph = LONGSERVICEOUTPUT.remove('\n').match('base64,(.*)[\s"]') %]
+[% graph = LONGSERVICEOUTPUT.remove('\n').match('base64,(.*)[\s"\']') %]
 "[% graph.0.chunk(70).join("\n") %]"
 
 [%+ END %]

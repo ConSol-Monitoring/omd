@@ -1,0 +1,8 @@
+###ROOT###/var/log/notifications.log {
+    missingok
+    rotate 52
+    compress
+    delaycompress
+    notifempty
+    create 660 ###SITE### ###SITE###
+}
