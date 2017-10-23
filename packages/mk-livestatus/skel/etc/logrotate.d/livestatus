@@ -1,4 +1,4 @@
-###ROOT###/var/nagios/livestatus.log {
+###ROOT###/var/nagios/livestatus.log ###ROOT###/var/icinga/livestatus.log ###ROOT###/var/naemon/livestatus.log {
 	missingok
 	rotate 7
 	compress
