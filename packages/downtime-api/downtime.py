@@ -6,6 +6,9 @@ import time
 import sys
 import subprocess
 import urllib
+import re
+import socket
+import time
 try: import simplejson as json
 except ImportError: import json
 #cgi.enable()
@@ -96,7 +99,13 @@ def originating_ip():
             return os.environ[vars]
     return None
 
-
+def trace(result, msg):
+    if os.path.exists(os.environ["OMD_ROOT"] + '/tmp/run/downtimeapi.trace'):
+        if not "trace" in result:
+            result["trace"] = []
+        if not isinstance(msg, basestring):
+            msg = str(msg)
+        result["trace"].append(time.strftime("%H:%M:%S ", time.localtime(time.time())) + msg)
 
 result = {}
 statuus = {
@@ -153,6 +162,7 @@ try:
     thruk = ThrukCli()
     backends = thruk.get_backend_names()
     result["backends"] = backends
+    trace(result, "found backends: " + str(backends))
 
     if not backends:
         result["error"] = "Thruk found no backends"
@@ -178,6 +188,7 @@ try:
             result["error"] = "Host not found"
             status = 400
             raise CGIAbort
+        trace(result, "found hosts " + " ".join([h["name"] + "@" + h["peer_name"] for h in hosts]))
 
     if not backend:
         backends = [h["peer_name"] for h in hosts]
@@ -186,13 +197,27 @@ try:
 
     real_hosts = []
     for host in hosts:
+        trace(result, "try host " + str(host))
         if dtauthtoken:
             macros = dict(zip(host["custom_variable_names"], host["custom_variable_values"]))
-            #result["macros"] = macros
             if "DTAUTHTOKEN" in macros and macros["DTAUTHTOKEN"] == dtauthtoken:
+                trace(result, 'dtauthtoken is valid')
                 real_hosts.append(host)
         elif host["address"] == address:
+            trace(result, 'requester address is host address')
             real_hosts.append(host)
+        elif not re.search(r'^\d+\.\d+\.\d+\.\d+$', host["address"]):
+            try:
+                trace(result, "lookup " + host["address"])
+                socket.setdefaulttimeout(5)
+                hostname, aliaslist, ipaddrlist = socket.gethostbyname_ex(host["address"])
+                trace(result, "resolves to " + str(ipaddrlist))
+            except Exception, e:
+                trace(result, e)
+                ipaddrlist = []
+            if address in ipaddrlist:
+                trace(result, 'matches the requester address')
+                real_hosts.append(host)
 
     if not real_hosts:
         if dtauthtoken:
