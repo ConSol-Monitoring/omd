@@ -83,6 +83,9 @@ build:
 	        cd $$MDIR; \
 	        echo PYTHONBUILD $$M ; \
 		if [ `uname -m` = 'armv7l' ] && [[ "$$M" =~ .*pymssql.* ]]; then \
+		    sed -ri "/setuptools_git/d" setup.py; \
+		    sed -ri "s#include_dirs = \[\]#include_dirs = \['$(FREETDS)/include'\]#" setup.py; \
+		    sed -ri "s#library_dirs = \[\]#library_dirs = \['$(FREETDS)/lib'\]#" setup.py; \
 	            python setup.py build_ext -I $(FREETDS)/include -L $(FREETDS)/lib ; \
 		else \
 	            python setup.py build ; \
