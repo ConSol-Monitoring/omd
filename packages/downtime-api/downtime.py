@@ -13,6 +13,12 @@ try: import simplejson as json
 except ImportError: import json
 #cgi.enable()
 
+def trace(msg):
+    if os.path.exists(os.environ["OMD_ROOT"] + '/tmp/run/downtimeapi.trace'):
+        if not isinstance(msg, basestring):
+            msg = str(msg)
+        sys.stderr.write(msg + "\n")
+
 class CGIAbort(Exception):
     pass
 
@@ -49,15 +55,26 @@ class ThrukCli(object):
 
     def get_host(self, host):
         try:
-            host = self.get('status.cgi?view_mode=json&host=%s&style=hostdetail' % host)
-            host = json.loads(host)
-            for h in host:
+            hosts = self.get('status.cgi?view_mode=json&host=%s&style=hostdetail' % host)
+            hosts = json.loads(hosts)
+            for h in hosts:
                 # sometimes (with lmd?) peer_name is missing
                 if not "peer_name" in h and "peer_key" in h and h["peer_key"] in self.backends:
                     h["peer_name"] = self.backends[h["peer_key"]]["peer_name"]
         except Exception, e:
-            host = []
-        return host
+            hosts = []
+        return hosts
+
+    def get_hostgroup(self, hostgroup):
+        try:
+            hosts = self.get('status.cgi?view_mode=json&hostgroup=%s&style=hostdetail' % hostgroup)
+            hosts = json.loads(hosts)
+            for h in hosts:
+                if not "peer_name" in h and "peer_key" in h and h["peer_key"] in self.backends:
+                    h["peer_name"] = self.backends[h["peer_key"]]["peer_name"]
+        except Exception, e:
+            hosts = []
+        return hosts
 
     def get_service(self, host, service):
         try:
@@ -75,20 +92,42 @@ class ThrukCli(object):
             self.hosts = []
         return self.hosts
 
-    def set_downtime(self, host, author, comment, start, end):
-        self.get('cmd.cgi?cmd_typ=55&cmd_mod=2&host=%s&com_author=%s&com_data=%s&fixed=1&childoptions=0&start_time=%s&end_time=%s' % (host, author, comment, start, end))
+    def set_host_downtimes(self, hosts, author, comment, start, end):
+        backends = set([h["peer_name"] for h in hosts])
+        for backend in backends:
+            self.prefer_backend(backend)
+            for host in [h for h in hosts if h["peer_name"] == backend]:
+                trace("set_host_downtimes %s@%s" % (host["name"], backend))
+                self.get('cmd.cgi?cmd_typ=55&cmd_mod=2&host=%s&com_author=%s&com_data=%s&fixed=1&childoptions=1&start_time=%s&end_time=%s' % (host["name"], author, comment, start, end))
 
-    def get_downtime(self, host, author, comment, start, end):
+    def get_host_downtimes(self, hosts, author, comment, start, end):
+        down_hosts = []
+        down_hosts_backend_wanted = {}
+        found_down_hosts = {}
         max_attempts = 10
+        backends = set([h["peer_name"] for h in hosts])
+        for backend in backends:
+            down_hosts_backend_wanted[backend] = [h for h in hosts if h["peer_name"] == backend]
         for attempt in range(max_attempts):
-            downtimes = self.get('extinfo.cgi?view_mode=json&type=6')
-            downtimes = json.loads(downtimes)
-            for downtime in downtimes["host"]:
-                if downtime["comment"] == comment:
-                    return True
+            trace("get_host_downtimes attempt " + str(attempt))
+            for backend in backends:
+                if len([dh for dh in down_hosts if dh["peer_name"] == backend]) == len(down_hosts_backend_wanted[backend]):
+                    continue
+                trace("get_host_downtimes check backend " + backend)
+                self.prefer_backend(backend)
+                downtimes = self.get('extinfo.cgi?view_mode=json&type=6')
+                downtimes = json.loads(downtimes)
+                for downtime in downtimes["host"]:
+                    if downtime["comment"] == comment:
+                        if not [dh for dh in down_hosts if dh["name"] == downtime["host_name"] and dh["peer_name"] == backend]:
+                            trace("get_host_downtimes found %s@%s" %(downtime["host_name"], backend))
+                            down_hosts.extend([dh for dh in hosts if dh["name"] == downtime["host_name"] and dh["peer_name"] == backend])
+            if len(down_hosts) == len(hosts):
+                trace("get_host_downtimes found all %d hosts" % len(hosts))
+                break
             # in bigger environments it may take a while...
             time.sleep(1)
-        return False
+        return down_hosts
                 
 
 def originating_ip():
@@ -98,14 +137,6 @@ def originating_ip():
         if vars in os.environ:
             return os.environ[vars]
     return None
-
-def trace(result, msg):
-    if os.path.exists(os.environ["OMD_ROOT"] + '/tmp/run/downtimeapi.trace'):
-        if not "trace" in result:
-            result["trace"] = []
-        if not isinstance(msg, basestring):
-            msg = str(msg)
-        result["trace"].append(time.strftime("%H:%M:%S ", time.localtime(time.time())) + msg)
 
 result = {}
 statuus = {
@@ -129,6 +160,7 @@ try:
 
     params = cgi.FieldStorage()
     host_name = params.getfirst("host", None)
+    hostgroup_name = params.getfirst("hostgroup", None)
     service_description = params.getfirst("service", None)
     comment = params.getfirst("comment", None)
     duration = params.getfirst("duration", None)
@@ -140,7 +172,13 @@ try:
     for key in params.keys():
         result["params"][key] = params[key].value
     
-    if not host_name or not comment or not duration:
+    ######################################################################
+    # validate parameters
+    # host= or hostgroup=
+    # duration=
+    # comment=
+    ######################################################################
+    if not (host_name or hostgroup_name) or not comment or not duration:
         result["error"] = "Missing Required Parameters"
         status = 400
         raise CGIAbort
@@ -162,7 +200,7 @@ try:
     thruk = ThrukCli()
     backends = thruk.get_backend_names()
     result["backends"] = backends
-    trace(result, "found backends: " + str(backends))
+    trace("found backends: " + str(backends))
 
     if not backends:
         result["error"] = "Thruk found no backends"
@@ -177,46 +215,66 @@ try:
         thruk.prefer_backend(backend)
 
     if service_description:
+        ##################################################################
+        # to be done. i start implementing as soon as you pay
+        ##################################################################
         services = thruk.get_service(host_name, service_description) # may exist many times
         if len(services) < 1:
             result["error"] = "Service not found"
             status = 400
             raise CGIAbort
+    elif hostgroup_name:
+        ##################################################################
+        # get the list of hostgroup members from multiple backends
+        ##################################################################
+        hosts = thruk.get_hostgroup(hostgroup_name)
+        if len(hosts) < 1:
+            result["error"] = "Hostgroup not found or hostgroup empty"
+            status = 400
+            raise CGIAbort
+        trace("found hosts " + " ".join([h["name"] + "@" + h["peer_name"] for h in hosts]))
     else:
+        ##################################################################
+        # get the list of hosts (same name may exist in different backends
+        ##################################################################
         hosts = thruk.get_host(host_name) # may exist many times
         if len(hosts) < 1:
             result["error"] = "Host not found"
             status = 400
             raise CGIAbort
-        trace(result, "found hosts " + " ".join([h["name"] + "@" + h["peer_name"] for h in hosts]))
+        trace("found hosts " + " ".join([h["name"] + "@" + h["peer_name"] for h in hosts]))
 
     if not backend:
         backends = [h["peer_name"] for h in hosts]
     else:
         backends = [backend]
 
+    ######################################################################
+    # check the list of hosts for matching address or authtoken
+    # those which passed the test are appended to real_hosts
+    ######################################################################
     real_hosts = []
     for host in hosts:
-        trace(result, "try host " + str(host))
+        trace("try host " + str(host))
         if dtauthtoken:
             macros = dict(zip(host["custom_variable_names"], host["custom_variable_values"]))
             if "DTAUTHTOKEN" in macros and macros["DTAUTHTOKEN"] == dtauthtoken:
-                trace(result, 'dtauthtoken is valid')
+                trace('dtauthtoken is valid for host ' + host["name"])
                 real_hosts.append(host)
         elif host["address"] == address:
-            trace(result, 'requester address is host address')
+            trace('requester address is host address')
             real_hosts.append(host)
         elif not re.search(r'^\d+\.\d+\.\d+\.\d+$', host["address"]):
             try:
-                trace(result, "lookup " + host["address"])
+                trace("lookup " + host["address"])
                 socket.setdefaulttimeout(5)
                 hostname, aliaslist, ipaddrlist = socket.gethostbyname_ex(host["address"])
-                trace(result, "resolves to " + str(ipaddrlist))
+                trace("resolves to " + str(ipaddrlist))
             except Exception, e:
-                trace(result, e)
+                trace(e)
                 ipaddrlist = []
             if address in ipaddrlist:
-                trace(result, 'matches the requester address')
+                trace('matches the requester address')
                 real_hosts.append(host)
 
     if not real_hosts:
@@ -229,34 +287,33 @@ try:
             status = 401
             raise CGIAbort
     elif len(real_hosts) < len(hosts):
+        trace('matches the requester address')
         # we could abort here with 401 because we have permission
-        # only for a subset of identical-names hosts
+        # only for a subset of identical-names hosts or hotgroup members
         pass
    
-    now = int(time.time())
-    start_time = now
+    ######################################################################
+    # add a downtime for every host in real_hosts
+    ######################################################################
+    start_time = int(time.time())
     comment = comment + " apiset" + urllib.quote_plus(time.strftime("%s", time.localtime(start_time)))
-    end_time = now + 60 * duration
-    for host in real_hosts:
-        thruk.prefer_backend(host["peer_name"])
-        thruk.set_downtime(
-            host_name, "omdadmin", comment,
-            urllib.quote_plus(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(start_time))),
-            urllib.quote_plus(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(end_time))),
-        )
-            
-    result["downtimes"] = {}
-    count_downtimes = 0
-    for host in real_hosts:
-        thruk.prefer_backend(host["peer_name"])
-        result["downtimes"][host["peer_name"]] = thruk.get_downtime(
-            host_name, "omdadmin", comment,
-            start_time, end_time,
-        )
-    if len([be for be in result["downtimes"] if result["downtimes"][be]]) == 0:
+    end_time = start_time + 60 * duration
+    thruk.set_host_downtimes(real_hosts, "omdadmin", comment,
+        urllib.quote_plus(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(start_time))),
+        urllib.quote_plus(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(end_time))),
+    )
+
+    ######################################################################
+    # get all hosts with this downtime in down_hosts
+    ######################################################################
+    down_hosts = thruk.get_host_downtimes(
+        real_hosts, "omdadmin", comment,
+        start_time, end_time,
+    )
+    if len(down_hosts) == 0:
         status = 202
         result["error"] = "downtime was not set"
-    elif len(real_hosts) > len([be for be in result["downtimes"] if result["downtimes"][be]]):
+    elif len(real_hosts) > len(down_hosts):
         status = 202
         result["error"] = "downtime not set in some backends"
     elif len(real_hosts) < len(hosts):
