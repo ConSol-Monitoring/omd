@@ -88,6 +88,7 @@ build:
 		    sed -ri "s#library_dirs = \[\]#library_dirs = \['$(FREETDS)/lib'\]#" setup.py; \
 	            python setup.py build_ext -I $(FREETDS)/include -L $(FREETDS)/lib ; \
 		else \
+		    sed -ri "/setuptools_git/d" setup.py; \
 	            python setup.py build ; \
 		fi ; \
 	        cd .. ; \
