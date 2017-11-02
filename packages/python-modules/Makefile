@@ -69,9 +69,9 @@ build:
 	    else \
 		export PYMSSQL_BUILD_WITH_BUNDLED_FREETDS=1; \
 	    fi; \
-	    unset http_proxy; \
-	    unset https_proxy; \
-	    unset ftp_proxy; \
+	    export http_proxy=http://external_dependencies_must_be_included_in_omd; \
+	    export https_proxy=http://external_dependencies_must_be_included_in_omd; \
+	    export ftp_proxy=http://external_dependencies_must_be_included_in_omd; \
 	    for M in $(MODULES); do \
 	        if echo $$M | grep .tar.gz; then \
 	            tar xzf ../src/$$M ; \
@@ -97,9 +97,9 @@ install:
 	mkdir -p $(LOCALPYTHONDIR)
 	set -e ; cd dest && \
 	    export PYTHONPATH=$$PYTHONPATH:$(LOCALPYTHONDIR); \
-	    unset http_proxy; \
-	    unset https_proxy; \
-	    unset ftp_proxy; \
+	    export http_proxy=http://external_dependencies_must_be_included_in_omd; \
+	    export https_proxy=http://external_dependencies_must_be_included_in_omd; \
+	    export ftp_proxy=http://external_dependencies_must_be_included_in_omd; \
 	    for M in $(MODULES); do \
 	        MDIR=$$(echo $$M | sed -e 's/.tar.gz//g' -e 's/.zip//g') ; \
 	        cd $$MDIR ; \
