@@ -49,7 +49,6 @@ MODULES += pysnmp-4.3.5.tar.gz
 MODULES += pywbem-0.7.0.tar.gz
 MODULES += requests-2.10.0.tar.gz
 MODULES += prometheus_client-0.0.17.tar.gz
-MODULES += influxdb-4.1.1.tar.gz
 
 # More datasources for coshsh
 MODULES += MySQL-python-1.2.5.zip
