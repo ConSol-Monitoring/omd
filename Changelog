@@ -1,7 +1,7 @@
 This file documents the revision history for the Open Monitoring Distribution (Labs Edition)
 
 next
-          - Prometheus update to 1.8.1
+          - Prometheus update to 1.8.2
 		  - Prometheus node_exporter update to 0.15.0
 		  - Prometheus Alertmanager update to 0.9.1
 		  - Prometheus blackbox_exporter update to 0.9.1
