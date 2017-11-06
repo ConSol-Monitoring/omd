@@ -71,7 +71,7 @@ def header(db):
     h.append('# DDL')
     h.append('# CREATE DATABASE mytest')
     h.append('# CREATE RETENTION POLICY oneday ON mytest DURATION 1d REPLICATION 1')
-    h.append(''
+    h.append('')
     h.append('# DML')   
     h.append('# CONTEXT-DATABASE: '+db)   
     h.append('# CONTEXT-RETENTION-POLICY: default')   
