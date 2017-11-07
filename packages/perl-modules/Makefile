@@ -24,7 +24,7 @@ MODULES = \
           DBD-Sybase-1.15.tar.gz \
           Data-Dumper-2.154.tar.gz \
           Digest-1.17.tar.gz \
-	  Digest-HMAC-1.03.tar.gz \
+	  	  Digest-HMAC-1.03.tar.gz \
           Digest-MD5-2.54.tar.gz \
           Digest-Perl-MD5-1.9.tar.gz \
           Digest-SHA1-2.13.tar.gz \
@@ -194,9 +194,10 @@ MODULES = \
           Email-MIME-Encodings-1.315.tar.gz \
           Email-MessageID-1.406.tar.gz \
           MIME-Types-2.13.tar.gz \
-	  Email-Simple-2.211.tar.gz \
-	  Email-MIME-1.937.tar.gz \
-	  Monitoring-GLPlugin-2.4.14.2.tar.gz
+	  	  Email-Simple-2.211.tar.gz \
+	  	  Email-MIME-1.937.tar.gz \
+	  	  Clone-0.39.tar.gz \
+	  	  Monitoring-GLPlugin-2.4.14.2.tar.gz
 
 
 
