@@ -43,7 +43,8 @@ my $tests = [
   { cmd => $omd_bin." config $site set APACHE_TCP_ADDR 127.0.0.1",  like => '/^$/' },
   { cmd => "/bin/su - $site -c 'grep -c 5010 etc/apache/proxy-port.conf'", like => '/^0$/', exit => 1 },
   { cmd => "/bin/df -k /omd/sites/$site/tmp/.", like => '/tmpfs/m' },
-  { cmd => $omd_bin." start $site",  like => '/Starting naemon/' },
+  { cmd => $omd_bin." start $site",  like => '/Starting naemon/',
+                                     sleep => 10 },
   { cmd => $omd_bin." status $site", like => [
                                                 '/apache:\s*running/',
                                                 '/rrdcached:\s*running/',
