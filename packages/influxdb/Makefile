@@ -12,6 +12,7 @@ DATE       = $(shell date -u '+%Y-%m-%d_%I:%M:%S%p')
 
 build:
 	tar zxf $(SRC)
+	patch -p1 < influxdb_inspect_pattern.patch
 	export GOROOT=$(PWD)/../go-$(GOPKG)/go-$(GOVERSION) && export GOPATH=$(PWD)/$(GOPATH)/ && PATH=$$GOROOT/bin:$$PATH && \
 		cd $(GOPATH)/src/github.com/influxdata && \
 		go build -ldflags "-s -w" ./... && \
