@@ -6,6 +6,10 @@ include ../pnp4nagios/Makefile
 build:
 	tar xzf ../pnp4nagios/$(DIR).tar.gz
 	set -e; \
+	for p in ../pnp4nagios/patches/*.diff ; do \
+	    echo "applying $$p..." ; \
+	    ( cd $(DIR) ; patch -p1 ) < $$p || exit 1; \
+	done
 	for p in patches/*.patch ; do \
 	    echo "applying $$p..." ; \
 	    ( cd $(DIR) ; patch -p1 ) < $$p || exit 1; \
