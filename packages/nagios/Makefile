@@ -4,6 +4,8 @@ NAME = nagios
 VERSION = 3.5.1
 DIR = $(NAME)-$(VERSION)
 
+unexport MAKEFLAGS
+
 # Configure options for Nagios. Since we want to compile
 # as non-root, we use our own user and group for compiling.
 # All files will be packaged as user 'root' later anyway.

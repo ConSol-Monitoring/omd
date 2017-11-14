@@ -4,6 +4,8 @@ NAME = mk-livestatus
 VERSION = 1.2.8p20
 DIR = $(NAME)-$(VERSION)
 
+unexport MAKEFLAGS
+
 CONFIGUREOPTS = \
     --prefix=$(OMD_ROOT)
 
