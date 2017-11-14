@@ -75,6 +75,7 @@ OS_PACKAGES    += perl-SNMP
 OS_PACKAGES    += php7-fastcgi
 OS_PACKAGES    += php7-gd
 OS_PACKAGES    += php7-iconv
+OS_PACKAGES    += php7-json
 OS_PACKAGES    += php7-mbstring
 OS_PACKAGES    += php7-pear
 OS_PACKAGES    += php7-sockets
