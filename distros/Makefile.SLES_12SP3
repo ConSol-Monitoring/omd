@@ -1,5 +1,6 @@
 DISTRO_CODE     = sles12sp3
 BUILD_PACKAGES  =
+BUILD_PACKAGES += automake
 BUILD_PACKAGES += tar # needed for "make rpm"
 BUILD_PACKAGES += rpm-devel # needed for "make rpm"
 BUILD_PACKAGES += unzip # unpack src files of packages
