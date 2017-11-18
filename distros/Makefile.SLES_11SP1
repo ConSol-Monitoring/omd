@@ -16,6 +16,7 @@ BUILD_PACKAGES += gd-devel
 BUILD_PACKAGES += git
 BUILD_PACKAGES += glib-devel
 BUILD_PACKAGES += gperf
+BUILD_PACKAGES += groff
 BUILD_PACKAGES += help2man    # required by naemon
 BUILD_PACKAGES += libcurl-devel   # needed by perl modules / thruk
 BUILD_PACKAGES += libexpat-devel
