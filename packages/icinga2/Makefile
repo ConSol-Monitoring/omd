@@ -118,6 +118,8 @@ skel:
 	    $(SKEL)/etc/icinga2/constants.conf
 	sed -i -e '/const PluginDir/a /* The directory which contains your local site plugins */\nconst LocalPluginDir = "###ROOT###/local/lib/nagios/plugins"' \
 	    $(SKEL)/etc/icinga2/constants.conf
+	printf '\n/* The OMD site name */\nconst OMD_SITE = "###SITE###"\nconst OmdSite = "###SITE###"\n' >> $(SKEL)/etc/icinga2/constants.conf
+	printf '\n/* Root folder of this OMD site */\nconst OMD_ROOT = "###ROOT###"\nconst OmdRoot = "###ROOT###"\n' >> $(SKEL)/etc/icinga2/constants.conf
 	sed -i -e 's%^const PluginContribDir.*%const PluginContribDir = "###ROOT###/local/lib/nagios/plugins"%g' \
 	    $(SKEL)/etc/icinga2/constants.conf
 	#echo 'const PrefixDir      = "###ROOT###"'                                         >> $(SKEL)/etc/icinga2/init.conf
