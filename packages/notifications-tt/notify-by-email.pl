@@ -104,18 +104,20 @@ sub set_livestatus_macros {
     my $ls = Monitoring::Livestatus::Class::Lite->new($livestatus);
 
     if($macro{'SERVICEDESC'}) {
-        @data = $ls->table('services')->columns(qw/long_plugin_output/)->filter(
+        @data = $ls->table('services')->columns(qw/plugin_output long_plugin_output/)->filter(
             { host_name   => $macro{'HOSTNAME'},
               description => $macro{'SERVICEDESC'},
             }
         )->hashref_array();
         $macro{'LONGSERVICEOUTPUT'} = $data[0]->{'long_plugin_output'};
+        $macro{'SERVICEOUTPUT'}     = $data[0]->{'plugin_output'};
     } else {
-        @data = $ls->table('hosts')->columns(qw/long_plugin_output/)->filter(
+        @data = $ls->table('hosts')->columns(qw/plugin_output long_plugin_output/)->filter(
             { name   => $macro{'HOSTNAME'},
             }
         )->hashref_array();
         $macro{'LONGHOSTOUTPUT'} = $data[0]->{'long_plugin_output'};
+        $macro{'HOSTOUTPUT'}     = $data[0]->{'plugin_output'};
     }
     return;
 }
