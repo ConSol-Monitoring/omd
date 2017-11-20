@@ -1,10 +1,10 @@
 include ../../Makefile.omd
 
 NAME       = grafana
-VERSION    = 4.5.2
+VERSION    = 4.6.2
 SRC        = $(NAME)-$(VERSION).tar.gz
 GOPATH     = go
-GOPKG      = 1.8
+GOPKG      = 1.9
 GOVERSION  = $(shell grep ^VERSION ../go-${GOPKG}/Makefile | awk '{ print $$3 }')
 PWD        = $(shell pwd)
 GO         = export GOROOT=$(PWD)/../go-$(GOPKG)/go-$(GOVERSION) && export GOPATH=$(PWD)/$(GOPATH)/ && PATH=$$GOROOT/bin:$$PATH && go
@@ -27,10 +27,6 @@ install:
 	install -m 755 $(GOPATH)/src/github.com/grafana/grafana/bin/grafana-cli  $(DESTDIR)$(OMD_ROOT)/bin/grafana-cli
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/grafana
 	tar zxf public.tar.gz -C $(DESTDIR)$(OMD_ROOT)/share/grafana
-	set -e ; for p in patches/*.public_patch ; do \
-	    echo "applying $$p..." ; \
-	    ( cd $(DESTDIR)$(OMD_ROOT)/share/grafana; patch -p1 ) < $$p ; \
-	done
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/grafana/conf
 	install -m 644 defaults.ini $(DESTDIR)$(OMD_ROOT)/share/grafana/conf/
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/grafana/vendor/
