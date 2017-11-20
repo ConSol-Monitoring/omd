@@ -107,6 +107,15 @@ case "$1" in
                 echo "CREATE USER $GRAFANA_USER WITH PASSWORD '$GRAFANA_PASS'" | influx $CONNECT -username $USER -password $PASS >/dev/null
                 echo "CREATE DATABASE nagflux" | influx $CONNECT -username $USER -password $PASS >/dev/null
                 echo "GRANT READ ON nagflux TO $GRAFANA_USER" | influx $CONNECT -username $USER -password $PASS >/dev/null
+                # on the first start it takes a few seconds until the _internal database exists
+                if ! test -d $OMD_ROOT/var/influxdb/data/_internal/; then
+                    echo -n "first run, waiting for initial _internal database"
+                    for x in $(seq 30); do
+                        [ $(echo "SHOW DATABASES" | influx $CONNECT -username $USER -password $PASS | grep -c _internal) -eq 1 ] && break;
+                        printf "."
+                        sleep 1
+                    done
+                fi
                 echo "GRANT READ ON _internal TO $GRAFANA_USER" | influx $CONNECT -username $USER -password $PASS >/dev/null
                 # check for default retention policy
                 echo 'SHOW RETENTION POLICIES ON nagflux' | influx $CONNECT -username $USER -password $PASS 2>/dev/null | grep -q '^autogen.*true'

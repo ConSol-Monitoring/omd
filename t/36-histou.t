@@ -34,7 +34,7 @@ TestUtils::test_command({ cmd => $omd_bin." config $site set CORE icinga2" });
 TestUtils::test_command({ cmd => "/bin/su - $site -c 'rm etc/icinga2/conf.d/pnp4nagios.conf'", like => '/^\s*$/' });
 TestUtils::test_command({ cmd => "/bin/su - $site -c 'sed -i etc/icinga2/conf.d/histou.conf -e \'s/-perf/-pnp/g\''", like => '/^\s*$/' });
 
-TestUtils::test_command({ cmd => $omd_bin." start $site", like => '/Starting influxdb\.+OK/' });
+TestUtils::test_command({ cmd => $omd_bin." start $site", like => '/Starting influxdb.+OK/' });
 
 TestUtils::test_command({ cmd => "/bin/su - $site -c 'echo \"COMMAND [".time()."] SCHEDULE_FORCED_SVC_CHECK;$host;$service;".time()."\" | lq'", like => '/^\s*$/' });
 

@@ -23,7 +23,7 @@ my $curl    = '/usr/bin/curl -v --user omdadmin:omd --noproxy \* ';
 my $ip      = TestUtils::get_external_ip();
 
 TestUtils::test_command({ cmd => $omd_bin." config $site set INFLUXDB on" });
-TestUtils::test_command({ cmd => $omd_bin." start $site", like => '/Starting influxdb\.+OK/' });
+TestUtils::test_command({ cmd => $omd_bin." start $site", like => '/Starting influxdb.+OK/' });
 sleep(5); # influxdb api returns 404 when accessed directly after first start
 
 #http api

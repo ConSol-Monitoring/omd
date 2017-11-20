@@ -7,7 +7,7 @@ next
           - Prometheus Alertmanager update to 0.10.0
           - Icinga2 update to 2.7.2
             - add omd_root and omd_site to constants.conf
-          - InfluxDB: update to 1.3.7
+          - InfluxDB: update to 1.4.2
           - Ansible: update to 2.3.2.0-1
           - Check_prometheus: added 0.0.1
           - Go: added 1.9
