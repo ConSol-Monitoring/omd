@@ -1,7 +1,7 @@
 include ../../../Makefile.omd
 
 NAME        = check_nsc_web
-VERSION     = 0.4.2
+VERSION     = 0.4.3
 SRC         = $(NAME)-$(VERSION).tar.gz
 GOPKG       = 1.9
 GOVERSION   = $(shell grep ^VERSION ../../go-${GOPKG}/Makefile | awk '{ print $$3 }')
