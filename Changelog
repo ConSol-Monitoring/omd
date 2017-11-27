@@ -14,7 +14,7 @@ next
           - Grafana update to 4.6.2
           - Histou update to 0.4.3
           - added check_vmware_esx plugin
-          - LMD: Update 1.1.3
+          - LMD: Update 1.1.4
 
 2.60     Aug 20 2017
           - Thruk: update to 2.16-2
