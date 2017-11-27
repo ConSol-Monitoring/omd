@@ -35,6 +35,8 @@ Originally written by Vit Safar, extended by Michael Kraus
 
     --nullcookiejar Set cookie jar to /dev/null (workaround to prevent infinite loop when redirecting)
 
+    --alias Alternative text to be included in plugin output
+
     --debug Enable debug mode
 
  Example:
@@ -234,6 +236,16 @@ if ($Pocet>1){
         if ($DebugArgs) echo "\nDEBUG: --nullcookiejar";
         break;
 
+      case '--alias':    
+        if ($Pocet>$i+1){
+          $Alias=$argv[++$i];
+          if ($DebugArgs) echo "\nDEBUG: --alias ".$Alias;
+        }else{
+          echo "ERROR in parsing argument --alias: missing value";
+          Help(3);
+        }
+        break;
+
       case '--help':
       case '-h':
         Help(0);
@@ -411,8 +423,13 @@ function nagios_exit($status) {
   global $body;
   global $url;
   global $effective_url;
+  global $Alias;
 
-  $Msg .= ". Checked URL $url ($effective_url).";
+  if ($Alias) {
+    $Msg .= ". $Alias.";
+  } else {
+    $Msg .= ". Checked URL $url ($effective_url).";
+  }
 
   if ($IncludePerf) $Msg.=$Perf;
   echo "$Msg\n";
