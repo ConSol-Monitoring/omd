@@ -104,21 +104,20 @@ class AtomicRecipient(coshsh.datarecipient.Datarecipient):
         return written
 
     def process(self, command):
+        stdout = None
+        stderr = None
+        status = False
         try:
-            stdout = "connecting..."
-            stderr = "connecting..."
             process = subprocess.Popen(command,
                 shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             stdout, stderr = process.communicate()
             status = process.poll()
             if status != 0:
                 raise DatarecipientNotAvailable
+            status = True
         except Exception, e:
-            logger.error("output stdout " + stdout)
-            logger.error("output stderr " + stderr)
-            return False, stdout, stderr
-        else:
-            return True, stdout if stdout else "", stderr if stderr else ""
+            status = False
+        return status, stdout if stdout else "", stderr if stderr else ""
 
 
 class RemoteAtomicRecipient(AtomicRecipient):
@@ -160,8 +159,6 @@ class RemoteAtomicRecipient(AtomicRecipient):
                         self.item_write_config(itemobj, local_tempdir, '')
         logger.info('copy items to object_dir %s:%s' % (self.remote, self.objects_dir))
         status, stdout, stderr = self.process("rsync -ac %s/ %s:%s" % (local_tempdir, self.remote, self.objects_dir))
-        logger.debug('stdout: ' + stdout)
-        logger.debug('stderr: ' + stderr)
         if not status:
             shutil.rmtree(local_tempdir)
             raise DatarecipientNotAvailable
