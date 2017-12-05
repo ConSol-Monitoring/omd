@@ -1,8 +1,8 @@
---- a/script/thruk_fastcgi.pl	2012-03-05 12:03:43.000000000 +0100
-+++ b/script/thruk_fastcgi.pl	2012-03-05 17:37:56.548029668 +0100
-@@ -3,6 +3,10 @@
- use strict;
+--- a/script/thruk_fastcgi.pl	2017-07-10 17:14:29.000000000 +0200
++++ b/script/thruk_fastcgi.pl	2017-12-05 19:58:39.970920313 +0100
+@@ -4,6 +4,10 @@
  use warnings;
+ use lib 'lib';
  
 +BEGIN {
 +    use lib $ENV{'OMD_ROOT'}.'/share/thruk/lib';
