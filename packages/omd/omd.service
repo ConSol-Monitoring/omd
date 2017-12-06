@@ -11,5 +11,14 @@ ExecReload=/usr/bin/omd reload
 RemainAfterExit=yes
 Restart=no
 
+# Not limited by systemd as default
+LimitCORE=infinity
+LimitNOFILE=infinity
+LimitNPROC=infinity
+
+# Uncomment TasksMax if your systemd version supports it.
+# Only systemd 226 and above support this property. (SLES 12 SP3)
+#TasksMax=infinity
+
 [Install]
 WantedBy=multi-user.target
