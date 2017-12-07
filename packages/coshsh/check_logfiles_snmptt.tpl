@@ -6,7 +6,7 @@ my $VERBOSE = 0;
 our @commands = ();
 
 sub prepare_submit_command {
-  my ($address, $mib, $trap, $severity, $text) = @_;
+  my ($address, $mib, $trap, $recovers, $severity, $text) = @_;
   $text =~ s/[^[:ascii:]]//g;
   $trap =~ s/[^[:ascii:]]//g;;
   if (my $info = Monitoring::Trap::HostSNMPTrapinfo::get_host_from_ip($address, $mib)) {
@@ -15,8 +15,8 @@ sub prepare_submit_command {
     vom trapfile-Scanner ISILON-TRAP-2014-MIB entdeckt.
     Seine Services lauten aber ...traps_ISILON-TRAP-MIB_..., daher muss get_host_from_ip
     auch die Alias-Mib [2] liefern.
-    '10.145.60.67' => {
-        'ISILON-TRAP-2014-MIB' => ['itaemc01c1.bmwgroup.net', 'os_isilon', 'ISILON-TRAP-MIB'],
+    '10.14.6.67' => {
+        'ISILON-TRAP-2014-MIB' => ['itaemc01c1.mygroup.net', 'os_isilon', 'ISILON-TRAP-MIB'],
     },
 
 #}
@@ -25,7 +25,28 @@ sub prepare_submit_command {
         $info->[1].'_traps_'.$info->[2].'_'.$trap,
         $severity,
         $text;
-    push(@commands, $command);
+    push(@commands, $command) if $severity != -1;
+    if ($recovers) {
+      # alle bisherigen <dieserhost>;recovers aus commands loeschen
+      # alle, nicht-ok, aber auch die ok. Ist zwar schade um die Historie
+      # aber wer's genau wissen will, muss sich durch die traps.log fressen
+      my $to_delete = sprintf ";%s;%s;", $info->[0], $info->[1].'_traps_'.$info->[2].'_'.$recovers;
+      @commands = map {
+        if (index($_, $to_delete) == -1) {
+          $_;
+        } elsif (index($_, 'UN') == 0) {
+          $_; # already UN
+        } else {
+          'UN'.$_;
+        }
+      } @commands;
+      my $command = sprintf "COMMAND [%d] PROCESS_SERVICE_CHECK_RESULT;%s;%s;%d;%s",
+          time, $info->[0],
+          $info->[1].'_traps_'.$info->[2].'_'.$recovers,
+          0,
+          'recovered by '.$trap.($severity == -1 ? ' ('.$text.')' : '');
+      push(@commands, $command);
+    }
   }
   return $text;
 }
@@ -104,7 +125,7 @@ printf STDERR "unknown rule __%s__\n", $rule;
   return 0;
 }
 
-$options = 'report=long,supersmartpostscript';
+$options = 'report=short,supersmartpostscript';
 
 @searches = (
 {% for event in mib.events %}
@@ -112,6 +133,9 @@ $options = 'report=long,supersmartpostscript';
   tag => '{{ event.name }}',
   logfile => $ENV{OMD_ROOT}.'/var/log/snmp/traps.log',
   rotation => '^%s\.((1)|([2-9]+\.gz))$',
+{% if mib.common_prefix %}
+  prefilter => '{{ mib.common_prefix }}',
+{% endif %}
   criticalpatterns => '^\[(.*?)\] summary: .*UDP: \[([\.\d]+)\].*?____([\.\d]+ .*?)____\.1\.3\.6\.1\.6\.3\.1\.1\.4\.1\.0 [\.]*{{ event.oid }}____(.*)$',
   script => sub {
     my $address = $ENV{CHECK_LOGFILES_CAPTURE_GROUP2};
@@ -139,7 +163,7 @@ $options = 'report=long,supersmartpostscript';
       $resolved_text = snmptt_resolve($address, '{{ event.text }}', $flat_trap);
       $severity = {{ event.nagioslevel }}
     }
-    my $sub =  prepare_submit_command($address, '{{ mib.mib }}', '{{ event.name }}', $severity, $resolved_text);
+    my $sub =  prepare_submit_command($address, '{{ mib.mib }}', '{{ event.name }}', '{{ event.recovers or "" }}', $severity, $resolved_text);
     printf "sub %s\n", $sub;
     return 2;
   },
@@ -178,7 +202,7 @@ $postscript = sub {
     my $last_command = "";
     if (scalar(@commands)) {
       open SPOOL, ">".$ENV{OMD_ROOT}.'/tmp/{{ mib.mib }}.cmds';
-      foreach (map { /COMMAND (.*)/; $1; } @commands) {
+      foreach (map { /COMMAND (.*)/; $1; } grep { /^COMMAND/ } @commands) {
         if ($_ eq $last_command) {
           next;
         } else {

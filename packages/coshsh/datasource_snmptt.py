@@ -11,7 +11,7 @@ import re
 import logging
 from copy import copy
 from os import listdir
-from os.path import isfile, join
+from os.path import isfile, join, commonprefix
 import pprint
 import coshsh
 from coshsh.datasource import Datasource, DatasourceNotAvailable
@@ -95,6 +95,7 @@ class SNMPTT(coshsh.datasource.Datasource):
         empty_mibs = []
         snmpttfiles = [f for f in listdir(self.dir) if isfile(join(self.dir, f)) and f.endswith('.snmptt')]
         eventname_pat = re.compile(r'^EVENT (.*) ([\.\d]+) .*?([\-\w]+)$')
+        recovers_pat = re.compile(r'^RECOVERS (.*)$')
         eventtext_pat = re.compile(r'^FORMAT (.*)')
         match_pat = re.compile(r'^MATCH (\$.*)')
         matchmode_pat = re.compile(r'^MATCH MODE=(.*)')
@@ -106,12 +107,14 @@ class SNMPTT(coshsh.datasource.Datasource):
             last_eventname = None
             last_name = None
             last_matchmode = 'and'
+            last_recovers = None
             #
             # Namenlose Events von 1.3.6.1.4.1.1981_ bekommen 
             # EventName="EventMonitorTrapError"
             with open(os.path.join(self.dir, ttfile)) as f:
                 for line in f.readlines():
                     eventname_m = eventname_pat.search(line)
+                    recovers_m = recovers_pat.search(line)
                     eventtext_m = eventtext_pat.search(line)
                     match_m = match_pat.search(line)
                     matchmode_m = matchmode_pat.search(line)
@@ -126,6 +129,7 @@ class SNMPTT(coshsh.datasource.Datasource):
                                     'name': last_eventname,
                                     'oid': last_oid,
                                     'text': last_eventtext,
+                                    'recovers': last_recovers,
                                     'match': last_match,
                                     'nagioslevel': last_nagios,
                                 })
@@ -134,6 +138,7 @@ class SNMPTT(coshsh.datasource.Datasource):
                                     'name': last_eventname,
                                     'oid': last_oid,
                                     'text': last_eventtext,
+                                    'recovers': last_recovers,
                                     'match': last_match,
                                     'nagioslevel': last_nagios,
                                 }]
@@ -156,12 +161,15 @@ class SNMPTT(coshsh.datasource.Datasource):
                                 'WARNING': 1,
                                 'CRITICAL': 2,
                                 'UNKNOWN': 3,
+
+                                'HIDDEN': -1,
                             }[last_severity]
                         except Exception, e:
                             logger.debug('trap severity %s unknown' %  eventname_m.group(3))
                             last_nagios = 2
                         last_eventtext = None
                         last_match = None
+                        last_recovers = None
                     elif eventtext_m:
                         last_eventtext = eventtext_m.group(1).replace("'", '"')
                     elif match_m:
@@ -172,6 +180,8 @@ class SNMPTT(coshsh.datasource.Datasource):
                     elif matchmode_m:
 
                         last_matchmode = matchmode_m.group(1)
+                    elif recovers_m:
+                        last_recovers = recovers_m.group(1)
                 if last_eventname:
                     # save the last event if there is one
                     try:
@@ -179,6 +189,7 @@ class SNMPTT(coshsh.datasource.Datasource):
                             'name': last_eventname,
                             'oid': last_oid,
                             'text': last_eventtext,
+                            'recovers': last_recovers,
                             'match': last_match,
                             'nagioslevel': last_nagios,
                         })
@@ -187,6 +198,7 @@ class SNMPTT(coshsh.datasource.Datasource):
                             'name': last_eventname,
                             'oid': last_oid,
                             'text': last_eventtext,
+                            'recovers': last_recovers,
                             'match': last_match,
                             'nagioslevel': last_nagios,
                         }]
@@ -240,9 +252,16 @@ class SNMPTT(coshsh.datasource.Datasource):
                     m.events.append(event)
                 else:
                     pass
+                if event['recovers'] and event['recovers'] not in unique_names:
+                    logger.warning('%s tries to recover an unknown trap %s' % (event['name'], event['recovers']))
+                    event['recovers'] = None
             # Jetzt haben wir:
             # - Events, die mehrfach vorkommen, sind auch in MIB.events
             #   und haben ein Attribut "matches" mit den Sub-Events
+            try:
+                m.common_prefix = os.path.commonprefix([event['oid'] for event in m.events])
+            except Exception, e:
+                m.common_prefix = ''
             self.add('mibconfigs', m)
 
         i = HostInfoObj(combinations=[])

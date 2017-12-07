@@ -1,0 +1,15 @@
+0.91 and 1.00
+
+getenv("FREETDSCONF")
+tds_try_conf_file(path
+
+getenv("FREETDS")
+tds_try_conf_file(getenv("FREETDS")/etc/freetds.conf
+ 
+tds_try_conf_file(getenv("HOME").freetds.conf
+
+according to http://www.freetds.org/userguide/envvar.htm
+FREETDS
+may be used to specify the name and location of the freetds.conf file. In prior versions of FreeTDS this variable was known as FREETDSCONF.
+
+Check if FREETDS is still supported in future version updates, then change etc/environment
