@@ -1,7 +1,7 @@
 include ../../../Makefile.omd
 
 NAME = check_dell_health
-VERSION = 1.0.0.8
+VERSION = 1.0.0.9
 DIR = $(NAME)-$(VERSION)
 
 .PHONY: skel
