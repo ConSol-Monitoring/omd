@@ -3,7 +3,7 @@
 @@ -38,14 +38,22 @@
  else
  	error_reporting(E_ALL);
- 
+
 +$_path_parts = explode('/', dirname($_SERVER["SCRIPT_FILENAME"]));
 +if($_path_parts[count($_path_parts) - 6] == 'local') // handle OMD local/ hierarchy
 +    $_base_dir = join(array_slice(explode('/' ,dirname($_SERVER["SCRIPT_FILENAME"])), 0, -6), '/');
@@ -17,22 +17,22 @@
  	get_include_path()
 -	.PATH_SEPARATOR.'../../server/core/classes'
 -	.PATH_SEPARATOR.'../../server/core/classes/objects'
--	.PATH_SEPARATOR.'../../server/core/ext/php-gettext-1.0.9'
+-	.PATH_SEPARATOR.'../../server/core/ext/php-gettext-1.0.12'
 +	.PATH_SEPARATOR.$_base_dir.'/local/share/nagvis/htdocs/server/core/classes'
 +	.PATH_SEPARATOR.$_base_dir.'/local/share/nagvis/htdocs/server/core/classes/objects'
 +	.PATH_SEPARATOR.$_base_dir.'/share/nagvis/htdocs/server/core/classes'
 +	.PATH_SEPARATOR.$_base_dir.'/share/nagvis/htdocs/server/core/classes/objects'
-+	.PATH_SEPARATOR.$_base_dir.'/share/nagvis/htdocs/server/core/ext/php-gettext-1.0.9'
++	.PATH_SEPARATOR.$_base_dir.'/share/nagvis/htdocs/server/core/ext/php-gettext-1.0.12'
  );
- 
+
  // Enable/Disable profiling of NagVis using xhprof.  To make use of this the
 @@ -64,7 +73,7 @@
  define('DEBUGLEVEL', 6);
- 
+
  // Path to the debug file
 -define('DEBUGFILE', '../../../var/nagvis-debug.log');
 +define('DEBUGFILE', $_base_dir.'/tmp/nagvis/nagvis-debug.log');
- 
+
  // It is possible to define a conf.d directory for splitting the main
  // configuration in several files. Only the values defined in the CONST_MAINCFG
 @@ -78,14 +87,14 @@
@@ -43,14 +43,14 @@
 -define('CONST_MAINCFG_CACHE', '../../../var/nagvis-conf');
 +define('CONST_MAINCFG', $_base_dir.'/etc/nagvis/nagvis.ini.php');
 +define('CONST_MAINCFG_CACHE', $_base_dir.'/tmp/nagvis/nagvis-conf');
- 
+
  // Path to the main configuration conf.d directory
 -define('CONST_MAINCFG_DIR', '../../../etc/conf.d');
 +define('CONST_MAINCFG_DIR', $_base_dir.'/etc/nagvis/conf.d');
- 
+
  // The directory below the NagVis root which is shared by the webserver
 -define('HTDOCS_DIR', 'share');
 +define('HTDOCS_DIR', 'htdocs');
- 
+
  // Needed minimal PHP version
  define('CONST_NEEDED_PHP_VERSION', '5.0');
