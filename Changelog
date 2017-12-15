@@ -12,7 +12,7 @@ next
           - Ansible: update to 2.3.2.0-1
           - Check_prometheus: added 0.0.1
           - Go: added 1.9.2
-          - Grafana update to 4.6.2
+          - Grafana update to 4.6.3
           - Histou update to 0.4.3
           - added check_vmware_esx plugin
           - LMD: Update 1.1.5
