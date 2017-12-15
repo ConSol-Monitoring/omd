@@ -3,7 +3,7 @@ This file documents the revision history for the Open Monitoring Distribution (L
 next
           - Prometheus update to 1.8.2
           - Prometheus blackbox_exporter update to 0.11.0
-          - Prometheus node_exporter update to 0.15.1
+          - Prometheus node_exporter update to 0.15.2
           - Prometheus Alertmanager update to 0.12.0
           - Icinga2 update to 2.8.0
             - add omd_root and omd_site to constants.conf
