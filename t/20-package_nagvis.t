@@ -177,7 +177,7 @@ my $urls = [
   
     # Language switch
     url({ url  => "/nagvis/frontend/nagvis-js/index.php?lang=de_DE",
-          like => '/Sprache w&auml;hlen/'}),
+          like => '/Sprache w.+len/'}),
   
     # Language switch back
     url({ url  => "/nagvis/frontend/nagvis-js/index.php?lang=en_US",
