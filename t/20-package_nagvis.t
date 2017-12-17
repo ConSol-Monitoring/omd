@@ -411,7 +411,7 @@ TestUtils::test_url(
 ###############################################################################
 # Language switch
 TestUtils::test_url(url({ url  => "/nagvis/frontend/nagvis-js/index.php?lang=de_DE",
-                          like => '/Sprache w&auml;hlen/'}));
+                          like => '/Sprache w.+hlen/'}));
 
 # Check profile file
 site_match_file($site, 'var/nagvis/profiles/omdadmin.profile', '/"language":"de_DE"/');
