@@ -177,7 +177,7 @@ my $urls = [
   
     # Language switch
     url({ url  => "/nagvis/frontend/nagvis-js/index.php?lang=de_DE",
-          like => '/Sprache w.+len/'}),
+          like => '/Sprache w/'}),
   
     # Language switch back
     url({ url  => "/nagvis/frontend/nagvis-js/index.php?lang=en_US",
@@ -411,7 +411,7 @@ TestUtils::test_url(
 ###############################################################################
 # Language switch
 TestUtils::test_url(url({ url  => "/nagvis/frontend/nagvis-js/index.php?lang=de_DE",
-                          like => '/Sprache w.+hlen/'}));
+                          like => '/Sprache w/'}));
 
 # Check profile file
 site_match_file($site, 'var/nagvis/profiles/omdadmin.profile', '/"language":"de_DE"/');
