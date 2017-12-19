@@ -163,7 +163,7 @@ verify_config() {
     if [ "$1" != "quiet" ]; then
         echo -n "Running configuration check... "
     fi
-    RESULT=$($TOOL check-config $CFG_FILE 2>&1)
+    RESULT=$($TOOL check config $CFG_FILE 2>&1)
     if [ $? -eq 0 ]; then
         if [ "$1" != "quiet" ]; then
             echo "done."
