@@ -1,0 +1,11 @@
+groups:
+- name: dailytest.yml
+  rules:
+  - alert: DailyTest
+    expr: vector(1) > 0
+    for: 1m
+    labels:
+      job: dailytest
+    annotations:
+      description: daily alert test
+      summary: daily alert test

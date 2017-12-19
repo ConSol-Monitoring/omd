@@ -2,7 +2,7 @@ This file documents the revision history for the Open Monitoring Distribution (L
 
 next
           - NagVis update to 1.9.4
-          - Prometheus update to 1.8.2
+          - Prometheus update to 2.0.0
           - Prometheus blackbox_exporter update to 0.11.0
           - Prometheus node_exporter update to 0.15.2
           - Prometheus Alertmanager update to 0.10.0

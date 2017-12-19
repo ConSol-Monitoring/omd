@@ -67,10 +67,7 @@ GRP=###SITE###
 unset LANG
 export LC_ALL=C
 
-OPTIONS="-config.file $CFG_FILE -web.listen-address=$CONFIG_PROMETHEUS_TCP_ADDR:$CONFIG_PROMETHEUS_TCP_PORT -web.external-url=http://desjucktkoasauwosdosteht/###SITE###/prometheus -storage.local.path $DATA_DIR -web.console.libraries=###ROOT###/etc/prometheus/console_libraries -web.console.templates=###ROOT###/etc/prometheus/consoles"
-if [ "$CONFIG_ALERTMANAGER" = "on" ]; then
-  OPTIONS="$OPTIONS -alertmanager.url=http://$CONFIG_ALERTMANAGER_TCP_ADDR:$CONFIG_ALERTMANAGER_TCP_PORT/###SITE###/alertmanager"
-fi
+OPTIONS="--config.file $CFG_FILE --web.listen-address=$CONFIG_PROMETHEUS_TCP_ADDR:$CONFIG_PROMETHEUS_TCP_PORT --web.external-url=http://desjucktkoasauwosdosteht/###SITE###/prometheus --storage.tsdb.path $DATA_DIR --web.console.libraries=###ROOT###/etc/prometheus/console_libraries --web.console.templates=###ROOT###/etc/prometheus/consoles"
 
 # Put together fragments and build a new prometheus.yml
 #
@@ -79,15 +76,15 @@ rebuild_config() {
     # 
     cat ###ROOT###/etc/prometheus/prometheus.yml |\
         sed -n '1,/# - start of rule files/p' > $CFG_FILE
-    # all files in ###ROOT###/etc/prometheus/prometheus.d/rules/*/*.rules
-    for rules in ###ROOT###/etc/prometheus/prometheus.d/rules/*.rules
+    # all files in ###ROOT###/etc/prometheus/prometheus.d/rules/*/*.yml
+    for rules in ###ROOT###/etc/prometheus/prometheus.d/rules/*.yml
     do
         [ -f $rules ] && echo "  - $rules" >> $CFG_FILE
     done
     for rules in ###ROOT###/etc/prometheus/prometheus.d/rules/*
     do
         if [ -d $rules ]; then
-            for subrules in ${rules}/*.rules
+            for subrules in ${rules}/*.yml
             do
                 [ -f $subrules ] && echo "  - $subrules" >> $CFG_FILE
             done
@@ -95,7 +92,7 @@ rebuild_config() {
     done
     cat ###ROOT###/etc/prometheus/prometheus.yml |\
         sed -n '/# - end of rule files/,/# - start of scrape configs/p' >> $CFG_FILE
-    # all files in ###ROOT###/etc/prometheus/prometheus.d/rules/*.rules
+    # all files in ###ROOT###/etc/prometheus/prometheus.d/scrape_configs/*.yml
     for scrapes in ###ROOT###/etc/prometheus/prometheus.d/scrape_configs/*.yml
     do
         echo >> $CFG_FILE
@@ -113,10 +110,21 @@ rebuild_config() {
     cat ###ROOT###/etc/prometheus/prometheus.yml |\
         sed -n '/# - end of scrape configs/,$p' >> $CFG_FILE
     
+    if [ "$CONFIG_ALERTMANAGER" = "on" ]; then
+      echo '# Alertmanager configuration' >> $CFG_FILE
+      echo 'alerting:' >> $CFG_FILE
+      echo '  alertmanagers:' >> $CFG_FILE
+      echo '  - static_config:' >> $CFG_FILE
+      echo '    - targets:' >> $CFG_FILE
+      echo '      - ###ALERTMANAGER_TCP_ADDR###:###ALERTMANAGER_TCP_PORT###' >> $CFG_FILE
+    fi
+
     sed -ri "s&""#""#""#ROOT#""#""#""&###ROOT###&g" $CFG_FILE
     sed -ri "s&""#""#""#SITE#""#""#""&###SITE###&g" $CFG_FILE
     sed -ri "s/###PROMETHEUS_TCP_PORT###/$CONFIG_PROMETHEUS_TCP_PORT/g" $CFG_FILE
     sed -ri "s/###PROMETHEUS_TCP_ADDR###/$CONFIG_PROMETHEUS_TCP_ADDR/g" $CFG_FILE
+    sed -ri "s/###ALERTMANAGER_TCP_PORT###/$CONFIG_ALERTMANAGER_TCP_PORT/g" $CFG_FILE
+    sed -ri "s/###ALERTMANAGER_TCP_ADDR###/$CONFIG_ALERTMANAGER_TCP_ADDR/g" $CFG_FILE
 }
 
 # Fetches the pid of the currently running prometheus process of the given
