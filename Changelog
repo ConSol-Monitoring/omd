@@ -1,9 +1,10 @@
 This file documents the revision history for the Open Monitoring Distribution (Labs Edition)
 
 next
-          - Prometheus update to 1.8.2
-          - Prometheus blackbox_exporter update to 0.10.0
-          - Prometheus node_exporter update to 0.15.1
+          - NagVis update to 1.9.4
+          - Prometheus update to 2.0.0
+          - Prometheus blackbox_exporter update to 0.11.0
+          - Prometheus node_exporter update to 0.15.2
           - Prometheus Alertmanager update to 0.10.0
           - Icinga2 update to 2.8.0
             - add omd_root and omd_site to constants.conf
@@ -11,7 +12,7 @@ next
           - Ansible: update to 2.3.2.0-1
           - Check_prometheus: added 0.0.1
           - Go: added 1.9.2
-          - Grafana update to 4.6.2
+          - Grafana update to 4.6.3
           - Histou update to 0.4.3
           - added check_vmware_esx plugin
           - LMD: Update 1.1.5
