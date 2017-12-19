@@ -114,7 +114,7 @@ rebuild_config() {
       echo '# Alertmanager configuration' >> $CFG_FILE
       echo 'alerting:' >> $CFG_FILE
       echo '  alertmanagers:' >> $CFG_FILE
-      echo '  - static_config:' >> $CFG_FILE
+      echo '  - static_configs:' >> $CFG_FILE
       echo '    - targets:' >> $CFG_FILE
       echo '      - ###ALERTMANAGER_TCP_ADDR###:###ALERTMANAGER_TCP_PORT###' >> $CFG_FILE
     fi
