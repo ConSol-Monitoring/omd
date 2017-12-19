@@ -36,8 +36,6 @@ install:
 	    $(DESTDIR)$(OMD_ROOT)/share/coshsh/recipes/default/templates
 	cp check_logfiles_snmptt.tpl \
 	    $(DESTDIR)$(OMD_ROOT)/share/coshsh/recipes/default/templates
-	cp HostSNMPTrapinfo.tpl \
-	    $(DESTDIR)$(OMD_ROOT)/share/coshsh/recipes/default/templates
 	cp check_git_updates \
 	    $(DESTDIR)$(OMD_ROOT)/bin
 	chmod 755 $(DESTDIR)$(OMD_ROOT)/bin/check_git_updates

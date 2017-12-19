@@ -13,6 +13,7 @@ from copy import copy
 from os import listdir
 from os.path import isfile, join, commonprefix
 import pprint
+import textwrap
 import coshsh
 from coshsh.datasource import Datasource, DatasourceNotAvailable
 from coshsh.host import Host
@@ -45,26 +46,26 @@ class MIB(coshsh.item.Item):
         self.mib = kwargs["mib"]
         self.events = kwargs["events"]
         self.extcmd = kwargs.get("extcmd", "nagios.cmd")
+        self.agents = {}
 
     def fingerprint(self):
         return self.mib
 
+    def add_agent(self, agent):
+        self.agents["%03d%03d%03d%03d" % tuple([int(n) for n in agent[0].split(".")])] = [agent[1], agent[2], agent[3]]
 
-class HostInfoObj(coshsh.item.Item):
-    id = 120
-    template_rules = [
-        TemplateRule(
-            template="HostSNMPTrapinfo",
-            self_name="info",
-            suffix="pm"),
-    ]
-
-    def __init__(self, **kwargs):
-        super(self.__class__, self).__init__(kwargs)
-
-    def fingerprint(self):
-        return "info"
-
+    def sort_agents(self):
+        self.agent_ips = []
+        self.service_pointers = []
+        sortme = [(
+            # ohne fuehrende 0, damit's richtig numerisch zugeht hier
+            int("%d%03d%03d%03d" % tuple([int(n) for n in textwrap.wrap(str_ip, 3)])),
+            str_ip
+        ) for str_ip in self.agents.keys()]
+        sortme.sort(key=lambda x: x[0])
+        for num_ip, str_ip in sortme:
+            self.agent_ips.append(num_ip)
+            self.service_pointers.append(self.agents[str_ip])
 
 
 class SNMPTT(coshsh.datasource.Datasource):
@@ -229,7 +230,6 @@ class SNMPTT(coshsh.datasource.Datasource):
             # 
             matches = {}
             for event in mib_traps[mib]:
-                event['oid'] = event['oid'].replace('.', '\.').replace('*', '.*?')
                 event['mib'] = mib
                 if event['match']:
                     try:
@@ -259,12 +259,11 @@ class SNMPTT(coshsh.datasource.Datasource):
             # - Events, die mehrfach vorkommen, sind auch in MIB.events
             #   und haben ein Attribut "matches" mit den Sub-Events
             try:
-                m.common_prefix = os.path.commonprefix([event['oid'] for event in m.events])
+                m.common_prefix = os.path.commonprefix([event['oid'].replace('.', '\.').replace('*', '.*?') for event in m.events])
             except Exception, e:
-                m.common_prefix = ''
+                m.common_prefix = '.*'
             self.add('mibconfigs', m)
 
-        i = HostInfoObj(combinations=[])
         for application in self.getall('applications'):
             # hier werden applikationen um ein hash mit mibs -> events
             # versorgt, welches in *traps.tpl die services erzeugt
@@ -274,27 +273,31 @@ class SNMPTT(coshsh.datasource.Datasource):
             application.resolve_monitoring_details()
             if hasattr(application, 'implements_mibs'):
                 logger.debug("app %s implements %s" % (application.fingerprint(), application.implements_mibs))
-                # list of mibs where aliases (the real filenames)
-                # have precedence over the symbolic mib names
-                application_mib_files = [m.split(':')[1] if ':' in m else m for m in application.implements_mibs]
-                application_mib_unknown = [m for m in application_mib_files if m not in mib_traps and m not in empty_mibs]
-                #if application_mib_unknown:
-                #    logger.error('application %s implements unknown mibs %s' % (application.fingerprint(), ', '.join(application_mib_unknown)))
-                trap_events = {}
-                unalias_mib = {}
+                if not hasattr(application, 'trap_service_prefix'):
+                    setattr(application, 'trap_service_prefix', str(application.__module__).split('.')[0])
+                # list of (alias for svcdesc, snmptt name)
+                application_mibs = [m.split(':') if ':' in m else (m, m) for m in application.implements_mibs]
+                application_mibs_unknown = [m for m in application_mibs if m[1] not in mib_traps and m[1] not in empty_mibs]
+                application_mibs_known = [m for m in application_mibs if m[1] in mib_traps and m[1] not in empty_mibs]
+                if application_mibs_unknown:
+                    logger.error('application %s implements unknown mibs %s' % (application.fingerprint(), ', '.join([m[1] for m in application_mibs_unknown])))
 
-                for mib in mib_traps:
-                    # Aufsplitten von Aliasmib:Filenamemib
-                    if mib in [m.split(':')[0] for m in application.implements_mibs if ':' in m]:
-                        alias, mib = [m.split(':') for m in application.implements_mibs if m.split(':')[0] == mib][0]
-                        unalias_mib[alias] = mib
-                        trap_events[alias] = [e for e in self.get('mibconfigs', mib).events]
-                    elif mib in application.implements_mibs:
-                        trap_events[mib] = [e for e in self.get('mibconfigs', mib).events]
                 # Bereinigen, so dass ggf. Aliase in der implements_mibs stehen.
                 # In trap_events sind die tatsaechlichen Events aus der 
                 # Original-MIB
-                application.implements_mibs = [m.split(':')[0] for m in application.implements_mibs]
+                application.implements_mibs = [m[0] for m in application_mibs_known]
+                trap_events = {}
+
+                for svcmib, mib in application_mibs_known:
+                    mobj = self.get('mibconfigs', mib)
+                    trap_events[svcmib] = [e for e in mobj.events]
+                    mobj.add_agent([
+                        self.get('hosts', application.host_name).address,
+                        application.host_name,
+                        application.trap_service_prefix,
+                        svcmib,
+                    ])
+
                 if trap_events:
                     application.monitoring_details.append(MonitoringDetail({
                         'host_name': application.host_name,
@@ -304,19 +307,11 @@ class SNMPTT(coshsh.datasource.Datasource):
                         'monitoring_0': 'trap_events',
                         'monitoring_1': trap_events,
                     }))
-                    if not hasattr(application, 'trap_service_prefix'):
-                        setattr(application, 'trap_service_prefix', str(application.__module__).split('.')[0])
-                    i.combinations.append({
-                        'address': self.get('hosts', application.host_name).address,
-                        'host_name': application.host_name,
-                        'trap_service_prefix': application.trap_service_prefix,
-                        'mibs': application.implements_mibs,
-                        'unalias_mib': unalias_mib,
-                    })
     
-        self.add('infos', i)
-
         
+        for mib in self.getall('mibconfigs'):
+            mib.sort_agents()
+
         # An diesem Host werden die scan-Services fuer
         # var/log/snmp/traps.log festgemacht.
         trapdest = Host({
@@ -342,4 +337,3 @@ class SNMPTT(coshsh.datasource.Datasource):
                 'monitoring_1': mib_traps.keys(),
             })
         )
-

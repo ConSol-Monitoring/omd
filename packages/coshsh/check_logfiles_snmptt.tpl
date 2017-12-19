@@ -1,24 +1,54 @@
 # {{ mib.mib }} {{ mib.miblabel }}
 
-use Monitoring::Trap::HostSNMPTrapinfo;
-
 my $VERBOSE = 0;
 our @commands = ();
 
+sub get_host_from_ip {
+  my ($ip) = @_;
+  my $num_ip = int(sprintf "%d%03d%03d%03d", split /\./, $ip);
+  my @ips = (
+{% for ip in mib.agent_ips %}
+{{ ip }},
+{% endfor %}
+  );
+  my @pointers = (
+{% for pointer in mib.service_pointers %}
+["{{ pointer[0] }}", "{{ pointer[1] }}", "{{ pointer[2] }}"],
+{% endfor %}
+  );
+
+  my $found = 0;
+  my ($left, $right) = (0, scalar(@ips) - 1);
+  my $idx;
+  while ($left <= $right) {
+    $idx = int(($left + $right)/2);
+    if ($ips[$idx] < $num_ip) {
+      $left = $idx + 1;
+    } elsif ($ips[$idx] > $num_ip) {
+      $right = $idx - 1;
+    } else {
+      $found = 1;
+      last;
+    }
+  }
+  if ($found) {
+    return $pointers[$idx];
+  } else {
+    return undef;
+  }
+}
+
 sub prepare_submit_command {
-  my ($address, $mib, $trap, $recovers, $severity, $text) = @_;
+  my ($address, $trap, $recovers, $severity, $text) = @_;
   $text =~ s/[^[:ascii:]]//g;
   $trap =~ s/[^[:ascii:]]//g;;
-  if (my $info = Monitoring::Trap::HostSNMPTrapinfo::get_host_from_ip($address, $mib)) {
+  if (my $info = get_host_from_ip($address)) {
 {#
-    Sowas ist moeglich. Der Host implementiert die alte Mib, seine Traps werden also
-    vom trapfile-Scanner ISILON-TRAP-2014-MIB entdeckt.
-    Seine Services lauten aber ...traps_ISILON-TRAP-MIB_..., daher muss get_host_from_ip
-    auch die Alias-Mib [2] liefern.
-    '10.14.6.67' => {
-        'ISILON-TRAP-2014-MIB' => ['itaemc01c1.mygroup.net', 'os_isilon', 'ISILON-TRAP-MIB'],
-    },
-
+    Folgendes ist moeglich: Der Host implementiert die alte Mib,
+    seine Traps werden also vom trapfile-Scanner ISILON-TRAP-2014-MIB entdeckt.
+    Seine Services lauten aber ...traps_ISILON-TRAP-MIB_...,
+    daher muss get_host_from_ip auch die Alias-Mib [2] liefern.
+    '10.14.6.67' => ['itaemc01c1.mygroup.net', 'os_isilon', 'ISILON-TRAP-MIB'],
 #}
     my $command = sprintf "COMMAND [%d] PROCESS_SERVICE_CHECK_RESULT;%s;%s;%d;%s",
         time, $info->[0],
@@ -117,7 +147,7 @@ sub match_matches {
       # MATCH $x: n-n
       $rulehits += 1 if $subtraps[$1-1] >= $2 && $subtraps[$1-1] <= $3;
     } else {
-printf STDERR "unknown rule __%s__\n", $rule;
+      printf STDERR "unknown rule __%s__\n", $rule;
     }
   }
   return 1 if $mode eq 'and' && $rulehits == scalar(@rules); # all of them
@@ -128,48 +158,72 @@ printf STDERR "unknown rule __%s__\n", $rule;
 $options = 'report=short,supersmartpostscript';
 
 @searches = (
-{% for event in mib.events %}
 {
-  tag => '{{ event.name }}',
+  tag => '{{ mib.mib }}',
   logfile => $ENV{OMD_ROOT}.'/var/log/snmp/traps.log',
   rotation => '^%s\.((1)|([2-9]+\.gz))$',
 {% if mib.common_prefix %}
   prefilter => '{{ mib.common_prefix }}',
 {% endif %}
-  criticalpatterns => '^\[(.*?)\] summary: .*UDP: \[([\.\d]+)\].*?____([\.\d]+ .*?)____\.1\.3\.6\.1\.6\.3\.1\.1\.4\.1\.0 [\.]*{{ event.oid }}____(.*)$',
+  criticalpatterns => '^\[(.*?)\] summary: .*UDP: \[([\.\d]+)\].*?____([\.\d]+ .*?)____\.1\.3\.6\.1\.6\.3\.1\.1\.4\.1\.0\s+([\.\d]+)____(.*?)$',
   script => sub {
     my $address = $ENV{CHECK_LOGFILES_CAPTURE_GROUP2};
+    my $trap_oid = $ENV{CHECK_LOGFILES_CAPTURE_GROUP4};
     my $flat_trap = $ENV{CHECK_LOGFILES_CAPTURE_GROUP.$ENV{CHECK_LOGFILES_CAPTURE_GROUPS}};
     my $severity = undef;
     my $resolved_text = undef;
-{% if event.matches %}
-{%   for match in event.matches %}
-{%     if loop.first %}
-    if (match_matches('{{ match[1] }}', '{{ match[2] }}', $flat_trap)) {
-        $resolved_text = snmptt_resolve($address, '{{ match[3] }}', $flat_trap)." - match {{ match[2].replace('$', 'DLR') }}";
+    my $known_event = 0;
+    my $event_name = undef;
+    my $event_text = undef;
+    my $event_recovers = undef;
+    my $nagioslevel = undef;
+
+{% for event in mib.events %}
+{%   if loop.first %}
+    if ("{{ event.oid }}" eq $trap_oid) {
+{%   else %}
+    } elsif ("{{ event.oid }}" eq $trap_oid) {
+{%   endif %}
+      $known_event = 1;
+      $event_name = '{{ event.name }}';
+      $event_text = '{{ event.text }}';
+      $event_recovers = '{{ event.recovers or "" }}';
+      $nagioslevel = {{ event.nagioslevel }};
+{%   if event.matches %}
+{%     for match in event.matches %}
+{%       if loop.first %}
+      if (match_matches('{{ match[1] }}', '{{ match[2] }}', $flat_trap)) {
+        $resolved_text = snmptt_resolve($address, '{{ match[3] }}', $flat_trap);
         $severity = {{ match[0] }};
-{%     else %}
-    } elsif (match_matches('{{ match[1] }}', '{{ match[2] }}', $flat_trap)) {
-        $resolved_text = snmptt_resolve($address, '{{ match[3] }}', $flat_trap)." - match {{ match[2].replace('$', 'DLR') }}";
+{%       else %}
+      } elsif (match_matches('{{ match[1] }}', '{{ match[2] }}', $flat_trap)) {
+        $resolved_text = snmptt_resolve($address, '{{ match[3] }}', $flat_trap);
         $severity = {{ match[0] }};
-{%     endif %}
-{%     if loop.last %}
+{%       endif %}
+{%       if loop.last %}
+      }
+{%       endif %}
+{%     endfor %}
+{%   endif %}
+{%   if loop.last %}
     }
-{%     endif %}
-{%   endfor %}
-{% endif %}
-    if (! defined $severity) {
+{%   endif %}
+{% endfor %}
+    if (! defined $severity && $known_event) {
       # there are no sub-events at all or none of them matched
-      $resolved_text = snmptt_resolve($address, '{{ event.text }}', $flat_trap);
-      $severity = {{ event.nagioslevel }}
+      $resolved_text = snmptt_resolve($address, $event_text, $flat_trap);
+      $severity = $nagioslevel;
     }
-    my $sub =  prepare_submit_command($address, '{{ mib.mib }}', '{{ event.name }}', '{{ event.recovers or "" }}', $severity, $resolved_text);
-    printf "sub %s\n", $sub;
-    return 2;
+    if ($known_event) {
+      my $sub =  prepare_submit_command($address, $event_name, $event_recovers, $severity, $resolved_text);
+      printf "sub %s\n", $sub;
+      return 2;
+    } else {
+      return 0;
+    }
   },
   options => 'supersmartscript,capturegroups,noprotocol,noperfdata',
 },
-{% endfor %}
 {#
 {
   tag => 'UnknownTraps',
