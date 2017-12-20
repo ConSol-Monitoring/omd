@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 NAME     = thruk
-VERSION  = 2.16-2
+VERSION  = 2.17
 DIR      = $(NAME)-$(VERSION)
 PERLARCH = $(shell $(PERL) -e 'use Config; print $$Config{archname}')
 
