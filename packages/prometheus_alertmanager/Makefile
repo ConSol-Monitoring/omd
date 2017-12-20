@@ -3,7 +3,7 @@ include ../../Makefile.omd
 .PHONY: skel
 
 NAME       = alertmanager
-VERSION    = 0.10.0
+VERSION    = 0.12.0
 BRANCH     = master
 SRC        = $(NAME)-$(VERSION).tar.gz
 GOPKG      = 1.9
@@ -29,7 +29,8 @@ build:
 
 install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/bin
-	install -m 755 $(GOPATH)/bin/$(NAME) $(DESTDIR)$(OMD_ROOT)/bin
+	install -m 755 $(GOPATH)/bin/alertmanager $(DESTDIR)$(OMD_ROOT)/bin
+	install -m 755 $(GOPATH)/bin/amtool $(DESTDIR)$(OMD_ROOT)/bin
 
 skel:
 	mkdir -p $(SKEL)/etc/alertmanager
