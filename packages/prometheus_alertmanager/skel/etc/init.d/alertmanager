@@ -43,7 +43,7 @@ cd ###ROOT###
 mkdir -p ###ROOT###/tmp/alertmanager
 mkdir -p ###ROOT###/var/alertmanager
 BIN=###ROOT###/bin/alertmanager
-TOOL=###ROOT###/bin/promtool # a smiliar tool for the alertmanager does not yet exist
+TOOL=###ROOT###/bin/amtool
 CFG_FILE=###ROOT###/tmp/alertmanager/alertmanager.yml
 LOG_DIR=###ROOT###/var/alertmanager
 LOGFILE=###ROOT###/var/alertmanager/alertmanager.log

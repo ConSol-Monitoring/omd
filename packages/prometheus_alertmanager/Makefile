@@ -29,7 +29,8 @@ build:
 
 install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/bin
-	install -m 755 $(GOPATH)/bin/$(NAME) $(DESTDIR)$(OMD_ROOT)/bin
+	install -m 755 $(GOPATH)/bin/alertmanager $(DESTDIR)$(OMD_ROOT)/bin
+	install -m 755 $(GOPATH)/bin/amtool $(DESTDIR)$(OMD_ROOT)/bin
 
 skel:
 	mkdir -p $(SKEL)/etc/alertmanager
