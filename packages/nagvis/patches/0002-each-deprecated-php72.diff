@@ -1,0 +1,12 @@
+diff -Naur a/share/nagvis/htdocs/frontend/nagvis-js/ext/dwoo-1.1.0/plugins/builtin/blocks/if.php b/share/nagvis/htdocs/frontend/nagvis-js/ext/dwoo-1.1.0/plugins/builtin/blocks/if.php
+--- a/share/nagvis/htdocs/frontend/nagvis-js/ext/dwoo-1.1.0/plugins/builtin/blocks/if.php 2017-12-21 19:17:31.000000000 +0100
++++ b/share/nagvis/htdocs/frontend/nagvis-js/ext/dwoo-1.1.0/plugins/builtin/blocks/if.php 2017-12-21 19:18:32.000000000 +0100
+@@ -38,7 +38,7 @@
+ 		$p = array();
+
+ 		reset($params);
+-		while (list($k,$v) = each($params)) {
++		foreach ($params AS $k => $v) {
+ 			$v = (string) $v;
+ 			if(substr($v, 0, 1) === '"' || substr($v, 0, 1) === '\'') {
+ 				$vmod = strtolower(substr($v, 1, -1));

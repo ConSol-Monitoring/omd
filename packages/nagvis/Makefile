@@ -8,6 +8,10 @@ DIR = $(NAME)-$(VERSION)
 
 build:
 	tar xzf $(DIR).tar.gz
+	for p in patches/*.diff ; do \
+		echo "applying $$p..." ; \
+		( cd $(DIR) ; patch -p1 -b ) < $$p ; \
+       done
 	patch $(DIR)/share/server/core/defines/global.php global.php.patch
 	rm $(DIR)/share/server/core/defines/global.php.orig || true
 
