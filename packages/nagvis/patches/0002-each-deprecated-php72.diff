@@ -1,6 +1,6 @@
-diff -Naur a/share/nagvis/htdocs/frontend/nagvis-js/ext/dwoo-1.1.0/plugins/builtin/blocks/if.php b/share/nagvis/htdocs/frontend/nagvis-js/ext/dwoo-1.1.0/plugins/builtin/blocks/if.php
---- a/share/nagvis/htdocs/frontend/nagvis-js/ext/dwoo-1.1.0/plugins/builtin/blocks/if.php 2017-12-21 19:17:31.000000000 +0100
-+++ b/share/nagvis/htdocs/frontend/nagvis-js/ext/dwoo-1.1.0/plugins/builtin/blocks/if.php 2017-12-21 19:18:32.000000000 +0100
+diff -Naur a/share/frontend/nagvis-js/ext/dwoo-1.1.0/plugins/builtin/blocks/if.php b/share/frontend/nagvis-js/ext/dwoo-1.1.0/plugins/builtin/blocks/if.php
+--- a/share/frontend/nagvis-js/ext/dwoo-1.1.0/plugins/builtin/blocks/if.php 2017-12-21 19:17:31.000000000 +0100
++++ b/share/frontend/nagvis-js/ext/dwoo-1.1.0/plugins/builtin/blocks/if.php 2017-12-21 19:18:32.000000000 +0100
 @@ -38,7 +38,7 @@
  		$p = array();
 

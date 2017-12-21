@@ -8,6 +8,7 @@ DIR = $(NAME)-$(VERSION)
 
 build:
 	tar xzf $(DIR).tar.gz
+	dos2unix $(DIR)/share/frontend/nagvis-js/ext/dwoo-1.1.0/Dwoo/Compiler.php
 	for p in patches/*.diff ; do \
 		echo "applying $$p..." ; \
 		( cd $(DIR) ; patch -p1 -b ) < $$p ; \
