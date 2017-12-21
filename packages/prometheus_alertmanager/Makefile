@@ -25,7 +25,8 @@ LDFLAGS    = "\
 build:
 	tar zxf $(SRC)
 	export GOROOT=$(GOROOT) && export GOPATH=$(GOPATH) && PATH=$$GOROOT/bin:$$PATH && \
-		go install -ldflags $(LDFLAGS) github.com/prometheus/$(NAME)/cmd/$(NAME)
+		go install -ldflags $(LDFLAGS) github.com/prometheus/$(NAME)/cmd/alertmanager && \
+		go install -ldflags $(LDFLAGS) github.com/prometheus/$(NAME)/cmd/amtool
 
 install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/bin
