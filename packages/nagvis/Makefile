@@ -8,6 +8,7 @@ DIR = $(NAME)-$(VERSION)
 
 build:
 	tar xzf $(DIR).tar.gz
+	# Prepare CRLF formatted files for patching
 	sed -i 's/\r//' $(DIR)/share/frontend/nagvis-js/ext/dwoo-1.1.0/Dwoo/Compiler.php
 	for p in patches/*.diff ; do \
 		echo "applying $$p..." ; \
