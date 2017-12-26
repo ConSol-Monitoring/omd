@@ -44,6 +44,11 @@ skel:
 	mv $(SKEL)/etc/prometheus/consoles/index.html.example $(SKEL)/etc/prometheus/consoles/index.html
 	sed -ri 's/index.html.example/index.html/g' $(SKEL)/etc/prometheus/console_libraries/menu.lib
 
+    for p in patches/*.skel_patch ; do \
+        echo "applying $$p..." ; \
+        ( cd $(SKEL) ; patch -p1 ) < $$p || exit 1; \
+    done	
+
 clean:
 	rm -rf $(GOPATH)
 
