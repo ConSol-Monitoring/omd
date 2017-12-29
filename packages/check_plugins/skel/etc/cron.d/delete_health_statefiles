@@ -1,0 +1,3 @@
+MAILTO=""
+# remove check_*_health statefiles which are older than 7 days
+13 7 * * * find $OMD_ROOT/var/tmp -type d -name check_\*_health -o -name check_logfiles | while read dir; do find $dir -type f -ignore_readdir_race -mtime +6 -print; done
