@@ -44,6 +44,9 @@ if ( ! -e $template ){
 for my $key (qw/SERVICEOUTPUT LONGSERVICEOUTPUT HOSTOUTPUT LONGHOSTOUTPUT/) {
     $macro{$key} = $ENV{'NAGIOS_'.$key} if defined $ENV{'NAGIOS_'.$key};
 }
+for my $key (qw/OMD_ROOT OMD_SITE/) {
+    $macro{$key} = $ENV{$key} unless defined $macro{$key};
+}
 
 map($macro{$_} =~ s/\\n/\n/gmx, keys %macro);
 if($livestatus && -e $livestatus) {
