@@ -69,7 +69,7 @@ sub process_template {
 		$data .= "$_";
 	}
 	close FILE;
-	my $template = Template->new({PRE_CHOMP => 1, POST_CHOMP => 0, EVAL_PERL => 1});
+	my $template = Template->new({PRE_CHOMP => 1, POST_CHOMP => 0, EVAL_PERL => 1, ABSOLUTE => 1});
 	$template->process(\$data, \%macro, \$output) or die Template->error;
 	print $output if $verbose;
 	send_mail();
