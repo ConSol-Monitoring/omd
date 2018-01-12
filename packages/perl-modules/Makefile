@@ -199,7 +199,7 @@ MODULES = \
 	  	  Clone-0.39.tar.gz \
 	  	  Time-Duration-1.20.tar.gz \
 	  	  IO-Socket-IP-0.39.tar.gz \
-	  	  Monitoring-GLPlugin-2.4.14.14.tar.gz
+	  	  Monitoring-GLPlugin-3.0.0.3.tar.gz
 
 
 
