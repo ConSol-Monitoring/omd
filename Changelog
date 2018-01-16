@@ -1,6 +1,9 @@
 This file documents the revision history for the Open Monitoring Distribution (Labs Edition)
 
 next
+          - OMD:
+            - add LIVESTATUS_TCP_ONLY_FROM hook
+            - add omd -p switch for parallel restart/reload/stop/start
           - Thruk: update to 2.18
           - NagVis update to 1.9.4
           - Prometheus update to 2.0.0
