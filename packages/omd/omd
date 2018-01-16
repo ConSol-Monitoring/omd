@@ -26,6 +26,7 @@
 
 import sys, os, shutil, pwd, grp, re, time, pprint, tty, termios, traceback
 import fcntl
+import subprocess
 import tarfile, fnmatch
 from subprocess import *
 
@@ -3869,12 +3870,18 @@ commands = [
     ""),
 
   ( "restart",   False, False, 2, 1, False, "[SERVICE]", lambda args, opts: main_init_action("restart", args, opts),
-    [ ( "version", "V", True, "only restart sites having version ARG" ) ],
+    [
+        ( "version", "V", True, "only stop sites having version ARG" ),
+        ( "parallel", "p", False, "Invoke stop of sites in parallel" ),
+    ],
     "Restart services of site(s)",
     ""),
 
   ( "reload",    False, False, 2, 1, False, "[SERVICE]", lambda args, opts: main_init_action("reload", args, opts),
-    [ ( "version", "V", True, "only reload sites having version ARG" ) ],
+    [
+        ( "version", "V", True, "only stop sites having version ARG" ),
+        ( "parallel", "p", False, "Invoke stop of sites in parallel" ),
+    ],
     "Reload services of site(s)",
     ""),
 
