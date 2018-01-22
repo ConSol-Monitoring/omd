@@ -15,9 +15,11 @@ export PYTHONPATH="$OMD_ROOT/lib/python:$OMD_ROOT/local/lib/python"
 export MAILRC="$OMD_ROOT/etc/mail.rc"
 
 
-if [ -f $OMD_ROOT/etc/environment ]
+if [ -f "$OMD_ROOT/etc/environment" ]
 then
-    eval $(egrep -v '^[[:space:]]*(#|$)' < $OMD_ROOT/etc/environment | sed 's/^/export /')
+    set -a
+    . "$OMD_ROOT/etc/environment"
+    set +a
 fi
 
 # Only load bashrc when in a bash shell and not loaded yet.
