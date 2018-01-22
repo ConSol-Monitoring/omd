@@ -1,4 +1,4 @@
-0001-check-icmp-allows-pl-of-101.dif
+0001-check-icmp-allows-pl-of-101.patch
     This patch allows to configure check_icmp in a way that a packet loss of
     100% is not CRITICAL. Consider:
 
@@ -7,5 +7,9 @@
     In this case the user would expect the outcome to be WARN, if 100%
     packats are lost. An RTA is "nan" in this case. But check_icmp would
     insist to make the outcome CRITICAL. The patch fixes this.
-0002-negate-pr1505.dif
+
+0002-negate-pr1505.patch
     Pull Request 1505: Output plugin's stderr to stderr and do not exit with WARNING in that case
+
+1522-fix-undefined-mysql-port.patch
+    fix building check_mysql with latest mariadb

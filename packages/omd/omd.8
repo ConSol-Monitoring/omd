@@ -278,7 +278,7 @@ be switched.
 This is the default behaviour of interactive conflict resolution.
 
 .TP
-.B omd [-f, --force] start      [SITE] [SERVICE]
+.B omd [-f, --force] start [-p, --parallel]    [SITE] [SERVICE]
 Start a site, i.e. start all activated daemons and services of a site.
 If you call this as root, you need to specify the site to
 be started. If you do not specify a site, then all sites with AUTOSTART=on
@@ -289,8 +289,15 @@ The current site will be started.
 If you add the name of a service, e.g. \fBnagios\fP, then only that
 service is being started. If being called as root, a service can only
 be specified if also a site is specified.
+
+When you use the start operation with multiple sites, this is done sequentially
+for each site and service. You can execute the operations on the different
+sites in parallel by providing the option \fB-p\fP or \fB--parallel\fP. This
+will slightly change the output of the command and invoke the start operation
+on each site at first and then collect the results from each site after that
+and block till the start operations for all sites have been completed.
 .TP
-.B omd stop       [SITE] [SERVICE]
+.B omd stop [-p, --parallel]      [SITE] [SERVICE]
 Stop a site. See \fBomd start\fP for details. This stops also sites where
 AUTOSTART=off.
 .TP
@@ -316,7 +323,7 @@ format.
 If you add the option \fB--auto\fP then only the status of those sites will
 be displayed, that are set to {AUTOSTART} = {on}.
 .TP
-.B omd [-f, --force] config [SITE] [set|show] [VARIABLE] [VALUE]
+.B omd config [-f, --force] [SITE] [set|show|change] [VARIABLE] [VALUE]
 This command is used to view and change the configuration of a site. Each
 site has a list of configuration variables. Those variables configure
 how the addons of the site should work together. Optional addons can be
@@ -340,6 +347,18 @@ Setting and querying variables in batch mode can be done with
 The option \fB--force\fP will automatically stop the site in case
 it is running before the config change is done and start it afterwards
 again.
+
+In addition to \fBomd config set\fP there is this option to set multiple
+variables at once:
+
+\fBomd config [SITE] change\fP
+
+To change configuration options, you need to provide newline separated
+KEY=value pairs via stdin, for example like this:
+
+\fBecho -e "CORE=cmc\\nAUTOSTART=on" | omd config change\fP
+
+The site is restarted automatically once in case it's currently runnig.
 
 .TP
 .B omd [-v] diff [RELBASE] [-b, --bare]

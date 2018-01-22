@@ -433,6 +433,14 @@ sub install_module {
     local $ENV{'PERL5LIB'} = $ENV{'PERL5LIB'}.":." if -e 'inc/';
     local $ENV{'PERL5LIB'} = $ENV{'PERL5LIB'}.":." if -e 'Configure.pm';
 
+    # apply patches
+    my @patches = glob('../patches/'.$file.'.*.patch');
+    for my $patch (@patches) {
+        print "applying patch ".$patch;
+        `patch -p1 < $patch >> $LOG 2>&1`;
+        if($? != 0 ) { die("error: patch failed - rc $?\n".`cat $LOG`."\n"); }
+    }
+
     eval {
         local $SIG{ALRM} = sub { die "timeout on: $file\n" };
         alarm(120); # single module should not take longer than 1 minute

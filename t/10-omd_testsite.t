@@ -12,7 +12,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 237 );
+plan( tests => 257 );
 
 my $omd_bin = TestUtils::get_omd_bin();
 
@@ -107,6 +107,12 @@ my $tests = [
   { cmd => "/bin/su - $site -c 'omd diff'", like => ['/Changed content .profile/', '/Deleted etc\/icinga\/conf.d/'] },
   { cmd => "/bin/su - $site -c 'omd reset .profile etc/icinga/conf.d'"  },
   { cmd => "/bin/su - $site -c 'omd diff'", like => ['/^$/'] },
+
+  # parallel mode
+  { cmd => $omd_bin." stop -p", like => ["/Invoking 'stop'/", '/Stopping dedicated Apache/'] },
+  { cmd => $omd_bin." start -p", like => ["/Invoking 'start'/", '/Starting dedicated Apache/'] },
+  { cmd => $omd_bin." reload -p", like => ["/Invoking 'reload'/", "/Reloading dedicated Apache for site/"] },
+  { cmd => $omd_bin." restart -p", like => ["/Invoking 'restart'/", "/Initializing Crontab\.*OK/"] },
 
   # cleanup
   { cmd => $omd_bin." rm $site", like => '/Restarting Apache...\s*OK/', stdin => "yes\n" },

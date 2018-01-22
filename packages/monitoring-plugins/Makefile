@@ -11,7 +11,7 @@ CONFIGUREOPTS = \
 build:
 	rm -rf $(DIR)
 	tar xzf $(DIR).tar.gz
-	set -e ; for p in patches/*.dif ; do \
+	set -e ; for p in patches/*.patch ; do \
 	    echo "applying $$p..." ; \
 	    ( cd $(DIR) ; patch -p1 -b ) < $$p ; \
 	done

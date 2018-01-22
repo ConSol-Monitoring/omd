@@ -1,12 +1,17 @@
 This file documents the revision history for the Open Monitoring Distribution (Labs Edition)
 
 next
+          - OMD:
+            - add LIVESTATUS_TCP_ONLY_FROM hook
+            - add omd -p switch for parallel restart/reload/stop/start
+            - add build support for Ubuntu 17.10 Artful
+            - add build support for Fedora 27
           - Thruk: update to 2.18
           - NagVis update to 1.9.4
-          - Prometheus update to 2.0.0
+          - Prometheus update to 2.1.0
           - Prometheus blackbox_exporter update to 0.11.0
           - Prometheus node_exporter update to 0.15.2
-          - Prometheus Alertmanager update to 0.12.0
+          - Prometheus Alertmanager update to 0.13.0
           - Icinga2 update to 2.8.0
             - add omd_root and omd_site to constants.conf
           - InfluxDB: update to 1.4.2

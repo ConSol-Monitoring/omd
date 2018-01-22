@@ -51,7 +51,7 @@ MODULES += requests-2.10.0.tar.gz
 MODULES += prometheus_client-0.0.17.tar.gz
 
 # More datasources for coshsh
-MODULES += MySQL-python-1.2.5.zip
+MODULES += mysqlclient-1.3.12.tar.gz
 MODULES += pymssql-2.1.3.tar.gz
 
 # DataScryer:
