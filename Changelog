@@ -12,7 +12,7 @@ next
           - Prometheus blackbox_exporter update to 0.11.0
           - Prometheus node_exporter update to 0.15.2
           - Prometheus Alertmanager update to 0.13.0
-          - Icinga2 update to 2.8.0
+          - Icinga2 update to 2.8.1
             - add omd_root and omd_site to constants.conf
           - InfluxDB: update to 1.4.2
           - Ansible: update to 2.3.2.0-1
