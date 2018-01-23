@@ -18,7 +18,7 @@ my $verbose = 0;
 GetOptions ('v|verbose' => \$verbose);
 
 ####################################
-my @packages     = glob("../jmx4perl/jmx4perl-*.tar.gz ../thruk/Thruk-*.tar.gz ../check_webinject/Webinject-*.tar.gz");
+my @packages     = glob("../jmx4perl/jmx4perl-*.tar.gz ../thruk/thruk-*.tar.gz ../check_plugins/*/*.tar.gz");
 my $more_modules = {
         'App::cpanminus'                => '0',         # OMD
         'CPAN'                          => '0',         # OMD
