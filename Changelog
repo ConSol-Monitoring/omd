@@ -7,7 +7,7 @@ next
             - add build support for Ubuntu 17.10 Artful
             - add build support for Fedora 27
           - Thruk: update to 2.18
-          - NagVis update to 1.9.4
+          - NagVis update to 1.9.5
           - Prometheus update to 2.1.0
           - Prometheus blackbox_exporter update to 0.11.0
           - Prometheus node_exporter update to 0.15.2
