@@ -421,6 +421,7 @@ sub test_url {
                 isa_ok( $lint, "HTML::Lint" );
 
                 $lint->parse($page->{'content'});
+                $lint->eof();
                 my @errors = $lint->errors;
                 @errors = _diag_lint_errors_and_remove_some_exceptions($lint);
                 is( scalar @errors, 0, "No errors found in HTML (".$test->{'url'}.")" );
@@ -697,6 +698,7 @@ sub _diag_lint_errors_and_remove_some_exceptions {
             "Unknown\ attribute\ \"autocomplete\"\ for\ tag\ <form>",
             "Unknown\ attribute\ \"autocomplete\"\ for\ tag\ <input>",
             "Unknown\ attribute\ \"sizes\"\ for\ tag\ <link>",
+            "Entity\ .*\ is\ unknown",
         ) {
             next LINT_ERROR if($err_str =~ m/$exclude_pattern/i);
         }

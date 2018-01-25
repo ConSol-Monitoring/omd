@@ -200,7 +200,7 @@ sub translate_module_name {
 sub module_to_file {
     my($mod, $files, $version) = @_;
     $version = 0 unless defined $version;
-    if($version > 0 and defined $files->{$mod}) {
+    if($version && defined $files->{$mod}) {
         my($m,$v) = file_to_module($files->{$mod});
         return $files->{$mod} if version_compare($v, $version);
     }

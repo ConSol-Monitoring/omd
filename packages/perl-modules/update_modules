@@ -63,6 +63,14 @@ for my $file (@modules) {
         print "skipped, broken symlinks in make distcheck\n";
         next;
     }
+    if($file =~ m/^JSON\-XS/mx) {
+        print "skipped, broken release, migrate to Cpanel::JSON::XS\n";
+        next;
+    }
+    if($file =~ m/^Log\-Dispatch/mx) {
+        print "skipped, newer releases have lots of dependencies\n";
+        next;
+    }
 
     my($modname,$modversion) = BuildHelper::file_to_module($file);
     my $urlpath = BuildHelper::get_url_for_module($modname);

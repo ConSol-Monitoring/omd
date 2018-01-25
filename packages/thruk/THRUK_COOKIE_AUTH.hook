@@ -20,8 +20,13 @@ case "$1" in
        APACHE_CFG=${OMD_ROOT}/etc/apache/conf.d/thruk_cookie_auth.conf
        if [ "$2" == "on" ]; then
            cat > $APACHE_CFG <<EOF
+# apache 2.2 lock
 <IfModule !mod_authz_core.c>
   RewriteLock "\${OMD_ROOT}/var/thruk/apache_rewrite.lock"
+</IfModule>
+# apache 2.4 lock
+<IfModule mod_authz_core.c>
+  Mutex file:\${OMD_ROOT}/var/thruk/ rewrite-map
 </IfModule>
 RewriteMap  users prg:\${OMD_ROOT}/share/thruk/script/thruk_auth
 

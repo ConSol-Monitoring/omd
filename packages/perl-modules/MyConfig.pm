@@ -2,7 +2,7 @@
 # the first call of cpan
 $CPAN::Config = {
   'cpan_home'                     => glob('~/.cpan'),
-  'urllist'                       => [  q[ftp://ftp.cpan.org/pub/CPAN/],
+  'urllist'                       => [  q[http://ftp.cpan.org],
                                         q[ftp://cpan.mirror.iphh.net/pub/CPAN/],
                                         q[ftp://cpan.noris.de/pub/CPAN/],
                                         q[ftp://ftp-stud.hs-esslingen.de/pub/Mirrors/CPAN/],
