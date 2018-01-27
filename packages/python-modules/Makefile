@@ -49,6 +49,7 @@ MODULES += pysnmp-4.3.5.tar.gz
 MODULES += pywbem-0.7.0.tar.gz
 MODULES += requests-2.10.0.tar.gz
 MODULES += prometheus_client-0.0.17.tar.gz
+MODULES += nagiosplugin-1.2.4.tar.gz
 
 # More datasources for coshsh
 MODULES += mysqlclient-1.3.12.tar.gz
