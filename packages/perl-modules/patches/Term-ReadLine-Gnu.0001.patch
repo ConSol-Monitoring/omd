@@ -14,8 +14,8 @@ index 9b8b313..06fce86 100644
  use warnings;
  use Carp;
  # use version TRG-1.22 for perl 5.7.x, or TRG-1.09 for older Perl
--use 5.008_001;
-+use 5.8.1;
+-use 5.8.1;
++use 5.008_001;
  
  # This module can't be loaded directly.
  BEGIN {
