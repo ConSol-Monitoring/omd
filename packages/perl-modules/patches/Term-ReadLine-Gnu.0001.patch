@@ -1,0 +1,21 @@
+From: Sven Nierlein <sven@consol.de>
+Date: Mon Jan 29 14:40:13 CET 2018
+Subject: [PATCH] fix v-string in use/require non-portable at /omd/sites/testsite/lib/perl5/lib/perl5/x86_64-linux-thread-multi/Term/ReadLine/Gnu.pm line 72.
+
+---
+ Gnu.pm.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/Gnu.pm b/Gnu.pm
+index 9b8b313..06fce86 100644
+--- a/Gnu.pm	2018-01-29 14:37:59.327511208 +0100
++++ b/Gnu.pm	2018-01-29 14:34:35.909524361 +0100
+@@ -69,7 +69,7 @@
+ use warnings;
+ use Carp;
+ # use version TRG-1.22 for perl 5.7.x, or TRG-1.09 for older Perl
+-use 5.008_001;
++use 5.8.1;
+ 
+ # This module can't be loaded directly.
+ BEGIN {
