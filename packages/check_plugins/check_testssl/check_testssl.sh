@@ -10,6 +10,7 @@ else
   OPTIONS="--color 0 $OPTIONS"
 fi
 OPTIONS="--wide --quiet --warnings batch $OPTIONS"
+export TESTSSL_INSTALL_DIR=$OMD_ROOT/etc/testssl
 
 OUT=$($DIR/testssl.sh $OPTIONS 2>&1)
 RC=$?
