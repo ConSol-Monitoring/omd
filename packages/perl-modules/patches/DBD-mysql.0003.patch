@@ -5,7 +5,7 @@
      IV type = 0;
      SV* retsv=NULL;
 -#if !defined(MARIADB_BASE_VERSION) && MYSQL_VERSION_ID >= 50709
-+#if MYSQL_VERSION_ID >= 50709
++#if (!defined(MARIADB_BASE_VERSION) && MYSQL_VERSION_ID >= 50709) || MYSQL_VERSION_ID >= 100210
  /* MariaDB 10 is not MySQL source level compatible so this only applies to MySQL*/
      IV buffer_len;
  #endif 
@@ -14,7 +14,7 @@
  	    break;
  	case SQL_MAXIMUM_STATEMENT_LENGTH:
 -#if !defined(MARIADB_BASE_VERSION) && MYSQL_VERSION_ID >= 50709
-+#if MYSQL_VERSION_ID >= 50709
++#if (!defined(MARIADB_BASE_VERSION) && MYSQL_VERSION_ID >= 50709) || MYSQL_VERSION_ID >= 100210
          /* MariaDB 10 is not MySQL source level compatible so this
             only applies to MySQL*/
  	    /* mysql_get_option() was added in mysql 5.7.3 */
