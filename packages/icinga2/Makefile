@@ -153,8 +153,8 @@ skel:
 	echo '}'                                                               >> $(SKEL)/etc/icinga2/features-available/perfdata.conf
 	# fix path to command file
 	sed -e 's/ }//g' -i $(SKEL)/etc/icinga2/features-available/command.conf
-	echo 'command_path = "###ROOT###/tmp/run/icinga.cmd" >> $(SKEL)/etc/icinga2/features-available/command.conf
-	echo '}'                                             >> $(SKEL)/etc/icinga2/features-available/command.conf
+	echo 'command_path = "###ROOT###/tmp/run/icinga.cmd"' >> $(SKEL)/etc/icinga2/features-available/command.conf
+	echo '}'                                              >> $(SKEL)/etc/icinga2/features-available/command.conf
 	sed -e 's/import "generic-host"/import "generic-host"\n  import "host-pnp"/g'      -i $(SKEL)/etc/icinga2/conf.d/hosts.conf
 	sed -e 's/import "generic-service"/import "generic-service"\n  import "srv-pnp"/g' -i $(SKEL)/etc/icinga2/conf.d/services.conf
 
