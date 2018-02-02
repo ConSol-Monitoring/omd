@@ -51,3 +51,4 @@ package: clean deps
 		cd $(PWD) && \
 		tar zcf $(SRC) $(GOPATH)/src/$(GITURL) --exclude=.git --exclude=*_test.go
 
+upstream: clean deps package
