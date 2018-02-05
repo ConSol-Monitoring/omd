@@ -17,6 +17,9 @@ install:
 	install -m 755 ./build/check_apache_serverstatus.pl $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins/
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/pnp4nagios/htdocs/templates.dist
 	install -m 644 ./check_apache_serverstatus.php $(DESTDIR)$(OMD_ROOT)/share/pnp4nagios/htdocs/templates.dist
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/histou/templates/default/
+	install -m 644 $(PWD)/apache_status.simple $(DESTDIR)$(OMD_ROOT)/share/histou/templates/default/apache_status.simple
+
 
 skel:
 
