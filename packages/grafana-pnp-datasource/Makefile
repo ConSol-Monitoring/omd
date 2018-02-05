@@ -28,4 +28,4 @@ upstream:
 	rm -f $(SRC)
 	wget https://github.com/sni/grafana-pnp-datasource/archive/master.tar.gz -O $(SRC)
 	rm -f $(APISRC)
-	wget https://github.com/lingej/pnp-metrics-api/archive/master.tar.gz -O $(APISRC)
+	wget https://github.com/sni/pnp-metrics-api/archive/master.tar.gz -O $(APISRC)
