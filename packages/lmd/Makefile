@@ -1,8 +1,10 @@
 include ../../Makefile.omd
 
 NAME        = lmd
-#VERSION     = 1.1.5
-VERSION     = master
+VERSION     = 1.2.0
+BRANCH      = v$(VERSION)
+#VERSION     = master
+#BRANCH      = master
 SRC         = $(NAME)-$(VERSION).tar.gz
 GOPKG       = 1.9
 GOVERSION   = $(shell grep ^VERSION ../go-${GOPKG}/Makefile | awk '{ print $$3 }')
@@ -10,8 +12,6 @@ GOPATH      = go
 PWD         = $(shell pwd)
 GITBASE     = github.com/sni
 GITURL      = $(GITBASE)/$(NAME)
-#BRANCH      = v$(VERSION)
-BRANCH      = master
 DEPS_SRC    = deps.tar.gz
 
 .PHONY: skel
