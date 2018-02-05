@@ -32,7 +32,7 @@
 
 
 // Process-Informationen
-$opt[1] = " --vertical-label \"Anzahl\" --title \"Apache Server-Status for $hostname\" --lower-limit 0 ";
+$opt[1] = " --vertical-label \"#\" --title \"Apache Server-Status for $hostname\" --lower-limit 0 ";
 $ds_name[1] = 'Server-Status';
 
 // Scoreboard to var1 - var11
@@ -124,7 +124,7 @@ if($this->MACRO['TIMET'] != ""){
 // apache >= 2.4? Build chart for rates (if data exists)
 if(isset($DS[12])) {
     // Request per Second
-    $opt[2] = " --vertical-label \"Anzahl\" --title \"Apache Requests per Second for $hostname\" --lower-limit 0 ";
+    $opt[2] = " --vertical-label \"#\" --title \"Apache Requests per Second for $hostname\" --lower-limit 0 ";
     $ds_name[2] = 'Server-Status';
     $def[2] = "DEF:var12=$RRDFILE[12]:$DS[12]:AVERAGE " ;
     $def[2] .= "LINE1:var12#ffae2d:\"Requests per Second        \" ";
@@ -133,7 +133,7 @@ if(isset($DS[12])) {
     $def[2] .= "GPRINT:var12:MAX:\"%4.0lf max\\n\" " ;
 
     // Bytes per Second and Bytes per Request
-    $opt[3] = " --vertical-label \"Anzahl\" --title \"Apache Bytes per ... for $hostname\" --lower-limit 0 ";
+    $opt[3] = " --vertical-label \"#\" --title \"Apache Bytes per ... for $hostname\" --lower-limit 0 ";
     $ds_name[3] = 'Server-Status';
     $def[3] = "DEF:var13=$RRDFILE[13]:$DS[13]:AVERAGE " ;
     $def[3] .= "DEF:var14=$RRDFILE[14]:$DS[14]:AVERAGE " ;
