@@ -5,6 +5,10 @@ NAME     = check_apache_serverstatus
 .PHONY: skel
 
 build:
+	for p in patches/*.patch ; do \
+	    echo "applying $$p..." ; \
+	    ( patch -p1 ) < $$p || exit 1; \
+	done
 
 install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins
