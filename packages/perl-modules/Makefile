@@ -125,7 +125,7 @@ MODULES = \
           Bit-Vector-7.4.tar.gz \
           CPAN-Meta-2.150010.tar.gz \
           CPAN-Meta-YAML-0.018.tar.gz \
-          DBD-mysql-4.044.tar.gz \
+          DBD-mysql-4.041.tar.gz \
           Date-Calc-6.4.tar.gz \
           Date-Calc-XS-6.4.tar.gz \
           Devel-GlobalDestruction-0.14.tar.gz \
