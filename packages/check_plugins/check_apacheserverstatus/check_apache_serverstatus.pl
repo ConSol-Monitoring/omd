@@ -8,17 +8,17 @@
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
 # in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell 
-# copies of the Software, and to permit persons to whom the Software is 
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
 # furnished to do so, subject to the following conditions:
 #
-# The above copyright notice and this permission notice shall be included in 
+# The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
-# 
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE 
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
@@ -45,8 +45,8 @@ use constant {
 
 	# a simple inf variant - works for me ;-)
 	MAXINT				=> ~0,
-  NEGMAXINT     => -1 * ~0,	
-	
+  NEGMAXINT     => -1 * ~0,
+
 	STAT_OK				=> 0,
 	STAT_WARNING 	=> 1,
 	STAT_CRITICAL	=> 2,
@@ -63,28 +63,28 @@ my $options = { # define defaults here
 };
 my $goodOpt = GetOptions(
 	'v+'					=> \$options->{'verbose'},
-	'verbose+'		=> \$options->{'verbose'}, 
+	'verbose+'		=> \$options->{'verbose'},
 	'V' 					=> \$options->{'version'},
 	'h' 					=> \$options->{'help'},
 	'version' 		=> \$options->{'version'},
 	'help' 				=> \$options->{'help'},
-	
+
 	'H=s'					=> \$options->{'hostname'},
 	'hostname=s'	=> \$options->{'hostname'},
-	
+
 	'wc=s'				=> \@{$options->{'warncrit'}},
 	'warncrit=s'	=> \@{$options->{'warncrit'}},
 
 	'wget'				=> \$options->{'wget'},
-	'woptions'  	=> \$options->{'wget-options'},
-	
+	'woptions=s'  	=> \$options->{'wget-options'},
+
 	'u=s'					=> \$options->{'url'},
 	'url=s'				=> \$options->{'url'},
 );
 helpShort() unless $goodOpt;
 helpLong() if $options->{'help'};
 if($options->{'version'}) {
-	print 'Version: ', VERSION, "\n"; 
+	print 'Version: ', VERSION, "\n";
 	exit STAT_UNKNOWN;
 }
 print Data::Dumper->Dump([$options], ['options'])
@@ -94,7 +94,7 @@ print Data::Dumper->Dump([$options], ['options'])
 my $warncrit = {};
 foreach my $item (@{$options->{'warncrit'}}) {
 	if($item =~ m/^([^,]+),([^,]+),([^,]+)$/o) {
-		$warncrit->{$1} = {'w' => $2, 'c' => $3};	
+		$warncrit->{$1} = {'w' => $2, 'c' => $3};
 	} else {
 		mydie('Don\'t understand ' . $item);
 	}
@@ -106,10 +106,10 @@ print Data::Dumper->Dump([$warncrit], ['warncrit'])
 local $/;
 
 # which url to use? --url can overwrite the auto-creation
-my $url = $options->{'url'} 
-	? $options->{'url'} 
+my $url = $options->{'url'}
+	? $options->{'url'}
 	: 'http://' . $options->{'hostname'} . '/server-status?auto';
-printf "Url: %s\n", $url 
+printf "Url: %s\n", $url
 	if $options->{'verbose'};
 
 # open server info
@@ -118,7 +118,7 @@ open PH, sprintf('%s %s %s |',
 	$options->{'wget-options'},
 	$url
 ) or mydie('Can not open server-status: ' . $!);
-  
+
 # read and cut data
 my %lineData = map { (split /:\s*/)[0..1] } split /\n/, <PH>;
 close PH;
@@ -131,7 +131,7 @@ if(exists $lineData{'Scoreboard'}) {
   $data->{$1}++ while $lineData{'Scoreboard'} =~ m/(.)/og;
 } else {
   # Not found...
-  print 'No usefull data found';
+  print 'No useful data found';
   exit STAT_UNKNOWN;
 }
 print Data::Dumper->Dump([$data], ['scoreboard'])
@@ -144,7 +144,7 @@ foreach(keys %$data) {
 }
 
 # print result
-my $result = '';
+my $result = $lineData{'ServerMPM'} ? sprintf('MPM=%s', $lineData{'ServerMPM'}) : '';
 my $perfData = '';
 my @statList = qw(_ S R W K D C L G I .);
 my $stats = {
@@ -162,7 +162,7 @@ my $stats = {
 };
 foreach my $item (@statList) {
   $result .= ', ' if $result;
-  $perfData .= ' ' if $perfData;  
+  $perfData .= ' ' if $perfData;
   $result .= sprintf '%s=%d', $stats->{$item}, ($data->{$item} or 0);
   $perfData .= sprintf '%s=%d', $stats->{$item}, ($data->{$item} or 0);
 }
@@ -170,14 +170,16 @@ $result .= ' ===> Total=' . $sum;
 
 # add server rates - if exisiting (apache => 2.4)
 if(
-  exists $lineData{'ReqPerSec'} 
-  and exists $lineData{'BytesPerSec'} 
+  exists $lineData{'ReqPerSec'}
+  and exists $lineData{'BytesPerSec'}
   and exists $lineData{'BytesPerReq'}
 ) {
-  $result .= sprintf ' RATES %s=%s, %s=%s, %s=%s', 
+  $result .= sprintf ' RATES %s=%s, %s=%s, %s=%s',
     (map { $_, $lineData{$_} } qw(ReqPerSec BytesPerSec BytesPerReq));
-  $perfData .= sprintf ' %s=%s %s=%s %s=%s', 
+  $perfData .= sprintf ' %s=%s %s=%s %s=%s',
     (map { $_, $lineData{$_} } qw(ReqPerSec BytesPerSec BytesPerReq));
+  $perfData .= sprintf ' Total_Accesses=%sc', $lineData{"Total Accesses"};
+  $perfData .= sprintf ' Total_kBytes=%s', $lineData{"Total kBytes"};
 }
 
 # check for warning and critical
@@ -186,13 +188,13 @@ foreach my $field (keys %$warncrit) {
 	printf "checking warn/crit for \"%s\"...\n", $field
 		if $options->{'verbose'};
   # value = if one letter scoreboard, else one of lineData (0 if not found)
-  my $fieldValue = 
+  my $fieldValue =
     $field =~ m/^.$/o ? $data->{$field} || 0 : $lineData{$field} || 0;
 	printf "  value: \"%s\"\n", $fieldValue
 		if $options->{'verbose'};
   my $fieldStatus = checkStatus($fieldValue, $warncrit->{$field});
   printf "  result: %d\n", $fieldStatus
-    if $options->{'verbose'};  		
+    if $options->{'verbose'};
   # last if CRITICAL, save WARNING, ignore OK
   if($fieldStatus == STAT_CRITICAL) {
     $status = STAT_CRITICAL;
@@ -206,9 +208,9 @@ printf "Check overall status: %d\n", $status
 
 
 # print result
-printf "%s APACHE SERVER STATUS %s|%s\n",
-  $status == 0 ? 'OK' : $status == 1 
-    ? 'WARNING' : $status == 2 
+printf "APACHE SERVER STATUS %s - %s|%s\n",
+  $status == 0 ? 'OK' : $status == 1
+    ? 'WARNING' : $status == 2
     ? 'CRITICAL' : 'UNKNOWN',
   $result, $perfData;
 exit $status;
@@ -243,7 +245,7 @@ Options:
  -V, --version
     Print version
  -H, --hostname
-    Host name or IP address - will be used as 
+    Host name or IP address - will be used as
     http://<hostname>/server-status. You can overwrite this
     url by using -u/--url.
  -v, --verbose
@@ -260,7 +262,7 @@ Options:
     Field could be any of the letters of the apache scoreboard or
     of the other keys returned by server-status. Can be set multiple
     times if you want to check more than one field.
-  	    
+
 END
 	exit STAT_UNKNOWN;
 }
@@ -269,8 +271,8 @@ END
 # die with STAT_UNKNOWN
 sub mydie {
 	print @_, "\n";
-	exit STAT_UNKNOWN; 
-} 
+	exit STAT_UNKNOWN;
+}
 
 
 # checks if value is in defined limits for warning and critical
@@ -281,14 +283,14 @@ sub mydie {
 sub checkStatus {
   my $value = shift;
   my $limits = shift;
-  
+
   # first check critical - if not crit, then check warning. If not must be ok
   for my $type (qw(c w)) {
-    printf "    checking type %s = %s\n", 
+    printf "    checking type %s = %s\n",
       $type eq 'c' ? 'critcal' : 'warning',
-      $limits->{$type}     
-      if $options->{'verbose'}; 
-      
+      $limits->{$type}
+      if $options->{'verbose'};
+
     # Get min/max values, range is inside or outside?
     my $inOrOut = 'out';
     my $min;
@@ -302,7 +304,7 @@ sub checkStatus {
       ($min, $max) = map { $_ eq '~' ? NEGMAXINT : $_ } ($min, $max);
     } else {
       # Don't understand...
-      myexit('--> Strange range found: ', $limits->{$type}); 
+      myexit('--> Strange range found: ', $limits->{$type});
     }
     printf "    inside or outside: %s   min: %s   max: %s\n",
       $inOrOut, $min, $max
@@ -316,7 +318,7 @@ sub checkStatus {
     } elsif($inOrOut eq 'in') {
       if($min <= $value && $value <= $max) {
         return $type eq 'c' ? STAT_CRITICAL : STAT_WARNING;
-      } 
+      }
     }
   }
 

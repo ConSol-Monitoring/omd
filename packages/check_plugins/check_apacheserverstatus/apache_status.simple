@@ -7,17 +7,32 @@ perfLabel = Wait, Start, Read, Send, Keepalive, DNS, Close, Logging, Graceful, I
 
 #Copy the grafana dashboard below:
 {
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": "-- Grafana --",
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "graphTooltip": 0,
+  "hideControls": false,
   "id": 1,
-  "timezone": "browser",
-  "title": "Apache Server Status",
   "links": [],
+  "refresh": "30s",
   "rows": [
     {
       "collapse": false,
       "height": 250,
       "panels": [
         {
-          "aliasColors": {},
+          "aliasColors": [],
           "bars": false,
           "dashLength": 10,
           "dashes": false,
@@ -97,13 +112,13 @@ perfLabel = Wait, Start, Read, Send, Keepalive, DNS, Close, Logging, Graceful, I
                 {
                   "key": "host",
                   "operator": "=",
-                  "value": "hostname"
+                  "value": "host"
                 },
                 {
                   "condition": "AND",
                   "key": "service",
                   "operator": "=",
-                  "value": "description"
+                  "value": "service"
                 },
                 {
                   "condition": "AND",
@@ -159,13 +174,13 @@ perfLabel = Wait, Start, Read, Send, Keepalive, DNS, Close, Logging, Graceful, I
                 {
                   "key": "host",
                   "operator": "=",
-                  "value": "hostname"
+                  "value": "host"
                 },
                 {
                   "condition": "AND",
                   "key": "service",
                   "operator": "=",
-                  "value": "description"
+                  "value": "service"
                 },
                 {
                   "condition": "AND",
@@ -221,13 +236,13 @@ perfLabel = Wait, Start, Read, Send, Keepalive, DNS, Close, Logging, Graceful, I
                 {
                   "key": "host",
                   "operator": "=",
-                  "value": "hostname"
+                  "value": "host"
                 },
                 {
                   "condition": "AND",
                   "key": "service",
                   "operator": "=",
-                  "value": "description"
+                  "value": "service"
                 },
                 {
                   "condition": "AND",
@@ -283,13 +298,13 @@ perfLabel = Wait, Start, Read, Send, Keepalive, DNS, Close, Logging, Graceful, I
                 {
                   "key": "host",
                   "operator": "=",
-                  "value": "hostname"
+                  "value": "host"
                 },
                 {
                   "condition": "AND",
                   "key": "service",
                   "operator": "=",
-                  "value": "description"
+                  "value": "service"
                 },
                 {
                   "condition": "AND",
@@ -345,13 +360,13 @@ perfLabel = Wait, Start, Read, Send, Keepalive, DNS, Close, Logging, Graceful, I
                 {
                   "key": "host",
                   "operator": "=",
-                  "value": "hostname"
+                  "value": "host"
                 },
                 {
                   "condition": "AND",
                   "key": "service",
                   "operator": "=",
-                  "value": "description"
+                  "value": "service"
                 },
                 {
                   "condition": "AND",
@@ -407,13 +422,13 @@ perfLabel = Wait, Start, Read, Send, Keepalive, DNS, Close, Logging, Graceful, I
                 {
                   "key": "host",
                   "operator": "=",
-                  "value": "hostname"
+                  "value": "host"
                 },
                 {
                   "condition": "AND",
                   "key": "service",
                   "operator": "=",
-                  "value": "description"
+                  "value": "service"
                 },
                 {
                   "condition": "AND",
@@ -469,13 +484,13 @@ perfLabel = Wait, Start, Read, Send, Keepalive, DNS, Close, Logging, Graceful, I
                 {
                   "key": "host",
                   "operator": "=",
-                  "value": "hostname"
+                  "value": "host"
                 },
                 {
                   "condition": "AND",
                   "key": "service",
                   "operator": "=",
-                  "value": "description"
+                  "value": "service"
                 },
                 {
                   "condition": "AND",
@@ -531,13 +546,13 @@ perfLabel = Wait, Start, Read, Send, Keepalive, DNS, Close, Logging, Graceful, I
                 {
                   "key": "host",
                   "operator": "=",
-                  "value": "hostname"
+                  "value": "host"
                 },
                 {
                   "condition": "AND",
                   "key": "service",
                   "operator": "=",
-                  "value": "description"
+                  "value": "service"
                 },
                 {
                   "condition": "AND",
@@ -593,13 +608,13 @@ perfLabel = Wait, Start, Read, Send, Keepalive, DNS, Close, Logging, Graceful, I
                 {
                   "key": "host",
                   "operator": "=",
-                  "value": "hostname"
+                  "value": "host"
                 },
                 {
                   "condition": "AND",
                   "key": "service",
                   "operator": "=",
-                  "value": "description"
+                  "value": "service"
                 },
                 {
                   "condition": "AND",
@@ -655,13 +670,13 @@ perfLabel = Wait, Start, Read, Send, Keepalive, DNS, Close, Logging, Graceful, I
                 {
                   "key": "host",
                   "operator": "=",
-                  "value": "hostname"
+                  "value": "host"
                 },
                 {
                   "condition": "AND",
                   "key": "service",
                   "operator": "=",
-                  "value": "description"
+                  "value": "service"
                 },
                 {
                   "condition": "AND",
@@ -717,13 +732,13 @@ perfLabel = Wait, Start, Read, Send, Keepalive, DNS, Close, Logging, Graceful, I
                 {
                   "key": "host",
                   "operator": "=",
-                  "value": "hostname"
+                  "value": "host"
                 },
                 {
                   "condition": "AND",
                   "key": "service",
                   "operator": "=",
-                  "value": "description"
+                  "value": "service"
                 },
                 {
                   "condition": "AND",
@@ -849,7 +864,7 @@ perfLabel = Wait, Start, Read, Send, Keepalive, DNS, Close, Logging, Graceful, I
                 },
                 {
                   "params": [
-                    "null"
+                    "none"
                   ],
                   "type": "fill"
                 }
@@ -869,7 +884,13 @@ perfLabel = Wait, Start, Read, Send, Keepalive, DNS, Close, Logging, Graceful, I
                   },
                   {
                     "params": [],
-                    "type": "mean"
+                    "type": "first"
+                  },
+                  {
+                    "params": [
+                      "1s"
+                    ],
+                    "type": "derivative"
                   }
                 ]
               ],
@@ -877,19 +898,19 @@ perfLabel = Wait, Start, Read, Send, Keepalive, DNS, Close, Logging, Graceful, I
                 {
                   "key": "host",
                   "operator": "=",
-                  "value": "hostname"
+                  "value": "host"
                 },
                 {
                   "condition": "AND",
                   "key": "service",
                   "operator": "=",
-                  "value": "description"
+                  "value": "service"
                 },
                 {
                   "condition": "AND",
                   "key": "performanceLabel",
                   "operator": "=",
-                  "value": "ReqPerSec"
+                  "value": "Total_Accesses"
                 }
               ]
             }
@@ -974,7 +995,7 @@ perfLabel = Wait, Start, Read, Send, Keepalive, DNS, Close, Logging, Graceful, I
                 },
                 {
                   "params": [
-                    "null"
+                    "none"
                   ],
                   "type": "fill"
                 }
@@ -994,7 +1015,19 @@ perfLabel = Wait, Start, Read, Send, Keepalive, DNS, Close, Logging, Graceful, I
                   },
                   {
                     "params": [],
-                    "type": "mean"
+                    "type": "first"
+                  },
+                  {
+                    "params": [
+                      "1s"
+                    ],
+                    "type": "derivative"
+                  },
+                  {
+                    "params": [
+                      "*1024"
+                    ],
+                    "type": "math"
                   }
                 ]
               ],
@@ -1002,19 +1035,19 @@ perfLabel = Wait, Start, Read, Send, Keepalive, DNS, Close, Logging, Graceful, I
                 {
                   "key": "host",
                   "operator": "=",
-                  "value": "hostname"
+                  "value": "host"
                 },
                 {
                   "condition": "AND",
                   "key": "service",
                   "operator": "=",
-                  "value": "description"
+                  "value": "service"
                 },
                 {
                   "condition": "AND",
                   "key": "performanceLabel",
                   "operator": "=",
-                  "value": "BytesPerSec"
+                  "value": "Total_kBytes"
                 }
               ]
             }
@@ -1045,7 +1078,7 @@ perfLabel = Wait, Start, Read, Send, Keepalive, DNS, Close, Logging, Graceful, I
       "height": "250px",
       "panels": [
         {
-          "aliasColors": {},
+          "aliasColors": [],
           "bars": false,
           "dashLength": 10,
           "dashes": false,
@@ -1112,11 +1145,17 @@ perfLabel = Wait, Start, Read, Send, Keepalive, DNS, Close, Logging, Graceful, I
                   },
                   {
                     "params": [],
-                    "type": "mean"
+                    "type": "first"
                   },
                   {
                     "params": [
-                      "ReqPerSec"
+                      "1s"
+                    ],
+                    "type": "derivative"
+                  },
+                  {
+                    "params": [
+                      "Requests per second"
                     ],
                     "type": "alias"
                   }
@@ -1126,19 +1165,19 @@ perfLabel = Wait, Start, Read, Send, Keepalive, DNS, Close, Logging, Graceful, I
                 {
                   "key": "host",
                   "operator": "=",
-                  "value": "hostname"
+                  "value": "host"
                 },
                 {
                   "condition": "AND",
                   "key": "service",
                   "operator": "=",
-                  "value": "description"
+                  "value": "service"
                 },
                 {
                   "condition": "AND",
                   "key": "performanceLabel",
                   "operator": "=",
-                  "value": "ReqPerSec"
+                  "value": "Total_Accesses"
                 }
               ]
             }
@@ -1180,7 +1219,7 @@ perfLabel = Wait, Start, Read, Send, Keepalive, DNS, Close, Logging, Graceful, I
           ]
         },
         {
-          "aliasColors": {},
+          "aliasColors": [],
           "bars": false,
           "dashLength": 10,
           "dashes": false,
@@ -1232,6 +1271,7 @@ perfLabel = Wait, Start, Read, Send, Keepalive, DNS, Close, Logging, Graceful, I
                   "type": "fill"
                 }
               ],
+              "hide": false,
               "measurement": "metrics",
               "orderByTime": "ASC",
               "policy": "default",
@@ -1247,11 +1287,23 @@ perfLabel = Wait, Start, Read, Send, Keepalive, DNS, Close, Logging, Graceful, I
                   },
                   {
                     "params": [],
-                    "type": "mean"
+                    "type": "first"
                   },
                   {
                     "params": [
-                      "BytesperReq"
+                      "1s"
+                    ],
+                    "type": "derivative"
+                  },
+                  {
+                    "params": [
+                      "*1024"
+                    ],
+                    "type": "math"
+                  },
+                  {
+                    "params": [
+                      "Bytes per second"
                     ],
                     "type": "alias"
                   }
@@ -1261,19 +1313,19 @@ perfLabel = Wait, Start, Read, Send, Keepalive, DNS, Close, Logging, Graceful, I
                 {
                   "key": "host",
                   "operator": "=",
-                  "value": "hostname"
+                  "value": "host"
                 },
                 {
                   "condition": "AND",
                   "key": "service",
                   "operator": "=",
-                  "value": "description"
+                  "value": "service"
                 },
                 {
                   "condition": "AND",
                   "key": "performanceLabel",
                   "operator": "=",
-                  "value": "BytesPerReq"
+                  "value": "Total_kBytes"
                 }
               ]
             },
@@ -1313,23 +1365,23 @@ perfLabel = Wait, Start, Read, Send, Keepalive, DNS, Close, Logging, Graceful, I
                   },
                   {
                     "params": [
-                      "BytesPerSec"
+                      "Average bytes per request"
                     ],
                     "type": "alias"
-                  }
+                 }
                 ]
               ],
               "tags": [
                 {
                   "key": "host",
                   "operator": "=",
-                  "value": "hostname"
+                  "value": "host"
                 },
                 {
                   "condition": "AND",
                   "key": "performanceLabel",
                   "operator": "=",
-                  "value": "BytesPerSec"
+                  "value": "BytesPerReq"
                 }
               ]
             }
@@ -1386,7 +1438,7 @@ perfLabel = Wait, Start, Read, Send, Keepalive, DNS, Close, Logging, Graceful, I
     "list": []
   },
   "time": {
-    "from": "now-6h",
+    "from": "now-30m",
     "to": "now"
   },
   "timepicker": {
@@ -1413,5 +1465,7 @@ perfLabel = Wait, Start, Read, Send, Keepalive, DNS, Close, Logging, Graceful, I
       "7d",
       "30d"
     ]
-  }
+  },
+  "timezone": "browser",
+  "title": "Apache Server Status"
 }
