@@ -20,6 +20,7 @@ case "$1" in
        APACHE_CFG=${OMD_ROOT}/etc/apache/conf.d/thruk_cookie_auth.conf
        if [ "$2" == "on" ]; then
            cat > $APACHE_CFG <<EOF
+RewriteEngine On
 # apache 2.2 lock
 <IfModule !mod_authz_core.c>
   RewriteLock "\${OMD_ROOT}/var/thruk/apache_rewrite.lock"
@@ -31,7 +32,7 @@ case "$1" in
 RewriteMap  users prg:\${OMD_ROOT}/share/thruk/script/thruk_auth
 
 # make cookie accessible by the url
-RewriteCond %{REQUEST_URI}           !^/\${OMD_SITE}/thruk/cgi-bin/restricted.cgi
+RewriteCond %{REQUEST_URI}           !^/\${OMD_SITE}/thruk/cgi-bin/(login|remote|restricted).cgi
 RewriteCond %{REQUEST_URI}           !^/server-status
 RewriteCond %{REQUEST_URI}           !^/\${OMD_SITE}/api/
 RewriteCond %{REQUEST_URI}           !^/\${OMD_SITE}/pnp4nagios/index.php/api/
