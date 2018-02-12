@@ -1,0 +1,23 @@
+diff -Naur a/scripts/process_perfdata.pl.in b/scripts/process_perfdata.pl.in
+--- a/scripts/process_perfdata.pl.in	2018-02-11 00:04:00.156617400 +0100
++++ b/scripts/process_perfdata.pl.in	2018-02-11 00:09:07.133795200 +0100
+@@ -304,6 +304,19 @@
+         }
+     }
+ 
++    # remove unprintable and control characters
++    $NAGIOS{PERFDATA} =~ s/[^[:ascii:]]//g;
++    $NAGIOS{PERFDATA} =~ s/[\x00-\x07]//g;
++    $NAGIOS{PERFDATA} =~ s/[\x0e-\x1f]//g;
++    if ($NAGIOS{SERVICEPERFDATA}) {
++      $NAGIOS{SERVICEPERFDATA} =~ s/[^[:ascii:]]//g;
++      $NAGIOS{SERVICEPERFDATA} =~ s/[\x00-\x07]//g;
++      $NAGIOS{SERVICEPERFDATA} =~ s/[\x0e-\x1f]//g;
++    } elsif ($NAGIOS{HOSTPERFDATA}) {
++      $NAGIOS{HOSTPERFDATA} =~ s/[^[:ascii:]]//g;
++      $NAGIOS{HOSTPERFDATA} =~ s/[\x00-\x07]//g;
++      $NAGIOS{HOSTPERFDATA} =~ s/[\x0e-\x1f]//g;
++    }
+     if ( $NAGIOS{PERFDATA} =~ /^(.*)\s\[(.*)\]$/ ) {
+         $NAGIOS{PERFDATA}      = $1;
+         $NAGIOS{CHECK_COMMAND} = $2;
