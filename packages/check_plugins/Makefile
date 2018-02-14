@@ -15,7 +15,9 @@ install:
 	set -e; for plugin in $(PLUGINS); do \
 		echo "install: $$plugin..." ; \
 		$(MAKE) DESTDIR=$(DESTDIR) -C $$plugin install; \
-	done
+	done; \
+	echo "install: simple plugins"; \
+	$(MAKE) DESTDIR=$(DESTDIR) -C single_files install
 
 skel:
 	mkdir -p skel
