@@ -3,6 +3,7 @@
 # description: Grafana web server & backend
 
 # Check if grafana is enabled in OMD. If not terminate.
+. lib/omd/init_profile
 . etc/omd/site.conf
 if [ "$CONFIG_GRAFANA" != "on" ] ; then
     exit 5
@@ -47,14 +48,17 @@ stop_grafana() {
         done
         if ! ps -p $pid > /dev/null 2>&1 ; then
             echo "OK"
+	    __init_hook $0 $1 post 0
             exit 0;
         else
             echo "failed"
+	    __init_hook $0 $1 post 1
             exit 1;
         fi
     fi
 }
 
+__init_hook $0 $1 pre
 case "$1" in
   start)
         printf '%s' "Starting $NAME..."
@@ -70,6 +74,7 @@ case "$1" in
         nohup $DAEMON $OPTIONS >>$LOGFILE 2>&1 &
         if [ $? -eq 0 ]; then
             echo "OK"
+	    __init_hook $0 $1 post 0
             # packages using Grafana register themselves through installer files
             if ls $OMD_ROOT/etc/grafana/*_installer >/dev/null 2>&1; then
                 for client in $OMD_ROOT/etc/grafana/*_installer
@@ -80,6 +85,7 @@ case "$1" in
             exit 0;
         else
             echo "failed"
+	    __init_hook $0 $1 post 1
             exit 1;
         fi
     ;;
