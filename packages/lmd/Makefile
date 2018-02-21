@@ -1,10 +1,10 @@
 include ../../Makefile.omd
 
 NAME        = lmd
-VERSION     = 1.2.0
-BRANCH      = v$(VERSION)
-#VERSION     = master
-#BRANCH      = master
+#VERSION     = 1.2.0
+#BRANCH      = v$(VERSION)
+VERSION     = master
+BRANCH      = master
 SRC         = $(NAME)-$(VERSION).tar.gz
 GOPKG       = 1.9
 GOVERSION   = $(shell grep ^VERSION ../go-${GOPKG}/Makefile | awk '{ print $$3 }')
@@ -20,7 +20,7 @@ build:
 	tar zxf $(DEPS_SRC)
 	tar zxf $(SRC)
 	export GOROOT=$(PWD)/../go-$(GOPKG)/go-$(GOVERSION)/ && export GOPATH=$(PWD)/$(GOPATH)/ && PATH=$$GOROOT/bin:$$PATH && \
-	go install -ldflags "-s -w -X main.Build=$(OMD_VERSION)" $(GITURL)/$(NAME)
+	go install -ldflags "-s -w -X main.Build=$(OMD_VERSION)_($(shell cd $(PWD)/$(GOPATH)/src/$(GITURL) && git rev-parse --short HEAD))" $(GITURL)/$(NAME)
 
 install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/bin
