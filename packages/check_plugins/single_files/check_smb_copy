@@ -96,11 +96,11 @@ class Smb(nagiosplugin.Resource):
                 file.close()
                 size = len(contents)
                 self.context = None
-                yield nagiosplugin.Metric('file_size', size, min=0, context='transfer_time')
+                yield nagiosplugin.Metric('file_size', size, min=0, context='file_size')
                 yield nagiosplugin.Metric('transfer_time', self.time_read + self.time_open, min=0, context='transfer_time')
                 yield nagiosplugin.Metric('read_time', self.time_read, min=0, context='read_time')
                 yield nagiosplugin.Metric('open_time', self.time_open, min=0, context='open_time')
-                yield nagiosplugin.Metric('transfer_speed', (size / 1048576) / self.time_read + self.time_open, context='transfer_time')
+                yield nagiosplugin.Metric('transfer_speed', (size / 1048576) / self.time_read + self.time_open, context='transfer_speed')
         except Exception, exp:
             raise nagiosplugin.CheckError(exp.__str__())
 
@@ -115,8 +115,10 @@ def main():
     argp.add_argument('-x', '--share', action='store')
     argp.add_argument('-f', '--file', action='store')
     argp.add_argument('-m', '--mode', action='store', default='connection-time')
-    argp.add_argument('-w', '--warning', type=int, action='store')
-    argp.add_argument('-c', '--critical', type=int, action='store')
+    argp.add_argument('-w', '--warning', type=str, action='store')
+    argp.add_argument('-c', '--critical', type=str, action='store')
+    argp.add_argument('--warning_speed', type=str, action='store')
+    argp.add_argument('--critical_speed', type=str, action='store')
     argp.add_argument('-t', '--timeout', action='store', default=60)
     argp.add_argument('-v', '--verbose', action='count', default=0)
     args = argp.parse_args()
@@ -133,14 +135,14 @@ def main():
         )
     elif args.mode == "read-file":
         check.add(
+            nagiosplugin.ScalarContext('file_size',
+                fmt_metric='%dMB'),
             nagiosplugin.ScalarContext('open_time',
                 fmt_metric='%.2f to open'),
             nagiosplugin.ScalarContext('read_time',
                 fmt_metric='%.2f to read'),
-            nagiosplugin.ScalarContext('transfer_time', args.warning, args.critical,
-                fmt_metric='%.2f to transfer'),
-            nagiosplugin.ScalarContext('transfer_speed',
-                fmt_metric='%.2MB/s'),
+            nagiosplugin.ScalarContext('transfer_time', args.warning, args.critical),
+            nagiosplugin.ScalarContext('transfer_speed', args.warning_speed, args.critical_speed),
             SmbCopySummary(args.file)
         )
     check.main(args.verbose, args.timeout)
