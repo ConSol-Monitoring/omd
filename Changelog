@@ -6,7 +6,7 @@ next
             - add omd -p switch for parallel restart/reload/stop/start
             - add build support for Ubuntu 17.10 Artful
             - add build support for Fedora 27
-          - Thruk: update to 2.18
+          - Thruk: update to 2.20
           - NagVis update to 1.9.5
           - Prometheus update to 2.1.0
           - Prometheus blackbox_exporter update to 0.11.0
