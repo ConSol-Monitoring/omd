@@ -8,7 +8,7 @@ next
             - add build support for Fedora 27
           - Thruk: update to 2.20
           - NagVis update to 1.9.5
-          - Prometheus update to 2.2.0
+          - Prometheus update to 2.1.0
           - Prometheus blackbox_exporter update to 0.12.0
           - Prometheus node_exporter update to 0.15.2
           - Prometheus Alertmanager update to 0.13.0
