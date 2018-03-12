@@ -18,6 +18,7 @@ next
           - Ansible: update to 2.3.3.0-1
           - Check_prometheus: added 0.0.1
           - Go: added 1.9.4
+          - Go: added 1.10
           - Grafana update to 4.6.3
           - Histou update to 0.4.3
           - added check_vmware_esx plugin
