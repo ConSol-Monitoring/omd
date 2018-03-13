@@ -1,6 +1,6 @@
 This file documents the revision history for the Open Monitoring Distribution (Labs Edition)
 
-next
+2.70     Mar 14 2018
           - OMD:
             - add LIVESTATUS_TCP_ONLY_FROM hook
             - add omd -p switch for parallel restart/reload/stop/start
