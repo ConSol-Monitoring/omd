@@ -25,7 +25,7 @@ case "$1" in
         # configuration of the other sites...
         PORT=$($OMD_ROOT/lib/omd/port_is_used PROMETHEUS_TCP_PORT $2)
         if [ "$PORT" != "$2" ] ; then
-            echo "Prometheus port $2 is in use. I've choosen $PORT instead." >&2
+            [ "$CONFIG_PROMETHEUS" = on ] && echo "Prometheus port $2 is in use. I've choosen $PORT instead." >&2
             echo "$PORT"
             touch $OMD_ROOT/prometheusportupdated
         fi

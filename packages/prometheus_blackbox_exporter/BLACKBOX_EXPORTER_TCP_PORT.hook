@@ -26,7 +26,7 @@ case "$1" in
     set)
         PORT=$($OMD_ROOT/lib/omd/port_is_used BLACKBOX_EXPORTER_TCP_PORT $2)
         if [ "$PORT" != "$2" ] ; then
-            echo "Blackbox prober exporter port $2 is in use. I've choosen $PORT instead." >&2
+            [ "$CONFIG_BLACKBOX_EXPORTER" = on ] && echo "Blackbox prober exporter port $2 is in use. I've choosen $PORT instead." >&2
             echo "$PORT"
         fi
         cat <<EOF > $OMD_ROOT/etc/blackbox_exporter/apache.conf

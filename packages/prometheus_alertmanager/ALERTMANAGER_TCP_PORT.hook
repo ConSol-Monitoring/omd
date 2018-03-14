@@ -25,7 +25,7 @@ case "$1" in
         # configuration of the other sites...
         PORT=$($OMD_ROOT/lib/omd/port_is_used ALERTMANAGER_TCP_PORT $2)
         if [ "$PORT" != "$2" ] ; then
-            echo "Alertmanager port $2 is in use. I've choosen $PORT instead." >&2
+            [ "$CONFIG_ALERTMANAGER" = on ] && echo "Alertmanager port $2 is in use. I've choosen $PORT instead." >&2
             echo "$PORT"
         fi
         cat <<EOF > $OMD_ROOT/etc/alertmanager/apache.conf
