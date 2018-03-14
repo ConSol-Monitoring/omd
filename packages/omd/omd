@@ -689,7 +689,7 @@ def create_skeleton_files(sitename, dir):
                     continue
                 if dirpath == "tmp" or dirpath.startswith("tmp/"):
                     continue
-	    create_skeleton_file(skelroot, sitedir, dirpath + "/" + entry, replacements)
+            create_skeleton_file(skelroot, sitedir, dirpath + "/" + entry, replacements)
 
 def delete_user_file(user_path):
     if not os.path.islink(user_path) and os.path.isdir(user_path):
@@ -3039,11 +3039,21 @@ def main_reset(args, options={}):
     for arg in args:
         if not os.path.exists(skelroot + '/' + arg):
             bail_out("file %s does not exist in skeleton"  % (arg))
-        try:
-            os.remove(arg)
-        except Exception, e:
-            pass
-        create_skeleton_file(skelroot, sitedir, arg, replacements)
+        if os.path.isdir(skelroot + '/' +arg) and not os.path.islink(skelroot + '/' + arg):
+            for dirpath, dirnames, filenames in os.walk(arg):
+                for entry in filenames:
+                    if os.path.exists(skelroot + '/' + dirpath + '/' + entry):
+                        try:
+                            os.remove(arg)
+                        except Exception:
+                            pass
+            create_skeleton_files(g_sitename, arg)
+        else:
+            try:
+                os.remove(arg)
+            except Exception:
+                pass
+            create_skeleton_file(skelroot, sitedir, arg, replacements)
 
     config_set_all()
 

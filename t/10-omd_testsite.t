@@ -12,7 +12,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 263 );
+plan( tests => 281 );
 
 my $omd_bin = TestUtils::get_omd_bin();
 
@@ -106,6 +106,11 @@ my $tests = [
   { cmd => "/bin/sh -c \"rm /omd/sites/$site/etc/icinga/conf.d\""},
   { cmd => "/bin/su - $site -c 'omd diff'", like => ['/Changed content .profile/', '/Deleted etc\/icinga\/conf.d/'] },
   { cmd => "/bin/su - $site -c 'omd reset .profile etc/icinga/conf.d'"  },
+  { cmd => "/bin/su - $site -c 'omd diff'", like => ['/^$/'] },
+  { cmd => "/bin/sh -c \"rm /omd/sites/$site/etc/icinga/*.cfg\""},
+  { cmd => "/bin/sh -c \"rm /omd/sites/$site/etc/icinga/conf.d\""},
+  { cmd => "/bin/su - $site -c 'omd diff'", like => ['/Deleted etc\/icinga/cgi.cfg/', '/Deleted etc\/icinga\/conf.d/'] },
+  { cmd => "/bin/su - $site -c 'omd reset etc/'"  },
   { cmd => "/bin/su - $site -c 'omd diff'", like => ['/^$/'] },
 
   # parallel mode
