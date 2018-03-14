@@ -2033,6 +2033,7 @@ def config_set_all():
                 if output and output != value:
                     g_site_conf[hook_name] = output
                     putenv("CONFIG_" + hook_name, output)
+                    save_site_conf()
 
 
 
