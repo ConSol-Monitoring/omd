@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 NAME       = grafana
-VERSION    = 4.6.3
+VERSION    = 5.0.3
 SRC        = $(NAME)-$(VERSION).tar.gz
 GOPATH     = go
 GOPKG      = 1.9
@@ -29,11 +29,11 @@ install:
 	tar zxf public.tar.gz -C $(DESTDIR)$(OMD_ROOT)/share/grafana
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/grafana/conf
 	install -m 644 defaults.ini $(DESTDIR)$(OMD_ROOT)/share/grafana/conf/
-	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/grafana/vendor/
-	cp -rp go/src/github.com/grafana/grafana/vendor/phantomjs $(DESTDIR)$(OMD_ROOT)/share/grafana/vendor/
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/grafana/tools/
+	cp -rp go/src/github.com/grafana/grafana/tools/phantomjs $(DESTDIR)$(OMD_ROOT)/share/grafana/tools/
 	# This link is needed due to grafana does not ship with the binary
-	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/grafana/vendor/phantomjs
-	ln -s ../../../../bin/phantomjs $(DESTDIR)$(OMD_ROOT)/share/grafana/vendor/phantomjs/phantomjs
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/grafana/tools/phantomjs
+	ln -s ../../../../bin/phantomjs $(DESTDIR)$(OMD_ROOT)/share/grafana/tools/phantomjs/phantomjs
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/python
 	install -m 755 grafana_utils.py $(DESTDIR)$(OMD_ROOT)/lib/python/grafana_utils.py
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/var/tmp

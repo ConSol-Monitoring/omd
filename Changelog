@@ -1,5 +1,8 @@
 This file documents the revision history for the Open Monitoring Distribution (Labs Edition)
 
+next:
+          - Grafana update to 5.0.3
+
 2.70     Mar 14 2018
           - OMD:
             - add LIVESTATUS_TCP_ONLY_FROM hook
