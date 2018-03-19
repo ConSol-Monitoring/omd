@@ -41,7 +41,7 @@ cd ###ROOT###
 [ "$CONFIG_PUSHGATEWAY" = "on" ] || exit 5
 
 mkdir -p ###ROOT###/tmp/pushgateway
-mkdir -p ###ROOT###/var/pushgateway
+mkdir -p ###ROOT###/var/pushgateway/data
 BIN=###ROOT###/bin/pushgateway
 LOG_DIR=###ROOT###/var/pushgateway
 LOGFILE=###ROOT###/var/pushgateway/pushgateway.log
