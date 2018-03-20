@@ -44,7 +44,7 @@ skel:
 	       $(SKEL)/etc/apache/conf.d/grafana.conf
 	mkdir -p $(SKEL)/var/grafana/plugins
 	tar zxf clock-panel-plugin-0.0.9.tar.gz -C $(SKEL)/var/grafana/plugins
-	tar zxf piechart-panel-plugin-1.1.5.tar.gz -C $(SKEL)/var/grafana/plugins
+	tar zxf piechart-panel-plugin-1.2.0.tar.gz -C $(SKEL)/var/grafana/plugins
 
 clean:
 	rm -rf $(GOPATH)
