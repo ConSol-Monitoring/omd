@@ -1,0 +1,3 @@
+NOTES:
+The main status page does currently not work, because the tmeplate.html and its assets are statically compiled in and no flag like web.external_url exists currently.
+This may be done by some magic apache vodoo from someone who really knows, what he is doing...

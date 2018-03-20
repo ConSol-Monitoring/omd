@@ -39,10 +39,12 @@ case "$1" in
 </IfModule>
 
 <Location "/$OMD_SITE/pushgateway">
-    ProxyPass http://$CONFIG_PUSHGATEWAY_TCP_ADDR:$PORT/$OMD_SITE/pushgateway retry=0 disablereuse=On
-    #ProxyPassReverse http://$CONFIG_PUSHGATEWAY_TCP_ADDR:$PORT/$OMD_SITE/pushgateway
-    ProxyPassReverse http://$CONFIG_PUSHGATEWAY_TCP_ADDR:$PORT/
-    RequestHeader set X-WEBAUTH-USER %{REMOTE_USER}e
+#   Order allow,deny
+#   Allow from all
+#   Satisfy Any
+    ProxyPass http://$CONFIG_PUSHGATEWAY_TCP_ADDR:$PORT retry=0 disablereuse=On
+    ProxyPassReverse http://$CONFIG_PUSHGATEWAY_TCP_ADDR:$PORT/$OMD_SITE/pushgateway
+    #RequestHeader set X-WEBAUTH-USER %{REMOTE_USER}e
 </Location>
 EOF
     ;;
