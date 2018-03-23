@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 NAME = icinga2
-VERSION = 2.8.1
+VERSION = 2.8.2
 DIR = $(NAME)-$(VERSION)
 BOOSTDIR=boost_1_60_0
 BOOSTDEST=$(shell pwd)/$(BOOSTDIR)-dest
@@ -108,13 +108,11 @@ skel:
 	chmod 755 $(SKEL)/etc/icinga2/scripts/*
 	rm -rf $(SKEL)/etc/icinga2/conf.d/win32
 	mv $(SKEL)/etc/icinga2/constants.conf.cmake $(SKEL)/etc/icinga2/constants.conf
-	mv $(SKEL)/etc/icinga2/init.conf.cmake $(SKEL)/etc/icinga2/init.conf
 	mkdir -p $(SKEL)/etc/bash_completion.d
 	install $(DIR)/etc/bash_completion.d/icinga2 $(SKEL)/etc/bash_completion.d
 	sed -i -e 's/@ICINGA2_USER@/###SITE###/g' \
 	       -e 's/@ICINGA2_GROUP@/###SITE###/g' \
 	       -e 's/@ICINGA2_PLUGINDIR@/###ROOT###\/lib\/nagios\/plugins/g' \
-	    $(SKEL)/etc/icinga2/init.conf \
 	    $(SKEL)/etc/icinga2/constants.conf
 	sed -i -e '/const PluginDir/a /* The directory which contains your local site plugins */\nconst LocalPluginDir = "###ROOT###/local/lib/nagios/plugins"' \
 	    $(SKEL)/etc/icinga2/constants.conf
@@ -122,16 +120,6 @@ skel:
 	printf '\n/* Root folder of this OMD site */\nconst OMD_ROOT = "###ROOT###"\nconst OmdRoot = "###ROOT###"\n' >> $(SKEL)/etc/icinga2/constants.conf
 	sed -i -e 's%^const PluginContribDir.*%const PluginContribDir = "###ROOT###/local/lib/nagios/plugins"%g' \
 	    $(SKEL)/etc/icinga2/constants.conf
-	#echo 'const PrefixDir      = "###ROOT###"'                                         >> $(SKEL)/etc/icinga2/init.conf
-	echo 'const SysconfDir     = "###ROOT###/etc"'                                     >> $(SKEL)/etc/icinga2/init.conf
-	echo 'const RunDir         = "###ROOT###/tmp/icinga2"'                             >> $(SKEL)/etc/icinga2/init.conf
-	echo 'const LocalStateDir  = "###ROOT###/var/icinga2"'                             >> $(SKEL)/etc/icinga2/init.conf
-	echo 'const ZonesDir       = "###ROOT###/etc/icinga2/zones.d"'                     >> $(SKEL)/etc/icinga2/init.conf
-	echo 'const PkgDataDir     = "###ROOT###/share/icinga2"'                           >> $(SKEL)/etc/icinga2/init.conf
-	echo 'const StatePath      = "###ROOT###/var/icinga2/lib/icinga2/icinga2.state"'   >> $(SKEL)/etc/icinga2/init.conf
-	echo 'const ObjectsPath    = "###ROOT###/tmp/icinga2/icinga2.debug"'               >> $(SKEL)/etc/icinga2/init.conf
-	echo 'const VarsPath       = "###ROOT###/tmp/icinga2/icinga2.vars"'                >> $(SKEL)/etc/icinga2/init.conf
-	echo 'const PidPath        = "###ROOT###/tmp/run/icinga2.pid"'                     >> $(SKEL)/etc/icinga2/init.conf
 	# enable livestatus
 	ln -sf ../features-available/livestatus.conf $(SKEL)/etc/icinga2/features-enabled/livestatus.conf
 	sed -e 's/ }//g' -i $(SKEL)/etc/icinga2/features-available/livestatus.conf
