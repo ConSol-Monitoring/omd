@@ -207,7 +207,7 @@ MODULES = \
           DateTime-Locale-0.45.tar.gz \
           DateTime-TimeZone-1.88.tar.gz \
           DateTime-1.18.tar.gz \
-          Monitoring-GLPlugin-3.0.2.2.tar.gz
+          Monitoring-GLPlugin-3.0.2.5.tar.gz
 
 
 

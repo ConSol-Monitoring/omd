@@ -4,6 +4,7 @@ next:
           - Go update to 1.10.1
           - Grafana update to 5.0.3
           - Prometheus update to 2.2.1
+          - Icinga2 update to 2.8.2
 
 2.70     Mar 14 2018
           - OMD:
