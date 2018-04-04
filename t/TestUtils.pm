@@ -350,6 +350,8 @@ sub remove_test_site {
     skip_html_lint   => flag to disable the html lint checking
     skip_link_check  => (list of) regular expressions to skip the link checks for
     waitfor          => wait till regex occurs (max 120sec)
+    redirect         => request should redirect
+    location         => redirect location
   }
 
 =cut
@@ -374,7 +376,19 @@ sub test_url {
             $now = time();
             $page = _request($test);
         }
-        fail("content did not occur within 120 seconds") unless $found;
+        fail("content did not occur within 60 seconds") unless $found;
+        return $page;
+    }
+
+    if(defined $test->{'redirect'}) {
+        ok( $page->{'response'}->is_redirect, 'Request '.$test->{'url'}.' should redirect' ) or diag(Dumper($test, $page->{'response'}));
+        if(defined $test->{'location'}) {
+            if(defined $page->{'response'}->{'_headers'}->{'location'}) {
+                like($page->{'response'}->{'_headers'}->{'location'}, qr/$test->{'location'}/, "Content should redirect: ".$test->{'location'});
+            } else {
+                fail('no redirect header found');
+            }
+        }
         return $page;
     }
 
@@ -746,6 +760,8 @@ sub _request {
     $ua->timeout(60);
     $ua->env_proxy;
     $ua->cookie_jar($cookie_jar);
+
+    $ua->requests_redirectable([]) if $data->{'redirect'};
 
     if(defined $data->{'auth'}) {
         $data->{'url'} =~ m/(http|https):\/\/(.*?)(\/|:\d+)/;
