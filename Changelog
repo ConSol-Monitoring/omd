@@ -5,6 +5,8 @@ next:
           - Grafana update to 5.0.4
           - Prometheus update to 2.2.1
           - Icinga2 update to 2.8.2
+          - Thruk:
+            - disable shinken features plugin in default installation
 
 2.70     Mar 14 2018
           - OMD:

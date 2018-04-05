@@ -52,6 +52,7 @@ skel:
 	mkdir -p $(SKEL)/etc/thruk/plugins-enabled
 	# set links for enabled plugins
 	for link in `ls -1 $(DIR)/plugins/plugins-enabled/`; do cd $(SKEL)/etc/thruk/plugins-enabled && ln -sfn ../../../share/thruk/plugins/plugins-available/$$link $$link; done
+	rm $(SKEL)/etc/thruk/plugins-enabled/shinken_features
 	# set links for enabled themes
 	mkdir -p $(SKEL)/etc/thruk/themes-enabled
 	for link in `ls -1 $(DIR)/themes/themes-enabled/`; do cd $(SKEL)/etc/thruk/themes-enabled && ln -sfn ../../../share/thruk/themes/themes-available/$$link $$link; done
