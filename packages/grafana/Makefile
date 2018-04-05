@@ -13,10 +13,6 @@ GO         = export GOROOT=$(PWD)/../go-$(GOPKG)/go-$(GOVERSION) && export GOPAT
 
 build:
 	tar zxf $(SRC)
-	set -e ; for p in patches/*.patch ; do \
-	    echo "applying $$p..." ; \
-	    ( cd $(GOPATH) ; patch -p1 ) < $$p ; \
-	done
 	export GOROOT=$(PWD)/../go-$(GOPKG)/go-$(GOVERSION) && export GOPATH=$(PWD)/$(GOPATH)/ && PATH=$$GOROOT/bin:$$PATH && \
 		cd $(GOPATH)/src/github.com/grafana/grafana && \
 		PATH=$(PWD)/build_bin:$$PATH go run build.go build
