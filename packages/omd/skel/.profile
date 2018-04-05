@@ -13,6 +13,7 @@ export PERL_MM_OPT=INSTALL_BASE="$OMD_ROOT/local/lib/perl5/"
 export MANPATH="$OMD_ROOT/share/man:$MANPATH"
 export PYTHONPATH="$OMD_ROOT/lib/python:$OMD_ROOT/local/lib/python"
 export MAILRC="$OMD_ROOT/etc/mail.rc"
+export GF_PLUGIN_DIR="$OMD_ROOT/var/grafana/plugins"
 
 
 if [ -f "$OMD_ROOT/etc/environment" ]
