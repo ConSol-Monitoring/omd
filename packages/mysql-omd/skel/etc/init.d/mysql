@@ -87,6 +87,22 @@ check_install_db() {
             echo "and https://labs.consol.de/omd/packages/mariadb/"
             exit 1
         fi
+
+        ####################
+        # mariadb on ubuntu uses unix_socket auth plugin which breaks omd mysql, so try to disable it
+        mysqld_safe --defaults-file=$MYSQL_CNF --skip-grant-tables --skip-networking >/dev/null 2>&1 &
+        i=0
+        while mysqld_status check_dead nowarn;  do
+            if [ $i = '10' ]; then
+                return 1
+            else
+                i=$(($i+1))
+                sleep 1
+           fi
+        done
+        echo "UPDATE user SET plugin='';" | mysql mysql >/dev/null 2>&1
+        echo "FLUSH PRIVILEGES;"          | mysql mysql >/dev/null 2>&1
+        mysql_wait_stop
     fi
 }
 
