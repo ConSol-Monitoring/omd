@@ -126,6 +126,8 @@ class RemoteAtomicRecipient(AtomicRecipient):
         self.objects_dir = kwargs["objects_dir"]
         self.items = kwargs.get("items", None)
         self.remote = kwargs.get("hostname", None)
+        self.delta_watch = True if kwargs.get("delta_watch", False) == "true" else False
+        self.delta_action = kwargs.get("delta_action", None)
 
     def prepare_target_dir(self):
         logger.info("recipient %s objects_dir %s" % (self.name, self.objects_dir))
