@@ -1520,12 +1520,12 @@ def file_contents(path):
 def tmpfs_mounted(sitename):
     # Problem here: if /omd is a symbolic link somewhere else,
     # then in /proc/mounts the physical path will appear and be
-    # different from tmp_path. We just check the suffix therefore.
-    path_suffix = "sites/%s/tmp" % sitename
+    # different from tmp_path. We resolve the path prior to comparing.
+    tmp = tmp_dir(sitename)
     for line in file("/proc/mounts"):
         try:
             device, mp, fstype, options, dump, fsck = line.split()
-            if mp.endswith(path_suffix) and fstype == 'tmpfs':
+            if mp == os.path.realpath(tmp) and fstype == 'tmpfs':
                 return True
         except:
             continue
