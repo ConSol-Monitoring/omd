@@ -1,6 +1,8 @@
 This file documents the revision history for the Open Monitoring Distribution (Labs Edition)
 
 next:
+          - OMD:
+            - add SELinux support for centos/rhel and fedora
           - InfluxDB: update to 1.5.2
           - Go update to 1.10.1
           - Grafana update to 5.0.4

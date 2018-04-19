@@ -152,6 +152,11 @@ chkconfig @APACHE_NAME@ on    >/dev/null 2>&1
 
 # ensure apache is running
 service @APACHE_NAME@ start >/dev/null 2>&1
+
+# enable required selinux booleans
+setsebool -P httpd_can_network_relay on   >/dev/null 2>&1
+setsebool -P httpd_can_network_connect on >/dev/null 2>&1
+
 exit 0
 
 %preun
@@ -210,5 +215,11 @@ else
     # Try to remove empty directories
     rmdir /opt/omd/sites 2>/dev/null || true
     rmdir /opt/omd 2>/dev/null || true
+    if type setsebool >/dev/null 2>&1; then
+      echo "OMD enabled two SELinux booleans, since this is the last OMD package beeing removed, you"
+      echo "might want to disable them again if you don't need these rules anymore:"
+      echo "#> setsebool -P httpd_can_network_relay off"
+      echo "#> setsebool -P httpd_can_network_connect off"
+    fi
 fi
 
