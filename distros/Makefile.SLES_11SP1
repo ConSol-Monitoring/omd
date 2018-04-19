@@ -99,3 +99,4 @@ APACHE_ENMOD      = a2enmod %s
 BECOME_ROOT       = su -c
 MOUNT_OPTIONS     =
 INIT_CMD          = /etc/init.d/%(name)s %(action)s
+SKIP_PACKAGES     = icinga2
