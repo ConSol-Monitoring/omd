@@ -16,7 +16,7 @@ alias influx='influx -host `echo $(omd config show INFLUXDB_HTTP_TCP_PORT) | per
 
 # pointless unless running interactively
 if [ "$PS1" ]; then
-  PS1='OMD[\u]:\w$ '
+  PS1='OMD[\u@\h]:\w$ '
   alias ls='ls --color=auto -F'
   alias ll='ls -l'
   alias la='ls -la'
