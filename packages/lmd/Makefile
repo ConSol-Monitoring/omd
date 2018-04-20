@@ -20,7 +20,8 @@ build:
 	tar zxf $(DEPS_SRC)
 	tar zxf $(SRC)
 	export GOROOT=$(PWD)/../go-$(GOPKG)/go-$(GOVERSION)/ && export GOPATH=$(PWD)/$(GOPATH)/ && PATH=$$GOROOT/bin:$$PATH && \
-	go install -ldflags "-s -w -X main.Build=$(OMD_VERSION)_($(shell cd $(PWD)/$(GOPATH)/src/$(GITURL) && git rev-parse --short HEAD))" $(GITURL)/$(NAME)
+	#go install -ldflags "-s -w -X main.Build=$(OMD_VERSION)_($(shell cd $(PWD)/$(GOPATH)/src/$(GITURL) && git rev-parse --short HEAD))" $(GITURL)/$(NAME)
+	go install -ldflags "-s -w -X main.Build=$(OMD_VERSION)" $(GITURL)/$(NAME)
 
 install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/bin
