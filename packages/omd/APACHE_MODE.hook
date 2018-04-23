@@ -23,15 +23,11 @@ case "$1" in
     ;;
     set)
         if [ "$2" == "ssl" ] && ! test -f $OMD_ROOT/etc/apache/site.key; then
-            openssl req -new -config $OMD_ROOT/share/omd/openssl.cnf -keyout $OMD_ROOT/etc/apache/privkey.pem -batch > $OMD_ROOT/etc/apache/new.cert.csr 2>/dev/null
-            openssl rsa -in $OMD_ROOT/etc/apache/privkey.pem -out $OMD_ROOT/etc/apache/site.key -passin pass:selfsigned 2> /dev/null
-            openssl x509 -in $OMD_ROOT/etc/apache/new.cert.csr -out $OMD_ROOT/etc/apache/site.cert -req -signkey $OMD_ROOT/etc/apache/site.key -days 3650 2> /dev/null
-            if ! test -f $OMD_ROOT/etc/apache/site.key && ! test -f $OMD_ROOT/etc/apache/site.cert; then
+            $OMD_ROOT/bin/create_site_selfsigned_cert
+            if [ $? -ne 0 ]; then
                 echo "failed to create ssl certificates"
                 exit 1
             fi
-            chmod 600 $OMD_ROOT/etc/apache/site.key $OMD_ROOT/etc/apache/privkey.pem $OMD_ROOT/etc/apache/site.cert
-            rm -f $OMD_ROOT/etc/apache/new.cert.csr
         fi
         if [ "$2" == "ssl" ]; then
             ln -sfn ../apache-ssl.conf $OMD_ROOT/etc/apache/conf.d/ssl.conf

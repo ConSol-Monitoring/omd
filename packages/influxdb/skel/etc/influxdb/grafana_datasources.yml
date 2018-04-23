@@ -1,0 +1,41 @@
+#
+# ports will be overwritten by the influxdb omd config hook
+#
+
+# config file version
+apiVersion: 1
+
+# see http://docs.grafana.org/administration/provisioning/#datasources
+datasources:
+  - name: nagflux
+    type: influxdb
+    access: proxy
+    orgId: 1
+    url: http://localhost:8086
+    user: grafana
+    password: grafana
+    database: nagflux
+    isDefault: true
+    editable: false
+
+  - name: _internal
+    type: influxdb
+    access: proxy
+    orgId: 1
+    url: http://localhost:8086
+    user: grafana
+    password: grafana
+    database: _internal
+    isDefault: false
+    editable: false
+
+  - name: sakuli
+    type: influxdb
+    access: proxy
+    orgId: 1
+    url: http://localhost:8086
+    user: grafana
+    password: grafana
+    database: sakuli
+    isDefault: false
+    editable: false

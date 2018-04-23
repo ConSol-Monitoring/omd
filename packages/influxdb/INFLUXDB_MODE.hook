@@ -1,0 +1,34 @@
+#!/bin/bash
+
+# Alias: Influxd mode to use
+# Menu: Addons
+# Description:
+#  Here you can choose wether the influxdb speaks http or https.
+
+case "$1" in
+    default)
+        echo "http"
+    ;;
+    choices)
+            echo "http: Run influx in http mode"
+            echo "ssl: Run influx with ssl encryption"
+    ;;
+    set)
+        if [ "$2" == "ssl" ] && ! test -f $OMD_ROOT/etc/apache/site.key; then
+            $OMD_ROOT/bin/create_site_selfsigned_cert
+            if [ $? -ne 0 ]; then
+                echo "failed to create ssl certificates"
+                exit 1
+            fi
+        fi
+        if [ "$2" == "ssl" ]; then
+            sed -e '/^\[http\]/,/^\[/{s/https-enabled.*$/https-enabled = true/}' -i $OMD_ROOT/etc/influxdb/influxdb.conf
+        else
+            sed -e '/^\[http\]/,/^\[/{s/https-enabled.*$/https-enabled = false/}' -i $OMD_ROOT/etc/influxdb/influxdb.conf
+        fi
+    ;;
+    depends)
+    [ "$CONFIG_INFLUXDB" = "on" ]
+    ;;
+esac
+

@@ -14,16 +14,14 @@ case "$1" in
         echo "off: disable influxdb database"
     ;;
     set)
-       if [ "$2" == "off" ]
-       then
-           rm -f $OMD_ROOT/etc/grafana/influxdb_installer
-           rm -f $OMD_ROOT/var/tmp/influxportupdated
-       fi
-       if [ "$2" == "on" ]
-       then
-           rm -f $OMD_ROOT/etc/grafana/influxdb_installer
-           ln -s $OMD_ROOT/etc/influxdb/grafana_installer \
-               $OMD_ROOT/etc/grafana/influxdb_installer
+       mkdir -p $OMD_ROOT/etc/grafana/provisioning/datasources
+       rm -f $OMD_ROOT/etc/grafana/provisioning/datasources/influxd.yml
+       if [ "$2" == "on" ]; then
+           ln -s $OMD_ROOT/etc/influxdb/grafana_datasources.yml \
+                 $OMD_ROOT/etc/grafana/provisioning/datasources/influxd.yml
+       else
+           ln -s $OMD_ROOT/etc/influxdb/grafana_datasources_remove.yml \
+                 $OMD_ROOT/etc/grafana/provisioning/datasources/influxd.yml
        fi
     ;;
 esac
