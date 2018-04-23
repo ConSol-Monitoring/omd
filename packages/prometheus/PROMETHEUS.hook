@@ -16,21 +16,24 @@ case "$1" in
         echo "off: disable"
     ;;
     set)
-        if [ "$2" == "off" ]
-        then
+        mkdir -p $OMD_ROOT/etc/grafana/provisioning/datasources
+        mkdir -p $OMD_ROOT/etc/grafana/provisioning/dashboards
+        rm -f $OMD_ROOT/etc/grafana/provisioning/datasources/prometheus.yml
+        if [ "$2" == "off" ]; then
             rm -f $OMD_ROOT/etc/prometheus/apache.conf
             rm -f $OMD_ROOT/etc/apache/conf.d/prometheus.conf
             rm -f $OMD_ROOT/prometheusportupdated
-            rm -f $OMD_ROOT/etc/grafana/prometheus_installer
-        fi
-        if [ "$2" == "on" ]
-        then
+            ln -s $OMD_ROOT/etc/prometheus/grafana_datasources_remove.yml \
+                  $OMD_ROOT/etc/grafana/provisioning/datasources/prometheus.yml
+            rm -f $OMD_ROOT/etc/grafana/examples/prometheus_stats.json
+        elif [ "$2" == "on" ]; then
             rm -f $OMD_ROOT/etc/apache/conf.d/prometheus.conf
             ln -s $OMD_ROOT/etc/prometheus/apache.conf \
                 $OMD_ROOT/etc/apache/conf.d/prometheus.conf
-            rm -f $OMD_ROOT/etc/grafana/prometheus_installer
-            ln -s $OMD_ROOT/etc/prometheus/grafana_installer \
-                $OMD_ROOT/etc/grafana/prometheus_installer
+            ln -s $OMD_ROOT/etc/prometheus/grafana_datasources.yml \
+                  $OMD_ROOT/etc/grafana/provisioning/datasources/prometheus.yml
+            ln -s $OMD_ROOT/etc/prometheus/prometheus_stats.json \
+                  $OMD_ROOT/etc/grafana/examples/
         fi
     ;;
 esac
