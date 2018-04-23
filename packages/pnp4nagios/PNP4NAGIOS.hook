@@ -76,6 +76,27 @@ case "$1" in
            if [ -s $OMD_ROOT/etc/mod-gearman/perfdata.conf ]; then
                sed -i -e 's/^perfdata=.*$/perfdata=no/' $OMD_ROOT/etc/mod-gearman/perfdata.conf
            fi
+           echo > $OMD_ROOT/etc/grafana/provisioning/datasources/pnp4nagios.yml <<EOT
+apiVersion: 1
+
+deleteDatasources:
+  - name: pnp
+    orgId: 1
+EOT
+       fi
+       rm -f $OMD_ROOT/etc/grafana/provisioning/datasources/pnp4nagios.yml
+       if [ "$2" != "off" ]; then
+           PROTO="http"
+           DEFAULT="false"
+           if [ "$CONFIG_APACHE_MODE" = "ssl" ]; then
+             PROTO="https"
+           fi
+           if [ "$CONFIG_INFLUXDB" = "off" -a "$CONFIG_PROMETHEUS" = "off" ]; then
+             DEFAULT="true"
+           fi
+           sed -e 's%^\*url:.*$%    url: "'$PROTO'://127.0.0.1:'$CONFIG_APACHE_TCP_PORT'/'$OMD_SITE'/pnp4nagios%' -i $OMD_ROOT/etc/pnp4nagios/grafana_datasource.yml
+           ln -s $OMD_ROOT/etc/pnp4nagios/grafana_datasource.yml \
+                 $OMD_ROOT/etc/grafana/provisioning/datasources/pnp4nagios.yml
        fi
    ;;
 
