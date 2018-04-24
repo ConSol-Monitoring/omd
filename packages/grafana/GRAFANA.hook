@@ -14,5 +14,10 @@ case "$1" in
         echo "off: disable grafana"
     ;;
     set)
+        rm -f $OMD_ROOT/etc/prometheus/prometheus.d/scrape_configs/static/01-grafana.yml
+        if [ "$2" == "on" ]; then
+            ln -s $OMD_ROOT/share/grafana/01-grafana.yml \
+              $OMD_ROOT/etc/prometheus/prometheus.d/scrape_configs/static/01-grafana.yml
+        fi
     ;;
 esac

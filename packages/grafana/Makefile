@@ -29,6 +29,7 @@ install:
 	install -m 644 defaults.ini $(DESTDIR)$(OMD_ROOT)/share/grafana/conf/
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/grafana/tools/
 	cp -rp go/src/github.com/grafana/grafana/tools/phantomjs $(DESTDIR)$(OMD_ROOT)/share/grafana/tools/
+	cp -rp 01-grafana.yml $(DESTDIR)$(OMD_ROOT)/share/grafana/
 	# This link is needed due to grafana does not ship with the binary
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/grafana/tools/phantomjs
 	ln -s ../../../../bin/phantomjs $(DESTDIR)$(OMD_ROOT)/share/grafana/tools/phantomjs/phantomjs

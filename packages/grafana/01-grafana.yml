@@ -1,0 +1,13 @@
+  - job_name: 'grafana'
+
+    # Override the global default and scrape targets from this job every 5 seconds.
+    scrape_interval: 5s
+
+    # metrics_path defaults to '/metrics', but here we use the omd-prefix
+    # scheme defaults to 'http'.
+    metrics_path: /metrics
+
+    static_configs:
+      - targets: ['127.0.0.1:###GRAFANA_TCP_PORT###']
+
+
