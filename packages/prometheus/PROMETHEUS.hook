@@ -25,15 +25,12 @@ case "$1" in
             rm -f $OMD_ROOT/prometheusportupdated
             ln -s $OMD_ROOT/etc/prometheus/grafana_datasources_remove.yml \
                   $OMD_ROOT/etc/grafana/provisioning/datasources/prometheus.yml
-            rm -f $OMD_ROOT/etc/grafana/examples/prometheus_stats.json
         elif [ "$2" == "on" ]; then
             rm -f $OMD_ROOT/etc/apache/conf.d/prometheus.conf
             ln -s $OMD_ROOT/etc/prometheus/apache.conf \
                 $OMD_ROOT/etc/apache/conf.d/prometheus.conf
             ln -s $OMD_ROOT/etc/prometheus/grafana_datasources.yml \
                   $OMD_ROOT/etc/grafana/provisioning/datasources/prometheus.yml
-            ln -s $OMD_ROOT/etc/prometheus/prometheus_stats.json \
-                  $OMD_ROOT/etc/grafana/examples/
         fi
     ;;
 esac
