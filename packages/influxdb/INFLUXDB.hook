@@ -19,9 +19,6 @@ case "$1" in
        if [ "$2" == "on" ]; then
            ln -s $OMD_ROOT/etc/influxdb/grafana_datasources.yml \
                  $OMD_ROOT/etc/grafana/provisioning/datasources/influxd.yml
-       else
-           ln -s $OMD_ROOT/etc/influxdb/grafana_datasources_remove.yml \
-                 $OMD_ROOT/etc/grafana/provisioning/datasources/influxd.yml
        fi
     ;;
 esac

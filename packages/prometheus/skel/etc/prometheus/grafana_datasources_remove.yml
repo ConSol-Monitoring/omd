@@ -1,8 +1,0 @@
-# this file removes our grafana datasources in case prometheus is no longer active
-
-# config file version
-apiVersion: 1
-
-deleteDatasources:
-  - name: prometheus
-    orgId: 1
