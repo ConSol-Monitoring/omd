@@ -17,6 +17,11 @@ case "$1" in
        echo "off: use basic authentication"
    ;;
    set)
+       MUTEX="Mutex file:\${OMD_ROOT}/var/thruk/ rewrite-map"
+       if [ $(findmnt -T $OMD_ROOT/var/thruk -o FSTYPE -f -n 2>/dev/null | grep -c nfs) -eq 1 ]; then
+         # use pthread mutex in case var folder is on nfs
+         MUTEX="Mutex pthread rewrite-map"
+       fi
        APACHE_CFG=${OMD_ROOT}/etc/apache/conf.d/thruk_cookie_auth.conf
        if [ "$2" == "on" ]; then
            cat > $APACHE_CFG <<EOF
@@ -27,7 +32,7 @@ RewriteEngine On
 </IfModule>
 # apache 2.4 lock
 <IfModule mod_authz_core.c>
-  Mutex file:\${OMD_ROOT}/var/thruk/ rewrite-map
+  $MUTEX
 </IfModule>
 RewriteMap  users prg:\${OMD_ROOT}/share/thruk/script/thruk_auth
 
