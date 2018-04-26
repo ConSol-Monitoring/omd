@@ -1,17 +1,6 @@
-From d00b4916a5a8709586bc35fc1df3943ea39428db Mon Sep 17 00:00:00 2001
-From: Philip Griesbacher <philip@griesbacher.org>
-Date: Wed, 5 Apr 2017 11:07:41 +0200
-Subject: [PATCH] community and version can be passed by get param
-
----
- main.go | 13 +++++++++++++
- 1 file changed, 13 insertions(+)
-
-diff --git a/main.go b/main.go
-index da332de..d9bdc49 100644
 --- go/src/github.com/prometheus/snmp_exporter/main.go
 +++ go/src/github.com/prometheus/snmp_exporter/main.go
-@@ -14,6 +14,7 @@ import (
+@@ -19,6 +19,7 @@
  	"github.com/prometheus/common/version"
  
  	"github.com/prometheus/snmp_exporter/config"
@@ -19,7 +8,7 @@ index da332de..d9bdc49 100644
  )
  
  var (
-@@ -76,6 +77,18 @@ func handler(w http.ResponseWriter, r *http.Request) {
+@@ -72,6 +73,18 @@
  	}
  	log.Debugf("Scraping target '%s' with module '%s'", target, moduleName)
  
@@ -38,6 +27,3 @@ index da332de..d9bdc49 100644
  	start := time.Now()
  	registry := prometheus.NewRegistry()
  	collector := collector{target: target, module: module}
--- 
-2.7.0.windows.1
-
