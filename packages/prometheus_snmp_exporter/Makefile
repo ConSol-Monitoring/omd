@@ -42,7 +42,7 @@ install:
 skel:
 	mkdir -p $(SKEL)/etc/prometheus_snmp_exporter/
 	cp $(GOPATH)/src/github.com/prometheus/snmp_exporter/snmp.yml $(SKEL)/etc/prometheus_snmp_exporter/
-    cp $(GOPATH)/src/github.com/prometheus/snmp_exporter/generator/generator.yml $(SKEL)/etc/prometheus_snmp_exporter/
+	cp $(GOPATH)/src/github.com/prometheus/snmp_exporter/generator/generator.yml $(SKEL)/etc/prometheus_snmp_exporter/
 
 clean:
 	rm -rf $(GOPATH)
