@@ -1,5 +1,5 @@
---- /src/github.com/prometheus/snmp_exporter/main.go
-+++ /src/github.com/prometheus/snmp_exporter/main.go
+--- go/src/github.com/prometheus/snmp_exporter/main.go
++++ go/src/github.com/prometheus/snmp_exporter/main.go
 @@ -19,6 +19,7 @@
  	"github.com/prometheus/common/version"
  
