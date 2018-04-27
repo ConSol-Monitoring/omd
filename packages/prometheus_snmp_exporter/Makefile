@@ -24,14 +24,14 @@ LDFLAGS    = "\
 
 build:
 	tar zxf $(SRC)
-	set -e ; for p in patches/*.patch ; do \
-		echo "applying $$p..." ; \
-		( cd $(GOPATH) ; patch -p1 ) < $$p ; \
-	done
+#	set -e ; for p in patches/*.patch ; do \
+#		echo "applying $$p..." ; \
+#		( cd $(GOPATH) ; patch -p1 ) < $$p ; \
+#	done
 	export GOROOT=$(GOROOT) && export GOPATH=$(GOPATH) && PATH=$$GOROOT/bin:$$PATH && \
-		go install -ldflags $(LDFLAGS) github.com/prometheus/$(NAME) && \
-		cd $(GOPATH)/src/github.com/prometheus/snmp_exporter/generator && \
-		go build
+		go install -ldflags $(LDFLAGS) github.com/prometheus/$(NAME)
+#		cd $(GOPATH)/src/github.com/prometheus/snmp_exporter/generator && \
+#		go build
 	
 
 install:

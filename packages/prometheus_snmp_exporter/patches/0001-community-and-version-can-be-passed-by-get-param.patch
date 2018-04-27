@@ -14,14 +14,14 @@
  
 +	snmpVersion := r.URL.Query().Get("version")
 +	if v, err := strconv.Atoi(snmpVersion); snmpVersion != "" && err != nil {
-+		log.Debugf("Overriding version. Old version: '%d' new version: '%d'", module.Version, v)
-+		module.Version = v
++		log.Debugf("Overriding version. Old version: '%d' new version: '%d'", module.WalkParams.Version, v)
++		module.WalkParams.Version = v
 +	}
 +
 +	community := r.URL.Query().Get("community")
 +	if community != "" {
-+		log.Debugf("Overriding community. Old community: '%s' new community: '%s'", module.Auth.Community, community)
-+		module.Auth.Community = community
++		log.Debugf("Overriding community. Old community: '%s' new community: '%s'", module.WalkParams.Auth.Community, community)
++		module.WalkParams.Auth.Community = Secret(community)
 +	}
 +
  	start := time.Now()
