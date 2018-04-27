@@ -12,7 +12,27 @@ if [ -z $OMD_ROOT ]; then
     cd ~
 fi
 alias cpan='cpan.wrapper'
-alias influx='influx -host `echo $(omd config show INFLUXDB_HTTP_TCP_PORT) | perl -lne '"'"'print $1 if /([a-zA-Z0-9\.\-]+)?:([0-9]+)/'"'"'` -port `echo $(omd config show INFLUXDB_HTTP_TCP_PORT) | perl -lne '"'"'print $2 if /([a-zA-Z0-9\.\-]+)?:([0-9]+)/'"'"'` -precision rfc3339 -username omdadmin -password omd `echo $(if [ "$(omd config show INFLUXDB_MODE) " = "ssl" ]; then echo "-ssl -unsafeSsl"; fi)`'
+
+influx() {
+  typeset var val tcp mode host port cmd
+  while read var val; do
+    case "$var" in
+      INFLUXDB_HTTP_TCP_PORT:)
+        port=${val##*:}
+        host=${val%:*}
+      ;;
+      INFLUXDB_MODE:)
+        mode=$mode
+      ;;
+    esac
+  done < <( omd config show )
+  cmd=(command influx -host "$host" -port "$port" \
+       -precision rfc3339 -username omdadmin -password omd)
+  if [ "$mode" = ssl ] ; then
+    cmd+=(-ssl -unsafeSsl)
+  fi
+  "${cmd[@]}" "$@"
+}
 
 # pointless unless running interactively
 if [ "$PS1" ]; then
