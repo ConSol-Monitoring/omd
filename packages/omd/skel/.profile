@@ -25,7 +25,10 @@ fi
 
 # Only load bashrc when in a bash shell and not loaded yet.
 # The load once is ensured by the variable $BASHRC.
-if [ "$BASH" -a -s $OMD_ROOT/.bashrc -a -z "$BASHRC" ]; then
-    . $OMD_ROOT/.bashrc
+
+if [ "${BASH-}" ] && [ "$BASH" != "/bin/sh" ]; then
+    if [ -r "$OMD_ROOT/.bashrc" ] && [ -z "${BASHRC:-}" ]; then
+        . "$OMD_ROOT/.bashrc"
+    fi
 fi
 
