@@ -21,7 +21,7 @@
 +	community := r.URL.Query().Get("community")
 +	if community != "" {
 +		log.Debugf("Overriding community. Old community: '%s' new community: '%s'", module.WalkParams.Auth.Community, community)
-+		module.WalkParams.Auth.Community = Secret(community)
++		module.WalkParams.Auth.Community = config.Secret(community)
 +	}
 +
  	start := time.Now()
