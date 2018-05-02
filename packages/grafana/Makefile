@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 NAME       = grafana
-VERSION    = 5.0.4
+VERSION    = 5.1.0
 SRC        = $(NAME)-$(VERSION).tar.gz
 GOPATH     = go
 GOPKG      = 1.9
@@ -72,7 +72,8 @@ public:
 	cd grafana-*/. && tar cfz ../public.tar.gz public
 	rm grafana-$(VERSION).linux-x64.tar.gz
 	rm -rf grafana-*/
-	wget --no-check-certificate "https://github.com/grafana/grafana/raw/master/conf/defaults.ini" -O defaults.ini
+	wget "https://raw.githubusercontent.com/grafana/grafana/v$(VERSION)/conf/defaults.ini" -O defaults.ini
+	sed -i -e 's/^default_theme.*$$/default_theme = light/' defaults.ini
 
 plugins:
 	git clone --depth=1 https://github.com/grafana/piechart-panel.git
