@@ -19,7 +19,7 @@ NAME=snmp_exporter
 USER=###SITE###
 DESC="Prometheus SNMP Exporter"
 CONF=$OMD_ROOT/etc/prometheus_snmp_exporter/snmp.yml
-OPTS="-config.file $CONF -log.level warn -web.listen-address $CONFIG_PROMETHEUS_SNMP_ADDR:$CONFIG_PROMETHEUS_SNMP_PORT"
+OPTS="--config.file $CONF --log.level warn --web.listen-address $CONFIG_PROMETHEUS_SNMP_ADDR:$CONFIG_PROMETHEUS_SNMP_PORT"
 LOGIFLE=$OMD_ROOT/var/log/snmp_exporter.log
 
 ###
