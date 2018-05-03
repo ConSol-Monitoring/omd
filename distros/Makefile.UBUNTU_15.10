@@ -37,6 +37,7 @@ BUILD_PACKAGES += python-dev
 BUILD_PACKAGES += python-setuptools
 BUILD_PACKAGES += uuid-dev
 BUILD_PACKAGES += snmp
+BUILD_PACKAGES += libsnmp-dev
 BUILD_PACKAGES += apache2-threaded-dev  # compiling mod_python
 BUILD_PACKAGES += apache2      # compiling mod_python
 BUILD_PACKAGES += libncurses5-dev # compiling mod-gearman
