@@ -18,7 +18,9 @@ GCCVERSIONGTEQ7 := $(shell expr `gcc -dumpversion | cut -f1 -d.` \>= 7)
 CFLAGS=
 
 ifeq "$(GCCVERSIONGTEQ7)" "1"
-  CFLAGS += -Wimplicit-fallthrough=0 -Werror=format-truncation=0
+  CFLAGS += -Wimplicit-fallthrough=0 \
+            -Werror=format-truncation=0 \
+            -Wno-cast-function-type
 endif
 
 build:
