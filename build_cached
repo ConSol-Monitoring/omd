@@ -68,7 +68,7 @@ CACHE_PATTERN="$BUILD_CACHE/${SRC}_${MD5}_v*.tgz"
 
 # cache hit - just unpack the already built package
 CACHED_FILE=$(ls -1 $CACHE_PATTERN 2>/dev/null)
-if [ "x$CACHED_FILE" != "x" ]; then
+if [ "x$CACHED_FILE" != "x" ] && test -s "$CACHED_FILE"; then
     echo "md5sum matched, trying cache from $CACHED_FILE"
     tar zxf "$CACHED_FILE" || exit 1
 
@@ -127,7 +127,7 @@ set +e
 # create cache file
 TARBALL_TMP=$(mktemp)
 set -e
-tar cfz $TARBALL_TMP "$SRC" --exclude=\*.orig --exclude-from=$EXCLUDES_FILE
+tar --exclude=\*.orig --exclude-from=$EXCLUDES_FILE -czf $TARBALL_TMP "$SRC"
 rm -f "$CACHE_FILE"
 rm -f $CACHE_PATTERN
 mv $TARBALL_TMP "$CACHE_FILE"
