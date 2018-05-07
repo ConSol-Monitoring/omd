@@ -13,7 +13,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 44 );
+plan( tests => 64 );
 
 ##################################################
 # create our test site
@@ -57,6 +57,24 @@ TestUtils::test_command({ cmd => "/bin/su - $site -c '$curl \"http://$ip:8086/qu
                           errlike => ['/(Failed to connect|Connection refused)/'], 
                           unlike  => ['/HTTP\/1\.1 200 OK/', '/"results":/'],
                           exit    => undef,
+                       });
+
+# test cli
+TestUtils::test_command({ cmd => "/bin/su - $site -c 'influx'",
+                          like    => ['/nagflux/', '/_internal/'],
+                          stdin   => ['SHOW DATABASES'],
+                       });
+
+
+# enable ssl influxdb
+TestUtils::test_command({ cmd => $omd_bin." stop $site" });
+TestUtils::test_command({ cmd => $omd_bin." config $site set INFLUXDB_MODE ssl" });
+TestUtils::test_command({ cmd => $omd_bin." start $site", like => '/Starting influxdb.+OK/' });
+
+# test cli
+TestUtils::test_command({ cmd => "/bin/su - $site -c 'influx'",
+                          like    => ['/nagflux/', '/_internal/'],
+                          stdin   => ['SHOW DATABASES'],
                        });
 
 TestUtils::test_command({ cmd => $omd_bin." stop $site" });

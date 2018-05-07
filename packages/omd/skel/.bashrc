@@ -22,7 +22,7 @@ influx() {
         host=${val%:*}
       ;;
       INFLUXDB_MODE:)
-        mode=$mode
+        mode=$val
       ;;
     esac
   done < <( omd config show )

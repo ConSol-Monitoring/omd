@@ -39,7 +39,7 @@ PORT=$CONFIG_INFLUXDB_HTTP_TCP_PORT
 fi
 CONNECT="-host $ADDRESS -port $PORT"
 INFLUXD_PROTO="http"
-if [ "x$CONFIG_INFLUXDB_MODE" = "ssl" ]; then
+if [ "x$CONFIG_INFLUXDB_MODE" = "xssl" ]; then
     INFLUXD_PROTO="https"
     CONNECT="$CONNECT -ssl -unsafeSsl"
 fi
