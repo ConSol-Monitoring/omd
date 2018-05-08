@@ -1,0 +1,325 @@
+From 1fcb63fe34f24215cc6575b9d666fc5143258beb Mon Sep 17 00:00:00 2001
+From: Sven Nierlein <sven@nierlein.de>
+Date: Tue, 8 May 2018 10:14:52 +0200
+Subject: [PATCH] add --unsafessl option to bypass tls checks
+
+---
+ main.go           | 54 +++++++++++++++++++++++++++++++++---------------------
+ mode/divSeries.go |  4 ++--
+ mode/memory.go    |  4 ++--
+ mode/numSeries.go |  4 ++--
+ mode/oldSeries.go |  4 ++--
+ mode/ping.go      |  4 ++--
+ mode/query.go     |  4 ++--
+ mode/readWrite.go |  4 ++--
+ 8 files changed, 47 insertions(+), 35 deletions(-)
+
+diff --git a/main.go b/main.go
+index e4f93b9..e587932 100644
+--- a/main.go
++++ b/main.go
+@@ -10,20 +10,21 @@ import (
+ )
+ 
+ var (
+-	path        string
+-	address     string
+-	username    string
+-	password    string
+-	timeout     int
+-	warning     string
+-	critical    string
+-	filterRegex string
+-	timerange   int
+-	livestatus  string
+-	database    string
+-	query       string
+-	alias       string
+-	unknown2ok  bool
++	path               string
++	address            string
++	username           string
++	password           string
++	insecureSkipVerify bool
++	timeout            int
++	warning            string
++	critical           string
++	filterRegex        string
++	timerange          int
++	livestatus         string
++	database           string
++	query              string
++	alias              string
++	unknown2ok         bool
+ )
+ 
+ func startTimeout() {
+@@ -58,6 +59,10 @@ func main() {
+ 		Usage:       "regex to filter databases",
+ 		Destination: &filterRegex,
+ 	}
++	flagUnsafeSSL := cli.BoolFlag{
++		Name:        "unsafessl",
++		Destination: &insecureSkipVerify,
++	}
+ 	app.Commands = []cli.Command{
+ 		{
+ 			Name:    "mode",
+@@ -69,12 +74,13 @@ func main() {
+ 					Usage: "Tests if the influxdb is alive",
+ 					Action: func(c *cli.Context) error {
+ 						startTimeout()
+-						return mode.Ping(address, username, password, warning, critical)
++						return mode.Ping(address, username, password, insecureSkipVerify, warning, critical)
+ 					},
+ 					Flags: []cli.Flag{
+ 						flagAddress,
+ 						flagUsername,
+ 						flagPassword,
++						flagUnsafeSSL,
+ 						cli.StringFlag{
+ 							Name:        "w",
+ 							Usage:       "warning: request duration in ms",
+@@ -119,12 +125,13 @@ func main() {
+ 					Usage: "The numbers of series/measurements",
+ 					Action: func(c *cli.Context) error {
+ 						startTimeout()
+-						return mode.NumSeries(address, username, password, warning, critical, filterRegex)
++						return mode.NumSeries(address, username, password, insecureSkipVerify, warning, critical, filterRegex)
+ 					},
+ 					Flags: []cli.Flag{
+ 						flagAddress,
+ 						flagUsername,
+ 						flagPassword,
++						flagUnsafeSSL,
+ 						flagFilter,
+ 						cli.StringFlag{
+ 							Name:        "w",
+@@ -142,12 +149,13 @@ func main() {
+ 					Usage: "The diverence of series/measurements between now and x minutes. If a livestatus address is given, the overall state will switch to Warning if a core restart happened and due to that the metric got into Critical.",
+ 					Action: func(c *cli.Context) error {
+ 						startTimeout()
+-						return mode.DivSeries(address, username, password, warning, critical, filterRegex, livestatus, timerange)
++						return mode.DivSeries(address, username, password, insecureSkipVerify, warning, critical, filterRegex, livestatus, timerange)
+ 					},
+ 					Flags: []cli.Flag{
+ 						flagAddress,
+ 						flagUsername,
+ 						flagPassword,
++						flagUnsafeSSL,
+ 						flagFilter,
+ 						cli.StringFlag{
+ 							Name:        "w",
+@@ -176,12 +184,13 @@ func main() {
+ 					Usage: "Checks the bytes/operations read and written the last x minutes",
+ 					Action: func(c *cli.Context) error {
+ 						startTimeout()
+-						return mode.ReadWrite(address, username, password, warning, critical, timerange)
++						return mode.ReadWrite(address, username, password, insecureSkipVerify, warning, critical, timerange)
+ 					},
+ 					Flags: []cli.Flag{
+ 						flagAddress,
+ 						flagUsername,
+ 						flagPassword,
++						flagUnsafeSSL,
+ 						cli.StringFlag{
+ 							Name:        "w",
+ 							Usage:       "warning: read(Bps),read(Ops),write(Bps),read(Ops) (only read: 10,10 only write: ,,10,10)",
+@@ -204,12 +213,13 @@ func main() {
+ 					Usage: "RSS in Byte",
+ 					Action: func(c *cli.Context) error {
+ 						startTimeout()
+-						return mode.Memory(address, username, password, warning, critical)
++						return mode.Memory(address, username, password, insecureSkipVerify, warning, critical)
+ 					},
+ 					Flags: []cli.Flag{
+ 						flagAddress,
+ 						flagUsername,
+ 						flagPassword,
++						flagUnsafeSSL,
+ 						cli.StringFlag{
+ 							Name:        "w",
+ 							Usage:       "warning in B",
+@@ -226,12 +236,13 @@ func main() {
+ 					Usage: "Returns a list of series older then x hours. This check makes only sense when the databases hast the tags: hostname and service - it's build for nagflux",
+ 					Action: func(c *cli.Context) error {
+ 						startTimeout()
+-						return mode.OldSeries(address, database, username, password, warning, critical, timerange)
++						return mode.OldSeries(address, database, username, password, insecureSkipVerify, warning, critical, timerange)
+ 					},
+ 					Flags: []cli.Flag{
+ 						flagAddress,
+ 						flagUsername,
+ 						flagPassword,
++						flagUnsafeSSL,
+ 						cli.StringFlag{
+ 							Name:        "database",
+ 							Usage:       "Database to use",
+@@ -260,12 +271,13 @@ func main() {
+ 					Usage: "You could check a certain value from the database, but your query has to return only ONE value. Like 'select last(value) from metrics'",
+ 					Action: func(c *cli.Context) error {
+ 						startTimeout()
+-						return mode.Query(address, database, username, password, warning, critical, query, alias, unknown2ok)
++						return mode.Query(address, database, username, password, insecureSkipVerify, warning, critical, query, alias, unknown2ok)
+ 					},
+ 					Flags: []cli.Flag{
+ 						flagAddress,
+ 						flagUsername,
+ 						flagPassword,
++						flagUnsafeSSL,
+ 						cli.StringFlag{
+ 							Name:        "database",
+ 							Usage:       "Database to use",
+diff --git a/mode/divSeries.go b/mode/divSeries.go
+index c956563..9703779 100644
+--- a/mode/divSeries.go
++++ b/mode/divSeries.go
+@@ -15,7 +15,7 @@ import (
+ )
+ 
+ //DivSeries calculates the div of series and measurements between now and x min
+-func DivSeries(address, username, password, warning, critical, filterRegex, livestatus string, timerange int) (err error) {
++func DivSeries(address, username, password string, insecureSkipVerify bool, warning, critical, filterRegex, livestatus string, timerange int) (err error) {
+ 	thresholds, err := helper.ParseCommaThresholds(warning, critical)
+ 	if err != nil {
+ 		return
+@@ -43,7 +43,7 @@ func DivSeries(address, username, password, warning, critical, filterRegex, live
+ 		}
+ 	}
+ 
+-	c, err := client.NewHTTPClient(client.HTTPConfig{Addr: address, Username: username, Password: password})
++	c, err := client.NewHTTPClient(client.HTTPConfig{Addr: address, Username: username, Password: password, InsecureSkipVerify: insecureSkipVerify})
+ 	if err != nil {
+ 		return
+ 	}
+diff --git a/mode/memory.go b/mode/memory.go
+index 092f59a..44e2e26 100644
+--- a/mode/memory.go
++++ b/mode/memory.go
+@@ -10,7 +10,7 @@ import (
+ )
+ 
+ //Memory will check the RSS usage
+-func Memory(address, username, password, warning, critical string) (err error) {
++func Memory(address, username, password string, insecureSkipVerify bool, warning, critical string) (err error) {
+ 	warn, err := check_x.NewThreshold(warning)
+ 	if err != nil {
+ 		return
+@@ -21,7 +21,7 @@ func Memory(address, username, password, warning, critical string) (err error) {
+ 		return
+ 	}
+ 
+-	c, err := client.NewHTTPClient(client.HTTPConfig{Addr: address, Username: username, Password: password})
++	c, err := client.NewHTTPClient(client.HTTPConfig{Addr: address, Username: username, Password: password, InsecureSkipVerify: insecureSkipVerify})
+ 	if err != nil {
+ 		return
+ 	}
+diff --git a/mode/numSeries.go b/mode/numSeries.go
+index fc7cd5d..880dbfc 100644
+--- a/mode/numSeries.go
++++ b/mode/numSeries.go
+@@ -13,13 +13,13 @@ import (
+ )
+ 
+ //NumSeries checks the amount of series and measurements
+-func NumSeries(address, username, password, warning, critical, filterRegex string) (err error) {
++func NumSeries(address, username, password string, insecureSkipVerify bool, warning, critical, filterRegex string) (err error) {
+ 	thresholds, err := helper.ParseCommaThresholds(warning, critical)
+ 	if err != nil {
+ 		return
+ 	}
+ 
+-	c, err := client.NewHTTPClient(client.HTTPConfig{Addr: address, Username: username, Password: password})
++	c, err := client.NewHTTPClient(client.HTTPConfig{Addr: address, Username: username, Password: password, InsecureSkipVerify: insecureSkipVerify})
+ 	if err != nil {
+ 		return
+ 	}
+diff --git a/mode/oldSeries.go b/mode/oldSeries.go
+index c9a702d..5bb7fc6 100644
+--- a/mode/oldSeries.go
++++ b/mode/oldSeries.go
+@@ -13,7 +13,7 @@ import (
+ )
+ 
+ //OldSeries will check for old series
+-func OldSeries(address, database, username, password, warning, critical string, timerange int) (err error) {
++func OldSeries(address, database, username, password string, insecureSkipVerify bool, warning, critical string, timerange int) (err error) {
+ 	warn, err := check_x.NewThreshold(warning)
+ 	if err != nil {
+ 		return
+@@ -24,7 +24,7 @@ func OldSeries(address, database, username, password, warning, critical string,
+ 		return
+ 	}
+ 
+-	c, err := client.NewHTTPClient(client.HTTPConfig{Addr: address, Username: username, Password: password})
++	c, err := client.NewHTTPClient(client.HTTPConfig{Addr: address, Username: username, Password: password, InsecureSkipVerify: insecureSkipVerify})
+ 	if err != nil {
+ 		return
+ 	}
+diff --git a/mode/ping.go b/mode/ping.go
+index b3a2fef..d8af79d 100644
+--- a/mode/ping.go
++++ b/mode/ping.go
+@@ -9,7 +9,7 @@ import (
+ )
+ 
+ //Ping will be called on ping mode
+-func Ping(address, username, password, warn, crit string) (err error) {
++func Ping(address, username, password string, insecureSkipVerify bool, warn, crit string) (err error) {
+ 	warning, err := check_x.NewThreshold(warn)
+ 	if err != nil {
+ 		return
+@@ -20,7 +20,7 @@ func Ping(address, username, password, warn, crit string) (err error) {
+ 		return
+ 	}
+ 
+-	c, err := client.NewHTTPClient(client.HTTPConfig{Addr: address, Username: username, Password: password})
++	c, err := client.NewHTTPClient(client.HTTPConfig{Addr: address, Username: username, Password: password, InsecureSkipVerify: insecureSkipVerify})
+ 	if err != nil {
+ 		return
+ 	}
+diff --git a/mode/query.go b/mode/query.go
+index 9d99042..078fb80 100644
+--- a/mode/query.go
++++ b/mode/query.go
+@@ -10,7 +10,7 @@ import (
+ )
+ 
+ //Query will execute the given query and evaluate the result
+-func Query(address, database, username, password, warning, critical, query, alias string, unknown2ok bool) (err error) {
++func Query(address, database, username, password string, insecureSkipVerify bool, warning, critical, query, alias string, unknown2ok bool) (err error) {
+ 	warn, err := check_x.NewThreshold(warning)
+ 	if err != nil {
+ 		return
+@@ -21,7 +21,7 @@ func Query(address, database, username, password, warning, critical, query, alia
+ 		return
+ 	}
+ 
+-	c, err := client.NewHTTPClient(client.HTTPConfig{Addr: address, Username: username, Password: password})
++	c, err := client.NewHTTPClient(client.HTTPConfig{Addr: address, Username: username, Password: password, InsecureSkipVerify: insecureSkipVerify})
+ 	if err != nil {
+ 		return
+ 	}
+diff --git a/mode/readWrite.go b/mode/readWrite.go
+index 0a1bdb3..c18a52c 100644
+--- a/mode/readWrite.go
++++ b/mode/readWrite.go
+@@ -12,13 +12,13 @@ import (
+ )
+ 
+ //ReadWrite checks the bytes read and written the last x minutes
+-func ReadWrite(address, username, password, warning, critical string, timerange int) (err error) {
++func ReadWrite(address, username, password string, insecureSkipVerify bool, warning, critical string, timerange int) (err error) {
+ 	thresholds, err := helper.ParseCommaThresholds(warning, critical)
+ 	if err != nil {
+ 		return
+ 	}
+ 
+-	c, err := client.NewHTTPClient(client.HTTPConfig{Addr: address, Username: username, Password: password})
++	c, err := client.NewHTTPClient(client.HTTPConfig{Addr: address, Username: username, Password: password, InsecureSkipVerify: insecureSkipVerify})
+ 	if err != nil {
+ 		return
+ 	}
+-- 
+2.14.2
+
