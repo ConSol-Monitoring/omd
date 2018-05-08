@@ -13,7 +13,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 64 );
+plan( tests => 72 );
 
 ##################################################
 # create our test site
@@ -65,6 +65,10 @@ TestUtils::test_command({ cmd => "/bin/su - $site -c 'influx'",
                           stdin   => ['SHOW DATABASES'],
                        });
 
+TestUtils::test_command({ cmd => "/bin/su - $site -c './lib/naemon/plugins/check_influxdb m ping --address http://127.0.0.1:8086'",
+                          like    => ['/OK/'],
+                       });
+
 
 # enable ssl influxdb
 TestUtils::test_command({ cmd => $omd_bin." stop $site" });
@@ -75,6 +79,10 @@ TestUtils::test_command({ cmd => $omd_bin." start $site", like => '/Starting inf
 TestUtils::test_command({ cmd => "/bin/su - $site -c 'influx'",
                           like    => ['/nagflux/', '/_internal/'],
                           stdin   => ['SHOW DATABASES'],
+                       });
+
+TestUtils::test_command({ cmd => "/bin/su - $site -c './lib/naemon/plugins/check_influxdb m ping --address https://127.0.0.1:8086 --unsafessl'",
+                          like    => ['/OK/'],
                        });
 
 TestUtils::test_command({ cmd => $omd_bin." stop $site" });
