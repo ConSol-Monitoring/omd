@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 NAME = dokuwiki
-VERSION = 2017-02-19e
+VERSION = 2018-04-22a
 DIR = $(NAME)
 
 .PHONY: skel
