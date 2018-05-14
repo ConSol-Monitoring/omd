@@ -1,0 +1,254 @@
+#!/usr/bin/env perl
+
+=head1 NAME
+
+check_external_commands - checks if nagios reads externals commands
+
+=head1 SYNOPSIS
+
+./check_external_commands [ -h ] [ -v ] [-w seconds ] [ -c seconds ] [ -t seconds ] -p <cmdfile> -l <logfile>
+
+run as nagios plugin
+
+=head1 DESCRIPTION
+
+this nagios plugin sends an external command and checks if that command occurs in the logfile
+
+you have to set at least
+
+ - check_external_commands=1
+ - log_external_commands=1
+
+in your nagios.cfg
+
+=head1 ARGUMENTS
+
+script has the following arguments
+
+=over 4
+
+=item help
+
+    -h
+
+print help and exit
+
+=item verbose
+
+    -v
+
+verbose output
+
+=item warning
+
+    -w seconds
+
+    warning threshold for commands to occur in the logfile
+
+    default: 15seconds
+
+=item critical
+
+    -c seconds
+
+    critical threshold for commands to occur in the logfile
+
+    default: 30 seconds
+
+=item timeout
+
+    -t seconds
+
+set timeout to x seconds, default is 60.
+
+=item commandpipe
+
+    -p path to your commandpipe
+
+
+=item logfile
+
+    -l path to your nagios.log
+
+=back
+
+=head1 EXAMPLE
+
+./check_external_commands -t 120 -p /var/lib/nagios3/rw/nagios.cmd -l /var/log/nagios3/nagios.log
+
+=head1 AUTHOR
+
+2009, Sven Nierlein, <sven.nierlein@consol.de>
+
+http://labs.consol.de/
+
+=cut
+
+#########################################################################
+use strict;
+use warnings;
+use Getopt::Long;
+use Pod::Usage;
+use Data::Dumper;
+use Time::HiRes qw(gettimeofday tv_interval);
+use File::Tail;
+
+#########################################################################
+my $VERSION      = "0.2";
+my $plugin       = "EXT COMMANDS";
+
+#########################################################################
+# parse and check cmd line arguments
+my ($opt_h, $opt_v, $opt_t, $opt_p, $opt_l, $opt_w, $opt_c);
+Getopt::Long::Configure('no_ignore_case');
+GetOptions (
+   "h"        => \$opt_h,
+   "v"        => \$opt_v,
+   "t=i"      => \$opt_t,
+   "p=s"      => \$opt_p,
+   "l=s"      => \$opt_l,
+   "w=i"      => \$opt_w,
+   "c=i"      => \$opt_c,
+);
+
+if(defined $opt_h) {
+  pod2usage( { -verbose => 1 } );
+  exit 3;
+}
+my $verbose = 0;
+if(defined $opt_v) {
+  $verbose = 1;
+}
+
+#########################################################################
+my $status              = "OK";
+my $exit                = 0;
+my $timeout             = $opt_t || 60;
+my $warning             = $opt_w || 15;
+my $critical            = $opt_c || 30;
+my $start               = time();
+my $teststring   = "SCHEDULE_SVC_DOWNTIME;test-host-for-ext-command-check;test-service-for-ext-command-check;$start;".($start+1).";0;0;7200;$0;test downtime to verify external commands by $0";
+
+#########################################################################
+# Timeout
+$SIG{'ALRM'} = sub {
+  my @caller = caller();
+  $status = "CRITICAL - timeout in ".$caller[0]." ".$caller[1].":".$caller[2];
+  print $plugin." ".$status."\n";
+  exit 2;
+};
+
+alarm($timeout);
+print "DEBUG: set timeout to $timeout\n" if $verbose;
+
+#########################################################################
+# did we get valid input?
+if(!defined $opt_p) {
+  pod2usage( { -verbose => 1 } );
+  exit 3;
+}
+if(!defined $opt_l) {
+  pod2usage( { -verbose => 1 } );
+  exit 3;
+}
+
+if(! -s $opt_l) {
+  print "DEBUG: test -s $opt_l resulted in: $?\n" if $verbose;
+  print $plugin." UNKNOWN - $opt_l does not exist. Cannot check.\n";
+  exit 3;
+}
+
+if(! -p $opt_p) {
+  print "DEBUG: test -p $opt_p resulted in: $?\n" if $verbose;
+  print $plugin." UNKNOWN - $opt_p does not exist or is not a named pipe. Cannot check.\n";
+  exit 3;
+}
+#########################################################################
+# set another timeout with different message
+$SIG{'ALRM'} = sub {
+  print $plugin." CRITICAL - external commands are not accpeted in time (timeout of $timeout seconds hit)\n";
+  exit 2;
+};
+
+#########################################################################
+# create File::Tail
+my $logtail = File::Tail->new( 
+                 name        => $opt_l,
+                 maxinterval => 0.1,
+                 interval    => 0.1,
+                 adjustafter => 100,
+                 maxbuf      => 1000000,
+              );
+print "DEBUG: opened File::Tail for $opt_l\n" if $verbose;
+my $elapsed1 = sendCommand();
+
+#########################################################################
+# set another timeout with different message
+$SIG{'ALRM'} = sub {
+  print $plugin." CRITICAL - external commands are not accepted in time (timeout of $timeout seconds hit)\n";
+  exit 2;
+};
+
+#########################################################################
+# read from File::Tail
+my $t2 = [gettimeofday];
+while( defined( my $line = $logtail->read() )) {
+  print "DEBUG: reading: $line" if $verbose;
+  if(index($line, $teststring) != -1) {
+    print "DEBUG: line matched\n" if $verbose;
+    last;
+  }
+  else {
+    print "DEBUG: line did not match\n" if $verbose;
+  }
+}
+my $elapsed2 = int(tv_interval($t2) * 1000);
+print "DEBUG: time2 = $elapsed2 ms\n" if $verbose;
+
+
+#########################################################################
+# EXIT
+$elapsed1 = $elapsed1 / 1000;
+$elapsed2 = $elapsed2 / 1000;
+my $elapsed = $elapsed1 + $elapsed2;
+if($elapsed >= $critical) {
+  $exit   = 2;
+  $status = "CRITICAL - command took $elapsed seconds";
+}
+elsif($elapsed >= $warning) {
+  $exit   = 1;
+  $status = "WARNING - command took $elapsed seconds";
+}
+else {
+  $status = "OK - command took $elapsed seconds";
+}
+
+my $perf = "command_write=".$elapsed1."s command_read=".$elapsed2."s";
+print $plugin." ".$status."|".$perf."\n";
+exit $exit;
+
+
+#########################################################################
+# SUBS
+#########################################################################
+
+#########################################################################
+# send ext command to core
+sub sendCommand {
+  my $t1    = [gettimeofday];
+  print "DEBUG: sending '".$teststring."'\n" if $verbose;
+  eval {
+    open(FIFO, '>>', $opt_p) or die("cannot open pipe $opt_p: $!");
+    print "DEBUG: openend $opt_p\n" if $verbose;
+    print FIFO "[".$start."] $teststring\n";
+    close(FIFO);
+  };
+  if($@) {
+    print "DEBUG: writing to cmd file: $opt_p failed: $@\n" if $verbose;
+    print $plugin." CRITICAL - writing to cmd file failed: $@\n";
+    exit 2;
+  }
+  my $elapsed1 = int(tv_interval($t1) * 1000);
+  print "DEBUG: time1 = $elapsed1 ms\n" if $verbose;
+  return($elapsed1);
+}
