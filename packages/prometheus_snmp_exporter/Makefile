@@ -32,7 +32,7 @@ build:
 		go install -ldflags $(LDFLAGS) github.com/prometheus/$(NAME) && \
 		cd $(GOPATH)/src/github.com/prometheus/snmp_exporter/generator && \
 		go build
-	
+
 
 install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/bin
@@ -41,8 +41,8 @@ install:
 
 skel:
 	mkdir -p $(SKEL)/etc/prometheus_snmp_exporter/
-	cp $(GOPATH)/src/github.com/prometheus/snmp_exporter/snmp.yml $(SKEL)/etc/prometheus_snmp_exporter/
-	cp $(GOPATH)/src/github.com/prometheus/snmp_exporter/generator/generator.yml $(SKEL)/etc/prometheus_snmp_exporter/
+	cp $(GOPATH)/src/github.com/prometheus/snmp_exporter/snmp.yml $(SKEL)/etc/prometheus_snmp_exporter/config/
+	cp $(GOPATH)/src/github.com/prometheus/snmp_exporter/generator/generator.yml $(SKEL)/etc/prometheus_snmp_exporter/generator/
 
 clean:
 	rm -rf $(GOPATH)
@@ -55,4 +55,3 @@ package: clean
 		cd $(NAME) && go get -d && \
 		cd $(PWD) && \
 		tar zcf $(SRC) $(GOFOLDER)/src/ --exclude=.git
-

@@ -1,0 +1,29 @@
+  - job_name: 'snmp'
+    # Override the global default
+    scrape_interval: 60s
+    scrape_timeout: 55s
+    file_sd_configs:
+      - files:
+    #    - '/omd/sites/###SITE###/etc/prometheus_snmp_exporter/targets/*.json'
+
+    #static_configs:
+    #  - targets:
+    #    - 192.168.1.1
+    #    - 172.28.1.1
+    #    - 127.0.0.1
+
+    metrics_path: /snmp
+    params:
+      module: [if_mib]
+      community: [public]
+    relabel_configs:
+      - source_labels: [mib]
+        target_label: __param_module
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [hostname]
+        target_label: instance
+      - target_label: __address__
+        replacement: ###PROMETHEUS_SNMP_ADDR###:###PROMETHEUS_SNMP_PORT###
+      - source_labels: [snmpCommunity]
+        target_label: __param_community

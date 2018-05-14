@@ -15,14 +15,15 @@ case "$1" in
         echo "off: disable"
     ;;
     set)
-    #    if [ "$2" == "off" ]
-    #    then
-
-    #    fi
-    #    if [ "$2" == "on" ]
-    #    then
-
-    #    fi
+        scrape_config="prometheus/prometheus.d/scrape_configs/static/snmp_exporter.yml"
+        if [ "$2" == "on" ]
+        then
+          if [ -e $OMD_ROOT/etc/promtheus/prometheus.d/scrape_configs/static ]; then
+              ln -sfn ../../prometheus_snmp_exporter/config/snmp_exporter_scrape.yml $OMD_ROOT/etc/$scrape_config
+        fi
+        if [ "$2" == "off" ]; then
+            rm -rf $OMD_ROOT/etc/$scrape_config
+        fi
     ;;
     depends)
         [ "$CONFIG_PROMETHEUS" = on ]
