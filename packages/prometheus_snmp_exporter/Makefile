@@ -40,7 +40,7 @@ install:
 	install -m 755 $(GOPATH)/src/github.com/prometheus/snmp_exporter/generator/generator $(DESTDIR)$(OMD_ROOT)/bin
 
 skel:
-	mkdir -p $(SKEL)/etc/prometheus_snmp_exporter/
+	mkdir -p $(SKEL)/etc/prometheus_snmp_exporter/generator/
 	cp $(GOPATH)/src/github.com/prometheus/snmp_exporter/snmp.yml $(SKEL)/etc/prometheus_snmp_exporter/config/
 	cp $(GOPATH)/src/github.com/prometheus/snmp_exporter/generator/generator.yml $(SKEL)/etc/prometheus_snmp_exporter/generator/
 
