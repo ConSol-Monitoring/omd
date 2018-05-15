@@ -1,0 +1,65 @@
+From c3e4294d1b0ec8707da5331773f62f4250fbb376 Mon Sep 17 00:00:00 2001
+From: Sven Nierlein <sven@nierlein.de>
+Date: Tue, 15 May 2018 15:17:50 +0200
+Subject: [PATCH] first notification delay should start on hard state
+
+first_notification_delay should start on the last hard change instead of using
+the last time ok. Hard state changes could also occur if a service changes from
+warning to critical.
+
+Example with max_check_attempts 5
+ soft 0: OK
+ soft 1: Warning
+ soft 2: Warning
+ soft 3: Warning
+ soft 4: Critical
+ hard 5: Critical
+
+Naemon would now use the time from the last ok (soft 0) to calculate the first
+notification delay instead of the actual time of the usual first notification (hard 5)
+
+references:
+  - https://github.com/NagiosEnterprises/nagioscore/pull/483
+  - https://github.com/NagiosEnterprises/nagioscore/pull/482
+
+Signed-off-by: Sven Nierlein <sven@nierlein.de>
+---
+ src/naemon/notifications.c | 16 ++++++++++++----
+ 1 file changed, 12 insertions(+), 4 deletions(-)
+
+diff --git a/src/naemon/notifications.c b/src/naemon/notifications.c
+index 1e085c5d..96d632c3 100644
+--- a/src/naemon/notifications.c
++++ b/src/naemon/notifications.c
+@@ -778,9 +778,13 @@ int check_service_notification_viability(service *svc, int type, int options)
+ 	/* see if enough time has elapsed for first notification (Mathias Sundman) */
+ 	/* 10/02/07 don't place restrictions on recoveries or non-normal notifications, must use last time ok (or program start) in calculation */
+ 	/* it is reasonable to assume that if the service was never up, the program start time should be used in this calculation */
+-	if (type == NOTIFICATION_NORMAL && svc->current_notification_number == 0 && svc->current_state != STATE_OK) {
++	if (type == NOTIFICATION_NORMAL
++		&& svc->current_notification_number == 0
++		&& svc->first_notification_delay > 0
++		&& svc->current_state != STATE_OK)
++	{
+ 
+-		first_problem_time = svc->last_time_ok > 0 ? svc->last_time_ok : program_start;
++		first_problem_time = svc->last_hard_state_change > 0 ? svc->last_hard_state_change : program_start;
+ 
+ 		if (current_time < first_problem_time + (time_t)(svc->first_notification_delay * interval_length)) {
+ 			LOG_SERVICE_NSR(NSR_DELAY);
+@@ -1636,9 +1640,13 @@ int check_host_notification_viability(host *hst, int type, int options)
+ 	/* see if enough time has elapsed for first notification (Mathias Sundman) */
+ 	/* 10/02/07 don't place restrictions on recoveries or non-normal notifications, must use last time up (or program start) in calculation */
+ 	/* it is reasonable to assume that if the host was never up, the program start time should be used in this calculation */
+-	if (type == NOTIFICATION_NORMAL && hst->current_notification_number == 0 && hst->current_state != STATE_UP) {
++	if (type == NOTIFICATION_NORMAL
++	    && hst->current_notification_number == 0
++	    && hst->first_notification_delay > 0
++		&& hst->current_state != STATE_UP)
++	{
+ 
+-		first_problem_time = hst->last_time_up > 0 ? hst->last_time_up : program_start;
++		first_problem_time = hst->last_hard_state_change > 0 ? hst->last_hard_state_change : program_start;
+ 
+ 		if (current_time < first_problem_time + (time_t)(hst->first_notification_delay * interval_length)) {
+ 			LOG_HOST_NSR(NSR_DELAY);
