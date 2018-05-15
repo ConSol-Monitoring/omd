@@ -75,13 +75,6 @@ case "$1" in
         if [ $? -eq 0 ]; then
             echo "OK"
 	    __init_hook $0 $1 post 0
-            # packages using Grafana register themselves through installer files
-            if ls $OMD_ROOT/etc/grafana/*_installer >/dev/null 2>&1; then
-                for client in $OMD_ROOT/etc/grafana/*_installer
-                do
-                    $client
-                done
-            fi
             exit 0;
         else
             echo "failed"
