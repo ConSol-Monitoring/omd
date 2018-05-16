@@ -6,3 +6,12 @@
 	notifempty
 	create 660 ###SITE### ###SITE###
 }
+
+###ROOT###/var/thruk/cron.log {
+	missingok
+	rotate 7
+	compress
+	delaycompress
+	notifempty
+	create 660 ###SITE### ###SITE###
+}
