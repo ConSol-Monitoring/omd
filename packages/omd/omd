@@ -1267,7 +1267,10 @@ def update_file(relpath, old_version, new_version, userdir, old_perms, old_skel 
 
     # 3c) same, but user has changed it contents
     elif not new_type and user_changed_content:
-        if user_confirms("Changes in obsolete %s %s" % (old_type, relpath),
+        if re.match('var/.*\.log$', relpath):
+            # simply keep old logs which should have never been in skel/ in first place
+            pass
+        elif user_confirms("Changes in obsolete %s %s" % (old_type, relpath),
                 "The %s %s has become obsolete in "
                 "the new version, but you have changed its contents. "
                 "Do you want to keep your %s or "
@@ -1297,6 +1300,9 @@ def update_file(relpath, old_version, new_version, userdir, old_perms, old_skel 
 
     # 3e) same, but user hasn't changed anything -> silently delete
     elif not new_type:
+        if re.match('var/.*\.log$', relpath):
+            # simply keep old logs which should have never been in skel/ in first place
+            pass
         delete_user_file(user_path)
         sys.stdout.write(good + " Vanished       %s\n" % fn)
 
