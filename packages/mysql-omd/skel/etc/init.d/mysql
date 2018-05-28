@@ -118,6 +118,12 @@ case $1 in
             if [ -e $OMD_ROOT/etc/thruk/thruk_local.d/omd_logcache.conf ] && [ $(grep -c ^logcache $OMD_ROOT/etc/thruk/thruk_local.d/omd_logcache.conf) -ge 1 ]; then
                 echo "CREATE DATABASE IF NOT EXISTS thruk_logs" | mysql
             fi
+            # create icinga2 ido database
+            if [ -e $OMD_ROOT/etc/icinga2/features-enabled/omd-ido-mysql.conf ] && [ ! -d $OMD_ROOT/var/mysql/icinga ]; then
+                echo "creating initial ido database"
+                echo "CREATE DATABASE IF NOT EXISTS icinga" | mysql
+                mysql icinga < $OMD_ROOT/share/icinga2-ido-mysql/schema/mysql.sql
+            fi
             exit 0
         else
             echo 'ERROR.'

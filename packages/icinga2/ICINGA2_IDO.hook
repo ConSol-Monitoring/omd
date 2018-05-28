@@ -1,0 +1,27 @@
+#!/bin/bash
+
+# Alias: Enable IDO feature for Icinga2
+# Menu: Addons
+# Description:
+#  Icinga2 can store runtime and historical data in a database
+#  using the ido feature.
+
+case "$1" in
+   default)
+       echo "off"
+   ;;
+   choices)
+       echo "off: disable icinga2 ido feature"
+       echo "mysql: enable icinga-ido-mysql"
+   ;;
+   depends)
+       [ "$CONFIG_MYSQL" = "on" -a "$CONFIG_CORE" = "icinga2" ]
+   ;;
+   set)
+       if [ "$2" == "mysql" ]; then
+          ln -sfn ../features-available/ido-mysql.conf etc/icinga2/features-enabled/omd-ido-mysql.conf
+       else
+          rm -f etc/icinga2/features-enabled/omd-ido-mysql.conf
+       fi
+   ;;
+esac

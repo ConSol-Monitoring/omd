@@ -13,7 +13,7 @@ BEGIN {
 }
 
 plan skip_all => "icinga2 not included, cannot test" unless -x '/omd/versions/default/bin/icinga2';
-plan( tests => 41 );
+plan( tests => 60 );
 
 ##################################################
 # create our test site
@@ -33,6 +33,13 @@ my $tests = [
   { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -H localhost -u /$site/icinga -e 401'",                  like => '/HTTP OK:/' },
   { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -H localhost -a omdadmin:omd -u /$site/icinga -e 301'",  like => '/HTTP OK:/' },
   { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -H localhost -a omdadmin:omd -u /$site/icinga/ -e 200'", like => '/HTTP OK:/' },
+
+  { cmd => $omd_bin." stop $site" },
+
+  { cmd => $omd_bin." config $site set MYSQL on" },
+  { cmd => $omd_bin." config $site set ICINGA2_IDO mysql" },
+  { cmd => $omd_bin." start $site", like => '/creating initial ido database/' },
+  { cmd => "/bin/su - $site -c 'echo \"select process_id from icinga_programstatus\" | mysql icinga'", like => ['/\d+/', '/process_id/'], waitfor => '\d+' },
 
   { cmd => $omd_bin." stop $site" },
 ];

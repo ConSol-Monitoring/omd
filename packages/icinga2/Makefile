@@ -143,6 +143,15 @@ skel:
 	echo '}'                                              >> $(SKEL)/etc/icinga2/features-available/command.conf
 	sed -e 's/import "generic-host"/import "generic-host"\n  import "host-pnp"/g'      -i $(SKEL)/etc/icinga2/conf.d/hosts.conf
 	sed -e 's/import "generic-service"/import "generic-service"\n  import "srv-pnp"/g' -i $(SKEL)/etc/icinga2/conf.d/services.conf
+	# set useful defaults for ido-mysql
+	sed -e 's/^\ *}//g' -i $(SKEL)/etc/icinga2/features-available/ido-mysql.conf
+	sed -e '/user = /d' -i $(SKEL)/etc/icinga2/features-available/ido-mysql.conf
+	sed -e '/password = /d' -i $(SKEL)/etc/icinga2/features-available/ido-mysql.conf
+	echo '  socket_path = "###ROOT###/tmp/run/mysqld/mysqld.sock"' >> $(SKEL)/etc/icinga2/features-available/ido-mysql.conf
+	echo '  user        = "root"'                                  >> $(SKEL)/etc/icinga2/features-available/ido-mysql.conf
+	echo '  password    = ""'                                      >> $(SKEL)/etc/icinga2/features-available/ido-mysql.conf
+	echo '  database    = "icinga"'                                >> $(SKEL)/etc/icinga2/features-available/ido-mysql.conf
+	echo '}'                                                       >> $(SKEL)/etc/icinga2/features-available/ido-mysql.conf
 
 clean:
 	rm -rf $(DIR)
