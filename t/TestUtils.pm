@@ -328,7 +328,13 @@ sub create_fake_cookie_login {
 sub remove_test_site {
     my $site = shift;
     # kill all processes, sometimes checks are still running and prevent us from removing the site
+    # sometimes systemd is still running:
+    # ps: UID        PID  PPID  C STIME TTY          TIME CMD
+    # testsite 28609     1 16 07:49 ?        00:00:00 /usr/lib/systemd/systemd --user
+    # testsite 28651 28609  0 07:49 ?        00:00:00 (sd-pam)
+    # testsite 28669 28609  0 07:49 ?        00:00:00 [systemctl]
     `if [ \$(ps -fu $site | wc -l) -gt 0 ]; then /usr/bin/pkill -2 -U $site; sleep 1; fi`;
+    `if [ \$(ps -fu $site | wc -l) -gt 0 ]; then /usr/bin/pkill -9 -U $site; sleep 1; fi`;
     test_command({ cmd => TestUtils::get_omd_bin()." rm $site", stdin => "yes\n" });
     return;
 }
