@@ -5,6 +5,8 @@
 # Description:
 #  Icinga2 can store runtime and historical data in a database
 #  using the ido feature.
+#  WARNING: Experimental feature. This hook creates the initial database
+#  but you have to care yourself about updates etc...
 
 case "$1" in
    default)
@@ -19,6 +21,7 @@ case "$1" in
    ;;
    set)
        if [ "$2" == "mysql" ]; then
+          sed -e 's|^skip-innodb|#skip-innodb|' -i $OMD_ROOT/.my.cnf
           ln -sfn ../features-available/ido-mysql.conf etc/icinga2/features-enabled/omd-ido-mysql.conf
        else
           rm -f etc/icinga2/features-enabled/omd-ido-mysql.conf
