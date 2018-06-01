@@ -1,8 +1,8 @@
 include ../../Makefile.omd
 
 NAME = naemon
-VERSION = 1.0.6.2
-DIR = $(NAME)-core-$(VERSION)
+VERSION = 1.0.7
+DIR = $(NAME)-$(VERSION)
 
 # Configure options for Naemon. Since we want to compile
 # as non-root, we use our own user and group for compiling.
@@ -24,7 +24,7 @@ ifeq "$(GCCVERSIONGTEQ7)" "1"
 endif
 
 build:
-	tar xzf naemon-core-$(VERSION).tar.gz
+	tar xzf naemon-$(VERSION).tar.gz
 	set -e ; for p in patches/*.patch ; do \
 	    echo "applying $$p..." ; \
 	    ( cd $(DIR) && patch -p1 -b -F 5 ) < $$p ; \
