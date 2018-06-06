@@ -16,8 +16,8 @@ Content-Transfer-Encoding: 8bit
 - - - - - - - - - - - - - - - - -
 - State:       [% HOSTSTATE %]
 - Date:        [% SHORTDATETIME %]
-- Output:      [% HOSTOUTPUT %]
--              [% LONGHOSTOUTPUT %]
+- Output:      [% HOSTOUTPUT +%]
+[%+ LONGHOSTOUTPUT.replace('\\\n', "\n") %]
 [% IF NOTIFICATIONTYPE == 'ACKNOWLEDGEMENT' %]
 ----------------------------------
 - Author:      [% ACKAUTHOR %]
