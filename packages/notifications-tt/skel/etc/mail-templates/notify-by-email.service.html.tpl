@@ -25,8 +25,8 @@ Content-Transfer-Encoding: 7bit
 - - - - - - - - - - - - - - - - -
 - State:       [% SERVICESTATE %]
 - Date:        [% SHORTDATETIME %]
-- Output:      [% SERVICEOUTPUT %]
-[% LONGSERVICEOUTPUT %]
+- Output:      [% SERVICEOUTPUT +%]
+[%+ LONGSERVICEOUTPUT.replace('\\\n', "\n") %]
 [% IF NOTIFICATIONTYPE == 'ACKNOWLEDGEMENT' %]
 ----------------------------------
 - Author:      [% ACKAUTHOR %]
@@ -117,7 +117,7 @@ a:hover {
 [% IF LONGSERVICEOUTPUT && LONGSERVICEOUTPUT.match('base64,') %]
   <tr><td valign="top">Output:</td><td>[% SERVICEOUTPUT %]<br/><img style="max-width: 100%; max-height: 100%;" src="cid:embedded.png@1" alt="embedded graph"></td></tr>
 [% ELSIF LONGSERVICEOUTPUT %]
-  <tr><td valign="top">Output:</td><td><pre>[% SERVICEOUTPUT %]<br/>[% LONGSERVICEOUTPUT.trim().replace("\n", "<br/>") %]</pre></td></tr>
+  <tr><td valign="top">Output:</td><td><pre>[% SERVICEOUTPUT %]<br/>[% LONGSERVICEOUTPUT.trim().replace("\n", "<br/>").replace('\\\n', "<br/>") %]</pre></td></tr>
 [% ELSE %]
   <tr><td>Output:</td><td>[% SERVICEOUTPUT %]</td></tr>
 [% END %]
