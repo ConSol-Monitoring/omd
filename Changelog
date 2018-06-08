@@ -10,7 +10,7 @@ next:
             - add INFLUXDB_MODE hook to support ssl
           - Go update to 1.9.7
           - Go update to 1.10.3
-          - Grafana update to 5.1.1
+          - Grafana update to 5.1.3
             - set default fill to none for influxdb datasource
           - Prometheus update to 2.2.1
           - Icinga2 update to 2.8.4
