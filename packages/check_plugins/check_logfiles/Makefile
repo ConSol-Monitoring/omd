@@ -22,6 +22,9 @@ build:
 install:
 	[ -d $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins ] || mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins
 	install -m 755 $(DIR)/plugins-scripts/check_logfiles $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins/
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/check_logfiles
+	cp check_logfiles.exe \
+	    $(DESTDIR)$(OMD_ROOT)/share/check_logfiles
 
 skel:
 
