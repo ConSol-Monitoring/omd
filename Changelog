@@ -12,7 +12,7 @@ next:
           - Go update to 1.10.3
           - Grafana update to 5.1.4
             - set default fill to none for influxdb datasource
-          - Prometheus update to 2.3.0
+          - Prometheus update to 2.3.1
           - Prometheus Pushgateway update to 0.5.1
           - Prometheus node_exporter update to 0.16.0
           - Prometheus Alertmanager update to 0.14.0
