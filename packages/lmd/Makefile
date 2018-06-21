@@ -13,6 +13,8 @@ PWD         = $(shell pwd)
 GITBASE     = github.com/sni
 GITURL      = $(GITBASE)/$(NAME)
 DEPS_SRC    = deps.tar.gz
+# GIT TAG is set automatically by "make upstream" or "make package"
+GIT_TAG     = 05c634a
 
 .PHONY: skel
 
@@ -20,7 +22,7 @@ build:
 	tar zxf $(DEPS_SRC)
 	tar zxf $(SRC)
 	export GOROOT=$(PWD)/../go-$(GOPKG)/go-$(GOVERSION)/ && export GOPATH=$(PWD)/$(GOPATH)/ && PATH=$$GOROOT/bin:$$PATH && \
-	go install -ldflags "-s -w -X main.Build=$(OMD_VERSION)" $(GITURL)/$(NAME)
+	go install -ldflags "-s -w -X main.Build=$(OMD_VERSION)-$(GIT_TAG)" $(GITURL)/$(NAME)
 
 install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/bin
@@ -42,12 +44,14 @@ deps: clean
 		rm -rf  $(GOPATH)/src/$(GITBASE)
 		tar zcf $(DEPS_SRC) $(GOPATH)/src/ --exclude=.git --exclude=*_test.go
 
-package: clean deps
+package: clean
 	mkdir -p $(GOPATH)
 	export GOROOT=$(PWD)/../go-$(GOPKG)/go-$(GOVERSION)/ && export GOPATH=$(PWD)/$(GOPATH)/ && PATH=$$GOROOT/bin:$$PATH && \
 		mkdir -p $(GOPATH)/src/$(GITBASE) && \
 		cd $(GOPATH)/src/$(GITBASE) && \
 		git clone --depth=1 --branch "$(BRANCH)" https://$(GITURL) && \
+		cd $(NAME) && \
+		sed -i $(PWD)/Makefile -e 's/^GIT_TAG.*$$/GIT_TAG     = '$$(git describe --always --tags)'/g' && \
 		cd $(PWD) && \
 		tar zcf $(SRC) $(GOPATH)/src/$(GITURL) --exclude=.git --exclude=*_test.go
 
