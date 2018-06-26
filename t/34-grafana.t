@@ -13,7 +13,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 89 );
+plan( tests => 103 );
 
 ##################################################
 # create our test site
@@ -23,8 +23,15 @@ my $auth    = 'OMD Monitoring Site '.$site.':omdadmin:omd';
 my $curl    = '/usr/bin/curl -v --user omdadmin:omd --noproxy \* ';
 my $ip      = TestUtils::get_external_ip();
 
+# create test host/service
+TestUtils::prepare_obj_config('t/data/omd/testconf1', '/omd/sites/'.$site.'/etc/nagios/conf.d', $site);
+TestUtils::test_command({ cmd => "/usr/bin/env sed -i -e 's/^perfdata_file_processing_interval = 15/perfdata_file_processing_interval = 2/g' -e 's/^sleep_time = 15/sleep_time = 2/g' /opt/omd/sites/$site/etc/pnp4nagios/npcd.cfg" });
+
 TestUtils::test_command({ cmd => $omd_bin." config $site set GRAFANA on" });
 TestUtils::test_command({ cmd => $omd_bin." start $site", like => '/Starting Grafana...OK/' });
+
+# schedule forced check
+TestUtils::test_command({ cmd => "/bin/su - $site -c './lib/nagios/plugins/check_http -H localhost -a omdadmin:omd -u /$site/thruk/cgi-bin/cmd.cgi -e 200 -P \"cmd_typ=96&cmd_mod=2&host=omd-$site&start_time=2010-11-06+09%3A46%3A02&force_check=on&btnSubmit=Commit\" -r \"Your command request was successfully submitted\"'", like => '/HTTP OK:/' });
 
 #grafana interface
 TestUtils::test_url({ url => 'http://localhost/'.$site.'/grafana/', waitfor => '<title>Grafana<\/title>', auth => $auth });
@@ -45,6 +52,7 @@ my $sessionid = TestUtils::create_fake_cookie_login($site);
 TestUtils::test_command({ cmd => $omd_bin." config $site set THRUK_COOKIE_AUTH on", like => '/^$/' });
 TestUtils::test_command({ cmd => $omd_bin." start $site", like => '/Starting Grafana/' });
 TestUtils::test_command({ cmd => "/omd/sites/$site/lib/nagios/plugins/check_http -t 60 -H localhost -S -k 'Cookie: thruk_auth=$sessionid' -u '/$site/grafana/' -s '\"login\":\"omdadmin\"'", like => '/HTTP OK:/' });
+TestUtils::test_command({ cmd => "/omd/sites/$site/lib/nagios/plugins/check_http -t 60 -H localhost -S -k 'Cookie: thruk_auth=$sessionid' -u '/$site/grafana/api/datasources/proxy/1/index.php/api/hosts' -vv -s '[{\"name\":\"omd-testsite\"}]'", like => '/HTTP OK:/' });
 
 #grafana interface with http and thruk cookie auth
 TestUtils::test_command({ cmd => $omd_bin." stop $site" });

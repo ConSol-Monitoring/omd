@@ -2,10 +2,15 @@ apiVersion: 1
 
 datasources:
   - name: pnp
-    type: pnp
+    type: sni-pnp-datasource
     access: proxy
     orgId: 1 
     url: https://127.0.0.1:5000/###SITE###/pnp4nagios
     withCredentials: true
     isDefault: false
     editable: false
+    jsonData:
+      tlsSkipVerify: true
+      keepCookies:
+        - thruk_auth
+        - pnp4nagios

@@ -40,7 +40,6 @@ RewriteMap  users prg:\${OMD_ROOT}/share/thruk/script/thruk_auth
 RewriteCond %{REQUEST_URI}           !^/\${OMD_SITE}/thruk/cgi-bin/(login|remote|restricted).cgi
 RewriteCond %{REQUEST_URI}           !^/server-status
 RewriteCond %{REQUEST_URI}           !^/\${OMD_SITE}/api/
-RewriteCond %{REQUEST_URI}           !^/\${OMD_SITE}/pnp4nagios/index.php/api/
 RewriteCond %{REQUEST_URI}           !^/\${OMD_SITE}/check_mk/
 RewriteCond %{HTTP_COOKIE}           (thruk_auth=[^;]+|$)  [NC]
 RewriteRule ^/(.*)$                  /%1/%{REMOTE_ADDR}~~%{HTTP:Authorization}~~%{HTTP_USER_AGENT}/____/\$1/____/%{QUERY_STRING} [C,NS]
@@ -49,7 +48,7 @@ RewriteRule ^/pass/(.*)$             /\$1 [NS,PT,L,E=!REMOTE_USER]
 RewriteRule ^/redirect/(.*)$         /\$1 [NS,L,R=302]
 RewriteRule ^/loginok/([^/]+)/(.*)$  /\$2 [NS,PT,L,E=REMOTE_USER:\$1]
 
-<LocationMatch ^/\${OMD_SITE}/(?!(thruk/cgi-bin/restricted.cgi|pnp4nagios/index.php/api/))>
+<LocationMatch ^/\${OMD_SITE}/(?!(thruk/cgi-bin/restricted.cgi))>
     Order allow,deny
     Allow from all
     Satisfy any
