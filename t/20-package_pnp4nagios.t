@@ -13,7 +13,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 169 );
+plan( tests => 164 );
 
 ##################################################
 # create our test site
@@ -101,9 +101,6 @@ $tests = [
   { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -H localhost -a omdadmin:omd -u /$site/pnp4nagios/graph?host=omd-$site -e 200'", like => '/HTTP OK:/' },
   { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -H localhost -a omdadmin:omd -u \"/$site/pnp4nagios/graph?host=omd-$site&srv=Dummy+Service\" -e 200'", like => '/HTTP OK:/' },
   { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -H localhost -a omdadmin:omd -u \"/$site/pnp4nagios/image?host=omd-$site&srv=Dummy+Service\" -e 200'", like => '/HTTP OK:/' },
-  # api should be accessible from localhost without password
-  { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -H localhost -u \"/$site/pnp4nagios/index.php/api/\" -v -f follow'", like => ['/HTTP OK:/', '/pnp_rel_date/' ] },
-  # api must require a password from anywhere else
   { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -H $ip -u \"/$site/pnp4nagios/index.php/api/\" -e 401'", like => '/HTTP OK:/' },
   { cmd => $omd_bin." stop $site" },
 ];
