@@ -183,6 +183,8 @@ if [ "$NEWDYNAMICREV" != "$OLDDYNAMICREV" -o "$NEWSTATICREV" != "$OLDSTATICREV" 
   else
     logger_error ${CORE} exitcode was $?
     logger_error configuration did not pass the test
+    tar cfz ${OMD_ROOT}/var/last_failed_generated_config.tgz --exclude=".git" etc/
+    echo "created ${OMD_ROOT}/var/last_failed_generated_config.tgz"
     if [ -n "$OLDSTATICREV" ]; then
       pushd ${OMD_ROOT}/etc/${CORE}/conf.d/${OMD_LANDSCAPE}/${OMD_SITE}/static
       git reset --hard $OLDSTATICREV
