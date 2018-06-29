@@ -20,6 +20,7 @@ next:
             - add ido features (experimental)
             - add ido omd config hook (experimental)
           - Thruk:
+            - update to 2.22
             - disable shinken features plugin in default installation
           - LMD: Update 1.3.2
 
