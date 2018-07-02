@@ -2508,26 +2508,6 @@ def main_setup(args, options={}):
         os.chmod(path, 04750)
 
 
-def main_uninstall(args, options={}):
-    global g_sitename
-    global g_sitedir
-    for sitename in all_sites():
-        g_sitename = sitename
-        g_sitedir = site_dir(g_sitename)
-        main_rm([])
-
-    for path in [ g_info["OMD_PHYSICAL_BASE"],
-                  "/omd",
-		          g_info["APACHE_CONF_DIR"] + "/zzz_omd.conf",
-                  "/etc/init.d/omd",
-                  "/usr/bin/omd" ]:
-        shutil.rmtree(path, ignore_errors=True)
-
-    groupdel('omd')
-
-    sys.stdout.write("Good bye.\n")
-
-
 def main_setversion(args, options={}):
     if len(args) == 0:
         versions = [ (v, "Version %s" % v) for v in omd_versions() if not v == default_version() ]
@@ -3799,13 +3779,6 @@ commands = [
     "Prepare operating system for OMD (installs packages)",
     "We will install missing packages from your operating system and setup the\n"
     "system apache daemon (add configuration files and modules needed by omd)\n"),
-
-  ( "uninstall", True,  False, 0, 0, True, "",        main_uninstall,
-    [],
-    "Remove OMD and all sites!",
-
-    "BE WARNED: You are about to remove everything your system\n"
-    "           have ever known about omd."),
 
   ( "setversion", True, False, 0, 0, False, "VERSION", main_setversion,
     [],

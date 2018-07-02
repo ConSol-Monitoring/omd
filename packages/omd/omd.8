@@ -82,15 +82,6 @@ correctly configured (for the group omd).
 \fBNote:\fP If you have installed OMD via RPM or DEB and have installed
 all packages the omd package depends on, no \fBomd setup\fP is neccessary.
 .TP
-.B omd uninstall
-This deletes all software and data of OMD and its sites. That command is mainly used
-for trying out OMD or testing the installation of OMD. Be aware that
-all your monitoring configuration and data will be lost!
-
-Note: Do not use \fBomd uninstall\fP if you've installed omd via RPM or DEB.
-Better remove all sites via by using \fBomd rm\fP and remove the RPM/DEB
-package afterwards.
-.TP
 .B omd sites [--bare, -b]
 Show a list of all sites and the version of OMD each site uses. If you specify
 the option \fB-b\fP or \fB--bare\fP, then the output leaves out hints to the
