@@ -39,7 +39,7 @@ case "$1" in
         if [ "$BEFORE" != "$EXTRACTED_ADDRESS$PORT" ] ; then
             echo "$EXTRACTED_ADDRESS$PORT"
         fi
-        sed -e 's%^\*url:.*$%    url: "http://'$EXTRACTED_ADDRESS$PORT'%' -i $OMD_ROOT/etc/influxdb/grafana_datasources.yml
+        sed -e 's%^.*url:.*$%    url: http://'$EXTRACTED_ADDRESS$PORT'%' -i $OMD_ROOT/etc/influxdb/grafana_datasources.yml
     ;;
     depends)
     [ "$CONFIG_INFLUXDB" = "on" ]
