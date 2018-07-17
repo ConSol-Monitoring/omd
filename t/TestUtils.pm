@@ -889,10 +889,16 @@ sub _diag_cmd {
         _tail("nagios livestatus nagios logs:", "/omd/sites/$site/var/nagios/livestatus.log") if defined $site;
         _tail("naemon livestatus logs:", "/omd/sites/$site/var/naemon/livestatus.log") if defined $site;
     }
+    if($stdout =~ m/HTTP CRITICAL/ && $test->{'cmd'} =~ m/su \- (\w+)\s+/) {
+        my $site = $1;
+        _tail("apache logs:", "/omd/sites/$site/var/log/apache/error_log") if defined $site;
+        _tail_apache_logs();
+    }
     if( $stderr =~ m/User '(\w+)' still logged in or running processes/ ) {
         my $site = $1;
         diag("ps: ".`ps -fu $site`) if $site;
     }
+    diag("\n#################################\n");
     return;
 }
 
