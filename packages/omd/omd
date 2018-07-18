@@ -2336,6 +2336,8 @@ def hostname():
 def create_apache_hook(sitename):
     file("/omd/apache/%s.conf" % sitename, "w")\
         .write("Include %s/etc/apache/mode.conf\n" % site_dir(sitename))
+    file("/omd/apache/%s.include" % sitename, "w")\
+        .write("IncludeOptional %s/etc/apache/*.include\n" % site_dir(sitename))
 
 def delete_apache_hook(sitename):
     hook_path = "/omd/apache/%s.conf" % sitename
@@ -2345,6 +2347,14 @@ def delete_apache_hook(sitename):
         os.remove(hook_path)
     except Exception, e:
         sys.stderr.write("Cannot remove apache hook %s: %s\n" % (hook_path, e))
+    hook_path = "/omd/apache/%s.include" % sitename
+    if not os.path.exists(hook_path):
+        return
+    try:
+        os.remove(hook_path)
+    except Exception, e:
+        sys.stderr.write("Cannot remove apache hook %s: %s\n" % (hook_path, e))
+
 
 def init_cmd(name, action):
     return g_info['INIT_CMD'] % {

@@ -140,6 +140,13 @@ then
 %endif
 fi
 
+ls -1 /etc/apache2/vhosts.d/vhost-ssl-omd.conf /etc/httpd/conf.d/ssl.conf | \
+  while read file; do
+      if ! grep /omd/apache/ $file >/dev/null 2>&1; then
+          sed -i -e 's|</VirtualHost>|\n    IncludeOptional /omd/apache/*.include\n</VirtualHost>|g' $file
+      fi
+  done
+
 # SLES: make sure that the following file exists:
 if [ -d /etc/apache2/sysconfig.d ]
 then

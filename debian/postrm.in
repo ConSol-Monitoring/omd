@@ -19,7 +19,6 @@ set -e
 # the debian-policy package
 
 APACHE_OMD_CONF="/etc/apache2/conf.d/zzz_omd.conf"
-APACHE_OMD_EMPTY_CONF="/opt/omd/apache/empty.conf"
 OMD="omd-###OMD_VERSION###"
 
 case "$1" in
@@ -45,7 +44,7 @@ case "$1" in
             APACHE_OMD_CONF="/etc/apache2/conf-available/zzz_omd.conf"
           fi
 	  ! test -x /usr/sbin/a2disconf || a2disconf zzz_omd
-	  rm -f $APACHE_OMD_CONF $APACHE_OMD_EMPTY_CONF
+	  rm -f $APACHE_OMD_CONF
 	  rm -f /omd
 	  # Try to remove empty directories
 	  if test -d /opt/omd/versions; then
