@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 NAME       = grafana
-VERSION    = 5.1.4
+VERSION    = 5.2.1
 SRC        = $(NAME)-$(VERSION).tar.gz
 GOPATH     = go
 GOPKG      = 1.10
@@ -42,8 +42,8 @@ skel:
 	sed -i -e 's|###APACHE_MODULE_DIR###|$(MODULE_DIR)|g' \
 	       $(SKEL)/etc/apache/conf.d/grafana.conf
 	mkdir -p $(SKEL)/var/grafana/plugins
-	tar zxf clock-panel-plugin-0.0.9.tar.gz -C $(SKEL)/var/grafana/plugins
-	tar zxf piechart-panel-plugin-1.2.0.tar.gz -C $(SKEL)/var/grafana/plugins
+	tar zxf clock-panel-plugin-0.1.0.tar.gz -C $(SKEL)/var/grafana/plugins
+	tar zxf piechart-panel-plugin-1.3.3.tar.gz -C $(SKEL)/var/grafana/plugins
 
 clean:
 	rm -rf $(GOPATH)
@@ -67,10 +67,10 @@ package: public
 	tar zcf $(SRC) $(GOPATH)/src/ --exclude=.git
 
 public:
-	wget --no-check-certificate https://s3-us-west-2.amazonaws.com/grafana-releases/release/grafana-$(VERSION).linux-x64.tar.gz
-	tar zxf grafana-$(VERSION).linux-x64.tar.gz
+	wget --no-check-certificate https://s3-us-west-2.amazonaws.com/grafana-releases/release/grafana-$(VERSION).linux-amd64.tar.gz
+	tar zxf grafana-$(VERSION).linux-amd64.tar.gz
 	cd grafana-*/. && tar cfz ../public.tar.gz public
-	rm grafana-$(VERSION).linux-x64.tar.gz
+	rm grafana-$(VERSION).linux-amd64.tar.gz
 	rm -rf grafana-*/
 	wget "https://raw.githubusercontent.com/grafana/grafana/v$(VERSION)/conf/defaults.ini" -O defaults.ini
 	sed -i -e 's/^default_theme.*$$/default_theme = light/' defaults.ini
