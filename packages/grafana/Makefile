@@ -19,8 +19,8 @@ build:
 
 install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/bin
-	install -m 755 $(GOPATH)/src/github.com/grafana/grafana/bin/grafana-server  $(DESTDIR)$(OMD_ROOT)/bin/grafana
-	install -m 755 $(GOPATH)/src/github.com/grafana/grafana/bin/grafana-cli  $(DESTDIR)$(OMD_ROOT)/bin/grafana-cli
+	install -m 755 $(GOPATH)/src/github.com/grafana/grafana/bin/linux-amd64/grafana-server  $(DESTDIR)$(OMD_ROOT)/bin/grafana
+	install -m 755 $(GOPATH)/src/github.com/grafana/grafana/bin/linux-amd64/grafana-cli  $(DESTDIR)$(OMD_ROOT)/bin/grafana-cli
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/grafana
 	tar zxf public.tar.gz -C $(DESTDIR)$(OMD_ROOT)/share/grafana
 	# change default fill option for influxdb to something useful
