@@ -45,6 +45,12 @@ case "$1" in
           fi
 	  ! test -x /usr/sbin/a2disconf || a2disconf zzz_omd
 	  rm -f $APACHE_OMD_CONF
+      ls -1 /etc/apache2/sites-available/default-ssl.conf 2>/dev/null | \
+        while read file; do
+          if ! grep /omd/apache/ $file >/dev/null 2>&1; then
+            sed -i -e '/Include.* \/omd\/apache/d' $file
+          fi
+        done
 	  rm -f /omd
 	  # Try to remove empty directories
 	  if test -d /opt/omd/versions; then

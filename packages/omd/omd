@@ -2337,7 +2337,7 @@ def create_apache_hook(sitename):
     file("/omd/apache/%s.conf" % sitename, "w")\
         .write("Include %s/etc/apache/mode.conf\n" % site_dir(sitename))
     file("/omd/apache/%s.include" % sitename, "w")\
-        .write("IncludeOptional %s/etc/apache/*.include\n" % site_dir(sitename))
+        .write("Include %s/etc/apache/system.d/*.conf\n" % site_dir(sitename))
 
 def delete_apache_hook(sitename):
     hook_path = "/omd/apache/%s.conf" % sitename

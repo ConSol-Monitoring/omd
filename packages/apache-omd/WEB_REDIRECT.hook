@@ -22,8 +22,8 @@ case "$1" in
         echo "on: redirect / to /$TARGET"
     ;;
     set)
-        # just create an empty file
-        cat <<EOF > $OMD_ROOT/etc/apache/redirect.include
+        mkdir -p $OMD_ROOT/etc/apache/system.d
+        cat <<EOF > $OMD_ROOT/etc/apache/system.d/redirect.conf
 # This file is managed by 'omd config set WEB_REDIRECT'.
 # Better do not edit manually
 EOF
@@ -35,7 +35,7 @@ EOF
                 echo "redirect is currently enabled for site: $CURRENT" >&2
                 echo "off"
             else
-                cat <<EOF >>$OMD_ROOT/etc/apache/redirect.include
+                cat <<EOF >>$OMD_ROOT/etc/apache/system.d/redirect.conf
 # redirect / to our site
 RewriteEngine On
 RewriteRule ^/$  /$OMD_SITE/  [R,L]

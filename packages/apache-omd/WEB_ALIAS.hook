@@ -13,45 +13,43 @@ case "$1" in
         echo ""
     ;;
         choices)
-        echo "([a-zA-Z0-9-]+)"
+        echo "([a-zA-Z0-9-_]+)"
     ;;
     set)
         ALIAS=$2
-        cat <<EOF > $OMD_ROOT/etc/apache/alias.include
+        . $OMD_ROOT/etc/omd/site.conf >/dev/null 2>&1
+        PROTO="http"
+        if [ $CONFIG_APACHE_MODE = "ssl" ]; then
+            PROTO="https"
+        fi
+        sed -i $OMD_ROOT/etc/grafana/grafana.ini -e 's/^root_url.*/root_url = %(protocol)s:\/\/%(domain)s\/'$OMD_SITE'\/grafana\//g'
+        rm -f $OMD_ROOT/etc/apache/thruk/thruk_local.d/omd_web_alias.conf
+        mkdir -p $OMD_ROOT/etc/apache/system.d
+        cat <<EOF > $OMD_ROOT/etc/apache/system.d/alias.conf
 # This file is managed by 'omd config set WEB_ALIAS'.
 # Better do not edit manually
 EOF
         if [ ! -z $ALIAS ]; then
-            cat <<EOF >> $OMD_ROOT/etc/apache/alias.include
-#RewriteEngine on
-#RewriteCond %{REQUEST_METHOD} GET
-#RewriteRule ^/$OMD_SITE(.*) /$ALIAS\$1 [R=permanent,L,NE]
-#RewriteRule ^/$ALIAS(.*) /$OMD_SITE\$1 [PT,L,NE]
-#Alias /$OMD_SITE "$OMD_ROOT/var/www"
-#<Directory "$OMD_ROOT/var/www">
-#    Options +SymLinksIfOwnerMatch
-#    AllowOverride All
-#    Order deny,allow
-#    Allow from all
-#</Directory>
-
-
+            cat <<EOF >> $OMD_ROOT/etc/apache/system.d/alias.conf
 RewriteEngine on
 RewriteCond %{REQUEST_METHOD} GET
 RewriteRule ^/$OMD_SITE(.*) /$ALIAS\$1 [R=permanent,L,NE]
 
 <IfModule mod_proxy_http.c>
-
   <Location /$ALIAS>
     # Setting "retry=0" to prevent 60 second caching of problem states e.g. when
     # the site apache is down and someone tries to access the page.
     # "disablereuse=On" prevents the apache from keeping the connection which leads to
     # wrong devlivered pages sometimes
-    ProxyPass https://127.0.0.1:5000/$OMD_SITE retry=0 disablereuse=On
-    ProxyPassReverse https://127.0.0.1:5000/$OMD_SITE
+    ProxyPass $PROTO://$CONFIG_APACHE_TCP_ADDR:$CONFIG_APACHE_TCP_PORT/$OMD_SITE retry=0 disablereuse=On
+    ProxyPassReverse $PROTO://$CONFIG_APACHE_TCP_ADDR:$CONFIG_APACHE_TCP_PORT/$OMD_SITE
   </Location>
 </IfModule>
 EOF
+            cat <<EOF > $OMD_ROOT/etc/apache/thruk/thruk_local.d/omd_web_alias.conf
+cookie_path = /$ALIAS
+EOF
+            sed -i $OMD_ROOT/etc/grafana/grafana.ini -e 's/^root_url.*/root_url = %(protocol)s:\/\/%(domain)s\/'$ALIAS'\/grafana\//g'
         fi
     ;;
     depends)
