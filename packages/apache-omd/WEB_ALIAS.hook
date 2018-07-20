@@ -1,12 +1,14 @@
 #!/bin/bash
 
-# Alias: URL Alias
+# Alias: URL Alias (experimental)
 # Menu: Web GUI
 # Description:
 #  Configure a URL alias which can be used instead of the
 #  site name.
 #  After changing this variable, the main Apache webserver
 #  must be restarted.
+#  This option is experimental and might break certain web
+#  features.
 
 case "$1" in
     default)
@@ -23,7 +25,7 @@ case "$1" in
             PROTO="https"
         fi
         sed -i $OMD_ROOT/etc/grafana/grafana.ini -e 's/^root_url.*/root_url = %(protocol)s:\/\/%(domain)s\/'$OMD_SITE'\/grafana\//g'
-        rm -f $OMD_ROOT/etc/apache/thruk/thruk_local.d/omd_web_alias.conf
+        rm -f $OMD_ROOT/etc/thruk/thruk_local.d/omd_web_alias.conf
         mkdir -p $OMD_ROOT/etc/apache/system.d
         cat <<EOF > $OMD_ROOT/etc/apache/system.d/alias.conf
 # This file is managed by 'omd config set WEB_ALIAS'.
@@ -46,7 +48,7 @@ RewriteRule ^/$OMD_SITE(.*) /$ALIAS\$1 [R=permanent,L,NE]
   </Location>
 </IfModule>
 EOF
-            cat <<EOF > $OMD_ROOT/etc/apache/thruk/thruk_local.d/omd_web_alias.conf
+            cat <<EOF > $OMD_ROOT/etc/thruk/thruk_local.d/omd_web_alias.conf
 cookie_path = /$ALIAS
 EOF
             sed -i $OMD_ROOT/etc/grafana/grafana.ini -e 's/^root_url.*/root_url = %(protocol)s:\/\/%(domain)s\/'$ALIAS'\/grafana\//g'
