@@ -1,0 +1,236 @@
+--- ./src/check_nrpe.orig	2018-07-20 09:35:18.592677173 +0200
++++ ./src/check_nrpe.c	2018-07-20 09:41:26.558687136 +0200
+@@ -175,7 +175,7 @@ int main(int argc, char **argv)
+ 
+ 	if (result == -1) {
+ 		/* Failure reading from remote, so try version 2 packet */
+-		logit(LOG_INFO, "Remote %s does not support Version 3 Packets", rem_host);
++		logit(LOG_DEBUG, "Remote %s does not support Version 3 Packets", rem_host);
+ 		packet_ver = NRPE_PACKET_VERSION_2;
+ 
+ 		/* Rerun the setup */
+@@ -293,7 +293,7 @@ int process_arguments(int argc, char **a
+ 
+ 		case 't':
+ 			if (from_config_file && socket_timeout != -1) {
+-				logit(LOG_WARNING, "WARNING: Command-line socket timeout overrides the config file option.");
++				logit(LOG_DEBUG, "WARNING: Command-line socket timeout overrides the config file option.");
+ 				break;
+ 			}
+ 			socket_timeout=parse_timeout_string(optarg);
+@@ -303,7 +303,7 @@ int process_arguments(int argc, char **a
+ 
+ 		case 'p':
+ 			if (from_config_file && server_port != 0) {
+-				logit(LOG_WARNING, "WARNING: Command-line server port overrides the config file option.");
++				logit(LOG_DEBUG, "WARNING: Command-line server port overrides the config file option.");
+ 				break;
+ 			}
+ 			server_port = atoi(optarg);
+@@ -313,7 +313,7 @@ int process_arguments(int argc, char **a
+ 
+ 		case 'P':
+ 			if (from_config_file && payload_size > 0) {
+-				logit(LOG_WARNING, "WARNING: Command-line payload-size (-P) overrides the config file option.");
++				logit(LOG_DEBUG, "WARNING: Command-line payload-size (-P) overrides the config file option.");
+ 				break;
+ 			}
+ 			payload_size = atoi(optarg);
+@@ -323,7 +323,7 @@ int process_arguments(int argc, char **a
+ 
+ 		case 'H':
+ 			if (from_config_file && server_name != NULL) {
+-				logit(LOG_WARNING, "WARNING: Command-line server name overrides the config file option.");
++				logit(LOG_DEBUG, "WARNING: Command-line server name overrides the config file option.");
+ 				break;
+ 			}
+ 			server_name = strdup(optarg);
+@@ -331,7 +331,7 @@ int process_arguments(int argc, char **a
+ 
+ 		case 'E':
+ 			if (from_config_file && stderr_to_stdout != 0) {
+-				logit(LOG_WARNING, "WARNING: Command-line stderr redirection overrides the config file option.");
++				logit(LOG_DEBUG, "WARNING: Command-line stderr redirection overrides the config file option.");
+ 				break;
+ 			}
+ 			stderr_to_stdout = 1;
+@@ -359,7 +359,7 @@ int process_arguments(int argc, char **a
+ 
+ 		case 'u':
+ 			if (from_config_file && timeout_return_code != -1) {
+-				logit(LOG_WARNING, "WARNING: Command-line unknown-timeout (-u) overrides the config file option.");
++				logit(LOG_DEBUG, "WARNING: Command-line unknown-timeout (-u) overrides the config file option.");
+ 				break;
+ 			}
+ 			timeout_return_code = STATE_UNKNOWN;
+@@ -367,7 +367,7 @@ int process_arguments(int argc, char **a
+ 
+ 		case '2':
+ 			if (from_config_file && packet_ver != NRPE_PACKET_VERSION_3) {
+-				logit(LOG_WARNING, "WARNING: Command-line v2-packets-only (-2) overrides the config file option.");
++				logit(LOG_DEBUG, "WARNING: Command-line v2-packets-only (-2) overrides the config file option.");
+ 				break;
+ 			}
+ 			packet_ver = NRPE_PACKET_VERSION_2;
+@@ -376,7 +376,7 @@ int process_arguments(int argc, char **a
+ 
+ 		case '4':
+ 			if (from_config_file && address_family != AF_UNSPEC) {
+-				logit(LOG_WARNING, "WARNING: Command-line ipv4 (-4) or ipv6 (-6) overrides the config file option.");
++				logit(LOG_DEBUG, "WARNING: Command-line ipv4 (-4) or ipv6 (-6) overrides the config file option.");
+ 				break;
+ 			}
+ 			address_family = AF_INET;
+@@ -384,7 +384,7 @@ int process_arguments(int argc, char **a
+ 
+ 		case '6':
+ 			if (from_config_file && address_family != AF_UNSPEC) {
+-				logit(LOG_WARNING, "WARNING: Command-line ipv4 (-4) or ipv6 (-6) overrides the config file option.");
++				logit(LOG_DEBUG, "WARNING: Command-line ipv4 (-4) or ipv6 (-6) overrides the config file option.");
+ 				break;
+ 			}
+ 			address_family = AF_INET6;
+@@ -392,7 +392,7 @@ int process_arguments(int argc, char **a
+ 
+ 		case 'd':
+ 			if (from_config_file && sslprm.allowDH != -1) {
+-				logit(LOG_WARNING, "WARNING: Command-line use-adh (-d) overrides the config file option.");
++				logit(LOG_DEBUG, "WARNING: Command-line use-adh (-d) overrides the config file option.");
+ 				break;
+ 			}
+ 			if (!optarg || optarg[0] < '0' || optarg[0] > '2')
+@@ -402,7 +402,7 @@ int process_arguments(int argc, char **a
+ 
+ 		case 'A':
+ 			if (from_config_file && sslprm.cacert_file != NULL) {
+-				logit(LOG_WARNING, "WARNING: Command-line ca-cert-file (-A) overrides the config file option.");
++				logit(LOG_DEBUG, "WARNING: Command-line ca-cert-file (-A) overrides the config file option.");
+ 				break;
+ 			}
+ 			sslprm.cacert_file = strdup(optarg);
+@@ -410,7 +410,7 @@ int process_arguments(int argc, char **a
+ 
+ 		case 'C':
+ 			if (from_config_file && sslprm.cert_file != NULL) {
+-				logit(LOG_WARNING, "WARNING: Command-line client-cert (-C) overrides the config file option.");
++				logit(LOG_DEBUG, "WARNING: Command-line client-cert (-C) overrides the config file option.");
+ 				break;
+ 			}
+ 			sslprm.cert_file = strdup(optarg);
+@@ -419,7 +419,7 @@ int process_arguments(int argc, char **a
+ 
+ 		case 'K':
+ 			if (from_config_file && sslprm.privatekey_file != NULL) {
+-				logit(LOG_WARNING, "WARNING: Command-line key-file (-K) overrides the config file option.");
++				logit(LOG_DEBUG, "WARNING: Command-line key-file (-K) overrides the config file option.");
+ 				break;
+ 			}
+ 			sslprm.privatekey_file = strdup(optarg);
+@@ -428,7 +428,7 @@ int process_arguments(int argc, char **a
+ 
+ 		case 'S':
+ 			if (from_config_file && sslprm.ssl_proto_ver != SSL_Ver_Invalid) {
+-				logit(LOG_WARNING, "WARNING: Command-line ssl-version (-S) overrides the config file option.");
++				logit(LOG_DEBUG, "WARNING: Command-line ssl-version (-S) overrides the config file option.");
+ 				break;
+ 			}
+ 
+@@ -460,7 +460,7 @@ int process_arguments(int argc, char **a
+ 
+ 		case 'L':
+ 			if (from_config_file && sslprm.cipher_list[0] != '\0') {
+-				logit(LOG_WARNING, "WARNING: Command-line cipher-list (-L) overrides the config file option.");
++				logit(LOG_DEBUG, "WARNING: Command-line cipher-list (-L) overrides the config file option.");
+ 				break;
+ 			}
+ 			strncpy(sslprm.cipher_list, optarg, sizeof(sslprm.cipher_list) - 1);
+@@ -469,7 +469,7 @@ int process_arguments(int argc, char **a
+ 
+ 		case 's':
+ 			if (from_config_file && have_log_opts == TRUE) {
+-				logit(LOG_WARNING, "WARNING: Command-line ssl-logging (-s) overrides the config file option.");
++				logit(LOG_DEBUG, "WARNING: Command-line ssl-logging (-s) overrides the config file option.");
+ 				break;
+ 			}
+ 			sslprm.log_opts = strtoul(optarg, NULL, 0);
+@@ -478,7 +478,7 @@ int process_arguments(int argc, char **a
+ 
+ 		case 'g':
+ 			if (from_config_file && log_file != NULL) {
+-				logit(LOG_WARNING, "WARNING: Command-line log-file (-g) overrides the config file option.");
++				logit(LOG_DEBUG, "WARNING: Command-line log-file (-g) overrides the config file option.");
+ 				break;
+ 			}
+ 			log_file = strdup(optarg);
+@@ -773,12 +773,12 @@ void setup_ssl()
+ 	if (sslprm.log_opts & SSL_LogStartup) {
+ 		char *val;
+ 
+-		logit(LOG_INFO, "SSL Certificate File: %s", sslprm.cert_file ? sslprm.cert_file : "None");
+-		logit(LOG_INFO, "SSL Private Key File: %s", sslprm.privatekey_file ? sslprm.privatekey_file : "None");
+-		logit(LOG_INFO, "SSL CA Certificate File: %s", sslprm.cacert_file ? sslprm.cacert_file : "None");
+-		logit(LOG_INFO, "SSL Cipher List: %s", sslprm.cipher_list);
+-		logit(LOG_INFO, "SSL Allow ADH: %d", sslprm.allowDH);
+-		logit(LOG_INFO, "SSL Log Options: 0x%02x", sslprm.log_opts);
++		logit(LOG_DEBUG, "SSL Certificate File: %s", sslprm.cert_file ? sslprm.cert_file : "None");
++		logit(LOG_DEBUG, "SSL Private Key File: %s", sslprm.privatekey_file ? sslprm.privatekey_file : "None");
++		logit(LOG_DEBUG, "SSL CA Certificate File: %s", sslprm.cacert_file ? sslprm.cacert_file : "None");
++		logit(LOG_DEBUG, "SSL Cipher List: %s", sslprm.cipher_list);
++		logit(LOG_DEBUG, "SSL Allow ADH: %d", sslprm.allowDH);
++		logit(LOG_DEBUG, "SSL Log Options: 0x%02x", sslprm.log_opts);
+ 
+ 		switch (sslprm.ssl_proto_ver) {
+ 		case SSLv2:
+@@ -815,7 +815,7 @@ void setup_ssl()
+ 			val = "INVALID VALUE!";
+ 			break;
+ 		}
+-		logit(LOG_INFO, "SSL Version: %s", val);
++		logit(LOG_DEBUG, "SSL Version: %s", val);
+ 	}
+ 
+ 	/* initialize SSL */
+@@ -955,7 +955,7 @@ void setup_ssl()
+ 			if (strlen(sslprm.cipher_list) < sizeof(sslprm.cipher_list) - 6) {
+ 				strcat(sslprm.cipher_list, ":!ADH");
+ 				if (sslprm.log_opts & SSL_LogStartup)
+-					logit(LOG_INFO, "New SSL Cipher List: %s", sslprm.cipher_list);
++					logit(LOG_DEBUG, "New SSL Cipher List: %s", sslprm.cipher_list);
+ 			}
+ 		} else {
+ 			/* use anonymous DH ciphers */
+@@ -1086,7 +1086,7 @@ int connect_to_remote()
+ 	} else {
+ 
+ 		if (sslprm.log_opts & SSL_LogVersion)
+-			logit(LOG_NOTICE, "Remote %s - SSL Version: %s", rem_host, SSL_get_version(ssl));
++			logit(LOG_DEBUG, "Remote %s - SSL Version: %s", rem_host, SSL_get_version(ssl));
+ 
+ 		if (sslprm.log_opts & SSL_LogCipher) {
+ # if (defined(__sun) && defined(SOLARIS_10)) || defined(_AIX) || defined(__hpux)
+@@ -1094,7 +1094,7 @@ int connect_to_remote()
+ # else
+ 			const SSL_CIPHER *c = SSL_get_current_cipher(ssl);
+ # endif
+-			logit(LOG_NOTICE, "Remote %s - %s, Cipher is %s", rem_host,
++			logit(LOG_DEBUG, "Remote %s - %s, Cipher is %s", rem_host,
+ 				   SSL_CIPHER_get_version(c), SSL_CIPHER_get_name(c));
+ 		}
+ 
+@@ -1104,13 +1104,13 @@ int connect_to_remote()
+ 
+ 			if (peer) {
+ 				if (sslprm.log_opts & SSL_LogIfClientCert)
+-					logit(LOG_NOTICE, "SSL %s has %s certificate", rem_host, SSL_get_verify_result(ssl) == X509_V_OK ? "a valid" : "an invalid");
++					logit(LOG_DEBUG, "SSL %s has %s certificate", rem_host, SSL_get_verify_result(ssl) == X509_V_OK ? "a valid" : "an invalid");
+ 
+ 				if (sslprm.log_opts & SSL_LogCertDetails) {
+ 					X509_NAME_oneline(X509_get_subject_name(peer), buffer, sizeof(buffer));
+-					logit(LOG_NOTICE, "SSL %s Cert Name: %s", rem_host, buffer);
++					logit(LOG_DEBUG, "SSL %s Cert Name: %s", rem_host, buffer);
+ 					X509_NAME_oneline(X509_get_issuer_name(peer), buffer, sizeof(buffer));
+-					logit(LOG_NOTICE, "SSL %s Cert Issuer: %s", rem_host, buffer);
++					logit(LOG_DEBUG, "SSL %s Cert Issuer: %s", rem_host, buffer);
+ 				}
+ 
+ 			} else
