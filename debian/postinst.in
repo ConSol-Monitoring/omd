@@ -94,7 +94,7 @@ case "$1" in
         a2ensite default-ssl
     fi
 
-    ls -1 /etc/apache2/sites-available/default-ssl.conf 2>/dev/null | \
+    ls -1 /etc/apache2/sites-available/*default*.conf 2>/dev/null | \
       while read file; do
         if ! grep /omd/apache/ $file >/dev/null 2>&1; then
           sed -i -e 's|</VirtualHost>|\n    ###APACHE_INCLUDEOPT### /omd/apache/*.include\n</VirtualHost>|g' $file
