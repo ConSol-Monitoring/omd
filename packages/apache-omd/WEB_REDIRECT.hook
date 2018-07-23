@@ -13,7 +13,6 @@ case "$1" in
         echo "off"
     ;;
         choices)
-        . $OMD_ROOT/etc/omd/site.conf >/dev/null 2>&1
         TARGET="$OMD_SITE"
         if [ "x$CONFIG_WEB_ALIAS" != "x" ]; then
             TARGET="$CONFIG_WEB_ALIAS"

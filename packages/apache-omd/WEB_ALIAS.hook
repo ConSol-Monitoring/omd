@@ -19,7 +19,6 @@ case "$1" in
     ;;
     set)
         ALIAS=$2
-        . $OMD_ROOT/etc/omd/site.conf >/dev/null 2>&1
         PROTO="http"
         if [ $CONFIG_APACHE_MODE = "ssl" ]; then
             PROTO="https"

@@ -1863,10 +1863,11 @@ def load_config_hooks():
             if hook_name[0] != '.':
                 hook = config_load_hook(hook_name)
                 # only load configuration hooks
-                if hook.get("choices", None) != None:
+                if hook.get("menu", None) != None:
                     g_config_hooks[hook_name] = hook
         except:
             pass
+    create_config_environment()
 
 def config_load_hook(hook_name):
     hook = { "name" : hook_name }
@@ -1885,16 +1886,15 @@ def config_load_hook(hook_name):
         else:
             description_active = False
     hook["description"] = description
+    return hook
 
-    def get_hook_info(info):
-        return call_hook(hook_name, [info])[1]
-
+def load_hook_choices(hook):
     # The choices can either be a list of possible keys. Then
     # the hook outputs one live for each choice where the key and a
     # description are separated by a colon. Or it outputs one line
     # where that line is an extended regular expression matching the
     # possible values.
-    choicestxt = get_hook_info("choices").split("\n")
+    choicestxt = call_hook(hook["name"], ["choices"])[1].split("\n")
     if len(choicestxt) == 1:
         regextext = choicestxt[0].strip()
         if regextext != "":
@@ -1913,7 +1913,7 @@ def config_load_hook(hook_name):
             bail_out("Invalid output of hook: %s" % choicestxt)
 
     hook["choices"] = choices
-    return hook
+    return
 
 def load_hook_dependencies():
     for hook_name, hook in g_config_hooks.items():
@@ -1991,6 +1991,7 @@ def validate_config_change_commands(settings):
 
         # Check if value is valid. Choices are either a list of allowed
         # keys or a regular expression
+        load_hook_choices(hook)
         if type(hook["choices"]) == list:
             choices = [ var for (var, descr) in hook["choices"] ]
             if value not in choices:
@@ -2021,6 +2022,7 @@ def config_set(args):
 
     # Check if value is valid. Choices are either a list of allowed
     # keys or a regular expression
+    load_hook_choices(hook)
     if type(hook["choices"]) == list:
         choices = [ var for (var, descr) in hook["choices"] ]
         if value not in choices:
@@ -2049,19 +2051,16 @@ def config_set_all():
 
 
 def config_set_value(hook_name, value, save = True):
-    hook = g_config_hooks.get(hook_name)
-
-    # TODO: Warum wird hier nicht call_hook() aufgerufen!!
-
-    # Call hook with 'set'. If it outputs something, that will
-    # be our new value (i.e. hook disagrees with the new setting!)
-    commandline = "%s/lib/omd/hooks/%s set '%s'" % (g_sitedir, hook_name, value)
     if os.getuid() == 0:
         sys.stderr.write("I am root. This should never happen!\n")
         sys.exit(1)
 
-        # commandline = 'su -p -l %s -c "%s"' % (g_sitename, commandline)
-    answer = os.popen(commandline).read()
+    # Call hook with 'set'. If it outputs something, that will
+    # be our new value (i.e. hook disagrees with the new setting!)
+    exitcode, answer = call_hook(hook_name, ["set", value])
+    if exitcode:
+        return
+
     if len(answer) > 0:
         value = answer.strip()
 
@@ -2176,6 +2175,7 @@ def config_configure_hook(hook_name):
     title = hook["alias"]
     descr = hook["description"].replace("\n\n", "\001").replace("\n", " ").replace("\001", "\n\n")
     value = g_site_conf[hook_name]
+    load_hook_choices(hook)
     choices = hook["choices"]
     if type(choices) == list:
         dialog_function = dialog_menu
@@ -3440,7 +3440,7 @@ def main_init_action(command, args, options={}):
 
 def main_config(args, options={}):
     if (len(args) == 0 or args[0] != "show") and \
-        not site_is_stopped(g_sitename) and opt_force:
+        opt_force and not site_is_stopped(g_sitename):
         need_start = True
         stop_site(g_sitename)
     else:
@@ -3719,6 +3719,7 @@ def main_restore(args, options={}):
         create_version_symlink(g_sitename, to_version)
 
         # Let hooks do their work and update configuration.
+        create_config_environment()
         config_set_all()
 
         if from_version != to_version:
