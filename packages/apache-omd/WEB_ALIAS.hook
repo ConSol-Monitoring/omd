@@ -15,7 +15,7 @@ case "$1" in
         echo ""
     ;;
         choices)
-        echo "([a-zA-Z0-9-_]+)"
+        echo "([a-zA-Z0-9-_]*)"
     ;;
     set)
         ALIAS=$2
