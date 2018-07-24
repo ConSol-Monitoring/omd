@@ -37,3 +37,13 @@ endif
 ifdef SKIP_PACKAGES
   PACKAGES:=$(shell for p in $(PACKAGES); do skip=0; for s in $(SKIP_PACKAGES); do if [ "$$s" = "$$p" ]; then skip=1; fi; done; if [ $$skip -eq 0 ]; then echo $$p; fi; done)
 endif
+
+APACHE_VERSION      = $(shell $(APACHE_BIN) -v | awk '/version/ {print $$3}' | awk -F/ '{print $$2}')
+APACHE_VERSION_MAIN = $(word 1, $(subst ., ,$(APACHE_VERSION)))
+APACHE_VERSION_SUB  = $(word 2, $(subst ., ,$(APACHE_VERSION)))
+APACHE_24_OR_NEWER  = $(shell [ $(APACHE_VERSION_MAIN) -ge 2 -a $(APACHE_VERSION_SUB) -ge 4 ] && echo 1 || echo 0)
+ifeq ($(APACHE_24_OR_NEWER),1)
+APACHE_INCLUDEOPT  = IncludeOptional
+else
+APACHE_INCLUDEOPT  = Include
+endif

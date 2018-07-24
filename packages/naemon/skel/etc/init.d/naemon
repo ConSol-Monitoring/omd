@@ -68,8 +68,7 @@ case "$1" in start|restart|reload|checkconfig|check)
     rm -f $CFG_FILE
     merge-core-config \
        ###ROOT###/etc/${CONFIG_CORE}/${CONFIG_CORE}.d/*.cfg \
-       ###ROOT###/etc/${CONFIG_CORE}/${CONFIG_CORE}.cfg | \
-    grep -v '^\ *failure_prediction_enabled ' \
+       ###ROOT###/etc/${CONFIG_CORE}/${CONFIG_CORE}.cfg \
        > $CFG_FILE || rm -f $CFG_FILE
     if [ $? -ne 0 ]; then exit 1; fi
        rm -f $OMD_ROOT/tmp/nagios/nagios.cfg

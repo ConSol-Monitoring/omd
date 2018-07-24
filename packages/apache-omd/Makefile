@@ -6,11 +6,6 @@ DIR = $(NAME)-$(VERSION)
 FCGI_FILE="mod_fcgid-2.3.9"
 MOD_RPAF_VERSION="0.8"
 
-APACHE_VERSION      = $(shell $(APACHE_BIN) -v | awk '/version/ {print $$3}' | awk -F/ '{print $$2}')
-APACHE_VERSION_MAIN = $(word 1, $(subst ., ,$(APACHE_VERSION)))
-APACHE_VERSION_SUB  = $(word 2, $(subst ., ,$(APACHE_VERSION)))
-APACHE_24_OR_NEWER  = $(shell [ $(APACHE_VERSION_MAIN) -ge 2 -a $(APACHE_VERSION_SUB) -ge 4 ] && echo 1 || echo 0)
-
 APACHE_MODULES=modrpaf
 APACHE_MODULES_INSTALL=modrpaf_install
 APACHE_FCGID_PATH=$(MODULE_DIR)/$(APACHE_FCGID_MODULE)

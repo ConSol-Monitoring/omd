@@ -9,14 +9,6 @@
 #  After changing this variable, the man Apache webserver
 #  must be restarted.
 
-# Load other config options. This hook needs
-# APACHE_TCP_ADDR.
-if [ -f $OMD_ROOT/etc/omd/site.conf ]; then
-    . $OMD_ROOT/etc/omd/site.conf
-else
-    CONFIG_APACHE_TCP_ADDR=${CONFIG_APACHE_TCP_ADDR:-127.0.0.1}
-fi
-
 case "$1" in
     default)
         echo "5000"
@@ -84,6 +76,8 @@ EOF
     ProxyPassReverse $PROTO://$CONFIG_APACHE_TCP_ADDR:$PORT/$OMD_SITE
   </Location>
 </IfModule>
+
+###APACHE_INCLUDEOPT### $OMD_ROOT/etc/apache/system.d/*.conf
 EOF
         if [ "$PORT" != "$2" ] ; then
             echo "Apache port $2 is in use. I've choosen $PORT instead." >&2

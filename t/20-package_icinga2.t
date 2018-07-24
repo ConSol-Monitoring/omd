@@ -13,7 +13,7 @@ BEGIN {
 }
 
 plan skip_all => "icinga2 not included, cannot test" unless -x '/omd/versions/default/bin/icinga2';
-plan( tests => 60 );
+plan( tests => 64 );
 
 ##################################################
 # create our test site
@@ -40,6 +40,7 @@ my $tests = [
   { cmd => $omd_bin." config $site set ICINGA2_IDO mysql" },
   { cmd => $omd_bin." start $site", like => '/creating initial ido database/' },
   { cmd => "/bin/su - $site -c 'echo \"select process_id from icinga_programstatus\" | mysql icinga'", like => ['/\d+/', '/process_id/'], waitfor => '\d+' },
+  { cmd => "/bin/su - $site -c 'test -f share/icinga2-ido-pgsql/schema/pgsql.sql'", like => ['/^$/'] },
 
   { cmd => $omd_bin." stop $site" },
 ];

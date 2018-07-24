@@ -1,0 +1,49 @@
+#!/bin/bash
+
+# Alias: URL Alias
+# Menu: Web GUI
+# Description:
+#  Configure a redirect from / to this site. This can only
+#  be set once for all sites on this host.
+#  After changing this variable, the main Apache webserver
+#  must be restarted.
+
+case "$1" in
+    default)
+        echo "off"
+    ;;
+        choices)
+        TARGET="$OMD_SITE"
+        if [ "x$CONFIG_WEB_ALIAS" != "x" ]; then
+            TARGET="$CONFIG_WEB_ALIAS"
+        fi
+        echo "off: disable redirect"
+        echo "on: redirect / to /$TARGET"
+    ;;
+    set)
+        mkdir -p $OMD_ROOT/etc/apache/system.d
+        cat <<EOF > $OMD_ROOT/etc/apache/system.d/redirect.conf
+# This file is managed by 'omd config set WEB_REDIRECT'.
+# Better do not edit manually
+EOF
+        if [ $2 = "on" ]; then
+            CURRENT=$(grep -H CONFIG_WEB_REDIRECT /omd/sites/*/etc/omd/site.conf | grep "'on'" | grep -v "/$OMD_SITE/" | sed -e 's%/omd/sites/\(.*\)/etc/omd/site.conf.*%\1%')
+            if [ "x$CURRENT" != "x" ]; then
+                echo "only on site can be redirected from /" >&2
+                echo "disabling redirect for $OMD_SITE" >&2
+                echo "redirect is currently enabled for site: $CURRENT" >&2
+                echo "off"
+            else
+                cat <<EOF >>$OMD_ROOT/etc/apache/system.d/redirect.conf
+# redirect / to our site
+RewriteEngine On
+RewriteRule ^/$  /$OMD_SITE/  [R,L]
+EOF
+            fi
+        fi
+    ;;
+    depends)
+        [ "$CONFIG_APACHE_MODE" != "none" ]
+    ;;
+esac
+

@@ -76,9 +76,7 @@ case "$1" in
     fi
 
     if ! test -e $APACHE_OMD_CONF; then
-      echo "Include /omd/apache/*.conf" > $APACHE_OMD_CONF
-      # avoid apache error message including /omd/apache if no site exist
-      touch "/omd/apache/empty.conf"
+      echo "###APACHE_INCLUDEOPT### /omd/apache/*.conf" > $APACHE_OMD_CONF
 
       # -- enable conf include, when available
       ! test -x /usr/sbin/a2enconf || a2enconf zzz_omd
@@ -96,6 +94,12 @@ case "$1" in
         a2ensite default-ssl
     fi
 
+    ls -1 /etc/apache2/sites-available/*default*.conf 2>/dev/null | \
+      while read file; do
+        if ! grep /omd/apache/ $file >/dev/null 2>&1; then
+          sed -i -e 's|</VirtualHost>|\n    ###APACHE_INCLUDEOPT### /omd/apache/*.include\n</VirtualHost>|g' $file
+        fi
+      done
     # -- default for init
     DEFAULT=/etc/default/omd
     if ! test -e $DEFAULT ; then

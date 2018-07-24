@@ -1,0 +1,20 @@
+--- a/src/naemon/xodtemplate.c	2018-07-23 09:10:15.951813447 +0200
++++ b/src/naemon/xodtemplate.c	2018-07-23 09:10:48.371965739 +0200
+@@ -7517,7 +7517,7 @@
+ 			temp_host->process_perf_data = (atoi(value) > 0) ? TRUE : FALSE;
+ 			temp_host->have_process_perf_data = TRUE;
+ 		} else if (!strcmp(variable, "failure_prediction_enabled")) {
+-			xodtemplate_obsoleted(variable, temp_host->_start_line);
++			//xodtemplate_obsoleted(variable, temp_host->_start_line);
+ 		} else if (!strcmp(variable, "2d_coords")) {
+ 			if ((temp_ptr = strtok(value, ", ")) == NULL) {
+ 				nm_log(NSLOG_CONFIG_ERROR, "Error: Invalid 2d_coords value '%s' in host definition.\n", temp_ptr);
+@@ -7865,7 +7865,7 @@
+ 			temp_service->process_perf_data = (atoi(value) > 0) ? TRUE : FALSE;
+ 			temp_service->have_process_perf_data = TRUE;
+ 		} else if (!strcmp(variable, "failure_prediction_enabled")) {
+-			xodtemplate_obsoleted(variable, temp_service->_start_line);
++			//xodtemplate_obsoleted(variable, temp_service->_start_line);
+ 		} else if (!strcmp(variable, "retain_status_information")) {
+ 			temp_service->retain_status_information = (atoi(value) > 0) ? TRUE : FALSE;
+ 			temp_service->have_retain_status_information = TRUE;

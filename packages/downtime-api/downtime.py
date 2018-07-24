@@ -97,13 +97,15 @@ class ThrukCli(object):
         #return self.services
         return [s for s in self.services if s["description"] == service]
 
-    def set_host_downtimes(self, hosts, author, comment, start, end):
+    def set_host_downtimes(self, hosts, author, comment, start, end, plus_svc):
         backends = set([h["peer_name"] for h in hosts])
         for backend in backends:
             self.prefer_backend(backend)
             for host in [h for h in hosts if h["peer_name"] == backend]:
                 logger.debug("set_host_downtimes %s@%s", host["name"], backend)
                 self.get('cmd.cgi?cmd_typ=55&cmd_mod=2&host=%s&com_author=%s&com_data=%s&fixed=1&childoptions=1&start_time=%s&end_time=%s' % (host["name"], author, comment, start, end))
+                if plus_svc:
+                    self.get('cmd.cgi?cmd_typ=86&cmd_mod=2&host=%s&com_author=%s&com_data=%s&fixed=1&childoptions=1&start_time=%s&end_time=%s' % (host["name"], author, comment, start, end))
 
     def get_host_downtimes(self, hosts, author, comment, start, end):
         down_hosts = []
@@ -206,7 +208,6 @@ try:
         raise CGIAbort
     setup_logging(logdir=os.environ["OMD_ROOT"]+"/var/log", logfile="downtime-api.log", scrnloglevel=logging.CRITICAL, txtloglevel=logging.INFO, format="[%(asctime)s][%(process)d] - %(levelname)s - %(message)s")
     logger = logging.getLogger('downtime-api')
-    #logger.disabled = True
 
     params = cgi.FieldStorage()
     host_name = params.getfirst("host", None)
@@ -216,6 +217,7 @@ try:
     duration = params.getfirst("duration", None)
     dtauthtoken = params.getfirst("dtauthtoken", None)
     backend = params.getfirst("backend", None)
+    plus_svc = params.getfirst("plus_svc", None)
     address = originating_ip()
 
     hosts = []
@@ -265,6 +267,12 @@ try:
         raise CGIAbort
     elif backend:
         thruk.prefer_backend(backend)
+
+    if plus_svc != None:
+        if plus_svc == "0" or plus_svc == "false":
+            plus_svc = False
+        else:
+            plus_svc = True
 
     if service_description:
         ##################################################################
@@ -359,6 +367,7 @@ try:
         thruk.set_host_downtimes(real_hosts, "omdadmin", comment,
             urllib.quote_plus(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(start_time))),
             urllib.quote_plus(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(end_time))),
+            plus_svc,
         )
 
         ######################################################################
