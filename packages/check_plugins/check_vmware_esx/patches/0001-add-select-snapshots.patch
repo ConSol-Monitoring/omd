@@ -1,0 +1,299 @@
+From ee34a2df28dd9b7568f5c17c81d3f693350913b2 Mon Sep 17 00:00:00 2001
+From: omd labs <mon@se1-mon-p004.sys.schwarz>
+Date: Fri, 20 Jul 2018 20:49:04 +0200
+Subject: [PATCH] add select=snapshots
+
+---
+ check_vmware_esx-master/check_vmware_esx.pl        |   7 +
+ check_vmware_esx-master/command_reference          |  27 +++
+ .../modules/host_snapshot_info.pm                  | 222 +++++++++++++++++++++
+ 3 files changed, 256 insertions(+)
+ create mode 100644 check_vmware_esx-master/modules/host_snapshot_info.pm
+
+diff --git a/check_vmware_esx.pl b/check_vmware_esx.pl
+index 271d6ee..2da33b3 100755
+--- a/check_vmware_esx.pl
++++ b/check_vmware_esx.pl
+@@ -2102,6 +2102,13 @@ sub main_select
+           ($result, $output) = host_uptime_info($esx_server);
+           return($result, $output);
+           }
++       if ($select eq "snapshots")
++          {
++          require host_snapshot_info;
++          import host_snapshot_info;
++          ($result, $output) = host_snapshot_info($esx_server);
++          return($result, $output);
++          }
+        if ($select eq "hostmedia")
+           {
+           require host_mounted_media_info;
+diff --git a/command_reference b/command_reference
+index 24f4001..67d82c5 100644
+--- a/command_reference
++++ b/command_reference
+@@ -622,6 +622,33 @@ SOAP API:
+ -S, --select=soap                   Simple check to verify a successfull connection
+                                     to VMWare SOAP API.
+ 
++Snapshots:
++----------
++
++-S, --select=hostmedia              List vm's with attached host mounted media like cd,dvd or
++                                    floppy drives. This is important for monitoring because a
++                                    virtual machine with a mount cd or dvd drive can not be
++                                    moved to another host.
++-w, --warning=<threshold>           Warning threshold in percent.
++-c, --critical=<threshold>          Critical threshold in percent.
++-B, --exclude=<black_list>          Blacklist VMs.
++-W, --include=<white_list>          Whitelist VMs.
++
++                                    Use blacklist OR(!) whitelist. Using both in one statement
++                                    is not allowed.
++
++    --isregexp                      Whether to treat blacklist and whitelist as regexp
++    --listall                       List all VMs with all snapshots.
++    --multiline                     Multiline output in overview. This mean technically that
++                                    a multiline output uses a HTML <br> for the GUI instead of
++                                    Be aware that your messing connections (email, SMS...) must use
++                                    a filter to file out the <br>. A sed oneliner like the following
++                                    will do the job: sed 's/<[^<>]*>//g'
++or with
++-s, --subselect=age                 Shows age of snapshots in days.
++or
++-s, --subselect=count               Counts the number of snapshots of VMs.
++
+ Monitoring a virtual machine via vmware datacenter or vmware host:
+ ==================================================================
+ 
+diff --git a/modules/host_snapshot_info.pm b/modules/host_snapshot_info.pm
+new file mode 100644
+index 0000000..d7cc345
+--- /dev/null
++++ b/modules/host_snapshot_info.pm
+@@ -0,0 +1,222 @@
++sub host_snapshot_info
++    {
++    my ($host) = @_;
++    my $count = 0;
++    my $state;
++    my $output;
++    my $host_view;
++    my $vm_views;
++    my $vm;
++    my $istemplate;
++    my $match;
++    my $displayname;
++    my $devices;
++   
++    $host_view = Vim::find_entity_view(view_type => 'HostSystem', filter => $host, properties => ['name', 'runtime.inMaintenanceMode']);
++    if (!defined($host_view))
++       {
++       print "Host " . $$host{"name"} . " does not exist\n";
++       exit 2;
++       }
++
++    if (($host_view->get_property('runtime.inMaintenanceMode')) eq "true")
++       {
++       print "Notice: " . $host_view->name . " is in maintenance mode, check skipped\n";
++       exit 0;
++       }
++
++    $vm_views = Vim::find_entity_views(view_type => 'VirtualMachine', begin_entity => $host_view, properties => ['name', 'config.template', 'snapshot', 'runtime.powerState']);
++
++    if (!defined($vm_views))
++       {
++       print "Runtime error\n";
++       exit 2;
++       }
++    $output = '';
++
++    if (!defined($subselect))
++       {
++       $subselect = "age";
++       }
++
++    foreach $vm (@$vm_views)
++            {
++            my $vm_snapinfo = $vm->{snapshot};
++            next unless defined $vm_snapinfo;
++            # change get_property to {} to avoid infinite loop
++            $istemplate = $vm->{'config.template'};
++            
++            if ($istemplate && ($istemplate eq 'true'))
++               {
++               next;
++               }
++            
++            $match = 0;
++            $displayname = $vm->name;
++
++            if (defined($isregexp))
++               {
++               $isregexp = 1;
++               }
++            else
++               {
++               $isregexp = 0;
++               }
++               
++            if (defined($blacklist))
++               {
++               if (isblacklisted(\$blacklist, $isregexp, $displayname))
++                  {
++                  next;
++                  }
++               }
++            if (defined($whitelist))
++               {
++               if (isnotwhitelisted(\$whitelist, $isregexp, $displayname))
++                  {
++                  next;
++                  }
++               }
++            my $snapstate = 0;
++            my $snapoutput = "";
++            if ($subselect eq "age")
++               {
++               ($snapstate, $snapoutput) = check_snapshot_age( $vm->{name}, $vm_snapinfo->{rootSnapshotList} );
++               }
++               elsif ($subselect eq "count")
++               {
++               my %vm_snapshot_count;
++               ($snapstate, $snapoutput) = check_snapshot_count( $vm->{name},
++                   $vm_snapinfo->{rootSnapshotList}, \%vm_snapshot_count );
++               }
++            if ($snapstate)
++               {
++               $state = final_state($state, $snapstate);
++               $multiline = "<br>";
++               $count++;
++               $output = "$snapoutput" . $multiline . $output;
++               }
++               else
++               {
++               if ($listall)
++                  {
++                  $output = $output . "$snapoutput" . $multiline;
++                  }
++               }
++            }
++
++    #Cut the last multiline of $output. Second line is better than 2 time chop() like the original :-)
++    if ($output ne '')
++       {
++       $output  =~ s/<br>$//i;
++       $output  =~ s/\n$//i;
++       }
++
++    if ($count)
++       {
++       $output = "VMs with snapshots:" . $multiline . $output;
++       #$state = 1;
++       }
++    else
++       {
++       if ($listall)
++          {
++          $output = "No VMs with outdated/too many snapshots found. VMs." . $multiline . $output;
++          }
++       else
++          {
++          $output = "No VMs with outdated/too many snapshots found.";
++          }
++       $state = 0;
++       }
++
++    return ($state, $output);
++    }
++
++sub check_snapshot_age
++    {
++    my $vm_name = shift;
++    my $vm_snaplist = shift;
++    my $output = "";
++    my $state = 0;
++    $multiline = "<br>";
++    foreach my $vm_snap (@{$vm_snaplist})
++            {
++            if ($vm_snap->{childSnapshotList})
++               {
++               my ($cstate, $coutput) = check_snapshot_age($vm_name, $vm_snap->{childSnapshotList});
++               if ($cstate)
++                  {
++                  $output = $output . $multiline . $coutput;
++                  $state = final_state($state, $cstate);
++                  }
++               }
++
++            my $epoch_snap = str2time( $vm_snap->{createTime} );
++            my $days_snap = ( ( time() - $epoch_snap ) / 86400 );
++            my $tstate = check_against_threshold($days_snap);
++            if ($tstate)
++               {
++               $output = $output . $multiline . sprintf "Snapshot \"%s\" (VM: '%s') is %0.1f days old",
++                $vm_snap->{name}, $vm_name, $days_snap;
++               $state = final_state($state, $tstate);
++               }
++            }
++    return ($state, $output);
++    }
++
++sub check_snapshot_count
++    {
++    my $vm_name = shift;
++    my $vm_snaplist = shift;
++    my $vm_snapcount = shift;
++    my $recursion = shift || 0;
++    my $output = "";
++    my $state = 0;
++    $multiline = "<br>";
++
++    foreach my $vm_snap (@{$vm_snaplist})
++            {
++            if ($vm_snap->{childSnapshotList})
++               {
++               my ($cstate, $coutput) = check_snapshot_count($vm_name, $vm_snap->{childSnapshotList}, $vm_snapcount, 1);
++               }
++               $vm_snapcount->{$vm_name}++;
++            }
++            if ($recursion == 0)
++               {
++               my $tstate = check_against_threshold($vm_snapcount->{$vm_name});
++               $output = $output . $multiline . sprintf "VM '%s' has %d snapshots",
++                   $vm_name, $vm_snapcount->{$vm_name};
++               $state = final_state($state, $tstate);
++               return ($state, $output);
++               }
++    }
++
++sub final_state
++    {
++    my ($state1, $state2) = @_;
++    my $final_state = 0;
++    if ($state1)
++       {
++       if ($state2 == 2)
++          {
++          return $state2;
++          }
++          elsif ($state1 == 1 && $state2 == 3)
++          {
++          return $state1;
++          }
++          else
++          {
++          return $state1;
++          }
++       }
++       else
++       {
++       return $state2;
++       }
++    }
++# A module always must end with a returncode of 1. So placing 1 at the end of a module 
++# is a common method to ensure this.
++1;
+-- 
+1.8.3.1
+
