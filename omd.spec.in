@@ -221,8 +221,8 @@ else
     rm -f /omd
     ls -1 /etc/apache2/vhosts.d/vhost-ssl-omd.conf /etc/httpd/conf.d/ssl.conf 2>/dev/null | \
       while read file; do
-        if ! grep /omd/apache/ $file >/dev/null 2>&1; then
-          sed -i -e '/Include.* \/omd\/apache/d' $file
+        if grep /omd/apache/ $file >/dev/null 2>&1; then
+          sed -i -e '/Include.*\/omd\/apache/d' $file
         fi
       done
 

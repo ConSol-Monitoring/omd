@@ -47,8 +47,8 @@ case "$1" in
 	  rm -f $APACHE_OMD_CONF
       ls -1 /etc/apache2/sites-available/*default*.conf 2>/dev/null | \
         while read file; do
-          if ! grep /omd/apache/ $file >/dev/null 2>&1; then
-            sed -i -e '/Include.* \/omd\/apache/d' $file
+          if grep /omd/apache/ $file >/dev/null 2>&1; then
+            sed -i -e '/Include.*\/omd\/apache/d' $file
           fi
         done
 	  rm -f /omd
