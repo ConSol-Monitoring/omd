@@ -372,6 +372,7 @@ sub test_url {
         my $now = time();
         my $waitfor = $test->{'waitfor'};
         my $found   = 0;
+        ok(1, "waiting for '$waitfor' on ".$test->{'url'});
         while($now < $start + 120) {
             if($page->{'content'} =~ m/$waitfor/mx) {
                 ok(1, "content ".$waitfor." found after ".($now - $start)."seconds");
@@ -382,7 +383,8 @@ sub test_url {
             $now = time();
             $page = _request($test);
         }
-        fail("content did not occur within 60 seconds") unless $found;
+        carp("content (".$waitfor.") did not occur within 120 seconds") unless $found;
+        fail("content (".$waitfor.") did not occur within 120 seconds") unless $found;
         return $page;
     }
 
