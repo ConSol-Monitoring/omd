@@ -80,18 +80,13 @@ class ThrukCli(object):
             hosts = []
         return hosts
 
-    def get_service(self, host, service):
-        try:
-            service = self.get('status.cgi?view_mode=json&host=%s&service=%s&style=servicedetail' % (host, service))
-            service = json.loads(service)
-        except Exception, e:
-            service = []
-        return service
-
     def get_services(self, host, service):
         try:
             services = self.get('status.cgi?view_mode=json&host=%s&service=%s&style=detail' % (host, service))
             self.services = json.loads(services)
+            for s in self.services:
+                if not "peer_name" in s and "peer_key" in s and s["peer_key"] in self.backends:
+                    s["peer_name"] = self.backends[s["peer_key"]]["peer_name"]
         except Exception, e:
             self.services = []
         #return self.services
