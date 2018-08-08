@@ -268,7 +268,7 @@ index 0f2033f..05448ab 100644
         print "\n";
 +       print "Snapshots\n";
 +       print "-------------\n";
-+       print "-S, --select=snapshots              List vm's wich have snapshots older or bigger than a certain threshold\n";
++       print "-S, --select=snapshots              List vm's which have snapshots older or bigger than a certain threshold\n";
 +       print "-w, --warning=<threshold>           Warning threshold.\n";
 +       print "-c, --critical=<threshold>          Critical threshold.\n";
 +       print "-B, --exclude=<black_list>          Blacklist VMs.\n";
