@@ -13,7 +13,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 1379 );
+plan( tests => 1376 );
 
 ##################################################
 # create our test site
@@ -88,7 +88,6 @@ for my $report (@{$reports}) {
     push @{$tests}, (
       { cmd => "/bin/su - $site -c './bin/thruk -A omdadmin \"/thruk/cgi-bin/reports2.cgi?action=save&report=9999&".join('&', @{$args})."\"'",
                like => "/OK - report updated/" },
-      { cmd => "/bin/su - $site -c 'omd reload crontab'", like => [ '/OK/' ] },
       { cmd => "/bin/su - $site -c '/usr/bin/crontab -l | grep -i thruk | grep -v cron.d'", like => [ '/9999/' ] },
       { cmd => "/bin/su - $site -c './bin/thruk -a report=9999 --local'", like => [ '/%PDF\-1\.4/', '/%%EOF/' ] },
       { cmd => "/bin/su - $site -c './bin/thruk -A omdadmin \"/thruk/cgi-bin/reports2.cgi?action=remove&report=9999\"'", like => '/OK - report removed/' },
@@ -228,10 +227,10 @@ for my $core (qw/nagios naemon/) {
     ##################################################
     # and request some pages
     for my $url ( @{$urls} ) {
-        TestUtils::test_url($url);
+        TestUtils::test_url($url) or BAIL_OUT("failed");
     }
     for my $url ( @{$own_urls} ) {
-        TestUtils::test_url($url);
+        TestUtils::test_url($url) or BAIL_OUT("failed");
     }
 
     my $log  = "/omd/sites/$site/var/log/thruk.log";
