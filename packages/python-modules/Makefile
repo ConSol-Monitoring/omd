@@ -48,7 +48,7 @@ MODULES += pycryptodome-3.4.5.tar.gz
 MODULES += pysnmp-4.3.5.tar.gz
 MODULES += pywbem-0.7.0.tar.gz
 MODULES += requests-2.10.0.tar.gz
-MODULES += prometheus_client-0.0.17.tar.gz
+MODULES += prometheus_client-0.3.1.tar.gz
 MODULES += nagiosplugin-1.2.4.tar.gz
 MODULES += pysmbc-1.0.15.8.tar.gz
 
