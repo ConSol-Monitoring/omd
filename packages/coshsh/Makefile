@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 NAME=coshsh
-VERSION=5.0
+VERSION=5.1
 COSHSH=$(NAME)-$(VERSION)
 
 build:
