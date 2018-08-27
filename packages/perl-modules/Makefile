@@ -199,7 +199,7 @@ MODULES = \
           Log-Dispatch-2.44.tar.gz \
           Monitoring-Plugin-0.40.tar.gz \
           Nagios-Plugin-0.36.tar.gz \
-          Plack-1.0045.tar.gz \
+          Plack-1.0047.tar.gz \
           namespace-clean-0.27.tar.gz \
           List-UtilsBy-0.10.tar.gz \
           List-AllUtils-0.14.tar.gz \
