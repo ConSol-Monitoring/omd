@@ -40,7 +40,7 @@ case "$1" in
     RequestHeader set X-WEBAUTH-USER %{REMOTE_USER}e
 </Location>
 EOF
-        sed -e 's%^\*url:.*$%    url: "http://'$CONFIG_PROMETHEUS_TCP_ADDR:$PORT'/'$OMD_SITE'/prometheus%' -i $OMD_ROOT/etc/prometheus/grafana_datasources.yml
+        sed -e 's%^\ *url:.*$%    url: http://'$CONFIG_PROMETHEUS_TCP_ADDR:$PORT'/'$OMD_SITE'/prometheus%' -i $OMD_ROOT/etc/prometheus/grafana_datasources.yml
     ;;
     depends)
         [ "$CONFIG_PROMETHEUS" = on ]
