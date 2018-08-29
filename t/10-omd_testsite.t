@@ -58,7 +58,7 @@ my $tests = [
   { cmd => $omd_bin." config $site2 show APACHE_TCP_PORT",  like => '/^5001$/' },
   { cmd => "/usr/bin/find /omd/sites/$site2/ -not -user $site2 -ls",  like => '/^\s*$/' },
   { cmd => "/bin/df -k /omd/sites/$site2/tmp/.", like => '/tmpfs/m' },
-  { cmd => $omd_bin." mv $site2 $site3", like => '/Moving site '.$site2.' to '.$site3.'.../' },
+  { cmd => $omd_bin." mv $site2 $site3", like => '/Moving site '.$site2.' to '.$site3.'.../', errlike => '/Error patching template file/' }, # patching will fail for a grafana datasource files
   { cmd => $omd_bin." config $site3 show APACHE_TCP_PORT",  like => '/^5001$/' },
   { cmd => "/usr/bin/find /omd/sites/$site3/ -not -user $site3 -ls",  like => '/^\s*$/' },
   { cmd => "/bin/df -k /omd/sites/$site3/tmp/.", like => '/tmpfs/m' },
@@ -73,7 +73,7 @@ my $tests = [
                                          errlike => '/Apache port \d+ is in use\. I\'ve choosen \d+ instead\./' },
   { cmd => "/usr/bin/id -u $site2",      like => '/7019/' },
   { cmd => "/usr/bin/id -g $site2",      like => '/7020/' },
-  { cmd => $omd_bin." mv -u 7021 -g 7022 $site2 $site3", like => '/Moving site '.$site2.' to '.$site3.'.../' },
+  { cmd => $omd_bin." mv -u 7021 -g 7022 $site2 $site3", like => '/Moving site '.$site2.' to '.$site3.'.../', errlike => '/Error patching template file/' }, # patching will fail for a grafana datasource files
   { cmd => "/usr/bin/id -u $site3",      like => '/7021/' },
   { cmd => "/usr/bin/id -g $site3",      like => '/7022/' },
   { cmd => $omd_bin." rm $site",         like => '/Restarting Apache...\s*OK/', stdin => "yes\n" },
