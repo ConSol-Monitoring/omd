@@ -52,7 +52,7 @@
 	# The address is controlled by omd itself. Do not change it here.
 	# Instead use 'omd config INFLUXDB_HTTP_TCP_PORT set <port>'
 	#
-	Address = "http://127.0.0.1:8086"
+	Address = "http://###CONFIG_INFLUXDB_HTTP_TCP_PORT###"
 	#
 	# also keep this comments to reduce the merge conflicts during updates
 	##############

@@ -5,7 +5,7 @@ datasources:
     type: sni-pnp-datasource
     access: proxy
     orgId: 1 
-    url: https://127.0.0.1:5000/###SITE###/pnp4nagios
+    url: https://127.0.0.1:###CONFIG_APACHE_TCP_PORT###/###SITE###/pnp4nagios
     withCredentials: true
     isDefault: false
     editable: false

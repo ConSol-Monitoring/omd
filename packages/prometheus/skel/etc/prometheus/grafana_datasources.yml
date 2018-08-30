@@ -11,6 +11,6 @@ datasources:
     type: prometheus
     access: proxy
     orgId: 1
-    url: http://127.0.0.1:9090/###SITE###/prometheus
+    url: http://127.0.0.1:###CONFIG_PROMETHEUS_TCP_PORT###/###SITE###/prometheus
     isDefault: false
     editable: false

@@ -11,7 +11,7 @@ datasources:
     type: influxdb
     access: proxy
     orgId: 1
-    url: http://127.0.0.1:8086
+    url: http://###CONFIG_INFLUXDB_HTTP_TCP_PORT###
     user: grafana
     password: grafana
     database: nagflux
@@ -22,7 +22,7 @@ datasources:
     type: influxdb
     access: proxy
     orgId: 1
-    url: http://127.0.0.1:8086
+    url: http://###CONFIG_INFLUXDB_HTTP_TCP_PORT###
     user: grafana
     password: grafana
     database: _internal
@@ -33,7 +33,7 @@ datasources:
     type: influxdb
     access: proxy
     orgId: 1
-    url: http://127.0.0.1:8086
+    url: http://###CONFIG_INFLUXDB_HTTP_TCP_PORT###
     user: grafana
     password: grafana
     database: sakuli

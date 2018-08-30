@@ -16,7 +16,7 @@ case "$1" in
     set)
         PORT=$($OMD_ROOT/lib/omd/port_is_used GRAFANA_TCP_PORT $2)
         sed -e 's/^http_port = .*$/http_port = '$PORT'/' -i $OMD_ROOT/etc/grafana/grafana.ini
-        sed -e 's/127.0.0.1:[0-9]*/127.0.0.1:'$PORT'/g'  -i $OMD_ROOT/etc/apache/conf.d/grafana.conf
+        sed -e 's/127.0.0.1:[^ \/]*/127.0.0.1:'$PORT'/g'  -i $OMD_ROOT/etc/apache/conf.d/grafana.conf
         if [ "$PORT" != "$2" ] ; then
             echo "$PORT"
         fi

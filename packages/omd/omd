@@ -754,6 +754,8 @@ def instantiate_skel(path):
             "###SITE###" : g_sitename,
             "###ROOT###" : g_sitedir,
         }
+        for hook_name in g_site_conf:
+            replacements["###CONFIG_%s###" % hook_name] = g_site_conf[hook_name]
         return replace_tags(t, replacements)
     except:
         return "" # e.g. due to permission error
@@ -875,6 +877,8 @@ def patch_template_file(src, dst, old, new):
             "###SITE###" : site,
             "###ROOT###" : site_dir(site),
         }
+        for hook_name in g_site_conf:
+            replacements["###CONFIG_%s###" % hook_name] = g_site_conf[hook_name]
         filename = "%s.skel.%s" % (dst, site)
         file(filename, "w").write(replace_tags(content, replacements))
         try_chown(filename, new)
@@ -997,6 +1001,8 @@ def merge_update_file(relpath, old_version, new_version, skel_path = None):
         "###SITE###" : g_sitename,
         "###ROOT###" : g_sitedir,
     }
+    for hook_name in g_site_conf:
+        replacements["###CONFIG_%s###" % hook_name] = g_site_conf[hook_name]
     user_path = g_sitedir + "/" + relpath
     content = file(user_path).read()
     permissions = os.stat(user_path).st_mode
@@ -1186,6 +1192,8 @@ def update_file(relpath, old_version, new_version, userdir, old_perms, old_skel 
         "###SITE###" : g_sitename,
         "###ROOT###" : g_sitedir,
     }
+    for hook_name in g_site_conf:
+        replacements["###CONFIG_%s###" % hook_name] = g_site_conf[hook_name]
 
     old_path = old_skel + "/" + relpath
     new_path = new_skel + "/" + relpath
@@ -3057,6 +3065,8 @@ def main_reset(args, options={}):
         "###SITE###" : g_sitename,
         "###ROOT###" : sitedir,
     }
+    for hook_name in g_site_conf:
+        replacements["###CONFIG_%s###" % hook_name] = g_site_conf[hook_name]
     skelroot = "/omd/versions/%s/skel" % OMD_VERSION
     read_skel_permissions()
 
