@@ -57,6 +57,7 @@ PACKAGES=freetds \
          snmptrapd \
          downtime-api \
          grafana-pnp-datasource \
+         grafana-thruk-datasource \
          sakuli
 
 include Makefile.omd
