@@ -13,7 +13,7 @@ install:
 skel:
 	mkdir -p $(SKEL)/var/grafana/plugins
 	tar zxf $(SRC) -C $(SKEL)/var/grafana/plugins
-	mv $(SKEL)/var/grafana/plugins/$(NAME)-$(VERSION) $(SKEL)/var/grafana/plugins/pnp-rrd-datasource
+	mv $(SKEL)/var/grafana/plugins/$(NAME)-$(VERSION) $(SKEL)/var/grafana/plugins/sni-thruk-datasource
 
 clean:
 
