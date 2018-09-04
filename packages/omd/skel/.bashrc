@@ -43,6 +43,8 @@ if [ "$PS1" ]; then
 
   if [ -f /etc/bash_completion ]; then
     . /etc/bash_completion
+  fi
+  if [ -f /etc/bash_completion ] || [ -d /etc/bash_completion.d ]; then
     for file in ~/etc/bash_completion.d/*; do . $file; done
   fi
 fi
