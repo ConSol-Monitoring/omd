@@ -17,7 +17,7 @@ my @uname = POSIX::uname();
 #if($uname[3] =~ m/ubuntu/i) {
 #  plan( skip_all => "MySQL on Ubuntu does not work due to AppArmor restrictions" );
 #} else {
-  plan( tests => 63 );
+  plan( tests => 71 );
 #}
 
 ##################################################
@@ -39,6 +39,8 @@ my $tests = [
   { cmd => "/bin/su - $site -c 'thruk -a logcacheimport -y --local'", like => [ '/running import for site '.$site.'/' ] },
   { cmd => "/bin/su - $site -c 'mysql thruk_logs'", stdin => "show tables;\n", like => [ '/_status/', '/_log/' ] },
   { cmd => "/bin/su - $site -c 'thruk logcache update'", like => [ '/log items from 1 site successfully in/' ] },
+  { cmd => "/bin/su - $site -c './share/thruk/examples/get_logs ./var/naemon/naemon.log'", like => '/^$/' },
+  { cmd => "/bin/su - $site -c './share/thruk/examples/get_logs -n ./var/naemon/naemon.log'", like => '/^$/' },
   { cmd => "/bin/su - $site -c 'thruk logcache drop -y'", like => [ '/OK - droped logcache for/' ] },
   { cmd => "/bin/su - $site -c 'mysql thruk_logs'", stdin => "show tables;\n", like => [ '/^$/' ] },
   { cmd => $omd_bin." stop   $site" },

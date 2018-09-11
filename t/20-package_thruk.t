@@ -13,7 +13,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 1376 );
+plan( tests => 1380 );
 
 ##################################################
 # create our test site
@@ -39,6 +39,10 @@ push @INC, '/omd/sites/'.$site.'/share/thruk/lib';
 use_ok('Thruk::Utils::Cache');
 use_ok('Thruk::Config');
 set_test_user_token();
+
+##################################################
+# test examples
+TestUtils::test_command({ cmd => "/bin/su - $site -c './share/thruk/examples/get_logs -n ./var/naemon/naemon.log'", like => '/^$/' });
 
 
 my $reports = [
