@@ -8,7 +8,7 @@ next:
             - add WEB_ALIAS hook to define an url alias
             - add WEB_REDIRECT hook to enable redirect from / to /sitename
           - Naemon update to 1.0.8
-          - InfluxDB: update to 1.5.4
+          - InfluxDB: update to 1.6.2
             - add INFLUXDB_MODE hook to support ssl
           - Go update to 1.9.7
           - Go update to 1.10.3
