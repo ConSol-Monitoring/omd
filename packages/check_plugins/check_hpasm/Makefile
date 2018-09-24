@@ -1,7 +1,7 @@
 include ../../../Makefile.omd
 
 NAME = check_hpasm
-VERSION = 4.7.5.5
+VERSION = 4.8
 DIR = $(NAME)-$(VERSION)
 
 .PHONY: skel
