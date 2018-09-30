@@ -192,7 +192,7 @@ my $own_urls = [
 ];
 
 my $cookie_urls = [
-  { url => '/thruk/cgi-bin/tac.cgi', like => '/Password/', unlike => [ '/internal server error/'] },
+  { url => '/thruk/cgi-bin/tac.cgi', like => '/Password/', unlike => [ '/internal server error/'], code => 401 },
 ];
 
 
