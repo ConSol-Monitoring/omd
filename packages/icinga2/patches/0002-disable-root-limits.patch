@@ -1,0 +1,10 @@
+--- a/lib/base/application.cpp	2018-10-01 17:36:56.631595994 +0200
++++ b/lib/base/application.cpp	2018-10-01 17:38:07.857401831 +0200
+@@ -164,6 +164,7 @@
+ 
+ void Application::SetResourceLimits()
+ {
++    return;
+ #ifdef __linux__
+ 	rlimit rl;
+ 

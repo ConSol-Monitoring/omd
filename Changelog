@@ -18,7 +18,7 @@ next:
           - Prometheus Pushgateway update to 0.5.2
           - Prometheus node_exporter update to 0.16.0
           - Prometheus Alertmanager update to 0.15.2
-          - Icinga2 update to 2.8.4
+          - Icinga2 update to 2.9.2
             - add ido features (experimental)
             - add ido omd config hook (experimental)
           - Thruk:
