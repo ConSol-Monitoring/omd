@@ -1,0 +1,304 @@
+From 10a3079a0fe6e01ae6eb593cac486d545806bdd8 Mon Sep 17 00:00:00 2001
+From: Sven Nierlein <sven@nierlein.de>
+Date: Fri, 5 Oct 2018 11:51:44 +0200
+Subject: [PATCH] fix pending dependencies
+
+right now we did only check the state during dependency checks. But for pending hosts
+and services the state is usually OK/UP so the check passed. For pending flag checks
+we have to look at the has_been_checked flag as well. This leads to the situation where
+services checks will be run if the master service is in pending state even if the service
+has pending service execution failure flag set.
+---
+ src/naemon/checks_host.c        |  10 ++
+ src/naemon/checks_service.c     |  12 +++
+ tests.mk                        |   8 +-
+ tests/test-check-dependencies.c | 161 ++++++++++++++++++++++++++++++++
+ 4 files changed, 190 insertions(+), 1 deletion(-)
+ create mode 100644 tests/test-check-dependencies.c
+
+diff --git a/src/naemon/checks_host.c b/src/naemon/checks_host.c
+index d555f092..c0082bc7 100644
+--- a/src/naemon/checks_host.c
++++ b/src/naemon/checks_host.c
+@@ -232,7 +232,9 @@ static int run_async_host_check(host *hst, int check_options, double latency)
+ 		}
+ 
+ 		/* check host dependencies for execution */
++		log_debug_info(DEBUGL_CHECKS, 0, "Host '%s' checking dependencies...\n", hst->name);
+ 		if (check_host_dependencies(hst, EXECUTION_DEPENDENCY) == DEPENDENCIES_FAILED) {
++			log_debug_info(DEBUGL_CHECKS, 0, "Host '%s' failed dependency check. Aborting check\n", hst->name);
+ 			return ERROR;
+ 		}
+ 	}
+@@ -1157,6 +1159,8 @@ int check_host_dependencies(host *hst, int dependency_type)
+ 	int state = STATE_UP;
+ 	time_t current_time = 0L;
+ 
++	log_debug_info(DEBUGL_CHECKS, 0, "Host '%s' check_host_dependencies()\n", hst->name);
++
+ 	if (dependency_type == NOTIFICATION_DEPENDENCY) {
+ 		list = hst->notify_deps;
+ 	} else {
+@@ -1182,10 +1186,16 @@ int check_host_dependencies(host *hst, int dependency_type)
+ 		else
+ 			state = temp_host->current_state;
+ 
++		log_debug_info(DEBUGL_CHECKS, 1, "  depending on host '%s' with state: %d / has_been_checked: %d\n", temp_host->name, state, temp_host->has_been_checked);
++
+ 		/* is the host we depend on in state that fails the dependency tests? */
+ 		if (flag_isset(temp_dependency->failure_options, 1 << state))
+ 			return DEPENDENCIES_FAILED;
+ 
++		/* check for pending flag */
++		if(temp_host->has_been_checked == FALSE && flag_isset(temp_dependency->failure_options, OPT_PENDING))
++			return DEPENDENCIES_FAILED;
++
+ 		/* immediate dependencies ok at this point - check parent dependencies if necessary */
+ 		if (temp_dependency->inherits_parent == TRUE) {
+ 			if (check_host_dependencies(temp_host, dependency_type) != DEPENDENCIES_OK)
+diff --git a/src/naemon/checks_service.c b/src/naemon/checks_service.c
+index e1056f1a..93cca540 100644
+--- a/src/naemon/checks_service.c
++++ b/src/naemon/checks_service.c
+@@ -138,6 +138,8 @@ static void handle_service_check_event(struct nm_event_execution_properties *evp
+ 	struct timeval event_runtime;
+ 	int options = temp_service->check_options;
+ 
++    log_debug_info(DEBUGL_CHECKS, 0, "Service '%s' on host '%s' handle_service_check_event()...\n", temp_service->description, temp_service->host_name);
++
+ 	if(evprop->execution_type == EVENT_EXEC_NORMAL) {
+ 
+ 		/* get event latency */
+@@ -189,7 +191,9 @@ static void handle_service_check_event(struct nm_event_execution_properties *evp
+ 			}
+ 
+ 			/* check service dependencies for execution */
++			log_debug_info(DEBUGL_CHECKS, 0, "Service '%s' on host '%s' checking dependencies...\n", temp_service->description, temp_service->host_name);
+ 			if (check_service_dependencies(temp_service, EXECUTION_DEPENDENCY) == DEPENDENCIES_FAILED) {
++				log_debug_info(DEBUGL_CHECKS, 0, "Service '%s' on host '%s' failed dependency check. Aborting check\n", temp_service->description, temp_service->host_name);
+ 				return;
+ 			}
+ 
+@@ -1156,6 +1160,8 @@ int check_service_dependencies(service *svc, int dependency_type)
+ 	int state = STATE_OK;
+ 	time_t current_time = 0L;
+ 
++	log_debug_info(DEBUGL_CHECKS, 0, "Service '%s' on host '%s' check_service_dependencies()\n", svc->description, svc->host_name);
++
+ 	/* only check dependencies of the desired type */
+ 	if (dependency_type == NOTIFICATION_DEPENDENCY)
+ 		list = svc->notify_deps;
+@@ -1182,10 +1188,16 @@ int check_service_dependencies(service *svc, int dependency_type)
+ 		else
+ 			state = temp_service->current_state;
+ 
++		log_debug_info(DEBUGL_CHECKS, 1, "  depending on service '%s' on host '%s' with state: %d / has_been_checked: %d\n", temp_service->description, temp_service->host_name, state, temp_service->has_been_checked);
++
+ 		/* is the service we depend on in state that fails the dependency tests? */
+ 		if (flag_isset(temp_dependency->failure_options, 1 << state))
+ 			return DEPENDENCIES_FAILED;
+ 
++		/* check for pending flag */
++		if(temp_service->has_been_checked == FALSE && flag_isset(temp_dependency->failure_options, OPT_PENDING))
++			return DEPENDENCIES_FAILED;
++
+ 		/* immediate dependencies ok at this point - check parent dependencies if necessary */
+ 		if (temp_dependency->inherits_parent == TRUE) {
+ 			if (check_service_dependencies(temp_service, dependency_type) != DEPENDENCIES_OK)
+diff --git a/tests.mk b/tests.mk
+index e8d830cd..e68a30e7 100644
+--- a/tests.mk
++++ b/tests.mk
+@@ -80,11 +80,16 @@ tests_test_scheduled_downtimes_LDADD = $(TESTSLDADD)
+ tests_test_scheduled_downtimes_LDFLAGS = $(TESTSLDFLAGS)
+ tests_test_scheduled_downtimes_CPPFLAGS = $(TESTSCPPFLAGS)
+ 
+-tests_test_check_scheduling = tests/test-check-scheduling.c
++tests_test_check_scheduling_SOURCES = tests/test-check-scheduling.c
+ tests_test_check_scheduling_LDADD =  $(TESTSLDADD)
+ tests_test_check_scheduling_LDFLAGS = $(TESTSLDFLAGS)
+ tests_test_check_scheduling_CPPFLAGS = $(TESTSCPPFLAGS)
+ 
++tests_test_check_dependencies_SOURCES = tests/test-check-dependencies.c
++tests_test_check_dependencies_LDADD =  $(TESTSLDADD)
++tests_test_check_dependencies_LDFLAGS = $(TESTSLDFLAGS)
++tests_test_check_dependencies_CPPFLAGS = $(TESTSCPPFLAGS)
++
+ tests_test_arith_SOURCES = tests/test-arith.c
+ tests_test_arith_LDADD =  $(TESTSLDADD)
+ tests_test_arith_CFLAGS =  $(CFLAGS) -DNM_SKIP_BUILTIN_OVERFLOW_CHECKS=1
+@@ -163,6 +168,7 @@ check_PROGRAMS += \
+ 	tests/test-check-result-processing \
+ 	tests/test-scheduled-downtimes \
+ 	tests/test-check-scheduling \
++	tests/test-check-dependencies \
+ 	tests/test-obj-config-parse \
+ 	tests/test-utils \
+ 	tests/test-log \
+diff --git a/tests/test-check-dependencies.c b/tests/test-check-dependencies.c
+new file mode 100644
+index 00000000..72c0893b
+--- /dev/null
++++ b/tests/test-check-dependencies.c
+@@ -0,0 +1,161 @@
++#include <check.h>
++#include <glib.h>
++#include "naemon/checks.h"
++#include "naemon/checks_host.c"
++#include "naemon/checks_service.c"
++
++#define TARGET_SERVICE_NAME "my_service"
++#define TARGET_DEP_SERVICE_NAME "my_dependency"
++#define TARGET_HOST_NAME "my_host"
++#define TARGET_DEP_HOST_NAME "my_dep_host"
++
++static host *hst;
++static host *dep_hst;
++static service *svc;
++static service *dep_svc;
++static command *cmd;
++void setup (void) {
++
++	init_event_queue();
++	init_objects_host(2);
++	init_objects_service(2);
++	init_objects_command(1);
++
++	cmd = create_command("my_command", "/bin/true");
++	ck_assert(cmd != NULL);
++	register_command(cmd);
++
++	hst = create_host(TARGET_HOST_NAME);
++	ck_assert(hst != NULL);
++	hst->check_command_ptr = cmd;
++	hst->check_command = nm_strdup("something or other");
++	register_host(hst);
++
++	dep_hst = create_host(TARGET_DEP_HOST_NAME);
++	ck_assert(dep_hst != NULL);
++	dep_hst->check_command_ptr = cmd;
++	dep_hst->check_command = nm_strdup("something or other");
++	register_host(dep_hst);
++
++	svc = create_service(hst, TARGET_SERVICE_NAME);
++	ck_assert(svc != NULL);
++	svc->check_command_ptr = cmd;
++	register_service(svc);
++
++	dep_svc = create_service(hst, TARGET_DEP_SERVICE_NAME);
++	ck_assert(dep_svc != NULL);
++	dep_svc->check_command_ptr = cmd;
++	register_service(dep_svc);
++}
++
++void teardown (void) {
++	destroy_event_queue();
++	destroy_objects_command();
++	destroy_objects_service();
++	destroy_objects_host();
++}
++
++START_TEST(host_execution_no_dependency)
++{
++	int result;
++
++	result = check_host_dependencies(hst, EXECUTION_DEPENDENCY);
++
++	ck_assert(result == DEPENDENCIES_OK);
++}
++END_TEST
++
++
++START_TEST(service_execution_no_dependency)
++{
++	int result;
++
++	result = check_service_dependencies(svc, EXECUTION_DEPENDENCY);
++
++	ck_assert(result == DEPENDENCIES_OK);
++}
++END_TEST
++
++START_TEST(host_execution_dependency_pending)
++{
++	int result;
++	add_host_dependency(TARGET_HOST_NAME, TARGET_DEP_HOST_NAME, EXECUTION_DEPENDENCY, 0, OPT_PENDING, NULL);
++
++	dep_hst->has_been_checked = FALSE;
++	result = check_host_dependencies(hst, EXECUTION_DEPENDENCY);
++	ck_assert(result == DEPENDENCIES_FAILED);
++}
++END_TEST
++
++START_TEST(host_execution_dependency_down)
++{
++	int result;
++	add_host_dependency(TARGET_HOST_NAME, TARGET_DEP_HOST_NAME, EXECUTION_DEPENDENCY, 0, OPT_DOWN, NULL);
++	dep_hst->state_type = HARD_STATE;
++	dep_hst->current_state = STATE_UP;
++	dep_hst->has_been_checked = TRUE;
++	result = check_host_dependencies(hst, EXECUTION_DEPENDENCY);
++	ck_assert(result == DEPENDENCIES_OK);
++
++	dep_hst->current_state = STATE_DOWN;
++	result = check_host_dependencies(hst, EXECUTION_DEPENDENCY);
++	ck_assert(result == DEPENDENCIES_FAILED);
++}
++END_TEST
++
++START_TEST(service_execution_dependency_pending)
++{
++	int result;
++	add_service_dependency(TARGET_HOST_NAME, TARGET_SERVICE_NAME, TARGET_HOST_NAME, TARGET_DEP_SERVICE_NAME, EXECUTION_DEPENDENCY, 0, OPT_PENDING, NULL);
++
++	dep_svc->has_been_checked = FALSE;
++	result = check_service_dependencies(svc, EXECUTION_DEPENDENCY);
++	ck_assert(result == DEPENDENCIES_FAILED);
++}
++END_TEST
++
++START_TEST(service_execution_dependency_critical)
++{
++	int result;
++	add_service_dependency(TARGET_HOST_NAME, TARGET_SERVICE_NAME, TARGET_HOST_NAME, TARGET_DEP_SERVICE_NAME, EXECUTION_DEPENDENCY, 0, OPT_CRITICAL, NULL);
++	dep_svc->state_type = HARD_STATE;
++	dep_svc->current_state = STATE_OK;
++	dep_svc->has_been_checked = TRUE;
++	result = check_service_dependencies(svc, EXECUTION_DEPENDENCY);
++	ck_assert(result == DEPENDENCIES_OK);
++
++	dep_svc->current_state = STATE_CRITICAL;
++	result = check_service_dependencies(svc, EXECUTION_DEPENDENCY);
++	ck_assert(result == DEPENDENCIES_FAILED);
++}
++END_TEST
++
++Suite*
++check_dependencies_suite(void)
++{
++	Suite *s = suite_create("Check dependencies");
++	TCase *tc_deps = tcase_create("Check dependencies");
++	tcase_add_checked_fixture(tc_deps, setup, teardown);
++
++	tcase_add_test(tc_deps, host_execution_no_dependency);
++	tcase_add_test(tc_deps, host_execution_dependency_pending);
++	tcase_add_test(tc_deps, host_execution_dependency_down);
++
++	tcase_add_test(tc_deps, service_execution_no_dependency);
++	tcase_add_test(tc_deps, service_execution_dependency_pending);
++	tcase_add_test(tc_deps, service_execution_dependency_critical);
++	suite_add_tcase(s, tc_deps);
++
++	return s;
++}
++
++int main(void)
++{
++	int number_failed = 0;
++	Suite *s = check_dependencies_suite();
++	SRunner *sr = srunner_create(s);
++	srunner_run_all(sr, CK_ENV);
++	number_failed = srunner_ntests_failed(sr);
++	srunner_free(sr);
++	return (number_failed == 0) ? EXIT_SUCCESS : EXIT_FAILURE;
++}
