@@ -17,8 +17,8 @@ case "$1" in
        echo "off: use basic authentication"
    ;;
    set)
-       MUTEX="Mutex file:\${OMD_ROOT}/var/thruk/ rewrite-map"
-       if [ $(findmnt -T $OMD_ROOT/var/thruk -o FSTYPE -f -n 2>/dev/null | grep -c nfs) -eq 1 ]; then
+       MUTEX="Mutex file:\${OMD_ROOT}/var/ rewrite-map"
+       if [ $(findmnt -T $OMD_ROOT/var/ -o FSTYPE -f -n 2>/dev/null | grep -c nfs) -eq 1 ]; then
          # use pthread mutex in case var folder is on nfs
          MUTEX="Mutex pthread rewrite-map"
        fi
