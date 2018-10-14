@@ -41,6 +41,7 @@ PACKAGES=freetds \
          maintenance \
          gearmand \
          mod-gearman \
+         mod-gearman-worker-go \
          patch \
          nail \
          notifications-tt \
