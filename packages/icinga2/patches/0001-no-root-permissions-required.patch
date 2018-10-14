@@ -11,7 +11,7 @@
 -		Application::DeclarePkgDataDir(ICINGA_PKGDATADIR);
 -		Application::DeclareIncludeConfDir(ICINGA_INCLUDECONFDIR);
 +		Application::DeclarePrefixDir(std::string(getenv("OMD_ROOT")));
-+		Application::DeclareSysconfDir(std::string(getenv("OMD_ROOT")) + "/etc/icinga2");
++		Application::DeclareSysconfDir(std::string(getenv("OMD_ROOT")) + "/etc");
 +		Application::DeclareRunDir(std::string(getenv("OMD_ROOT")) + "/tmp/icinga2");
 +		Application::DeclareLocalStateDir(std::string(getenv("OMD_ROOT")) + "/var/icinga2");
 +		Application::DeclarePkgDataDir(std::string(getenv("OMD_ROOT")) + "/share/icinga2");
