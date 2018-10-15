@@ -24,7 +24,7 @@ next:
           - Thruk:
             - update to 2.22
             - disable shinken features plugin in default installation
-          - LMD: Update 1.3.3
+          - LMD: Update 1.3.5
           - Mod-Gearman: Update 3.0.6
 
 2.70     Mar 14 2018
