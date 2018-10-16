@@ -89,12 +89,12 @@ for my $core (qw/nagios icinga naemon/) {
     my $tests = [
       { cmd => "/bin/grep 'Event broker module.*$module.*initialized successfully' /omd/sites/$site/var/$core/$core.log", like => '/successfully/' },
       { cmd => "/bin/grep 'mod_gearman: initialized version ".$modgearman_version." \(libgearman ".$libgearman_version."\)' /omd/sites/$site/var/$core/$core.log", like => '/initialized/' },
-      { cmd => "/bin/su - $site -c 'bin/send_gearman --server=localhost:4730 --keyfile=etc/mod-gearman/secret.key --host=$host --message=test'" },
-      { cmd => "/bin/su - $site -c 'bin/send_gearman --server=localhost:4730 --keyfile=etc/mod-gearman/secret.key --host=$host --service=\"$service\" --message=test'" },
+      { cmd => "/bin/su - $site -c 'bin/send_gearman --server=127.0.0.1:4730 --keyfile=etc/mod-gearman/secret.key --host=$host --message=test'" },
+      { cmd => "/bin/su - $site -c 'bin/send_gearman --server=127.0.0.1:4730 --keyfile=etc/mod-gearman/secret.key --host=$host --service=\"$service\" --message=test'" },
       { cmd => "/bin/grep -i 'mod_gearman: ERROR' /omd/sites/$site/var/$core/$core.log", 'exit' => 1, like => '/^\s*$/' },
       { cmd => "/bin/grep -i 'mod_gearman: WARN' /omd/sites/$site/var/$core/$core.log", 'exit' => 1, like => '/^\s*$/' },
-      { cmd => "/bin/su - $site -c 'lib/$core/plugins/check_gearman -H localhost:4730'", like => '/check_gearman OK/' },
-      { cmd => "/bin/su - $site -c 'lib/$core/plugins/check_gearman -H localhost:4730 -q host'", like => '/check_gearman OK/' },
+      { cmd => "/bin/su - $site -c 'lib/$core/plugins/check_gearman -H 127.0.0.1:4730'", like => '/check_gearman OK/' },
+      { cmd => "/bin/su - $site -c 'lib/$core/plugins/check_gearman -H 127.0.0.1:4730 -q host'", like => '/check_gearman OK/' },
     ];
     for my $test (@{$tests}) {
         TestUtils::test_command($test);
@@ -109,7 +109,7 @@ for my $core (qw/nagios icinga naemon/) {
     );
 
     # verify the jobs done
-    my $test = { cmd => "/bin/su - $site -c 'lib/$core/plugins/check_gearman -H localhost:4730 -q worker_".hostname." -t 10 -s check'", like => [ '/check_gearman OK/' ] };
+    my $test = { cmd => "/bin/su - $site -c 'lib/$core/plugins/check_gearman -H 127.0.0.1:4730 -q worker_".hostname." -t 10 -s check'", like => [ '/check_gearman OK/' ] };
     TestUtils::test_command($test);
     chomp($test->{'stdout'});
     unlike($test->{'stdout'}, qr/jobs=0c/, "worker has jobs done: ".$test->{'stdout'});
