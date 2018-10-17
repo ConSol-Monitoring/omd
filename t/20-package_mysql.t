@@ -13,7 +13,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 71 );
+plan( tests => 75 );
 
 ##################################################
 # create our test site
@@ -30,6 +30,7 @@ my $tests = [
   { cmd => "/bin/su - $site -c 'mysql mysql'", stdin => "show tables;\n", like => [ '/user/', '/tables_priv/' ] },
   { cmd => $omd_bin." stop   $site" },
   { cmd => $omd_bin." config $site set THRUK_LOGCACHE on" },
+  { cmd => "/bin/su - $site -c 'rm etc/cron.d/thruk_logcache.auto'", like => [ '/^$/' ] }, # might already run otherwise
   { cmd => $omd_bin." start  $site" },
   { cmd => "/bin/su - $site -c 'thruk -a logcacheimport -y --local'", like => [ '/running import for site '.$site.'/' ] },
   { cmd => "/bin/su - $site -c 'mysql thruk_logs'", stdin => "show tables;\n", like => [ '/_status/', '/_log/' ] },
