@@ -14,7 +14,7 @@ GITBASE     = github.com/ConSol
 GITURL      = $(GITBASE)/$(NAME)
 DEPS_SRC    = deps.tar.gz
 # GIT TAG is set automatically by "make upstream" or "make package"
-GIT_TAG     = v1.0.0
+GIT_TAG     = ab85383
 
 .PHONY: skel
 
@@ -26,7 +26,7 @@ build:
 
 install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/bin
-	install -m 755 $(PWD)/$(GOPATH)/bin/$(NAME)  $(DESTDIR)$(OMD_ROOT)/bin/mod_gearman_worker-go
+	install -m 755 $(PWD)/$(GOPATH)/bin/mod_gearman_worker  $(DESTDIR)$(OMD_ROOT)/bin/mod_gearman_worker-go
 
 skel:
 
