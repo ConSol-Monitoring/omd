@@ -78,7 +78,7 @@ case "$1" in start|restart|reload|checkconfig|check)
     sed -ri "s/###ALERTMANAGER_TCP_ADDR###/$CONFIG_ALERTMANAGER_TCP_ADDR/g" $CFG_FILE
 esac
 
-OPTIONS="--config.file $CFG_FILE --web.listen-address=$CONFIG_ALERTMANAGER_TCP_ADDR:$CONFIG_ALERTMANAGER_TCP_PORT --web.external-url=http://${EXTERNAL_FQDN}/ts/alertmanager --storage.path=$DATA_DIR"
+OPTIONS="--config.file $CFG_FILE --web.listen-address=$CONFIG_ALERTMANAGER_TCP_ADDR:$CONFIG_ALERTMANAGER_TCP_PORT --web.external-url=http://${EXTERNAL_FQDN}/###SITE###/alertmanager --storage.path=$DATA_DIR"
 
 if [ -n "$CLUSTER_LISTEN_ADDRESS" ] ; then
        # Cluster mode active
