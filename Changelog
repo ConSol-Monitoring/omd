@@ -9,6 +9,8 @@ next:
             - add WEB_REDIRECT hook to enable redirect from / to /sitename
             - support uninstalling versions, even if sites use this version
               - site can be updated later by running omd update of the new version
+            - add --no-tmpfs option to "omd create"
+            - add "omd cleanup" command to remove unused omd versions
           - Naemon update to 1.0.8
           - InfluxDB: update to 1.6.4
             - add INFLUXDB_MODE hook to support ssl
