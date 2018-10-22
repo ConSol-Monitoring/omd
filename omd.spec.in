@@ -180,8 +180,13 @@ if [ $1 = 0 ] ; then
         then
             site=${link#/omd/sites/}
             site=${site%/version}
-            echo "Site $site is still using this version!" >&2
-            exit 1
+            echo "Site $site is still using this version, saving skel/ folder for later upgrade" >&2
+            omd stop $site >/dev/null 2>&1
+            rm -rf /omd/sites/$site/.backup_meta
+            mkdir /omd/sites/$site/.backup_meta
+            cp /omd/versions/$version/share/omd/skel.permissions /omd/sites/$site/.backup_meta/skel.permissions
+            cp -r /omd/versions/$version/skel /omd/sites/$site/.backup_meta/
+            chown -R $site:$site /omd/sites/$site/.backup_meta
         fi
     done
 fi

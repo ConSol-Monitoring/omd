@@ -7,6 +7,8 @@ next:
             - add build support for Fedora 28
             - add WEB_ALIAS hook to define an url alias
             - add WEB_REDIRECT hook to enable redirect from / to /sitename
+            - support uninstalling versions, even if sites use this version
+              - site can be updated later by running omd update of the new version
           - Naemon update to 1.0.8
           - InfluxDB: update to 1.6.4
             - add INFLUXDB_MODE hook to support ssl

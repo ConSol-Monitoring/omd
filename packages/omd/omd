@@ -3273,17 +3273,26 @@ def main_update(args, options={}):
     from_skelroot = "/omd/versions/%s/skel" % from_version
     to_skelroot = "/omd/versions/%s/skel" % to_version
 
+    backup_skel_path = os.path.join(g_sitedir, ".backup_meta")
+    if os.path.exists(os.path.join(backup_skel_path, 'skel')):
+        from_skelroot = os.path.join(backup_skel_path, 'skel')
+        sys.stdout.write("using backup skeleton path from: '%s'\n" % backup_skel_path)
+        old_perms = load_skel_permissions_for_path(backup_skel_path+'/skel.permissions')
+
     # First walk through skeleton files of new version
-    walk_skel(to_skelroot, update_file, (from_version, to_version, g_sitedir, old_perms), depth_first=False)
+    walk_skel(to_skelroot, update_file, (from_version, to_version, g_sitedir, old_perms, from_skelroot), depth_first=False)
 
     # Now handle files present in old but not in new skel files
-    walk_skel(from_skelroot, update_file, (from_version, to_version, g_sitedir, old_perms), depth_first=True, exclude_if_in = to_skelroot)
+    walk_skel(from_skelroot, update_file, (from_version, to_version, g_sitedir, old_perms, from_skelroot), depth_first=True, exclude_if_in = to_skelroot)
 
     # Change symbolic link pointing to new version
     create_version_symlink(g_sitename, to_version)
 
     # Let hooks do their work and update configuration.
     config_set_all()
+
+    if os.path.exists(backup_skel_path):
+        shutil.rmtree(backup_skel_path)
 
     call_scripts('post-update')
 
