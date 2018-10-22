@@ -3780,11 +3780,9 @@ class PackageManager:
 
     @classmethod
     def factory(self):
-        if os.path.exists("/etc/cma"):
-            return
-
         distro_code = g_info["DISTRO_CODE"]
         if distro_code.startswith("el") \
+           or distro_code.startswith("fc") \
            or distro_code.startswith("sles"):
             cls = PackageManagerRPM
         else:
