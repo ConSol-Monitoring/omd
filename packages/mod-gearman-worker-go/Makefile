@@ -14,7 +14,7 @@ GITBASE     = github.com/ConSol
 GITURL      = $(GITBASE)/$(NAME)
 DEPS_SRC    = deps.tar.gz
 # GIT TAG is set automatically by "make upstream" or "make package"
-GIT_TAG     = ab85383
+GIT_TAG     = 08a5cdc
 
 .PHONY: skel
 
