@@ -1,21 +1,25 @@
 include ../../Makefile.omd
 
 NAME = monitoring-plugins
-VERSION = 2.2
+VERSION = master
 DIR = $(NAME)-$(VERSION)
+URIPARSER=0.8.6
 
 CONFIGUREOPTS = \
     --prefix=$(OMD_ROOT) \
     --libexecdir=$(OMD_ROOT)/lib/nagios/plugins
 
-build:
+build: uriparser
 	rm -rf $(DIR)
 	tar xzf $(DIR).tar.gz
 	set -e ; for p in patches/*.patch ; do \
 	    echo "applying $$p..." ; \
 	    ( cd $(DIR) ; patch -p1 -b ) < $$p ; \
 	done
-	cd $(DIR) ; ./configure $(CONFIGUREOPTS)
+	cd $(DIR) ; \
+		URIPARSER="$(shell pwd)/uriparser-$(URIPARSER)/.libs/liburiparser.a" \
+		URIPARSER_CPPFLAGS="-I$(shell pwd)/uriparser-$(URIPARSER)/include" \
+		./configure $(CONFIGUREOPTS)
 	$(MAKE) -C $(DIR) all
 
 install:
@@ -40,7 +44,12 @@ install:
             cd $(DESTDIR)$(OMD_ROOT)/lib/naemon && ln -s ../nagios/plugins plugins ; \
 	fi
 
+uriparser:
+	tar jxf uriparser-$(URIPARSER).tar.bz2
+	cd uriparser-$(URIPARSER) && ./configure --disable-test --disable-doc && make
+
 skel:
 
 clean:
 	rm -rf $(DIR)
+	rm -rf uriparser-$(URIPARSER)

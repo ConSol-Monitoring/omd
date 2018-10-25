@@ -12,7 +12,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 28 );
+plan( tests => 36 );
 
 ##################################################
 # create our test site
@@ -27,6 +27,8 @@ my $tests = [
   { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_snmp'",     exit => 3, like => '/check_snmp: Could not parse arguments/' },
   { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_mysql'",exit => undef, like => '/Can\'t connect to local MySQL server through socket|Access denied for user|Open_tables/' },
   { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_logfiles'", exit => 3, like => '/Usage: check_logfiles/' },
+  { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -S -H 127.0.0.1 -p 9999'", exit => 2, like => '/HTTP CRITICAL - Unable to open TCP socket/' },
+  { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_curl -S -H 127.0.0.1 -p 9999'", exit => 2, like => '/HTTP CRITICAL - Invalid HTTP response received/' },
 ];
 for my $test (@{$tests}) {
     TestUtils::test_command($test);
