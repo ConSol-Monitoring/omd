@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 NAME       = grafana
-VERSION    = 5.3.1
+VERSION    = 5.3.2
 SRC        = $(NAME)-$(VERSION).tar.gz
 GOPATH     = go
 GOPKG      = 1.10
@@ -48,7 +48,7 @@ skel:
 clean:
 	rm -rf $(GOPATH)
 
-package: public
+package: public clean
 	$(GO) env
 	mkdir -p $(GOPATH)/src/github.com/grafana/
 	cd $(GOPATH)/src/github.com/grafana && \
