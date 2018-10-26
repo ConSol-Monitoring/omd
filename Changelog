@@ -31,6 +31,8 @@ next:
           - LMD: Update 1.3.5
           - Mod-Gearman: Update 3.0.6
             - add mod-gearman-worker-go
+          - Monitoring-Plugins
+            - add check_curl
 
 2.70     Mar 14 2018
           - OMD:
