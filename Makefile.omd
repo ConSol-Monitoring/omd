@@ -1,7 +1,7 @@
 # General settings included by all packages
 
-OMD_VERSION        = 2.70-labs-edition
-OMD_SERIAL         = 44
+OMD_VERSION        = 2.80-labs-edition
+OMD_SERIAL         = 45
 OMD_BASE           = /omd
 OMD_PHYSICAL_BASE  = /opt/omd
 OMD_ROOT           = $(OMD_BASE)/versions/$(OMD_VERSION)
