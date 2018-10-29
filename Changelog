@@ -18,6 +18,8 @@ This file documents the revision history for the Open Monitoring Distribution (L
           - Go update to 1.10.4
           - Grafana update to 5.3.2
             - set default fill to none for influxdb datasource
+            - new datasource for PNP
+            - new datasource for Thruks REST API
           - Prometheus update to 2.4.3
           - Prometheus Pushgateway update to 0.5.2
           - Prometheus node_exporter update to 0.16.0
