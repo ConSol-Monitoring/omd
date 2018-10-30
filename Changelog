@@ -1,5 +1,9 @@
 This file documents the revision history for the Open Monitoring Distribution (Labs Edition)
 
+next:
+          - Mod-Gearman:
+            - switch to go worker
+
 2.80     Oct 29 2018
           - OMD:
             - add SELinux support for centos/rhel and fedora
