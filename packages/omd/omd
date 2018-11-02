@@ -3194,11 +3194,13 @@ def main_update(args, options={}):
     # Target version: the version of the OMD binary
     to_version = OMD_VERSION
 
+    backup_skel_path = os.path.join(g_sitedir, ".backup_meta")
+
     # source and target are identical if 'omd update' is called
     # from within a site. In that case we make the user choose
     # the target version explicitely and the re-exec the bin/omd
     # of the target version he has choosen.
-    if from_version == to_version:
+    if from_version == to_version and not os.path.exists(os.path.join(backup_skel_path, 'skel')):
         possible_versions = [ v for v in omd_versions() if v != from_version ]
         possible_versions.sort(reverse=True)
         if len(possible_versions) == 0:
@@ -3250,7 +3252,6 @@ def main_update(args, options={}):
     from_skelroot = "/omd/versions/%s/skel" % from_version
     to_skelroot = "/omd/versions/%s/skel" % to_version
 
-    backup_skel_path = os.path.join(g_sitedir, ".backup_meta")
     if os.path.exists(os.path.join(backup_skel_path, 'skel')):
         from_skelroot = os.path.join(backup_skel_path, 'skel')
         sys.stdout.write("using backup skeleton path from: '%s'\n" % backup_skel_path)
