@@ -1,6 +1,9 @@
 This file documents the revision history for the Open Monitoring Distribution (Labs Edition)
 
 next:
+          - OMD:
+            - create random omdadmin password on omd create
+            - display warning if using the old default password
           - Mod-Gearman:
             - switch to go worker
             - update mod-gearman-worker-go to 1.0.2

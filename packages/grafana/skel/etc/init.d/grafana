@@ -21,7 +21,6 @@ LOGFILE=$LOG_DIR/grafana.log
 DAEMON=$OMD_ROOT/bin/grafana
 
 OPTIONS="--homepath=${GRAFANA_HOME} --pidfile=${PID_FILE} --config=${CONF_FILE} cfg:default.paths.data=${DATA_DIR} cfg:default.paths.logs=${LOG_DIR}"
-APIURL="http://omdadmin:omd@localhost:$CONFIG_GRAFANA_TCP_PORT/api"
 
 get_status() {
     pid=$( cat $PID_FILE 2>/dev/null )

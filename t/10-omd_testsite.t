@@ -12,7 +12,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 318 );
+plan( tests => 334 );
 
 my $omd_bin = TestUtils::get_omd_bin();
 
@@ -32,6 +32,7 @@ my $tests = [
   { cmd => $omd_bin." rm $site2",    stdin => "yes\n", 'exit' => undef, errlike => undef },
   { cmd => $omd_bin." rm $site2",    stdin => "yes\n", 'exit' => undef, errlike => undef },
   { cmd => $omd_bin." create $site", like => '/Created new site '.$site.'./' },
+  { cmd => "/bin/su - $site -c 'omd reset etc/htpasswd'", like => '/^$/' },
   { cmd => $omd_bin." sites",        like => '/^'.$site.'\s+\d+\.\d+( \(default\))?/m' },
   { cmd => $omd_bin." config $site show APACHE_TCP_PORT",  like => '/^5000$/' },
   { cmd => $omd_bin." config $site set APACHE_TCP_ADDR 127.0.0.2",  like => '/^$/' },
@@ -67,6 +68,7 @@ my $tests = [
   { cmd => $omd_bin." rm $site",         like => '/Restarting Apache...\s*OK/', stdin => "yes\n" },
   { cmd => $omd_bin." create -u 7017 -g 7018 $site",
                                          like => '/Created new site '.$site.'./' },
+  { cmd => "/bin/su - $site -c 'omd reset etc/htpasswd'", like => '/^$/' },
   { cmd => "/usr/bin/id -u $site",       like => '/7017/' },
   { cmd => "/usr/bin/id -g $site",       like => '/7018/' },
   { cmd => $omd_bin." cp -u 7019 -g 7020 $site $site2",
@@ -82,6 +84,7 @@ my $tests = [
 
   # --reuse
   { cmd => $omd_bin." create $site", like => '/Created new site '.$site.'./' },
+  { cmd => "/bin/su - $site -c 'omd reset etc/htpasswd'", like => '/^$/' },
   { cmd => $omd_bin." rm --reuse $site", stdin => "yes\n" },
   { cmd => "/usr/bin/id -u $site",       like => '/\d+/' },
   { cmd => "/usr/bin/id -g $site",       like => '/\d+/' },
@@ -107,6 +110,7 @@ my $tests = [
   { cmd => "/bin/sh -c \"rm /omd/sites/$site/etc/icinga/conf.d\""},
   { cmd => "/bin/su - $site -c 'omd diff'", like => ['/Changed content .profile/', '/Deleted etc\/icinga\/conf.d/'] },
   { cmd => "/bin/su - $site -c 'omd reset .profile etc/icinga/conf.d'"  },
+  { cmd => "/bin/su - $site -c 'omd reset etc/htpasswd'", like => '/^$/' },
   { cmd => "/bin/su - $site -c 'omd -v diff'", like => ['/^$/'] },
   { cmd => "/bin/sh -c \"rm /omd/sites/$site/etc/icinga/*.cfg\""},
   { cmd => "/bin/sh -c \"rm /omd/sites/$site/etc/icinga/conf.d\""},

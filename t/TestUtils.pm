@@ -290,6 +290,7 @@ sub create_test_site {
         print `mv /omd/sites/$site/etc/apache/conf.d/disable_nagios.conf /omd/sites/$site/etc/apache/conf.d/disable_nagios.off`;
         print `$omd_bin config $site set THRUK_COOKIE_AUTH off`;
         print `$omd_bin config $site set APACHE_MODE own`;
+        print `/bin/su - $site -c 'omd reset etc/htpasswd'`;
         restart_system_apache();
         return $site;
     }
