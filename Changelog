@@ -4,6 +4,8 @@ next:
           - OMD:
             - create random omdadmin password on omd create
             - display warning if using the old default password
+          - Thruk:
+            - update to 2.24-2
           - Mod-Gearman:
             - switch to go worker
             - update mod-gearman-worker-go to 1.0.2
