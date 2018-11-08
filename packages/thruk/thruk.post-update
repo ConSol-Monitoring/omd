@@ -5,5 +5,5 @@ if [ -s etc/cron.d/thruk.auto ]; then
     omd start nonexistant >/dev/null 2>&1 # hack to mount tmp filesystem since there is no omd mount (yet?)
     newversion=$(basename $(readlink version))
     sed -i etc/cron.d/thruk.auto -e "s|/omd/versions/[0-9\.]*/|/omd/versions/$newversion/|g" || echo "Updating Thruk Jobs Failed"
-    ./bin/thruk -a installcron > /dev/null
+    ./bin/thruk cron install > /dev/null
 fi

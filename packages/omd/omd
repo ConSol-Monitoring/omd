@@ -29,6 +29,8 @@ import abc
 import fcntl
 import subprocess
 import tarfile, fnmatch
+import random
+import string
 from subprocess import *
 
 OMD_VERSION = "2.80-labs-edition"
@@ -660,6 +662,17 @@ def create_version_symlink(sitename, version):
     if os.path.lexists(linkname):
         os.remove(linkname)
     os.symlink("../../versions/%s" % OMD_VERSION, linkname)
+
+
+def calculate_admin_password(options):
+    return options.get("admin-password", random_password())
+
+
+def set_admin_password(pw):
+    p = Popen(["%s/bin/set_admin_password" % g_sitedir, pw], stderr = PIPE, stdout = PIPE)
+    response = p.stderr.read()
+    return 0 == os.waitpid(p.pid, 0)[1], response
+
 
 def file_owner_verify(path, user_id, group_id):
     try:
@@ -2627,21 +2640,25 @@ def main_create(args, options={}):
         sys.stdout.write("Going to set TMPFS to off.\n")
 
     if not "no-init" in options:
-        init_site(config_settings, apache_reload = "apache-reload" in options)
-        welcome_message()
+        admin_password = init_site(config_settings, options)
+        welcome_message(admin_password)
 
     else:
         sys.stdout.write("Create new site %s in disabled state and with empty %s.\n" % (g_sitename, sitedir))
         sys.stdout.write("You can now mount a filesystem to %s.\n" % (sitedir))
         sys.stdout.write("Afterwards you can initialize the site with 'omd init'.\n")
 
-def welcome_message():
+def welcome_message(admin_password):
     sys.stdout.write("Created new site %s with version %s.\n\n" % (g_sitename, OMD_VERSION))
     sys.stdout.write("  The site can be started with %somd start %s%s.\n" %
             (tty_bold, g_sitename, tty_normal))
     sys.stdout.write("  The default web UI is available at %shttp://%s/%s/%s\n" %
             (tty_bold, hostname(), g_sitename, tty_normal))
-    sys.stdout.write("  The admin user for the web applications is %somdadmin%s with password %somd%s.\n" % (tty_bold, tty_normal, tty_bold, tty_normal))
+    sys.stdout.write("\n")
+    sys.stdout.write("  The admin user for the web applications is %somdadmin%s with password: %s%s%s\n" %
+            (tty_bold, tty_normal, tty_bold, admin_password, tty_normal))
+    sys.stdout.write("  (It can be changed with the 'set_admin_password' command as site user.)\n")
+    sys.stdout.write("\n")
     sys.stdout.write("  Please do a %ssu - %s%s for administration of this site.\n" %
             (tty_bold, g_sitename, tty_normal))
     sys.stdout.write("\n")
@@ -2676,10 +2693,12 @@ def main_init(args, options):
 
 
     # Do the things that have been ommited on omd create --disabled
-    init_site(apache_reload = "apache-reload" in options)
-    welcome_message()
+    admin_password = init_site(config_settings=None, options=options)
+    welcome_message(admin_password)
 
-def init_site(config_settings = None, apache_reload = False):
+def init_site(config_settings = None, options=False):
+    apache_reload = "apache-reload" in options
+
     # Create symbolic link to version
     create_version_symlink(g_sitename, OMD_VERSION)
 
@@ -2690,6 +2709,10 @@ def init_site(config_settings = None, apache_reload = False):
 
     # Create skeleton files of non-tmp directories
     create_skeleton_files(g_sitename, '.')
+
+    # Set the initial password of the default admin user
+    admin_password = calculate_admin_password(options)
+    set_admin_password(admin_password)
 
     # Change ownership of all files and dirs to site user
     chown_tree(g_sitedir, g_sitename)
@@ -2704,6 +2727,8 @@ def init_site(config_settings = None, apache_reload = False):
     chown_tree(g_sitedir, g_sitename)
 
     finalize_site("create", apache_reload)
+
+    return admin_password
 
 
 # Is being called at the end of create, cp and mv.
@@ -3169,11 +3194,13 @@ def main_update(args, options={}):
     # Target version: the version of the OMD binary
     to_version = OMD_VERSION
 
+    backup_skel_path = os.path.join(g_sitedir, ".backup_meta")
+
     # source and target are identical if 'omd update' is called
     # from within a site. In that case we make the user choose
     # the target version explicitely and the re-exec the bin/omd
     # of the target version he has choosen.
-    if from_version == to_version:
+    if from_version == to_version and not os.path.exists(os.path.join(backup_skel_path, 'skel')):
         possible_versions = [ v for v in omd_versions() if v != from_version ]
         possible_versions.sort(reverse=True)
         if len(possible_versions) == 0:
@@ -3225,7 +3252,6 @@ def main_update(args, options={}):
     from_skelroot = "/omd/versions/%s/skel" % from_version
     to_skelroot = "/omd/versions/%s/skel" % to_version
 
-    backup_skel_path = os.path.join(g_sitedir, ".backup_meta")
     if os.path.exists(os.path.join(backup_skel_path, 'skel')):
         from_skelroot = os.path.join(backup_skel_path, 'skel')
         sys.stdout.write("using backup skeleton path from: '%s'\n" % backup_skel_path)
@@ -3903,6 +3929,7 @@ commands = [
   ( "create",    True, False, 1, 0, False, "",        main_create,
     [ ( "uid", "u", True, "create site user with UID ARG" ),
       ( "gid", "g", True, "create site group with GID ARG" ),
+      ( "admin-password", None, True, "set initial password instead of generating one"),
       ( "reuse", None, False, "do not create a site user, reuse existing one" ),
       ( "no-init",  "n",  False, "leave new site directory empty (a later omd init does this"),
       ( "no-autostart", "A", False, "set AUTOSTART to off (useful for test sites)"),
@@ -4170,6 +4197,14 @@ def exec_other_omd(version):
         bail_out("Site %s uses version %s which is not installed.\n"
                 "Please reinstall that version and retry this command." %
                 (g_sitename, version))
+
+
+def random_password():
+    return ''.join(random.choice(string.ascii_letters + string.digits) for i in range(8))
+
+
+def hash_password(password):
+    return hashlib.sha256(password).hexdigest()
 
 
 #.

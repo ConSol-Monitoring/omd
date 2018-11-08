@@ -14,7 +14,7 @@ GITBASE     = github.com/sni
 GITURL      = $(GITBASE)/$(NAME)
 DEPS_SRC    = deps.tar.gz
 # GIT TAG is set automatically by "make upstream" or "make package"
-GIT_TAG     = d754232
+GIT_TAG     = 9191506
 
 .PHONY: skel
 

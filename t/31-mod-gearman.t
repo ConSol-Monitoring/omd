@@ -14,7 +14,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 477 );
+plan( tests => 471 );
 
 ##################################################
 # get version strings
@@ -117,7 +117,15 @@ for my $core (qw/nagios icinga naemon/) {
     if( $test->{'stdout'} =~ m/worker=(\d+)/ ) { $worker = $1 }
     ok($worker >= 3, "worker number >= 3: $worker") or diag($test->{'stdout'});
 
-    TestUtils::file_contains({file => "/opt/omd/sites/$site/var/log/gearman/worker.log", like => ['/Using Embedded Perl interpreter for: .*check_webinject/', '/Embedded Perl successfully compiled/', '/^output=.*find\ any\ test/mx'], unlike => ['/\[ERROR\]/'] });
+    TestUtils::file_contains({
+        file => "/opt/omd/sites/$site/var/log/gearman/worker.log", 
+        like => [
+#            '/Using Embedded Perl interpreter for: .*check_webinject/',
+#            '/Embedded Perl successfully compiled/',
+            '/^output=.*find\ any\ test/mx',
+        ],
+        unlike => ['/\[Error\]/'],
+    });
 
     TestUtils::test_command({
         cmd => $omd_bin." status $site", like => [
@@ -144,7 +152,7 @@ for my $core (qw/nagios icinga naemon/) {
     TestUtils::test_command({ cmd => "/bin/su - $site -c 'grep NOTIFICATION: var/$core/$core.log'", waitfor => 'SERVICE\ NOTIFICATION:' });
     TestUtils::file_contains({file => "/opt/omd/sites/$site/var/$core/$core.log", like => ['/SERVICE NOTIFICATION:.*;CUSTOM.*test svc notification/', '/EXTERNAL COMMAND: SEND_CUSTOM_SVC_NOTIFICATION/'], unlike => ['/SIGSEGV/'] });
  
-    TestUtils::test_command({ cmd => "/bin/su - $site -c 'echo -e \"".'GET services\nFilter: description = multiline\nColumns: plugin_output long_plugin_output\n'."\" | lq'", like => '/^OK - firstline;secondline\\\nthirdline\\\nCONFIG_CORE=\''.$core.'\'\\\n/' });
+    TestUtils::test_command({ cmd => "/bin/su - $site -c 'echo -e \"".'GET services\nFilter: description = multiline\nColumns: plugin_output long_plugin_output\n'."\" | lq'", like => '/^OK - firstline;secondline\\\nthirdline\\\nCONFIG_CORE=\''.$core.'\'/' });
     TestUtils::test_command({ cmd => "/bin/su - $site -c 'echo -e \"".'GET services\nFilter: description = multiline\nColumns: perf_data\n'."\" | lq'", like => '/^perf=1c$/' });
 
     ##################################################

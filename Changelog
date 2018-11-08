@@ -1,5 +1,15 @@
 This file documents the revision history for the Open Monitoring Distribution (Labs Edition)
 
+next:
+          - OMD:
+            - create random omdadmin password on omd create
+            - display warning if using the old default password
+          - Thruk:
+            - update to 2.24-2
+          - Mod-Gearman:
+            - switch to go worker
+            - update mod-gearman-worker-go to 1.0.2
+
 2.80     Oct 29 2018
           - OMD:
             - add SELinux support for centos/rhel and fedora
@@ -18,6 +28,8 @@ This file documents the revision history for the Open Monitoring Distribution (L
           - Go update to 1.10.4
           - Grafana update to 5.3.2
             - set default fill to none for influxdb datasource
+            - new datasource for PNP
+            - new datasource for Thruks REST API
           - Prometheus update to 2.4.3
           - Prometheus Pushgateway update to 0.5.2
           - Prometheus node_exporter update to 0.16.0

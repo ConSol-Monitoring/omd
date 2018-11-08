@@ -567,7 +567,7 @@ sub get_meta_for_dir {
     if(-s "$dir/Makefile") {
         my $prereq = `grep PREREQ_PM $dir/Makefile`;
         chomp($prereq);
-        $prereq =~ s/^#\s+PREREQ_PM\s*=>\s*({.*}).*$/\$req = $1;/g;
+        $prereq =~ s/^#\s+PREREQ_PM\s*=>\s*(\{.*\}).*$/\$req = $1;/g;
         $prereq =~ s/([\w:]+)=/'$1'=/g;
         my $req;
         eval($prereq);
