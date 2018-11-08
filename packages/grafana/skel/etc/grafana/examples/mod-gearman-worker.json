@@ -15,8 +15,7 @@
   "editable": true,
   "gnetId": null,
   "graphTooltip": 0,
-  "id": 211,
-  "iteration": 1539604653058,
+  "iteration": 1541692691836,
   "links": [],
   "panels": [
     {
@@ -299,7 +298,7 @@
         }
       ],
       "sparkline": {
-        "fillColor": "#fce2de",
+        "fillColor": "rgb(253, 169, 156)",
         "full": false,
         "lineColor": "#bf1b00",
         "show": true
@@ -307,7 +306,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "sum(rate(modgearmanworker_tasks_errors_total{instance=~\"$instance\"}[1m])) by (job) / sum(rate(modgearmanworker_tasks_completed_total{instance=~\"$instance\"}[1m])) by (job) * 100",
+          "expr": "sum(rate(modgearmanworker_tasks_errors_total{instance=~\"$instance\"}[1m])) / sum(rate(modgearmanworker_tasks_completed_total{instance=~\"$instance\"}[1m])) * 100",
           "format": "time_series",
           "groupBy": [
             {
@@ -961,7 +960,7 @@
             {
               "params": [
                 "$__interval"
-              ],
+             ],
               "type": "time"
             },
             {
@@ -1374,7 +1373,7 @@
         },
         {
           "dsType": "influxdb",
-          "expr": "sum(rate(modgearmanworker_tasks_errors_total{instance=~\"$instance\"}[1m])) by (job) / sum(rate(modgearmanworker_tasks_completed_total{instance=~\"$instance\"}[1m])) by (job) * 100",
+          "expr": "sum(rate(modgearmanworker_tasks_errors_total{instance=~\"$instance\"}[1m])) / sum(rate(modgearmanworker_tasks_completed_total{instance=~\"$instance\"}[1m])) * 100",
           "format": "time_series",
           "groupBy": [
             {
@@ -1551,5 +1550,5 @@
   "timezone": "browser",
   "title": "Mod-Gearman Worker",
   "uid": "u2qAFJ1mk",
-  "version": 9
+  "version": 1
 }
