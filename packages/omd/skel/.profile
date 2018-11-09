@@ -23,6 +23,9 @@ then
     set +a
 fi
 
+# remove duplicates from PATH, so PATH does not grow in cases the profile is sourced multiple times.
+export PATH=$(echo -n $PATH | awk -v RS=: -v ORS=: '!arr[$0]++')
+
 # Only load bashrc when in a bash shell and not loaded yet.
 # The load once is ensured by the variable $BASHRC.
 
