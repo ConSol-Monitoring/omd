@@ -2652,7 +2652,7 @@ def welcome_message(admin_password):
     sys.stdout.write("Created new site %s with version %s.\n\n" % (g_sitename, OMD_VERSION))
     sys.stdout.write("  The site can be started with %somd start %s%s.\n" %
             (tty_bold, g_sitename, tty_normal))
-    sys.stdout.write("  The default web UI is available at %shttp://%s/%s/%s\n" %
+    sys.stdout.write("  The default web UI is available at %shttps://%s/%s/%s\n" %
             (tty_bold, hostname(), g_sitename, tty_normal))
     sys.stdout.write("\n")
     sys.stdout.write("  The admin user for the web applications is %somdadmin%s with password: %s%s%s\n" %
