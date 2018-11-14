@@ -22,9 +22,6 @@ DAEMON="$OMD_ROOT/version/sbin/gearmand"
 OPTIONS="--daemon --worker-wakeup=10 --retention-file=$OMD_ROOT/var/gearmand.retention -q retention"
 PORT=`echo $CONFIG_GEARMAND_PORT | awk -F: {'print $2'}`
 LISTEN=`echo $CONFIG_GEARMAND_PORT | awk -F: {'print $1'}`
-if [ -z "$LISTEN" ]; then
-    LISTEN=0.0.0.0
-fi
 PIDFILE=$OMD_ROOT/tmp/run/gearmand.pid
 LOGFILE=$OMD_ROOT/var/log/gearman/gearmand.log
 USER=$OMD_SITE
@@ -93,7 +90,7 @@ case "$1" in
         # gearman opens lot of connections, so increase default ulimit
         ulimit -n 2048 >/dev/null 2>&1
 
-        CMD="$DAEMON --port=$PORT --pid-file=$PIDFILE $OPTIONS --log-file=$LOGFILE --verbose=$LOGLEVEL --listen=$LISTEN"
+        CMD="$DAEMON --port=$PORT --pid-file=$PIDFILE $OPTIONS --log-file=$LOGFILE --verbose=$LOGLEVEL ${LISTEN:+--listen=$LISTEN}"
         if [ "$WHO" = "root" ]; then
             # try to exec commands as user
             su - $USER -c /bin/true
@@ -121,7 +118,7 @@ case "$1" in
         else
             # do a shutdown
             if [ ! -z $NC ]; then
-                echo "shutdown" | $NC -w 1 $LISTEN $PORT > /dev/null
+                echo "shutdown" | $NC -w 1 ${LISTEN:-127.0.0.1} $PORT > /dev/null
                 x=$( expr $SHUTDOWN_TIME \* 10 )
                 while [ $x -gt 0 ]; do
                     [ $((x%5)) -eq 0 ] && printf "."
