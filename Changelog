@@ -9,6 +9,7 @@ next:
           - Grafana update to 5.3.3
           - Prometheus update to 2.5.0
           - Prometheus Alertmanager update to 0.15.3
+          - Prometheus Pushgateway update to 0.6.0
           - Mod-Gearman:
             - switch to go worker
             - update mod-gearman-worker-go to 1.0.2
