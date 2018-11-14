@@ -11,6 +11,7 @@ next:
           - Prometheus Alertmanager update to 0.15.3
           - Prometheus Pushgateway update to 0.6.0
           - Go update to 1.10.5
+          - Go added 1.11.2
           - Mod-Gearman:
             - switch to go worker
             - update mod-gearman-worker-go to 1.0.2
