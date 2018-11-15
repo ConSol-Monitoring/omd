@@ -25,6 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 import socket, time, re
+import ssl
 
 # Python 2.3 does not have 'set' in normal namespace.
 # But it can be imported from 'sets'
@@ -163,7 +164,7 @@ class Helpers:
 
 
 class BaseConnection:
-    def __init__(self, socketurl, persist = False, allow_cache = False):
+    def __init__(self, socketurl, persist = False, allow_cache = False, ssl_key = False, ssl_crt = False):
         """Create a new connection to a MK Livestatus socket"""
         self.add_headers = ""
         self.persist = persist
@@ -172,6 +173,8 @@ class BaseConnection:
         self.socket = None
         self.timeout = None
         self.successful_persistence = False
+        self.ssl_key = ssl_key
+        self.ssl_crt = ssl_crt
 
     def successfully_persisted(self):
         return self.successful_persistence
@@ -211,6 +214,8 @@ class BaseConnection:
                 raise MKLivestatusConfigError("Invalid livestatus tcp URL '%s'. "
                         "Correct example is 'tcp:somehost:6557'" % url)
             self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            if self.ssl_key and self.ssl_crt:
+                self.socket = ssl.wrap_socket(self.socket, keyfile = self.ssl_key, certfile = self.ssl_crt)
             target = (host, port)
         else:
             raise MKLivestatusConfigError("Invalid livestatus URL '%s'. "
@@ -327,7 +332,7 @@ class BaseConnection:
         except (MKLivestatusSocketClosed, IOError), e:
             self.disconnect()
             now = time.time()
-            if query and (not timeout_at or timeout_at > now):
+            if self.timeout and query and (not timeout_at or timeout_at > now):
                 if timeout_at == None:
                     timeout_at = now + self.timeout
                 time.sleep(0.1)
@@ -356,8 +361,8 @@ class BaseConnection:
 
 
 class SingleSiteConnection(BaseConnection, Helpers):
-    def __init__(self, socketurl, persist = False, allow_cache = False):
-        BaseConnection.__init__(self, socketurl, persist, allow_cache)
+    def __init__(self, socketurl, persist = False, allow_cache = False, ssl_key = False, ssl_crt = False):
+        BaseConnection.__init__(self, socketurl, persist, allow_cache, ssl_key, ssl_crt)
         self.prepend_site = False
         self.auth_users = {}
         self.deadsites = {} # never filled, just for compatibility
