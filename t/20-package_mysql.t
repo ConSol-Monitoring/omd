@@ -32,7 +32,7 @@ my $tests = [
   { cmd => $omd_bin." config $site set THRUK_LOGCACHE on" },
   { cmd => "/bin/su - $site -c 'rm etc/cron.d/thruk_logcache.auto'", like => [ '/^$/' ] }, # might already run otherwise
   { cmd => $omd_bin." start  $site" },
-  { cmd => "/bin/su - $site -c 'thruk -a logcacheimport -y --local'", like => [ '/running import for site '.$site.'/' ] },
+  { cmd => "/bin/su - $site -c 'thruk -a logcacheimport -y --local'", like => [ '/imported \d+ log items from 1 site successfully/' ] },
   { cmd => "/bin/su - $site -c 'mysql thruk_logs'", stdin => "show tables;\n", like => [ '/_status/', '/_log/' ] },
   { cmd => "/bin/su - $site -c 'thruk logcache update'", like => [ '/log items from 1 site successfully in/' ] },
   { cmd => "/bin/su - $site -c './share/thruk/examples/get_logs ./var/naemon/naemon.log'", like => '/^$/' },
