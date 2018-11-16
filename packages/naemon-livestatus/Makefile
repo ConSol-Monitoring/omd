@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 NAME = naemon-livestatus
-VERSION = 1.0.4
+VERSION = 1.0.8
 DIR = $(NAME)-$(VERSION)
 
 CONFIGUREOPTS = \
