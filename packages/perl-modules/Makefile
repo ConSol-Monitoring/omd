@@ -208,6 +208,7 @@ MODULES = \
           DateTime-TimeZone-1.88.tar.gz \
           DateTime-1.18.tar.gz \
           File-Tail-1.3.tar.gz \
+          Thruk-Utils-XS-0.02.tar.gz \
           Monitoring-GLPlugin-3.0.10.tar.gz
 
 
