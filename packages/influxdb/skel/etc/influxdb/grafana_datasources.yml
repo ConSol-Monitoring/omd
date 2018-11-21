@@ -17,6 +17,8 @@ datasources:
     database: nagflux
     isDefault: true
     editable: false
+    jsonData:
+     tlsSkipVerify: true
 
   - name: _internal
     type: influxdb
@@ -28,6 +30,8 @@ datasources:
     database: _internal
     isDefault: false
     editable: false
+    jsonData:
+     tlsSkipVerify: true
 
   - name: sakuli
     type: influxdb
@@ -39,3 +43,5 @@ datasources:
     database: sakuli
     isDefault: false
     editable: false
+    jsonData:
+     tlsSkipVerify: true
