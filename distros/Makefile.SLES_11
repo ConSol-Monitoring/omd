@@ -72,6 +72,7 @@ OS_PACKAGES    += php5-mbstring
 OS_PACKAGES    += php5-pear
 OS_PACKAGES    += php5-sockets
 OS_PACKAGES    += php5-sqlite
+OS_PACKAGES    += php5-openssl
 OS_PACKAGES    += rsync
 OS_PACKAGES    += samba-client
 OS_PACKAGES    += unzip

@@ -76,6 +76,7 @@ OS_PACKAGES    += php53-pdo
 OS_PACKAGES    += php53-pear
 OS_PACKAGES    += php53-sockets
 OS_PACKAGES    += php53-sqlite
+OS_PACKAGES    += php53-openssl
 OS_PACKAGES    += php53-zlib
 OS_PACKAGES    += rsync
 OS_PACKAGES    += samba-client
