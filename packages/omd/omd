@@ -2215,6 +2215,8 @@ def config_configure_hook(hook_name):
 def init_action(command, args, options):
     if site_is_disabled(g_sitename):
         bail_out("This site is disabled.")
+    if site_needs_update(g_sitename):
+        bail_out("This site needs to be updated with: omd update")
 
     if command in [ "start", "restart" ]:
         prepare_and_populate_tmpfs(g_sitename)
@@ -2579,6 +2581,7 @@ def main_sites(args, options={}):
             sys.stdout.write("%s\n" % site)
         else:
             disabled = site_is_disabled(site)
+            needs_update = site_needs_update(site)
             v = site_version(site)
             if v == None:
                 v = "(none)"
@@ -2587,6 +2590,8 @@ def main_sites(args, options={}):
                 tags.append("default version")
             if disabled:
                 tags.append(tty_bold + tty_red + "disabled" + tty_normal)
+            if needs_update:
+                tags.append(tty_bold + tty_red + "uninstalled" + tty_normal)
             try:
                 tags.append("addons: " + ", ".join(os.listdir("/omd/versions/%s/addon/" % v)))
             except:
@@ -2833,6 +2838,9 @@ def create_site_dir(sitename):
 def site_is_disabled(g_sitename):
     apache_conf = "/omd/apache/%s.conf" % g_sitename
     return not os.path.exists(apache_conf)
+
+def site_needs_update(g_sitename):
+    return os.path.exists(os.path.join("/omd/apache/%s.conf" % g_sitename, ".backup_meta"))
 
 def main_disable(args, options):
     if site_is_disabled(g_sitename):
@@ -3433,6 +3441,9 @@ def main_init_action(command, args, options={}):
     sys.exit(exit_status)
 
 def main_config(args, options={}):
+    if site_needs_update(g_sitename):
+        bail_out("This site needs to be updated with: omd update")
+
     if (len(args) == 0 or args[0] != "show") and \
         opt_force and not site_is_stopped(g_sitename):
         need_start = True
@@ -3514,6 +3525,8 @@ def main_backup(args, options={}):
         bail_out("You need to provide either a path to the destination "
                  "file or \"-\" for backup to stdout.")
 
+    if site_needs_update(g_sitename):
+        bail_out("This site needs to be updated with: omd update")
     if not site_is_stopped(g_sitename):
         sys.stdout.write("Warning: The site should be stopped for a backup.\n")
 
