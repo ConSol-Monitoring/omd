@@ -87,8 +87,8 @@ case "$1" in
             exit 1;
         fi
 
-        # gearman opens lot of connections, so increase default ulimit
-        ulimit -n 2048 >/dev/null 2>&1
+        # gearman opens lot of connections, so increase default ulimit to our hard limit
+        ulimit -n $(ulimit -Hn) >/dev/null 2>&1
 
         CMD="$DAEMON --port=$PORT --pid-file=$PIDFILE $OPTIONS --log-file=$LOGFILE --verbose=$LOGLEVEL ${LISTEN:+--listen=$LISTEN}"
         if [ "$WHO" = "root" ]; then
