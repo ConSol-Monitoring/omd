@@ -21,6 +21,8 @@ next:
           - LMD: Update 1.3.6
           - Naemon:
             - update livestatus to 1.0.8
+          - Icinga:
+            - remove cgis
 
 2.80     Oct 29 2018
           - OMD:

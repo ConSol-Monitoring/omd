@@ -14,7 +14,6 @@ case "$1" in
     choices)
             echo "welcome: Welcome page which lists all available GUIs"
             [ -e $OMD_ROOT/share/nagios/htdocs ]        && echo "nagios: Classic Nagios webinterface"
-            [ -e $OMD_ROOT/share/icinga/htdocs ]        && echo "icinga: Classic Icinga webinterface"
             [ -e $OMD_ROOT/share/check_mk/web ]         && echo "check_mk: The Check_MK's Multisite GUI"
             [ -e $OMD_ROOT/share/thruk ]                && echo "thruk: Thruk Monitoring Webinterface"
             [ -e $OMD_ROOT/share/nagvis ]               && echo "nagvis: NagVis - The visualisation addon for Nagios"

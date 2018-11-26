@@ -37,20 +37,12 @@ build:
 
 
 install:
-	$(MAKE) DESTDIR=$(DESTDIR) -C $(DIR) install-base install-cgis install-html
+	$(MAKE) DESTDIR=$(DESTDIR) -C $(DIR) install-base
 	rm -f $(DESTDIR)$(OMD_ROOT)/share/icinga/htdocs/config.php.inc
 
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/icinga
 	install -m 664 $(DIR)/p1.pl $(DESTDIR)$(OMD_ROOT)/lib/icinga
 	install -m 664 $(DIR)/module/idoutils/src/idomod.so $(DESTDIR)$(OMD_ROOT)/lib/icinga
-
-	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/icinga/htdocs/ssi
-	install -m 755 ssi-wrapper.pl $(DESTDIR)$(OMD_ROOT)/share/icinga/htdocs/ssi
-
-	for f in common avail cmd config extinfo histogram history notifications outages showlog status statusmap statuswml statuswrl summary tac trends ; do \
-		ln -sfn ssi-wrapper.pl $(DESTDIR)$(OMD_ROOT)/share/icinga/htdocs/ssi/$$f-header.ssi ; \
-		ln -sfn ssi-wrapper.pl $(DESTDIR)$(OMD_ROOT)/share/icinga/htdocs/ssi/$$f-footer.ssi ; \
-	done
 
 	# Copy package documentations to have these information in the binary packages
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/doc/$(NAME)

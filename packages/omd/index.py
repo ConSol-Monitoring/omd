@@ -122,13 +122,6 @@ def page_welcome(req):
                               'in C. It retrieves its status information from <tt>status.dat</tt>. '
                               'This interface is not longer actively developed and does not perform '
                               'well in large installations.'),
-                             ('icinga', 'Classic Icinga GUI',
-                              'share/icinga/htdocs',
-                              'Icinga\'s "classical" GUI is a derivate of the classical Nagios GUI '
-                              'and has been directly evolved from the original '
-                              'CGI programs in C. It has its own look and feel and brings useful '
-                              'improvements. It is not bound to Icinga and can be used with the '
-                              'other monitoring cores as well.'),
                              ('nagvis', 'NagVis - The visualization addon', 
                               'share/nagvis/htdocs',
                               '<p>NagVis is the leading visualization addon for Nagios.</p>'

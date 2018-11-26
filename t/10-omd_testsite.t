@@ -112,9 +112,9 @@ my $tests = [
   { cmd => "/bin/su - $site -c 'omd reset .profile etc/icinga/conf.d'"  },
   { cmd => "/bin/su - $site -c 'omd reset etc/htpasswd'", like => '/^$/' },
   { cmd => "/bin/su - $site -c 'omd -v diff'", like => ['/^$/'] },
-  { cmd => "/bin/sh -c \"rm /omd/sites/$site/etc/icinga/*.cfg\""},
+  { cmd => "/bin/sh -c \"rm /omd/sites/$site/etc/thruk/*.cfg\""},
   { cmd => "/bin/sh -c \"rm /omd/sites/$site/etc/icinga/conf.d\""},
-  { cmd => "/bin/su - $site -c 'omd diff'", like => ['/Deleted etc\/icinga/cgi.cfg/', '/Deleted etc\/icinga\/conf.d/'] },
+  { cmd => "/bin/su - $site -c 'omd diff'", like => ['/Deleted etc\/thruk/cgi.cfg/', '/Deleted etc\/icinga\/conf.d/'] },
   { cmd => "/bin/su - $site -c 'omd reset etc/'"  },
   { cmd => "/bin/su - $site -c 'omd diff'", like => ['/^$/'] },
 

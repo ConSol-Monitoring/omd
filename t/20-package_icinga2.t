@@ -13,7 +13,7 @@ BEGIN {
 }
 
 plan skip_all => "icinga2 not included, cannot test" unless -x '/omd/versions/default/bin/icinga2';
-plan( tests => 82 );
+plan( tests => 70 );
 
 ##################################################
 # create our test site
@@ -29,10 +29,6 @@ my $tests = [
   { cmd => "/bin/su - $site -c './etc/init.d/icinga2 status'",     like => '/Not running/', exit => 1 },
   { cmd => $omd_bin." start $site" },
   { cmd => "/bin/su - $site -c './etc/init.d/icinga2 status'",     like => '/Running \(\d+\)/' },
-
-  { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -H localhost -u /$site/icinga -e 401'",                  like => '/HTTP OK:/' },
-  { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -H localhost -a omdadmin:omd -u /$site/icinga -e 301'",  like => '/HTTP OK:/' },
-  { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -H localhost -a omdadmin:omd -u /$site/icinga/ -e 200'", like => '/HTTP OK:/' },
 
   { cmd => "/bin/su - $site -c 'echo -e \"".'GET status\nColumns: program_start program_version\n'."\" | lq'", like => ['/\d+/', '/;r2\./'] },
 

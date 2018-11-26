@@ -12,7 +12,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 33 );
+plan( tests => 21 );
 
 ##################################################
 # create our test site
@@ -27,11 +27,6 @@ TestUtils::prepare_obj_config('t/data/omd/testconf1', '/omd/sites/'.$site.'/etc/
 my $tests = [
   { cmd => $omd_bin." config $site set CORE icinga" },
   { cmd => $omd_bin." start $site" },
-
-  { cmd => "/bin/su - $site -c 'lib/icinga/plugins/check_http -H localhost -u /$site/icinga -e 401'",                  like => '/HTTP OK:/' },
-  { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -H localhost -a omdadmin:omd -u /$site/icinga -e 301'",  like => '/HTTP OK:/' },
-  { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -H localhost -a omdadmin:omd -u /$site/icinga/ -e 200'", like => '/HTTP OK:/' },
-
   { cmd => $omd_bin." stop $site" },
 ];
 for my $test (@{$tests}) {

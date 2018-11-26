@@ -31,10 +31,8 @@ for my $core (qw/nagios icinga naemon/) {
     my $site     = TestUtils::create_test_site() or TestUtils::bail_out_clean("no further testing without site");
     my $host     = "omd-".$site;
     my $service  = "Dummy Service";
-    my $core_url = $core;
     my $module   = 'mod_gearman_nagios3.o';
     if($core eq 'naemon') {
-        $core_url = 'thruk';
         $module   = 'mod_gearman_naemon.o';
     }
 
@@ -68,9 +66,9 @@ for my $core (qw/nagios icinga naemon/) {
       { cmd => "/bin/su - $site -c 'rm -f var/*/retention.dat'", like => '/^$/' },
       { cmd => $omd_bin." start $site", like => [ '/gearmand\.\.\.OK/', '/gearman_worker\.\.\.OK/'], sleep => 1 },
       { cmd => $omd_bin." status $site", like => [ '/gearmand:\s+running/', '/gearman_worker:\s*running/'] },
-      { cmd => "/bin/su - $site -c './lib/$core/plugins/check_http -H localhost -a omdadmin:omd -u /$site/$core_url/cgi-bin/cmd.cgi -e 200 -P \"cmd_typ=7&cmd_mod=2&host=omd-$site&service=Dummy+Service&start_time=$now&force_check=on&btnSubmit=Commit\" -r \"successfully submitted\"'", like => '/HTTP OK:/' },
-      { cmd => "/bin/su - $site -c './lib/$core/plugins/check_http -H localhost -a omdadmin:omd -u /$site/$core_url/cgi-bin/cmd.cgi -e 200 -P \"cmd_typ=7&cmd_mod=2&host=omd-$site&service=perl+test&start_time=$now&force_check=on&btnSubmit=Commit\" -r \"successfully submitted\"'", like => '/HTTP OK:/' },
-      { cmd => "/bin/su - $site -c './lib/$core/plugins/check_http -H localhost -a omdadmin:omd -u /$site/$core_url/cgi-bin/cmd.cgi -e 200 -P \"cmd_typ=7&cmd_mod=2&host=omd-$site&service=multiline&start_time=$now&force_check=on&btnSubmit=Commit\" -r \"successfully submitted\"'", like => '/HTTP OK:/' },
+      { cmd => "/bin/su - $site -c './lib/$core/plugins/check_http -H localhost -a omdadmin:omd -u /$site/thruk/cgi-bin/cmd.cgi -e 200 -P \"cmd_typ=7&cmd_mod=2&host=omd-$site&service=Dummy+Service&start_time=$now&force_check=on&btnSubmit=Commit\" -r \"successfully submitted\"'", like => '/HTTP OK:/' },
+      { cmd => "/bin/su - $site -c './lib/$core/plugins/check_http -H localhost -a omdadmin:omd -u /$site/thruk/cgi-bin/cmd.cgi -e 200 -P \"cmd_typ=7&cmd_mod=2&host=omd-$site&service=perl+test&start_time=$now&force_check=on&btnSubmit=Commit\" -r \"successfully submitted\"'", like => '/HTTP OK:/' },
+      { cmd => "/bin/su - $site -c './lib/$core/plugins/check_http -H localhost -a omdadmin:omd -u /$site/thruk/cgi-bin/cmd.cgi -e 200 -P \"cmd_typ=7&cmd_mod=2&host=omd-$site&service=multiline&start_time=$now&force_check=on&btnSubmit=Commit\" -r \"successfully submitted\"'", like => '/HTTP OK:/' },
       { cmd => $omd_bin." status $site", like => [
                                                 '/apache:\s*running/',
                                                 '/rrdcached:\s*running/',
@@ -102,7 +100,7 @@ for my $core (qw/nagios icinga naemon/) {
 
     #--- wait for all services being checked
     TestUtils::wait_for_content({
-        url => "http://localhost/$site/$core_url/cgi-bin/status.cgi?host=$host&servicestatustypes=1&hoststatustypes=15",
+        url => "http://localhost/$site/thruk/cgi-bin/status.cgi?host=$host&servicestatustypes=1&hoststatustypes=15",
         auth    => "OMD Monitoring Site $site:omdadmin:omd",
         like    => [ "0 Matching Service" ],
         }
