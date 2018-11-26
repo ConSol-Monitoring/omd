@@ -21,8 +21,8 @@ my $site    = TestUtils::create_test_site() or TestUtils::bail_out_clean("no fur
 ##################################################
 # execute some checks
 my $tests = [
-  { cmd => "/bin/su - $site -c '/usr/bin/env cpan.wrapper'", stdin => "yes\n", like => '/cpan\[1\]>/' },
-  { cmd => "/bin/su - $site -c '/usr/bin/env cpan'",         stdin => "yes\n", like => '/cpan\[1\]>/' },
+  { cmd => "/bin/su - $site -c '/usr/bin/env cpan.wrapper'", stdin => "yes\n", like => '/cpan\[1\]>/', errlike => '/^(\s*|.*01mailrc.txt.gz.*saved.*)$/s' },
+  { cmd => "/bin/su - $site -c '/usr/bin/env cpan'",         stdin => "yes\n", like => '/cpan\[1\]>/', errlike => '/^(\s*|.*01mailrc.txt.gz.*saved.*)$/s' },
 ];
 for my $test (@{$tests}) {
     TestUtils::test_command($test);
@@ -71,7 +71,7 @@ for my $file (qw|/*/Class/MethodMaker/scalar.pm /*/Class/MethodMaker/hash.pm /*/
 SKIP: {
     skip('Author test. Set $ENV{TEST_AUTHOR} to a true value to run.', 4) unless $ENV{TEST_AUTHOR};
     my $author_tests = [
-      { cmd => "/bin/su - $site -c '/usr/bin/env cpan'", stdin => "notest install Traceroute::Similar\n", like => '/install\s+\-\-\s+OK/' },
+      { cmd => "/bin/su - $site -c '/usr/bin/env cpan'", stdin => "notest install Traceroute::Similar\n", like => '/install\s+\-\-\s+OK/', errlike => '/^(\s*|.*01mailrc.txt.gz.*saved.*)$/s' },
     ];
     for my $author_test (@{$author_tests}) {
         TestUtils::test_command($author_test);
