@@ -8,6 +8,7 @@ next:
             - add build support for Fedora 29
           - Thruk:
             - update to 2.24-2
+            - migrate cgi.cfg to etc/thruk
           - Grafana update to 5.3.4
           - Prometheus update to 2.5.0
           - Prometheus Alertmanager update to 0.15.3

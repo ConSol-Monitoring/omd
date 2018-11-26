@@ -77,6 +77,9 @@ skel:
 	cp $(DIR)/ssi/status-header.ssi-pnp $(SKEL)/etc/thruk/ssi/status-header.ssi
 	cp $(DIR)/ssi/status-header.ssi-pnp $(SKEL)/etc/thruk/ssi/extinfo-header.ssi
 	cp $(DIR)/ssi/extinfo-header.ssi-tickets $(SKEL)/etc/thruk/ssi/extinfo-header.ssi-example
+	mkdir -p $(SKEL)/etc/nagios/
+	cp $(DIR)/cgi.cfg $(SKEL)/etc/thruk/
+	sed -e 's/thrukadmin/omdadmin/g' -i $(SKEL)/etc/thruk/cgi.cfg
 
 clean:
 	rm -rf $(DIR)

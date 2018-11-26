@@ -3,34 +3,49 @@
 # OMD - Pre Update Hook
 #
 # This script prepares the site to fix some know issues which causes update conflicts.
-# It will be run prior the update process with the new OMD, but the
+# It will be run prior the update process with the new OMD.
 
 cd $OMD_ROOT
 
-VERSION=$(readlink version | sed 's%.*versions/\([0-9]*\.*[0-9]*\)[-\.].*$%\1%')
+NEW_VERSION=$(grep ^OMD_VERSION $(dirname $0)/../../../../bin/omd | awk '{ print $3 }' | tr -d '"')
+OLD_VERSION=$(readlink version | sed 's%.*versions/\([0-9]*\.*[0-9]*\)[-\.].*$%\1%')
 # convert version to int so we can compare it in bash
 # version 2.20 becomes 220
-VERSION=$(( $(( ${VERSION%.*} * 100 )) + ${VERSION#*.} ))
-SKEL=version/skel
+OLD_VERSION=$(( $(( ${OLD_VERSION%.*} * 100 )) + ${OLD_VERSION#*.} ))
+OLD_SKEL=version/skel
 if [ -e ".backup_meta/skel" ]; then
     # when restoring from an non-installed version, skel folder is here
-    SKEL=".backup_meta/skel"
+    OLD_SKEL=".backup_meta/skel"
 fi
 
 # apply some fixed to versions until 2.20
-if [ $VERSION -le 220 ]; then
+if [ $OLD_VERSION -le 220 ]; then
   # remove file created by hook to prevent update conflict
   rm -f etc/shinken/apache.conf
 
   # restore original file from skel to prevent update conflict
-  test -e etc/mongodb/mongod.cfg && sed -e 's%###ROOT###%'$OMD_ROOT'%g' $SKEL/etc/mongodb/mongod.cfg > etc/mongodb/mongod.cfg
-  test -e etc/mongodb/mongod.d/port.conf && cat $SKEL/etc/mongodb/mongod.d/port.conf > etc/mongodb/mongod.d/port.conf
+  test -e etc/mongodb/mongod.cfg && sed -e 's%###ROOT###%'$OMD_ROOT'%g' $OLD_SKEL/etc/mongodb/mongod.cfg > etc/mongodb/mongod.cfg
+  test -e etc/mongodb/mongod.d/port.conf && cat $OLD_SKEL/etc/mongodb/mongod.d/port.conf > etc/mongodb/mongod.d/port.conf
 
   # influxdb port conflicts: reset port to default port from skel, then update. After the update the hook will set the actual port
-  test -e etc/influxdb/influxdb.conf && sed -e "/^\[http\]/,/^\[/{s/.*bind-address = .*$/$(grep '^\[http\]' -A 10 $SKEL/etc/influxdb/influxdb.conf | grep '^\s*bind-address')/}" -i etc/influxdb/influxdb.conf
-  test -e etc/nagflux/config.gcfg && sed -e "/^\[Influx/,/^\[/{s%^\s*Address = \"http.*$%$(grep '^\[Influx' -A 10 $SKEL/etc/nagflux/config.gcfg | grep '^\s*Address')%}" -i etc/nagflux/config.gcfg
-  test -e etc/nagflux/config.gcfg && sed -e "/^\[Elasticsearch/,/^\[/{s%^\s*Address = \"http.*$%$(grep '^\[Elasticsearch' -A 10 $SKEL/etc/nagflux/config.gcfg | grep '^\s*Address')%}" -i etc/nagflux/config.gcfg
-  test -e etc/influxdb/influxdb.conf && sed -e "1,/^\[/{s/^bind-address = .*$/$(grep '^bind-address' $SKEL/etc/influxdb/influxdb.conf)/}" -i etc/influxdb/influxdb.conf
+  test -e etc/influxdb/influxdb.conf && sed -e "/^\[http\]/,/^\[/{s/.*bind-address = .*$/$(grep '^\[http\]' -A 10 $OLD_SKEL/etc/influxdb/influxdb.conf | grep '^\s*bind-address')/}" -i etc/influxdb/influxdb.conf
+  test -e etc/nagflux/config.gcfg && sed -e "/^\[Influx/,/^\[/{s%^\s*Address = \"http.*$%$(grep '^\[Influx' -A 10 $OLD_SKEL/etc/nagflux/config.gcfg | grep '^\s*Address')%}" -i etc/nagflux/config.gcfg
+  test -e etc/nagflux/config.gcfg && sed -e "/^\[Elasticsearch/,/^\[/{s%^\s*Address = \"http.*$%$(grep '^\[Elasticsearch' -A 10 $OLD_SKEL/etc/nagflux/config.gcfg | grep '^\s*Address')%}" -i etc/nagflux/config.gcfg
+  test -e etc/influxdb/influxdb.conf && sed -e "1,/^\[/{s/^bind-address = .*$/$(grep '^bind-address' $OLD_SKEL/etc/influxdb/influxdb.conf)/}" -i etc/influxdb/influxdb.conf
+fi
+
+# migrate cgi.cfg content into thruks cgi.cfg
+if test -h etc/thruk/cgi.cfg && test -f etc/nagios/cgi.cfg; then
+    rm -f etc/thruk/cgi.cfg
+    cp /omd/versions/$NEW_VERSION/skel/etc/thruk/cgi.cfg etc/thruk/cgi.cfg
+    for key in $(grep -v ^# etc/nagios/cgi.cfg | grep -v ^\ *$); do
+        name=$(echo "$key" | awk -F = '{ print $1 '})
+        value=$(echo "$key" | sed -e 's/^'$name'\ *=\ *//')
+        sed -e 's#^'$name'\ *=.*$#'$name'='$value'#g' -i etc/thruk/cgi.cfg
+    done
+    rm etc/nagios/cgi.cfg
+    sed -e 's%###ROOT###%'$OMD_ROOT'%g' $OLD_SKEL/etc/nagios/cgi.cfg > etc/nagios/cgi.cfg
+    sed -e 's%###SITE###%'$OMD_SITE'%g' -i etc/nagios/cgi.cfg
 fi
 
 exit 0
