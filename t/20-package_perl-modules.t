@@ -21,8 +21,8 @@ my $site    = TestUtils::create_test_site() or TestUtils::bail_out_clean("no fur
 ##################################################
 # execute some checks
 my $tests = [
-  { cmd => "/bin/su - $site -c '/usr/bin/env cpan.wrapper'", stdin => "yes\n", like => '/cpan\[1\]>/', errlike => '/^(\s*|.*01mailrc.txt.gz.*saved.*)$/s' },
-  { cmd => "/bin/su - $site -c '/usr/bin/env cpan'",         stdin => "yes\n", like => '/cpan\[1\]>/', errlike => '/^(\s*|.*01mailrc.txt.gz.*saved.*)$/s' },
+  { cmd => "/bin/su - $site -c '/usr/bin/env cpan.wrapper'", stdin => "yes\n", like => '/cpan\[1\]>/', errlike => '/^(\s*|.*01mailrc.txt.gz.*saved.*|.*Network is unreachable.*)$/s' },
+  { cmd => "/bin/su - $site -c '/usr/bin/env cpan'",         stdin => "yes\n", like => '/cpan\[1\]>/', errlike => '/^(\s*|.*01mailrc.txt.gz.*saved.*|.*Network is unreachable.*)$/s' },
 ];
 for my $test (@{$tests}) {
     TestUtils::test_command($test);
