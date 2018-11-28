@@ -71,7 +71,7 @@ for my $file (qw|/*/Class/MethodMaker/scalar.pm /*/Class/MethodMaker/hash.pm /*/
 SKIP: {
     skip('Author test. Set $ENV{TEST_AUTHOR} to a true value to run.', 4) unless $ENV{TEST_AUTHOR};
     my $author_tests = [
-      { cmd => "/bin/su - $site -c '/usr/bin/env cpan'", stdin => "notest install Traceroute::Similar\n", like => '/install\s+\-\-\s+OK/', errlike => '/^(\s*|.*01mailrc.txt.gz.*saved.*)$/s' },
+      { cmd => "/bin/su - $site -c '/usr/bin/env cpan'", stdin => "notest install Traceroute::Similar\n", like => '/install\s+\-\-\s+OK/', errlike => '/^(\s*|.*01mailrc.txt.gz.*saved.*|.*Network is unreachable.*)$/s' },
     ];
     for my $author_test (@{$author_tests}) {
         TestUtils::test_command($author_test);
