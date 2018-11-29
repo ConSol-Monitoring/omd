@@ -7,3 +7,8 @@ if [ -s etc/cron.d/thruk.auto ]; then
     sed -i etc/cron.d/thruk.auto -e "s|/omd/versions/[0-9\.]*/|/omd/versions/$newversion/|g" || echo "Updating Thruk Jobs Failed"
     ./bin/thruk cron install > /dev/null
 fi
+
+if test -e etc/thruk/cgi.cfg.update; then
+  rm etc/thruk/cgi.cfg
+  mv etc/thruk/cgi.cfg.update etc/thruk/cgi.cfg
+fi

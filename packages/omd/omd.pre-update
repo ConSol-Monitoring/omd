@@ -36,12 +36,11 @@ fi
 
 # migrate cgi.cfg content into thruks cgi.cfg
 if test -h etc/thruk/cgi.cfg && test -f etc/nagios/cgi.cfg; then
-    rm -f etc/thruk/cgi.cfg
-    cp /omd/versions/$NEW_VERSION/skel/etc/thruk/cgi.cfg etc/thruk/cgi.cfg
+    cp /omd/versions/$NEW_VERSION/skel/etc/thruk/cgi.cfg etc/thruk/cgi.cfg.update
     for key in $(grep -v ^# etc/nagios/cgi.cfg | grep -v ^\ *$); do
         name=$(echo "$key" | awk -F = '{ print $1 '})
         value=$(echo "$key" | sed -e 's/^'$name'\ *=\ *//')
-        sed -e 's#^'$name'\ *=.*$#'$name'='$value'#g' -i etc/thruk/cgi.cfg
+        sed -e 's#^'$name'\ *=.*$#'$name'='$value'#g' -i etc/thruk/cgi.cfg.update
     done
     rm etc/nagios/cgi.cfg
     sed -e 's%###ROOT###%'$OMD_ROOT'%g' $OLD_SKEL/etc/nagios/cgi.cfg > etc/nagios/cgi.cfg
