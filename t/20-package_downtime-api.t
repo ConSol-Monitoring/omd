@@ -142,6 +142,7 @@ ok($query->[0]->[0] == 0);
 # down3/downsvc3b with svcdt -> ok, remove downtime -> ok
 $dturl = "/$site/api/downtime?host=down3&service=downsvc3b&comment=bla1&duration=10&dtauthtoken=a62932a270b2e200d9ba21b80f8cff00";
 TestUtils::test_command({ cmd => sprintf("/bin/su - %s -c \"lib/nagios/plugins/check_http -t 60 -H %s --onredirect=follow -u '%s' --ssl\"", $site, $this_ip, $dturl), like => '/HTTP OK:/' });
+$query = $ml->selectall_arrayref("GET services\nFilter: host_name = down3\nFilter: description = downsvc3b\nColumns: scheduled_downtime_depth host_name description\n");
 ok($query->[0]->[0] == 1);
 sleep 61;
 $query = $ml->selectall_arrayref("GET services\nFilter: host_name = down3\nFilter: description = downsvc3b\nColumns: scheduled_downtime_depth host_name description\n");
