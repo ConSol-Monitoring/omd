@@ -189,9 +189,9 @@ class ThrukCli(object):
 
     def set_service_downtimes(self, services, context):
         data = {
-            'start_time': start,
-            'end_time': end,
-            'comment_data': comment,
+            'start_time': context['start_time'],
+            'end_time': context['end_time'],
+            'comment_data': context['comment'],
             'comment_author': 'api',
         }
         for backend, services in self.item_chunks(services).items():
@@ -257,7 +257,7 @@ try:
         result["error"] = "This script must be run in an OMD environment"
         status = 400
         raise CGIAbort
-    setup_logging(logdir=os.environ["OMD_ROOT"]+"/var/log", logfile="downtime-api.log", scrnloglevel=logging.CRITICAL, txtloglevel=logging.DEBUG, format="[%(asctime)s][%(process)d] - %(levelname)s - %(message)s")
+    setup_logging(logdir=os.environ["OMD_ROOT"]+"/var/log", logfile="downtime-api.log", scrnloglevel=logging.CRITICAL, txtloglevel=logging.INFO, format="[%(asctime)s][%(process)d] - %(levelname)s - %(message)s")
     logger = logging.getLogger('downtime-api')
 
     params = cgi.FieldStorage()
