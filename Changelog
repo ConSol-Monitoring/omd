@@ -16,6 +16,7 @@ next:
           - Go update to 1.10.5
           - Go added 1.11.2
           - Mod-Gearman:
+            - update 3.0.7
             - switch to go worker
             - update mod-gearman-worker-go to 1.0.4
           - LMD: Update 1.3.6
