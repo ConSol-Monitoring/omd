@@ -80,6 +80,7 @@ skel:
 	mkdir -p $(SKEL)/etc/nagios/
 	cp $(DIR)/cgi.cfg $(SKEL)/etc/thruk/
 	sed -e 's/thrukadmin/omdadmin/g' -i $(SKEL)/etc/thruk/cgi.cfg
+	sed -e 's/^default_user_name=.*/default_user_name=/g' -i $(SKEL)/etc/thruk/cgi.cfg
 
 clean:
 	rm -rf $(DIR)
