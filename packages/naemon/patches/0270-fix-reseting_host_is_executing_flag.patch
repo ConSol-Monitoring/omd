@@ -1,0 +1,28 @@
+From c87f2852f05f8e34f98ad4f1a8193025cfbe5a9e Mon Sep 17 00:00:00 2001
+From: Sven Nierlein <sven@nierlein.de>
+Date: Fri, 30 Nov 2018 16:49:51 +0100
+Subject: [PATCH] reset is_executing flag when processing active host check
+ result (fixes #154)
+
+right now, we have to reset the flag in mod-gearman but hosts should just
+behave like services here when processing check results and reset the flag on
+processing an active check result.
+
+Signed-off-by: Sven Nierlein <sven@nierlein.de>
+---
+ src/naemon/checks_host.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/src/naemon/checks_host.c b/src/naemon/checks_host.c
+index 1c1e1b0d..4acd4699 100644
+--- a/src/naemon/checks_host.c
++++ b/src/naemon/checks_host.c
+@@ -431,6 +431,8 @@ int update_host_state_post_check(struct host *hst, struct check_result *cr)
+ 
+ 	/* adjust return code (active checks only) */
+ 	if (cr->check_type == CHECK_TYPE_ACTIVE) {
++		hst->is_executing = FALSE;
++
+ 		if (cr->early_timeout) {
+ 			nm_free(hst->plugin_output);
+ 			nm_free(hst->long_plugin_output);

@@ -1,0 +1,103 @@
+From a37372bae1fb0250e7e144f7750897c4fbdb8516 Mon Sep 17 00:00:00 2001
+From: Sven Nierlein <sven@nierlein.de>
+Date: Fri, 30 Nov 2018 15:59:31 +0100
+Subject: [PATCH] fix orphaned checks logic
+
+the orphaned check eventhandler checks the next_check against the expected next
+check. But normal service/host check events simply run schedule_next_... so
+then orphan check will never match.
+
+right now its like this:
+
+  handle_host_check_event()
+  ->  run_async_host_check()
+  ->  sets is_executing true
+  ->  check never comes back
+  ->  next check scheduled
+  handle_host_check_event()
+  ->  run_async_host_check()
+  ->  returns an error because is_executing is still set
+  ->  next check scheduled
+
+So since next_check is always pushed forward, the orphan check will never
+match, even if the host/service has the is_executing flag for days. To fix
+this, we only reschedule the next check if the is_executing flag is false.
+
+Now when the check takes longer than the check interval, this can lead to
+situations that there is no event scheduled. So make sure we scheduled a event
+when receiving a check result and there is no event yet.
+
+Signed-off-by: Sven Nierlein <sven@nierlein.de>
+---
+ src/naemon/checks_host.c    | 9 +++++++--
+ src/naemon/checks_service.c | 9 +++++++--
+ 2 files changed, 14 insertions(+), 4 deletions(-)
+
+diff --git a/src/naemon/checks_host.c b/src/naemon/checks_host.c
+index 1c1e1b0d..688c274f 100644
+--- a/src/naemon/checks_host.c
++++ b/src/naemon/checks_host.c
+@@ -158,7 +158,7 @@ static void handle_host_check_event(struct nm_event_execution_properties *evprop
+ 		 * But this is only done if checks are recurring, that is non-zero
+ 		 * check_interval
+ 		 */
+-		if (hst->check_interval != 0.0)
++		if (hst->check_interval != 0.0 && hst->is_executing == FALSE)
+ 			schedule_next_host_check(hst, get_host_check_interval_s(hst), CHECK_OPTION_NONE);
+ 
+ 		/* Don't run checks if checks are disabled, unless foreced */
+@@ -175,7 +175,7 @@ static void handle_host_check_event(struct nm_event_execution_properties *evprop
+ 		/* an error occurred, so reschedule the check */
+ 		if (result == ERROR) {
+ 			/* Somethings wrong, reschedule for retry interval instead, if retry_interval is specified. */
+-			if (hst->retry_interval != 0.0) {
++			if (hst->retry_interval != 0.0 && hst->is_executing == FALSE) {
+ 				schedule_next_host_check(hst, get_host_retry_interval_s(hst), CHECK_OPTION_NONE);
+ 				log_debug_info(DEBUGL_CHECKS, 1, "Rescheduled next host check for %s\n", ctime(&hst->next_check));
+ 			}
+@@ -879,6 +879,11 @@ static int process_host_check_result(host *hst, host *prev, int *alert_recorded)
+ 		}
+ 	}
+ 
++	/* make sure there is a next check event scheduled */
++	if (hst->check_interval != 0.0 && hst->next_check_event == NULL) {
++		schedule_next_host_check(hst, get_host_check_interval_s(hst), CHECK_OPTION_NONE);
++	}
++
+ 	/* update host status - for both active (scheduled) and passive (non-scheduled) hosts */
+ 	update_host_status(hst, FALSE);
+ 
+diff --git a/src/naemon/checks_service.c b/src/naemon/checks_service.c
+index c9d782e7..e3346fcd 100644
+--- a/src/naemon/checks_service.c
++++ b/src/naemon/checks_service.c
+@@ -155,7 +155,7 @@ static void handle_service_check_event(struct nm_event_execution_properties *evp
+ 		temp_service->next_check_event = NULL;
+ 
+ 		/* Reschedule next check directly, might be replaced later */
+-		if (temp_service->check_interval != 0.0) {
++		if (temp_service->check_interval != 0.0 && temp_service->is_executing == FALSE) {
+ 			schedule_next_service_check(temp_service, get_service_check_interval_s(temp_service), 0);
+ 		}
+ 
+@@ -166,7 +166,7 @@ static void handle_service_check_event(struct nm_event_execution_properties *evp
+ 				nm_log(NSLOG_RUNTIME_WARNING,
+ 				       "\tMax concurrent service checks (%d) has been reached.  Nudging %s:%s by %d seconds...\n", max_parallel_service_checks, temp_service->host_name, temp_service->description, nudge_seconds);
+ 				/* Simply reschedule at retry_interval instead, if defined (otherwise keep scheduling at normal interval) */
+-				if (temp_service->retry_interval != 0.0) {
++				if (temp_service->retry_interval != 0.0 && temp_service->is_executing == FALSE) {
+ 					schedule_next_service_check(temp_service, get_service_retry_interval_s(temp_service), 0);
+ 				}
+ 				return;
+@@ -1010,6 +1010,11 @@ int handle_async_service_check_result(service *temp_service, check_result *queue
+ 	/* set the checked flag */
+ 	temp_service->has_been_checked = TRUE;
+ 
++	/* make sure there is a next check event scheduled */
++	if(temp_service->next_check_event == NULL && temp_service->check_interval != 0.0) {
++		schedule_next_service_check(temp_service, get_service_check_interval_s(temp_service), CHECK_OPTION_NONE);
++	}
++
+ 	/* update the current service status log */
+ 	update_service_status(temp_service, FALSE);
+ 
