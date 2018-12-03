@@ -39,6 +39,10 @@ case "$1" in
         mkdir -p ###ROOT###/var/log/gearman
         rm -f ###ROOT###/var/log/mod-gearman/gearman
         CMD="$DAEMON -d --config=$CONFIG --pidfile=$PIDFILE"
+
+        # worker opens lot of connections, so increase default ulimit to our hard limit
+        ulimit -n $(ulimit -Hn) >/dev/null 2>&1
+
         if [ "$USERID" -eq 0 ]; then
             su -s $SHELL - $USER -c  "$CMD"
         else
