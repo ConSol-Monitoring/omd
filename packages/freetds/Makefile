@@ -12,9 +12,10 @@ build:
 	cd $(FREETDS_DIR) && \
 	./configure --prefix=$(OMD_ROOT) && \
 	$(MAKE) && $(MAKE) DESTDIR=$(shell pwd)/tmpinstall install
+	$(MAKE) DESTDIR=$(DESTDIR) -C $(FREETDS_DIR)
 
 install:
-	$(MAKE) DESTDIR=$(DESTDIR) -C $(FREETDS_DIR) -j 1 install
+	$(MAKE) DESTDIR=$(DESTDIR) -C $(FREETDS_DIR) install
 	rm -rf $(DESTDIR)$(OMD_ROOT)/etc/freetds.conf
 	rm -rf tmpinstall
 
