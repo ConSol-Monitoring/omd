@@ -1,0 +1,53 @@
+From 747828343287bbf48f153af6cd446c636741d5d6 Mon Sep 17 00:00:00 2001
+From: Sven Nierlein <sven@nierlein.de>
+Date: Mon, 3 Dec 2018 09:24:13 +0100
+Subject: [PATCH] set flag if check is scheduled from the orphan event handler
+
+this flag was used by mod-gearman to detect orphaned checks for example
+from misconfiguration to submit a critical check result with a useful
+message.
+---
+ src/naemon/checks_host.c    | 2 +-
+ src/naemon/checks_service.c | 2 +-
+ src/naemon/common.h         | 2 +-
+ 3 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/src/naemon/checks_host.c b/src/naemon/checks_host.c
+index 1c1e1b0d..77204250 100644
+--- a/src/naemon/checks_host.c
++++ b/src/naemon/checks_host.c
+@@ -1142,7 +1142,7 @@ static void check_for_orphaned_hosts_eventhandler(struct nm_event_execution_prop
+ 				temp_host->is_executing = FALSE;
+ 
+ 				/* schedule an immediate check of the host */
+-				schedule_next_host_check(temp_host, 0, CHECK_OPTION_NONE);
++				schedule_next_host_check(temp_host, 0, CHECK_OPTION_ORPHAN_CHECK);
+ 			}
+ 
+ 		}
+diff --git a/src/naemon/checks_service.c b/src/naemon/checks_service.c
+index c9d782e7..6bfb94a1 100644
+--- a/src/naemon/checks_service.c
++++ b/src/naemon/checks_service.c
+@@ -1079,7 +1079,7 @@ static void check_for_orphaned_services_eventhandler(struct nm_event_execution_p
+ 				temp_service->is_executing = FALSE;
+ 
+ 				/* schedule an immediate check of the service */
+-				schedule_next_service_check(temp_service, 0, 0);
++				schedule_next_service_check(temp_service, 0, CHECK_OPTION_ORPHAN_CHECK);
+ 			}
+ 
+ 		}
+diff --git a/src/naemon/common.h b/src/naemon/common.h
+index f888d18f..a96c5eb9 100644
+--- a/src/naemon/common.h
++++ b/src/naemon/common.h
+@@ -385,7 +385,7 @@ NAGIOS_END_DECL
+ #define CHECK_OPTION_NONE		0	/* no check options */
+ #define CHECK_OPTION_FORCE_EXECUTION	1	/* force execution of a check (ignores disabled services/hosts, invalid timeperiods) */
+ #define CHECK_OPTION_FRESHNESS_CHECK    2       /* this is a freshness check */
+-                                     /* 4          used to be CHECK_OPTION_ORPHAN_CHECK, but is no longer used */
++#define CHECK_OPTION_ORPHAN_CHECK       4       /* flag for scheduled checks from orphan event handler */
+ #define CHECK_OPTION_DEPENDENCY_CHECK   8       /* dependency check. different scheduling rules apply */
+ #define CHECK_OPTION_ALLOW_POSTPONE     16      /* allow the check to take precedence over an earlier (sooner) scheduled check */
+ 

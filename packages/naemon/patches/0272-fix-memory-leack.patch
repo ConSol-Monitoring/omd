@@ -1,0 +1,36 @@
+From 3ec44f75b7873cf4469814bfe8713063c8a85252 Mon Sep 17 00:00:00 2001
+From: Sven Nierlein <sven@nierlein.de>
+Date: Mon, 3 Dec 2018 22:42:58 +0100
+Subject: [PATCH] fix memory leak when overriding checks
+
+Overriding checks during the host/service_initiate stage leads to a memory leak.
+Freeing the check_result pointer helps.
+---
+ src/naemon/checks_host.c    | 1 +
+ src/naemon/checks_service.c | 1 +
+ 2 files changed, 2 insertions(+)
+
+diff --git a/src/naemon/checks_host.c b/src/naemon/checks_host.c
+index 86391eb0..59ceec27 100644
+--- a/src/naemon/checks_host.c
++++ b/src/naemon/checks_host.c
+@@ -318,6 +318,7 @@ static int run_async_host_check(host *hst, int check_options, double latency)
+ 	if (neb_result == NEBERROR_CALLBACKOVERRIDE) {
+ 		clear_volatile_macros_r(&mac);
+ 		free_check_result(cr);
++		free(cr);
+ 		nm_free(processed_command);
+ 		return OK;
+ 	}
+diff --git a/src/naemon/checks_service.c b/src/naemon/checks_service.c
+index c5969555..5ddc7f8b 100644
+--- a/src/naemon/checks_service.c
++++ b/src/naemon/checks_service.c
+@@ -307,6 +307,7 @@ static int run_scheduled_service_check(service *svc, int check_options, double l
+ 	if (neb_result == NEBERROR_CALLBACKOVERRIDE) {
+ 		clear_volatile_macros_r(&mac);
+ 		free_check_result(cr);
++		free(cr);
+ 		nm_free(processed_command);
+ 		return OK;
+ 	}
