@@ -42,6 +42,7 @@ install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/doc/naemon
 	install -m 644 example.cfg                                $(DESTDIR)$(OMD_ROOT)/share/doc/naemon
 	install -m 755 purge_naemon    		                      $(DESTDIR)$(OMD_ROOT)/bin
+	install -m 755 nq                                         $(DESTDIR)$(OMD_ROOT)/bin
 
 skel:
 

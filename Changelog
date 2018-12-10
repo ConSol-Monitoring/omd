@@ -23,6 +23,7 @@ next:
           - LMD: Update 1.3.6
           - Naemon:
             - update livestatus to 1.0.8
+            - add simple query handler client: nq
           - Icinga:
             - remove cgis
 
