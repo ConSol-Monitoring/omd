@@ -1,0 +1,146 @@
+From 523f205a0f2fa2e328e68f37d2a88fa2bf07dbb5 Mon Sep 17 00:00:00 2001
+From: Sven Nierlein <sven@nierlein.de>
+Date: Mon, 10 Dec 2018 17:56:04 +0100
+Subject: [PATCH 1/2] fix using uninitialized buffer
+
+---
+ src/Store.cc | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
+
+diff --git a/src/Store.cc b/src/Store.cc
+index d700fc8..c4422bd 100644
+--- a/src/Store.cc
++++ b/src/Store.cc
+@@ -149,7 +149,7 @@ bool Store::answerRequest(InputBuffer *input, OutputBuffer *output)
+ void Store::answerCommandRequest(const char *command)
+ {
+     int ret, sd;
+-    char *buf;
++    char buf[4096];
+     sd = nsock_unix(qh_socket_path, NSOCK_TCP | NSOCK_CONNECT);
+     if (sd < 0) {
+         logger(LG_INFO, "Failed to connect to query socket '%s': %s: %s", qh_socket_path, nsock_strerror(sd), strerror(errno));
+@@ -159,8 +159,9 @@ void Store::answerCommandRequest(const char *command)
+     if (ret < 0) {
+         logger(LG_INFO, "failed to submit command by query handler");
+     }
+-    while(read(sd, buf, 1024) > 0) {
+-        logger(LG_INFO, "query handler: %s\n", buf);
++    while(read(sd, buf, 4095) > 0) {
++        rstrip(buf);
++        logger(LG_INFO, "query handler: %s", rstrip(buf));
+     }
+     close(sd);
+     return;
+
+From 9f70a0688fc6e7f46b1c42badfd36c032a6eb46c Mon Sep 17 00:00:00 2001
+From: Sven Nierlein <sven@nierlein.de>
+Date: Mon, 10 Dec 2018 18:44:20 +0100
+Subject: [PATCH 2/2] pass errors from the query handler back to the client
+
+so the client has a chance to detect failed commands. This
+should not break(tm) existing setups, because it changes the output
+only if the command was unsuccessful.
+---
+ src/OutputBuffer.cc | 23 ++++++++++-------------
+ src/Store.cc        | 12 ++++++++----
+ src/Store.h         |  2 +-
+ 3 files changed, 19 insertions(+), 18 deletions(-)
+
+diff --git a/src/OutputBuffer.cc b/src/OutputBuffer.cc
+index d94f5c8..fa61d3b 100644
+--- a/src/OutputBuffer.cc
++++ b/src/OutputBuffer.cc
+@@ -93,26 +93,24 @@ void OutputBuffer::needSpace(unsigned len)
+ 
+ void OutputBuffer::flush(int fd, int *termination_flag)
+ {
++    const char *buffer = _buffer;
++    int s = size();
++    // if response code is not OK, output error
++    // message instead of data
++    if (_response_code != RESPONSE_CODE_OK)
++    {
++        buffer = _error_message.c_str();
++        s = _error_message.size();
++    }
+     if (_response_header == RESPONSE_HEADER_FIXED16)
+     {
+-        const char *buffer = _buffer;
+-        int s = size();
+-
+-        // if response code is not OK, output error
+-        // message instead of data
+-        if (_response_code != RESPONSE_CODE_OK)
+-        {
+-            buffer = _error_message.c_str();
+-            s = _error_message.size();
+-        }
+-
+         char header[17];
+         snprintf(header, sizeof(header), "%03d %11d\n", _response_code, s);
+         writeData(fd, termination_flag, header, 16);
+         writeData(fd, termination_flag, buffer, s);
+     }
+     else
+-        writeData(fd, termination_flag, _buffer, size());
++        writeData(fd, termination_flag, buffer, s);
+     reset();
+ }
+ 
+@@ -161,4 +159,3 @@ void OutputBuffer::setError(unsigned code, const char *format, ...)
+         _response_code = code;
+     }
+ }
+-
+diff --git a/src/Store.cc b/src/Store.cc
+index c4422bd..556efc9 100644
+--- a/src/Store.cc
++++ b/src/Store.cc
+@@ -132,7 +132,7 @@ bool Store::answerRequest(InputBuffer *input, OutputBuffer *output)
+     else if (!strcmp(line, "GET"))
+         answerGetRequest(input, output, ""); // only to get error message
+     else if (!strncmp(line, "COMMAND ", 8)) {
+-        answerCommandRequest(lstrip((char *)line + 8));
++        answerCommandRequest(lstrip((char *)line + 8), output);
+         output->setDoKeepalive(true);
+     }
+     else if (!strncmp(line, "LOGROTATE", 9)) {
+@@ -146,7 +146,7 @@ bool Store::answerRequest(InputBuffer *input, OutputBuffer *output)
+     return output->doKeepalive();
+ }
+ 
+-void Store::answerCommandRequest(const char *command)
++void Store::answerCommandRequest(const char *command, OutputBuffer *output)
+ {
+     int ret, sd;
+     char buf[4096];
+@@ -159,9 +159,13 @@ void Store::answerCommandRequest(const char *command)
+     if (ret < 0) {
+         logger(LG_INFO, "failed to submit command by query handler");
+     }
++    output->reset();
+     while(read(sd, buf, 4095) > 0) {
+-        rstrip(buf);
+-        logger(LG_INFO, "query handler: %s", rstrip(buf));
++        int code = atoi(buf);
++        if(code != 200) {
++            logger(LG_INFO, "Unsuccessful command: '%s'", command);
++            output->setError(RESPONSE_CODE_INVALID_REQUEST, "%s", rstrip(buf));
++        }
+     }
+     close(sd);
+     return;
+diff --git a/src/Store.h b/src/Store.h
+index 0ead3d8..f489e0b 100644
+--- a/src/Store.h
++++ b/src/Store.h
+@@ -74,7 +74,7 @@ class Store
+ private:
+     Table *findTable(string name);
+     void answerGetRequest(InputBuffer *, OutputBuffer *, const char *);
+-    void answerCommandRequest(const char *);
++    void answerCommandRequest(const char *, OutputBuffer *);
+ };
+ 
+ #endif // Store_h
