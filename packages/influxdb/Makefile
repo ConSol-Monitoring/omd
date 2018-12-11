@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 NAME       = influxdb
-VERSION    = 1.6.4
+VERSION    = 1.7.1
 SRC        = $(NAME)-$(VERSION).tar.gz
 GOPATH     = go
 GOPKG      = 1.11
@@ -36,17 +36,13 @@ clean:
 package: clean
 	mkdir -p $(GOPATH)
 	export GOROOT=$(PWD)/../go-$(GOPKG)/go-$(GOVERSION) && export GOPATH=$(PWD)/$(GOPATH)/ && PATH=$$GOROOT/bin:$$PATH && \
+		go get -d -u github.com/golang/dep && \
+		go install github.com/golang/dep/cmd/dep && \
 		mkdir -p $(GOPATH)/src/github.com/influxdata/ && \
 		cd $(GOPATH)/src/github.com/influxdata && \
 		git clone --depth=1 --branch "v$(VERSION)" https://github.com/influxdata/influxdb.git && \
 		cd influxdb && \
-		git branch master && \
-		git checkout master && \
-		go get github.com/sparrc/gdm && \
-		$(PWD)/$(GOPATH)/bin/gdm restore && \
-		go fmt ./... && \
-		cd .. && \
-		go get ./... && \
+		$(PWD)/$(GOPATH)/bin/dep ensure -vendor-only && \
 		cd $(PWD) && \
 		find $(GOPATH)/src/ -type d -name ".git*" -exec chmod -R u+w {} \; && \
 		find $(GOPATH)/src/ -name ".git*" -exec rm -R {} \; ; \

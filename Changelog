@@ -28,6 +28,7 @@ next:
             - add simple query handler client: nq
           - Icinga:
             - remove cgis
+          - InfluxDB: update to 1.7.1
 
 2.80     Oct 29 2018
           - OMD:
