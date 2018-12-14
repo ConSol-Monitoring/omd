@@ -71,6 +71,7 @@ class ThrukCli(object):
     def get_backends(self):
         try:
             self.backends = self.get('/sites')
+            self.backend_dict = { b["id"]: b["name"] for b in self.backends }
         except Exception, e:
             pass
 
@@ -82,44 +83,47 @@ class ThrukCli(object):
             for b in self.backends:
                 logger.error("get_backend_names %s", str(b))
 
+    def add_peer_names(self, items):
+        for i in items:
+            # sometimes (with lmd?) peer_name is missing
+            if not "peer_name" in i and "peer_key" in i and i["peer_key"] in self.backend_dict:
+                i["peer_name"] = self.backend_dict[i["peer_key"]]
+        return items
+
     def get_host(self, host):
         try:
             hosts = self.get('/hosts/%s', (host,))
-            for h in hosts:
-                # sometimes (with lmd?) peer_name is missing
-                if not "peer_name" in h and "peer_key" in h and h["peer_key"] in self.backends:
-                    h["peer_name"] = self.backends[h["peer_key"]]["peer_name"]
         except Exception, e:
             hosts = []
-        return hosts
+        return self.add_peer_names(hosts)
 
     def get_hostgroup(self, hostgroup):
         try:
             hosts = self.get('/hosts?q=groups >= "%s"', ('NQ'+hostgroup,))
         except Exception, e:
             hosts = []
-        return hosts
+        return self.add_peer_names(hosts)
 
     def get_services(self, host, service):
         try:
             services = self.get('/services?host_name=%s&description=%s', (host, service))
         except Exception, e:
             services = []
-        return services
+        return self.add_peer_names(services)
 
     def get_hostgroup_services(self, hostgroup, service):
         try:
             services = self.get('/services?q=(host_groups >= "%s") and description = "%s"', ('NQ'+hostgroup, 'NQ'+service))
         except Exception, e:
             services = []
-        return services
+        return self.add_peer_names(services)
 
     def get_host_services(self, host):
         try:
             services = self.get('/services?host_name=%s', (host,))
         except Exception, e:
             services = []
-        return services
+        return self.add_peer_names(services)
 
     def downtime_match(self, item, downtime):
         if "description" in item and item["description"]:
@@ -170,7 +174,7 @@ class ThrukCli(object):
         for backend, hosts in self.item_chunks(hosts).items():
             self.prefer_backend(backend)
             for host in hosts:
-                for downtime in self.get('/downtimes?host_name=%s', (host["name"],)):
+                for downtime in self.add_peer_names(self.get('/downtimes?host_name=%s', (host["name"],))):
                     if self.downtime_match(host, downtime):
                         host_downtimes.append(downtime)
             self.reset_backend()
@@ -214,7 +218,7 @@ class ThrukCli(object):
         for backend, services in self.item_chunks(services).items():
             self.prefer_backend(backend)
             for service in services:
-                for downtime in self.get('/downtimes?host_name=%s&service_description=%s', (service["host_name"], service["description"])):
+                for downtime in self.add_peer_names(self.get('/downtimes?host_name=%s&service_description=%s', (service["host_name"], service["description"]))):
                     if self.downtime_match(service, downtime):
                         service_downtimes.append(downtime)
             self.reset_backend()
