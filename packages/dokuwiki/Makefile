@@ -22,6 +22,7 @@ build:
 		( cd $(DIR) ; patch -p1 -b ) < $$p ; \
 	done
 	find $(DIR)/ -name \*.orig -exec rm {} \;
+	find $(DIR)/ -name ._\* -exec rm {} \;
 
 install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/dokuwiki
