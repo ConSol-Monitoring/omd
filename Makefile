@@ -112,14 +112,16 @@ pack:
 	rm -rf $(DESTDIR)
 	mkdir -p $(DESTDIR)$(OMD_PHYSICAL_BASE)
 	A="$(OMD_PHYSICAL_BASE)" ; ln -s $${A:1} $(DESTDIR)/omd
-	@set -e ; cd packages ; for p in $(PACKAGES) ; do \
+	@set -e; MB1=0 ; cd packages ; for p in $(PACKAGES) ; do \
             NOW=$$(date +%s); \
             $(MAKE) -C $$p DESTDIR=$(DESTDIR) install ; \
             for hook in $$(cd $$p ; ls *.hook 2>/dev/null) ; do \
                 mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/omd/hooks ; \
                 install -m 755 $$p/$$hook $(DESTDIR)$(OMD_ROOT)/lib/omd/hooks/$${hook%.hook} ; \
             done ; \
-            echo "pack: $$p (took $$(( $$(date +%s) - NOW ))s)"; \
+            MB2=$$(du -sm $(DESTDIR) | awk '{ print $$1 }'); \
+            echo "pack: $$p (took $$(( $$(date +%s) - NOW ))s) disk usage: $$(( MB2 - MB1 ))MB"; \
+            MB1=$$MB2; \
         done
 
 	sed -i -e 's|###APACHE_MODULE_DIR###|$(MODULE_DIR)|g' $(DESTDIR)$(OMD_ROOT)/lib/omd/hooks/*
