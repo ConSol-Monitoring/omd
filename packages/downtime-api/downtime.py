@@ -71,7 +71,7 @@ class ThrukCli(object):
     def get_backends(self):
         try:
             self.backends = self.get('/sites')
-            self.backend_dict = { b["id"]: b["name"] for b in self.backends }
+            self.backend_dict = dict([ (b["id"], b["name"]) for b in self.backends ])
         except Exception, e:
             pass
 
