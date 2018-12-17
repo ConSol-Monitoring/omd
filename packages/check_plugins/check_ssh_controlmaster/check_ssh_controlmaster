@@ -243,13 +243,13 @@ function killcm() {
   local restart="n"
   local pid=$(pidof "$host" "$port" "$user" "$sshopts" "$controlpath")
   if [ -n "$pid" ]; then
-    test -e $controlpath && mv $controlpath ${controlpath}old
+    test -e $controlpath && mv -f $controlpath ${controlpath}old
     kill -9 $pid
     sleep 1
     test $DEBUG && echo killcm $controlpath $pid >1 >&2
     echo "y killed"
   else
-    test -e $controlpath && mv $controlpath ${controlpath}old
+    test -e $controlpath && mv -f $controlpath ${controlpath}old
     echo "n nopid"
     test $DEBUG && echo killcm $controlpath nopid >1 >&2
   fi
