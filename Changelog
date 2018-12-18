@@ -23,6 +23,7 @@ next:
             - reduce log entries when gearmand hits open file limit
           - LMD: Update 1.3.6
           - Naemon:
+            - update core to 1.0.9
             - update livestatus to 1.0.8
             - add simple query handler client: nq
           - Icinga:
