@@ -13,8 +13,6 @@ MESSAGE=""
 NOW=$(date +'%s')
 if [ -x "/usr/bin/nc" ]; then
   NC="/usr/bin/nc"
-elif [ -x "/bin/nc" ]; then
-  NC="/bin/nc"
 else
   NC="/usr/bin/netcat"
 fi
@@ -25,8 +23,11 @@ LSPORT=6557
 # -l ${REMUSER} -H hostname/address -p 22
 # ->
 
-while getopts "l:H:p:c:m:s:Px" opt; do
+while getopts "dl:H:p:c:m:s:Px" opt; do
     case $opt in 
+    d)
+        DEBUG=1
+        ;;
     l)
         REMUSER=$OPTARG
         ;;
@@ -181,7 +182,7 @@ function responding() {
   local restart="n"
   # test if the connection is working
   home=$(remoteid "$host" "$port" "$user" "$sshopts" "$controlpath")
-  if [[ "$home" =~ .*mux_client_request_session.* ]]; then
+  if [[ "$home" =~ .*mux_client_request_session.*(session request|read from master)\s+failed ]]; then
     # ...session: session request failed: Session open refused by peer
     # maybe kill longrunning processes
     restart="n"
@@ -321,8 +322,11 @@ do
       elif [ "$text" = "ConnectionTimeout" ]; then
         echo "remote sshd connection timed out"
         exit 2
+      elif [ "$text" = "MuxClientRequestSession" ]; then
+        #echo "controlmaster running"
+        :
       else
-        echo "controlmaster hangs"
+        echo "controlmaster hangs $text"
         exit 2
       fi
     else
@@ -331,7 +335,7 @@ do
   else
     # wenn info file juenger als 1 min ist, dann pruefen
     INFOAGE=$(($NOW - $(stat -c "%Y" ${CONTROLPATH}.info)))
-    if [ $INFOAGE -lt 60 ]; then
+    if [ $INFOAGE -lt 60 -o ! -f $CONTROLPATHX ]; then
       # only if the info file was renewed (after 1/2h) we check. otherwise we trust in stabiluity
       ret=$(responding "$REMHOSTADDR" "$REMPORT" "$REMUSER" "$CMCOPTS" "$CONTROLPATHX")
       mustrestart=${ret%% *}
@@ -360,7 +364,7 @@ elif [ $RUNNING -lt $FORKS ]; then
   printf "WARNING - session partially established (%d of %d)\n" $RUNNING $FORKS
   exit 1
 else
-  printf "OK - session established\n"
+  printf "OK - session established (%d connections)\n" $RUNNING
   exit 0
 fi
 
