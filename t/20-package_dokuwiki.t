@@ -14,7 +14,7 @@ BEGIN {
 
 my $php_version = `php -v`;
 $php_version =~ s%^PHP\ (\d\.\d).*%$1%gmsx;
-plan( skip_all => 'dokuwiki requires at least php 5.3') if $php_version < 5.3;
+plan( skip_all => 'dokuwiki requires at least php 5.6') if $php_version < 5.6;
 plan( tests => 39 );
 
 ##################################################
