@@ -17,6 +17,7 @@ build:
 install:
 	$(MAKE) DESTDIR=$(DESTDIR) -C $(FREETDS_DIR) install
 	rm -rf $(DESTDIR)$(OMD_ROOT)/etc/freetds.conf
+	rm -rf $(DESTDIR)$(OMD_ROOT)/share/doc/freetds-0.91
 	rm -rf tmpinstall
 
 skel:

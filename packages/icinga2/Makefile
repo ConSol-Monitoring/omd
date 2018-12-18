@@ -99,6 +99,9 @@ install:
 	rm -rf $(DESTDIR)$(OMD_ROOT)/lib*/icinga2
 	sed   -e "s#/lib/icinga2/sbin/icinga2#/lib/sbin/icinga2#g" -i $(DESTDIR)$(OMD_ROOT)/bin/icinga2
 	sed -e "s#/lib64/icinga2/sbin/icinga2#/lib/sbin/icinga2#g" -i $(DESTDIR)$(OMD_ROOT)/bin/icinga2
+	strip $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins/check_nscp_api
+	find $(DESTDIR)$(OMD_ROOT)/lib/ -name icinga2 -type f -exec strip {} \;
+	rm -rf $(DESTDIR)$(OMD_ROOT)/share/doc/icinga2
 
 skel:
 	mkdir -p $(SKEL)/etc/icinga2

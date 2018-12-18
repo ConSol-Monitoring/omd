@@ -37,6 +37,11 @@ install:
 	install -m 755 grafana_utils.py $(DESTDIR)$(OMD_ROOT)/lib/python/grafana_utils.py
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/var/tmp
 	install -m 755 grafanactl $(DESTDIR)$(OMD_ROOT)/bin/
+	# clean up
+	rm -rf $(DESTDIR)$(OMD_ROOT)/share/grafana/public/test
+	rm -rf $(DESTDIR)$(OMD_ROOT)/share/grafana/public/sass
+	rm -rf $(DESTDIR)$(OMD_ROOT)/share/grafana/public/vendor
+	rm -rf $(DESTDIR)$(OMD_ROOT)/share/grafana/public/build/*.map
 
 skel:
 	sed -i -e 's|###APACHE_MODULE_DIR###|$(MODULE_DIR)|g' \

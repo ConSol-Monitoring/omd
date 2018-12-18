@@ -26,7 +26,7 @@ build:
 
 install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/naemon
-	cp $(DIR)/src/.libs/livestatus.so $(DESTDIR)$(OMD_ROOT)/lib/naemon/livestatus.o
+	install -sm 755 $(DIR)/src/.libs/livestatus.so $(DESTDIR)$(OMD_ROOT)/lib/naemon/livestatus.o
 
 skel:
 	mkdir -p $(SKEL)/etc/naemon
