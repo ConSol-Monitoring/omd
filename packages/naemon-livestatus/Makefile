@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 NAME = naemon-livestatus
-VERSION = 1.0.8
+VERSION = 1.0.9
 DIR = $(NAME)-$(VERSION)
 
 CONFIGUREOPTS = \
@@ -9,10 +9,10 @@ CONFIGUREOPTS = \
 
 build:
 	tar xzf $(NAME)-$(VERSION).tar.gz
-	set -e ; for p in patches/*.patch ; do \
-	    echo "applying $$p..." ; \
-	    ( cd $(DIR) ; patch -p1 -b ) < $$p ; \
-	done
+	#set -e ; for p in patches/*.patch ; do \
+	#    echo "applying $$p..." ; \
+	#    ( cd $(DIR) ; patch -p1 -b ) < $$p ; \
+	#done
 	cd $(DIR); \
 		autoreconf -s; \
 		automake --add-missing; \
