@@ -1,0 +1,20 @@
+--- a/go/src/github.com/influxdata/influxdb/prometheus/converters.go	2018-12-19 09:35:48.988071208 +0100
++++ b/go/src/github.com/influxdata/influxdb/prometheus/converters.go	2018-12-19 09:38:39.872738216 +0100
+@@ -57,6 +57,7 @@
+ 		for _, s := range ts.Samples {
+ 			// skip NaN values, which are valid in Prometheus
+ 			if math.IsNaN(s.Value) {
++				// FIXME: Add some logging here?
+ 				droppedNaN = ErrNaNDropped
+ 				continue
+ 			}
+@@ -66,7 +67,8 @@
+ 			fields := map[string]interface{}{fieldName: s.Value}
+ 			p, err := models.NewPoint(measurement, models.NewTags(tags), fields, t)
+ 			if err != nil {
+-				return nil, err
++				// FIXME: Add some logging here?
++				continue
+ 			}
+ 
+ 			points = append(points, p)
