@@ -1,6 +1,12 @@
 This file documents the revision history for the Open Monitoring Distribution (Labs Edition)
 
-next:
+DEPRECATION WARNING: the following components are deprecated and will be removed from the upcoming 3.x release:
+          - Nagios 3
+          - Icinga 1
+          - CheckMK
+          - Nagvis
+
+2.90     Dec 19 2018
           - OMD:
             - create random omdadmin password on omd create
             - display warning if using the old default password
