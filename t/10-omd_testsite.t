@@ -12,7 +12,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 334 );
+plan( tests => 338 );
 
 my $omd_bin = TestUtils::get_omd_bin();
 
@@ -104,6 +104,7 @@ my $tests = [
   # --restore
   { cmd => $omd_bin." restore /tmp/omd.backup.tgz", like => '/Restoring site testsite from /' },
   { cmd => "/bin/su - $site -c 'omd -f restore /tmp/omd.backup.tgz'", like => '/Restore completed/' },
+  { cmd => "/bin/su - $site -c 'find . -user root -ls'", like => '/^$/' },
 
   # --reset
   { cmd => "/bin/sh -c \"echo '# test newline in profile' >> /omd/sites/$site/.profile\""},

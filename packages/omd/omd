@@ -3748,6 +3748,10 @@ def main_restore(args, options={}):
     if not reuse:
         add_to_fstab(g_sitename, tmpfs_size = options.get('tmpfs-size'))
 
+    # give new user all files
+    if am_root:
+        chown_tree(g_sitedir, g_sitename)
+
     finalize_site("restore", "apache-reload" in options)
 
     if not am_root:
