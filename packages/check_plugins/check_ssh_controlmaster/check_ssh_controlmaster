@@ -1,4 +1,4 @@
-#! /bin/sh
+#! /bin/bash
 
 REMUSER=
 REMPORT=22
@@ -13,6 +13,8 @@ MESSAGE=""
 NOW=$(date +'%s')
 if [ -x "/usr/bin/nc" ]; then
   NC="/usr/bin/nc"
+elif [ -x "/bin/nc" ]; then
+  NC="/bin/nc"
 else
   NC="/usr/bin/netcat"
 fi
