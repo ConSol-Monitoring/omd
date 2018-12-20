@@ -6,6 +6,11 @@ DEPRECATION WARNING: the following components are deprecated and will be removed
           - CheckMK
           - Nagvis
 
+next:
+          - Mod-Gearman:
+            - update mod-gearman-worker-go to 1.0.8
+
+
 2.90     Dec 19 2018
           - OMD:
             - create random omdadmin password on omd create
