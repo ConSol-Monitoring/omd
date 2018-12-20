@@ -4,7 +4,7 @@ OMD for Debian
 Nagios-Plugins
 ---------------
 
-OMD contains the package nagios-plugins. Some of those (check_icmp, check_dhcp) 
+OMD contains the package monitoring-plugins. Some of those (check_icmp, check_dhcp) 
 needs root privileges (aka suid bit) to run. The omd debian package as you 
 for setting root privileges. You can change this at any time, just do
 
