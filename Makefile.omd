@@ -2,6 +2,7 @@
 
 OMD_VERSION        = 2.90-labs-edition
 OMD_SERIAL         = 47
+OMD_PATCH_LEVEL    = 1  # increase when creating servicepack releases
 OMD_BASE           = /omd
 OMD_PHYSICAL_BASE  = /opt/omd
 OMD_ROOT           = $(OMD_BASE)/versions/$(OMD_VERSION)
