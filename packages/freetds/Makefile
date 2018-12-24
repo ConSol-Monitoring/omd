@@ -1,23 +1,23 @@
 include ../../Makefile.omd
 
 NAME = freetds
-FREETDS_VERSION = 0.91
+FREETDS_VERSION = 1.00.109
 FREETDS_DIR = freetds-$(FREETDS_VERSION)
 SHELL = /bin/bash
 
 build:
 	# ftp://ftp.freetds.org/pub/freetds/stable/freetds-stable.tgz
 	tar xf freetds-$(FREETDS_VERSION).tar.gz
-	cd $(FREETDS_DIR) && patch -p1 < ../0001-ct_connect-allow-host.patch
+	#cd $(FREETDS_DIR) && patch -p1 < ../0001-ct_connect-allow-host.patch
 	cd $(FREETDS_DIR) && \
-	./configure --prefix=$(OMD_ROOT) && \
+	./configure --prefix=$(OMD_ROOT) --with-openssl && \
 	$(MAKE) && $(MAKE) DESTDIR=$(shell pwd)/tmpinstall install
 	$(MAKE) DESTDIR=$(DESTDIR) -C $(FREETDS_DIR)
 
 install:
 	$(MAKE) DESTDIR=$(DESTDIR) -C $(FREETDS_DIR) install
 	rm -rf $(DESTDIR)$(OMD_ROOT)/etc/freetds.conf
-	rm -rf $(DESTDIR)$(OMD_ROOT)/share/doc/freetds-0.91
+	rm -rf $(DESTDIR)$(OMD_ROOT)/share/doc/$(FREETDS_DIR)
 	rm -rf tmpinstall
 
 skel:

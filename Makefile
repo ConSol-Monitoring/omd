@@ -176,7 +176,7 @@ pack:
 
 clean:
 	rm -rf $(DESTDIR)
-	@for p in packages/* ; do \
+	@set -e ; cd packages ; for p in $(PACKAGES) ; do \
             $(MAKE) -C $$p clean ; \
         done
 
