@@ -60,14 +60,6 @@ for my $tarball (glob("packages/perl-modules/src/*.gz packages/perl-modules/src/
 }
 
 ##################################################
-for my $file (qw|/*/Class/MethodMaker/scalar.pm /*/Class/MethodMaker/hash.pm /*/Class/MethodMaker/array.pm|) {
-    my $pattern = "/omd/sites/$site/lib/perl5/lib/perl5".$file;
-    my @files   = glob($pattern);
-    ok(scalar @files > 0, "found file(s) for pattern: ".$pattern);
-    ok(-s $files[0], $files[0]." must not be empty");
-}
-
-##################################################
 SKIP: {
     skip('Author test. Set $ENV{TEST_AUTHOR} to a true value to run.', 4) unless $ENV{TEST_AUTHOR};
     my $author_tests = [

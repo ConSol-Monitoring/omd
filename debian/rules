@@ -7,6 +7,9 @@
 # Uncomment this to turn on verbose mode.
 #export DH_VERBOSE=1
 
+# do not build dbgsym packages
+DEB_DH_STRIP_ARGS := --no-automatic-dbgsym
+
 _PWD=`pwd`
 
 include Makefile.omd

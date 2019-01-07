@@ -40,7 +40,6 @@ install:
 	# clean up
 	rm -rf $(DESTDIR)$(OMD_ROOT)/share/grafana/public/test
 	rm -rf $(DESTDIR)$(OMD_ROOT)/share/grafana/public/sass
-	rm -rf $(DESTDIR)$(OMD_ROOT)/share/grafana/public/vendor
 	rm -rf $(DESTDIR)$(OMD_ROOT)/share/grafana/public/build/*.map
 
 skel:

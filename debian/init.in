@@ -5,10 +5,11 @@
 # Provides:          omd-###OMD_VERSION###
 # Required-Start:    $syslog
 # Required-Stop:     $syslog
+# Should-Start:      $network $remote_fs ntpdate
 # Default-Start:     2 3 4 5
 # Default-Stop:      0 1 6
 # Short-Description: OMD sites
-# Description:       Start and stop the sites of the OpenSource Monitoring 
+# Description:       Start and stop the sites of the Open Monitoring
 #                    Distribution (OMD)
 ### END INIT INFO
 
@@ -23,12 +24,12 @@ OMD="/omd/versions/$VERSION/bin/omd"
 
 case "$1" in
     start)
-	if [ "$AUTOSTART" = "1" ]; then
-          echo "Starting all OMD monitoring sites $MSG:"
-          $OMD "$1" $VER
-	else
-	  echo "OMD autostart disabled, skipping ..."
-	fi
+    if [ "$AUTOSTART" = "1" ]; then
+        echo "Starting all OMD monitoring sites $MSG:"
+        $OMD "$1" $VER
+    else
+        echo "OMD autostart disabled, skipping ..."
+    fi
     ;;
     stop)
         echo "Stopping all OMD monitoring sites $MSG:"
@@ -47,8 +48,8 @@ case "$1" in
         $OMD "$1" $VER
     ;;
     '')
-	echo "usage: $PROGNAME start|stop|restart|reload|status"
-	exit 1
+        echo "usage: $PROGNAME start|stop|restart|reload|status"
+        exit 1
     ;;
     *)
         echo "Doing $1 on all OMD monitoring sites $MSG:"

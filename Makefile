@@ -263,7 +263,7 @@ rpm:
 	sed -e 's/^Requires:.*/Requires:        $(OS_PACKAGES)/' \
 	    -e 's/%{version}/$(OMD_VERSION)/g' \
 	    -e 's/^Version:.*/Version: $(DISTRO_CODE)/' \
-	    -e 's/^Release:.*/Release: $(OMD_SERIAL)/' \
+	    -e 's/^Release:.*/Release: $(OMD_PATCH_LEVEL)/' \
 	    -e 's#@APACHE_CONFDIR@#$(APACHE_CONF_DIR)#g' \
 	    -e 's#@APACHE_NAME@#$(APACHE_NAME)#g' \
 	    -e 's#@APACHE_INCLUDEOPT@#$(APACHE_INCLUDEOPT)#g' \
@@ -294,7 +294,7 @@ deb-changelog: deb-environment
 	# this is a hack!
 	rm -f debian/changelog
 	dch --create --package omd-$(OMD_VERSION) \
-	    --newversion 0.$(DISTRO_CODE) "`cat debian/changelog.tmpl`"
+	    --newversion $(OMD_PATCH_LEVEL).$(DISTRO_CODE) "`cat debian/changelog.tmpl`"
 	dch --release "releasing ...."
 
 deb: deb-changelog
@@ -345,6 +345,7 @@ version:
 	if [ -n "$$newversion" ] && [ "$$newversion" != "$(OMD_VERSION)" ]; then \
 	    sed -ri 's/^(OMD_VERSION[[:space:]]*= *).*/\1'"$$newversion/" Makefile.omd ; \
 	    sed -ri 's/^(OMD_SERIAL[[:space:]]*= *).*/\1'"$(NEWSERIAL)/" Makefile.omd ; \
+	    sed -ri 's/^(OMD_PATCH_LEVEL[[:space:]]*= *).*/\1'"1/" Makefile.omd ; \
 	    sed -ri 's/^(OMD_VERSION[[:space:]]*= *).*/\1"'"$$newversion"'"/' packages/omd/omd ; \
 	fi ;
 

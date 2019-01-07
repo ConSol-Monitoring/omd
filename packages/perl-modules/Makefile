@@ -141,14 +141,12 @@ MODULES = \
           XML-SAX-0.99.tar.gz \
           XML-Simple-2.24.tar.gz \
           autodie-2.29.tar.gz \
-          Class-MethodMaker-2.24.tar.gz \
           HTML-Lint-2.30.tar.gz \
           HTTP-Message-6.14.tar.gz \
           HTTP-Negotiate-6.01.tar.gz \
           Module-Load-Conditional-0.68.tar.gz \
           Monitoring-Livestatus-0.78.tar.gz \
           Net-HTTP-6.17.tar.gz \
-          Term-ProgressBar-2.21.tar.gz \
           XML-LibXML-2.0132.tar.gz \
           HTTP-Body-1.22.tar.gz \
           HTTP-Cookies-6.04.tar.gz \

@@ -57,7 +57,9 @@ rm -f $RPM_BUILD_ROOT/usr/share/man/man8/omd.8.gz
 rm -f $RPM_BUILD_ROOT/@APACHE_CONFDIR@/*
 rm -f $RPM_BUILD_ROOT/etc/init.d/omd
 find $RPM_BUILD_ROOT/opt/omd/versions/%{version}/bin/ -type f | grep -v waitmax | grep -v agent_modbus | xargs strip 2>&1 | grep -v 'File format not recognized' ||:
+find $RPM_BUILD_ROOT/opt/omd/versions/%{version}/sbin/ -type f | grep -v waitmax | grep -v agent_modbus | xargs strip 2>&1 | grep -v 'File format not recognized' ||:
 find $RPM_BUILD_ROOT/opt/omd/versions/%{version}/lib/nagios/plugins/ -type f | xargs strip 2>&1 | grep -v 'File format not recognized' ||:
+find $RPM_BUILD_ROOT/opt/omd/versions/%{version}/lib/ -type f | grep -v waitmax | grep -v agent_modbus | xargs strip 2>&1 | grep -v 'File format not recognized' ||:
 
 %files
 %defattr(-,root,root)
@@ -170,10 +172,7 @@ setsebool -P httpd_can_network_connect on >/dev/null 2>&1
 exit 0
 
 %preun
-# ON UNINSTALL: Make sure no sites use that version
-# Do not check this on new release of the same OMD version
-# (I know this has not happend yet in official releases, but might
-#  happen in future? At least I had such a case with my own builds now.)
+# on run if uninstalled, not during updates
 if [ $1 = 0 ] ; then
     for link in /omd/sites/*/version
     do
@@ -197,6 +196,8 @@ exit 0
 
 
 %postun
+# on run if uninstalled, not during updates
+if [ $1 = 0 ] ; then
 # sles12 sometimes does not remove some empty folders
 rm -rf /omd/versions/%{version}
 rm -f /omd/versions/default
@@ -245,4 +246,6 @@ else
       echo "#> setsebool -P httpd_can_network_connect off"
     fi
 fi
+fi
+exit 0
 
