@@ -9,7 +9,8 @@ DEPRECATION WARNING: the following components are deprecated and will be removed
 next:
           - Mod-Gearman:
             - update mod-gearman-worker-go to 1.0.8
-          - LMD: Update 1.4.1
+          - LMD: Update 1.4.2
+          - check_nsc_web: Update 0.5.1
 
 
 2.90     Dec 19 2018

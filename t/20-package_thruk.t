@@ -13,7 +13,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 1380 );
+plan( tests => 1462 );
 
 ##################################################
 # create our test site
@@ -75,11 +75,16 @@ my $tests = [
   { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -t 20 -H localhost -a omdadmin:omd -u \"/$site/thruk/cgi-bin/tac.cgi\" -e 200 -r \"Logged in as <i>omdadmin<\/i>\"'", like => '/HTTP OK:/' },
   { cmd => "/bin/su - $site -c './bin/thruk -l'", like => "/$site/" },
   { cmd => "/bin/su - $site -c './bin/thruk -l --local'", like => "/$site/" },
+  { cmd => "/bin/su - $site -c './bin/thruk r -d \"\" /hosts/$host/cmd/schedule_forced_host_check'", like => ["/SCHEDULE_FORCED_HOST_CHECK/", "/Command successfully submitted/"] },
   { cmd => "/bin/su - $site -c './bin/naglint ./etc/nagios/conf.d/commands.cfg'", like => "/check_local_load/" },
 ];
 
 my $own_tests = [
   { cmd => "/bin/su - $site -c './etc/init.d/thruk restart'", like => '/\([\d\ ]+\)\ OK/' },
+];
+
+my $naemon_tests = [
+  { cmd => "/bin/su - $site -c './bin/thruk r -d \"comment_data=test\" -d \"triggered_by=test\" /hosts/$host/cmd/schedule_host_downtime'", like => ["/400: Couldn't parse ulong argument trigger_id/", "/sending command failed:/"], exit => 1 },
 ];
 
 for my $report (@{$reports}) {
@@ -225,6 +230,11 @@ for my $core (qw/nagios naemon/) {
     for my $test (@{$tests}) {
         TestUtils::test_command($test);
     }
+    if($core eq 'naemon') {
+        for my $test (@{$naemon_tests}) {
+            TestUtils::test_command($test);
+        }
+    }
     for my $test (@{$own_tests}) {
         TestUtils::test_command($test);
     }
@@ -246,12 +256,21 @@ for my $core (qw/nagios naemon/) {
     unlink($tlog);
 }
 
+# make sure we got the naemon core now
+TestUtils::test_command({ cmd => $omd_bin." config $site show CORE", like => "/naemon/" });
+
 ##################################################
 # lmd
 TestUtils::test_command({ cmd => "/usr/bin/env sed -i -e 's/^#use_lmd_core=1/use_lmd_core=1/g' -e 's/^#lmd/lmd/g' /opt/omd/sites/$site/etc/thruk/thruk_local.d/lmd.conf" });
 TestUtils::test_command({ cmd => $omd_bin." restart $site thruk", like => '/OK/' });
 for my $url ( @{$urls} ) {
     TestUtils::test_url($url);
+}
+for my $test (@{$tests}) {
+    TestUtils::test_command($test);
+}
+for my $test (@{$naemon_tests}) {
+    TestUtils::test_command($test);
 }
 is(-S "/omd/sites/$site/tmp/thruk/lmd/live.sock", 1, "lmd socket exists");
 my $log  = "/omd/sites/$site/tmp/thruk/lmd/lmd.log";
