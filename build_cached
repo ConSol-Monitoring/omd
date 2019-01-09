@@ -120,7 +120,7 @@ echo "no cached file found building from source and creating $CACHE_FILE"
 
 # exclude files from before the build
 EXCLUDES_FILE=$(mktemp)
-find "$SRC" -type f > $EXCLUDES_FILE
+find "./$SRC" -type f > $EXCLUDES_FILE
 
 # no cache hit - rebuild package and create cache tarball
 set -e
