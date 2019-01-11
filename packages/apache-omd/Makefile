@@ -111,6 +111,8 @@ modfcgid:
 	tar zxf $(FCGI_FILE).tar.gz
 	cd $(FCGI_FILE) && patch -p1 < ../patches/0001-fcgid_proc_unix.c.patch
 	cd $(FCGI_FILE) && patch -p1 < ../patches/0002-fcgid_pm_unix.c.patch
+	cd $(FCGI_FILE) && patch -p1 < ../patches/30_fix-bts-691929.patch
+	cd $(FCGI_FILE) && patch -p1 < ../patches/40_fix_loading_large_requests.patch
 	cd $(FCGI_FILE) && APXS=$(APXS) ./configure.apxs
 	CPATH="/usr/include/apache2-worker" $(MAKE) -C $(FCGI_FILE)
 
