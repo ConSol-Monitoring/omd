@@ -53,6 +53,7 @@ PACKAGES=freetds \
          prometheus_alertmanager \
          prometheus_blackbox_exporter \
          prometheus_pushgateway \
+         thanos \
          dataScryer \
          snmptrapd \
          downtime-api \

@@ -2,7 +2,7 @@ include ../../Makefile.omd
 
 
 NAME       = thanos
-VERSION    = 0.2.0
+VERSION    = 0.2.1
 SRC        = $(NAME)-$(VERSION).tar.gz
 GOPATH     = go
 GOPKG      = 1.11
@@ -12,6 +12,10 @@ DATE       = $(shell date -u '+%Y-%m-%d_%I:%M:%S%p')
 
 build:
 	tar zxf $(SRC)
+	set -e ; for p in patches/*.patch ; do \
+        echo "applying $$p..." ; \
+        (cd $(GOPATH)/src/github.com/improbable-eng/thanos; patch -p1) < $$p || exit 1; \
+    done
 	export GOROOT=$(PWD)/../go-$(GOPKG)/go-$(GOVERSION) && export GOPATH=$(PWD)/$(GOPATH)/ && PATH=$$GOROOT/bin:$$PATH && \
 		cd $(GOPATH)/src/github.com/improbable-eng/thanos && \
 		make
