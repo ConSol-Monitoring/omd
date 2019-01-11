@@ -12,7 +12,6 @@ next:
           - LMD: Update 1.4.2
           - check_nsc_web: Update 0.5.1
           - Thanos 0.2.1
-          - Minio RELEASE.2019-01-10T00-21-20Z
 
 
 2.90     Dec 19 2018
