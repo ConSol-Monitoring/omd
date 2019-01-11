@@ -54,7 +54,6 @@ PACKAGES=freetds \
          prometheus_blackbox_exporter \
          prometheus_pushgateway \
          thanos \
-         minio \
          dataScryer \
          snmptrapd \
          downtime-api \
