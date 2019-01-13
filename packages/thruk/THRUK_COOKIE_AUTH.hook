@@ -17,45 +17,16 @@ case "$1" in
        echo "off: use basic authentication"
    ;;
    set)
-       MUTEX="Mutex file:\${OMD_ROOT}/var/ rewrite-map"
+       MUTEX='  Mutex file:\${OMD_ROOT}/var/ rewrite-map'
        if [ $(findmnt -T $OMD_ROOT/var/ -o FSTYPE -f -n 2>/dev/null | grep -c nfs) -eq 1 ]; then
          # use pthread mutex in case var folder is on nfs
-         MUTEX="Mutex pthread rewrite-map"
+         MUTEX='  Mutex pthread rewrite-map'
        fi
        APACHE_CFG=${OMD_ROOT}/etc/apache/conf.d/thruk_cookie_auth.conf
+       rm -f $APACHE_CFG
        if [ "$2" == "on" ]; then
-           cat > $APACHE_CFG <<EOF
-RewriteEngine On
-# apache 2.2 lock
-<IfModule !mod_authz_core.c>
-  RewriteLock "\${OMD_ROOT}/var/thruk/apache_rewrite.lock"
-</IfModule>
-# apache 2.4 lock
-<IfModule mod_authz_core.c>
-  $MUTEX
-</IfModule>
-RewriteMap  users prg:\${OMD_ROOT}/share/thruk/script/thruk_auth
-
-# make cookie accessible by the url
-RewriteCond %{REQUEST_URI}           !^/\${OMD_SITE}/thruk/cgi-bin/(login|remote|restricted).cgi
-RewriteCond %{REQUEST_URI}           !^/server-status
-RewriteCond %{REQUEST_URI}           !^/\${OMD_SITE}/api/
-RewriteCond %{REQUEST_URI}           !^/\${OMD_SITE}/check_mk/
-RewriteCond %{HTTP_COOKIE}           (thruk_auth=[^;]+|$)  [NC]
-RewriteRule ^/(.*)$                  /%1/%{REMOTE_ADDR}~~%{HTTP:Authorization}~~%{HTTP:X-Thruk-Auth-Key}~~%{HTTP:X-Thruk-Auth-User}/____/\$1/____/%{QUERY_STRING} [C,NS]
-RewriteRule ^(.*)$                   \${users:\$1|/loginbad/}  [C,NS]
-RewriteRule ^/pass/(.*)$             /\$1 [NS,PT,L,E=!REMOTE_USER]
-RewriteRule ^/redirect/(.*)$         /\$1 [NS,L,R=302]
-RewriteRule ^/loginok/([^/]+)/(.*)$  /\$2 [NS,PT,L,E=REMOTE_USER:\$1]
-
-<LocationMatch ^/\${OMD_SITE}/(?!(thruk/cgi-bin/restricted.cgi))>
-    Order allow,deny
-    Allow from all
-    Satisfy any
-</LocationMatch>
-EOF
-       else
-          rm -f $APACHE_CFG
+          ln -sfn ../../thruk/apache_cookie_auth.conf $APACHE_CFG
+          sed -i ${OMD_ROOT}/etc/thruk/apache_cookie_auth.conf -e "s%^  Mutex.*%${MUTEX}%g"
        fi
    ;;
 esac
