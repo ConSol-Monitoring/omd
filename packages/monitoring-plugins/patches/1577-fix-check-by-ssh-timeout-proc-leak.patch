@@ -1,0 +1,203 @@
+From be94a6d5adf7063af15a1ba65dc0b944b8a99f01 Mon Sep 17 00:00:00 2001
+From: Sven Nierlein <sven@nierlein.de>
+Date: Mon, 21 Jan 2019 16:26:12 +0100
+Subject: [PATCH] check_by_ssh: fix child process leak on timeouts
+
+When check_by_ssh runs into a timeout it simply exits keeping all child processes running.
+Simply adopting the kill loop from runcmd_timeout_alarm_handler() fixes this.
+
+Signed-off-by: Sven Nierlein <sven@nierlein.de>
+---
+ lib/utils_cmd.c  | 25 -------------------------
+ plugins/common.h | 24 ++++++++++++++++++++++++
+ plugins/popen.c  | 29 -----------------------------
+ plugins/runcmd.c | 13 -------------
+ plugins/utils.c  |  6 ++++++
+ 5 files changed, 30 insertions(+), 67 deletions(-)
+
+diff --git a/lib/utils_cmd.c b/lib/utils_cmd.c
+index 7eb9a3a0..440055f3 100644
+--- a/lib/utils_cmd.c
++++ b/lib/utils_cmd.c
+@@ -65,31 +65,6 @@ extern char **environ;
+ # define SIG_ERR ((Sigfunc *)-1)
+ #endif
+ 
+-/* This variable must be global, since there's no way the caller
+- * can forcibly slay a dead or ungainly running program otherwise.
+- * Multithreading apps and plugins can initialize it (via CMD_INIT)
+- * in an async safe manner PRIOR to calling cmd_run() or cmd_run_array()
+- * for the first time.
+- *
+- * The check for initialized values is atomic and can
+- * occur in any number of threads simultaneously. */
+-static pid_t *_cmd_pids = NULL;
+-
+-/* Try sysconf(_SC_OPEN_MAX) first, as it can be higher than OPEN_MAX.
+- * If that fails and the macro isn't defined, we fall back to an educated
+- * guess. There's no guarantee that our guess is adequate and the program
+- * will die with SIGSEGV if it isn't and the upper boundary is breached. */
+-#define DEFAULT_MAXFD  256   /* fallback value if no max open files value is set */
+-#define MAXFD_LIMIT   8192   /* upper limit of open files */
+-#ifdef _SC_OPEN_MAX
+-static long maxfd = 0;
+-#elif defined(OPEN_MAX)
+-# define maxfd OPEN_MAX
+-#else	/* sysconf macro unavailable, so guess (may be wildly inaccurate) */
+-# define maxfd DEFAULT_MAXFD
+-#endif
+-
+-
+ /** prototypes **/
+ static int _cmd_open (char *const *, int *, int *)
+ 	__attribute__ ((__nonnull__ (1, 2, 3)));
+diff --git a/plugins/common.h b/plugins/common.h
+index 6bf4fca4..59d52df3 100644
+--- a/plugins/common.h
++++ b/plugins/common.h
+@@ -225,4 +225,28 @@ enum {
+ # define __attribute__(x) /* do nothing */
+ #endif
+ 
++/* This variable must be global, since there's no way the caller
++ * can forcibly slay a dead or ungainly running program otherwise.
++ * Multithreading apps and plugins can initialize it (via CMD_INIT)
++ * in an async safe manner PRIOR to calling cmd_run() or cmd_run_array()
++ * for the first time.
++ *
++ * The check for initialized values is atomic and can
++ * occur in any number of threads simultaneously. */
++static pid_t *_cmd_pids = NULL;
++
++/* Try sysconf(_SC_OPEN_MAX) first, as it can be higher than OPEN_MAX.
++ * If that fails and the macro isn't defined, we fall back to an educated
++ * guess. There's no guarantee that our guess is adequate and the program
++ * will die with SIGSEGV if it isn't and the upper boundary is breached. */
++#define DEFAULT_MAXFD  256   /* fallback value if no max open files value is set */
++#define MAXFD_LIMIT   8192   /* upper limit of open files */
++#ifdef _SC_OPEN_MAX
++static long maxfd = 0;
++#elif defined(OPEN_MAX)
++# define maxfd OPEN_MAX
++#else	/* sysconf macro unavailable, so guess (may be wildly inaccurate) */
++# define maxfd DEFAULT_MAXFD
++#endif
++
+ #endif /* _COMMON_H_ */
+diff --git a/plugins/popen.c b/plugins/popen.c
+index 592263fd..116d168d 100644
+--- a/plugins/popen.c
++++ b/plugins/popen.c
+@@ -78,7 +78,6 @@ RETSIGTYPE popen_timeout_alarm_handler (int);
+ 
+ #define	min(a,b)	((a) < (b) ? (a) : (b))
+ #define	max(a,b)	((a) > (b) ? (a) : (b))
+-int open_max (void);						/* {Prog openmax} */
+ static void err_sys (const char *, ...) __attribute__((noreturn,format(printf, 1, 2)));
+ char *rtrim (char *, const char *);
+ 
+@@ -86,7 +85,6 @@ char *pname = NULL;							/* caller can set this from argv[0] */
+ 
+ /*int *childerr = NULL;*//* ptr to array allocated at run-time */
+ /*extern pid_t *childpid = NULL; *//* ptr to array allocated at run-time */
+-static int maxfd;								/* from our open_max(), {Prog openmax} */
+ 
+ #ifdef REDHAT_SPOPEN_ERROR
+ static volatile int childtermd = 0;
+@@ -187,13 +185,11 @@ spopen (const char *cmdstring)
+ 	argv[i] = NULL;
+ 
+ 	if (childpid == NULL) {				/* first time through */
+-		maxfd = open_max ();				/* allocate zeroed out array for child pids */
+ 		if ((childpid = calloc ((size_t)maxfd, sizeof (pid_t))) == NULL)
+ 			return (NULL);
+ 	}
+ 
+ 	if (child_stderr_array == NULL) {	/* first time through */
+-		maxfd = open_max ();				/* allocate zeroed out array for child pids */
+ 		if ((child_stderr_array = calloc ((size_t)maxfd, sizeof (int))) == NULL)
+ 			return (NULL);
+ 	}
+@@ -273,15 +269,6 @@ spclose (FILE * fp)
+ 	return (1);
+ }
+ 
+-#ifdef	OPEN_MAX
+-static int openmax = OPEN_MAX;
+-#else
+-static int openmax = 0;
+-#endif
+-
+-#define	OPEN_MAX_GUESS	256			/* if OPEN_MAX is indeterminate */
+-				/* no guarantee this is adequate */
+-
+ #ifdef REDHAT_SPOPEN_ERROR
+ RETSIGTYPE
+ popen_sigchld_handler (int signo)
+@@ -311,22 +298,6 @@ popen_timeout_alarm_handler (int signo)
+ }
+ 
+ 
+-int
+-open_max (void)
+-{
+-	if (openmax == 0) {						/* first time through */
+-		errno = 0;
+-		if ((openmax = sysconf (_SC_OPEN_MAX)) < 0) {
+-			if (errno == 0)
+-				openmax = OPEN_MAX_GUESS;	/* it's indeterminate */
+-			else
+-				err_sys (_("sysconf error for _SC_OPEN_MAX"));
+-		}
+-	}
+-	return (openmax);
+-}
+-
+-
+ /* Fatal error related to a system call.
+  * Print a message and die. */
+ 
+diff --git a/plugins/runcmd.c b/plugins/runcmd.c
+index 1a7c904f..c3828678 100644
+--- a/plugins/runcmd.c
++++ b/plugins/runcmd.c
+@@ -67,19 +67,6 @@
+  * occur in any number of threads simultaneously. */
+ static pid_t *np_pids = NULL;
+ 
+-/* Try sysconf(_SC_OPEN_MAX) first, as it can be higher than OPEN_MAX.
+- * If that fails and the macro isn't defined, we fall back to an educated
+- * guess. There's no guarantee that our guess is adequate and the program
+- * will die with SIGSEGV if it isn't and the upper boundary is breached. */
+-#ifdef _SC_OPEN_MAX
+-static long maxfd = 0;
+-#elif defined(OPEN_MAX)
+-# define maxfd OPEN_MAX
+-#else /* sysconf macro unavailable, so guess (may be wildly inaccurate) */
+-# define maxfd 256
+-#endif
+-
+-
+ /** prototypes **/
+ static int np_runcmd_open(const char *, int *, int *)
+ 	__attribute__((__nonnull__(1, 2, 3)));
+diff --git a/plugins/utils.c b/plugins/utils.c
+index 231af92b..c1135f2a 100644
+--- a/plugins/utils.c
++++ b/plugins/utils.c
+@@ -168,9 +168,15 @@ state_text (int result)
+ void
+ timeout_alarm_handler (int signo)
+ {
++	size_t i;
+ 	if (signo == SIGALRM) {
+ 		printf (_("%s - Plugin timed out after %d seconds\n"),
+ 						state_text(timeout_state), timeout_interval);
++
++		if(_cmd_pids) for(i = 0; i < maxfd; i++) {
++			if(_cmd_pids[i] != 0) kill(_cmd_pids[i], SIGKILL);
++		}
++
+ 		exit (timeout_state);
+ 	}
+ }
