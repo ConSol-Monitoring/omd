@@ -14,6 +14,7 @@ next:
           - Thanos 0.2.1
           - Prometheus update to 2.6.1
           - Prometheus Alertmanager update to 0.16.0
+          - InfluxDB: update to 1.7.3
 
 
 2.90     Dec 19 2018
