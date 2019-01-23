@@ -23,10 +23,10 @@ case "$1" in
         fi
         if [ "$2" == "ssl" ]; then
             sed -e '/^\[http\]/,/^\[/{s/https-enabled.*$/https-enabled = true/}' -i $OMD_ROOT/etc/influxdb/influxdb.conf
-            sed -e 's/url: http:/url: https/' -i $OMD_ROOT/etc/influxdb/grafana_datasources.yml
+            sed -e 's/url: http:/url: https:/' -i $OMD_ROOT/etc/influxdb/grafana_datasources.yml
         else
             sed -e '/^\[http\]/,/^\[/{s/https-enabled.*$/https-enabled = false/}' -i $OMD_ROOT/etc/influxdb/influxdb.conf
-            sed -e 's/url: https:/url: http/' -i $OMD_ROOT/etc/influxdb/grafana_datasources.yml
+            sed -e 's/url: https:/url: http:/' -i $OMD_ROOT/etc/influxdb/grafana_datasources.yml
         fi
     ;;
     depends)
