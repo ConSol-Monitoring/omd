@@ -68,6 +68,16 @@ class ThrukCli(object):
             #logger.debug("output is not json: "+str(e))
             return ()
 
+    def set_thruk_timezone(self):
+        try:
+            thruk_config = self.get('/thruk/config')
+            tz = thruk_config["server_timezone"]
+            logger.debug("thruk timezone is " + tz)
+            os.environ["TZ"] = tz.strip()
+            time.tzset()
+        except Exception, e:
+            pass
+
     def get_backends(self):
         try:
             self.backends = self.get('/sites')
@@ -341,6 +351,7 @@ try:
         thruk.prefer_backend(backend)
 
     if not delete:
+        thruk.set_thruk_timezone()
         start_time = int(time.time())
         comment = comment + " apiset" + urllib.quote_plus(time.strftime("%s", time.localtime(start_time)))
         end_time = start_time + 60 * duration
