@@ -12,7 +12,7 @@ next:
           - LMD: Update 1.4.3
           - check_nsc_web: update to 0.5.2
           - Thanos 0.2.1
-          - Prometheus: update to 2.7.0
+          - Prometheus: update to 2.7.1
             - Alertmanager update to 0.16.0
           - InfluxDB: update to 1.7.3
           - Go updated to 1.11.5
