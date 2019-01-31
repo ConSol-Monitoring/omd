@@ -1,6 +1,6 @@
-From be94a6d5adf7063af15a1ba65dc0b944b8a99f01 Mon Sep 17 00:00:00 2001
+From 6da22ea69ea3acec7db662f87072659be70ac175 Mon Sep 17 00:00:00 2001
 From: Sven Nierlein <sven@nierlein.de>
-Date: Mon, 21 Jan 2019 16:26:12 +0100
+Date: Thu, 31 Jan 2019 17:47:26 +0100
 Subject: [PATCH] check_by_ssh: fix child process leak on timeouts
 
 When check_by_ssh runs into a timeout it simply exits keeping all child processes running.
@@ -8,18 +8,30 @@ Simply adopting the kill loop from runcmd_timeout_alarm_handler() fixes this.
 
 Signed-off-by: Sven Nierlein <sven@nierlein.de>
 ---
- lib/utils_cmd.c  | 25 -------------------------
- plugins/common.h | 24 ++++++++++++++++++++++++
- plugins/popen.c  | 29 -----------------------------
- plugins/runcmd.c | 13 -------------
- plugins/utils.c  |  6 ++++++
- 5 files changed, 30 insertions(+), 67 deletions(-)
+ lib/utils_cmd.c       | 42 +++++++++++++++++-------------------------
+ lib/utils_cmd.h       | 13 +++++++++++++
+ plugins/check_dbi.c   |  1 +
+ plugins/check_pgsql.c |  1 +
+ plugins/common.h      | 14 ++++++++++++++
+ plugins/popen.c       | 29 -----------------------------
+ plugins/runcmd.c      | 13 -------------
+ plugins/utils.c       | 11 -----------
+ plugins/utils.h       |  2 --
+ 9 files changed, 46 insertions(+), 80 deletions(-)
 
 diff --git a/lib/utils_cmd.c b/lib/utils_cmd.c
-index 7eb9a3a0..440055f3 100644
+index 7eb9a3a0..371bb43f 100644
 --- a/lib/utils_cmd.c
 +++ b/lib/utils_cmd.c
-@@ -65,31 +65,6 @@ extern char **environ;
+@@ -40,6 +40,7 @@
+ 
+ /** includes **/
+ #include "common.h"
++#include "utils.h"
+ #include "utils_cmd.h"
+ #include "utils_base.h"
+ #include <fcntl.h>
+@@ -65,31 +66,6 @@ extern char **environ;
  # define SIG_ERR ((Sigfunc *)-1)
  #endif
  
@@ -51,13 +63,33 @@ index 7eb9a3a0..440055f3 100644
  /** prototypes **/
  static int _cmd_open (char *const *, int *, int *)
  	__attribute__ ((__nonnull__ (1, 2, 3)));
-diff --git a/plugins/common.h b/plugins/common.h
-index 6bf4fca4..59d52df3 100644
---- a/plugins/common.h
-+++ b/plugins/common.h
-@@ -225,4 +225,28 @@ enum {
- # define __attribute__(x) /* do nothing */
- #endif
+@@ -406,3 +382,19 @@ cmd_file_read ( char *filename, output *out, int flags)
+ 
+ 	return 0;
+ }
++
++void
++timeout_alarm_handler (int signo)
++{
++	size_t i;
++	if (signo == SIGALRM) {
++		printf (_("%s - Plugin timed out after %d seconds\n"),
++						state_text(timeout_state), timeout_interval);
++
++		if(_cmd_pids) for(i = 0; i < maxfd; i++) {
++			if(_cmd_pids[i] != 0) kill(_cmd_pids[i], SIGKILL);
++		}
++
++		exit (timeout_state);
++	}
++}
+diff --git a/lib/utils_cmd.h b/lib/utils_cmd.h
+index ebaf15be..17291d34 100644
+--- a/lib/utils_cmd.h
++++ b/lib/utils_cmd.h
+@@ -32,4 +32,17 @@ void cmd_init (void);
+ #define CMD_NO_ARRAYS 0x01   /* don't populate arrays at all */
+ #define CMD_NO_ASSOC 0x02    /* output.line won't point to buf */
  
 +/* This variable must be global, since there's no way the caller
 + * can forcibly slay a dead or ungainly running program otherwise.
@@ -69,6 +101,42 @@ index 6bf4fca4..59d52df3 100644
 + * occur in any number of threads simultaneously. */
 +static pid_t *_cmd_pids = NULL;
 +
++RETSIGTYPE timeout_alarm_handler (int);
++
++
+ #endif /* _UTILS_CMD_ */
+diff --git a/plugins/check_dbi.c b/plugins/check_dbi.c
+index 826eb8d9..ced13d05 100644
+--- a/plugins/check_dbi.c
++++ b/plugins/check_dbi.c
+@@ -35,6 +35,7 @@ const char *email = "devel@monitoring-plugins.org";
+ 
+ #include "common.h"
+ #include "utils.h"
++#include "utils_cmd.h"
+ 
+ #include "netutils.h"
+ 
+diff --git a/plugins/check_pgsql.c b/plugins/check_pgsql.c
+index 5cd47093..11ce6916 100644
+--- a/plugins/check_pgsql.c
++++ b/plugins/check_pgsql.c
+@@ -34,6 +34,7 @@ const char *email = "devel@monitoring-plugins.org";
+ 
+ #include "common.h"
+ #include "utils.h"
++#include "utils_cmd.h"
+ 
+ #include "netutils.h"
+ #include <libpq-fe.h>
+diff --git a/plugins/common.h b/plugins/common.h
+index 6bf4fca4..60483d40 100644
+--- a/plugins/common.h
++++ b/plugins/common.h
+@@ -225,4 +225,18 @@ enum {
+ # define __attribute__(x) /* do nothing */
+ #endif
+ 
 +/* Try sysconf(_SC_OPEN_MAX) first, as it can be higher than OPEN_MAX.
 + * If that fails and the macro isn't defined, we fall back to an educated
 + * guess. There's no guarantee that our guess is adequate and the program
@@ -182,22 +250,44 @@ index 1a7c904f..c3828678 100644
  static int np_runcmd_open(const char *, int *, int *)
  	__attribute__((__nonnull__(1, 2, 3)));
 diff --git a/plugins/utils.c b/plugins/utils.c
-index 231af92b..c1135f2a 100644
+index 231af92b..e9d9d6ed 100644
 --- a/plugins/utils.c
 +++ b/plugins/utils.c
-@@ -168,9 +168,15 @@ state_text (int result)
- void
- timeout_alarm_handler (int signo)
- {
-+	size_t i;
- 	if (signo == SIGALRM) {
- 		printf (_("%s - Plugin timed out after %d seconds\n"),
- 						state_text(timeout_state), timeout_interval);
-+
-+		if(_cmd_pids) for(i = 0; i < maxfd; i++) {
-+			if(_cmd_pids[i] != 0) kill(_cmd_pids[i], SIGKILL);
-+		}
-+
- 		exit (timeout_state);
+@@ -165,16 +165,6 @@ state_text (int result)
  	}
  }
+ 
+-void
+-timeout_alarm_handler (int signo)
+-{
+-	if (signo == SIGALRM) {
+-		printf (_("%s - Plugin timed out after %d seconds\n"),
+-						state_text(timeout_state), timeout_interval);
+-		exit (timeout_state);
+-	}
+-}
+-
+ int
+ is_numeric (char *number)
+ {
+@@ -708,4 +698,3 @@ char *sperfdata_int (const char *label,
+ 
+ 	return data;
+ }
+-
+diff --git a/plugins/utils.h b/plugins/utils.h
+index a436e1ca..58bb7aca 100644
+--- a/plugins/utils.h
++++ b/plugins/utils.h
+@@ -34,8 +34,6 @@ void print_revision (const char *, const char *);
+ extern unsigned int timeout_state;
+ extern unsigned int timeout_interval;
+ 
+-RETSIGTYPE timeout_alarm_handler (int);
+-
+ extern time_t start_time, end_time;
+ 
+ /* Test input types */
+-- 
+2.20.1
+
