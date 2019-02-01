@@ -8,7 +8,7 @@ DEPRECATION WARNING: the following components are deprecated and will be removed
 
 next:
           - Mod-Gearman:
-            - update mod-gearman-worker-go to 1.0.9
+            - update mod-gearman-worker-go to 1.1.0
           - LMD: Update 1.4.3
           - check_nsc_web: update to 0.5.2
           - Thanos 0.2.1
