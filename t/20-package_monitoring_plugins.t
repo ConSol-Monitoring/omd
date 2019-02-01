@@ -12,7 +12,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 36 );
+plan( tests => 40 );
 
 ##################################################
 # create our test site
@@ -29,6 +29,7 @@ my $tests = [
   { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_logfiles'", exit => 3, like => '/Usage: check_logfiles/' },
   { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -S -H 127.0.0.1 -p 9999'", exit => 2, like => '/HTTP CRITICAL - Unable to open TCP socket/' },
   { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_curl -S -H 127.0.0.1 -p 9999'", exit => 2, like => '/HTTP CRITICAL - Invalid HTTP response received/' },
+  { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_by_ssh -V'", exit => 3, like => '/labs\-edition/' }, # plugins should contain omd in the version information
 ];
 for my $test (@{$tests}) {
     TestUtils::test_command($test);
