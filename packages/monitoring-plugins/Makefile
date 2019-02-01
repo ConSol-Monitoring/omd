@@ -16,7 +16,9 @@ build: uriparser
 	    echo "applying $$p..." ; \
 	    ( cd $(DIR) ; patch -p1 -b ) < $$p ; \
 	done
-	cd $(DIR) ; \
+	sed -e 's/\.git/_$(OMD_VERSION)/g' -i $(DIR)/NP-VERSION-GEN
+	rm -f $(DIR)/release
+	cd $(DIR) && \
 		URIPARSER="$(shell pwd)/uriparser-$(URIPARSER)/.libs/liburiparser.a" \
 		URIPARSER_CPPFLAGS="-I$(shell pwd)/uriparser-$(URIPARSER)/include" \
 		./configure $(CONFIGUREOPTS)
