@@ -11,7 +11,7 @@ next:
             - update mod-gearman-worker-go to 1.1.0
           - LMD: Update 1.4.3
           - check_nsc_web: update to 0.5.2
-          - Thanos 0.2.1
+          - Thanos 0.3.0
           - Prometheus: update to 2.7.1
             - Alertmanager update to 0.16.1
           - InfluxDB: update to 1.7.3

@@ -2,7 +2,7 @@ include ../../Makefile.omd
 
 
 NAME       = thanos
-VERSION    = 0.2.1
+VERSION    = 0.3.0
 SRC        = $(NAME)-$(VERSION).tar.gz
 GOPATH     = go
 GOPKG      = 1.11
@@ -40,7 +40,7 @@ package: clean
 		go get -d github.com/improbable-eng/thanos/... && \
 		cd $(GOPATH)/src/github.com/improbable-eng/thanos && \
 		git checkout tags/v$(VERSION) && \
-		$(PWD)/$(GOPATH)/bin/dep ensure -vendor-only && \
+		$(PWD)/$(GOPATH)/bin/dep ensure  && \
 		cd $(PWD) && \
 		find $(GOPATH)/src/ -type d -name ".git*" -exec chmod -R u+w {} \; && \
 		find $(GOPATH)/src/ -name ".git*" -exec rm -R {} \; ; \
