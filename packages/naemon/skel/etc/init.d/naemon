@@ -46,6 +46,7 @@ STATUS_FILE=###ROOT###/tmp/${CONFIG_CORE}/status.dat
 CMD_FILE=###ROOT###/tmp/run/${CONFIG_CORE}.cmd
 PID_FILE=###ROOT###/tmp/lock/${CONFIG_CORE}.lock
 STATUS_DAT=###ROOT###/tmp/${CONFIG_CORE}/status.dat
+CHECKRESULTS_DIR=###ROOT###/tmp/${CONFIG_CORE}/checkresults
 USR=###SITE###
 GRP=###SITE###
 
@@ -123,6 +124,7 @@ prep_start() {
     fi
     touch $PID_FILE
     chown $USR:$GRP $PID_FILE
+    rm -f $CHECKRESULTS_DIR/*
 }
 
 core_wait_stop() {
