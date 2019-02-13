@@ -9,6 +9,8 @@ GOPKG      = 1.11
 GOVERSION  = $(shell grep ^VERSION ../go-${GOPKG}/Makefile | awk '{ print $$3 }')
 PWD        = $(shell pwd)
 DATE       = $(shell date -u '+%Y-%m-%d_%I:%M:%S%p')
+GITBASE    = github.com/improbable-eng
+GITURL     = $(GITBASE)/$(NAME)
 LDFLAGS    = "\
 -X github.com/prometheus/$(NAME)/vendor/github.com/prometheus/common/version.Version=$(VERSION) \
 -X github.com/prometheus/$(NAME)/vendor/github.com/prometheus/common/version.Revision=OMD-Labs \
@@ -18,10 +20,10 @@ LDFLAGS    = "\
 -s -w \
 "
 
-build:
+build: clean
 	tar zxf $(SRC)
 	export GOROOT=$(PWD)/../go-$(GOPKG)/go-$(GOVERSION) && export GOPATH=$(PWD)/$(GOPATH)/ && PATH=$$GOROOT/bin:$$PATH && \
-		go install -ldflags $(LDFLAGS) github.com/improbable-eng/$(NAME)/cmd/thanos
+		go install -ldflags $(LDFLAGS) $(GITBASE)/$(NAME)/cmd/thanos
 
 install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/bin
@@ -37,12 +39,14 @@ package: clean
 	export GOROOT=$(PWD)/../go-$(GOPKG)/go-$(GOVERSION) && export GOPATH=$(PWD)/$(GOPATH)/ && PATH=$$GOROOT/bin:$$PATH && \
         go get -d -u github.com/golang/dep && \
         go install github.com/golang/dep/cmd/dep && \
-		go get -d github.com/improbable-eng/thanos/... && \
-		cd $(GOPATH)/src/github.com/improbable-eng/thanos && \
-		git checkout tags/v$(VERSION) && \
+		mkdir -p $(GOPATH)/src/$(GITBASE) && \
+		cd $(PWD)/$(GOPATH)/src/$(GITBASE) && \
+		git clone --depth=1 --branch "v$(VERSION)" https://$(GITURL) && \
+		go get -d ./... && \
+		cd $(PWD)/$(GOPATH)/src/$(GITBASE)/$(NAME) && \
 		$(PWD)/$(GOPATH)/bin/dep ensure  && \
 		cd $(PWD) && \
 		find $(GOPATH)/src/ -type d -name ".git*" -exec chmod -R u+w {} \; && \
 		find $(GOPATH)/src/ -name ".git*" -exec rm -R {} \; ; \
-		tar zcf $(SRC) $(GOPATH)/src/ --exclude=.git
+		tar zcf $(SRC) --exclude=.git $(GOPATH)/src/$(GITBASE)/$(NAME)
 
