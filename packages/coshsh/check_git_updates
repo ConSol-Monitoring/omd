@@ -127,6 +127,8 @@ else
   OLDSTATICREV=""
   if [[ ${OMD_GIT_BASE_STATIC} =~ ^http ]] && [[ ! $OMD_GIT_BASE_STATIC =~ ^http[s]*://([0-9a-zA-Z._-:]+)/([0-9a-zA-Z._-]+)/api/git/ ]]; then
     git clone ${OMD_GIT_BASE_STATIC}_static static
+  elif [[ ${OMD_GIT_BASE_STATIC} =~ ^git ]] && [[ ! $OMD_GIT_BASE_STATIC =~ ^git@([0-9a-zA-Z._-:]+)([0-9a-zA-Z._-/]+)/api/git/ ]]; then
+    git clone ${OMD_GIT_BASE_STATIC}_static static
   else
     git clone ${OMD_GIT_BASE_STATIC}/static
   fi
@@ -149,6 +151,8 @@ else
   pushd ${OMD_ROOT}/etc/${CORE}/conf.d/${OMD_LANDSCAPE}/${OMD_SITE}
   OLDDYNAMICREV=""
   if [[ ${OMD_GIT_BASE_DYNAMIC} =~ ^http ]] && [[ ! $OMD_GIT_BASE_DYNAMIC =~ ^http[s]*://([0-9a-zA-Z._-:]+)/([0-9a-zA-Z._-]+)/api/git/ ]]; then
+    git clone ${OMD_GIT_BASE_DYNAMIC}_dynamic dynamic
+  elif [[ ${OMD_GIT_BASE_DYNAMIC} =~ ^git ]] && [[ ! $OMD_GIT_BASE_DYNAMIC =~ ^git@([0-9a-zA-Z._-:]+)([0-9a-zA-Z._-/]+)/api/git/ ]]; then
     git clone ${OMD_GIT_BASE_DYNAMIC}_dynamic dynamic
   else
     git clone ${OMD_GIT_BASE_DYNAMIC}/dynamic
