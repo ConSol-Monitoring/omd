@@ -51,6 +51,7 @@ MODULES += requests-2.10.0.tar.gz
 MODULES += prometheus_client-0.3.1.tar.gz
 MODULES += nagiosplugin-1.2.4.tar.gz
 MODULES += pysmbc-1.0.15.8.tar.gz
+MODULES += pyvmomi-6.7.1.2018.12.tar.gz
 
 # More datasources for coshsh
 MODULES += mysqlclient-1.3.12.tar.gz
