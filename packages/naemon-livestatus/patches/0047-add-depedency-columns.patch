@@ -1,0 +1,518 @@
+From bf771cdff919c9e5ea3343acb9c61b08f5401e62 Mon Sep 17 00:00:00 2001
+From: Sven Nierlein <sven@nierlein.de>
+Date: Thu, 21 Feb 2019 10:17:21 +0100
+Subject: [PATCH 1/2] add dependency columns
+
+this pr add 4 new columns for hosts and services with dependency information.
+
+  - depends_exec: list of all hosts this hosts depends on to execute
+  - depends_exec_with_info: list of all hosts this hosts depends on to execute including information: host_name, failure_options, dependency_period and inherits_parent
+  - depends_notify: list of all hosts this hosts depends on to notify
+  - depends_notify_with_info: list of all hosts this hosts depends on to notify including information: host_name, failure_options, dependency_period and inherits_parent
+
+and the same for services.
+
+Signed-off-by: Sven Nierlein <sven@nierlein.de>
+---
+ src/Filter.h                             |  3 ++
+ src/HostlistDependencyColumn.cc          | 51 +++++++++++++++++++++
+ src/HostlistDependencyColumn.h           | 21 +++++++++
+ src/HostlistDependencyColumnFilter.cc    | 47 +++++++++++++++++++
+ src/HostlistDependencyColumnFilter.h     | 25 ++++++++++
+ src/Makefile.am                          |  2 +
+ src/ServicelistColumnFilter.cc           |  2 -
+ src/ServicelistDependencyColumn.cc       | 52 +++++++++++++++++++++
+ src/ServicelistDependencyColumn.h        | 21 +++++++++
+ src/ServicelistDependencyColumnFilter.cc | 58 ++++++++++++++++++++++++
+ src/ServicelistDependencyColumnFilter.h  | 26 +++++++++++
+ src/TableHosts.cc                        | 10 ++++
+ src/TableServices.cc                     | 10 ++++
+ 13 files changed, 326 insertions(+), 2 deletions(-)
+ create mode 100644 src/HostlistDependencyColumn.cc
+ create mode 100644 src/HostlistDependencyColumn.h
+ create mode 100644 src/HostlistDependencyColumnFilter.cc
+ create mode 100644 src/HostlistDependencyColumnFilter.h
+ create mode 100644 src/ServicelistDependencyColumn.cc
+ create mode 100644 src/ServicelistDependencyColumn.h
+ create mode 100644 src/ServicelistDependencyColumnFilter.cc
+ create mode 100644 src/ServicelistDependencyColumnFilter.h
+
+diff --git a/src/Filter.h b/src/Filter.h
+index 808479c..30f6e23 100644
+--- a/src/Filter.h
++++ b/src/Filter.h
+@@ -32,6 +32,9 @@
+ #include <stdint.h>
+ 
+ using namespace std;
++
++#define HOSTSERVICE_SEPARATOR '|'
++
+ class Query;
+ 
+ class Filter
+diff --git a/src/HostlistDependencyColumn.cc b/src/HostlistDependencyColumn.cc
+new file mode 100644
+index 0000000..b11a932
+--- /dev/null
++++ b/src/HostlistDependencyColumn.cc
+@@ -0,0 +1,51 @@
++#include "HostlistDependencyColumn.h"
++#include "HostlistDependencyColumnFilter.h"
++#include "Query.h"
++#include "TableHosts.h"
++
++extern TableHosts *g_table_hosts;
++
++objectlist *HostlistDependencyColumn::getList(void *data)
++{
++    data = shiftPointer(data);
++    if (!data) return 0;
++
++    return *(objectlist **)((char *)data + _offset);
++}
++
++void HostlistDependencyColumn::output(void *data, Query *query)
++{
++    bool first = true;
++    query->outputBeginList();
++    objectlist *list = getList(data);
++    contact *auth_user = query->authUser();
++    while(list) {
++        hostdependency *dependency = (hostdependency *)list->object_ptr;
++        host *hst = dependency->master_host_ptr;
++        if(!auth_user || g_table_hosts->isAuthorized(auth_user, hst)) {
++            if (!first)
++                query->outputListSeparator();
++            else
++                first = false;
++            if(_with_info)
++                query->outputBeginSublist();
++            query->outputString(hst->name);
++            if(_with_info) {
++                query->outputSublistSeparator();
++                query->outputInteger64(dependency->failure_options);
++                query->outputSublistSeparator();
++                query->outputString(dependency->dependency_period);
++                query->outputSublistSeparator();
++                query->outputInteger64(dependency->inherits_parent);
++                query->outputEndSublist();
++            }
++        }
++        list = list->next;
++    }
++    query->outputEndList();
++}
++
++Filter *HostlistDependencyColumn::createFilter(int opid, char *value)
++{
++    return new HostlistDependencyColumnFilter(this, opid, value, _with_info);
++}
+\ No newline at end of file
+diff --git a/src/HostlistDependencyColumn.h b/src/HostlistDependencyColumn.h
+new file mode 100644
+index 0000000..f0ddc8a
+--- /dev/null
++++ b/src/HostlistDependencyColumn.h
+@@ -0,0 +1,21 @@
++#ifndef HostlistDependencyColumn_h
++#define HostlistDependencyColumn_h
++
++#include "nagios.h"
++#include "config.h"
++#include "Column.h"
++
++class HostlistDependencyColumn : public Column
++{
++    int  _offset;
++    bool  _with_info;
++public:
++    HostlistDependencyColumn(string name, string description, int offset, int indirect_offset, bool with_info)
++        : Column(name, description, indirect_offset), _offset(offset), _with_info(with_info) {}
++    int type() { return COLTYPE_LIST; }
++    void output(void *, Query *);
++    objectlist *getList(void *data);
++    Filter *createFilter(int opid, char *value);
++};
++
++#endif // HostlistDependencyColumn_h
+diff --git a/src/HostlistDependencyColumnFilter.cc b/src/HostlistDependencyColumnFilter.cc
+new file mode 100644
+index 0000000..3a8f551
+--- /dev/null
++++ b/src/HostlistDependencyColumnFilter.cc
+@@ -0,0 +1,47 @@
++#include <strings.h>
++
++#include "HostlistDependencyColumnFilter.h"
++#include "HostlistDependencyColumn.h"
++#include "nagios.h"
++#include "opids.h"
++#include "logger.h"
++
++
++    HostlistDependencyColumnFilter::HostlistDependencyColumnFilter(HostlistDependencyColumn *column, int opid, char *refvalue, bool with_info)
++: _hostlist_dependency_column(column), _opid(opid), _with_info(with_info)
++{
++    if (abs(_opid) == OP_EQUAL && !refvalue[0])
++        return; // test for emptiness is allowed
++
++    _ref_host = refvalue;
++}
++
++bool HostlistDependencyColumnFilter::accepts(void *data)
++{
++    // data points to a primary object list containing pointer to host dependencies
++    objectlist *list = _hostlist_dependency_column->getList(data);
++
++    // test for empty list
++    if(abs(_opid == OP_EQUAL) && _ref_host == "")
++        return (list == 0) == (_opid == OP_EQUAL);
++
++    bool is_member = false;
++    while (list) {
++        hostdependency *dependency = (hostdependency *)list->object_ptr;
++        host *hst = dependency->master_host_ptr;
++        if(hst->name == _ref_host) {
++            is_member = true;
++            break;
++        }
++        list = list->next;
++    }
++    switch (_opid) {
++        case -OP_LESS: // !< means >= means 'contains'
++            return is_member;
++        case OP_LESS:
++            return !is_member;
++        default:
++            logger(LG_INFO, "Sorry, Operator %s for host dependecy lists lists not implemented.", op_names_plus_8[_opid]);
++            return true;
++    }
++}
+diff --git a/src/HostlistDependencyColumnFilter.h b/src/HostlistDependencyColumnFilter.h
+new file mode 100644
+index 0000000..5be33f9
+--- /dev/null
++++ b/src/HostlistDependencyColumnFilter.h
+@@ -0,0 +1,25 @@
++#ifndef HostlistDependencyColumnFilter_h
++#define HostlistDependencyColumnFilter_h
++
++#include "config.h"
++
++#include "Filter.h"
++#include <string>
++using namespace std;
++
++class HostlistDependencyColumn;
++
++class HostlistDependencyColumnFilter : public Filter
++{
++    HostlistDependencyColumn *_hostlist_dependency_column;
++    int _opid;
++    string _ref_host;
++    bool _with_info;
++
++public:
++    HostlistDependencyColumnFilter(HostlistDependencyColumn *column, int opid, char *refvalue, bool with_info);
++    bool accepts(void *data);
++};
++
++
++#endif // HostlistDependencyColumnFilter_h
+diff --git a/src/Makefile.am b/src/Makefile.am
+index 1a9d498..7b75f3f 100644
+--- a/src/Makefile.am
++++ b/src/Makefile.am
+@@ -53,6 +53,8 @@ livestatus_la_SOURCES = \
+ 	DoubleAggregator.cc AttributelistColumn.cc AttributelistFilter.cc \
+ 	global_counters.c  module.c  logger.c waittriggers.c TimeperiodsCache.cc \
+ 	TimeperiodExclusionColumn.cc TimeperiodDaysColumn.cc TimeperiodExceptionsColumn.cc pnp4nagios.cc \
++	HostlistDependencyColumn.cc HostlistDependencyColumnFilter.cc \
++	ServicelistDependencyColumn.cc ServicelistDependencyColumnFilter.cc \
+ 	ContactgroupsColumn.cc RowSortedSet.cc opids.cc auth.cc
+ 
+ if HAVE_DIET
+diff --git a/src/ServicelistColumnFilter.cc b/src/ServicelistColumnFilter.cc
+index 18d5e14..7fd63b2 100644
+--- a/src/ServicelistColumnFilter.cc
++++ b/src/ServicelistColumnFilter.cc
+@@ -30,8 +30,6 @@
+ #include "opids.h"
+ #include "logger.h"
+ 
+-#define HOSTSERVICE_SEPARATOR '|'
+-
+     ServicelistColumnFilter::ServicelistColumnFilter(ServicelistColumn *column, int opid, char *refvalue, bool show_host)
+ : _servicelist_column(column), _opid(opid), _show_host(show_host)
+ {
+diff --git a/src/ServicelistDependencyColumn.cc b/src/ServicelistDependencyColumn.cc
+new file mode 100644
+index 0000000..b3b91ea
+--- /dev/null
++++ b/src/ServicelistDependencyColumn.cc
+@@ -0,0 +1,52 @@
++#include "ServicelistDependencyColumn.h"
++#include "ServicelistDependencyColumnFilter.h"
++#include "Query.h"
++#include "TableServices.h"
++
++extern TableServices *g_table_services;
++
++objectlist *ServicelistDependencyColumn::getList(void *data)
++{
++    data = shiftPointer(data);
++    if (!data) return 0;
++
++    return *(objectlist **)((char *)data + _offset);
++}
++
++void ServicelistDependencyColumn::output(void *data, Query *query)
++{
++    bool first = true;
++    query->outputBeginList();
++    objectlist *list = getList(data);
++    contact *auth_user = query->authUser();
++    while(list) {
++        servicedependency *dependency = (servicedependency *)list->object_ptr;
++        service *svc = dependency->master_service_ptr;
++        if(!auth_user || g_table_services->isAuthorized(auth_user, svc)) {
++            if (!first)
++                query->outputListSeparator();
++            else
++                first = false;
++            query->outputBeginSublist();
++            query->outputString(svc->host_name);
++            query->outputSublistSeparator();
++            query->outputString(svc->description);
++            if(_with_info) {
++                query->outputSublistSeparator();
++                query->outputInteger64(dependency->failure_options);
++                query->outputSublistSeparator();
++                query->outputString(dependency->dependency_period);
++                query->outputSublistSeparator();
++                query->outputInteger64(dependency->inherits_parent);
++            }
++            query->outputEndSublist();
++        }
++        list = list->next;
++    }
++    query->outputEndList();
++}
++
++Filter *ServicelistDependencyColumn::createFilter(int opid, char *value)
++{
++    return new ServicelistDependencyColumnFilter(this, opid, value, _with_info);
++}
+\ No newline at end of file
+diff --git a/src/ServicelistDependencyColumn.h b/src/ServicelistDependencyColumn.h
+new file mode 100644
+index 0000000..3ef4952
+--- /dev/null
++++ b/src/ServicelistDependencyColumn.h
+@@ -0,0 +1,21 @@
++#ifndef ServicelistDependencyColumn_h
++#define ServicelistDependencyColumn_h
++
++#include "nagios.h"
++#include "config.h"
++#include "Column.h"
++
++class ServicelistDependencyColumn : public Column
++{
++    int  _offset;
++    bool  _with_info;
++public:
++    ServicelistDependencyColumn(string name, string description, int offset, int indirect_offset, bool with_info)
++        : Column(name, description, indirect_offset), _offset(offset), _with_info(with_info) {}
++    int type() { return COLTYPE_LIST; }
++    void output(void *, Query *);
++    objectlist *getList(void *data);
++    Filter *createFilter(int opid, char *value);
++};
++
++#endif // ServicelistDependencyColumn_h
+diff --git a/src/ServicelistDependencyColumnFilter.cc b/src/ServicelistDependencyColumnFilter.cc
+new file mode 100644
+index 0000000..d210a75
+--- /dev/null
++++ b/src/ServicelistDependencyColumnFilter.cc
+@@ -0,0 +1,58 @@
++#include <strings.h>
++
++#include "ServicelistDependencyColumnFilter.h"
++#include "ServicelistDependencyColumn.h"
++#include "ServicelistColumnFilter.h"
++#include "nagios.h"
++#include "opids.h"
++#include "logger.h"
++
++
++    ServicelistDependencyColumnFilter::ServicelistDependencyColumnFilter(ServicelistDependencyColumn *column, int opid, char *refvalue, bool with_info)
++: _servicelist_dependency_column(column), _opid(opid), _with_info(with_info)
++{
++    if (abs(_opid) == OP_EQUAL && !refvalue[0])
++        return; // test for emptiness is allowed
++
++    // ref_value must be of from hostname HOSTSERVICE_SEPARATOR service_description
++    char *sep = index(refvalue, HOSTSERVICE_SEPARATOR);
++    if (!sep) {
++        logger(LG_INFO, "Invalid reference value for service dependency list membership. Must be 'hostname%cservicename'", HOSTSERVICE_SEPARATOR);
++        _ref_host = "";
++        _ref_service = "";
++    }
++    else {
++        _ref_host = string(refvalue, sep - refvalue);
++        _ref_service = sep + 1;
++    }
++}
++
++bool ServicelistDependencyColumnFilter::accepts(void *data)
++{
++    // data points to a primary object list containing pointer to service dependencies
++    objectlist *list = _servicelist_dependency_column->getList(data);
++
++    // test for empty list
++    if(abs(_opid == OP_EQUAL) && _ref_service == "")
++        return (list == 0) == (_opid == OP_EQUAL);
++
++    bool is_member = false;
++    while (list) {
++        servicedependency *dependency = (servicedependency *)list->object_ptr;
++        service *svc = dependency->master_service_ptr;
++        if(svc->host_name == _ref_host && svc->description == _ref_service) {
++            is_member = true;
++            break;
++        }
++        list = list->next;
++    }
++    switch (_opid) {
++        case -OP_LESS: // !< means >= means 'contains'
++            return is_member;
++        case OP_LESS:
++            return !is_member;
++        default:
++            logger(LG_INFO, "Sorry, Operator %s for service dependecy lists lists not implemented.", op_names_plus_8[_opid]);
++            return true;
++    }
++}
+diff --git a/src/ServicelistDependencyColumnFilter.h b/src/ServicelistDependencyColumnFilter.h
+new file mode 100644
+index 0000000..2342b3a
+--- /dev/null
++++ b/src/ServicelistDependencyColumnFilter.h
+@@ -0,0 +1,26 @@
++#ifndef ServicelistDependencyColumnFilter_h
++#define ServicelistDependencyColumnFilter_h
++
++#include "config.h"
++
++#include "Filter.h"
++#include <string>
++using namespace std;
++
++class ServicelistDependencyColumn;
++
++class ServicelistDependencyColumnFilter : public Filter
++{
++    ServicelistDependencyColumn *_servicelist_dependency_column;
++    int _opid;
++    string _ref_host;
++    string _ref_service;
++    bool _with_info;
++
++public:
++    ServicelistDependencyColumnFilter(ServicelistDependencyColumn *column, int opid, char *refvalue, bool with_info);
++    bool accepts(void *data);
++};
++
++
++#endif // ServicelistDependencyColumnFilter_h
+diff --git a/src/TableHosts.cc b/src/TableHosts.cc
+index e56154d..313d85b 100644
+--- a/src/TableHosts.cc
++++ b/src/TableHosts.cc
+@@ -41,6 +41,7 @@
+ #include "CustomVarsColumn.h"
+ #include "CustomVarsExplicitColumn.h"
+ #include "HostlistColumn.h"
++#include "HostlistDependencyColumn.h"
+ #include "ServicelistColumn.h"
+ #include "ServicelistStateColumn.h"
+ #include "HostgroupsColumn.h"
+@@ -279,6 +280,15 @@ void TableHosts::addColumns(Table *table, string prefix, int indirect_offset)
+     table->addColumn(new HostlistColumn(prefix + "childs",
+                 "A list of all direct childs of the host", (char *)(&hst.child_hosts) - ref, indirect_offset, false));
+ 
++    table->addColumn(new HostlistDependencyColumn(prefix + "depends_exec",
++                "A list of all hosts this hosts depends on to execute", (char *)(&hst.exec_deps) - ref, indirect_offset, false));
++    table->addColumn(new HostlistDependencyColumn(prefix + "depends_exec_with_info",
++                "A list of all hosts this hosts depends on to execute including information: host_name, failure_options, dependency_period and inherits_parent", (char *)(&hst.exec_deps) - ref, indirect_offset, true));
++    table->addColumn(new HostlistDependencyColumn(prefix + "depends_notify",
++                "A list of all hosts this hosts depends on to notify", (char *)(&hst.notify_deps) - ref, indirect_offset, false));
++    table->addColumn(new HostlistDependencyColumn(prefix + "depends_notify_with_info",
++                "A list of all hosts this hosts depends on to notify including information: host_name, failure_options, dependency_period and inherits_parent", (char *)(&hst.notify_deps) - ref, indirect_offset, true));
++
+     table->addColumn(new ServicelistStateColumn(prefix + "num_services",
+                 "The total number of services of the host",         SLSC_NUM,         (char *)(&hst.services) - ref, indirect_offset));
+     table->addColumn(new ServicelistStateColumn(prefix + "worst_service_state",
+diff --git a/src/TableServices.cc b/src/TableServices.cc
+index bab6bd3..1c1d097 100644
+--- a/src/TableServices.cc
++++ b/src/TableServices.cc
+@@ -37,6 +37,7 @@
+ #include "OffsetStringServiceMacroColumn.h"
+ #include "ServiceSpecialIntColumn.h"
+ #include "ServiceSpecialDoubleColumn.h"
++#include "ServicelistDependencyColumn.h"
+ #include "AttributelistColumn.h"
+ #include "TableHosts.h"
+ #include "TableServicegroups.h"
+@@ -378,6 +379,15 @@ void TableServices::addColumns(Table *table, string prefix, int indirect_offset,
+     table->addColumn(new OffsetTimeperiodColumn(prefix + "in_notification_period",
+                 "Whether the service is currently in its notification period (0/1)", (char *)&svc.notification_period_ptr - ref, indirect_offset));
+ 
++    table->addColumn(new ServicelistDependencyColumn(prefix + "depends_exec",
++                "A list of all services this service depends on to execute", (char *)(&svc.exec_deps) - ref, indirect_offset, false));
++    table->addColumn(new ServicelistDependencyColumn(prefix + "depends_exec_with_info",
++                "A list of all services this service depends on to execute including information: host_name, service_description, failure_options, dependency_period and inherits_parent", (char *)(&svc.exec_deps) - ref, indirect_offset, true));
++    table->addColumn(new ServicelistDependencyColumn(prefix + "depends_notify",
++                "A list of all services this service depends on to notify", (char *)(&svc.notify_deps) - ref, indirect_offset, false));
++    table->addColumn(new ServicelistDependencyColumn(prefix + "depends_notify_with_info",
++                "A list of all services this service depends on to notify including information: host_name, service_description, failure_options, dependency_period and inherits_parent", (char *)(&svc.notify_deps) - ref, indirect_offset, true));
++
+ 
+     table->addColumn(new ServiceContactsColumn(prefix + "contacts",
+                 "A list of all contacts of the service, either direct or via a contact group", indirect_offset));
+
+From 5154f363ebc2c946087df831cb270934c6a2578f Mon Sep 17 00:00:00 2001
+From: Sven Nierlein <sven@nierlein.de>
+Date: Thu, 21 Feb 2019 11:11:34 +0100
+Subject: [PATCH 2/2] add new column parents to services table
+
+Signed-off-by: Sven Nierlein <sven@nierlein.de>
+---
+ src/TableServices.cc | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/src/TableServices.cc b/src/TableServices.cc
+index 1c1d097..e9be66c 100644
+--- a/src/TableServices.cc
++++ b/src/TableServices.cc
+@@ -37,6 +37,7 @@
+ #include "OffsetStringServiceMacroColumn.h"
+ #include "ServiceSpecialIntColumn.h"
+ #include "ServiceSpecialDoubleColumn.h"
++#include "ServicelistColumn.h"
+ #include "ServicelistDependencyColumn.h"
+ #include "AttributelistColumn.h"
+ #include "TableHosts.h"
+@@ -387,6 +388,8 @@ void TableServices::addColumns(Table *table, string prefix, int indirect_offset,
+                 "A list of all services this service depends on to notify", (char *)(&svc.notify_deps) - ref, indirect_offset, false));
+     table->addColumn(new ServicelistDependencyColumn(prefix + "depends_notify_with_info",
+                 "A list of all services this service depends on to notify including information: host_name, service_description, failure_options, dependency_period and inherits_parent", (char *)(&svc.notify_deps) - ref, indirect_offset, true));
++    table->addColumn(new ServicelistColumn(prefix + "parents",
++                "A list of all parent services (descriptions only, because they are all same-host)", (char *)(&svc.parents) - ref, indirect_offset, false, 0));
+ 
+ 
+     table->addColumn(new ServiceContactsColumn(prefix + "contacts",

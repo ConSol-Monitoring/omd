@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 NAME = naemon-livestatus
-VERSION = 1.0.9
+VERSION = master
 DIR = $(NAME)-$(VERSION)
 
 CONFIGUREOPTS = \
@@ -36,11 +36,18 @@ clean:
 	rm -rf $(DIR)
 
 upstream:
-	rm -f livestatus.tar.gz
+	rm -f *.gz
 	wget https://github.com/naemon/naemon-livestatus/tarball/master -O tmp.tar.gz
 	tar zxf tmp.tar.gz
 	mv naemon-naemon-livestatus-??????? naemon-livestatus-master
-	cd naemon-livestatus-master && autoreconf -i
-	tar cfz naemon-livestatus-master.tar.gz naemon-livestatus-master
+	set -e ; for p in patches/*.patch ; do \
+	    echo "applying $$p..." ; \
+	    ( cd naemon-livestatus-master && patch -p1 -b ) < $$p ; \
+	done
+	cd naemon-livestatus-master && touch .naemon.official && autoreconf -i && ./configure && make dist && mv *.gz ..
 	rm -rf tmp.tar.gz naemon-livestatus-master
-	git add naemon-livestatus-master.tar.gz
+	tar zxf naemon-livestatus-*.tar.gz
+	rm naemon-livestatus-*.tar.gz
+	mv naemon-livestatus-* naemon-livestatus-master
+	tar cfz naemon-livestatus-master.tar.gz naemon-livestatus-master
+	rm -rf naemon-livestatus-master
