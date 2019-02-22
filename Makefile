@@ -22,7 +22,6 @@ PACKAGES=freetds \
          nagios \
          naemon \
          naemon-livestatus \
-         nagvis \
          nrpe \
          nsca \
          omd \

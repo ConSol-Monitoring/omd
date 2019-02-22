@@ -16,7 +16,6 @@ case "$1" in
             [ -e $OMD_ROOT/share/nagios/htdocs ]        && echo "nagios: Classic Nagios webinterface"
             [ -e $OMD_ROOT/share/check_mk/web ]         && echo "check_mk: The Check_MK's Multisite GUI"
             [ -e $OMD_ROOT/share/thruk ]                && echo "thruk: Thruk Monitoring Webinterface"
-            [ -e $OMD_ROOT/share/nagvis ]               && echo "nagvis: NagVis - The visualisation addon for Nagios"
             [ -e $OMD_ROOT/share/pnp4nagios/htdocs ]    && echo "pnp4nagios: RRD based performance data analyzer"
             [ -e $OMD_ROOT/share/grafana/public/views ] && echo "grafana: Visualize timeseries based metrics"
             echo "none: No default webinterface"
