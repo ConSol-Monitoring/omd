@@ -7,6 +7,8 @@ DEPRECATION WARNING: the following components are deprecated and will be removed
           - Nagvis
 
 next:
+          - OMD:
+            - removed icinga1
           - Mod-Gearman:
             - update mod-gearman-worker-go to 1.1.0
             - update 3.0.8

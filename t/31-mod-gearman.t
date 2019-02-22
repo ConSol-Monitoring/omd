@@ -14,7 +14,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 471 );
+plan( tests => 316 );
 
 ##################################################
 # get version strings
@@ -27,7 +27,7 @@ isnt($libgearman_version, '', "got libgearman_version") or BAIL_OUT("need lib-ge
 # create our test site
 my $omd_bin = TestUtils::get_omd_bin();
 
-for my $core (qw/nagios icinga naemon/) {
+for my $core (qw/nagios naemon/) {
     my $site     = TestUtils::create_test_site() or TestUtils::bail_out_clean("no further testing without site");
     my $host     = "omd-".$site;
     my $service  = "Dummy Service";
