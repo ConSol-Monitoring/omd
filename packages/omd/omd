@@ -909,7 +909,11 @@ def patch_template_file(src, dst, old, new):
     # existing - possibly user modified - file.
     patch = "%s/bin/patch" % site_dir(new)
     if not os.path.exists(patch):
+        patch = "/omd/versions/%s/bin/patch" % OMD_VERSION
+    if not os.path.exists(patch):
         patch = "%s/patch" % os.path.dirname(os.path.realpath(__file__))
+    if not os.path.exists(patch):
+        patch = "patch"
 
     result = os.system("diff -u %s %s | %s --force --backup --forward --silent %s" %
             (old_orig_path, new_orig_path, patch, dst))
@@ -3278,6 +3282,8 @@ def main_update(args, options={}):
     create_version_symlink(g_sitename, to_version)
 
     # Let hooks do their work and update configuration.
+    load_site_conf()
+    create_config_environment()
     config_set_all()
 
     if os.path.exists(backup_skel_path):
@@ -3729,6 +3735,7 @@ def main_restore(args, options={}):
         create_version_symlink(g_sitename, to_version)
 
         # Let hooks do their work and update configuration.
+        load_site_conf()
         create_config_environment()
         config_set_all()
 
@@ -3758,6 +3765,63 @@ def main_restore(args, options={}):
         sys.stdout.write("Restore completed as site user. "
                          "You may have to manually restart Apache...\n")
 
+
+def kill_site_user_processes(site, exclude_current_and_parents=False):
+    pids = site_user_processes(site, exclude_current_and_parents)
+    tries = 5
+    while tries > 0 and pids:
+        for pid in pids[:]:
+            try:
+                if opt_verbose:
+                    sys.stdout.write("Killing process %d...\n" % pid)
+                os.kill(pid, signal.SIGKILL)
+            except OSError as e:
+                if e.errno == 3:
+                    pids.remove(pid)  # No such process
+                else:
+                    raise
+        time.sleep(1)
+        tries -= 1
+
+    if pids:
+        bail_out("Failed to kill site processes: %s" % ", ".join(map(str, pids)))
+
+
+def get_current_and_parent_pids():
+    """Return list of PIDs of the current process and parent process tree till pid 0"""
+    pids = []
+    process = psutil.Process()
+    while process and process.pid != 0:
+        pids.append(process.pid)
+        process = process.parent()
+    return pids
+
+
+def site_user_processes(site, exclude_current_and_parents):
+    """Return list of PIDs of all running site user processes (that are not excluded)"""
+    exclude = []
+    if exclude_current_and_parents:
+        exclude = get_current_and_parent_pids()
+
+    p = subprocess.Popen(["ps", "-U", site.name, "-o", "pid", "--no-headers"],
+                         close_fds=True,
+                         stdin=open(os.devnull),
+                         stdout=subprocess.PIPE)
+    exclude.append(p.pid)
+
+    pids = []
+    for l in p.communicate()[0].split("\n"):
+        line = l.strip()
+        if not line:
+            continue
+
+        pid = int(line)
+
+        if pid in exclude:
+            continue
+
+        pids.append(pid)
+    return pids
 
 
 def main_cleanup(args, options=None):
@@ -4215,8 +4279,16 @@ def exec_other_omd(version):
         bail_out("Cannot run bin/omd of version %s." % version)
     else:
         bail_out("Site %s uses version %s which is not installed.\n"
-                "Please reinstall that version and retry this command." %
+                "Please reinstall that version and retry this command.\n"
+                "Or use the --force option to run the command with this version." %
                 (g_sitename, version))
+
+
+def omd_version_exists(version):
+    omd_path = "/omd/versions/%s/bin/omd" % version
+    if os.path.exists(omd_path):
+        return True
+    return False
 
 
 def random_password():
@@ -4310,7 +4382,8 @@ if g_sitename and site_must_exist and command != "update" and command != "restor
                      "If you have created that site with 'omd create --no-init %s'\n"
                      "then please first do an 'omd init %s'." % (3*(g_sitename,)))
     elif OMD_VERSION != v:
-        exec_other_omd(v)
+        if omd_version_exists(v) or not opt_force:
+            exec_other_omd(v)
 
 
 read_info()
