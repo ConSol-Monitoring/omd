@@ -27,7 +27,6 @@ build:
 install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/dokuwiki
 	cp preload.php $(DIR)/inc/
-	cp -r authmultisite $(DIR)/lib/plugins/
 	cp -r $(DIR) $(DESTDIR)$(OMD_ROOT)/share/dokuwiki/htdocs
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/doc/dokuwiki
 	install -m 644 $(DIR)/README $(DESTDIR)$(OMD_ROOT)/share/doc/dokuwiki

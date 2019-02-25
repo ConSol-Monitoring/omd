@@ -8,7 +8,6 @@ set -e
 NAGIOS_PLUGIN_PATH="/omd/versions/###OMD_VERSION###/lib/nagios/plugins"
 SUID_PLUGINS="check_icmp check_dhcp"
 PROGRAM_PATH="/omd/versions/###OMD_VERSION###/bin"
-SUID_PROGRAMS="mkeventd_open514"
 APACHE_OMD_CONF="/etc/apache2/conf.d/zzz_omd.conf"
 
 # Source debconf library.
@@ -63,9 +62,6 @@ case "$1" in
     fi
     for PLUGIN in $SUID_PLUGINS; do
       setperm root omd $PLUGPERM $NAGIOS_PLUGIN_PATH/$PLUGIN
-    done
-    for PROGRAM in $SUID_PROGRAMS; do
-      setperm root omd $PLUGPERM $PROGRAM_PATH/$PROGRAM
     done
 
     db_stop

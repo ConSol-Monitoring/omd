@@ -1,6 +1,6 @@
 This file documents the revision history for the Open Monitoring Distribution (Labs Edition)
 
-DEPRECATION WARNING: the following components are deprecated and will be removed from the upcoming 3.x release:
+DEPRECATION WARNING: the following components are deprecated in omd-labs and will be removed from the upcoming 3.x release:
           - Nagios 3
           - Icinga 1
           - CheckMK
@@ -10,6 +10,7 @@ next:
           - OMD:
             - removed icinga1
             - removed nagvis
+            - removed check_mk
           - Mod-Gearman:
             - update mod-gearman-worker-go to 1.1.0
             - update 3.0.8

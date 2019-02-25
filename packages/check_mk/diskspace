@@ -1,4 +1,0 @@
-cleanup_paths = [
-    'var/mkeventd/history/*.log',
-    'var/mkeventd/messages/*.log',
-]

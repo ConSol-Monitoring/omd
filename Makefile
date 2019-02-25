@@ -11,12 +11,10 @@ PACKAGES=freetds \
          python-modules \
          apache-omd \
          mod_python \
-         check_mk \
          check_multi \
          dokuwiki \
          example \
          jmx4perl \
-         mk-livestatus \
          mysql-omd \
          icinga2 \
          nagios \
@@ -322,7 +320,6 @@ setup: pack xzf alt
 xzf:
 	tar xzf $(BIN_TGZ) -C / # HACK: Add missing suid bits if compiled as non-root
 	chmod 4755 $(OMD_ROOT)/lib/nagios/plugins/check_{icmp,dhcp}
-	chmod 4775 $(OMD_ROOT)/bin/mkeventd_open514
 	$(APACHE_CTL) -k graceful
 
 # On debian based systems register the alternative switches
