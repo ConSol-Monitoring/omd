@@ -31,8 +31,15 @@ if [ $? -eq 0 ]; then
   fi
   version="$major.$minor"
 
+  # get current git branch
+  branch=$(git rev-parse --abbrev-ref HEAD)
+  if [ "x$branch" != "xlabs" ]; then
+    echo $version.$date-$branch | tr -d 'v'
+    exit 0
+  fi
+
   echo $version.$date-labs-edition | tr -d 'v'
-  exit 1
+  exit 0
 fi
 
 echo "unknown"
