@@ -703,6 +703,8 @@ def create_skeleton_files(sitename, dir):
                     continue
                 if dirpath == "tmp" or dirpath.startswith("tmp/"):
                     continue
+            if not os.path.exists(sitedir + "/" + dirpath):
+                create_skeleton_file(skelroot, sitedir, dirpath, replacements)
             create_skeleton_file(skelroot, sitedir, dirpath + "/" + entry, replacements)
 
 def delete_user_file(user_path):
