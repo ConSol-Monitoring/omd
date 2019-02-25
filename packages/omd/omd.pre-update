@@ -2,7 +2,7 @@
 #
 # OMD - Pre Update Hook
 #
-# This script prepares the site to fix some know issues which causes update conflicts.
+# This script prepares the site to fix some known issues which causes update conflicts.
 # It will be run prior the update process with the new OMD.
 
 cd $OMD_ROOT
@@ -18,7 +18,7 @@ if [ -e ".backup_meta/skel" ]; then
     OLD_SKEL=".backup_meta/skel"
 fi
 
-# apply some fixed to versions until 2.20
+# apply some fixes to versions until 2.20
 if [ $OLD_VERSION -le 220 ]; then
   # remove file created by hook to prevent update conflict
   rm -f etc/shinken/apache.conf
@@ -46,5 +46,17 @@ if test -h etc/thruk/cgi.cfg && test -f etc/nagios/cgi.cfg; then
     sed -e 's%###ROOT###%'$OMD_ROOT'%g' $OLD_SKEL/etc/nagios/cgi.cfg > etc/nagios/cgi.cfg
     sed -e 's%###SITE###%'$OMD_SITE'%g' -i etc/nagios/cgi.cfg
 fi
+
+# migrate nagios/icinga leftovers to naemon
+OLDCORE=$(readlink etc/init.d/core >/dev/null 2>&1)
+if test -h etc/naemon/conf.d && test -f etc/nagios/conf.d; then
+    rm -f etc/naemon/conf.d
+    mv etc/nagios/conf.d etc/naemon/
+fi
+if [ "x$CORE" != "x" -a "x$CORE" != "xnaemon" ]; then
+  mv var/$CORE/archive/* var/naemon/archive/ >/dev/null 2>&1
+fi
+mv local/share/nagios/htdocs/images/logos/* local/share/logos/ >/dev/null 2>&1
+
 
 exit 0

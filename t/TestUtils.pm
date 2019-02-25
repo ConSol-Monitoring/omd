@@ -287,7 +287,6 @@ sub create_test_site {
     if(test_command({ cmd => TestUtils::get_omd_bin()." create $site", errlike => $errlike })) {
         # disable cookie auth for tests
         my $omd_bin = TestUtils::get_omd_bin();
-        print `mv /omd/sites/$site/etc/apache/conf.d/disable_nagios.conf /omd/sites/$site/etc/apache/conf.d/disable_nagios.off`;
         print `$omd_bin config $site set THRUK_COOKIE_AUTH off`;
         print `$omd_bin config $site set APACHE_MODE own`;
         print `/bin/su - $site -c 'omd reset etc/htpasswd'`;
@@ -890,7 +889,6 @@ sub _diag_cmd {
         my $site = $1;
         _tail("apache logs:", "/omd/sites/$site/var/log/apache/error_log") if defined $site;
         _tail_apache_logs();
-        _tail("nagios livestatus nagios logs:", "/omd/sites/$site/var/nagios/livestatus.log") if defined $site;
         _tail("naemon livestatus logs:", "/omd/sites/$site/var/naemon/livestatus.log") if defined $site;
     }
     if($stdout =~ m/HTTP CRITICAL/ && $test->{'cmd'} =~ m/su \- (\w+)\s+/) {

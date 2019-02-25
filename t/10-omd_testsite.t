@@ -12,7 +12,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 338 );
+plan( tests => 352 );
 
 my $omd_bin = TestUtils::get_omd_bin();
 
@@ -108,15 +108,19 @@ my $tests = [
 
   # --reset
   { cmd => "/bin/sh -c \"echo '# test newline in profile' >> /omd/sites/$site/.profile\""},
-  { cmd => "/bin/sh -c \"rm /omd/sites/$site/etc/naemon/conf.d\""},
-  { cmd => "/bin/su - $site -c 'omd diff'", like => ['/Changed content .profile/', '/Deleted etc\/naemon\/conf.d/'] },
-  { cmd => "/bin/su - $site -c 'omd reset .profile etc/naemon/conf.d'"  },
+  { cmd => "/bin/sh -c \"rm -rf /omd/sites/$site/etc/rc.d/80-naemon\""},
+  { cmd => "/bin/su - $site -c 'omd diff'", like => ['/Changed content .profile/', '/Deleted etc\/rc\.d/80\-naemon/'] },
+  { cmd => "/bin/su - $site -c 'omd reset .profile etc/rc.d/80-naemon'"  },
   { cmd => "/bin/su - $site -c 'omd reset etc/htpasswd'", like => '/^$/' },
   { cmd => "/bin/su - $site -c 'omd -v diff'", like => ['/^$/'] },
   { cmd => "/bin/sh -c \"rm /omd/sites/$site/etc/thruk/*.cfg\""},
-  { cmd => "/bin/sh -c \"rm /omd/sites/$site/etc/naemon/conf.d\""},
-  { cmd => "/bin/su - $site -c 'omd diff'", like => ['/Deleted etc\/thruk/cgi.cfg/', '/Deleted etc\/naemon\/conf.d/'] },
+  { cmd => "/bin/sh -c \"rm -rf /omd/sites/$site/etc/naemon\""},
+  { cmd => "/bin/su - $site -c 'omd diff'", like => ['/Deleted etc\/thruk/cgi.cfg/', '/Deleted etc\/naemon/'] },
   { cmd => "/bin/su - $site -c 'omd reset etc/'"  },
+  { cmd => "/bin/su - $site -c 'omd diff'", like => ['/^$/'] },
+  { cmd => "/bin/sh -c \"rm -rf /omd/sites/$site/etc/naemon/conf.d\""},
+  { cmd => "/bin/su - $site -c 'omd diff'", like => ['/Deleted etc\/naemon\/conf\.d/'] },
+  { cmd => "/bin/su - $site -c 'omd reset etc/naemon/conf.d'"  },
   { cmd => "/bin/su - $site -c 'omd diff'", like => ['/^$/'] },
 
   # parallel mode

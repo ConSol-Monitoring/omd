@@ -24,7 +24,7 @@ my $curl    = '/usr/bin/curl -v --user omdadmin:omd --noproxy \* ';
 my $ip      = TestUtils::get_external_ip();
 
 # create test host/service
-TestUtils::prepare_obj_config('t/data/omd/testconf1', '/omd/sites/'.$site.'/etc/nagios/conf.d', $site);
+TestUtils::prepare_obj_config('t/data/omd/testconf1', '/omd/sites/'.$site.'/etc/naemon/conf.d', $site);
 TestUtils::test_command({ cmd => "/usr/bin/env sed -i -e 's/^perfdata_file_processing_interval = 15/perfdata_file_processing_interval = 2/g' -e 's/^sleep_time = 15/sleep_time = 2/g' /opt/omd/sites/$site/etc/pnp4nagios/npcd.cfg" });
 
 TestUtils::test_command({ cmd => $omd_bin." config $site set GRAFANA on" });

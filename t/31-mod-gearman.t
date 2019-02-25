@@ -27,14 +27,11 @@ isnt($libgearman_version, '', "got libgearman_version") or BAIL_OUT("need lib-ge
 # create our test site
 my $omd_bin = TestUtils::get_omd_bin();
 
-for my $core (qw/nagios naemon/) {
+for my $core (qw/naemon/) {
     my $site     = TestUtils::create_test_site() or TestUtils::bail_out_clean("no further testing without site");
     my $host     = "omd-".$site;
     my $service  = "Dummy Service";
-    my $module   = 'mod_gearman_nagios3.o';
-    if($core eq 'naemon') {
-        $module   = 'mod_gearman_naemon.o';
-    }
+    my $module   = 'mod_gearman_naemon.o';
 
     # make tests more reliable
     TestUtils::test_command({ cmd => "/usr/bin/env sed -i -e 's/^idle-timeout=30/idle-timeout=300/g' /opt/omd/sites/$site/etc/mod-gearman/worker.cfg" });

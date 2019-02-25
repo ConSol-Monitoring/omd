@@ -1,3 +1,0 @@
-cleanup_paths = [
-    'var/nagios/archive/*.log',
-]

@@ -17,9 +17,9 @@ PACKAGES=freetds \
          jmx4perl \
          mysql-omd \
          icinga2 \
-         nagios \
          naemon \
          naemon-livestatus \
+         logos \
          nrpe \
          nsca \
          omd \

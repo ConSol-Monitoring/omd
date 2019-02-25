@@ -25,7 +25,7 @@ my $startTime = time-60;
 TestUtils::test_command({ cmd => $omd_bin." config $site set INFLUXDB on" });
 TestUtils::test_command({ cmd => $omd_bin." config $site set PNP4NAGIOS off" });
 TestUtils::test_command({ cmd => $omd_bin." config $site set NAGFLUX on" });
-TestUtils::test_command({ cmd => $omd_bin." config $site set CORE nagios" });
+TestUtils::test_command({ cmd => $omd_bin." config $site set CORE naemon" });
 TestUtils::test_command({ cmd => $omd_bin." start $site", like => '/Starting Nagflux\.+OK/' });
 
 my $ranges = sprintf("<<END

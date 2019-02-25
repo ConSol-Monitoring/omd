@@ -12,6 +12,7 @@ next:
             - removed nagvis
             - removed check_mk
             - removed dataScryer
+            - removed nagios3
           - Mod-Gearman:
             - update mod-gearman-worker-go to 1.1.0
             - update 3.0.8

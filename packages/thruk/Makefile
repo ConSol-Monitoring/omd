@@ -59,8 +59,8 @@ skel:
 	cp $(DIR)/support/thruk.init $(SKEL)/etc/init.d/thruk
 	mkdir -p $(SKEL)/etc/bash_completion.d
 	cp $(DIR)/support/thruk_bash_completion $(SKEL)/etc/bash_completion.d/thruk-base
-	mkdir -p $(SKEL)/etc/nagios/conf.d
-	cp $(DIR)/support/thruk_templates.cfg $(SKEL)/etc/nagios/conf.d/
+	mkdir -p $(SKEL)/etc/naemon/conf.d
+	cp $(DIR)/support/thruk_templates.cfg $(SKEL)/etc/naemon/conf.d/
 	mkdir -p $(SKEL)/etc/icinga2/conf.d/thruk_bp_templates.conf
 	cp $(DIR)/support/thruk_templates_icinga2.conf $(SKEL)/etc/icinga2/conf.d/thruk_bp_templates.conf
 	cp $(DIR)/support/fcgid_env.sh $(SKEL)/etc/thruk/fcgid.thruk
@@ -77,7 +77,6 @@ skel:
 	cp $(DIR)/ssi/status-header.ssi-pnp $(SKEL)/etc/thruk/ssi/status-header.ssi
 	cp $(DIR)/ssi/status-header.ssi-pnp $(SKEL)/etc/thruk/ssi/extinfo-header.ssi
 	cp $(DIR)/ssi/extinfo-header.ssi-tickets $(SKEL)/etc/thruk/ssi/extinfo-header.ssi-example
-	mkdir -p $(SKEL)/etc/nagios/
 	cp $(DIR)/cgi.cfg $(SKEL)/etc/thruk/
 	sed -e 's/thrukadmin/omdadmin/g' -i $(SKEL)/etc/thruk/cgi.cfg
 	sed -e 's/^default_user_name=.*/default_user_name=/g' -i $(SKEL)/etc/thruk/cgi.cfg
