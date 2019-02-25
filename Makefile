@@ -50,7 +50,6 @@ PACKAGES=freetds \
          prometheus_blackbox_exporter \
          prometheus_pushgateway \
          thanos \
-         dataScryer \
          snmptrapd \
          downtime-api \
          grafana-pnp-datasource \

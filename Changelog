@@ -11,6 +11,7 @@ next:
             - removed icinga1
             - removed nagvis
             - removed check_mk
+            - removed dataScryer
           - Mod-Gearman:
             - update mod-gearman-worker-go to 1.1.0
             - update 3.0.8
