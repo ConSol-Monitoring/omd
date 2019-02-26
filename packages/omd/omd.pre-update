@@ -60,6 +60,14 @@ mv local/share/nagios/htdocs/images/logos/* local/share/logos/ >/dev/null 2>&1
 if ! test -h local/lib/nagios/plugins; then
   mv local/lib/nagios/plugins/* local/lib/monitoring-plugins/ >/dev/null 2>&1
 fi
-
+# remove files created by obsolete hooks
+rm -f local/share/nagios/htdocs/theme/images
+rm -f local/share/nagios/htdocs/theme/stylesheets
+rm -f etc/nagvis/urls.ini.php
+rm -f etc/nagios/nagios.d/pnp4nagios.cfg
+rm -f etc/icinga/icinga.d/pnp4nagios.cfg
+rm -f etc/check_mk/multisite.d/mkeventd.mk
+rm -f etc/nagios/nagios.d/mod-gearman.cfg
+rm -f etc/icinga/icinga.d/mod-gearman.cfg
 
 exit 0

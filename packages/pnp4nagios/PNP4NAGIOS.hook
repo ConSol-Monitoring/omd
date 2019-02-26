@@ -24,12 +24,6 @@ case "$1" in
        then
            #mkdir -p $OMD_ROOT/etc/nagios/nagios.d
            file="nagios_npcdmod.cfg"
-           if [ -e $OMD_ROOT/etc/nagios/nagios.d ] ; then
-               ln -sfn ../../pnp4nagios/$file $OMD_ROOT/etc/nagios/nagios.d/pnp4nagios.cfg
-           fi
-           if [ -e $OMD_ROOT/etc/icinga/icinga.d ] ; then
-               ln -sfn ../../pnp4nagios/$file $OMD_ROOT/etc/icinga/icinga.d/pnp4nagios.cfg
-           fi
            if [ -e $OMD_ROOT/etc/naemon/naemon.d ] && [ "$CONFIG_CORE" = "naemon" -o "$CONFIG_CORE" = "" ] ; then
                ln -sfn ../../pnp4nagios/naemon_npcdmod.cfg $OMD_ROOT/etc/naemon/naemon.d/pnp4nagios.cfg
            fi
@@ -39,12 +33,6 @@ case "$1" in
            fi
        elif [ "$2" == "gearman" ]
        then
-           if [ -e $OMD_ROOT/etc/nagios/nagios.d ] ; then
-               ln -sfn ../../pnp4nagios/nagios_gearman.cfg $OMD_ROOT/etc/nagios/nagios.d/pnp4nagios.cfg
-           fi
-           if [ -e $OMD_ROOT/etc/icinga/icinga.d ] ; then
-               ln -sfn ../../pnp4nagios/nagios_gearman.cfg $OMD_ROOT/etc/icinga/icinga.d/pnp4nagios.cfg
-           fi
            if [ -e $OMD_ROOT/etc/naemon/naemon.d ] ; then
                ln -sfn ../../pnp4nagios/nagios_gearman.cfg $OMD_ROOT/etc/naemon/naemon.d/pnp4nagios.cfg
            fi
@@ -54,12 +42,6 @@ case "$1" in
            fi
        elif [ "$2" == "npcd" ]
        then
-           if [ -e $OMD_ROOT/etc/nagios/nagios.d ] ; then
-               ln -sfn ../../pnp4nagios/nagios_npcd.cfg $OMD_ROOT/etc/nagios/nagios.d/pnp4nagios.cfg
-           fi
-           if [ -e $OMD_ROOT/etc/icinga/icinga.d ] ; then
-               ln -sfn ../../pnp4nagios/nagios_npcd.cfg $OMD_ROOT/etc/icinga/icinga.d/pnp4nagios.cfg
-           fi
            if [ -e $OMD_ROOT/etc/naemon/naemon.d ] ; then
                ln -sfn ../../pnp4nagios/nagios_npcd.cfg $OMD_ROOT/etc/naemon/naemon.d/pnp4nagios.cfg
            fi
@@ -68,8 +50,6 @@ case "$1" in
            fi
            ln -sfn ../../pnp4nagios/apache.conf $OMD_ROOT/etc/apache/conf.d/pnp4nagios.conf
        else
-           rm -f $OMD_ROOT/etc/nagios/nagios.d/pnp4nagios.cfg
-           rm -f $OMD_ROOT/etc/icinga/icinga.d/pnp4nagios.cfg
            rm -f $OMD_ROOT/etc/naemon/naemon.d/pnp4nagios.cfg
            rm -f $OMD_ROOT/etc/apache/conf.d/pnp4nagios.conf
            rm -f $OMD_ROOT/etc/icinga2/features-enabled/omd_pnp_perfdata.conf

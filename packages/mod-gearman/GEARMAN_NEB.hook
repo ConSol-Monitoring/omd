@@ -16,8 +16,7 @@ case "$1" in
     ;;
     set)
         if [ "$2" = "off" -o "$CONFIG_MOD_GEARMAN" != "on" ]; then
-            rm -f $OMD_ROOT/etc/nagios/nagios.d/mod-gearman.cfg
-            rm -f $OMD_ROOT/etc/icinga/icinga.d/mod-gearman.cfg
+            rm -f $OMD_ROOT/etc/naemon/naemon.d/mod-gearman.cfg
         elif [ "$2" = "on" ]; then
             # generate random key
             KEYSTORE="$OMD_ROOT/etc/mod-gearman/secret.key"
@@ -25,15 +24,8 @@ case "$1" in
                 key=`head -n 20 /dev/urandom | tr -d -c "[:alnum:]"`
                 echo ${key:0:32} > $KEYSTORE
             fi
-            mkdir -p $OMD_ROOT/etc/nagios/nagios.d
-            mkdir -p $OMD_ROOT/etc/icinga/icinga.d
-            if [ $CONFIG_CORE = "naemon" ]; then
-                ln -sfn ../../mod-gearman/naemon.cfg $OMD_ROOT/etc/nagios/nagios.d/mod-gearman.cfg
-                ln -sfn ../../mod-gearman/naemon.cfg $OMD_ROOT/etc/icinga/icinga.d/mod-gearman.cfg
-            else
-                ln -sfn ../../mod-gearman/nagios.cfg $OMD_ROOT/etc/nagios/nagios.d/mod-gearman.cfg
-                ln -sfn ../../mod-gearman/nagios.cfg $OMD_ROOT/etc/icinga/icinga.d/mod-gearman.cfg
-            fi
+            mkdir -p $OMD_ROOT/etc/naemon/naemon.d
+            ln -sfn ../../mod-gearman/naemon.cfg $OMD_ROOT/etc/naemon/naemon.d/mod-gearman.cfg
         fi
     ;;
     depends)
