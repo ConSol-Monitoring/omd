@@ -3245,6 +3245,15 @@ def main_update(args, options={}):
             "Update!", "Abort"):
         bail_out("Aborted.")
 
+    # show one extra confirmation dialog when updating from 1.x/2.x to 3.x
+    if version_numeric(from_version) < 3 and not opt_force and dialog_yesno(
+            "*******        MAJOR UPDATE TO %s        ******\n"
+            "You are going to update the site %s from version %s to version %s. "
+            "Please make sure you have read to migration guide at: https://labs.consol.de/omd/migration_3.html "
+            "and you made a backup. You have been warned." % (to_version, g_sitename, from_version, to_version),
+            "Abort", "Continue"):
+        bail_out("Aborted.")
+
     start_logging(g_sitedir + '/var/log/update.log')
 
     sys.stdout.write("%s - Updating site '%s' from version %s to %s...\n\n" %
@@ -4292,6 +4301,12 @@ def omd_version_exists(version):
         return True
     return False
 
+def version_numeric(version):
+    num = re.findall(r'^(\d+\.\d+)', version)
+    try:
+        return(float(num[0]))
+    except:
+        return(0)
 
 def random_password():
     return ''.join(random.choice(string.ascii_letters + string.digits) for i in range(8))
