@@ -33,7 +33,7 @@ import random
 import string
 from subprocess import *
 
-OMD_VERSION = "2.90-labs-edition"
+OMD_VERSION = "3.00-labs-edition"
 
 # Some global variables
 opt_verbose     = False
