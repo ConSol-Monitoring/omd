@@ -142,12 +142,12 @@ TestUtils::test_command({ cmd => "/bin/sh -c 'echo \"APACHE_MODE=ssl\nWEB_REDIRE
 TestUtils::restart_system_apache();
 
 # WEB_REDIRECT
-TestUtils::test_command({ cmd => "/omd/sites/$site/lib/nagios/plugins/check_http    -t 60 -H localhost -u '/' -s 'http://localhost/$site/'", like => '/HTTP OK:/' });
-TestUtils::test_command({ cmd => "/omd/sites/$site/lib/nagios/plugins/check_http -S -t 60 -H localhost -u '/' -s 'https://localhost/$site/'", like => '/HTTP OK:/' });
-TestUtils::test_command({ cmd => "/omd/sites/$site/lib/nagios/plugins/check_http    -t 60 -H localhost -u '/$site' -s 'http://localhost/sitealias'", like => '/HTTP OK:/' });
-TestUtils::test_command({ cmd => "/omd/sites/$site/lib/nagios/plugins/check_http -S -t 60 -H localhost -u '/$site' -s 'https://localhost/sitealias'", like => '/HTTP OK:/' });
-TestUtils::test_command({ cmd => "/omd/sites/$site/lib/nagios/plugins/check_http    -t 60 -H localhost -u '/' -f follow -s 'login.cgi'", like => '/HTTP WARN/', exit => 1 });
-TestUtils::test_command({ cmd => "/omd/sites/$site/lib/nagios/plugins/check_http -S -t 60 -H localhost -u '/' -f follow -s 'login.cgi'", like => '/HTTP WARN/', exit => 1 });
+TestUtils::test_command({ cmd => "/omd/sites/$site/lib/monitoring-plugins/check_http    -t 60 -H localhost -u '/' -s 'http://localhost/$site/'", like => '/HTTP OK:/' });
+TestUtils::test_command({ cmd => "/omd/sites/$site/lib/monitoring-plugins/check_http -S -t 60 -H localhost -u '/' -s 'https://localhost/$site/'", like => '/HTTP OK:/' });
+TestUtils::test_command({ cmd => "/omd/sites/$site/lib/monitoring-plugins/check_http    -t 60 -H localhost -u '/$site' -s 'http://localhost/sitealias'", like => '/HTTP OK:/' });
+TestUtils::test_command({ cmd => "/omd/sites/$site/lib/monitoring-plugins/check_http -S -t 60 -H localhost -u '/$site' -s 'https://localhost/sitealias'", like => '/HTTP OK:/' });
+TestUtils::test_command({ cmd => "/omd/sites/$site/lib/monitoring-plugins/check_http    -t 60 -H localhost -u '/' -f follow -s 'login.cgi'", like => '/HTTP WARN/', exit => 1 });
+TestUtils::test_command({ cmd => "/omd/sites/$site/lib/monitoring-plugins/check_http -S -t 60 -H localhost -u '/' -f follow -s 'login.cgi'", like => '/HTTP WARN/', exit => 1 });
 
 # bulk config change II
 TestUtils::test_command({ cmd => "/bin/sh -c 'echo \"APACHE_MODE=none\nAUTOSTART=off\" | omd config $site change'", like => ['/Stopping dedicated Apache/', '/Stopping naemon/', '/Starting naemon/'] });

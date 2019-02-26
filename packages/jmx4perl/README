@@ -19,7 +19,7 @@ $ jolokia repack --security jolokia.war
 
 More about this tool can be found in its man page (man jolokia)
 
-The nagios plugin can be found at lib/nagios/plugins/check_jmx4perl. It comes
+The nagios plugin can be found at lib/monitoring-plugins/check_jmx4perl. It comes
 with a comprehensive documentation, too (man check_jmx4perl). Its
 configuration files are located in etc/jmx4perl/, a sample nagios command
 definition is included as etc/nagios/conf.d/jmx4perl_nagios.cfg and references

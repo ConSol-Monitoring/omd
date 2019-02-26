@@ -8,8 +8,8 @@ VERSION  = 1
 build:
 
 install:
-	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins
-	install -m 755 notify-by-email.pl $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins/notify-by-email.pl
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/monitoring-plugins
+	install -m 755 notify-by-email.pl $(DESTDIR)$(OMD_ROOT)/lib/monitoring-plugins/notify-by-email.pl
 
 skel:
 

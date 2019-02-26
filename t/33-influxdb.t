@@ -65,7 +65,7 @@ TestUtils::test_command({ cmd => "/bin/su - $site -c 'influx'",
                           stdin   => ['SHOW DATABASES'],
                        });
 
-TestUtils::test_command({ cmd => "/bin/su - $site -c './lib/naemon/plugins/check_influxdb m ping --address http://127.0.0.1:8086'",
+TestUtils::test_command({ cmd => "/bin/su - $site -c './lib/monitoring-plugins/check_influxdb m ping --address http://127.0.0.1:8086'",
                           like    => ['/OK/'],
                        });
 
@@ -81,7 +81,7 @@ TestUtils::test_command({ cmd => "/bin/su - $site -c 'influx'",
                           stdin   => ['SHOW DATABASES'],
                        });
 
-TestUtils::test_command({ cmd => "/bin/su - $site -c './lib/naemon/plugins/check_influxdb m ping --address https://127.0.0.1:8086 --unsafessl'",
+TestUtils::test_command({ cmd => "/bin/su - $site -c './lib/monitoring-plugins/check_influxdb m ping --address https://127.0.0.1:8086 --unsafessl'",
                           like    => ['/OK/'],
                        });
 

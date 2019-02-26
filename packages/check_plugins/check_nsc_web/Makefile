@@ -18,8 +18,8 @@ build:
 	CGO_ENABLED=0 go build -ldflags "-s -w" $(NAME).go
 
 install:
-	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins
-	install -m 755 $(PWD)/$(NAME) $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/monitoring-plugins
+	install -m 755 $(PWD)/$(NAME) $(DESTDIR)$(OMD_ROOT)/lib/monitoring-plugins
 
 skel:
 

@@ -5,7 +5,7 @@
 
 set -e
 
-NAGIOS_PLUGIN_PATH="/omd/versions/###OMD_VERSION###/lib/nagios/plugins"
+MONITORING_PLUGIN_PATH="/omd/versions/###OMD_VERSION###/lib/monitoring-plugins"
 SUID_PLUGINS="check_icmp check_dhcp"
 PROGRAM_PATH="/omd/versions/###OMD_VERSION###/bin"
 APACHE_OMD_CONF="/etc/apache2/conf.d/zzz_omd.conf"
@@ -54,14 +54,9 @@ case "$1" in
       addgroup --system --force-badname omd > /dev/null
     fi
 
-    db_get omd/nagios-plugins-suid || true
-    if [ "$RET" = "true" ]; then
-      PLUGPERM="4754"
-    else
-      PLUGPERM="0755"
-    fi
+    PLUGPERM="4754"
     for PLUGIN in $SUID_PLUGINS; do
-      setperm root omd $PLUGPERM $NAGIOS_PLUGIN_PATH/$PLUGIN
+      setperm root omd $PLUGPERM $MONITORING_PLUGIN_PATH/$PLUGIN
     done
 
     db_stop

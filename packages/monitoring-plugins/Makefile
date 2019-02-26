@@ -7,7 +7,7 @@ URIPARSER=0.8.6
 
 CONFIGUREOPTS = \
     --prefix=$(OMD_ROOT) \
-    --libexecdir=$(OMD_ROOT)/lib/nagios/plugins
+    --libexecdir=$(OMD_ROOT)/lib/monitoring-plugins
 
 build: uriparser
 	rm -rf $(DIR)
@@ -27,9 +27,9 @@ build: uriparser
 install:
 	$(MAKE) DESTDIR=$(DESTDIR) -C $(DIR) install
 	# FIXME: pack these with SUID root
-	install -m 755 $(DIR)/plugins-root/check_icmp $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins
-	install -m 755 $(DIR)/plugins-root/check_dhcp $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins
-	ln -s check_icmp $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins/check_host
+	install -m 755 $(DIR)/plugins-root/check_icmp $(DESTDIR)$(OMD_ROOT)/lib/monitoring-plugins
+	install -m 755 $(DIR)/plugins-root/check_dhcp $(DESTDIR)$(OMD_ROOT)/lib/monitoring-plugins
+	ln -s check_icmp $(DESTDIR)$(OMD_ROOT)/lib/monitoring-plugins/check_host
 
 	# Copy package documentations to have these information in the binary packages
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/doc/$(NAME)
@@ -37,14 +37,9 @@ install:
 	   install -m 644 $(DIR)/$$file $(DESTDIR)$(OMD_ROOT)/share/doc/$(NAME); \
 	done
 
-	# link lib/nagios/plugins to lib/icinga/plugins
-	if [ -d "$(DESTDIR)$(OMD_ROOT)/lib/icinga" ] ; then \
-            cd $(DESTDIR)$(OMD_ROOT)/lib/icinga && ln -s ../nagios/plugins plugins ; \
-	fi
-	# link lib/nagios/plugins to lib/naemon/plugins
-	if [ -d "$(DESTDIR)$(OMD_ROOT)/lib/naemon" ] ; then \
-            cd $(DESTDIR)$(OMD_ROOT)/lib/naemon && ln -s ../nagios/plugins plugins ; \
-	fi
+	# link lib/monitoring-plugins to lib/nagios/plugins
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/nagios
+	cd $(DESTDIR)$(OMD_ROOT)/lib/nagios && ln -s ../monitoring-plugins plugins
 
 uriparser:
 	tar jxf uriparser-$(URIPARSER).tar.bz2

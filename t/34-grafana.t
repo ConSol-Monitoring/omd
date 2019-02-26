@@ -31,20 +31,20 @@ TestUtils::test_command({ cmd => $omd_bin." config $site set GRAFANA on" });
 TestUtils::test_command({ cmd => $omd_bin." start $site", like => '/Starting Grafana...OK/' });
 
 # schedule forced check
-TestUtils::test_command({ cmd => "/bin/su - $site -c './lib/nagios/plugins/check_http -H localhost -a omdadmin:omd -u /$site/thruk/cgi-bin/cmd.cgi -e 200 -P \"cmd_typ=96&cmd_mod=2&host=omd-$site&start_time=2010-11-06+09%3A46%3A02&force_check=on&btnSubmit=Commit\" -r \"Your command request was successfully submitted\"'", like => '/HTTP OK:/' });
+TestUtils::test_command({ cmd => "/bin/su - $site -c './lib/monitoring-plugins/check_http -H localhost -a omdadmin:omd -u /$site/thruk/cgi-bin/cmd.cgi -e 200 -P \"cmd_typ=96&cmd_mod=2&host=omd-$site&start_time=2010-11-06+09%3A46%3A02&force_check=on&btnSubmit=Commit\" -r \"Your command request was successfully submitted\"'", like => '/HTTP OK:/' });
 TestUtils::wait_for_file("/omd/sites/$site/var/pnp4nagios/perfdata/omd-$site/_HOST_.xml");
 
 #grafana interface
 TestUtils::test_url({ url => 'http://localhost/'.$site.'/grafana/', waitfor => '<title>Grafana<\/title>', auth => $auth });
-TestUtils::test_command({ cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -t 60 -H 127.0.0.1 -p 8003 -k \"X-WEBAUTH-USER: omdadmin\" -s \"<title>Grafana</title>\"'", like => '/HTTP OK:/', waitfor => 'HTTP\ OK:' });
-TestUtils::test_command({ cmd => "/omd/sites/$site/lib/nagios/plugins/check_http -t 60 -H localhost -a omdadmin:omd -u '/$site/grafana/' -s '\"login\":\"omdadmin\"'", like => '/HTTP OK:/', waitfor => 'HTTP\ OK:' });
+TestUtils::test_command({ cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_http -t 60 -H 127.0.0.1 -p 8003 -k \"X-WEBAUTH-USER: omdadmin\" -s \"<title>Grafana</title>\"'", like => '/HTTP OK:/', waitfor => 'HTTP\ OK:' });
+TestUtils::test_command({ cmd => "/omd/sites/$site/lib/monitoring-plugins/check_http -t 60 -H localhost -a omdadmin:omd -u '/$site/grafana/' -s '\"login\":\"omdadmin\"'", like => '/HTTP OK:/', waitfor => 'HTTP\ OK:' });
 
 #grafana interface with ssl
 TestUtils::test_command({ cmd => $omd_bin." stop $site", like => '/Stopping Grafana/' });
 TestUtils::test_command({ cmd => $omd_bin." config $site set APACHE_MODE ssl", like => '/^$/' });
 TestUtils::test_command({ cmd => $omd_bin." start $site", like => '/Starting Grafana/' });
 TestUtils::restart_system_apache();
-TestUtils::test_command({ cmd => "/omd/sites/$site/lib/nagios/plugins/check_http -t 60 -H localhost -S -a omdadmin:omd -u '/$site/grafana/' -s '\"login\":\"omdadmin\"'", like => '/HTTP OK:/', waitfor => 'HTTP\ OK:' });
+TestUtils::test_command({ cmd => "/omd/sites/$site/lib/monitoring-plugins/check_http -t 60 -H localhost -S -a omdadmin:omd -u '/$site/grafana/' -s '\"login\":\"omdadmin\"'", like => '/HTTP OK:/', waitfor => 'HTTP\ OK:' });
 
 TestUtils::test_command({ cmd => $omd_bin." stop $site" });
 
@@ -52,15 +52,15 @@ TestUtils::test_command({ cmd => $omd_bin." stop $site" });
 my $sessionid = TestUtils::create_fake_cookie_login($site);
 TestUtils::test_command({ cmd => $omd_bin." config $site set THRUK_COOKIE_AUTH on", like => '/^$/' });
 TestUtils::test_command({ cmd => $omd_bin." start $site", like => '/Starting Grafana/' });
-TestUtils::test_command({ cmd => "/omd/sites/$site/lib/nagios/plugins/check_http -t 60 -H localhost -S -k 'Cookie: thruk_auth=$sessionid' -u '/$site/grafana/' -s '\"login\":\"omdadmin\"'", like => '/HTTP OK:/' });
-TestUtils::test_command({ cmd => "/omd/sites/$site/lib/nagios/plugins/check_http -t 60 -H localhost -S -k 'Cookie: thruk_auth=$sessionid' -u '/$site/grafana/api/datasources/proxy/1/index.php/api/hosts' -vv -s '[{\"name\":\"omd-testsite\"}]'", like => '/HTTP OK:/' });
+TestUtils::test_command({ cmd => "/omd/sites/$site/lib/monitoring-plugins/check_http -t 60 -H localhost -S -k 'Cookie: thruk_auth=$sessionid' -u '/$site/grafana/' -s '\"login\":\"omdadmin\"'", like => '/HTTP OK:/' });
+TestUtils::test_command({ cmd => "/omd/sites/$site/lib/monitoring-plugins/check_http -t 60 -H localhost -S -k 'Cookie: thruk_auth=$sessionid' -u '/$site/grafana/api/datasources/proxy/1/index.php/api/hosts' -vv -s '[{\"name\":\"omd-testsite\"}]'", like => '/HTTP OK:/' });
 
 #grafana interface with http and thruk cookie auth
 TestUtils::test_command({ cmd => $omd_bin." stop $site" });
 TestUtils::test_command({ cmd => $omd_bin." config $site set APACHE_MODE own", like => '/^$/' });
 TestUtils::restart_system_apache();
 TestUtils::test_command({ cmd => $omd_bin." start $site", like => '/Starting Grafana/' });
-TestUtils::test_command({ cmd => "/omd/sites/$site/lib/nagios/plugins/check_http -t 60 -H localhost -k 'Cookie: thruk_auth=$sessionid' -u '/$site/grafana/' -s '\"login\":\"omdadmin\"'", like => '/HTTP OK:/' });
+TestUtils::test_command({ cmd => "/omd/sites/$site/lib/monitoring-plugins/check_http -t 60 -H localhost -k 'Cookie: thruk_auth=$sessionid' -u '/$site/grafana/' -s '\"login\":\"omdadmin\"'", like => '/HTTP OK:/' });
 
 
 # make sure grafana listens to localhost only

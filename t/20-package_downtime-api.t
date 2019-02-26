@@ -42,7 +42,7 @@ my $tests = [
   { cmd => $omd_bin." config $site set CORE naemon" },
   { cmd => $omd_bin." config $site set DOWNTIMEAPI on" },
   { cmd => $omd_bin." start $site" },
-  { cmd => "/bin/su - $site -c 'lib/naemon/plugins/check_http -t 60 -H localhost -a omdadmin:omd -u /$site/thruk/side.html -e 200'", like => '/HTTP OK:/' },
+  { cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_http -t 60 -H localhost -a omdadmin:omd -u /$site/thruk/side.html -e 200'", like => '/HTTP OK:/' },
 ];
 for my $test (@{$tests}) {
     TestUtils::test_command($test);
@@ -59,7 +59,7 @@ my $ml = Monitoring::Livestatus->new(
 my $query = $ml->selectall_arrayref("GET hosts\nFilter: host_name = down1\nColumns: scheduled_downtime_depth host_name\n");
 is($query->[0]->[0], 0, "host: down1 downtime does not yet exist");
 my $dturl = "/$site/api/downtime?host=down1&comment=bla1&duration=1";
-TestUtils::test_command({ cmd => sprintf("/bin/su - %s -c \"lib/naemon/plugins/check_http -t 60 -H %s --onredirect=follow -u '%s' --ssl\"", $site, $this_ip, $dturl), like => '/HTTP OK:/' });
+TestUtils::test_command({ cmd => sprintf("/bin/su - %s -c \"lib/monitoring-plugins/check_http -t 60 -H %s --onredirect=follow -u '%s' --ssl\"", $site, $this_ip, $dturl), like => '/HTTP OK:/' });
 $query = $ml->selectall_arrayref("GET hosts\nFilter: host_name = down1\nColumns: scheduled_downtime_depth host_name\n");
 is($query->[0]->[0], 1, "host: down1 downtime exists");
 $query = $ml->selectall_arrayref("GET downtimes\nFilter: host_name = down1\nColumns: duration comment\n");
@@ -70,7 +70,7 @@ like($query->[0]->[1], "/^bla1/", "host: down1 comment is correct");
 $query = $ml->selectall_arrayref("GET hosts\nFilter: host_name = down2\nColumns: scheduled_downtime_depth host_name\n");
 is($query->[0]->[0], 0, "host: down2 downtime does not yet exist");
 $dturl = "/$site/api/downtime?host=down2&comment=bla1&duration=1";
-TestUtils::test_command({ cmd => sprintf("/bin/su - %s -c \"lib/naemon/plugins/check_http -t 60 -H %s --onredirect=follow -u '%s' --ssl\"", $site, $this_ip, $dturl), like => '/HTTP WARNING:.* 401/', exit => 1 });
+TestUtils::test_command({ cmd => sprintf("/bin/su - %s -c \"lib/monitoring-plugins/check_http -t 60 -H %s --onredirect=follow -u '%s' --ssl\"", $site, $this_ip, $dturl), like => '/HTTP WARNING:.* 401/', exit => 1 });
 $query = $ml->selectall_arrayref("GET hosts\nFilter: host_name = down2\nColumns: scheduled_downtime_depth host_name\n");
 is($query->[0]->[0], 0, "host: down2 downtime must not exist");
 
@@ -78,13 +78,13 @@ is($query->[0]->[0], 0, "host: down2 downtime must not exist");
 $query = $ml->selectall_arrayref("GET hosts\nFilter: host_name = down3\nColumns: scheduled_downtime_depth host_name\n");
 is($query->[0]->[0], 0, "host: down3 downtime does not yet exist");
 $dturl = "/$site/api/downtime?host=down3&comment=bla1&duration=1&dtauthtoken=a62932a270bgeklauta21b80f8cff48";
-TestUtils::test_command({ cmd => sprintf("/bin/su - %s -c \"lib/naemon/plugins/check_http -t 60 -H %s --onredirect=follow -u '%s' --ssl\"", $site, $this_ip, $dturl), like => '/HTTP WARNING:.*401/', exit => 1 });
+TestUtils::test_command({ cmd => sprintf("/bin/su - %s -c \"lib/monitoring-plugins/check_http -t 60 -H %s --onredirect=follow -u '%s' --ssl\"", $site, $this_ip, $dturl), like => '/HTTP WARNING:.*401/', exit => 1 });
 $query = $ml->selectall_arrayref("GET hosts\nFilter: host_name = omd-testsite\nColumns: scheduled_downtime_depth host_name\n");
 is($query->[0]->[0], 0, "host: down3 downtime must not exist");
 
 # down -> ok, token
 $dturl = "/$site/api/downtime?host=down3&comment=bla1&duration=10&dtauthtoken=a62932a270b2e200d9ba21b80f8cff48";
-TestUtils::test_command({ cmd => sprintf("/bin/su - %s -c \"lib/naemon/plugins/check_http -t 60 -H %s --onredirect=follow -u '%s' --ssl\"", $site, $this_ip, $dturl), like => '/HTTP OK:/' });
+TestUtils::test_command({ cmd => sprintf("/bin/su - %s -c \"lib/monitoring-plugins/check_http -t 60 -H %s --onredirect=follow -u '%s' --ssl\"", $site, $this_ip, $dturl), like => '/HTTP OK:/' });
 $query = $ml->selectall_arrayref("GET hosts\nFilter: host_name = down3\nColumns: scheduled_downtime_depth host_name\n");
 is($query->[0]->[0], 1, "host: down3 downtime exists");
 $query = $ml->selectall_arrayref("GET downtimes\nFilter: host_name = down3\nColumns: duration comment\n");
@@ -98,37 +98,37 @@ like($query->[0]->[1], "/^bla1/", "host: down3 comment is correct");
 $query = $ml->selectall_arrayref("GET services\nFilter: host_name = down1\nFilter: description = downsvc1\nColumns: scheduled_downtime_depth host_name description\n");
 is($query->[0]->[0], 0, "service downtime does not yet exist: down1 - downsvc1");
 $dturl = "/$site/api/downtime?host=down1&service=downsvc1&comment=bla1&duration=1";
-TestUtils::test_command({ cmd => sprintf("/bin/su - %s -c \"lib/naemon/plugins/check_http -t 60 -H %s --onredirect=follow -u '%s' --ssl\"", $site, $this_ip, $dturl), like => '/HTTP OK:/' });
+TestUtils::test_command({ cmd => sprintf("/bin/su - %s -c \"lib/monitoring-plugins/check_http -t 60 -H %s --onredirect=follow -u '%s' --ssl\"", $site, $this_ip, $dturl), like => '/HTTP OK:/' });
 $query = $ml->selectall_arrayref("GET services\nFilter: host_name = down1\nFilter: description = downsvc1\nColumns: scheduled_downtime_depth host_name description\n");
 is($query->[0]->[0], 1, "service: down1 - downsvc1 downtime exists");
 
 # down2/downsvc2 -> fail, no token, different ip
 $dturl = "/$site/api/downtime?host=down2&service=downsvc2&comment=bla1&duration=1";
-TestUtils::test_command({ cmd => sprintf("/bin/su - %s -c \"lib/naemon/plugins/check_http -t 60 -H %s --onredirect=follow -u '%s' --ssl\"", $site, $this_ip, $dturl), like => '/HTTP WARNING:.* 401/', exit => 1 });
+TestUtils::test_command({ cmd => sprintf("/bin/su - %s -c \"lib/monitoring-plugins/check_http -t 60 -H %s --onredirect=follow -u '%s' --ssl\"", $site, $this_ip, $dturl), like => '/HTTP WARNING:.* 401/', exit => 1 });
 $query = $ml->selectall_arrayref("GET services\nFilter: host_name = down2\nFilter: description = downsvc2\nColumns: scheduled_downtime_depth host_name description\n");
 is($query->[0]->[0], 0, "service: down2 - downsvc2 downtime must not exist");
 
 # down3/downsvc3a with hostdt -> ok
 $dturl = "/$site/api/downtime?host=down3&service=downsvc3a&comment=bla1&duration=1&dtauthtoken=a62932a270b2e200d9ba21b80f8cff48";
-TestUtils::test_command({ cmd => sprintf("/bin/su - %s -c \"lib/naemon/plugins/check_http -t 60 -H %s --onredirect=follow -u '%s' --ssl\"", $site, $this_ip, $dturl), like => '/HTTP OK:/' });
+TestUtils::test_command({ cmd => sprintf("/bin/su - %s -c \"lib/monitoring-plugins/check_http -t 60 -H %s --onredirect=follow -u '%s' --ssl\"", $site, $this_ip, $dturl), like => '/HTTP OK:/' });
 $query = $ml->selectall_arrayref("GET services\nFilter: host_name = down3\nFilter: description = downsvc3a\nColumns: scheduled_downtime_depth host_name description\n");
 is($query->[0]->[0], 1, "service: down3 - downsvc3a downtime exists");
 
 # down3/downsvc3b with hostdt -> fail
 $dturl = "/$site/api/downtime?host=down3&service=downsvc3b&comment=bla1&duration=1&dtauthtoken=a62932a270b2e200d9ba21b80f8cff48";
-TestUtils::test_command({ cmd => sprintf("/bin/su - %s -c \"lib/naemon/plugins/check_http -t 60 -H %s --onredirect=follow -u '%s' --ssl\"", $site, $this_ip, $dturl), like => '/HTTP WARNING:.* 401/', exit => 1 });
+TestUtils::test_command({ cmd => sprintf("/bin/su - %s -c \"lib/monitoring-plugins/check_http -t 60 -H %s --onredirect=follow -u '%s' --ssl\"", $site, $this_ip, $dturl), like => '/HTTP WARNING:.* 401/', exit => 1 });
 $query = $ml->selectall_arrayref("GET services\nFilter: host_name = down3\nFilter: description = downsvc3b\nColumns: scheduled_downtime_depth host_name description\n");
 is($query->[0]->[0], 0, "service: down3 - downsvc3b downtime must not exist");
 
 # down3/downsvc3b with svcdt -> ok
 $dturl = "/$site/api/downtime?host=down3&service=downsvc3b&comment=bla1&duration=1&dtauthtoken=a62932a270b2e200d9ba21b80f8cff00";
-TestUtils::test_command({ cmd => sprintf("/bin/su - %s -c \"lib/naemon/plugins/check_http -t 60 -H %s --onredirect=follow -u '%s' --ssl\"", $site, $this_ip, $dturl), like => '/HTTP OK:/' });
+TestUtils::test_command({ cmd => sprintf("/bin/su - %s -c \"lib/monitoring-plugins/check_http -t 60 -H %s --onredirect=follow -u '%s' --ssl\"", $site, $this_ip, $dturl), like => '/HTTP OK:/' });
 $query = $ml->selectall_arrayref("GET services\nFilter: host_name = down3\nFilter: description = downsvc3b\nColumns: scheduled_downtime_depth host_name description\n");
 is($query->[0]->[0], 1, "service: down3 - downsvc3b downtime exists");
 
 # delete downtime
 $dturl = "/$site/api/downtime?host=down3&service=downsvc3b&dtauthtoken=a62932a270b2e200d9ba21b80f8cff00&delete=1";
-TestUtils::test_command({ cmd => sprintf("/bin/su - %s -c \"lib/naemon/plugins/check_http -t 60 -H %s --onredirect=follow -u '%s' --ssl\"", $site, $this_ip, $dturl), like => '/HTTP OK:/' });
+TestUtils::test_command({ cmd => sprintf("/bin/su - %s -c \"lib/monitoring-plugins/check_http -t 60 -H %s --onredirect=follow -u '%s' --ssl\"", $site, $this_ip, $dturl), like => '/HTTP OK:/' });
 $query = $ml->selectall_arrayref("GET services\nFilter: host_name = down3\nFilter: description = downsvc3b\nColumns: scheduled_downtime_depth host_name description\n");
 is($query->[0]->[0], 0, "service: down3 - downsvc3b downtime must not exist");
 
@@ -136,5 +136,5 @@ is($query->[0]->[0], 0, "service: down3 - downsvc3b downtime must not exist");
 # cleanup test site
 TestUtils::test_command({ cmd => $omd_bin." stop $site naemon", unlike => '/kill/i' });
 TestUtils::test_command({ cmd => $omd_bin." stop $site" });
-TestUtils::test_command({ cmd => sprintf("/bin/su - %s -c \"lib/naemon/plugins/check_http -t 60 -H %s --onredirect=follow -u '%s' --ssl\"", $site, $this_ip, $dturl), like => '/HTTP CRITICAL:/', exit => 2 });
+TestUtils::test_command({ cmd => sprintf("/bin/su - %s -c \"lib/monitoring-plugins/check_http -t 60 -H %s --onredirect=follow -u '%s' --ssl\"", $site, $this_ip, $dturl), like => '/HTTP CRITICAL:/', exit => 2 });
 TestUtils::remove_test_site($site);

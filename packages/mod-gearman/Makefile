@@ -21,8 +21,8 @@ build:
 install:
 	$(MAKE) DESTDIR=$(DESTDIR) -C $(DIR) -j 1 install
 	# fix path for plugin
-	[ -d $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins ] || mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins
-	mv $(DESTDIR)$(OMD_ROOT)/bin/check_gearman $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins/
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/monitoring-plugins
+	mv $(DESTDIR)$(OMD_ROOT)/bin/check_gearman $(DESTDIR)$(OMD_ROOT)/lib/monitoring-plugins/
 	rm -rf $(DESTDIR)$(OMD_ROOT)/share/mod_gearman/*.conf
 	rm -f $(DESTDIR)$(OMD_ROOT)/lib/mod_gearman/mod_gearman.so
 	strip $(DESTDIR)$(OMD_ROOT)/lib/mod_gearman/*.o

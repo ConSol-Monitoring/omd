@@ -1,1 +1,1 @@
-livestatus [ all ] = .*:/nagios/
+livestatus [ all ] = .*:/naemon/

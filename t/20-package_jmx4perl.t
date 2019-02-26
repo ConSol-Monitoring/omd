@@ -22,7 +22,7 @@ my $site    = TestUtils::create_test_site() or TestUtils::bail_out_clean("no fur
 ##################################################
 # execute some checks
 my $tests = [
-  { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_jmx4perl'",  exit => 3, like => '/No Server/' },
+  { cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_jmx4perl'",  exit => 3, like => '/No Server/' },
   { cmd => "/bin/su - $site -c 'jmx4perl --help'", like => '/jmx4perl/' },
   { cmd => "/bin/su - $site -c 'jolokia --help'",  like => '/jolokia/' },
   { cmd => "/bin/su - $site -c 'j4psh --version'", like => '/j4psh/' },

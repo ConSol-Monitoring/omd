@@ -14,8 +14,8 @@ build:
 	go install -ldflags "-s -w" github.com/griesbacher/check_prometheus
 
 install:
-	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins
-	install -m 755 $(PWD)/$(GOPATH)/bin/check_prometheus $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/monitoring-plugins
+	install -m 755 $(PWD)/$(GOPATH)/bin/check_prometheus $(DESTDIR)$(OMD_ROOT)/lib/monitoring-plugins
 
 skel:
 

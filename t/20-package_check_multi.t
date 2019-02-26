@@ -12,7 +12,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 134 );
+plan( tests => 125 );
 
 # create our test site
 my $omd_bin = TestUtils::get_omd_bin();
@@ -45,7 +45,7 @@ my $urls = [
 		like => [
 			'/Service Status Details/',
 			'/livestatus.*plugins checked/ms',
-			'/nagios.*\d+ plugins checked/ms',
+			'/naemon.*\d+ plugins checked/ms',
 			'/pnp4nagios.*\d+ plugins checked/ms',
 			'/statusdat.*\d+ plugins checked/ms',
 			'/system.*\d+ plugins checked/ms',
@@ -56,7 +56,7 @@ my $urls = [
 		like => [
 			"/Service Status Details/",
 			'/livestatus.*plugins checked/ms',
-			'/nagios.*\d+ plugins checked/ms',
+			'/naemon.*\d+ plugins checked/ms',
 			'/pnp4nagios.*\d+ plugins checked/ms',
 			'/statusdat.*\d+ plugins checked/ms',
 			'/system.*\d+ plugins checked/ms',
@@ -77,12 +77,12 @@ my $urls = [
 		],
 	},
 	{
-		url => "/thruk/cgi-bin/extinfo.cgi?type=2&host=$host&service=nagios",
+		url => "/thruk/cgi-bin/extinfo.cgi?type=2&host=$host&service=naemon",
 		like => [
-			'/Service.*nagios.*On Host/',
+			'/Service.*naemon.*On Host/s',
 			'/SITE.*testsite/',
 			'/ROOT.*\/omd\/sites\/testsite/',
-			'/check_nagios/',
+			'/check_naemon/',
 			'/checkresults_dir/',
 		],
 	},
@@ -112,11 +112,11 @@ for my $core (qw/naemon/) {
     TestUtils::wait_for_file("/omd/sites/$site/tmp/run/naemon.cmd") or TestUtils::bail_out_clean("No need to test $package without proper startup");;
 
 	#--- reschedule all checks and wait for result
-	TestUtils::test_command({ cmd => "/bin/su - $site -c './lib/nagios/plugins/check_http -t 30 -H localhost -a omdadmin:omd -u /$site/thruk/cgi-bin/cmd.cgi -e 200 -P \"cmd_typ=7&cmd_mod=2&host=$host&service=nagios&start_time=2010-11-06+09%3A46%3A02&force_check=on&btnSubmit=Commit\" -r \"Your command request was successfully submitted\"'", like => '/HTTP OK:/' });
-	TestUtils::test_command({ cmd => "/bin/su - $site -c './lib/nagios/plugins/check_http -t 30 -H localhost -a omdadmin:omd -u /$site/thruk/cgi-bin/cmd.cgi -e 200 -P \"cmd_typ=7&cmd_mod=2&host=$host&service=pnp4nagios&start_time=2010-11-06+09%3A46%3A02&force_check=on&btnSubmit=Commit\" -r \"Your command request was successfully submitted\"'", like => '/HTTP OK:/' });
-	TestUtils::test_command({ cmd => "/bin/su - $site -c './lib/nagios/plugins/check_http -t 30 -H localhost -a omdadmin:omd -u /$site/thruk/cgi-bin/cmd.cgi -e 200 -P \"cmd_typ=7&cmd_mod=2&host=$host&service=system&start_time=2010-11-06+09%3A46%3A02&force_check=on&btnSubmit=Commit\" -r \"Your command request was successfully submitted\"'", like => '/HTTP OK:/' });
-	TestUtils::test_command({ cmd => "/bin/su - $site -c './lib/nagios/plugins/check_http -t 30 -H localhost -a omdadmin:omd -u /$site/thruk/cgi-bin/cmd.cgi -e 200 -P \"cmd_typ=7&cmd_mod=2&host=$host&service=statusdat&start_time=2010-11-06+09%3A46%3A02&force_check=on&btnSubmit=Commit\" -r \"Your command request was successfully submitted\"'", like => '/HTTP OK:/' });
-	TestUtils::test_command({ cmd => "/bin/su - $site -c './lib/nagios/plugins/check_http -t 30 -H localhost -a omdadmin:omd -u /$site/thruk/cgi-bin/cmd.cgi -e 200 -P \"cmd_typ=7&cmd_mod=2&host=$host&service=livestatus&start_time=2010-11-06+09%3A46%3A02&force_check=on&btnSubmit=Commit\" -r \"Your command request was successfully submitted\"'", like => '/HTTP OK:/' });
+	TestUtils::test_command({ cmd => "/bin/su - $site -c './lib/monitoring-plugins/check_http -t 30 -H localhost -a omdadmin:omd -u /$site/thruk/cgi-bin/cmd.cgi -e 200 -P \"cmd_typ=7&cmd_mod=2&host=$host&service=naemon&start_time=2010-11-06+09%3A46%3A02&force_check=on&btnSubmit=Commit\" -r \"Your command request was successfully submitted\"'", like => '/HTTP OK:/' });
+	TestUtils::test_command({ cmd => "/bin/su - $site -c './lib/monitoring-plugins/check_http -t 30 -H localhost -a omdadmin:omd -u /$site/thruk/cgi-bin/cmd.cgi -e 200 -P \"cmd_typ=7&cmd_mod=2&host=$host&service=pnp4nagios&start_time=2010-11-06+09%3A46%3A02&force_check=on&btnSubmit=Commit\" -r \"Your command request was successfully submitted\"'", like => '/HTTP OK:/' });
+	TestUtils::test_command({ cmd => "/bin/su - $site -c './lib/monitoring-plugins/check_http -t 30 -H localhost -a omdadmin:omd -u /$site/thruk/cgi-bin/cmd.cgi -e 200 -P \"cmd_typ=7&cmd_mod=2&host=$host&service=system&start_time=2010-11-06+09%3A46%3A02&force_check=on&btnSubmit=Commit\" -r \"Your command request was successfully submitted\"'", like => '/HTTP OK:/' });
+	TestUtils::test_command({ cmd => "/bin/su - $site -c './lib/monitoring-plugins/check_http -t 30 -H localhost -a omdadmin:omd -u /$site/thruk/cgi-bin/cmd.cgi -e 200 -P \"cmd_typ=7&cmd_mod=2&host=$host&service=statusdat&start_time=2010-11-06+09%3A46%3A02&force_check=on&btnSubmit=Commit\" -r \"Your command request was successfully submitted\"'", like => '/HTTP OK:/' });
+	TestUtils::test_command({ cmd => "/bin/su - $site -c './lib/monitoring-plugins/check_http -t 30 -H localhost -a omdadmin:omd -u /$site/thruk/cgi-bin/cmd.cgi -e 200 -P \"cmd_typ=7&cmd_mod=2&host=$host&service=livestatus&start_time=2010-11-06+09%3A46%3A02&force_check=on&btnSubmit=Commit\" -r \"Your command request was successfully submitted\"'", like => '/HTTP OK:/' });
 
 	#--- check_multi specific cgi.cfg setting
 	TestUtils::test_command({ cmd => "/bin/sed -i -e 's/escape_html_tags=1/escape_html_tags=0/' /omd/sites/$site/etc/thruk/cgi.cfg" });
@@ -126,7 +126,7 @@ for my $core (qw/naemon/) {
 		{ 
 			url	=> "http://localhost/$site/thruk/cgi-bin/status.cgi?host=$host&servicestatustypes=1&hoststatustypes=15", 
 			auth	=> "OMD Monitoring Site $site:omdadmin:omd",
-			like	=> [ "0 of 0 Matching Services" ],
+			like	=> [ "0 Matching Service Entries Displayed" ],
 		}
 	);
 

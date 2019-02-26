@@ -10,8 +10,8 @@ DIR = $(NAME)-$(VERSION)
 build:
 
 install:
-	[ -d $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins ] || mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins
-	install -m 755 check_ssh_controlmaster $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/monitoring-plugins
+	install -m 755 check_ssh_controlmaster $(DESTDIR)$(OMD_ROOT)/lib/monitoring-plugins
 
 skel:
 

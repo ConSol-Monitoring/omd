@@ -14,7 +14,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 316 );
+plan( tests => 161 );
 
 ##################################################
 # get version strings
@@ -63,9 +63,9 @@ for my $core (qw/naemon/) {
       { cmd => "/bin/su - $site -c 'rm -f var/*/retention.dat'", like => '/^$/' },
       { cmd => $omd_bin." start $site", like => [ '/gearmand\.\.\.OK/', '/gearman_worker\.\.\.OK/'], sleep => 1 },
       { cmd => $omd_bin." status $site", like => [ '/gearmand:\s+running/', '/gearman_worker:\s*running/'] },
-      { cmd => "/bin/su - $site -c './lib/$core/plugins/check_http -H localhost -a omdadmin:omd -u /$site/thruk/cgi-bin/cmd.cgi -e 200 -P \"cmd_typ=7&cmd_mod=2&host=omd-$site&service=Dummy+Service&start_time=$now&force_check=on&btnSubmit=Commit\" -r \"successfully submitted\"'", like => '/HTTP OK:/' },
-      { cmd => "/bin/su - $site -c './lib/$core/plugins/check_http -H localhost -a omdadmin:omd -u /$site/thruk/cgi-bin/cmd.cgi -e 200 -P \"cmd_typ=7&cmd_mod=2&host=omd-$site&service=perl+test&start_time=$now&force_check=on&btnSubmit=Commit\" -r \"successfully submitted\"'", like => '/HTTP OK:/' },
-      { cmd => "/bin/su - $site -c './lib/$core/plugins/check_http -H localhost -a omdadmin:omd -u /$site/thruk/cgi-bin/cmd.cgi -e 200 -P \"cmd_typ=7&cmd_mod=2&host=omd-$site&service=multiline&start_time=$now&force_check=on&btnSubmit=Commit\" -r \"successfully submitted\"'", like => '/HTTP OK:/' },
+      { cmd => "/bin/su - $site -c './lib/monitoring-plugins/check_http -H localhost -a omdadmin:omd -u /$site/thruk/cgi-bin/cmd.cgi -e 200 -P \"cmd_typ=7&cmd_mod=2&host=omd-$site&service=Dummy+Service&start_time=$now&force_check=on&btnSubmit=Commit\" -r \"successfully submitted\"'", like => '/HTTP OK:/' },
+      { cmd => "/bin/su - $site -c './lib/monitoring-plugins/check_http -H localhost -a omdadmin:omd -u /$site/thruk/cgi-bin/cmd.cgi -e 200 -P \"cmd_typ=7&cmd_mod=2&host=omd-$site&service=perl+test&start_time=$now&force_check=on&btnSubmit=Commit\" -r \"successfully submitted\"'", like => '/HTTP OK:/' },
+      { cmd => "/bin/su - $site -c './lib/monitoring-plugins/check_http -H localhost -a omdadmin:omd -u /$site/thruk/cgi-bin/cmd.cgi -e 200 -P \"cmd_typ=7&cmd_mod=2&host=omd-$site&service=multiline&start_time=$now&force_check=on&btnSubmit=Commit\" -r \"successfully submitted\"'", like => '/HTTP OK:/' },
       { cmd => $omd_bin." status $site", like => [
                                                 '/apache:\s*running/',
                                                 '/rrdcached:\s*running/',
@@ -76,7 +76,7 @@ for my $core (qw/naemon/) {
       },
     ];
     for my $test (@{$preps}) {
-        TestUtils::test_command($test) or TestUtils::bail_out_clean("no further testing without proper preparation");
+        TestUtils::test_command($test);
     }
 
     ##################################################
@@ -88,8 +88,8 @@ for my $core (qw/naemon/) {
       { cmd => "/bin/su - $site -c 'bin/send_gearman --server=127.0.0.1:4730 --keyfile=etc/mod-gearman/secret.key --host=$host --service=\"$service\" --message=test'" },
       { cmd => "/bin/grep -i 'mod_gearman: ERROR' /omd/sites/$site/var/$core/$core.log", 'exit' => 1, like => '/^\s*$/' },
       { cmd => "/bin/grep -i 'mod_gearman: WARN' /omd/sites/$site/var/$core/$core.log", 'exit' => 1, like => '/^\s*$/' },
-      { cmd => "/bin/su - $site -c 'lib/$core/plugins/check_gearman -H 127.0.0.1:4730'", like => '/check_gearman OK/' },
-      { cmd => "/bin/su - $site -c 'lib/$core/plugins/check_gearman -H 127.0.0.1:4730 -q host'", like => '/check_gearman OK/' },
+      { cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_gearman -H 127.0.0.1:4730'", like => '/check_gearman OK/' },
+      { cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_gearman -H 127.0.0.1:4730 -q host'", like => '/check_gearman OK/' },
     ];
     for my $test (@{$tests}) {
         TestUtils::test_command($test);
@@ -104,7 +104,7 @@ for my $core (qw/naemon/) {
     );
 
     # verify the jobs done
-    my $test = { cmd => "/bin/su - $site -c 'lib/$core/plugins/check_gearman -H 127.0.0.1:4730 -q worker_".hostname." -t 10 -s check'", like => [ '/check_gearman OK/' ] };
+    my $test = { cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_gearman -H 127.0.0.1:4730 -q worker_".hostname." -t 10 -s check'", like => [ '/check_gearman OK/' ] };
     TestUtils::test_command($test);
     chomp($test->{'stdout'});
     unlike($test->{'stdout'}, qr/jobs=0c/, "worker has jobs done: ".$test->{'stdout'});

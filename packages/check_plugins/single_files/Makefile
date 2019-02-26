@@ -9,7 +9,7 @@ build:
 install:
 	set -e; for plugin in $(PLUGINS); do \
 		echo "install: $$plugin..." ; \
-		install -m 755 $$plugin $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins; \
+		install -m 755 $$plugin $(DESTDIR)$(OMD_ROOT)/lib/monitoring-plugins; \
 	done
 
 skel:

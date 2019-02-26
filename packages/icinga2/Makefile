@@ -20,7 +20,7 @@ CONFIGUREOPTS = \
     -DCMAKE_INSTALL_SYSCONFDIR=$(OMD_ROOT)/etc \
     -DCMAKE_INSTALL_LOCALSTATEDIR=$(OMD_ROOT)/var \
     -DINSTALL_SBINDIR=$(OMD_ROOT)/bin \
-    -DICINGA2_PLUGINDIR=$(OMD_ROOT)/lib/nagios/plugins \
+    -DICINGA2_PLUGINDIR=$(OMD_ROOT)/lib/monitoring-plugins \
     -DICINGA2_GIT_VERSION_INFO=ON \
     -DICINGA2_USER=root \
     -DICINGA2_WITH_TESTS=OFF \
@@ -99,7 +99,7 @@ install:
 	rm -rf $(DESTDIR)$(OMD_ROOT)/lib*/icinga2
 	sed   -e "s#/lib/icinga2/sbin/icinga2#/lib/sbin/icinga2#g" -i $(DESTDIR)$(OMD_ROOT)/bin/icinga2
 	sed -e "s#/lib64/icinga2/sbin/icinga2#/lib/sbin/icinga2#g" -i $(DESTDIR)$(OMD_ROOT)/bin/icinga2
-	strip $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins/check_nscp_api
+	strip $(DESTDIR)$(OMD_ROOT)/lib/monitoring-plugins/check_nscp_api
 	find $(DESTDIR)$(OMD_ROOT)/lib/ -name icinga2 -type f -exec strip {} \;
 	rm -rf $(DESTDIR)$(OMD_ROOT)/share/doc/icinga2
 
@@ -113,13 +113,13 @@ skel:
 	install $(DIR)/etc/bash_completion.d/icinga2 $(SKEL)/etc/bash_completion.d
 	sed -i -e 's/@ICINGA2_USER@/###SITE###/g' \
 	       -e 's/@ICINGA2_GROUP@/###SITE###/g' \
-	       -e 's/@ICINGA2_PLUGINDIR@/###ROOT###\/lib\/nagios\/plugins/g' \
+	       -e 's/@ICINGA2_PLUGINDIR@/###ROOT###\/lib\/monitoring\-plugins/g' \
 	    $(SKEL)/etc/icinga2/constants.conf
-	sed -i -e '/const PluginDir/a /* The directory which contains your local site plugins */\nconst LocalPluginDir = "###ROOT###/local/lib/nagios/plugins"' \
+	sed -i -e '/const PluginDir/a /* The directory which contains your local site plugins */\nconst LocalPluginDir = "###ROOT###/local/lib/monitoring-plugins"' \
 	    $(SKEL)/etc/icinga2/constants.conf
 	printf '\n/* The OMD site name */\nconst OMD_SITE = "###SITE###"\nconst OmdSite = "###SITE###"\n' >> $(SKEL)/etc/icinga2/constants.conf
 	printf '\n/* Root folder of this OMD site */\nconst OMD_ROOT = "###ROOT###"\nconst OmdRoot = "###ROOT###"\n' >> $(SKEL)/etc/icinga2/constants.conf
-	sed -i -e 's%^const PluginContribDir.*%const PluginContribDir = "###ROOT###/local/lib/nagios/plugins"%g' \
+	sed -i -e 's%^const PluginContribDir.*%const PluginContribDir = "###ROOT###/local/lib/monitoring-plugins"%g' \
 	    $(SKEL)/etc/icinga2/constants.conf
 	# enable livestatus
 	ln -sf ../features-available/livestatus.conf $(SKEL)/etc/icinga2/features-enabled/livestatus.conf

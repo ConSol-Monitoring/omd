@@ -14,8 +14,8 @@ build:
 	make -C "$(DIR)" check_vmware_esx
 
 install:
-	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins
-	install -m 755 $(DIR)/check_vmware_esx $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/monitoring-plugins
+	install -m 755 $(DIR)/check_vmware_esx $(DESTDIR)$(OMD_ROOT)/lib/monitoring-plugins
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/doc/check_vmware_esx
 	install -m 755 install_vmware_sdk.sh $(DESTDIR)$(OMD_ROOT)/share/doc/check_vmware_esx
 

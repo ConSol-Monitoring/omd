@@ -25,8 +25,8 @@ my $tests = [
   { cmd => $omd_bin." start $site" },
 
   { cmd => "/bin/su - $site -c 'cp share/logos/internet.gif local/share/logos/local.gif'",  like => '/^$/' },
-  { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -H localhost -a omdadmin:omd -u /$site/logos/internet.gif -e 200'",  like => '/HTTP OK:/' },
-  { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -H localhost -a omdadmin:omd -u /$site/logos/local.gif -e 200'", like => '/HTTP OK:/' },
+  { cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_http -H localhost -a omdadmin:omd -u /$site/logos/internet.gif -e 200'",  like => '/HTTP OK:/' },
+  { cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_http -H localhost -a omdadmin:omd -u /$site/logos/local.gif -e 200'", like => '/HTTP OK:/' },
 
   { cmd => $omd_bin." stop $site" },
 ];

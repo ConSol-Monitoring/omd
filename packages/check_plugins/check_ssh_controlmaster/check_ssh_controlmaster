@@ -100,7 +100,7 @@ CONTROLPATH=${CMDIR}/controlpath/ssh-${REMUSER}@${REMHOST}
 # check basic reachability
 #
 if [ -n "$REMPING" ]; then
-  pingout=$($OMD_ROOT/lib/nagios/plugins/check_host $REMHOSTADDR > /dev/null 2>&1)
+  pingout=$($OMD_ROOT/lib/monitoring-plugins/check_host $REMHOSTADDR > /dev/null 2>&1)
   if [ $? != 0 ]; then
       printf "CRITICAL - could not ping $REMHOST (%s)\n" "$pingout"
       exit 2
@@ -111,7 +111,7 @@ fi
 # check basic ssh connection
 #
 
-sshout=$($OMD_ROOT/lib/nagios/plugins/check_ssh -t15 -p$REMPORT $REMHOSTADDR > /dev/null 2>&1)
+sshout=$($OMD_ROOT/lib/monitoring-plugins/check_ssh -t15 -p$REMPORT $REMHOSTADDR > /dev/null 2>&1)
 if [ $? != 0 ]; then
     printf "CRITICAL - no basic ssh session available (%s)\n" "$sshout"
     exit 2

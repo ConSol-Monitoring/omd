@@ -21,7 +21,7 @@ build:
 	$(MAKE) -C $(DIR) check_nrpe
 
 install:
-	install -m 755 $(DIR)/src/check_nrpe $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins
+	install -m 755 $(DIR)/src/check_nrpe $(DESTDIR)$(OMD_ROOT)/lib/monitoring-plugins
 	
 	mkdir $(DESTDIR)$(OMD_ROOT)/share/doc/nrpe
 	install -m 644 $(DIR)/*.md  $(DESTDIR)$(OMD_ROOT)/share/doc/nrpe

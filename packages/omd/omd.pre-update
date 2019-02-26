@@ -57,6 +57,9 @@ if [ "x$CORE" != "x" -a "x$CORE" != "xnaemon" ]; then
   mv var/$CORE/archive/* var/naemon/archive/ >/dev/null 2>&1
 fi
 mv local/share/nagios/htdocs/images/logos/* local/share/logos/ >/dev/null 2>&1
+if ! test -h local/lib/nagios/plugins; then
+  mv local/lib/nagios/plugins/* local/lib/monitoring-plugins/ >/dev/null 2>&1
+fi
 
 
 exit 0
