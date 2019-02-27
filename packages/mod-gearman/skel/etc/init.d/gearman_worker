@@ -13,6 +13,7 @@
 
 # Check if Mod-Gearman is enabled in OMD. If not terminate.
 cd ###ROOT###
+. ###ROOT###/lib/omd/init_profile
 . ###ROOT###/.profile
 . ###ROOT###/etc/omd/site.conf
 if [ "$CONFIG_MOD_GEARMAN" != "on" -o "$CONFIG_GEARMAN_WORKER" != "on" ] ; then
@@ -32,6 +33,7 @@ if [ "$USERID" -eq 0 ]; then
   chown $USER: $(dirname $PIDFILE)
 fi
 
+__init_hook $0 $1 pre
 case "$1" in
     start)
         echo -n "Starting $NAME..."
@@ -50,8 +52,10 @@ case "$1" in
         fi
         if [ $? -eq 0 ]; then
             echo "OK"
+            __init_hook $0 $1 post 0
         else
             echo "failed"
+            __init_hook $0 $1 post 1
         fi
         ;;
     stop)
@@ -68,9 +72,11 @@ case "$1" in
             ps -p $pid > /dev/null 2>&1;
             if [ $? -ne 0 ]; then
                 echo "OK"
+                __init_hook $0 $1 post 0
                 exit 0;
             else
                 echo "failed"
+                __init_hook $0 $1 post 1
                 exit 1;
             fi
         fi
