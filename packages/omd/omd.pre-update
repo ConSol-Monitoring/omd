@@ -53,9 +53,10 @@ if test -h etc/naemon/conf.d && test -f etc/nagios/conf.d; then
     rm -f etc/naemon/conf.d
     mv etc/nagios/conf.d etc/naemon/
 fi
-if [ "x$CORE" != "x" -a "x$CORE" != "xnaemon" ]; then
-  mv var/$CORE/archive/* var/naemon/archive/ >/dev/null 2>&1
+if [ "x$OLDCORE" != "x" -a "x$OLDCORE" != "xnaemon" ]; then
+  mv var/$OLDCORE/archive/* var/naemon/archive/ >/dev/null 2>&1
 fi
+mkdir -p local/share/logos
 mv local/share/nagios/htdocs/images/logos/* local/share/logos/ >/dev/null 2>&1
 if ! test -h local/lib/nagios/plugins; then
   mkdir -p local/lib/monitoring-plugins
