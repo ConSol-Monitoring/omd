@@ -25,6 +25,7 @@ next:
           - Grafana update to 6.0.0
           - InfluxDB: update to 1.7.3
           - Go updated to 1.11.5
+            - Add Go 1.12
 
 
 2.90     Dec 19 2018
