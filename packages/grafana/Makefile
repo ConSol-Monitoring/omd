@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 NAME       = grafana
-VERSION    = 5.4.2
+VERSION    = 6.0.0
 SRC        = $(NAME)-$(VERSION).tar.gz
 GOPATH     = go
 GOPKG      = 1.11
@@ -68,7 +68,7 @@ package: public clean
 	cd $(GOPATH)/src/github.com/grafana/grafana && \
 		$(GO) run build.go setup
 	echo "packageing"
-	tar zcf $(SRC) $(GOPATH)/src/ --exclude=.git
+	tar --exclude=.git zcf $(SRC) --exclude=.git $(GOPATH)/src/
 
 public:
 	wget --no-check-certificate https://s3-us-west-2.amazonaws.com/grafana-releases/release/grafana-$(VERSION).linux-amd64.tar.gz
@@ -78,8 +78,3 @@ public:
 	rm -rf grafana-*/
 	wget "https://raw.githubusercontent.com/grafana/grafana/v$(VERSION)/conf/defaults.ini" -O defaults.ini
 	sed -i -e 's/^default_theme.*$$/default_theme = light/' defaults.ini
-
-plugins:
-	git clone --depth=1 https://github.com/grafana/piechart-panel.git
-	tar zcf plugins.tar.gz piechart-panel --exclude=.git
-	rm -rf piechart-panel
