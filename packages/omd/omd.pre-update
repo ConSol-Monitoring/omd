@@ -58,6 +58,7 @@ if [ "x$CORE" != "x" -a "x$CORE" != "xnaemon" ]; then
 fi
 mv local/share/nagios/htdocs/images/logos/* local/share/logos/ >/dev/null 2>&1
 if ! test -h local/lib/nagios/plugins; then
+  mkdir -p local/lib/monitoring-plugins
   mv local/lib/nagios/plugins/* local/lib/monitoring-plugins/ >/dev/null 2>&1
 fi
 # remove files created by obsolete hooks
