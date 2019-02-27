@@ -33,7 +33,7 @@ if [ $? -eq 0 ]; then
 
   # get current git branch
   branch=$(git rev-parse --abbrev-ref HEAD)
-  if [ "x$branch" != "xlabs" ]; then
+  if [[ ! $branch =~ labs|.*maint ]]; then
     echo $version.$date-$branch | tr -d 'v'
     exit 0
   fi
