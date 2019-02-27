@@ -1,6 +1,6 @@
 include ../../Makefile.omd
 
-ANSIBLE_VERSION=2.3.3.0-1
+ANSIBLE_VERSION=2.7.8
 ANSIBLE=ansible-$(ANSIBLE_VERSION)
 
 # This is where the python modules are going to be installed to
@@ -29,4 +29,4 @@ clean:
 	rm -rf ansible-*/
 
 tarball:
-	./maketarball $(ANSIBLE_VERSION)
+	wget -O $(ANSIBLE).tar.gz https://github.com/ansible/ansible/archive/v$(ANSIBLE_VERSION).tar.gz
