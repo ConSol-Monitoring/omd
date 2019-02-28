@@ -470,6 +470,7 @@ sub test_url {
             next if $match =~ m/^javascript:/;
             next if $match =~ m/internal&srv=runtime/;
             next if $match =~ m/this\./;
+            next if $match =~ m/logout/;
             next if $match =~ m/\+url/;
             if(defined $test->{'skip_link_check'}) {
                 my $skip = 0;
