@@ -23,15 +23,9 @@ case "$1" in
                 echo "ERROR: make sure $OMD_ROOT/etc/mod-gearman exists! (Should have been shipped with OMD)"
                 exit 1
             fi
-            mkdir -p $OMD_ROOT/etc/nagios/nagios.d
-            ln -sfn ../../mod-gearman/nagios.cfg $OMD_ROOT/etc/nagios/nagios.d/mod-gearman.cfg
-            mkdir -p $OMD_ROOT/etc/icinga/icinga.d
-            ln -sfn ../../mod-gearman/nagios.cfg $OMD_ROOT/etc/icinga/icinga.d/mod-gearman.cfg
             mkdir -p $OMD_ROOT/etc/naemon/naemon.d
             ln -sfn ../../mod-gearman/naemon.cfg $OMD_ROOT/etc/naemon/naemon.d/mod-gearman.cfg
         else
-            rm -f $OMD_ROOT/etc/nagios/nagios.d/mod-gearman.cfg
-            rm -f $OMD_ROOT/etc/icinga/icinga.d/mod-gearman.cfg
             rm -f $OMD_ROOT/etc/naemon/naemon.d/mod-gearman.cfg
         fi
     ;;

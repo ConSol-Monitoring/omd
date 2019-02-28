@@ -22,7 +22,6 @@ case "$1" in
    set)
        if [ "$2" == "on" ]
        then
-           #mkdir -p $OMD_ROOT/etc/nagios/nagios.d
            file="nagios_npcdmod.cfg"
            if [ -e $OMD_ROOT/etc/naemon/naemon.d ] && [ "$CONFIG_CORE" = "naemon" -o "$CONFIG_CORE" = "" ] ; then
                ln -sfn ../../pnp4nagios/naemon_npcdmod.cfg $OMD_ROOT/etc/naemon/naemon.d/pnp4nagios.cfg

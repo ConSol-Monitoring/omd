@@ -67,9 +67,11 @@ rm -f local/share/nagios/htdocs/theme/images
 rm -f local/share/nagios/htdocs/theme/stylesheets
 rm -f etc/nagvis/urls.ini.php
 rm -f etc/nagios/nagios.d/pnp4nagios.cfg
-rm -f etc/icinga/icinga.d/pnp4nagios.cfg
-rm -f etc/check_mk/multisite.d/mkeventd.mk
+rm -f etc/nagios/nagios.d/nagflux.cfg
 rm -f etc/nagios/nagios.d/mod-gearman.cfg
+rm -f etc/icinga/icinga.d/pnp4nagios.cfg
+rm -f etc/icinga/icinga.d/nagflux.cfg
 rm -f etc/icinga/icinga.d/mod-gearman.cfg
+rm -f etc/check_mk/multisite.d/mkeventd.mk
 
 exit 0
