@@ -12,7 +12,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 352 );
+plan( tests => 360 );
 
 my $omd_bin = TestUtils::get_omd_bin();
 
@@ -33,6 +33,8 @@ my $tests = [
   { cmd => $omd_bin." rm $site2",    stdin => "yes\n", 'exit' => undef, errlike => undef },
   { cmd => $omd_bin." create $site", like => '/Created new site '.$site.'./' },
   { cmd => "/bin/su - $site -c 'omd reset etc/htpasswd'", like => '/^$/' },
+  { cmd => "/bin/su - $site -c 'test -h etc/nagios/conf.d'", like => '/^$/' },
+  { cmd => "/bin/su - $site -c 'test -d etc/naemon/conf.d'", like => '/^$/' },
   { cmd => $omd_bin." sites",        like => '/^'.$site.'\s+\d+\.\d+( \(default\))?/m' },
   { cmd => $omd_bin." config $site show APACHE_TCP_PORT",  like => '/^5000$/' },
   { cmd => $omd_bin." config $site set APACHE_TCP_ADDR 127.0.0.2",  like => '/^$/' },
