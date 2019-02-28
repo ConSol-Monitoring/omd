@@ -13,7 +13,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 987 );
+plan( tests => 993 );
 
 ##################################################
 # create our test site
@@ -197,6 +197,7 @@ my $own_urls = [
 ];
 
 my $cookie_urls = [
+  { url => '/thruk/cgi-bin/login.cgi?logout', like => '/Password/', unlike => [ '/internal server error/'], code => 401 },
   { url => '/thruk/cgi-bin/tac.cgi', like => '/Password/', unlike => [ '/internal server error/'], code => 401 },
 ];
 
@@ -295,6 +296,7 @@ TestUtils::test_command({ cmd => $omd_bin." start $site thruk", like => '/OK/' }
 sleep(3);
 TestUtils::test_command({ cmd => $omd_bin." status $site apache", like => '/running/' });
 for my $url ( @{$cookie_urls} ) {
+    delete $url->{'auth'};
     TestUtils::test_url($url);
 }
 
