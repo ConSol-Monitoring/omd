@@ -55,6 +55,7 @@ if test -h etc/naemon/conf.d && test -d etc/nagios/conf.d; then
 fi
 if [ "x$OLDCORE" != "x" -a "x$OLDCORE" != "xnaemon" ]; then
   mv var/$OLDCORE/archive/* var/naemon/archive/ >/dev/null 2>&1
+  cp -p etc/$OLDCORE/resource.cfg etc/naemon/ >/dev/null 2>&1
 fi
 mkdir -p local/share/logos
 mv local/share/nagios/htdocs/images/logos/* local/share/logos/ >/dev/null 2>&1
