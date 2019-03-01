@@ -2630,13 +2630,16 @@ def main_create(args, options={}):
 
     sitename_must_be_valid(g_sitename, reuse)
 
+    sitedir = site_dir(g_sitename)
+    real_version_path = os.path.realpath("%s/../../versions" % sitedir)
+    if not os.path.exists(real_version_path):
+        bail_out("Error verifying versions folder: %s" % real_version_path)
+
     # Create operating system user for site
     uid = options.get("uid")
     gid = options.get("gid")
     if not reuse:
         useradd(g_sitename, uid, gid)
-
-    sitedir = site_dir(g_sitename)
 
     if reuse:
         fstab_verify(g_sitename)
@@ -3249,8 +3252,8 @@ def main_update(args, options={}):
     if version_numeric(from_version) < 3 and not opt_force and dialog_yesno(
             "*******        MAJOR UPDATE TO %s        ******\n"
             "You are going to update the site %s from version %s to version %s. "
-            "Please make sure you have read to migration guide at: https://labs.consol.de/omd/migration_3.html "
-            "and you made a backup. You have been warned." % (to_version, g_sitename, from_version, to_version),
+            "Please read the migration guide at: https://labs.consol.de/omd/migration_3.html "
+            "and ensure you have a backup. You have been warned." % (to_version, g_sitename, from_version, to_version),
             "Abort", "Continue"):
         bail_out("Aborted.")
 
