@@ -6,6 +6,7 @@
 # It will be run prior the update process with the new OMD.
 
 cd $OMD_ROOT
+umask 0022
 
 NEW_VERSION=$(grep ^OMD_VERSION $(dirname $0)/../../../../bin/omd | awk '{ print $3 }' | tr -d '"')
 OLD_VERSION=$(readlink version | sed 's%.*versions/\([0-9]*\.*[0-9]*\)[-\.].*$%\1%')
@@ -55,8 +56,12 @@ if test -h etc/naemon/conf.d && test -d etc/nagios/conf.d; then
 fi
 if [ "x$OLDCORE" != "x" -a "x$OLDCORE" != "xnaemon" ]; then
   mv var/$OLDCORE/archive/* var/naemon/archive/ >/dev/null 2>&1
-  cp -p etc/$OLDCORE/resource.cfg etc/naemon/ >/dev/null 2>&1
+  mv var/$OLDCORE/*.log var/naemon/ >/dev/null 2>&1
+  mv var/$OLDCORE/retention.dat var/naemon/ >/dev/null 2>&1
+  mv etc/$OLDCORE/resource.cfg etc/naemon/ >/dev/null 2>&1
 fi
+rm -f var/nagios/*.log var/nagios/*.cache var/nagios/*.precache
+rm -f var/icinga/*.log var/icinga/*.cache var/icinga/*.precache
 mkdir -p local/share/logos
 mv local/share/nagios/htdocs/images/logos/* local/share/logos/ >/dev/null 2>&1
 if ! test -h local/lib/nagios/plugins; then
@@ -66,7 +71,7 @@ fi
 # remove files created by obsolete hooks
 rm -f local/share/nagios/htdocs/theme/images
 rm -f local/share/nagios/htdocs/theme/stylesheets
-rm -f etc/nagvis/urls.ini.php
+rm -f etc/nagvis/conf.d/urls.ini.php
 rm -f etc/nagios/nagios.d/pnp4nagios.cfg
 rm -f etc/nagios/nagios.d/nagflux.cfg
 rm -f etc/nagios/nagios.d/mod-gearman.cfg
