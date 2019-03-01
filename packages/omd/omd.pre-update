@@ -49,7 +49,7 @@ fi
 
 # migrate nagios/icinga leftovers to naemon
 OLDCORE=$(readlink etc/init.d/core >/dev/null 2>&1)
-if test -h etc/naemon/conf.d && test -f etc/nagios/conf.d; then
+if test -h etc/naemon/conf.d && test -d etc/nagios/conf.d; then
     rm -f etc/naemon/conf.d
     mv etc/nagios/conf.d etc/naemon/
 fi
