@@ -3249,7 +3249,7 @@ def main_update(args, options={}):
         bail_out("Aborted.")
 
     # show one extra confirmation dialog when updating from 1.x/2.x to 3.x
-    if version_numeric(from_version) < 3 and not opt_force and dialog_yesno(
+    if int(version_numeric(from_version)) != int(version_numeric(to_version)) and not opt_force and dialog_yesno(
             "*******        MAJOR UPDATE TO %s        ******\n"
             "You are going to update the site %s from version %s to version %s. "
             "Please read the migration guide at: https://labs.consol.de/omd/migration_3.html "
