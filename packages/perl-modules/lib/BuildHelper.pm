@@ -127,7 +127,7 @@ sub download_module {
     my $tarball=$urlpath; $tarball =~ s/^.*\///g;
 
     if( ! -f $tarball and !defined $already_downloaded{$urlpath}) {
-        cmd('wget --retry-connrefused -q "http://search.cpan.org'.$urlpath.'"');
+        cmd('wget --retry-connrefused -q "'.$urlpath.'"');
         $already_downloaded{$urlpath} = 1;
         download_deps($tarball) unless $no_dep == 1;
         push @downloaded, $tarball;
@@ -173,7 +173,6 @@ sub file_to_module {
 
 ####################################
 # return real module name
-# TODO: get real name from http://search.cpan.org/search?mode=dist&query=<module>
 sub translate_module_name {
     my $name = shift;
     my $tr = {
@@ -355,9 +354,9 @@ sub get_url_for_module {
     our %url_cache;
     $mod = translate_module_name($mod);
     return $url_cache{$mod} if exists $url_cache{$mod};
-    for my $url ('http://search.cpan.org/perldoc?'.$mod, 'http://search.cpan.org/dist/'.$mod) {
+    for my $url ('https://metacpan.org/pod/'.$mod, 'https://metacpan.org/search?q='.$mod, 'https://metacpan.org/search?q='.$mod.'.pm') {
         my $out = cmd("wget --retry-connrefused -O - '".$url."'", 1);
-        if($out =~ m/href="(\/CPAN\/authors\/id\/.*?\/.*?(\.tar\.gz|\.tgz|\.zip))">/) {
+        if($out =~ m/href="([^\"]+\/authors\/id\/.*?\/.*?(\.tar\.gz|\.tgz|\.zip))">/) {
             $url_cache{$mod} = $1;
             return($1);
         }
