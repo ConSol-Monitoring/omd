@@ -48,36 +48,40 @@ if test -h etc/thruk/cgi.cfg && test -f etc/nagios/cgi.cfg; then
     sed -e 's%###SITE###%'$OMD_SITE'%g' -i etc/nagios/cgi.cfg
 fi
 
-# migrate nagios/icinga leftovers to naemon
-OLDCORE=$(readlink etc/init.d/core >/dev/null 2>&1)
-if test -h etc/naemon/conf.d && test -d etc/nagios/conf.d; then
-    rm -f etc/naemon/conf.d
-    mv etc/nagios/conf.d etc/naemon/
+if [ $OLD_VERSION -le 300 ]; then
+  # migrate nagios/icinga leftovers to naemon
+  OLDCORE=$(omd config show CORE 2>&1)
+  if test -h etc/naemon/conf.d && test -d etc/nagios/conf.d; then
+      rm -f etc/naemon/conf.d
+      mv etc/nagios/conf.d etc/naemon/
+  fi
+  if [ "x$OLDCORE" = "xicinga" -o "x$OLDCORE" = "xnagios" ]; then
+    omd config set CORE naemon
+    mv var/$OLDCORE/archive/* var/naemon/archive/ >/dev/null 2>&1
+    mv var/$OLDCORE/*.log var/naemon/ >/dev/null 2>&1
+    mv var/$OLDCORE/retention.dat var/naemon/ >/dev/null 2>&1
+    mv etc/$OLDCORE/resource.cfg etc/naemon/ >/dev/null 2>&1
+  fi
+  rm -f var/nagios/*.log var/nagios/*.cache var/nagios/*.precache var/nagios/*.gz
+  rm -f var/icinga/*.log var/icinga/*.cache var/icinga/*.precache var/icinga/*.gz
+  mkdir -p local/share/logos
+  mv local/share/nagios/htdocs/images/logos/* local/share/logos/ >/dev/null 2>&1
+  if ! test -h local/lib/nagios/plugins; then
+    mkdir -p local/lib/monitoring-plugins
+    mv local/lib/nagios/plugins/* local/lib/monitoring-plugins/ >/dev/null 2>&1
+  fi
+
+  # remove files created by obsolete hooks
+  rm -f local/share/nagios/htdocs/theme/images
+  rm -f local/share/nagios/htdocs/theme/stylesheets
+  rm -f etc/nagvis/conf.d/urls.ini.php
+  rm -f etc/nagios/nagios.d/pnp4nagios.cfg
+  rm -f etc/nagios/nagios.d/nagflux.cfg
+  rm -f etc/nagios/nagios.d/mod-gearman.cfg
+  rm -f etc/icinga/icinga.d/pnp4nagios.cfg
+  rm -f etc/icinga/icinga.d/nagflux.cfg
+  rm -f etc/icinga/icinga.d/mod-gearman.cfg
+  rm -f etc/check_mk/multisite.d/mkeventd.mk
 fi
-if [ "x$OLDCORE" != "x" -a "x$OLDCORE" != "xnaemon" ]; then
-  mv var/$OLDCORE/archive/* var/naemon/archive/ >/dev/null 2>&1
-  mv var/$OLDCORE/*.log var/naemon/ >/dev/null 2>&1
-  mv var/$OLDCORE/retention.dat var/naemon/ >/dev/null 2>&1
-  mv etc/$OLDCORE/resource.cfg etc/naemon/ >/dev/null 2>&1
-fi
-rm -f var/nagios/*.log var/nagios/*.cache var/nagios/*.precache
-rm -f var/icinga/*.log var/icinga/*.cache var/icinga/*.precache
-mkdir -p local/share/logos
-mv local/share/nagios/htdocs/images/logos/* local/share/logos/ >/dev/null 2>&1
-if ! test -h local/lib/nagios/plugins; then
-  mkdir -p local/lib/monitoring-plugins
-  mv local/lib/nagios/plugins/* local/lib/monitoring-plugins/ >/dev/null 2>&1
-fi
-# remove files created by obsolete hooks
-rm -f local/share/nagios/htdocs/theme/images
-rm -f local/share/nagios/htdocs/theme/stylesheets
-rm -f etc/nagvis/conf.d/urls.ini.php
-rm -f etc/nagios/nagios.d/pnp4nagios.cfg
-rm -f etc/nagios/nagios.d/nagflux.cfg
-rm -f etc/nagios/nagios.d/mod-gearman.cfg
-rm -f etc/icinga/icinga.d/pnp4nagios.cfg
-rm -f etc/icinga/icinga.d/nagflux.cfg
-rm -f etc/icinga/icinga.d/mod-gearman.cfg
-rm -f etc/check_mk/multisite.d/mkeventd.mk
 
 exit 0
