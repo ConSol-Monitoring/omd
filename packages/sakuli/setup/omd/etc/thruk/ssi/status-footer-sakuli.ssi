@@ -1,0 +1,266 @@
+<!--
+ SSI for Thruk - CSS lightbox to display Sakuli screenshots saved by a Nagios eventhandler
+ Simon Meggle <simon.meggle@consol.de>
+ See https://github.com/ConSol/sakuli for more information.
+-->
+
+<script type="text/javascript">
+jQuery(document).ready(function() {
+  // In case that Sakuli SSI is present, override te image href to show the history lightbox
+  if (typeof lightbox == 'function') {
+        var urlArgs = toQueryParams();
+        jQuery('a').has('img.screenshot').attr("href", "javascript:lightbox('" + urlArgs['host'] + "','" + urlArgs['service'] + "')" );
+  }
+});
+
+// lightbox button (forward)
+function lb_forward() {
+    if (lb_index < lb_items.length - 1) {
+        changeImage(lb_index + 1);
+    } else {
+        changeImage(0);
+    }
+}
+
+// lightbox button (back)
+function lb_back() {
+    if (lb_index > 0) {
+        changeImage(lb_index - 1);
+    } else {
+        changeImage(0);
+    }
+}
+
+// hide/show lightbox buttons depending on the array index
+function lb_button_refresh(i, arr_len) {
+    if (i+1 == arr_len) {
+        jQuery("#lb_right").toggleClass("lb_bt_inactive", true);
+    } else {
+        jQuery("#lb_right").toggleClass("lb_bt_inactive", false);
+    }
+    if (i == 0) {
+        jQuery("#lb_left").toggleClass("lb_bt_inactive", true);
+    } else {
+        jQuery("#lb_left").toggleClass("lb_bt_inactive", false);
+    }
+}
+
+// load output.txt and screenshot file for one timestamp
+function changeImage(i) {
+        var output;
+        jQuery.when(
+                jQuery.get(lb_items[i].url + 'output.txt',
+                        function(data) {
+                                output = data;
+                        }
+                ) &&
+		jQuery.ajax({
+			// https://localhost:8443/SITENAME/sakuli/sakuli_client/example_xfce/1500858250/
+			url: lb_items[i].url,
+			success: function(data) {
+				// the 3rd href on the apache index page
+				image = jQuery(data).find('a')[2].text.trim();
+				lb_items[i].image = image;
+			},
+			error: function(exception){alert('Exeption: There seems to be no image file in ' + base_url + t + '!' + exception);}
+		})
+        ).then ( function() {
+                lb_index = i;
+                var d = new Date(lb_items[i].timestamp * 1000);
+                var datetime = d.toLocaleDateString() + " " + d.toLocaleTimeString();
+		// assign output.txt
+                jQuery('#lb_footer_left').html('<b>' + datetime + '</b>: ' + output);
+		// assign image
+                jQuery('#lb_screenshot').attr('src', lb_items[i].url + lb_items[i].image);
+                jQuery('#lb_counter').html(i+1 + '/' + lb_items.length);
+                lb_button_refresh(lb_index, lb_items.length);
+        });
+}
+
+// create an array of all screenshot urls and their timestamps
+// load last screenshot
+// show the lightbox
+function lightbox(h, s) {
+	lb_items = [];
+        lb_index = -1;
+
+        var url_arr = location.href.split('/');
+        //             http                hostname           omd_site
+        var base_url = url_arr[0] + "//" + url_arr[2] + "/" + url_arr[3] + "/sakuli/" + h + "/" + s + "/";
+
+
+        jQuery.when(
+                jQuery.ajax({
+                  url: base_url,
+                  error   : function () { alert('Error loading screenshots from ' + base_url + '!'); },
+                  success : function(data){
+                     jQuery(data).find('a').filter(
+                        function() {
+                                return this.href.match(/\d{10}\/$/);
+                        }
+                     ).each(function() {
+                        t = jQuery(this).attr("href").replace(/\/$/, '');
+			img_hash = {
+                        	timestamp: t,
+                                url: base_url + t + '/'
+                        };
+                        lb_items.push(img_hash);
+                      });
+                  }
+                })
+        ).then ( function() {
+	// timestamp array loaded, now show the last image in array
+                jQuery("#lb_close").click(function() {
+                    jQuery("#lb_screenshots").css("display", "none");
+                    jQuery("#lb_background").css("display", "none");
+                    removeEvent(document, 'keyup', lb_register_keys);
+                });
+                jQuery("#lb_left").click(function() {
+                        lb_back();
+                });
+                jQuery("#lb_right").click(function() {
+                        lb_forward();
+                });
+                lb_index = lb_items.length - 1;
+                changeImage(lb_index);
+                jQuery("#lb_background").css("display", "block");
+                jQuery("#lb_screenshots").css("display", "block");
+                }
+        );
+        addEvent(document, 'keyup', lb_register_keys);
+}
+
+function lb_register_keys(e) {
+            switch(e.which) {
+                case 27:
+                jQuery("#lb_close").click();
+                break;
+
+                case 37:
+                lb_back();
+                break;
+
+                case 39:
+                lb_forward();
+                break;
+
+                default: return;
+            }
+            e.preventDefault(); // prevent the default action (scroll / move caret)
+}
+</script>
+
+<style type="text/css">
+.lb {
+    display: none;
+    position: fixed;
+    background-color: white;
+    margin: 24px;
+    box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2),0 6px 20px 0 rgba(0,0,0,0.19);
+    padding: 4px;
+    left: 0;
+    top: 0;
+    width: 95%;
+    height: 95%;
+}
+
+.lb_footer {
+    padding: 2px 16px;
+    background-color: #dedfdd;
+    color: black;
+    border: 1px solid #999;
+    min-height: 40px;
+}
+
+.lb_footer_right {
+    width: 300px;
+    float: right;
+}
+
+.lb_footer_left {
+    font-size: 120%;
+    margin-right: 300px;
+}
+
+.lb_close, .lb_left, .lb_right {
+    background: #aaa none repeat scroll 0 0;
+    border-radius: 12px;
+    color: #fff;
+    font-weight: bold;
+    line-height: 25px;
+    position: absolute;
+    text-align: center;
+    text-decoration: none;
+}
+
+.lb_bt_inactive {
+    display: none;
+}
+
+.lb_close {
+    right: 10px;
+    top: 25px;
+    width: 65px;
+
+}
+
+.lb_counter {
+    bottom: 1.7%;
+    right: 240px;
+    position: absolute;
+    text-align: center;
+}
+
+.lb_left, .lb_right {
+    bottom: 1.5%;
+    width: 100px;
+}
+.lb_left {
+    right: 130px;
+}
+.lb_right {
+    right: 20px;
+}
+.lb_left:hover, .lb_left:focus, .lb_right:hover, .lb_right:focus, .lb_close:hover, .lb_close:focus {
+    color: white;
+    background: #4a4944;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.lb_screenshot {
+    max-width: 80%;
+    max-height: 100%;
+}
+
+.lb_background {
+    display: none;
+    background: black;
+    position: fixed;
+    top: 0%;
+    left: 0%;
+    width: 100%;
+    height: 100%;
+    opacity: .60;
+}
+
+</style>
+
+<div id="lb_background" class="lb_background"></div>
+
+<div id="lb_screenshots" class="lb">
+  <span id="lb_close" class="lb_close">CLOSE</span>
+  <span id="lb_left" class="lb_left">prev</span>
+  <span id="lb_counter" class="lb_counter"></span>
+  <span id="lb_right" class="lb_right">next</span>
+
+  <div class="lb_body">
+    <div id="lb_img" >
+        <img id="lb_screenshot" class="lb_screenshot" src="#" />
+    </div>
+  </div>
+  <div id="lb_footer" class="lb_footer">
+        <div id="lb_footer_right" class="lb_footer_right"></div>
+        <div id="lb_footer_left" class="lb_footer_left"></div>
+  </div>
+</div>
