@@ -144,24 +144,24 @@ sub forward_job {
     (my $r) = $decoded =~ m/return_code=(.*)\n/;
     (my $o) = $decoded =~ m/output=(.*)/;
     $decoded =~ s/\n/####/g;
-    unless (service_exists($h, $s, $ls)) {
+    if($s && !service_exists($h, $s, $ls)) {
         # Missing service
         out("MISSING HOST/SERVICE!!");
-	      $decoded =~ s/host_name=.*\n/host_name=$err_h\n/;
-	      $decoded =~ s/service_description.*\n/service_description=$err_s\n/;
-	      $decoded =~ s/return_code=.*\n/return_code=$err_r\n/;
-	      $decoded =~ s/output=.*\\n/output=Ergebnis für Prüfung $s an $h hat kein Monitoring-Objekt!\\\\n/;
+        $decoded =~ s/host_name=.*\n/host_name=$err_h\n/;
+        $decoded =~ s/service_description.*\n/service_description=$err_s\n/;
+        $decoded =~ s/return_code=.*\n/return_code=$err_r\n/;
+        $decoded =~ s/output=.*\\n/output=Ergebnis für Prüfung $s an $h hat kein Monitoring-Objekt!\\\\n/;
     } else {
 #
 # $decoded is the raw gearman package data. You can do here what you want.
 #
-        $decoded =~ s/output=\[OK\] Sakuli suite (.*) ok.*\\n/output=Der IT-Service $1 steht ohne Einschränkung zur Verfügung.\\\\n/;
+        $decoded =~ s/output=\[OK\] Sakuli suite (.*) ok.*\\n/output=Der IT-Service $1 steht ohne Einschränkung zur Verfügung.\\n/;
         $decoded =~ s/output=\[WARN\] Sakuli suite (.*) warning in step.*\\n/Der IT-Service $1 weist aktuell Performance-Probleme auf und steht nicht in gewohnter Qualität zur Verfügung./;
         $decoded =~ s/return_code=1(.*)output=\[WARN\] Sakuli suite (.*) warning in step.*\\n/return_code=2$1output=Der IT-Service $2 weist aktuell Performance-Probleme auf und steht nicht in gewohnter Qualität zur Verfügung./;
-        $decoded =~ s/output=\[CRIT\] Sakuli suite (.*) critical in case.*\\n/output=Störung des IT-Service $1 erkannt. Ein Prüfschritt hat die vorgegebene Maximalzeit überschritten.\\\\n/;
-        $decoded =~ s/output=\[CRIT\] Sakuli suite (.*) \(\d+\.\d+s\) EXCEPTION.*STEP (.*?): .*\\n/output=Störung des IT-Service $1 erkannt. Festgestellt in Prüfschritt $2.\\\\n/;
-        $decoded =~ s/output=\[CRIT\] Sakuli suite (.*) \(\d+\.\d+s\) EXCEPTION.*CASE (.*?): .*\\n/output=Störung des IT-Service $1 erkannt. Festgestellt in Prüfschritt $2.\\\\n/;
-        $decoded =~ s/output=\[CRIT\] Sakuli suite (.*) \(\d+\.\d+s\) EXCEPTION.*Script did not start within 150 seconds.*\\n/output=Die Pruefung des IT-Services $1 wurde ausgesetzt und wird innerhalb des definierten Anwender-Nutzungszeitraums erneut ausgefuehrt. \\\\n/;
+        $decoded =~ s/output=\[CRIT\] Sakuli suite (.*) critical in case.*\\n/output=Störung des IT-Service $1 erkannt. Ein Prüfschritt hat die vorgegebene Maximalzeit überschritten.\\n/;
+        $decoded =~ s/output=\[CRIT\] Sakuli suite (.*) \(\d+\.\d+s\) EXCEPTION.*STEP (.*?): .*\\n/output=Störung des IT-Service $1 erkannt. Festgestellt in Prüfschritt $2.\\n/;
+        $decoded =~ s/output=\[CRIT\] Sakuli suite (.*) \(\d+\.\d+s\) EXCEPTION.*CASE (.*?): .*\\n/output=Störung des IT-Service $1 erkannt. Festgestellt in Prüfschritt $2.\\n/;
+        $decoded =~ s/output=\[CRIT\] Sakuli suite (.*) \(\d+\.\d+s\) EXCEPTION.*Script did not start within 150 seconds.*\\n/output=Die Pruefung des IT-Services $1 wurde ausgesetzt und wird innerhalb des definierten Anwender-Nutzungszeitraums erneut ausgefuehrt. \\n/;
     }
     $decoded =~ s/####/\n/g;
 
@@ -211,6 +211,21 @@ sub out {
 #################################################
 sub service_exists {
     my ($host, $service, $ls) = @_;
-    my $ls_res = $ls->selectrow_hashref("GET services\nColumns: description\nFilter: host_name = $host\nFilter: description = $service");
+    my $ls_res;
+    my $retries = 5;
+    while($retries > 0) {
+        eval {
+            $ls_res = $ls->selectrow_hashref("GET services\nColumns: description\nFilter: host_name = $host\nFilter: description = $service");
+        };
+        if(!$@) {
+            last;
+        }
+        if($retries == 1) {
+            out("failed to fetch service details: ".$@);
+            return 1;
+        }
+        sleep(1);
+        $retries--;
+    }
     $ls_res ? return 1 : return 0;
 }
