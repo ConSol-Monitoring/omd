@@ -1,0 +1,5 @@
+---
+- name: OMD_ROOT
+  set_fact: OMD_ROOT="{{ lookup('env','OMD_ROOT') }}"
+- name: OMD_SITE
+  set_fact: OMD_SITE="{{ lookup('env','OMD_SITE') }}"

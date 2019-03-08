@@ -1,0 +1,20 @@
+---
+- name: Configure PNP4Nagios feature
+  gather_facts: False
+  hosts: all
+  tasks:
+    - name: pretask
+      include: pretasks.yml
+    - name: stop omd
+      shell: omd stop
+    - name: enable PNP4Nagios
+      command: omd config set {{item}}
+      with_items:
+        - "PNP4NAGIOS on"
+        - "GRAFANA off"
+        - "INFLUXDB off"
+        - "NAGFLUX off"
+    - name: copy PNP4Nagios template
+      copy:
+        src: ./etc/pnp4nagios/templates/check_sakuli.php
+        dest: "{{ OMD_ROOT }}/etc/pnp4nagios/templates/"

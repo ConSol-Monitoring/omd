@@ -1,0 +1,74 @@
+---
+- name: Configure MySQL feature
+  gather_facts: False
+  hosts: all
+  tasks:
+    - name: pretask
+      include: pretasks.yml
+    - name: MYSQL_PORT
+      set_fact: MYSQL_PORT="{{ lookup('env', 'MYSQL_PORT')|default('3306', true) }}"
+    - name: MYSQL_BINDADDRESS
+      set_fact: MYSQL_BINDADDRESS="{{ lookup('env', 'MYSQL_BINDADDRESS')|default('0.0.0.0', true)}}"
+    - name: MYSQL_USER
+      set_fact: MYSQL_USER="{{ lookup('env', 'MYSQL_USER')|default('sakuli', true) }}"
+    - name: MYSQL_PASSWORD
+      set_fact: MYSQL_PASSWORD="{{ lookup('env', 'MYSQL_PASSWORD')|default('sakuli', true)}}"
+# Preconfig detection commented out, because the Playbook must be able to run
+# multiple times in containerized environments.
+# See https://github.com/ConSol/sakuli/issues/273
+    # - name: MYSQL_ON
+    #   shell: grep "CONFIG_MYSQL='off'" {{ OMD_ROOT}}/etc/omd/site.conf
+    #   register: mysql_grep
+    #   ignore_errors: yes
+    # - fail:
+    #     msg: "MySQL is already enabled on this site. I won't touch anything here..."
+    #   when: mysql_grep.rc > 0
+
+    - name: check_mysql_health dir
+      file:
+        state: directory
+        path: "{{ OMD_ROOT}}/etc/check_mysql_health/ "
+    - name: check_mysql_health perl module
+      copy:
+        src: ./etc/check_mysql_health/CheckMySQLHealthSakuli.pm
+        dest: "{{ OMD_ROOT}}/etc/check_mysql_health/"
+
+    - name: check_mysql_health command
+      copy:
+        src: ./etc/nagios/conf.d/sakuli_nagios_check_mysql.cfg
+        dest: "{{ OMD_ROOT}}/etc/core/conf.d/"
+
+    - name: sample resource cfg file
+      copy:
+        src: ./etc/nagios/resource.cfg.sakuli-db.sample
+        dest: "{{ OMD_ROOT}}/etc/core/"
+
+    - name: database cleanup script
+      copy:
+        src: ./local/bin/sakuli_mysql_purge.sh
+        dest: "{{ OMD_ROOT}}/local/bin/"
+    - name: cron - database cleanup script
+      copy:
+        src: ./etc/cron.d/sakuli_mysql_purge
+        dest: "{{ OMD_ROOT }}/etc/cron.d/"
+
+    - name: enable MySQL
+      shell: omd config set MYSQL on
+
+    - name: templating mysql config file
+      template:
+        src: ./.my.cnf.j2
+        dest: "{{ OMD_ROOT}}/.my.cnf"
+
+    - name: prepare db
+      shell: mysql_install_db
+    - name: start db
+      shell: omd start mysql
+    - name: create database
+      shell: mysql < ../database/create_sakuli_database.sql
+    - name: create user
+      mysql_user:
+        name: "{{ MYSQL_USER }}"
+        password: "{{ MYSQL_PASSWORD }}"
+        priv: 'sakuli.*:ALL'
+        state: present

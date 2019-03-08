@@ -1,0 +1,21 @@
+---
+- name: Configure gearman-proxy feature
+  gather_facts: False
+  hosts: all
+  tasks:
+    - name: pretask
+      include: pretasks.yml
+    - name: gearman_proxy init script
+      copy: 
+        src: ./etc/init.d/sakuli_gearman_proxy
+        dest: "{{ OMD_ROOT }}/etc/init.d/"
+        mode: 0775
+    - name: gearman_proxy script
+      copy: 
+        src: ./local/bin/sakuli_gearman_proxy.pl 
+        dest: "{{ OMD_ROOT}}/local/bin/"
+        mode: 0775
+    - name: gearman_proxy config
+      copy: 
+        src: ./etc/mod-gearman/sakuli_gearman_proxy.cfg 
+        dest: "{{ OMD_ROOT}}/etc/mod-gearman/"
