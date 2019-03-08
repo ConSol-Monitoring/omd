@@ -47,5 +47,4 @@
         line: 'escape_html_tags=0'
       ignore_errors: yes
       with_items:
-        - "{{ OMD_ROOT }}/etc/core/cgi.cfg"
         - "{{ OMD_ROOT }}/etc/thruk/cgi.cfg"
