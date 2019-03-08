@@ -8,6 +8,7 @@ use strict;
 use warnings;
 use Getopt::Long;
 use Template;
+use Encode qw/encode_utf8/;
 use lib $ENV{'OMD_ROOT'}.'/share/thruk/lib/';
 use Monitoring::Livestatus::Class::Lite;
 
@@ -72,7 +73,7 @@ sub process_template {
 		$data .= "$_";
 	}
 	close FILE;
-	my $template = Template->new({PRE_CHOMP => 1, POST_CHOMP => 0, EVAL_PERL => 1, ABSOLUTE => 1});
+	my $template = Template->new({PRE_CHOMP => 1, POST_CHOMP => 0, EVAL_PERL => 1, ABSOLUTE => 1, ENCODING => 'utf8'});
 	$template->process(\$data, \%macro, \$output) or die Template->error;
 	print $output if $verbose;
 	send_mail();
@@ -112,15 +113,15 @@ sub set_livestatus_macros {
               description => $macro{'SERVICEDESC'},
             }
         )->hashref_array();
-        $macro{'LONGSERVICEOUTPUT'} = $data[0]->{'long_plugin_output'};
-        $macro{'SERVICEOUTPUT'}     = $data[0]->{'plugin_output'};
+        $macro{'LONGSERVICEOUTPUT'} = encode_utf8($data[0]->{'long_plugin_output'});
+        $macro{'SERVICEOUTPUT'}     = encode_utf8($data[0]->{'plugin_output'});
     } else {
         @data = $ls->table('hosts')->columns(qw/plugin_output long_plugin_output/)->filter(
             { name   => $macro{'HOSTNAME'},
             }
         )->hashref_array();
-        $macro{'LONGHOSTOUTPUT'} = $data[0]->{'long_plugin_output'};
-        $macro{'HOSTOUTPUT'}     = $data[0]->{'plugin_output'};
+        $macro{'LONGHOSTOUTPUT'} = encode_utf8($data[0]->{'long_plugin_output'});
+        $macro{'HOSTOUTPUT'}     = encode_utf8($data[0]->{'plugin_output'});
     }
     return;
 }
