@@ -18,7 +18,7 @@ next:
             - update 3.0.8
           - LMD: Update 1.4.3
           - check_nsc_web: update to 0.5.2
-          - Ansible 2.7.8
+          - Ansible 2.7.9
           - Prometheus: update to 2.8.0
             - Alertmanager update to 0.16.1
             - Thanos update to 0.3.1
