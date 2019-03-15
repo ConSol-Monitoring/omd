@@ -3,7 +3,7 @@
 @@ -69,6 +69,19 @@
  {{ end }}
  {{ end }}
- 
+
 +{{ if query "up{job='snmp'}" }}
 +{{ template "_menuItem" (args . "snmp.html" "SNMP") }}
 +{{ if match "^snmp" .Path }}
@@ -19,4 +19,4 @@
 +
  </ul>
  </div>
- {{ end }}
+ </nav>
