@@ -13,6 +13,9 @@ next:
             - removed check_mk
             - removed dataScryer
             - removed nagios3
+          - Naemon:
+            - update core to 1.0.10
+            - update livestatus to 1.0.10
           - Mod-Gearman:
             - update mod-gearman-worker-go to 1.1.0
             - update 3.0.8
