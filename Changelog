@@ -25,7 +25,7 @@ next:
           - Prometheus: update to 2.8.0
             - Alertmanager update to 0.16.1
             - Thanos update to 0.3.1
-          - Grafana update to 6.0.1
+          - Grafana update to 6.0.2
           - InfluxDB: update to 1.7.3
           - Go updated to 1.11.6
             - Add Go 1.12.1
