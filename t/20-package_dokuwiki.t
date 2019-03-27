@@ -31,7 +31,7 @@ my $tests = [
   { cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_http -H localhost -a omdadmin:omd -u /$site/wiki -e 301'",          like => '/HTTP OK:/' },
   { cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_http -H localhost -a omdadmin:omd -u /$site/wiki/ -e 302'",         like => '/HTTP OK:/' },
   { cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_http -H localhost -a omdadmin:omd -u /$site/wiki/doku.php -e 200'", like => '/HTTP OK:/' },
-  { cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_http -H localhost -a omdadmin:omd -u \"/$site/wiki/doku.php?id=start&do=export_pdf\" -e 200'", like => '/HTTP OK:/' },
+  { cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_http -H localhost -a omdadmin:omd -u \"/$site/wiki/doku.php?id=start&do=export_pdf\" -e 200 -t 60'", like => '/HTTP OK:/' },
   { cmd => "/bin/su - $site -c 'test -h var/dokuwiki/lib/plugins/acl'", like => '/^\s*$/' },
 
   { cmd => $omd_bin." stop $site" },
