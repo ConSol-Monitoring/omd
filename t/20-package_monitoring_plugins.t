@@ -31,6 +31,7 @@ my $tests = [
   { cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_http -S -H 127.0.0.1 -p 9999'", exit => 2, like => '/HTTP CRITICAL - Unable to open TCP socket/' },
   { cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_curl -S -H 127.0.0.1 -p 9999'", exit => 2, like => '/HTTP CRITICAL - Invalid HTTP response received/' },
   { cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_by_ssh -V'", exit => 3, like => '/labs/' }, # plugins should contain omd in the version information
+  { cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_radius -h'", exit => 0, like => '/^check_radius.*$/'}, 
 ];
 for my $test (@{$tests}) {
     TestUtils::test_command($test);
