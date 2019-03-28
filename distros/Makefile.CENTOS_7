@@ -59,6 +59,7 @@ OS_PACKAGES      += bind-utils
 OS_PACKAGES      += boost-program-options
 OS_PACKAGES      += boost-date-time  # icinga 2
 OS_PACKAGES      += boost-regex      # icinga 2
+OS_PACKAGES      += boost-system     # mod-gearman
 OS_PACKAGES      += curl
 OS_PACKAGES      += dialog
 OS_PACKAGES      += expat
