@@ -67,6 +67,7 @@ OS_PACKAGES      += traceroute # needed for Check_MK parent scan
 OS_PACKAGES      += boost-program-options
 OS_PACKAGES      += boost-date-time  # icinga 2
 OS_PACKAGES      += boost-regex      # icinga 2
+OS_PACKAGES      += boost-thread     # icinga 2
 OS_PACKAGES      += boost-system     # mod-gearman
 OS_PACKAGES      += curl
 OS_PACKAGES      += dialog
