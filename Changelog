@@ -19,7 +19,7 @@ next:
           - Mod-Gearman:
             - update mod-gearman-worker-go to 1.1.1
             - update 3.0.8
-          - LMD: Update 1.4.3
+          - LMD: Update 1.5.0
           - check_nsc_web: update to 0.5.2
           - Ansible 2.7.9
           - Prometheus: update to 2.8.1
