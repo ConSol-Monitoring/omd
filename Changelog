@@ -17,7 +17,7 @@ next:
             - update core to 1.0.10
             - update livestatus to 1.0.10
           - Mod-Gearman:
-            - update mod-gearman-worker-go to 1.1.0
+            - update mod-gearman-worker-go to 1.1.1
             - update 3.0.8
           - LMD: Update 1.4.3
           - check_nsc_web: update to 0.5.2
