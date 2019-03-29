@@ -16,6 +16,7 @@ next:
           - Naemon:
             - update core to 1.0.10
             - update livestatus to 1.0.10
+          - Thruk: update to 2.28
           - Mod-Gearman:
             - update mod-gearman-worker-go to 1.1.1
             - update 3.0.8
