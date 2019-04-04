@@ -64,6 +64,7 @@ skel:
 	mkdir -p $(SKEL)/etc/icinga2/conf.d/thruk_bp_templates.conf
 	cp $(DIR)/support/thruk_templates_icinga2.conf $(SKEL)/etc/icinga2/conf.d/thruk_bp_templates.conf
 	cp $(DIR)/support/fcgid_env.sh $(SKEL)/etc/thruk/fcgid.thruk
+	cp $(DIR)/support/naglint.conf.example $(SKEL)/etc/thruk/naglint.conf
 	cp $(DIR)/thruk.conf $(SKEL)/etc/thruk/thruk.conf
 	cp -rp $(DIR)/root/thruk/usercontent $(SKEL)/etc/thruk
 	for p in patches/*.skel_patch ; do \
