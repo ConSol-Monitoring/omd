@@ -5,6 +5,7 @@ Next:
           - Prometheus:
             - Alertmanager update to 0.16.2
             - Thanos update to 0.3.2
+          - InfluxDB: update to 1.7.4
           - Go updated to 1.11.8 and 1.12.3
 
 
