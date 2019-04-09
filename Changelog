@@ -1,5 +1,8 @@
 This file documents the revision history for the Open Monitoring Distribution (Labs Edition)
 
+Next:
+          - Go updated to 1.11.8 and 1.12.3
+
 
 3.00     Apr 01 2018
           - DEPRECATION WARNING: the following components got removed, read more on https://labs.consol.de/omd/migration_3.html
