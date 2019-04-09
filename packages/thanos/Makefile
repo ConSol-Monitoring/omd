@@ -2,7 +2,7 @@ include ../../Makefile.omd
 
 
 NAME       = thanos
-VERSION    = 0.3.1
+VERSION    = 0.3.2
 SRC        = $(NAME)-$(VERSION).tar.gz
 GOPATH     = go
 GOPKG      = 1.11

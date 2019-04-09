@@ -2,6 +2,9 @@ This file documents the revision history for the Open Monitoring Distribution (L
 
 Next:
           - Go updated to 1.11.8 and 1.12.3
+          - Prometheus:
+            - Alertmanager update to 0.16.2
+            - Thanos update to 0.3.2
 
 
 3.00     Apr 01 2018
