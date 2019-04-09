@@ -32,6 +32,7 @@ MODULES = \
           Digest-HMAC-1.03.tar.gz \
           Digest-MD5-2.55.tar.gz \
           Digest-Perl-MD5-1.9.tar.gz \
+          Digest-SHA-6.02.tar.gz \
           Digest-SHA1-2.13.tar.gz \
           Email-Address-1.908.tar.gz \
           Email-Date-Format-1.005.tar.gz \
