@@ -17,7 +17,7 @@ BEGIN {
 # create our test site
 my $omd_bin = TestUtils::get_omd_bin();
 my $site    = TestUtils::create_test_site() or TestUtils::bail_out_clean("no further testing without site");
-my $network_exceptions = '/^(\s*|.*01mailrc.txt.gz.*saved.*|.*Network is unreachable.*|.*Temporary failure in name resolution.*|.*Name or service not known.*)$/s';
+my $network_exceptions = '/^(\s*|.*01mailrc.txt.gz.*saved.*|.*Network is unreachable.*|.*Temporary failure in name resolution.*|.*Name or service not known.*|200 OK)$/s';
 
 ##################################################
 # execute some checks
