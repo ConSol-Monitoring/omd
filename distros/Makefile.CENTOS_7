@@ -98,6 +98,7 @@ OS_PACKAGES      += xinetd
 OS_PACKAGES      += cronie
 OS_PACKAGES      += python-ldap # needed for ldap support in multisite
 OS_PACKAGES      += libsmbclient
+OS_PACKAGES      += radcli
 USERADD_OPTIONS   = -M
 ADD_USER_TO_GROUP = gpasswd -a %(user)s %(group)s
 PACKAGE_INSTALL   = yum -y makecache ; yum -y install
