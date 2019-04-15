@@ -44,6 +44,8 @@ install:
 		install -m 755 phantomjs-$$PHANTOM_VERSION-$$ARCH $(DESTDIR)$(OMD_ROOT)/bin/phantomjs;
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/omd/scripts/post-update
 	install -m 755 thruk.post-update $(DESTDIR)$(OMD_ROOT)/lib/omd/scripts/post-update/thruk
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/monitoring-plugins
+	install -m 755 $(DIR)/script/check_thruk_rest $(DESTDIR)$(OMD_ROOT)/lib/monitoring-plugins/check_thruk_rest
 
 
 skel:
