@@ -84,7 +84,7 @@ my $own_tests = [
 ];
 
 my $naemon_tests = [
-  { cmd => "/bin/su - $site -c './bin/thruk r -d \"comment_data=test\" -d \"triggered_by=test\" /hosts/$host/cmd/schedule_host_downtime'", like => ["/400: Couldn't parse ulong argument trigger_id/", "/sending command failed:/"], exit => 1 },
+  { cmd => "/bin/su - $site -c './bin/thruk r -d \"comment_data=test\" -d \"triggered_by=test\" /hosts/$host/cmd/schedule_host_downtime'", like => ["/400: Couldn't parse ulong argument trigger_id/", "/sending command failed:/"], exit => 3 },
 ];
 
 for my $report (@{$reports}) {
