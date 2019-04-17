@@ -59,7 +59,7 @@ MODULES += pymssql-2.1.3.tar.gz
 
 # for check_json_health
 MODULES += decorator-4.4.0.tar.gz
-MODULES += jsonpath-rw-1.4.0.tar.gz
+MODULES += jsonpath-ng-1.4.3.tar.gz
 
 # DataScryer:
 #MODULES += functools32-3.2.3-2.tar.gz
