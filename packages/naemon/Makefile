@@ -23,14 +23,20 @@ ifeq "$(GCCVERSIONGTEQ7)" "1"
             -Wno-cast-function-type
 endif
 
-build:
+build_prepare:
 	tar xzf naemon-$(VERSION).tar.gz
 	set -e ; for p in patches/*.patch ; do \
 	    echo "applying $$p..." ; \
 	    ( cd $(DIR) && patch -p1 -b -F 5 ) < $$p ; \
 	done
 	sed -i $(DIR)/configure -e 's/$(VERSION)\-source/$(VERSION)-omd/g'
+
+build: build_prepare
 	cd $(DIR) && CFLAGS="$(CFLAGS)" ./configure $(CONFIGUREOPTS)
+	$(MAKE) -C $(DIR) all
+
+build_debug: build_prepare
+	cd $(DIR) && CFLAGS="$(CFLAGS) -g3" ./configure $(CONFIGUREOPTS)
 	$(MAKE) -C $(DIR) all
 
 install:
