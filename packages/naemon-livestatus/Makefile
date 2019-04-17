@@ -26,6 +26,7 @@ build:
 
 install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/naemon
+	install -m 755 $(DIR)/src/.libs/livestatus.so $(DESTDIR)$(OMD_ROOT)/lib/naemon/livestatus.o.dbg
 	install -sm 755 $(DIR)/src/.libs/livestatus.so $(DESTDIR)$(OMD_ROOT)/lib/naemon/livestatus.o
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/bin
 	install -m 755 $(DIR)/src/unixcat $(DESTDIR)$(OMD_ROOT)/bin/unixcat
