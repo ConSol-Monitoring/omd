@@ -26,6 +26,7 @@ install:
 	rm -rf $(DESTDIR)$(OMD_ROOT)/share/mod_gearman/*.conf
 	rm -f $(DESTDIR)$(OMD_ROOT)/lib/mod_gearman/mod_gearman.so
 	cp $(DESTDIR)$(OMD_ROOT)/lib/mod_gearman/mod_gearman_naemon.o $(DESTDIR)$(OMD_ROOT)/lib/mod_gearman/mod_gearman_naemon.o.dbg
+	cp $(DESTDIR)$(OMD_ROOT)/bin/mod_gearman_worker $(DESTDIR)$(OMD_ROOT)/bin/mod_gearman_worker.dbg
 	rm -rf $(DESTDIR)$(OMD_ROOT)/etc
 	rm -rf $(DESTDIR)$(OMD_ROOT)/var
 

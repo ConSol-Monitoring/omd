@@ -1,0 +1,2 @@
+# remove core files older than 7 days
+0 0 * * * find $OMD_ROOT/ -maxdepth 1 -type f -name core\* -mtime +7 -delete
