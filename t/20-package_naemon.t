@@ -12,7 +12,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 61 );
+plan( tests => 46 );
 
 ##################################################
 # create our test site
@@ -24,7 +24,6 @@ my $site    = TestUtils::create_test_site() or TestUtils::bail_out_clean("no fur
 my $tests = [
   { cmd => $omd_bin." config $site set CORE naemon" },
 
-  { cmd => "/bin/su - $site -c 'sed -e \"s/^#ulimit/ulimit/g\" -i .profile'", like => '/^$/' },
   { cmd => $omd_bin." start $site" },
 
   { cmd => "/bin/su - $site -c 'test -S tmp/run/live'", like => '/^$/' },
@@ -34,9 +33,6 @@ my $tests = [
   { cmd => "/bin/su - $site -c 'file bin/naemon.dbg'", like => '/not stripped/' },
   { cmd => "/bin/su - $site -c 'file lib/naemon/livestatus.o.dbg'", like => '/not stripped/' },
   { cmd => "/bin/su - $site -c 'file lib/mod_gearman/mod_gearman_naemon.o.dbg'", like => '/not stripped/' },
-  { cmd => "/bin/su - $site -c 'kill -s SIGSEGV \$\$'", like => '/.*/', errlike => '/.*/', exit => undef },
-  { cmd => "/bin/su - $site -c 'ls core*'", like => '/core/' },
-  { cmd => "/bin/su - $site -c 'file core*'", like => '/core/' },
 
   { cmd => $omd_bin." stop $site naemon", unlike => '/kill/i' },
   { cmd => $omd_bin." stop $site" },
