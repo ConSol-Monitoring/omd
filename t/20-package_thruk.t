@@ -13,7 +13,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 993 );
+plan( tests => 1001 );
 
 ##################################################
 # create our test site
@@ -299,6 +299,11 @@ for my $url ( @{$cookie_urls} ) {
     delete $url->{'auth'};
     TestUtils::test_url($url);
 }
+
+##################################################
+# other tools
+TestUtils::test_command({ cmd => "/bin/su - $site -c './lib/monitoring-plugins/check_thruk_rest /hosts/totals'", like => '/total/'});
+TestUtils::test_command({ cmd => "/bin/su - $site -c './share/thruk/support/convert_old_datafile.pl'", like => '/^$/', errlike => '/usage:/', exit => 3});
 
 ##################################################
 # cleanup test site
