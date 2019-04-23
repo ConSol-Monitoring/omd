@@ -9,6 +9,7 @@ Next:
           - Go updated to 1.11.8 and 1.12.3
           - Mod-Gearman update 3.0.9
           - python modules: added decorator and jsonpath-ng
+          - Ansible 2.7.10
 
 
 3.00     Apr 01 2018
