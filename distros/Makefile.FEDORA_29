@@ -25,6 +25,7 @@ BUILD_PACKAGES   += libjpeg-devel          # needed by gd-devel
 BUILD_PACKAGES   += httpd-devel
 BUILD_PACKAGES   += libmcrypt-devel        # MISSING
 BUILD_PACKAGES   += libxml2-devel
+BUILD_PACKAGES   += libcom_err-devel       # freetds
 BUILD_PACKAGES   += mariadb-devel
 BUILD_PACKAGES   += mariadb-errmsg
 BUILD_PACKAGES   += postgresql-devel
