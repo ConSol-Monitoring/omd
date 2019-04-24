@@ -12,3 +12,5 @@ patch-stamp
 .config
 *.log
 debian/changelog
+.DS_Store
+.vscode
