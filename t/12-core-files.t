@@ -26,7 +26,7 @@ TestUtils::test_command({ cmd => "/bin/su - $site -c 'kill -s SIGSEGV \$\$'", li
 # test core file
 my $core_pattern = `cat /proc/sys/kernel/core_pattern`;
 if($core_pattern =~ m/\|.*systemd\-coredump/mx) {
-  TestUtils::test_command({ cmd => "/usr/bin/coredumpctl list", like => '/\/bin\/bash/' });
+  TestUtils::test_command({ cmd => "/usr/bin/coredumpctl list", like => '/\/bin\/bash/', waitfor => '\/bin\/bash' });
   TestUtils::test_command({ cmd => "/bin/rm -f /var/lib/systemd/coredump/*" });
 }
 elsif($core_pattern =~ m/\|.*apport/mx) {
