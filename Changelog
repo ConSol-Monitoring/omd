@@ -6,6 +6,7 @@ Next:
             - Alertmanager update to 0.16.2
             - Thanos update to 0.3.2
             - Pushgateway update to 0.8.0
+            - blackbox_exporter update to 0.14.0
           - InfluxDB: update to 1.7.6
           - Go updated to 1.11.8 and 1.12.3
           - Mod-Gearman update 3.0.9
