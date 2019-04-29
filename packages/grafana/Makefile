@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 NAME       = grafana
-VERSION    = 6.1.4
+VERSION    = 6.1.6
 SRC        = $(NAME)-$(VERSION).tar.gz
 GOPATH     = go
 GOPKG      = 1.12
@@ -71,7 +71,7 @@ package: public clean
 	tar zcf $(SRC) --exclude=.git $(GOPATH)/src/
 
 public:
-	wget --no-check-certificate https://s3-us-west-2.amazonaws.com/grafana-releases/release/grafana-$(VERSION).linux-amd64.tar.gz
+	wget https://dl.grafana.com/oss/release/grafana-$(VERSION).linux-amd64.tar.gz
 	tar zxf grafana-$(VERSION).linux-amd64.tar.gz
 	cd grafana-*/. && tar cfz ../public.tar.gz public
 	rm grafana-$(VERSION).linux-amd64.tar.gz
