@@ -3,7 +3,7 @@ This file documents the revision history for the Open Monitoring Distribution (L
 Next:
           - Grafana update to 6.1.6
           - Prometheus update to 2.9.2:
-            - Alertmanager update to 0.16.2
+            - Alertmanager update to 0.17.0
             - Thanos update to 0.3.2
             - Pushgateway update to 0.8.0
             - blackbox_exporter update to 0.14.0
