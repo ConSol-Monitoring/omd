@@ -1,0 +1,238 @@
+From 3bca4ea8ccc8d2d29047e4921cdfb07f4b1b4d98 Mon Sep 17 00:00:00 2001
+From: Sven Nierlein <sven@nierlein.de>
+Date: Wed, 8 May 2019 15:39:18 +0200
+Subject: [PATCH] avoid iterating all services when expanding service lists
+
+before this change, expanding wildcards or regular expressions in service lists
+resulted in iterating over all services, even for static hostnames. For example
+when expanding same host service dependencies still all services will be
+checked.
+With this patch, we create a shortlist for each hosts services and use that
+if possible. Using a example configuration with 80k same host service dependencies
+brings down the configuration parsing duration from 20 seconds down to 0.3 seconds.
+
+Signed-off-by: Sven Nierlein <sven@nierlein.de>
+---
+ src/naemon/xodtemplate.c | 112 ++++++++++++++++++++++++---------------
+ src/naemon/xodtemplate.h |   1 +
+ 2 files changed, 71 insertions(+), 42 deletions(-)
+
+diff --git a/src/naemon/xodtemplate.c b/src/naemon/xodtemplate.c
+index 203a09a4..ff8a9792 100644
+--- a/src/naemon/xodtemplate.c
++++ b/src/naemon/xodtemplate.c
+@@ -403,6 +403,7 @@ static void xodtemplate_free_memory(void)
+ 		nm_free(this_host->icon_image_alt);
+ 		nm_free(this_host->statusmap_image);
+ 		nm_free(this_host->vrml_image);
++		free_objectlist(&this_host->service_list);
+ 		nm_free(this_host);
+ 	}
+ 	xodtemplate_host_list = NULL;
+@@ -1910,12 +1911,15 @@ static int xodtemplate_expand_services(objectlist **list, bitmap *reject_map, ch
+ 	char *service_names = NULL;
+ 	char *temp_ptr = NULL;
+ 	xodtemplate_service *temp_service = NULL;
++	xodtemplate_host *temp_host = NULL;
+ 	regex_t preg;
+ 	regex_t preg2;
+ 	int use_regexp_host = FALSE;
+ 	int use_regexp_service = FALSE;
+ 	int found_match = TRUE;
+ 	int reject_item = FALSE;
++	int service_wildcard_match = FALSE;
++	objectlist *slist;
+ 
+ 	if (list == NULL)
+ 		return ERROR;
+@@ -1959,11 +1963,9 @@ static int xodtemplate_expand_services(objectlist **list, bitmap *reject_map, ch
+ 		return OK;
+ 
+ 	/* should we use regular expression matching for the host name? */
+-	if (use_regexp_matches == TRUE && (use_true_regexp_matching == TRUE || strstr(host_name, "*") || strstr(host_name, "?") || strstr(host_name, "+") || strstr(host_name, "\\.")))
++	if (use_regexp_matches == TRUE && (use_true_regexp_matching == TRUE || strstr(host_name, "*") || strstr(host_name, "?") || strstr(host_name, "+") || strstr(host_name, "\\."))) {
+ 		use_regexp_host = TRUE;
+-
+-	/* compile regular expression for host name */
+-	if (use_regexp_host == TRUE) {
++		/* compile regular expression for host name */
+ 		if (regcomp(&preg2, host_name, REG_EXTENDED))
+ 			return ERROR;
+ 	}
+@@ -1975,6 +1977,8 @@ static int xodtemplate_expand_services(objectlist **list, bitmap *reject_map, ch
+ 
+ 		found_match = FALSE;
+ 		reject_item = FALSE;
++		use_regexp_service = FALSE;
++		service_wildcard_match = FALSE;
+ 
+ 		/* strip trailing spaces */
+ 		strip(temp_ptr);
+@@ -1985,55 +1989,56 @@ static int xodtemplate_expand_services(objectlist **list, bitmap *reject_map, ch
+ 			temp_ptr++;
+ 		}
+ 
+-		/* should we use regular expression matching for the service description? */
+-		if (use_regexp_matches == TRUE && (use_true_regexp_matching == TRUE || strstr(temp_ptr, "*") || strstr(temp_ptr, "?") || strstr(temp_ptr, "+") || strstr(temp_ptr, "\\.")))
+-			use_regexp_service = TRUE;
+-		else
+-			use_regexp_service = FALSE;
++		if (!strcmp(temp_ptr, "*"))
++			service_wildcard_match = TRUE;
++		else if (use_regexp_matches && !strcmp(temp_ptr, ".*"))
++			service_wildcard_match = TRUE;
+ 
+-		/* compile regular expression for service description */
+-		if (use_regexp_service == TRUE) {
+-			if (regcomp(&preg, temp_ptr, REG_EXTENDED)) {
+-				if (use_regexp_host == TRUE)
+-					regfree(&preg2);
+-				nm_free(service_names);
+-				return ERROR;
++		if (service_wildcard_match == FALSE) {
++			/* should we use regular expression matching for the service description? */
++			if (use_regexp_matches == TRUE && (use_true_regexp_matching == TRUE || strstr(temp_ptr, "*") || strstr(temp_ptr, "?") || strstr(temp_ptr, "+") || strstr(temp_ptr, "\\."))) {
++				use_regexp_service = TRUE;
++
++				/* compile regular expression for service description */
++				if (regcomp(&preg, temp_ptr, REG_EXTENDED)) {
++					if (use_regexp_host == TRUE)
++						regfree(&preg2);
++					nm_free(service_names);
++					return ERROR;
++				}
+ 			}
+ 		}
+ 
+-		/* use regular expression matching */
+-		if (use_regexp_host == TRUE || use_regexp_service == TRUE) {
+ 
++		/* use regular expression host matching -> iterate over all services on all hosts */
++		if (use_regexp_host == TRUE) {
+ 			/* test match against all services */
+ 			for (temp_service = xodtemplate_service_list; temp_service != NULL; temp_service = temp_service->next) {
+ 
+ 				if (temp_service->host_name == NULL || temp_service->service_description == NULL)
+ 					continue;
+ 
++				/* don't add services that shouldn't be registered */
++				if (temp_service->register_object == FALSE)
++					continue;
++
+ 				/* skip this service if it doesn't match the host name expression */
+-				if (use_regexp_host == TRUE) {
+-					if (regexec(&preg2, temp_service->host_name, 0, NULL, 0))
+-						continue;
+-				} else {
+-					if (strcmp(temp_service->host_name, host_name))
+-						continue;
+-				}
++				if (regexec(&preg2, temp_service->host_name, 0, NULL, 0))
++					continue;
+ 
+ 				/* skip this service if it doesn't match the service description expression */
+-				if (use_regexp_service == TRUE) {
+-					if (regexec(&preg, temp_service->service_description, 0, NULL, 0))
+-						continue;
+-				} else {
+-					if (strcmp(temp_service->service_description, temp_ptr))
+-						continue;
++				if (service_wildcard_match == TRUE) {
++					if (use_regexp_service == TRUE) {
++						if (regexec(&preg, temp_service->service_description, 0, NULL, 0))
++							continue;
++					} else {
++						if (strcmp(temp_service->service_description, temp_ptr))
++							continue;
++					}
+ 				}
+ 
+ 				found_match = TRUE;
+ 
+-				/* don't add services that shouldn't be registered */
+-				if (temp_service->register_object == FALSE)
+-					continue;
+-
+ 				/* add service to the list */
+ 				if (reject_item == TRUE)
+ 					bitmap_set(reject_map, temp_service->id);
+@@ -2047,23 +2052,37 @@ static int xodtemplate_expand_services(objectlist **list, bitmap *reject_map, ch
+ 		}
+ 
+ 		/* use standard matching... */
+-		else if (!strcmp(temp_ptr, "*")) {
+-			/* return a list of all services on the host */
++		else if (service_wildcard_match == TRUE || use_regexp_service == TRUE) {
+ 
+-			found_match = TRUE;
++			/* get a list of all services on the host */
++			temp_host = xodtemplate_find_real_host(host_name);
++			if(temp_host == NULL) {
++				nm_log(NSLOG_CONFIG_ERROR, "Error: Cannot expand host_name '%s' (config file '%s', starting at line %d)\n",
++				       host_name, xodtemplate_config_file_name(_config_file), _start_line);
++				return ERROR;
++			}
+ 
+-			for (temp_service = xodtemplate_service_list; temp_service != NULL; temp_service = temp_service->next) {
++			if (service_wildcard_match == TRUE)
++				found_match = TRUE;
+ 
+-				if (temp_service->host_name == NULL || temp_service->service_description == NULL)
+-					continue;
++			for (slist = temp_host->service_list; slist; slist = slist->next) {
++				temp_service = (xodtemplate_service *)slist->object_ptr;
+ 
+-				if (strcmp(temp_service->host_name, host_name))
++				if (temp_service->service_description == NULL)
+ 					continue;
+ 
+ 				/* don't add services that shouldn't be registered */
+ 				if (temp_service->register_object == FALSE)
+ 					continue;
+ 
++				/* skip this service if it doesn't match the service description expression */
++				if (service_wildcard_match == FALSE) {
++					if (regexec(&preg, temp_service->service_description, 0, NULL, 0))
++						continue;
++				}
++
++				found_match = TRUE;
++
+ 				/* add service to the list */
+ 				if (reject_item == TRUE)
+ 					bitmap_set(reject_map, temp_service->id);
+@@ -2339,6 +2358,7 @@ static int xodtemplate_duplicate_services(void)
+ {
+ 	gpointer prev;
+ 	xodtemplate_service *temp_service = NULL;
++	xodtemplate_host *temp_host = NULL;
+ 
+ 	xodcount.services = 0;
+ 	/****** DUPLICATE SERVICE DEFINITIONS WITH ONE OR MORE HOSTGROUP AND/OR HOST NAMES ******/
+@@ -2490,6 +2510,14 @@ static int xodtemplate_duplicate_services(void)
+ 		} else {
+ 			xodcount.services++;
+ 		}
++
++		temp_host = xodtemplate_find_real_host(temp_service->host_name);
++		if(temp_host == NULL) {
++			nm_log(NSLOG_CONFIG_ERROR, "Error: Could not expand host_name '%s' (config file '%s', starting on line %d)\n", temp_service->host_name, xodtemplate_config_file_name(temp_service->_config_file), temp_service->_start_line);
++			return ERROR;
++		}
++		prepend_object_to_objectlist(&temp_host->service_list, temp_service);
++
+ 		g_free(service_ident);
+ 	}
+ 
+diff --git a/src/naemon/xodtemplate.h b/src/naemon/xodtemplate.h
+index f56c1247..5286b914 100644
+--- a/src/naemon/xodtemplate.h
++++ b/src/naemon/xodtemplate.h
+@@ -287,6 +287,7 @@ typedef struct xodtemplate_host_struct {
+ 
+     unsigned has_been_resolved : 1;
+     unsigned register_object : 1;
++    objectlist *service_list;
+     struct xodtemplate_host_struct *next;
+ } xodtemplate_host;
+ 

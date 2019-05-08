@@ -1,0 +1,27 @@
+From 811f013fa0842e8c229744f6feb3d8f29ff09a27 Mon Sep 17 00:00:00 2001
+From: Sven Nierlein <sven@nierlein.de>
+Date: Wed, 8 May 2019 16:33:22 +0200
+Subject: [PATCH] fix expanding service dependencies
+
+when iterating over parents and childs during service dependency expansion, we
+need to reset the children map for each parent. Otherwise dependencies are
+only added for the first parent while it should be added for all parents.
+
+Signed-off-by: Sven Nierlein <sven@nierlein.de>
+---
+ src/naemon/xodtemplate.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/src/naemon/xodtemplate.c b/src/naemon/xodtemplate.c
+index 203a09a4..cd40abf4 100644
+--- a/src/naemon/xodtemplate.c
++++ b/src/naemon/xodtemplate.c
+@@ -6287,6 +6287,8 @@ static int xodtemplate_register_and_destroy_servicedependency(void *sd_)
+ 				return ERROR;
+ 			}
+ 		}
++
++		bitmap_clear(service_map);
+ 		for (clist = children; clist; clist = clist->next) {
+ 			xodtemplate_service *c = (xodtemplate_service *)clist->object_ptr;
+ 			if (bitmap_isset(service_map, c->id))
