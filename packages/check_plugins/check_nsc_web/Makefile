@@ -5,21 +5,24 @@ VERSION     = 0.5.3
 SRC         = $(NAME)-$(VERSION).tar.gz
 GOPKG       = 1.12
 GOVERSION   = $(shell grep ^VERSION ../../go-${GOPKG}/Makefile | awk '{ print $$3 }')
-GOPATH      = go
 PWD         = $(shell pwd)
 BRANCH      = v$(VERSION)
 GITURL      = github.com/m-kraus
+GOFOLDER    = go
+GOPATH      = $(PWD)/$(GOFOLDER)/
+GOROOT      = $(PWD)/../../go-$(GOPKG)/go-$(GOVERSION)
 
 .PHONY: skel
 
 build:
 	tar zxf $(SRC)
-	export GOROOT=$(PWD)/../../go-$(GOPKG)/go-$(GOVERSION)/ && export GOPATH=$(PWD)/$(GOPATH)/ && PATH=$$GOROOT/bin:$$PATH && \
-	CGO_ENABLED=0 go build -ldflags "-s -w" $(NAME).go
+	export GOROOT=$(GOROOT) && export GOPATH=$(GOPATH) && PATH=$$GOROOT/bin:$$PATH && \
+		cd $(GOPATH)/src/${GITURL}/${NAME} && \
+		CGO_ENABLED=0 go build -ldflags "-s -w" $(NAME).go
 
 install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/monitoring-plugins
-	install -m 755 $(PWD)/$(NAME) $(DESTDIR)$(OMD_ROOT)/lib/monitoring-plugins
+	install -m 755 $(GOPATH)/src/${GITURL}/${NAME}/${NAME} $(DESTDIR)$(OMD_ROOT)/lib/monitoring-plugins
 
 skel:
 
@@ -30,10 +33,11 @@ clean:
 
 package: clean
 	mkdir -p $(GOPATH)
-	export GOROOT=$(PWD)/../go-$(GOPKG)/go-$(GOVERSION)/ && export GOPATH=$(PWD)/$(GOPATH)/ && PATH=$$GOROOT/bin:$$PATH && \
+	export GOROOT=$(GOROOT) && export GOPATH=$(GOPATH) && PATH=$$GOROOT/bin:$$PATH && \
 		mkdir -p $(GOPATH)/src/$(GITURL) && \
 		cd $(GOPATH)/src/$(GITURL) && \
 		git clone --depth=1 --branch "$(BRANCH)" https://$(GITURL)/$(NAME) && \
-		cd $(NAME) && \
-		tar zcf $(PWD)/$(SRC) $(NAME).go
+		cd $(NAME) && go get -d && \
+		cd $(PWD) && \
+		tar zcf $(SRC) $(GOFOLDER)/src/ --exclude=.git
 
