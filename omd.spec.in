@@ -82,7 +82,7 @@ fi
 # not want to make it implicitely active again.
 ACTIVATE_INIT=0
 if [ ! -e /omd/versions/default ] ; then
-    echo "Activating init script /etc/init.d/omd"
+    echo "Activating init script /etc/init.d/omd or systemd service"
     ACTIVATE_INIT=1
 fi
 
