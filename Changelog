@@ -5,9 +5,9 @@ Next:
           - Grafana update to 6.1.6
           - Prometheus update to 2.9.2:
             - Alertmanager update to 0.17.0
-            - Thanos update to 0.3.2
             - Pushgateway update to 0.8.0
             - blackbox_exporter update to 0.14.0
+            - Add Thanos download script for version 0.4.0
           - InfluxDB: update to 1.7.6
           - Go updated to 1.12.5
           - Mod-Gearman update 3.0.9
