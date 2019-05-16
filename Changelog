@@ -1,7 +1,7 @@
 This file documents the revision history for the Open Monitoring Distribution (Labs Edition)
 
 Next:
-          - Thruk: update to 2.30
+          - Thruk: update to 2.30-2
           - Grafana update to 6.1.6
           - Prometheus update to 2.9.2:
             - Alertmanager update to 0.17.0
