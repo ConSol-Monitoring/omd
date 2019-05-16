@@ -1,6 +1,7 @@
 This file documents the revision history for the Open Monitoring Distribution (Labs Edition)
 
-Next:
+
+3.10     May 16 2019
           - Thruk: update to 2.30-2
           - Grafana update to 6.1.6
           - Prometheus update to 2.9.2:
@@ -16,7 +17,7 @@ Next:
           - check_nsc_web: update to 0.5.3
 
 
-3.00     Apr 01 2018
+3.00     Apr 01 2019
           - DEPRECATION WARNING: the following components got removed, read more on https://labs.consol.de/omd/migration_3.html
             - Nagios 3
             - Icinga 1
