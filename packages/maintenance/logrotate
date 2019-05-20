@@ -24,4 +24,9 @@ if [ ! -x $LOCAL_LOGROTATE ] || \
   fi
   cp -f $SBIN_LOGROTATE $LOCAL_LOGROTATE
 fi
+
+# if for whatever reason, logrotate cannot create the gziped logfile, ex.: when the filesystem was full
+# then *.1.gz files are left and prevents logrotation from then on
+find $OMD_ROOT/var/log/ -name \*.1.gz -type f -empty -delete
+
 $LOCAL_LOGROTATE $@
