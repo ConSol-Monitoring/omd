@@ -47,6 +47,7 @@ skel:
 	       $(SKEL)/etc/apache/conf.d/grafana.conf
 	mkdir -p $(SKEL)/var/grafana/plugins
 	tar zxf clock-panel-plugin-0.1.0.tar.gz -C $(SKEL)/var/grafana/plugins
+	chmod 644 $(SKEL)/var/grafana/plugins/clock-panel/src/external/moment-duration-format.js
 	tar zxf piechart-panel-plugin-1.3.3.tar.gz -C $(SKEL)/var/grafana/plugins
 
 clean:

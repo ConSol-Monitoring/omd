@@ -106,11 +106,11 @@ install:
 skel:
 	mkdir -p $(SKEL)/etc/icinga2
 	cp -rp $(DIR)/etc/icinga2/* $(SKEL)/etc/icinga2/
-	chmod 755 $(SKEL)/etc/icinga2/scripts/*
+	chmod 644 $(SKEL)/etc/icinga2/scripts/*
 	rm -rf $(SKEL)/etc/icinga2/conf.d/win32
 	mv $(SKEL)/etc/icinga2/constants.conf.cmake $(SKEL)/etc/icinga2/constants.conf
 	mkdir -p $(SKEL)/etc/bash_completion.d
-	install $(DIR)/etc/bash_completion.d/icinga2 $(SKEL)/etc/bash_completion.d
+	install -m 0644 $(DIR)/etc/bash_completion.d/icinga2 $(SKEL)/etc/bash_completion.d
 	sed -i -e 's/@ICINGA2_USER@/###SITE###/g' \
 	       -e 's/@ICINGA2_GROUP@/###SITE###/g' \
 	       -e 's/@ICINGA2_PLUGINDIR@/###ROOT###\/lib\/monitoring\-plugins/g' \

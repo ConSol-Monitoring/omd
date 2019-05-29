@@ -22,6 +22,7 @@ install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/skel/etc/jmx4perl
 	rsync -a $(DIR)/config $(DESTDIR)$(OMD_ROOT)/skel/etc/jmx4perl/
 	chmod 644 $(DESTDIR)$(OMD_ROOT)/skel/etc/jmx4perl/config/*.cfg
+	chmod 644 $(DESTDIR)$(OMD_ROOT)/skel/etc/jmx4perl/config/*/*.cfg
 	cp -p $(DIR)/blib/script/jmx4perl $(DESTDIR)$(OMD_ROOT)/bin/
 	cp -p $(DIR)/blib/script/j4psh $(DESTDIR)$(OMD_ROOT)/bin/
 	cp -p $(DIR)/blib/script/jolokia $(DESTDIR)$(OMD_ROOT)/bin/
