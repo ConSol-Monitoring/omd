@@ -1,0 +1,14 @@
+gearman_proxy.pl
+=================
+
+Proxy Gearman Jobs from one jobserver to another jobserver. This could
+be handy, when you have a worker in a remote net and only push is
+allowed.
+
+Mod-Gearman <-> Gearmand <-> Gearman-Proxy <--|--> Gearmand <-> Worker
+
+Instead of the Worker polling from the master gearmand, it can now
+poll the jobs from a local jobserver which gets fed by the
+Gearman-Proxy.
+
+Written by: Sven Nierlein

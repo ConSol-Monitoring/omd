@@ -1,0 +1,23 @@
+#!/bin/bash
+
+# Alias: Gearman Proxy
+# Menu: Distributed Monitoring
+# Description:
+#   Proxy Gearman Jobs from one jobserver to another jobserver. This could
+#   be handy, when you have a worker in a remote net and only push is allowed.
+
+case "$1" in
+    default)
+        echo "off"
+    ;;
+    choices)
+        echo "on: enable gearman proxy"
+        echo "off: disable gearman proxy"
+    ;;
+    set)
+    ;;
+    depends)
+        [ "$CONFIG_MOD_GEARMAN" = "on" ]
+    ;;
+esac
+

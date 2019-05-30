@@ -27,13 +27,17 @@ install:
 	rm -f $(DESTDIR)$(OMD_ROOT)/lib/mod_gearman/mod_gearman.so
 	cp $(DESTDIR)$(OMD_ROOT)/lib/mod_gearman/mod_gearman_naemon.o $(DESTDIR)$(OMD_ROOT)/lib/mod_gearman/mod_gearman_naemon.o.dbg
 	cp $(DESTDIR)$(OMD_ROOT)/bin/mod_gearman_worker $(DESTDIR)$(OMD_ROOT)/bin/mod_gearman_worker.dbg
+	chmod 0755 $(DESTDIR)$(OMD_ROOT)/share/mod_gearman/gearman_proxy.pl
 	rm -rf $(DESTDIR)$(OMD_ROOT)/etc
 	rm -rf $(DESTDIR)$(OMD_ROOT)/var
 
 skel:
 	mkdir -p $(SKEL)/etc/mod-gearman
+	mkdir -p $(SKEL)/tmp/run
 	cp $(DIR)/etc/mod_gearman_neb.conf.in    $(SKEL)/etc/mod-gearman/server.cfg
 	cp $(DIR)/etc/mod_gearman_worker.conf.in $(SKEL)/etc/mod-gearman/worker.cfg
+	cp $(DIR)/contrib/gearman_proxy.cfg      $(SKEL)/etc/mod-gearman/gearman_proxy.cfg
+	sed -i -e 's/mod_gearman\/gearman_proxy.cfg/mod-gearman\/gearman_proxy.cfg/g' $(SKEL)/etc/init.d/gearman_proxy
 	for p in patches/*.skel_patch ; do \
 	    echo "applying $$p..." ; \
 	    ( cd $(SKEL) ; patch -p1 ) < $$p || exit 1; \
