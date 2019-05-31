@@ -79,3 +79,4 @@ public:
 	rm -rf grafana-*/
 	wget "https://raw.githubusercontent.com/grafana/grafana/v$(VERSION)/conf/defaults.ini" -O defaults.ini
 	sed -i -e 's/^default_theme.*$$/default_theme = light/' defaults.ini
+	sed -i -e 's/^allow_embedding.*$$/allow_embedding = true/' defaults.ini
