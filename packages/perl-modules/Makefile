@@ -208,7 +208,7 @@ MODULES = \
           DateTime-1.18.tar.gz \
           File-Tail-1.3.tar.gz \
           Thruk-Utils-XS-0.02.tar.gz \
-          Monitoring-GLPlugin-3.2.8.tar.gz
+          Monitoring-GLPlugin-3.2.9.tar.gz
 
 
 
