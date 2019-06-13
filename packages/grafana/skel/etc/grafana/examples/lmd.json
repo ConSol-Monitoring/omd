@@ -1047,7 +1047,7 @@
           "thresholds": [],
           "timeFrom": null,
           "timeShift": null,
-          "title": "Backend Objects",
+          "title": "Backend Hosts",
           "tooltip": {
             "msResolution": false,
             "shared": true,
@@ -1065,7 +1065,7 @@
           "yaxes": [
             {
               "format": "short",
-              "label": "connections /s",
+              "label": "hosts",
               "logBase": 1,
               "max": null,
               "min": null,
@@ -1184,7 +1184,7 @@
           "yaxes": [
             {
               "format": "short",
-              "label": "connections /s",
+              "label": "services",
               "logBase": 1,
               "max": null,
               "min": null,
