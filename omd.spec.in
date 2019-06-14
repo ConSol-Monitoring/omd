@@ -103,12 +103,10 @@ fi
 
 %if 0%{?_unitdir:1}
 if test -e /omd/versions/default/share/omd/omd.service; then
-  cp /omd/versions/default/share/omd/omd.service %{_unitdir}/omd.service
-  %systemd_post omd.service
-  if [ $ACTIVATE_INIT -eq 1 ]; then
+    cp /omd/versions/default/share/omd/omd.service %{_unitdir}/omd.service
+    %systemd_post omd.service
     systemctl disable omd.service
     systemctl enable omd.service
-  fi
 fi
 %endif
 
