@@ -15,6 +15,7 @@ This file documents the revision history for the Open Monitoring Distribution (L
           - python modules: added decorator and jsonpath-ng
           - Ansible 2.7.10
           - check_nsc_web: update to 0.5.3
+          - LMD: Update 1.6.0
 
 
 3.00     Apr 01 2019

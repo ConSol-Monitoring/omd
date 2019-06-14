@@ -15,8 +15,7 @@
   "editable": true,
   "gnetId": null,
   "graphTooltip": 0,
-  "id": 8,
-  "iteration": 1560424399652,
+  "iteration": 1560522006673,
   "links": [],
   "panels": [
     {
@@ -38,7 +37,7 @@
         "thresholdMarkers": true
       },
       "gridPos": {
-        "h": 3,
+        "h": 4,
         "w": 3,
         "x": 0,
         "y": 0
@@ -120,7 +119,7 @@
         "thresholdMarkers": true
       },
       "gridPos": {
-        "h": 3,
+        "h": 4,
         "w": 3,
         "x": 3,
         "y": 0
@@ -202,7 +201,7 @@
         "thresholdMarkers": true
       },
       "gridPos": {
-        "h": 3,
+        "h": 4,
         "w": 3,
         "x": 6,
         "y": 0
@@ -244,7 +243,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "sum(lmd_peer_host_num{instance=~\"$instance\"})+sum(lmd_peer_service_num{instance=~\"$instance\"})",
+          "expr": "sum(lmd_peer_object_count{instance=~\"$instance\"})",
           "format": "time_series",
           "intervalFactor": 1,
           "refId": "A"
@@ -266,6 +265,58 @@
       "valueName": "current"
     },
     {
+      "columns": [],
+      "datasource": "prometheus",
+      "fontSize": "100%",
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 9,
+        "y": 0
+      },
+      "id": 17,
+      "links": [],
+      "pageSize": null,
+      "scroll": true,
+      "showHeader": true,
+      "sort": {
+        "col": 0,
+        "desc": true
+      },
+      "styles": [
+        {
+          "alias": "",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 2,
+          "mappingType": 1,
+          "pattern": "/^(Time|Value|job|__name__)$/",
+          "thresholds": [],
+          "type": "hidden",
+          "unit": "short"
+        }
+      ],
+      "targets": [
+        {
+          "expr": "lmd_info{instance=~\"$instance\"}",
+          "format": "table",
+          "instant": true,
+          "intervalFactor": 1,
+          "refId": "A"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "Instance List",
+      "transform": "table",
+      "type": "table"
+    },
+    {
       "aliasColors": {},
       "bars": false,
       "dashLength": 10,
@@ -279,7 +330,7 @@
         "h": 7,
         "w": 24,
         "x": 0,
-        "y": 3
+        "y": 4
       },
       "id": 1,
       "legend": {
@@ -425,7 +476,7 @@
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
-      "title": "Internals",
+      "title": "Ressource Usage",
       "tooltip": {
         "msResolution": false,
         "shared": true,
@@ -475,9 +526,9 @@
       "grid": {},
       "gridPos": {
         "h": 7,
-        "w": 12,
+        "w": 8,
         "x": 0,
-        "y": 10
+        "y": 11
       },
       "id": 5,
       "legend": {
@@ -582,9 +633,133 @@
       "grid": {},
       "gridPos": {
         "h": 7,
-        "w": 12,
-        "x": 12,
-        "y": 10
+        "w": 8,
+        "x": 8,
+        "y": 11
+      },
+      "id": 14,
+      "legend": {
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "show": true,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 2,
+      "links": [],
+      "nullPointMode": "connected",
+      "percentage": false,
+      "pointradius": 5,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": true,
+      "steppedLine": false,
+      "targets": [
+        {
+          "dsType": "influxdb",
+          "expr": "avg by(listen)(rate(lmd_frontend_queries{instance=~\"$instance\"}[1m]))",
+          "format": "time_series",
+          "groupBy": [
+            {
+              "params": [
+                "$interval"
+              ],
+              "type": "time"
+            },
+            {
+              "params": [
+                "null"
+              ],
+              "type": "fill"
+            }
+          ],
+          "hide": false,
+          "intervalFactor": 2,
+          "legendFormat": "Queries {{listen}}",
+          "metric": "lmd_frontend_connections",
+          "policy": "default",
+          "refId": "A",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "mean"
+              }
+            ]
+          ],
+          "step": 2,
+          "tags": []
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "Frontend Queries",
+      "tooltip": {
+        "msResolution": false,
+        "shared": true,
+        "sort": 0,
+        "value_type": "cumulative"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "format": "short",
+          "label": "queries/s",
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "prometheus",
+      "editable": true,
+      "error": false,
+      "fill": 1,
+      "grid": {},
+      "gridPos": {
+        "h": 7,
+        "w": 8,
+        "x": 16,
+        "y": 11
       },
       "id": 6,
       "legend": {
@@ -706,9 +881,9 @@
       "grid": {},
       "gridPos": {
         "h": 7,
-        "w": 12,
+        "w": 8,
         "x": 0,
-        "y": 17
+        "y": 18
       },
       "id": 2,
       "legend": {
@@ -928,9 +1103,133 @@
       "grid": {},
       "gridPos": {
         "h": 7,
-        "w": 12,
-        "x": 12,
-        "y": 17
+        "w": 8,
+        "x": 8,
+        "y": 18
+      },
+      "id": 15,
+      "legend": {
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "show": true,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 2,
+      "links": [],
+      "nullPointMode": "connected",
+      "percentage": false,
+      "pointradius": 5,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": true,
+      "steppedLine": false,
+      "targets": [
+        {
+          "dsType": "influxdb",
+          "expr": "avg by(peer)(rate(lmd_peer_backend_queries{instance=~\"$instance\"}[1m]))",
+          "format": "time_series",
+          "groupBy": [
+            {
+              "params": [
+                "$interval"
+              ],
+              "type": "time"
+            },
+            {
+              "params": [
+                "null"
+              ],
+              "type": "fill"
+            }
+          ],
+          "hide": false,
+          "intervalFactor": 2,
+          "legendFormat": "Queries {{peer}}",
+          "metric": "peer_backend_connections",
+          "policy": "default",
+          "refId": "A",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "mean"
+              }
+            ]
+          ],
+          "step": 2,
+          "tags": []
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "Backend Queries",
+      "tooltip": {
+        "msResolution": false,
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "format": "short",
+          "label": "queries /s",
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "prometheus",
+      "editable": true,
+      "error": false,
+      "fill": 1,
+      "grid": {},
+      "gridPos": {
+        "h": 7,
+        "w": 8,
+        "x": 16,
+        "y": 18
       },
       "id": 3,
       "legend": {
@@ -1105,7 +1404,7 @@
         "h": 7,
         "w": 12,
         "x": 0,
-        "y": 24
+        "y": 25
       },
       "id": 7,
       "legend": {
@@ -1132,7 +1431,7 @@
       "targets": [
         {
           "dsType": "influxdb",
-          "expr": "avg by (peer)(lmd_peer_host_num{instance=~\"$instance\"})",
+          "expr": "avg by (peer)(lmd_peer_object_count{instance=~\"$instance\",type=\"hosts\"})",
           "format": "time_series",
           "groupBy": [
             {
@@ -1177,7 +1476,7 @@
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
-      "title": "Backend Hosts",
+      "title": "Cached Hosts",
       "tooltip": {
         "msResolution": false,
         "shared": true,
@@ -1229,7 +1528,7 @@
         "h": 7,
         "w": 12,
         "x": 12,
-        "y": 24
+        "y": 25
       },
       "id": 4,
       "legend": {
@@ -1353,7 +1652,7 @@
         "h": 7,
         "w": 12,
         "x": 0,
-        "y": 31
+        "y": 32
       },
       "id": 8,
       "legend": {
@@ -1380,7 +1679,7 @@
       "targets": [
         {
           "dsType": "influxdb",
-          "expr": "avg by(peer)(lmd_peer_service_num{instance=~\"$instance\"})",
+          "expr": "avg by(peer)(lmd_peer_object_count{instance=~\"$instance\",type=\"services\"})",
           "format": "time_series",
           "groupBy": [
             {
@@ -1425,7 +1724,7 @@
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
-      "title": "Backend Services",
+      "title": "Cached Services",
       "tooltip": {
         "msResolution": false,
         "shared": true,
@@ -1477,7 +1776,7 @@
         "h": 7,
         "w": 12,
         "x": 12,
-        "y": 31
+        "y": 32
       },
       "id": 12,
       "legend": {
@@ -1504,7 +1803,7 @@
       "targets": [
         {
           "dsType": "influxdb",
-          "expr": "sum(process_resident_memory_bytes{instance=~\"$instance\"})/(sum(lmd_peer_host_num{instance=~\"$instance\"})+sum(lmd_peer_service_num{instance=~\"$instance\"}))",
+          "expr": "sum(process_resident_memory_bytes{instance=~\"$instance\"})/(sum(lmd_peer_object_count{instance=~\"$instance\"}))",
           "format": "time_series",
           "groupBy": [
             {
@@ -1549,7 +1848,7 @@
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
-      "title": "Bytes Per Object",
+      "title": "Avergage Bytes per Object",
       "tooltip": {
         "msResolution": false,
         "shared": true,
@@ -1653,5 +1952,5 @@
   "timezone": "browser",
   "title": "LMD",
   "uid": "LYOjRF7Zz",
-  "version": 4
+  "version": 1
 }
