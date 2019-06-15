@@ -15,7 +15,7 @@
   "editable": true,
   "gnetId": null,
   "graphTooltip": 0,
-  "iteration": 1560522006673,
+  "iteration": 1560594578937,
   "links": [],
   "panels": [
     {
@@ -38,7 +38,7 @@
       },
       "gridPos": {
         "h": 4,
-        "w": 3,
+        "w": 4,
         "x": 0,
         "y": 0
       },
@@ -120,8 +120,8 @@
       },
       "gridPos": {
         "h": 4,
-        "w": 3,
-        "x": 3,
+        "w": 4,
+        "x": 4,
         "y": 0
       },
       "id": 13,
@@ -202,8 +202,8 @@
       },
       "gridPos": {
         "h": 4,
-        "w": 3,
-        "x": 6,
+        "w": 4,
+        "x": 8,
         "y": 0
       },
       "id": 11,
@@ -243,7 +243,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "sum(lmd_peer_object_count{instance=~\"$instance\"})",
+          "expr": "sum(lmd_peer_object_count{instance=~\"$instance\",peer=~\"$peer\"})",
           "format": "time_series",
           "intervalFactor": 1,
           "refId": "A"
@@ -270,8 +270,8 @@
       "fontSize": "100%",
       "gridPos": {
         "h": 4,
-        "w": 6,
-        "x": 9,
+        "w": 7,
+        "x": 12,
         "y": 0
       },
       "id": 17,
@@ -559,7 +559,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "avg by(listen)(rate(lmd_frontend_send_bytes{instance=~\"$instance\"}[1m]))",
+          "expr": "avg by(listen)(rate(lmd_frontend_send_bytes{instance=~\"$instance\",listen=~\"$listener\"}[1m]))",
           "format": "time_series",
           "hide": false,
           "intervalFactor": 2,
@@ -569,7 +569,7 @@
           "step": 2
         },
         {
-          "expr": "avg by(listen)(rate(lmd_frontend_received_bytes{instance=~\"$instance\"}[1m]))",
+          "expr": "avg by(listen)(rate(lmd_frontend_received_bytes{instance=~\"$instance\",listen=~\"$listener\"}[1m]))",
           "format": "time_series",
           "hide": false,
           "intervalFactor": 2,
@@ -662,7 +662,7 @@
       "targets": [
         {
           "dsType": "influxdb",
-          "expr": "avg by(listen)(rate(lmd_frontend_queries{instance=~\"$instance\"}[1m]))",
+          "expr": "avg by(listen)(rate(lmd_frontend_queries{instance=~\"$instance\",listen=~\"$listener\"}[1m]))",
           "format": "time_series",
           "groupBy": [
             {
@@ -786,7 +786,7 @@
       "targets": [
         {
           "dsType": "influxdb",
-          "expr": "avg by(listen)(rate(lmd_frontend_connections{instance=~\"$instance\"}[1m]))",
+          "expr": "avg by(listen)(rate(lmd_frontend_connections{instance=~\"$instance\",listen=~\"$listener\"}[1m]))",
           "format": "time_series",
           "groupBy": [
             {
@@ -925,7 +925,7 @@
       "targets": [
         {
           "dsType": "influxdb",
-          "expr": "avg by(peer)(rate(lmd_peer_received_bytes{instance=~\"$instance\"}[1m]))",
+          "expr": "avg by(peer)(rate(lmd_peer_received_bytes{instance=~\"$instance\",peer=~\"$peer\"}[1m]))",
           "format": "time_series",
           "groupBy": [
             {
@@ -967,7 +967,7 @@
         },
         {
           "dsType": "influxdb",
-          "expr": "avg by(peer)(rate(lmd_peer_sent_bytes{instance=~\"$instance\"}[1m]))",
+          "expr": "avg by(peer)(rate(lmd_peer_sent_bytes{instance=~\"$instance\",peer=~\"$peer\"}[1m]))",
           "format": "time_series",
           "groupBy": [
             {
@@ -1132,7 +1132,7 @@
       "targets": [
         {
           "dsType": "influxdb",
-          "expr": "avg by(peer)(rate(lmd_peer_backend_queries{instance=~\"$instance\"}[1m]))",
+          "expr": "avg by(peer)(rate(lmd_peer_backend_queries{instance=~\"$instance\",peer=~\"$peer\"}[1m]))",
           "format": "time_series",
           "groupBy": [
             {
@@ -1266,7 +1266,7 @@
       "targets": [
         {
           "dsType": "influxdb",
-          "expr": "avg by(peer)(rate(lmd_peer_backend_connections{instance=~\"$instance\"}[1m]))",
+          "expr": "avg by(peer)(rate(lmd_peer_backend_connections{instance=~\"$instance\",peer=~\"$peer\"}[1m]))",
           "format": "time_series",
           "groupBy": [
             {
@@ -1308,7 +1308,7 @@
         },
         {
           "dsType": "influxdb",
-          "expr": "avg by(peer)(rate(lmd_peer_backend_failed_connections{instance=~\"$instance\"}[1m]))",
+          "expr": "avg by(peer)(rate(lmd_peer_backend_failed_connections{instance=~\"$instance\",peer=~\"$peer\"}[1m]))",
           "format": "time_series",
           "groupBy": [
             {
@@ -1431,7 +1431,7 @@
       "targets": [
         {
           "dsType": "influxdb",
-          "expr": "avg by (peer)(lmd_peer_object_count{instance=~\"$instance\",type=\"hosts\"})",
+          "expr": "avg by (peer)(lmd_peer_object_count{instance=~\"$instance\",type=\"hosts\",peer=~\"$peer\"})",
           "format": "time_series",
           "groupBy": [
             {
@@ -1555,7 +1555,7 @@
       "targets": [
         {
           "dsType": "influxdb",
-          "expr": "avg by(peer)(lmd_peer_update_duration_seconds{instance=~\"$instance\"})",
+          "expr": "avg by(peer)(lmd_peer_update_duration_seconds{instance=~\"$instance\",peer=~\"$peer\"})",
           "format": "time_series",
           "groupBy": [
             {
@@ -1679,7 +1679,7 @@
       "targets": [
         {
           "dsType": "influxdb",
-          "expr": "avg by(peer)(lmd_peer_object_count{instance=~\"$instance\",type=\"services\"})",
+          "expr": "avg by(peer)(lmd_peer_object_count{instance=~\"$instance\",type=\"services\",peer=~\"$peer\"})",
           "format": "time_series",
           "groupBy": [
             {
@@ -1903,11 +1903,67 @@
         "definition": "",
         "hide": 0,
         "includeAll": true,
-        "label": null,
+        "label": "Instance",
         "multi": true,
         "name": "instance",
         "options": [],
         "query": "label_values(lmd_info, instance)",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "tagValuesQuery": "",
+        "tags": [],
+        "tagsQuery": "",
+        "type": "query",
+        "useTags": false
+      },
+      {
+        "allValue": null,
+        "current": {
+          "tags": [],
+          "text": "All",
+          "value": [
+            "$__all"
+          ]
+        },
+        "datasource": "prometheus",
+        "definition": "label_values(lmd_peer_object_count, peer)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Site",
+        "multi": true,
+        "name": "peer",
+        "options": [],
+        "query": "label_values(lmd_peer_object_count, peer)",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "tagValuesQuery": "",
+        "tags": [],
+        "tagsQuery": "",
+        "type": "query",
+        "useTags": false
+      },
+      {
+        "allValue": null,
+        "current": {
+          "tags": [],
+          "text": "All",
+          "value": [
+            "$__all"
+          ]
+        },
+        "datasource": "prometheus",
+        "definition": "label_values(lmd_frontend_send_bytes, listen)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Listener",
+        "multi": true,
+        "name": "listener",
+        "options": [],
+        "query": "label_values(lmd_frontend_send_bytes, listen)",
         "refresh": 1,
         "regex": "",
         "skipUrlSync": false,
@@ -1952,5 +2008,5 @@
   "timezone": "browser",
   "title": "LMD",
   "uid": "LYOjRF7Zz",
-  "version": 1
+  "version": 2
 }
