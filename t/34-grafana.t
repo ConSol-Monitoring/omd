@@ -65,12 +65,12 @@ TestUtils::test_command({ cmd => "/omd/sites/$site/lib/monitoring-plugins/check_
 
 # make sure grafana listens to localhost only
 # first test against localhost and make sure it works
-TestUtils::test_command({ cmd => "/bin/su - $site -c '$curl \"http://127.0.0.1:8003/$site/grafana\" -H \"X-WEBAUTH-USER: omdadmin\" '",
-                          errlike => ['/Set-Cookie: grafana_sess/'], 
+TestUtils::test_command({ cmd => "/bin/su - $site -c '$curl \"http://127.0.0.1:8003\" -H \"X-WEBAUTH-USER: omdadmin\" '",
+                          errlike => ['/200 OK/'], 
                           like  => ['/"login":"omdadmin"/'],
                        });
 # then test external ip and make sure it doesnt work
-TestUtils::test_command({ cmd => "/bin/su - $site -c '$curl \"http://$ip:8003/$site/grafana\" -H \"X-WEBAUTH-USER: omdadmin\" '",
+TestUtils::test_command({ cmd => "/bin/su - $site -c '$curl \"http://$ip:8003/\" -H \"X-WEBAUTH-USER: omdadmin\" '",
                           errlike => ['/(Failed to connect|Connection refused)/'], 
                           unlike  => ['/"login":"omdadmin"/'],
                           exit    => undef,
