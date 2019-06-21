@@ -33,8 +33,13 @@ ifeq ($(DISTRO_NAME),REDHAT)
     CENTOS_WORKAROUND=1
   endif
 endif
-ifneq (,$(findstring 11SP,$(DISTRO_VERSION)))
-  INSTALL_FCGID=1
+ifeq ($(DISTRO_NAME),SLES)
+  ifneq (,$(findstring 11SP,$(DISTRO_VERSION)))
+    INSTALL_FCGID=1
+  endif
+  ifneq (,$(findstring 12SP,$(DISTRO_VERSION)))
+    INSTALL_FCGID=1
+  endif
 endif
 
 ifeq ($(CENTOS_WORKAROUND), 1)
