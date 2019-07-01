@@ -1,5 +1,8 @@
 This file documents the revision history for the Open Monitoring Distribution (Labs Edition)
 
+next:
+          - OMD:
+            - omd cleanup will keep current default version installed
 
 3.10     May 16 2019
           - Thruk: update to 2.30-2

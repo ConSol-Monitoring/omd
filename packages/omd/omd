@@ -3852,6 +3852,10 @@ def main_cleanup(args, options=None):
             sys.stdout.write("%s%-20s%s In use (by %s). Keeping this version.\n" %
                     (tty_bold, version, tty_normal, ", ".join(site_ids)))
             continue
+        if version == OMD_VERSION and not opt_force:
+            sys.stdout.write("%s%-20s%s Default version. Keeping this version unless using --force.\n" %
+                    (tty_bold, version, tty_normal))
+            continue
 
         version_path = os.path.join("/omd/versions", version)
 
@@ -4198,7 +4202,7 @@ commands = [
 
   ( "cleanup",     True, False, 0, 0, False, "", main_cleanup,
     [ ],
-    "Uninstall all OMD versions that are not used by any site.",
+    "Uninstall all other OMD versions that are not used by any site.",
     ""),
 
 ]
