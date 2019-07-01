@@ -100,6 +100,9 @@ case "$1" in
         ulimit -m unlimited >/dev/null 2>&1
         ulimit -v unlimited >/dev/null 2>&1
 
+        # influx uses lots memory when hitting open files limit
+        ulimit -n $(ulimit -Hn) >/dev/null 2>&1
+
         nohup $DAEMON $OPTIONS >>$LOGFILE 2>&1 &
         if [ $? -eq 0 ]; then
             for x in $(seq 60); do
