@@ -3,10 +3,13 @@ This file documents the revision history for the Open Monitoring Distribution (L
 next:
           - OMD:
             - omd cleanup will keep current default version installed
+          - Grafana update to 6.2.4
+          - Prometheus update to 2.10.0
+          - LMD: Update 1.6.0
 
 3.10     May 16 2019
           - Thruk: update to 2.30-2
-          - Grafana update to 6.2.4
+          - Grafana update to 6.1.6
           - Prometheus update to 2.9.2:
             - Alertmanager update to 0.17.0
             - Pushgateway update to 0.8.0
@@ -18,7 +21,6 @@ next:
           - python modules: added decorator and jsonpath-ng
           - Ansible 2.7.10
           - check_nsc_web: update to 0.5.3
-          - LMD: Update 1.6.0
 
 
 3.00     Apr 01 2019
