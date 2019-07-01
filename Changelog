@@ -5,6 +5,7 @@ next:
             - omd cleanup will keep current default version installed
           - Grafana update to 6.2.4
           - Prometheus update to 2.10.0
+          - Mod-Gearman update 3.1.0
           - LMD: Update 1.6.0
 
 3.10     May 16 2019
