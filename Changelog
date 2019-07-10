@@ -4,6 +4,7 @@ next:
           - OMD:
             - omd cleanup will keep current default version installed
             - add build support for Fedora 30
+            - add build support for Ubuntu 19.04 Disco
           - Grafana update to 6.2.4
           - Prometheus update to 2.10.0
           - Mod-Gearman update 3.1.0
