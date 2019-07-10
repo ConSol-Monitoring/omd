@@ -98,8 +98,8 @@ ln -sfn /omd/versions/default/lib/omd/omd_bash_completion /etc/bash_completion.d
 # If the init script has been marked as to be activated
 # really activate the init script now
 if [ $ACTIVATE_INIT -eq 1 ]; then
-    chkconfig --add omd
-    chkconfig omd on
+    chkconfig --add omd >/dev/null 2>&1
+    chkconfig omd on >/dev/null 2>&1
 fi
 
 %if 0%{?_unitdir:1}

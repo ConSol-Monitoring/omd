@@ -3,6 +3,7 @@ This file documents the revision history for the Open Monitoring Distribution (L
 next:
           - OMD:
             - omd cleanup will keep current default version installed
+            - add build support for Fedora 30
           - Grafana update to 6.2.4
           - Prometheus update to 2.10.0
           - Mod-Gearman update 3.1.0
