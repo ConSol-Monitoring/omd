@@ -1,0 +1,246 @@
+From 89c3879e1a4be1593ce7d22724913bb178acc87d Mon Sep 17 00:00:00 2001
+From: Sven Nierlein <sven@nierlein.de>
+Date: Wed, 10 Jul 2019 14:04:00 +0200
+Subject: [PATCH] add last_update timestamp to track host/service changes
+
+This PR adds a new attribute last_update to hosts and services. This timestamp
+will be updated before and after servicechecks, on notifications and on
+external commands. Once this timestamp is accessible via livestatus, it will
+make synchronisation (ex. by LMD) easier.
+
+Signed-off-by: Sven Nierlein <sven@nierlein.de>
+---
+ src/naemon/checks_host.c     |  2 ++
+ src/naemon/checks_service.c  |  9 ++++++---
+ src/naemon/commands.c        | 16 ++++++++++++++--
+ src/naemon/nebmodules.h      |  2 +-
+ src/naemon/notifications.c   |  4 ++++
+ src/naemon/objects_host.h    |  1 +
+ src/naemon/objects_service.h |  1 +
+ src/naemon/xrddefault.c      |  6 ++++++
+ src/naemon/xsddefault.c      |  2 ++
+ 9 files changed, 37 insertions(+), 6 deletions(-)
+
+diff --git a/src/naemon/checks_host.c b/src/naemon/checks_host.c
+index f6e12803..cdccf3fa 100644
+--- a/src/naemon/checks_host.c
++++ b/src/naemon/checks_host.c
+@@ -253,6 +253,7 @@ static int run_async_host_check(host *hst, int check_options, double latency)
+ 	start_time.tv_usec = 0L;
+ 	end_time.tv_sec = 0L;
+ 	end_time.tv_usec = 0L;
++	hst->last_update = now;
+ 
+ 	neb_result = broker_host_check(NEBTYPE_HOSTCHECK_ASYNC_PRECHECK, NEBFLAG_NONE, NEBATTR_NONE, hst, CHECK_TYPE_ACTIVE, hst->current_state, hst->state_type, start_time, end_time, hst->check_command, hst->latency, 0.0, host_check_timeout, FALSE, 0, NULL, NULL, NULL, NULL, NULL);
+ 
+@@ -609,6 +610,7 @@ int handle_async_host_check_result(host *temp_host, check_result *cr)
+ 		temp_host->perf_data,
+ 		cr);
+ 
++	temp_host->last_update = end_time_hires.tv_sec;
+ 	return OK;
+ }
+ 
+diff --git a/src/naemon/checks_service.c b/src/naemon/checks_service.c
+index 00dae31f..ae23aec6 100644
+--- a/src/naemon/checks_service.c
++++ b/src/naemon/checks_service.c
+@@ -262,6 +262,11 @@ static int run_scheduled_service_check(service *svc, int check_options, double l
+ 		               svc->description, svc->host_name, svc->id,
+ 		               neb_result == NEBERROR_CALLBACKCANCEL ? "cancelled" : "overridden");
+ 	}
++
++	/* get the command start time */
++	gettimeofday(&start_time, NULL);
++	svc->last_update = start_time.tv_sec;
++
+ 	/* neb module wants to cancel the service check - the check will be rescheduled for a later time by the scheduling logic */
+ 	if (neb_result == NEBERROR_CALLBACKCANCEL) {
+ 		return ERROR;
+@@ -297,9 +302,6 @@ static int run_scheduled_service_check(service *svc, int check_options, double l
+ 		return ERROR;
+ 	}
+ 
+-	/* get the command start time */
+-	gettimeofday(&start_time, NULL);
+-
+ 	cr = nm_calloc(1, sizeof(*cr));
+ 	init_check_result(cr);
+ 
+@@ -1051,6 +1053,7 @@ int handle_async_service_check_result(service *temp_service, check_result *queue
+ 	nm_free(old_plugin_output);
+ 	nm_free(old_long_plugin_output);
+ 
++	temp_service->last_update = current_time;
+ 	return OK;
+ }
+ 
+diff --git a/src/naemon/commands.c b/src/naemon/commands.c
+index 5ae4369e..c1f641a5 100644
+--- a/src/naemon/commands.c
++++ b/src/naemon/commands.c
+@@ -1842,9 +1842,15 @@ static int host_command_handler(const struct external_command *ext_command, time
+ 	unsigned long downtime_id = 0L;
+ 	unsigned long duration = 0L;
+ 	time_t old_interval = 0L;
++	time_t current_time = 0L;
+ 
+-	if ( ext_command->id != CMD_DEL_HOST_COMMENT)
++	if ( ext_command->id != CMD_DEL_HOST_COMMENT) {
+ 		target_host = GV("host_name");
++		if(target_host) {
++			time(&current_time);
++			target_host->last_update = current_time;
++		}
++	}
+ 
+ 	switch (ext_command->id) {
+ 		case CMD_ADD_HOST_COMMENT:
+@@ -2250,9 +2256,15 @@ static int service_command_handler(const struct external_command *ext_command, t
+ 	struct service *target_service = NULL;
+ 	unsigned long downtime_id = 0L;
+ 	time_t old_interval = 0L;
++	time_t current_time = 0L;
+ 
+-	if (ext_command->id != CMD_DEL_SVC_COMMENT)
++	if (ext_command->id != CMD_DEL_SVC_COMMENT) {
+ 		target_service = GV_SERVICE("service");
++		if(target_service) {
++			time(&current_time);
++			target_service->last_update = current_time;
++		}
++	}
+ 
+ 	switch(ext_command->id) {
+ 		case CMD_ADD_SVC_COMMENT:
+diff --git a/src/naemon/nebmodules.h b/src/naemon/nebmodules.h
+index 63aff015..f1d619b0 100644
+--- a/src/naemon/nebmodules.h
++++ b/src/naemon/nebmodules.h
+@@ -10,7 +10,7 @@ NAGIOS_BEGIN_DECL
+ 
+ /***** MODULE VERSION INFORMATION *****/
+ #define NEB_API_VERSION(x) int __neb_api_version = x;
+-#define CURRENT_NEB_API_VERSION    4
++#define CURRENT_NEB_API_VERSION    5
+ 
+ 
+ /***** MODULE INFORMATION *****/
+diff --git a/src/naemon/notifications.c b/src/naemon/notifications.c
+index c5075710..3e3997dd 100644
+--- a/src/naemon/notifications.c
++++ b/src/naemon/notifications.c
+@@ -539,6 +539,7 @@ int service_notification(service *svc, int type, char *not_author, char *not_dat
+ 
+ 				/* update notifications flags */
+ 				add_notified_on(svc, svc->current_state);
++				svc->last_update = current_time;
+ 			}
+ 
+ 			/* we didn't end up notifying anyone */
+@@ -548,6 +549,7 @@ int service_notification(service *svc, int type, char *not_author, char *not_dat
+ 				svc->current_notification_number--;
+ 
+ 				log_debug_info(DEBUGL_NOTIFICATIONS, 0, "No contacts were notified.  Next possible notification time: %s\n", ctime(&svc->next_notification));
++				svc->last_update = current_time;
+ 			}
+ 		}
+ 
+@@ -1424,6 +1426,7 @@ int host_notification(host *hst, int type, char *not_author, char *not_data, int
+ 				add_notified_on(hst, hst->current_state);
+ 
+ 				log_debug_info(DEBUGL_NOTIFICATIONS, 0, "%d contacts were notified.  Next possible notification time: %s\n", contacts_notified, ctime(&hst->next_notification));
++				hst->last_update = current_time;
+ 			}
+ 
+ 			/* we didn't end up notifying anyone */
+@@ -1433,6 +1436,7 @@ int host_notification(host *hst, int type, char *not_author, char *not_data, int
+ 				hst->current_notification_number--;
+ 
+ 				log_debug_info(DEBUGL_NOTIFICATIONS, 0, "No contacts were notified.  Next possible notification time: %s\n", ctime(&hst->next_notification));
++				hst->last_update = current_time;
+ 			}
+ 		}
+ 
+diff --git a/src/naemon/objects_host.h b/src/naemon/objects_host.h
+index ba1a2fe1..780a77f7 100644
+--- a/src/naemon/objects_host.h
++++ b/src/naemon/objects_host.h
+@@ -129,6 +129,7 @@ struct host {
+ 	/* objects we depend upon */
+ 	struct objectlist *exec_deps, *notify_deps;
+ 	struct objectlist *escalation_list;
++	time_t  last_update /* timestamp when object has been updated the last time */;
+ 	struct  host *next;
+ 	struct timed_event *next_check_event;
+ };
+diff --git a/src/naemon/objects_service.h b/src/naemon/objects_service.h
+index 3e332805..7756565a 100644
+--- a/src/naemon/objects_service.h
++++ b/src/naemon/objects_service.h
+@@ -120,6 +120,7 @@ struct service {
+ 	struct objectlist *servicegroups_ptr;
+ 	struct objectlist *exec_deps, *notify_deps;
+ 	struct objectlist *escalation_list;
++	time_t  last_update /* timestamp when object has been updated the last time */;
+ 	struct service *next;
+ 	struct timed_event *next_check_event;
+ };
+diff --git a/src/naemon/xrddefault.c b/src/naemon/xrddefault.c
+index 97045c98..a65711fa 100644
+--- a/src/naemon/xrddefault.c
++++ b/src/naemon/xrddefault.c
+@@ -230,6 +230,7 @@ int xrddefault_save_state_information(void)
+ 		fprintf(fp, "is_flapping=%d\n", temp_host->is_flapping);
+ 		fprintf(fp, "percent_state_change=%.2f\n", temp_host->percent_state_change);
+ 		fprintf(fp, "check_flapping_recovery_notification=%d\n", temp_host->check_flapping_recovery_notification);
++		fprintf(fp, "last_update=%lu\n", temp_host->last_update);
+ 
+ 		fprintf(fp, "state_history=");
+ 		for (x = 0; x < MAX_STATE_HISTORY_ENTRIES; x++)
+@@ -322,6 +323,7 @@ int xrddefault_save_state_information(void)
+ 			fprintf(fp, "config:obsess=%d\n", conf_svc->obsess);
+ 			fprintf(fp, "obsess=%d\n", temp_service->obsess);
+ 		}
++		fprintf(fp, "last_update=%lu\n", temp_service->last_update);
+ 		fprintf(fp, "is_flapping=%d\n", temp_service->is_flapping);
+ 		fprintf(fp, "percent_state_change=%.2f\n", temp_service->percent_state_change);
+ 		fprintf(fp, "check_flapping_recovery_notification=%d\n", temp_service->check_flapping_recovery_notification);
+@@ -1035,6 +1037,8 @@ int xrddefault_read_state_information(void)
+ 							temp_host->last_time_down = strtoul(val, NULL, 10);
+ 						else if (!strcmp(var, "last_time_unreachable"))
+ 							temp_host->last_time_unreachable = strtoul(val, NULL, 10);
++						else if (!strcmp(var, "last_update"))
++							temp_host->last_update = strtoul(val, NULL, 10);
+ 						else if (!strcmp(var, "notified_on_down"))
+ 							temp_host->notified_on |= (atoi(val) > 0 ? OPT_DOWN : 0);
+ 						else if (!strcmp(var, "notified_on_unreachable"))
+@@ -1277,6 +1281,8 @@ int xrddefault_read_state_information(void)
+ 							temp_service->last_time_unknown = strtoul(val, NULL, 10);
+ 						else if (!strcmp(var, "last_time_critical"))
+ 							temp_service->last_time_critical = strtoul(val, NULL, 10);
++						else if (!strcmp(var, "last_update"))
++							temp_service->last_update = strtoul(val, NULL, 10);
+ 						else if (!strcmp(var, "plugin_output")) {
+ 							nm_free(temp_service->plugin_output);
+ 							temp_service->plugin_output = nm_strdup(val);
+diff --git a/src/naemon/xsddefault.c b/src/naemon/xsddefault.c
+index d4de6571..c4ee72db 100644
+--- a/src/naemon/xsddefault.c
++++ b/src/naemon/xsddefault.c
+@@ -232,6 +232,7 @@ int xsddefault_save_status_data(void)
+ 		fprintf(fp, "\tis_flapping=%d\n", temp_host->is_flapping);
+ 		fprintf(fp, "\tpercent_state_change=%.2f\n", temp_host->percent_state_change);
+ 		fprintf(fp, "\tscheduled_downtime_depth=%d\n", temp_host->scheduled_downtime_depth);
++		fprintf(fp, "\tlast_update=%lu\n", temp_host->last_update);
+ 		/* custom variables */
+ 		for (temp_customvariablesmember = temp_host->custom_variables; temp_customvariablesmember != NULL; temp_customvariablesmember = temp_customvariablesmember->next) {
+ 			if (temp_customvariablesmember->variable_name)
+@@ -298,6 +299,7 @@ int xsddefault_save_status_data(void)
+ 		fprintf(fp, "\tis_flapping=%d\n", temp_service->is_flapping);
+ 		fprintf(fp, "\tpercent_state_change=%.2f\n", temp_service->percent_state_change);
+ 		fprintf(fp, "\tscheduled_downtime_depth=%d\n", temp_service->scheduled_downtime_depth);
++		fprintf(fp, "\tlast_update=%lu\n", temp_service->last_update);
+ 		/* custom variables */
+ 		for (temp_customvariablesmember = temp_service->custom_variables; temp_customvariablesmember != NULL; temp_customvariablesmember = temp_customvariablesmember->next) {
+ 			if (temp_customvariablesmember->variable_name)

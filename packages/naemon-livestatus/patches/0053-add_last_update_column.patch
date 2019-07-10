@@ -1,0 +1,39 @@
+From 004a74a6a1e44b660d258e3979297c32f8a343f2 Mon Sep 17 00:00:00 2001
+From: Sven Nierlein <sven@nierlein.de>
+Date: Tue, 9 Jul 2019 11:43:58 +0200
+Subject: [PATCH] expose last_update timestamp
+
+expose the new added timestamps from https://github.com/naemon/naemon-core/pull/296
+
+Signed-off-by: Sven Nierlein <sven@nierlein.de>
+---
+ src/TableHosts.cc    | 2 ++
+ src/TableServices.cc | 2 ++
+ 2 files changed, 4 insertions(+)
+
+diff --git a/src/TableHosts.cc b/src/TableHosts.cc
+index 313d85b..dc86176 100644
+--- a/src/TableHosts.cc
++++ b/src/TableHosts.cc
+@@ -160,6 +160,8 @@ void TableHosts::addColumns(Table *table, string prefix, int indirect_offset)
+                 "Scheduled time for the next check (Unix timestamp)", (char *)(&hst.next_check) - ref, indirect_offset));
+     table->addColumn(new OffsetTimeColumn(prefix + "last_hard_state_change",
+                 "Time of the last hard state change (Unix timestamp)", (char *)(&hst.last_hard_state_change) - ref, indirect_offset));
++    table->addColumn(new OffsetTimeColumn(prefix + "last_update",
++                "Time of the last update of this host (Unix timestamp)", (char *)(&hst.last_update) - ref, indirect_offset));
+     table->addColumn(new OffsetIntColumn(prefix + "has_been_checked",
+                 "Whether the host has already been checked (0/1)", (char *)(&hst.has_been_checked) - ref, indirect_offset));
+     /* FIXME: hourly_value is an unsigned int... */
+diff --git a/src/TableServices.cc b/src/TableServices.cc
+index e9be66c..0532352 100644
+--- a/src/TableServices.cc
++++ b/src/TableServices.cc
+@@ -315,6 +315,8 @@ void TableServices::addColumns(Table *table, string prefix, int indirect_offset,
+                 "The time of the last state change - soft or hard (Unix timestamp)", (char *)&svc.last_state_change - ref, indirect_offset));
+     table->addColumn(new OffsetTimeColumn(prefix + "last_hard_state_change",
+                 "The time of the last hard state change (Unix timestamp)", (char *)&svc.last_hard_state_change - ref, indirect_offset));
++    table->addColumn(new OffsetTimeColumn(prefix + "last_update",
++                "Time of the last update of this service (Unix timestamp)", (char *)(&svc.last_update) - ref, indirect_offset));
+     table->addColumn(new OffsetIntColumn(prefix + "scheduled_downtime_depth",
+                 "The number of scheduled downtimes the service is currently in", (char *)(&svc.scheduled_downtime_depth) - ref, indirect_offset));
+     table->addColumn(new OffsetIntColumn(prefix + "is_flapping",
