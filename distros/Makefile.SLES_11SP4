@@ -70,6 +70,7 @@ OS_PACKAGES    += pango
 OS_PACKAGES    += patch
 OS_PACKAGES    += perl-Net-SNMP
 OS_PACKAGES    += perl-SNMP
+OS_PACKAGES    += perl-Crypt-SSLeay
 OS_PACKAGES    += php53-fastcgi
 OS_PACKAGES    += php53-gd
 OS_PACKAGES    += php53-iconv

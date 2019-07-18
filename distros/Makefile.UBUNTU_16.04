@@ -72,6 +72,7 @@ OS_PACKAGES    += libpango1.0-0
 OS_PACKAGES    += libperl5.22
 OS_PACKAGES    += libreadline5
 OS_PACKAGES    += libsnmp-perl
+OS_PACKAGES    += libcrypt-ssleay-perl
 OS_PACKAGES    += libuuid1
 OS_PACKAGES    += libxml2
 OS_PACKAGES    += libmcrypt4

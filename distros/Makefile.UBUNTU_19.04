@@ -67,6 +67,7 @@ OS_PACKAGES    += libevent-2.1-6
 OS_PACKAGES    += libicu63
 OS_PACKAGES    += libltdl7
 OS_PACKAGES    += libnet-snmp-perl
+OS_PACKAGES    += libcrypt-ssleay-perl
 OS_PACKAGES    += libpango1.0-0
 OS_PACKAGES    += perl-base
 OS_PACKAGES    += libreadline5

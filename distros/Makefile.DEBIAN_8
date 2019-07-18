@@ -63,6 +63,7 @@ OS_PACKAGES      += libgd3
 OS_PACKAGES      += libicu52
 OS_PACKAGES      += libltdl7
 OS_PACKAGES      += libnet-snmp-perl
+OS_PACKAGES      += libcrypt-ssleay-perl
 OS_PACKAGES      += libpango1.0-0
 OS_PACKAGES      += libperl5.20
 OS_PACKAGES      += libreadline6
