@@ -1,0 +1,34 @@
+From 232bc28421f67230ea551338c89f6ccf6631df40 Mon Sep 17 00:00:00 2001
+From: Sven Nierlein <sven@nierlein.de>
+Date: Thu, 18 Jul 2019 10:10:59 +0200
+Subject: [PATCH] fix segfault in on demand group macros
+
+using on demand hostgroup macros like $HOSTSTATEID:hostgroupname:,$"  made naemon crash
+
+Signed-off-by: Sven Nierlein <sven@nierlein.de>
+---
+ src/naemon/macros.c |  4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/src/naemon/macros.c b/src/naemon/macros.c
+index a464deee..75104248 100644
+--- a/src/naemon/macros.c
++++ b/src/naemon/macros.c
+@@ -389,7 +389,7 @@ static int grab_custom_macro_value_r(nagios_macros *mac, char *macro_name, char
+ 			g_tree_foreach(temp_hostgroup->members, concat_custom_macro_value, &params);
+ 			*output = nm_malloc(params.buffer->len + 1);
+ 			strncpy(*output, params.buffer->str, params.buffer->len);
+-			*output[params.buffer->len] = 0;
++			(*output)[params.buffer->len] = 0;
+ 			g_string_free(params.buffer, TRUE);
+ 		}
+ 	}
+@@ -1603,7 +1603,7 @@ static int grab_macrox_value_r(nagios_macros *mac, int macro_type, char *arg1, c
+ 			g_tree_foreach(temp_hostgroup->members, concat_macrox_value, &params);
+ 			*output = nm_malloc(params.buffer->len + 1);
+ 			strncpy(*output, params.buffer->str, params.buffer->len);
+-			*output[params.buffer->len] = 0;
++			(*output)[params.buffer->len] = 0;
+ 			g_string_free(params.buffer, TRUE);
+ 		}
+ 		break;
