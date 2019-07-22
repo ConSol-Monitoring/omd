@@ -6,7 +6,9 @@ next:
             - add build support for Fedora 30
             - add build support for Ubuntu 19.04 Disco
           - Grafana update to 6.2.4
-          - Prometheus update to 2.11.1
+          - Prometheus:
+            - Prometheus update to 2.11.1
+            - Alertmanager update to 0.18.0
           - Mod-Gearman update 3.1.0
           - LMD: Update 1.6.0
 
