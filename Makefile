@@ -271,10 +271,9 @@ rpm:
 	# NO_BRP_STALE_LINK_ERROR ignores errors when symlinking from skel to
 	# share,lib,bin because the link has a invalid target until the site is created
 	NO_BRP_STALE_LINK_ERROR="yes" \
-	rpmbuild -ba --define "_topdir $(RPM_TOPDIR)" \
+	rpmbuild -bb --define "_topdir $(RPM_TOPDIR)" \
 	     --buildroot=$$(pwd)/rpm.buildroot omd.spec
 	mv -v $(RPM_TOPDIR)/RPMS/*/*.rpm .
-	mv -v $(RPM_TOPDIR)/SRPMS/*.src.rpm .
 	rm -rf $(RPM_TOPDIR) rpm.buildroot
 
 # Build DEB from prebuild binary. This currently needs 'make dist' and thus only
