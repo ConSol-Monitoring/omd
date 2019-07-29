@@ -30,7 +30,8 @@ clean:
 	rm -rf histou
 
 package:
-	git clone  --depth=1 --branch "v$(VERSION)" https://github.com/Griesbacher/histou
+	#git clone  --depth=1 --branch "v$(VERSION)" https://github.com/Griesbacher/histou
+	git clone  --depth=1 --branch "master" https://github.com/Griesbacher/histou
 	tar zcf $(SRC) histou --exclude=.git --exclude=histou/tests --exclude=histou/conf --exclude=histou/stylecheck.sh
 	sed  "s#var url = 'http://localhost/histou/';#var site = window.location.href.match(/(https?:\\\\/\\\\/.*?\\\\/.*?)\\\\/grafana\\\\/.*/);\n    if(site \&\& site.length > 1){\n        url = site[1]+'/histou/';\n    }#" histou/histou.js > omd-histou.js
 	rm -rf histou
