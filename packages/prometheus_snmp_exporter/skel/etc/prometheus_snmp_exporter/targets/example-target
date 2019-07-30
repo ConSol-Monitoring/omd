@@ -1,0 +1,12 @@
+[
+  {
+    "targets": [ "127.0.0.1" ],
+    "labels": {
+      "hostname": "localhost",
+      "snmpCommunity": "public",
+      "mib": "if_mib",
+      "type": "switch",
+      "additional_label_key": "label_value"
+    }
+  }
+]
