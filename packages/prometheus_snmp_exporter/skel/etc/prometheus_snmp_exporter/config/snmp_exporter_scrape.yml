@@ -4,7 +4,7 @@
     scrape_timeout: 55s
     file_sd_configs:
       - files:
-    #    - '/omd/sites/###SITE###/etc/prometheus_snmp_exporter/targets/*.json'
+    #    - '###ROOT###/etc/snmp_exporter/targets/*.json'
 
     #static_configs:
     #  - targets:
@@ -24,6 +24,6 @@
       - source_labels: [hostname]
         target_label: instance
       - target_label: __address__
-        replacement: ###CONFIG_PROMETHEUS_SNMP_ADDR###:###CONFIG_PROMETHEUS_SNMP_PORT###
+        replacement: ###PROMETHEUS_SNMP_ADDR###:###PROMETHEUS_SNMP_PORT###
       - source_labels: [snmpCommunity]
         target_label: __param_community

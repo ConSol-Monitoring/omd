@@ -126,6 +126,8 @@ rebuild_config() {
     sed -ri "s/###ALERTMANAGER_TCP_PORT###/$CONFIG_ALERTMANAGER_TCP_PORT/g" $CFG_FILE
     sed -ri "s/###ALERTMANAGER_TCP_ADDR###/$CONFIG_ALERTMANAGER_TCP_ADDR/g" $CFG_FILE
     sed -ri "s/###GRAFANA_TCP_PORT###/$CONFIG_GRAFANA_TCP_PORT/g" $CFG_FILE
+    sed -ri "s/###PROMETHEUS_SNMP_ADDR###/$CONFIG_PROMETHEUS_SNMP_ADDR/g" $CFG_FILE
+    sed -ri "s/###PROMETHEUS_SNMP_PORT###/$CONFIG_PROMETHEUS_SNMP_PORT/g" $CFG_FILE
 }
 
 # Fetches the pid of the currently running prometheus process of the given
