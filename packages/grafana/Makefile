@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 NAME       = grafana
-VERSION    = 6.2.4
+VERSION    = 6.2.5
 SRC        = $(NAME)-$(VERSION).tar.gz
 GOPATH     = go
 GOPKG      = 1.12
@@ -49,6 +49,8 @@ skel:
 	tar zxf clock-panel-plugin-0.1.0.tar.gz -C $(SKEL)/var/grafana/plugins
 	chmod 644 $(SKEL)/var/grafana/plugins/clock-panel/src/external/moment-duration-format.js
 	tar zxf piechart-panel-plugin-1.3.3.tar.gz -C $(SKEL)/var/grafana/plugins
+	tar zxf snuids-trafficlights-panel-1.4.5.tar.gz -C $(SKEL)/var/grafana/plugins
+
 
 clean:
 	rm -rf $(GOPATH)
