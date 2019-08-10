@@ -96,7 +96,7 @@ rebuild_config() {
     for scrapes in ###ROOT###/etc/prometheus/prometheus.d/scrape_configs/*.yml
     do
         echo >> $CFG_FILE
-        [ -f $scrapes ] && cat $subscrapes >> $CFG_FILE
+        [ -f $scrapes ] && cat $scrapes >> $CFG_FILE
     done
     for scrapes in ###ROOT###/etc/prometheus/prometheus.d/scrape_configs/*
     do
