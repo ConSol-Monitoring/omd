@@ -22,7 +22,7 @@ MODULES = \
           Crypt-Blowfish_PP-1.12.tar.gz \
           Crypt-DES-2.07.tar.gz \
           Crypt-RC4-2.02.tar.gz \
-          Crypt-Rijndael-1.13.tar.gz \
+          Crypt-Rijndael-1.14.tar.gz \
           DBI-1.639.tar.gz \
           DBD-Sybase-1.16.tar.gz \
           Data-Dumper-2.161.tar.gz \
