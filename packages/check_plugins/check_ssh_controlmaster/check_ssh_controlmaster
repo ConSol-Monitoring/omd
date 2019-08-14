@@ -79,7 +79,6 @@ fi
 
 CMOPTS="-o ControlMaster=yes \
         -o UserKnownHostsFile=${CMDIR}/known_hosts \
-        -o IdentityFile=${HOME}/.ssh/id_rsa\
         -o IdentitiesOnly=yes \
         -o StrictHostKeyChecking=no \
         -o PreferredAuthentications=publickey \
@@ -87,7 +86,6 @@ CMOPTS="-o ControlMaster=yes \
 
 CMCOPTS="-o ControlMaster=no \
         -o UserKnownHostsFile=${CMDIR}/known_hosts \
-        -o IdentityFile=${HOME}/.ssh/id_rsa\
         -o IdentitiesOnly=yes \
         -o StrictHostKeyChecking=no \
         -o PreferredAuthentications=publickey \
