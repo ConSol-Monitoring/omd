@@ -61,23 +61,6 @@ EXTERNAL_FQDN=${OMD_EXTERNAL_FQDN:-$(hostname --fqdn)}
 unset LANG
 export LC_ALL=C
 
-# OMD: create configuration file out of fragments
-case "$1" in start|restart|reload|checkconfig|check)
-    #merge-alertmanager-config \
-    #   ###ROOT###/etc/alertmanager/alertmanager.d/*.yml \
-    #   ###ROOT###/etc/alertmanager/alertmanager.yml \
-    #   > $CFG_FILE || rm -f $CFG_FILE 
-    cat \
-       ###ROOT###/etc/alertmanager/alertmanager.yml \
-       > $CFG_FILE
-    for y in ###ROOT###/etc/alertmanager/alertmanager.d/*.yml
-    do
-       test -f $y && cat $y >> $CFG_FILE
-    done
-    sed -ri "s/###ALERTMANAGER_TCP_PORT###/$CONFIG_ALERTMANAGER_TCP_PORT/g" $CFG_FILE
-    sed -ri "s/###ALERTMANAGER_TCP_ADDR###/$CONFIG_ALERTMANAGER_TCP_ADDR/g" $CFG_FILE
-esac
-
 OPTIONS="--config.file $CFG_FILE --web.listen-address=$CONFIG_ALERTMANAGER_TCP_ADDR:$CONFIG_ALERTMANAGER_TCP_PORT --web.external-url=http://${EXTERNAL_FQDN}/###SITE###/alertmanager --storage.path=$DATA_DIR"
 
 if [ -n "$CLUSTER_LISTEN_ADDRESS" ] ; then
@@ -92,6 +75,71 @@ fi
 
 OPTIONS="$EXTRA_OPTIONS $OPTIONS"
 
+# Put together fragments and build a new alertmanager.yml
+#
+#
+rebuild_config() {
+    # 
+    cat ###ROOT###/etc/alertmanager/alertmanager.yml |\
+        sed -n '1,/# - start of routes/p' > $CFG_FILE
+    # all files in ###ROOT###/etc/alertmanager/alertmanager.d/routes/*/*.yml
+    for routes in ###ROOT###/etc/alertmanager/alertmanager.d/routes/*.yml
+    do
+        [ -f $routes ] && echo "  - $routes" >> $CFG_FILE
+    done
+    for routes in ###ROOT###/etc/alertmanager/alertmanager.d/routes/*
+    do
+        if [ -d $routes ]; then
+            for subroutes in ${routes}/*.yml
+            do
+                [ -f $subroutes ] && echo "  - $subroutes" >> $CFG_FILE
+            done
+        fi
+    done
+    cat ###ROOT###/etc/alertmanager/alertmanager.yml |\
+        sed -n '/# - end of routes/,/# - start of inhibit_rules/p' >> $CFG_FILE
+    # all files in ###ROOT###/etc/alertmanager/alertmanager.d/inhibit_rules/*/*.yml
+    for inhibits in ###ROOT###/etc/alertmanager/alertmanager.d/inhibit_rules/*.yml
+    do
+        [ -f $inhibits ] && echo "  - $inhibits" >> $CFG_FILE
+    done
+    for inhibits in ###ROOT###/etc/alertmanager/alertmanager.d/inhibit_rules/*
+    do
+        if [ -d $inhibits ]; then
+            for subinhibits in ${inhibits}/*.yml
+            do
+                [ -f $subinhibits ] && echo "  - $subinhibits" >> $CFG_FILE
+            done
+        fi
+    done
+    cat ###ROOT###/etc/alertmanager/alertmanager.yml |\
+        sed -n '/# - end of inhibit_rules/,/# - start of receivers/p' >> $CFG_FILE
+    # all files in ###ROOT###/etc/alertmanager/alertmanager.d/receivers/*/*.yml
+    for receivers in ###ROOT###/etc/alertmanager/alertmanager.d/receivers/*.yml
+    do
+        [ -f $receivers ] && echo "  - $receivers" >> $CFG_FILE
+    done
+    for receivers in ###ROOT###/etc/alertmanager/alertmanager.d/receivers/*
+    do
+        if [ -d $receivers ]; then
+            for subreceivers in ${receivers}/*.yml
+            do
+                [ -f $subreceivers ] && echo "  - $subreceivers" >> $CFG_FILE
+            done
+        fi
+    done
+    cat ###ROOT###/etc/alertmanager/alertmanager.yml |\
+        sed -n '1,/# - end of receivers/p' >> $CFG_FILE
+
+    for y in ###ROOT###/etc/alertmanager/alertmanager.d/*.yml
+    do
+       test -f $y && cat $y >> $CFG_FILE
+    done
+    sed -ri "s&""#""#""#ROOT#""#""#""&###ROOT###&g" $CFG_FILE
+    sed -ri "s&""#""#""#SITE#""#""#""&###SITE###&g" $CFG_FILE
+    sed -ri "s/###ALERTMANAGER_TCP_PORT###/$CONFIG_ALERTMANAGER_TCP_PORT/g" $CFG_FILE
+    sed -ri "s/###ALERTMANAGER_TCP_ADDR###/$CONFIG_ALERTMANAGER_TCP_ADDR/g" $CFG_FILE
+}
 
 # Fetches the pid of the currently running alertmanager process of the given
 # user.
@@ -204,6 +252,7 @@ if [ ! -f $BIN ]; then
 fi
 
 case "$1" in start|restart|reload|checkconfig)
+    rebuild_config
     if [ ! -f $CFG_FILE ]; then
         echo "Alertmanager configuration file $CFG_FILE not found. Terminating..."
         exit 1
