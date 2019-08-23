@@ -85,14 +85,14 @@ rebuild_config() {
     # all files in ###ROOT###/etc/alertmanager/alertmanager.d/routes/*/*.yml
     for routes in ###ROOT###/etc/alertmanager/alertmanager.d/routes/*.yml
     do
-        [ -f $routes ] && echo "  - $routes" >> $CFG_FILE
+        [ -f $routes ] && cat $routes >> $CFG_FILE
     done
     for routes in ###ROOT###/etc/alertmanager/alertmanager.d/routes/*
     do
         if [ -d $routes ]; then
             for subroutes in ${routes}/*.yml
             do
-                [ -f $subroutes ] && echo "  - $subroutes" >> $CFG_FILE
+                [ -f $subroutes ] && cat $subroutes >> $CFG_FILE
             done
         fi
     done
@@ -101,14 +101,14 @@ rebuild_config() {
     # all files in ###ROOT###/etc/alertmanager/alertmanager.d/inhibit_rules/*/*.yml
     for inhibits in ###ROOT###/etc/alertmanager/alertmanager.d/inhibit_rules/*.yml
     do
-        [ -f $inhibits ] && echo "  - $inhibits" >> $CFG_FILE
+        [ -f $inhibits ] && cat $inhibits >> $CFG_FILE
     done
     for inhibits in ###ROOT###/etc/alertmanager/alertmanager.d/inhibit_rules/*
     do
         if [ -d $inhibits ]; then
             for subinhibits in ${inhibits}/*.yml
             do
-                [ -f $subinhibits ] && echo "  - $subinhibits" >> $CFG_FILE
+                [ -f $subinhibits ] && cat $subinhibits >> $CFG_FILE
             done
         fi
     done
@@ -117,19 +117,19 @@ rebuild_config() {
     # all files in ###ROOT###/etc/alertmanager/alertmanager.d/receivers/*/*.yml
     for receivers in ###ROOT###/etc/alertmanager/alertmanager.d/receivers/*.yml
     do
-        [ -f $receivers ] && echo "  - $receivers" >> $CFG_FILE
+        [ -f $receivers ] && cat $receivers >> $CFG_FILE
     done
     for receivers in ###ROOT###/etc/alertmanager/alertmanager.d/receivers/*
     do
         if [ -d $receivers ]; then
             for subreceivers in ${receivers}/*.yml
             do
-                [ -f $subreceivers ] && echo "  - $subreceivers" >> $CFG_FILE
+                [ -f $subreceivers ] && cat $subreceivers >> $CFG_FILE
             done
         fi
     done
     cat ###ROOT###/etc/alertmanager/alertmanager.yml |\
-        sed -n '1,/# - end of receivers/p' >> $CFG_FILE
+        sed -n '/# - end of receivers/$p' >> $CFG_FILE
 
     for y in ###ROOT###/etc/alertmanager/alertmanager.d/*.yml
     do
