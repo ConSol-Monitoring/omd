@@ -129,7 +129,7 @@ rebuild_config() {
         fi
     done
     cat ###ROOT###/etc/alertmanager/alertmanager.yml |\
-        sed -n '/# - end of receivers/$p' >> $CFG_FILE
+        sed -n '/# - end of receivers/,$p' >> $CFG_FILE
 
     for y in ###ROOT###/etc/alertmanager/alertmanager.d/*.yml
     do
