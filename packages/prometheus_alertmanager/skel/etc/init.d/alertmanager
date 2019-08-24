@@ -150,7 +150,7 @@ rebuild_config() {
 # It returns 1 when no process can be found and echos the PID while
 # returning 0 when a process can be found.
 alertmanager_proc() {
-    kill -0 $(< $PID_FILE) >/dev/null 2>&1 || return 1
+    [[ -f $PID_FILE ]] && kill -0 $(< $PID_FILE) >/dev/null 2>&1 || return 1
     read comm user < <(ps -p $(< $PID_FILE) -o comm,user 2>/dev/null | tail -n 1) >/dev/null 2>&1
     test "$comm" = alertmanager >/dev/null 2>&1 || return 1
     test "$user" = $USR >/dev/null 2>&1 || return 1
