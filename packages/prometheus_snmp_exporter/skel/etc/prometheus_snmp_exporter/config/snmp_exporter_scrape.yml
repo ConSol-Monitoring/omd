@@ -4,7 +4,7 @@
     scrape_timeout: 55s
     file_sd_configs:
       - files:
-    #    - '###ROOT###/etc/snmp_exporter/targets/*.json'
+        - '###ROOT###/etc/snmp_exporter/targets/*.json'
 
     #static_configs:
     #  - targets:
