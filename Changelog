@@ -7,6 +7,7 @@ next:
             - add build support for Ubuntu 19.04 Disco
           - Naemon:
             - update core to 1.1.0
+            - update livestatus to 1.1.0
           - Grafana update to 6.3.5
           - Prometheus:
             - Prometheus update to 2.11.1
