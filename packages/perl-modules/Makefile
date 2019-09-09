@@ -52,7 +52,7 @@ MODULES = \
           File-Copy-Recursive-0.40.tar.gz \
           File-Path-2.15.tar.gz \
           File-Remove-1.57.tar.gz \
-          File-Slurp-9999.19.tar.gz \
+          File-Slurp-9999.27.tar.gz \
           GD-2.50.tar.gz \
           Getopt-Long-2.50.tar.gz \
           HTML-Tagset-3.20.tar.gz \
@@ -126,7 +126,8 @@ MODULES = \
           Bit-Vector-7.4.tar.gz \
           CPAN-Meta-2.150010.tar.gz \
           CPAN-Meta-YAML-0.018.tar.gz \
-          DBD-mysql-4.041.tar.gz \
+          Devel-CheckLib-1.13.tar.gz \
+          DBD-mysql-4.050.tar.gz \
           Date-Calc-6.4.tar.gz \
           Date-Calc-XS-6.4.tar.gz \
           Devel-GlobalDestruction-0.14.tar.gz \
