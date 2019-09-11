@@ -31,17 +31,7 @@ install:
 	mv $(DESTDIR)$(OMD_ROOT)/share/thruk/script/thruk $(DESTDIR)$(OMD_ROOT)/bin/thruk
 	chmod 755 $(DESTDIR)$(OMD_ROOT)/bin/thruk
 	chmod 755 $(DESTDIR)$(OMD_ROOT)/bin/naglint
-	PHANTOM_VERSION='2.1.1'; ARCH='i686'; \
-		if [ `uname -m` = 'x86_64' ]; then \
-			ARCH='x86_64'; \
-		elif [ `uname -m` = 'armv7l' ]; then \
-			ARCH='armhf'; \
-			PHANTOM_VERSION='2.1.1'; \
-		fi; \
-		if [ $(DISTRO_NAME) = "SLES" ] && [ $(DISTRO_VERSION) = "11SP1" ]; then \
-			PHANTOM_VERSION='1.9.1'; \
-		fi; \
-		install -m 755 phantomjs-$$PHANTOM_VERSION-$$ARCH $(DESTDIR)$(OMD_ROOT)/bin/phantomjs;
+	install -m 755 phantomjs-2.1.1-$(shell uname -m) $(DESTDIR)$(OMD_ROOT)/bin/phantomjs;
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/omd/scripts/post-update
 	install -m 755 thruk.post-update $(DESTDIR)$(OMD_ROOT)/lib/omd/scripts/post-update/thruk
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/monitoring-plugins

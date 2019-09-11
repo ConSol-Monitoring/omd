@@ -3,8 +3,6 @@ include ../../Makefile.omd
 NAME = icinga2
 VERSION = 2.9.2
 DIR = $(NAME)-$(VERSION)
-BOOSTDIR=boost_1_60_0
-BOOSTDEST=$(shell pwd)/$(BOOSTDIR)-dest
 CMAKE=cmake
 CMAKEDIR=cmake-3.5.0
 CMAKEDEST=$(shell pwd)/$(CMAKEDIR)-dest
@@ -26,46 +24,6 @@ CONFIGUREOPTS = \
     -DICINGA2_WITH_TESTS=OFF \
     -DICINGA2_GROUP=root
 
-BUILD_BOOST=
-ifeq ($(DISTRO_INFO),CENTOS 6)
-BUILD_BOOST=1
-endif
-ifneq (,$(findstring SLES 11SP,$(DISTRO_INFO)))
-BUILD_BOOST=1
-endif
-ifdef BUILD_BOOST
-EXTRA_BUILD_DEPS=build_env_for_sles11
-CONFIGUREOPTS+=-DCMAKE_EXE_LINKER_FLAGS=-lrt
-# workaround for https://bugzilla.redhat.com/show_bug.cgi?id=849791#c8
-CONFIGUREOPTS+=-DBoost_NO_BOOST_CMAKE=ON
-CONFIGUREOPTS+=-DBoost_NO_SYSTEM_PATHS=ON
-CONFIGUREOPTS+=-DBoost_USE_STATIC_LIBS=ON
-CONFIGUREOPTS+=-DBOOST_ROOT=$(BOOSTDEST)
-CONFIGUREOPTS+=-DBOOST_INCLUDEDIR=$(BOOSTDEST)/include
-CONFIGUREOPTS+=-DBOOST_LIBRARYDIR=$(BOOSTDEST)/lib
-#CONFIGUREOPTS+=-DBoost_DEBUG=ON
-CMAKE=$(CMAKEDEST)/bin/cmake
-else
-EXTRA_BUILD_DEPS=
-endif
-
-TMPGCC = $(shell pwd)/../gcc/tmp_gcc
-export PATH := $(TMPGCC)/bin/:$(PATH)
-export LD_LIBRARY_PATH := $(TMPGCC)/lib64:$(LD_LIBRARY_PATH)
-ifneq (,$(findstring CENTOS 6,$(DISTRO_INFO)))
-export CC := gcc
-export CXX := g++
-else ifneq (,$(findstring SLES 11SP4,$(DISTRO_INFO)))
-export CC := gcc-4.8
-export CXX := g++-4.8
-else ifneq (,$(findstring SLES 11SP2,$(DISTRO_INFO)))
-export CC := gcc
-export CXX := g++
-else ifneq (,$(findstring SLES 11SP,$(DISTRO_INFO)))
-export CC := gcc-4.7
-export CXX := g++-4.7
-endif
-
 build: $(EXTRA_BUILD_DEPS)
 	tar xzf $(DIR).tar.gz
 	mkdir -p $(DIR)/build
@@ -77,17 +35,6 @@ build: $(EXTRA_BUILD_DEPS)
 		export CXXFLAGS=-O2; \
 		$(CMAKE) .. $(CONFIGUREOPTS) && \
 		make -j1
-
-build_env_for_sles11:
-	tar xzf $(CMAKEDIR).tar.gz
-	cd $(CMAKEDIR) && \
-		./configure --prefix=$(CMAKEDEST) && \
-		make -j 4 && \
-		make install
-	tar xjf $(BOOSTDIR).tar.bz2
-	cd $(BOOSTDIR) && \
-		./bootstrap.sh --with-libraries=thread,system,program_options,regex,chrono,date_time,atomic --prefix=$(BOOSTDEST) && \
-		./bjam cxxflags=-fPIC cflags=-fPIC install
 
 install:
 	$(MAKE) DESTDIR=$(DESTDIR) -C $(DIR)/build install
@@ -158,8 +105,6 @@ skel:
 
 clean:
 	rm -rf $(DIR)
-	rm -rf $(BOOSTDIR)
-	rm -rf $(BOOSTDEST)
 	rm -rf $(CMAKEDIR)
 	rm -rf $(CMAKEDEST)
 

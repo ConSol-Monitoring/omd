@@ -1,0 +1,22 @@
+From 6841bf1b37272d21949c3925331f0011f6376f76 Mon Sep 17 00:00:00 2001
+From: Ed Sabol <edwardjsabol@gmail.com>
+Date: Mon, 29 Apr 2019 19:38:58 -0400
+Subject: [PATCH] Fix strncpy() warning in libgearman/run.cc when compiling
+ with gcc 8
+
+---
+ libgearman/run.cc | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/libgearman/run.cc b/libgearman/run.cc
+index 71f0c658..3d798091 100644
+--- a/libgearman/run.cc
++++ b/libgearman/run.cc
+@@ -271,6 +271,7 @@ gearman_return_t _client_run_task(Task *task)
+       {
+         task->error_code(GEARMAN_SUCCESS);
+         strncpy(task->unique, task->recv->arg[0], GEARMAN_MAX_UNIQUE_SIZE);
++        task->unique[GEARMAN_MAX_UNIQUE_SIZE -1]= '\0';
+         if (atoi(static_cast<char *>(task->recv->arg[1])) == 0)
+         {
+           task->options.is_known= false;

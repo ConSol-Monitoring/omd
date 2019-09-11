@@ -50,15 +50,8 @@ MODULES += prometheus_client-0.3.1.tar.gz
 MODULES += nagiosplugin-1.2.4.tar.gz
 MODULES += pysmbc-1.0.15.8.tar.gz
 MODULES += pyvmomi-6.7.1.2018.12.tar.gz
-
-# keep old module versions for SLES11
-ifneq (,$(findstring 11SP,$(DISTRO_VERSION)))
-  MODULES += pycryptodome-3.4.5.tar.gz
-  MODULES += pysnmp-4.3.5.tar.gz
-else
-  MODULES += pycryptodomex-3.8.1.tar.gz
-  MODULES += pysnmp-4.4.9.tar.gz
-endif
+MODULES += pycryptodomex-3.8.1.tar.gz
+MODULES += pysnmp-4.4.9.tar.gz
 
 # More datasources for coshsh
 MODULES += mysqlclient-1.3.12.tar.gz

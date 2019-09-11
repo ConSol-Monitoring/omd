@@ -15,6 +15,7 @@ next:
             - node_exporter update to 0.18.1
           - Mod-Gearman update 3.1.0
           - LMD: Update 1.6.0
+          - Gearmand: update 1.1.18
 
 3.10     May 16 2019
           - Thruk: update to 2.30-2

@@ -14,7 +14,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 161 );
+plan( tests => 169 );
 
 ##################################################
 # get version strings
@@ -149,6 +149,11 @@ for my $core (qw/naemon/) {
  
     TestUtils::test_command({ cmd => "/bin/su - $site -c 'echo -e \"".'GET services\nFilter: description = multiline\nColumns: plugin_output long_plugin_output\n'."\" | lq'", like => '/^OK - firstline;secondline\\\nthirdline\\\nCONFIG_CORE=\''.$core.'\'/' });
     TestUtils::test_command({ cmd => "/bin/su - $site -c 'echo -e \"".'GET services\nFilter: description = multiline\nColumns: perf_data\n'."\" | lq'", like => '/^perf=1c$/' });
+
+    ##################################################
+    # test sqlite retention
+    TestUtils::test_command({ cmd => "/bin/su - $site -c '$omd_bin stop gearmand'", like => '/OK/' });
+    TestUtils::test_command({ cmd => "/bin/su - $site -c 'test -f var/gearmand.db'", like => '/^$/' });
 
     ##################################################
     # cleanup test site
