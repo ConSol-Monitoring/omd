@@ -298,7 +298,7 @@ class SNMPTT(coshsh.datasource.Datasource):
                         application.trap_service_prefix,
                         svcmib,
                     ])
-                    if hasaddr(application, "agent_addresses"):
+                    if hasattr(application, "agent_addresses"):
                         for agent_address in application.agent_addresses:
                             mobj.add_agent([
                                 agent_address,
