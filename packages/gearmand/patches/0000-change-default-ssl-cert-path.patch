@@ -1,0 +1,19 @@
+--- gearmand-1.1.18/Makefile.in	2019-09-13 11:39:43.191786226 +0200
++++ gearmand-1.1.18/Makefile.in	2019-09-13 11:40:14.291134759 +0200
+@@ -9728,11 +9728,11 @@
+ 	@{ echo '/* DO NOT EDIT! GENERATED AUTOMATICALLY! */'; \
+ 	  echo '#define SYSCONFDIR "$(sysconfdir)"'; \
+ 	  echo '#define GEARMAND_CONFIG "$(sysconfdir)/gearmand.conf"'; \
+-	  echo '#define GEARMAND_CA_CERTIFICATE "$(sysconfdir)/ssl/certs/gearmand-ca.pem"'; \
+-	  echo '#define GEARMAND_SERVER_PEM "$(sysconfdir)/ssl/certs/gearmand.pem"'; \
+-	  echo '#define GEARMAND_SERVER_KEY "$(sysconfdir)/ssl/certs/gearmand.key"'; \
+-	  echo '#define GEARMAN_CLIENT_PEM "$(sysconfdir)/ssl/certs/gearman.pem"'; \
+-	  echo '#define GEARMAN_CLIENT_KEY "$(sysconfdir)/ssl/certs/gearman.key"'; \
++	  echo '#define GEARMAND_CA_CERTIFICATE "/etc/ssl/certs/gearmand-ca.pem"'; \
++	  echo '#define GEARMAND_SERVER_PEM "/etc/ssl/certs/gearmand.pem"'; \
++	  echo '#define GEARMAND_SERVER_KEY "/etc/ssl/certs/gearmand.key"'; \
++	  echo '#define GEARMAN_CLIENT_PEM "/etc/ssl/certs/gearman.pem"'; \
++	  echo '#define GEARMAN_CLIENT_KEY "/etc/ssl/certs/gearman.key"'; \
+ 	  echo '#define LOCALSTATEDIR "$(localstatedir)"'; \
+ 	  echo '#define GEARMAND_PID "$(localstatedir)/gearmand.pid"'; \
+ 	  } | sed '/""/d' > $@-t
