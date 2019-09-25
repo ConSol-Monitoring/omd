@@ -16,15 +16,13 @@
 if [ "$CONFIG_MOD_GEARMAN" != "on" -o "$CONFIG_GEARMAND" != "on" ] ; then
     exit 5
 fi
+. lib/omd/init_profile
 
 NAME=gearmand
 DAEMON="$OMD_ROOT/version/sbin/gearmand"
-OPTIONS="--daemon --worker-wakeup=10 --retention-file=$OMD_ROOT/var/gearmand.retention -q retention"
+OPTIONS="--daemon -q libsqlite3 --libsqlite3-db=$OMD_ROOT/var/gearmand.db --store-queue-on-shutdown"
 PORT=`echo $CONFIG_GEARMAND_PORT | awk -F: {'print $2'}`
 LISTEN=`echo $CONFIG_GEARMAND_PORT | awk -F: {'print $1'}`
-if [ -z "$LISTEN" ]; then
-    LISTEN=0.0.0.0
-fi
 PIDFILE=$OMD_ROOT/tmp/run/gearmand.pid
 LOGFILE=$OMD_ROOT/var/log/gearman/gearmand.log
 USER=$OMD_SITE
@@ -76,6 +74,7 @@ kill_gearmand() {
 }
 
 WHO=$( whoami )
+__init_hook $0 $1 pre
 case "$1" in
     start)
         printf '%s' "Starting $NAME..."
@@ -90,10 +89,10 @@ case "$1" in
             exit 1;
         fi
 
-        # gearman opens lot of connections, so increase default ulimit
-        ulimit -n 2048 >/dev/null 2>&1
+        # gearman opens lot of connections, so increase default ulimit to our hard limit
+        ulimit -n $(ulimit -Hn) >/dev/null 2>&1
 
-        CMD="$DAEMON --port=$PORT --pid-file=$PIDFILE $OPTIONS --log-file=$LOGFILE --verbose=$LOGLEVEL --listen=$LISTEN"
+        CMD="$DAEMON --port=$PORT --pid-file=$PIDFILE $OPTIONS --log-file=$LOGFILE --verbose=$LOGLEVEL ${LISTEN:+--listen=$LISTEN}"
         if [ "$WHO" = "root" ]; then
             # try to exec commands as user
             su - $USER -c /bin/true
@@ -107,6 +106,7 @@ case "$1" in
         fi
         if [ $? -eq 0 ]; then
             echo "OK"
+            __init_hook $0 $1 post
             exit 0;
         else
             echo "failed"
@@ -119,26 +119,26 @@ case "$1" in
         if [ -z "$pid" ]; then
             echo ". Not running."
         else
+            kill -TERM $pid
             # do a shutdown
-            if [ ! -z $NC ]; then
-                echo "shutdown" | $NC -w 1 $LISTEN $PORT > /dev/null
-                x=$( expr $SHUTDOWN_TIME \* 10 )
-                while [ $x -gt 0 ]; do
-                    [ $((x%5)) -eq 0 ] && printf "."
-                    ps -p $pid > /dev/null 2>&1 && sleep 0.1 || x=0;
-                    x=$( expr $x - 1 )
-                done
+            x=$( expr $SHUTDOWN_TIME \* 10 )
+            while [ $x -gt 0 ]; do
+                [ $((x%5)) -eq 0 ] && printf "."
+                ps -p $pid > /dev/null 2>&1 && sleep 0.1 || x=0;
+                x=$( expr $x - 1 )
+            done
 
-                if ! ps -p $pid > /dev/null 2>&1 ; then
-                    echo "OK"
-                    exit 0;
-                else
-                    echo "failed"
-                fi
+            if ! ps -p $pid > /dev/null 2>&1 ; then
+                __init_hook $0 $1 post
+                echo "OK"
+                exit 0;
+            else
+                echo "failed"
             fi
 
             # kill if still running
             ps -p $pid > /dev/null 2>&1 && kill_gearmand;
+            __init_hook $0 $1 post
         fi
         ;;
     kill)

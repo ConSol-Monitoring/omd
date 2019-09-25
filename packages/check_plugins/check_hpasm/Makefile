@@ -1,7 +1,7 @@
 include ../../../Makefile.omd
 
 NAME = check_hpasm
-VERSION = 4.7.5.5
+VERSION = 4.8
 DIR = $(NAME)-$(VERSION)
 
 .PHONY: skel
@@ -14,8 +14,8 @@ build:
 	$(MAKE) -C $(DIR)
 
 install:
-	[ -d $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins ] || mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins
-	install -m 755 $(DIR)/plugins-scripts/check_hpasm $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/monitoring-plugins
+	install -m 755 $(DIR)/plugins-scripts/check_hpasm $(DESTDIR)$(OMD_ROOT)/lib/monitoring-plugins
 
 skel:
 

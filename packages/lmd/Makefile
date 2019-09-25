@@ -6,7 +6,7 @@ NAME        = lmd
 VERSION     = master
 BRANCH      = master
 SRC         = $(NAME)-$(VERSION).tar.gz
-GOPKG       = 1.9
+GOPKG       = 1.12
 GOVERSION   = $(shell grep ^VERSION ../go-${GOPKG}/Makefile | awk '{ print $$3 }')
 GOPATH      = go
 PWD         = $(shell pwd)
@@ -14,7 +14,7 @@ GITBASE     = github.com/sni
 GITURL      = $(GITBASE)/$(NAME)
 DEPS_SRC    = deps.tar.gz
 # GIT TAG is set automatically by "make upstream" or "make package"
-GIT_TAG     = v1.3.3
+GIT_TAG     = 2660cca
 
 .PHONY: skel
 

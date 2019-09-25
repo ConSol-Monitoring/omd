@@ -13,7 +13,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 1376 );
+plan( tests => 1001 );
 
 ##################################################
 # create our test site
@@ -25,7 +25,7 @@ my $service = "Dummy+Service";
 my $servicep= "Dummy Service";
 
 # create test host/service
-TestUtils::prepare_obj_config('t/data/omd/testconf1', '/omd/sites/'.$site.'/etc/nagios/conf.d', $site);
+TestUtils::prepare_obj_config('t/data/omd/testconf1', '/omd/sites/'.$site.'/etc/naemon/conf.d', $site);
 
 # decrease pnp interval
 TestUtils::test_command({ cmd => "/usr/bin/env sed -i -e 's/^perfdata_file_processing_interval = 15/perfdata_file_processing_interval = 2/g' -e 's/^sleep_time = 15/sleep_time = 2/g' /opt/omd/sites/$site/etc/pnp4nagios/npcd.cfg" });
@@ -39,6 +39,10 @@ push @INC, '/omd/sites/'.$site.'/share/thruk/lib';
 use_ok('Thruk::Utils::Cache');
 use_ok('Thruk::Config');
 set_test_user_token();
+
+##################################################
+# test examples
+TestUtils::test_command({ cmd => "/bin/su - $site -c './share/thruk/examples/get_logs -n ./var/naemon/naemon.log'", like => '/^$/' });
 
 
 my $reports = [
@@ -63,19 +67,24 @@ my $reports = [
 ##################################################
 # define some checks
 my $tests = [
-  { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -t 60 -H localhost -a omdadmin:omd -u /$site/thruk/side.html -e 200'", like => '/HTTP OK:/' },
-  { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -t 20 -H localhost -u /$site/thruk -e 401'",                    like => '/HTTP OK:/' },
-  { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -t 60 -H localhost -a omdadmin:omd -u /$site/thruk -e 301'",    like => '/HTTP OK:/' },
-  { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -t 60 -H localhost -a omdadmin:omd -u /$site/thruk/ -e 200'",   like => '/HTTP OK:/' },
-  { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -t 20 -H localhost -a omdadmin:omd -u \"/$site/thruk/cgi-bin/status.cgi?hostgroup=all&style=hostdetail\" -e 200 -r \"Host Status Details For All Host Groups\"'", like => '/HTTP OK:/' },
-  { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -t 20 -H localhost -a omdadmin:omd -u \"/$site/thruk/cgi-bin/tac.cgi\" -e 200 -r \"Logged in as <i>omdadmin<\/i>\"'", like => '/HTTP OK:/' },
+  { cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_http -t 60 -H localhost -a omdadmin:omd -u /$site/thruk/side.html -e 200'", like => '/HTTP OK:/' },
+  { cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_http -t 20 -H localhost -u /$site/thruk -e 401'",                    like => '/HTTP OK:/' },
+  { cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_http -t 60 -H localhost -a omdadmin:omd -u /$site/thruk -e 301'",    like => '/HTTP OK:/' },
+  { cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_http -t 60 -H localhost -a omdadmin:omd -u /$site/thruk/ -e 200'",   like => '/HTTP OK:/' },
+  { cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_http -t 20 -H localhost -a omdadmin:omd -u \"/$site/thruk/cgi-bin/status.cgi?hostgroup=all&style=hostdetail\" -e 200 -r \"Host Status Details For All Host Groups\"'", like => '/HTTP OK:/' },
+  { cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_http -t 20 -H localhost -a omdadmin:omd -u \"/$site/thruk/cgi-bin/tac.cgi\" -e 200 -r \"Logged in as <i>omdadmin<\/i>\"'", like => '/HTTP OK:/' },
   { cmd => "/bin/su - $site -c './bin/thruk -l'", like => "/$site/" },
   { cmd => "/bin/su - $site -c './bin/thruk -l --local'", like => "/$site/" },
-  { cmd => "/bin/su - $site -c './bin/naglint ./etc/nagios/conf.d/commands.cfg'", like => "/check_local_load/" },
+  { cmd => "/bin/su - $site -c './bin/thruk r -d \"\" /hosts/$host/cmd/schedule_forced_host_check'", like => ["/SCHEDULE_FORCED_HOST_CHECK/", "/Command successfully submitted/"] },
+  { cmd => "/bin/su - $site -c './bin/naglint ./etc/naemon/conf.d/commands.cfg'", like => "/check_local_load/" },
 ];
 
 my $own_tests = [
   { cmd => "/bin/su - $site -c './etc/init.d/thruk restart'", like => '/\([\d\ ]+\)\ OK/' },
+];
+
+my $naemon_tests = [
+  { cmd => "/bin/su - $site -c './bin/thruk r -d \"comment_data=test\" -d \"triggered_by=test\" /hosts/$host/cmd/schedule_host_downtime'", like => ["/400: Couldn't parse ulong argument trigger_id/", "/sending command failed:/"], exit => 3 },
 ];
 
 for my $report (@{$reports}) {
@@ -188,7 +197,8 @@ my $own_urls = [
 ];
 
 my $cookie_urls = [
-  { url => '/thruk/cgi-bin/tac.cgi', like => '/Password/', unlike => [ '/internal server error/'] },
+  { url => '/thruk/cgi-bin/login.cgi?logout', like => '/Password/', unlike => [ '/internal server error/'], code => 401 },
+  { url => '/thruk/cgi-bin/tac.cgi', like => '/Password/', unlike => [ '/internal server error/'], code => 401 },
 ];
 
 
@@ -202,7 +212,7 @@ for my $url ( @{$urls}, @{$own_urls}, @{$cookie_urls} ) {
     }
 }
 
-for my $core (qw/nagios naemon/) {
+for my $core (qw/naemon/) {
     ##################################################
     # run our tests
     TestUtils::test_command({ cmd => $omd_bin." stop $site" });
@@ -220,6 +230,11 @@ for my $core (qw/nagios naemon/) {
 
     for my $test (@{$tests}) {
         TestUtils::test_command($test);
+    }
+    if($core eq 'naemon') {
+        for my $test (@{$naemon_tests}) {
+            TestUtils::test_command($test);
+        }
     }
     for my $test (@{$own_tests}) {
         TestUtils::test_command($test);
@@ -242,12 +257,21 @@ for my $core (qw/nagios naemon/) {
     unlink($tlog);
 }
 
+# make sure we got the naemon core now
+TestUtils::test_command({ cmd => $omd_bin." config $site show CORE", like => "/naemon/" });
+
 ##################################################
 # lmd
 TestUtils::test_command({ cmd => "/usr/bin/env sed -i -e 's/^#use_lmd_core=1/use_lmd_core=1/g' -e 's/^#lmd/lmd/g' /opt/omd/sites/$site/etc/thruk/thruk_local.d/lmd.conf" });
 TestUtils::test_command({ cmd => $omd_bin." restart $site thruk", like => '/OK/' });
 for my $url ( @{$urls} ) {
     TestUtils::test_url($url);
+}
+for my $test (@{$tests}) {
+    TestUtils::test_command($test);
+}
+for my $test (@{$naemon_tests}) {
+    TestUtils::test_command($test);
 }
 is(-S "/omd/sites/$site/tmp/thruk/lmd/live.sock", 1, "lmd socket exists");
 my $log  = "/omd/sites/$site/tmp/thruk/lmd/lmd.log";
@@ -261,7 +285,7 @@ unlink($tlog);
 ##################################################
 # enable cookie auth
 TestUtils::test_command({ cmd => $omd_bin." stop $site" });
-TestUtils::test_command({ cmd => $omd_bin." config $site set CORE nagios" });
+TestUtils::test_command({ cmd => $omd_bin." config $site set CORE naemon" });
 TestUtils::test_command({ cmd => $omd_bin." config $site set APACHE_MODE own" });
 TestUtils::test_command({ cmd => $omd_bin." config $site set THRUK_COOKIE_AUTH on" });
 unlink("/omd/sites/$site/tmp/run/live");
@@ -272,8 +296,14 @@ TestUtils::test_command({ cmd => $omd_bin." start $site thruk", like => '/OK/' }
 sleep(3);
 TestUtils::test_command({ cmd => $omd_bin." status $site apache", like => '/running/' });
 for my $url ( @{$cookie_urls} ) {
+    delete $url->{'auth'};
     TestUtils::test_url($url);
 }
+
+##################################################
+# other tools
+TestUtils::test_command({ cmd => "/bin/su - $site -c './lib/monitoring-plugins/check_thruk_rest /hosts/totals'", like => '/total/'});
+TestUtils::test_command({ cmd => "/bin/su - $site -c './share/thruk/support/convert_old_datafile.pl'", like => '/^$/', errlike => '/usage:/', exit => 3});
 
 ##################################################
 # cleanup test site

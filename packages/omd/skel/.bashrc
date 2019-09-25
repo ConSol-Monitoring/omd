@@ -47,4 +47,9 @@ if [ "$PS1" ]; then
   if [ -f /etc/bash_completion ] || [ -d /etc/bash_completion.d ]; then
     for file in ~/etc/bash_completion.d/*; do . $file; done
   fi
+
+  if test -e ~/etc/htpasswd && grep "^omdadmin:M29dfyFjgy5iA" ~/etc/htpasswd >/dev/null 2>&1 && ! grep APACHE_MODE.*none ~/etc/omd/site.conf >/dev/null 2>&1; then
+    echo "*** WARNING: you are using the default omdadmin password in ~/etc/htpasswd" >&2
+    echo "*** you can change that by running: set_admin_password" >&2
+  fi
 fi

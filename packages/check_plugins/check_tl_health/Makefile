@@ -1,7 +1,7 @@
 include ../../../Makefile.omd
 
 NAME = check_tl_health
-VERSION = 1.5.0.4
+VERSION = 1.6
 DIR = $(NAME)-$(VERSION)
 
 .PHONY: skel
@@ -14,8 +14,8 @@ build:
 	$(MAKE) -C $(DIR)
 
 install:
-	[ -d $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins ] || mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins
-	install -m 755 $(DIR)/plugins-scripts/check_tl_health $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/monitoring-plugins
+	install -m 755 $(DIR)/plugins-scripts/check_tl_health $(DESTDIR)$(OMD_ROOT)/lib/monitoring-plugins
 
 skel:
 

@@ -36,6 +36,7 @@ oradiag_*/
 .cache/
 .selected_editor
 *.orig
+./core*
 etc/nagvis/conf.d/urls.ini.php
 
 # Append your own ignores after this comment to avoid conflicts

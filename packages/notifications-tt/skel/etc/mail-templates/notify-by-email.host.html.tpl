@@ -29,13 +29,14 @@ Content-Transfer-Encoding: 7bit
 ----------------------------------
 - Author:      [% ACKAUTHOR %]
 - Comment:     [% ACKCOMMENT %]
-[% END %]
 ----------------------------------
-[% IF NOTIFICATIONCOMMENT %]
+[% ELSIF NOTIFICATIONCOMMENT %]
+----------------------------------
 - Comment:     [% NOTIFICATIONCOMMENT %]
 ----------------------------------
+[% ELSE %]
+----------------------------------
 [% END %]
-
 
 
 ------=_alternative_mail
@@ -119,8 +120,7 @@ a:hover {
 [% IF NOTIFICATIONTYPE == 'ACKNOWLEDGEMENT' %]
   <tr><td>Author:</td><td>[% ACKAUTHOR %]</td></tr>
   <tr><td>Comment:</td><td>[% ACKCOMMENT %]</td></tr>
-[% END %]
-[% IF NOTIFICATIONCOMMENT %]
+[% ELSIF NOTIFICATIONCOMMENT %]
   <tr><td>Comment:</td><td>[% NOTIFICATIONCOMMENT %]</td></tr>
 [% END %]
 [% TRY; graphimg = PERL %]

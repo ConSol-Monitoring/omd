@@ -12,7 +12,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 318 );
+plan( tests => 360 );
 
 my $omd_bin = TestUtils::get_omd_bin();
 
@@ -32,6 +32,9 @@ my $tests = [
   { cmd => $omd_bin." rm $site2",    stdin => "yes\n", 'exit' => undef, errlike => undef },
   { cmd => $omd_bin." rm $site2",    stdin => "yes\n", 'exit' => undef, errlike => undef },
   { cmd => $omd_bin." create $site", like => '/Created new site '.$site.'./' },
+  { cmd => "/bin/su - $site -c 'omd reset etc/htpasswd'", like => '/^$/' },
+  { cmd => "/bin/su - $site -c 'test -h etc/nagios/conf.d'", like => '/^$/' },
+  { cmd => "/bin/su - $site -c 'test -d etc/naemon/conf.d'", like => '/^$/' },
   { cmd => $omd_bin." sites",        like => '/^'.$site.'\s+\d+\.\d+( \(default\))?/m' },
   { cmd => $omd_bin." config $site show APACHE_TCP_PORT",  like => '/^5000$/' },
   { cmd => $omd_bin." config $site set APACHE_TCP_ADDR 127.0.0.2",  like => '/^$/' },
@@ -67,6 +70,7 @@ my $tests = [
   { cmd => $omd_bin." rm $site",         like => '/Restarting Apache...\s*OK/', stdin => "yes\n" },
   { cmd => $omd_bin." create -u 7017 -g 7018 $site",
                                          like => '/Created new site '.$site.'./' },
+  { cmd => "/bin/su - $site -c 'omd reset etc/htpasswd'", like => '/^$/' },
   { cmd => "/usr/bin/id -u $site",       like => '/7017/' },
   { cmd => "/usr/bin/id -g $site",       like => '/7018/' },
   { cmd => $omd_bin." cp -u 7019 -g 7020 $site $site2",
@@ -82,6 +86,7 @@ my $tests = [
 
   # --reuse
   { cmd => $omd_bin." create $site", like => '/Created new site '.$site.'./' },
+  { cmd => "/bin/su - $site -c 'omd reset etc/htpasswd'", like => '/^$/' },
   { cmd => $omd_bin." rm --reuse $site", stdin => "yes\n" },
   { cmd => "/usr/bin/id -u $site",       like => '/\d+/' },
   { cmd => "/usr/bin/id -g $site",       like => '/\d+/' },
@@ -101,17 +106,23 @@ my $tests = [
   # --restore
   { cmd => $omd_bin." restore /tmp/omd.backup.tgz", like => '/Restoring site testsite from /' },
   { cmd => "/bin/su - $site -c 'omd -f restore /tmp/omd.backup.tgz'", like => '/Restore completed/' },
+  { cmd => "/bin/su - $site -c 'find . -user root -ls'", like => '/^$/' },
 
   # --reset
   { cmd => "/bin/sh -c \"echo '# test newline in profile' >> /omd/sites/$site/.profile\""},
-  { cmd => "/bin/sh -c \"rm /omd/sites/$site/etc/icinga/conf.d\""},
-  { cmd => "/bin/su - $site -c 'omd diff'", like => ['/Changed content .profile/', '/Deleted etc\/icinga\/conf.d/'] },
-  { cmd => "/bin/su - $site -c 'omd reset .profile etc/icinga/conf.d'"  },
+  { cmd => "/bin/sh -c \"rm -rf /omd/sites/$site/etc/rc.d/80-naemon\""},
+  { cmd => "/bin/su - $site -c 'omd diff'", like => ['/Changed content .profile/', '/Deleted etc\/rc\.d/80\-naemon/'] },
+  { cmd => "/bin/su - $site -c 'omd reset .profile etc/rc.d/80-naemon'"  },
+  { cmd => "/bin/su - $site -c 'omd reset etc/htpasswd'", like => '/^$/' },
   { cmd => "/bin/su - $site -c 'omd -v diff'", like => ['/^$/'] },
-  { cmd => "/bin/sh -c \"rm /omd/sites/$site/etc/icinga/*.cfg\""},
-  { cmd => "/bin/sh -c \"rm /omd/sites/$site/etc/icinga/conf.d\""},
-  { cmd => "/bin/su - $site -c 'omd diff'", like => ['/Deleted etc\/icinga/cgi.cfg/', '/Deleted etc\/icinga\/conf.d/'] },
+  { cmd => "/bin/sh -c \"rm /omd/sites/$site/etc/thruk/*.cfg\""},
+  { cmd => "/bin/sh -c \"rm -rf /omd/sites/$site/etc/naemon\""},
+  { cmd => "/bin/su - $site -c 'omd diff'", like => ['/Deleted etc\/thruk/cgi.cfg/', '/Deleted etc\/naemon/'] },
   { cmd => "/bin/su - $site -c 'omd reset etc/'"  },
+  { cmd => "/bin/su - $site -c 'omd diff'", like => ['/^$/'] },
+  { cmd => "/bin/sh -c \"rm -rf /omd/sites/$site/etc/naemon/conf.d\""},
+  { cmd => "/bin/su - $site -c 'omd diff'", like => ['/Deleted etc\/naemon\/conf\.d/'] },
+  { cmd => "/bin/su - $site -c 'omd reset etc/naemon/conf.d'"  },
   { cmd => "/bin/su - $site -c 'omd diff'", like => ['/^$/'] },
 
   # parallel mode
@@ -133,12 +144,12 @@ TestUtils::test_command({ cmd => "/bin/sh -c 'echo \"APACHE_MODE=ssl\nWEB_REDIRE
 TestUtils::restart_system_apache();
 
 # WEB_REDIRECT
-TestUtils::test_command({ cmd => "/omd/sites/$site/lib/nagios/plugins/check_http    -t 60 -H localhost -u '/' -s 'http://localhost/$site/'", like => '/HTTP OK:/' });
-TestUtils::test_command({ cmd => "/omd/sites/$site/lib/nagios/plugins/check_http -S -t 60 -H localhost -u '/' -s 'https://localhost/$site/'", like => '/HTTP OK:/' });
-TestUtils::test_command({ cmd => "/omd/sites/$site/lib/nagios/plugins/check_http    -t 60 -H localhost -u '/$site' -s 'http://localhost/sitealias'", like => '/HTTP OK:/' });
-TestUtils::test_command({ cmd => "/omd/sites/$site/lib/nagios/plugins/check_http -S -t 60 -H localhost -u '/$site' -s 'https://localhost/sitealias'", like => '/HTTP OK:/' });
-TestUtils::test_command({ cmd => "/omd/sites/$site/lib/nagios/plugins/check_http    -t 60 -H localhost -u '/' -f follow -s 'login.cgi'", like => '/HTTP OK:/' });
-TestUtils::test_command({ cmd => "/omd/sites/$site/lib/nagios/plugins/check_http -S -t 60 -H localhost -u '/' -f follow -s 'login.cgi'", like => '/HTTP OK:/' });
+TestUtils::test_command({ cmd => "/omd/sites/$site/lib/monitoring-plugins/check_http    -t 60 -H localhost -u '/' -s 'http://localhost/$site/'", like => '/HTTP OK:/' });
+TestUtils::test_command({ cmd => "/omd/sites/$site/lib/monitoring-plugins/check_http -S -t 60 -H localhost -u '/' -s 'https://localhost/$site/'", like => '/HTTP OK:/' });
+TestUtils::test_command({ cmd => "/omd/sites/$site/lib/monitoring-plugins/check_http    -t 60 -H localhost -u '/$site' -s 'http://localhost/sitealias'", like => '/HTTP OK:/' });
+TestUtils::test_command({ cmd => "/omd/sites/$site/lib/monitoring-plugins/check_http -S -t 60 -H localhost -u '/$site' -s 'https://localhost/sitealias'", like => '/HTTP OK:/' });
+TestUtils::test_command({ cmd => "/omd/sites/$site/lib/monitoring-plugins/check_http    -t 60 -H localhost -u '/' -f follow -s 'login.cgi'", like => '/HTTP WARN/', exit => 1 });
+TestUtils::test_command({ cmd => "/omd/sites/$site/lib/monitoring-plugins/check_http -S -t 60 -H localhost -u '/' -f follow -s 'login.cgi'", like => '/HTTP WARN/', exit => 1 });
 
 # bulk config change II
 TestUtils::test_command({ cmd => "/bin/sh -c 'echo \"APACHE_MODE=none\nAUTOSTART=off\" | omd config $site change'", like => ['/Stopping dedicated Apache/', '/Stopping naemon/', '/Starting naemon/'] });

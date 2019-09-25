@@ -13,7 +13,7 @@ BEGIN {
 }
 
 plan skip_all => "icinga2 not included, cannot test" unless -x '/omd/versions/default/bin/icinga2';
-plan( tests => 64 );
+plan( tests => 70 );
 
 ##################################################
 # create our test site
@@ -30,9 +30,7 @@ my $tests = [
   { cmd => $omd_bin." start $site" },
   { cmd => "/bin/su - $site -c './etc/init.d/icinga2 status'",     like => '/Running \(\d+\)/' },
 
-  { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -H localhost -u /$site/icinga -e 401'",                  like => '/HTTP OK:/' },
-  { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -H localhost -a omdadmin:omd -u /$site/icinga -e 301'",  like => '/HTTP OK:/' },
-  { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -H localhost -a omdadmin:omd -u /$site/icinga/ -e 200'", like => '/HTTP OK:/' },
+  { cmd => "/bin/su - $site -c 'echo -e \"".'GET status\nColumns: program_start program_version\n'."\" | lq'", like => ['/\d+/', '/;r2\./'] },
 
   { cmd => $omd_bin." stop $site" },
 
@@ -41,6 +39,10 @@ my $tests = [
   { cmd => $omd_bin." start $site", like => '/creating initial ido database/' },
   { cmd => "/bin/su - $site -c 'echo \"select process_id from icinga_programstatus\" | mysql icinga'", like => ['/\d+/', '/process_id/'], waitfor => '\d+' },
   { cmd => "/bin/su - $site -c 'test -f share/icinga2-ido-pgsql/schema/pgsql.sql'", like => ['/^$/'] },
+
+  { cmd => "/bin/su - $site -c 'icinga2 feature list'", like => ['/livestatus/', '/Enabled features:/'] },
+  { cmd => "/bin/su - $site -c 'icinga2 feature enable debuglog'", like => ['/Enabling feature debuglog/'] },
+  { cmd => "/bin/su - $site -c 'icinga2 feature disable debuglog'", like => ['/Disabling feature debuglog./'] },
 
   { cmd => $omd_bin." stop $site" },
 ];

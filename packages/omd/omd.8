@@ -68,29 +68,6 @@ This mainly updates the symlink \fB/omd/versions/default\fP. On debian based dis
 it calls update-alternatives to change the default versions. In this case there is a special
 option \fBauto\fP available to let update-alternatives choose the default OMD version.
 .TP
-.B omd setup
-Prepare operating system for OMD. This includes installing all software
-packages from your linux distribution that the components of OMD need
-to run properly. You need to make sure that a package installation via
-aptitude/zypper/yum is possible.
-
-After installing missing packages a group \fBomd\fP will be created,
-some Apache modules will be activated, the init script \fB/etc/init.d/omd\fP
-will be activated and the SUID bits for some Nagios plugins will be
-correctly configured (for the group omd).
-
-\fBNote:\fP If you have installed OMD via RPM or DEB and have installed
-all packages the omd package depends on, no \fBomd setup\fP is neccessary.
-.TP
-.B omd uninstall
-This deletes all software and data of OMD and its sites. That command is mainly used
-for trying out OMD or testing the installation of OMD. Be aware that
-all your monitoring configuration and data will be lost!
-
-Note: Do not use \fBomd uninstall\fP if you've installed omd via RPM or DEB.
-Better remove all sites via by using \fBomd rm\fP and remove the RPM/DEB
-package afterwards.
-.TP
 .B omd sites [--bare, -b]
 Show a list of all sites and the version of OMD each site uses. If you specify
 the option \fB-b\fP or \fB--bare\fP, then the output leaves out hints to the
@@ -121,6 +98,11 @@ The following options can be used:
 the system Apache (/omd/apache/SITE.conf will be empty).
 
 \fB--apache-reload\fP Issue a reaload of the apache process instead of the default restart
+
+\fB--no-tmpfs\fP Use this to set the omd config option TMPFS to off during site creation.
+This may be useful when sites are set-up where the use of temporary filesystems is not
+possible. However, it is still highly recommended to use a tmpfs for the sites \fBtmp\fP
+directory for best performance.
 
 \fB-t SIZE\fP By default the tmpfs of the site is created to allocate 50% of
 the available RAM at max. When providing the \fB-t\fP option together with the SIZE
@@ -448,6 +430,16 @@ section about \fBomd update\fP for details.
 the available RAM at max. When providing the \fB-t\fP option together with the SIZE
 given as absolute value of e.g. \fB500M\fP or percentage value like \fB10%\fP the
 maximum size of the tmpfs can be changed.
+.TP
+.B omd cleanup
+This removes all OMD versions that are currently not used by any site. All
+installed versions are checked for the number of sites that use this version. The
+versions without sites will be removed by deinstalling the RPM/DEB package of this
+version.
+
+Note: The whole version directory \fB/omd/version/[version]\fP will be removed. Even
+when there are files left after deinstallation of the RPM/DEB package. OMD will cleanup
+the whole directory tree.
 
 .SH SEE ALSO
 .BR https://labs.consol.de/omd

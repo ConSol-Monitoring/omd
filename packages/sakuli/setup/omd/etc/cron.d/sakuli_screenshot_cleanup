@@ -1,0 +1,2 @@
+MAILTO=""
+0 1 * * * $OMD_ROOT/local/bin/sakuli_screenshot_cleanup.sh

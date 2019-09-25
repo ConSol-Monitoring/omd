@@ -2,30 +2,134 @@ This file documents the revision history for the Open Monitoring Distribution (L
 
 next:
           - OMD:
+            - omd cleanup will keep current default version installed
+            - add build support for Fedora 30
+            - add build support for Ubuntu 19.04 Disco
+          - Naemon:
+            - update core to 1.1.0
+            - update livestatus to 1.1.0
+          - Grafana update to 6.3.5
+          - Prometheus:
+            - Prometheus update to 2.11.1
+            - Alertmanager update to 0.18.0
+            - node_exporter update to 0.18.1
+            - blackbox_exporter update to 0.15.0
+          - Mod-Gearman update 3.1.0
+          - LMD: Update 1.6.0
+          - Gearmand: update 1.1.18
+
+3.10     May 16 2019
+          - Thruk: update to 2.30-2
+          - Grafana update to 6.1.6
+          - Prometheus update to 2.9.2:
+            - Alertmanager update to 0.17.0
+            - Pushgateway update to 0.8.0
+            - blackbox_exporter update to 0.14.0
+            - Add Thanos download script for version 0.4.0
+          - InfluxDB: update to 1.7.6
+          - Go updated to 1.12.5
+          - Mod-Gearman update 3.0.9
+          - python modules: added decorator and jsonpath-ng
+          - Ansible 2.7.10
+          - check_nsc_web: update to 0.5.3
+
+
+3.00     Apr 01 2019
+          - DEPRECATION WARNING: the following components got removed, read more on https://labs.consol.de/omd/migration_3.html
+            - Nagios 3
+            - Icinga 1
+            - CheckMK
+            - Nagvis
+          - OMD:
+            - removed icinga1
+            - removed nagvis
+            - removed check_mk
+            - removed dataScryer
+            - removed nagios3
+          - Naemon:
+            - update core to 1.0.10
+            - update livestatus to 1.0.10
+          - Thruk: update to 2.28
+          - Mod-Gearman:
+            - update mod-gearman-worker-go to 1.1.1
+            - update 3.0.8
+          - LMD: Update 1.5.0
+          - check_nsc_web: update to 0.5.2
+          - Ansible 2.7.9
+          - Prometheus: update to 2.8.1
+            - Alertmanager update to 0.16.1
+            - Thanos update to 0.3.1
+          - Grafana update to 6.0.2
+          - InfluxDB: update to 1.7.3
+          - Go updated to 1.11.6
+            - Add Go 1.12.1
+
+
+2.90     Dec 19 2018
+          - OMD:
+            - create random omdadmin password on omd create
+            - display warning if using the old default password
+            - add build support for Ubuntu 18.10 Cosmic
+            - add build support for Fedora 29
+          - Thruk:
+            - update to 2.26-2
+            - migrate cgi.cfg to etc/thruk
+          - Grafana update to 5.4.2
+          - Prometheus update to 2.6.0
+          - Prometheus Alertmanager update to 0.15.3
+          - Prometheus node_exporter update to 0.17.0
+          - Prometheus Pushgateway update to 0.7.0
+          - Prometheus blackbox_exporter update to 0.13.0
+          - Go updated to 1.11.4
+          - Mod-Gearman:
+            - update 3.0.7
+            - switch to go worker
+            - update mod-gearman-worker-go to 1.0.7
+            - reduce log entries when gearmand hits open file limit
+          - LMD: Update 1.3.7
+          - Naemon:
+            - update core to 1.0.9
+            - update livestatus to 1.0.9
+            - add simple query handler client: nq
+          - Icinga:
+            - remove cgis
+          - InfluxDB: update to 1.7.2
+
+2.80     Oct 29 2018
+          - OMD:
             - add SELinux support for centos/rhel and fedora
             - add build support for Ubuntu 18.04 Bionic
             - add build support for Fedora 28
             - add WEB_ALIAS hook to define an url alias
             - add WEB_REDIRECT hook to enable redirect from / to /sitename
+            - support uninstalling versions, even if sites use this version
+              - site can be updated later by running omd update of the new version
+            - add --no-tmpfs option to "omd create"
+            - add "omd cleanup" command to remove unused omd versions
           - Naemon update to 1.0.8
-          - InfluxDB: update to 1.5.4
+          - InfluxDB: update to 1.6.4
             - add INFLUXDB_MODE hook to support ssl
           - Go update to 1.9.7
-          - Go update to 1.10.3
-          - Grafana update to 5.2.4
+          - Go update to 1.10.4
+          - Grafana update to 5.3.2
             - set default fill to none for influxdb datasource
-          - Prometheus update to 2.3.2
+            - new datasource for PNP
+            - new datasource for Thruks REST API
+          - Prometheus update to 2.4.3
           - Prometheus Pushgateway update to 0.5.2
           - Prometheus node_exporter update to 0.16.0
           - Prometheus Alertmanager update to 0.15.2
-          - Icinga2 update to 2.8.4
+          - Icinga2 update to 2.9.2
             - add ido features (experimental)
             - add ido omd config hook (experimental)
           - Thruk:
-            - update to 2.22
+            - update to 2.24
             - disable shinken features plugin in default installation
-          - LMD: Update 1.3.3
+          - LMD: Update 1.3.5
           - Mod-Gearman: Update 3.0.6
+            - add mod-gearman-worker-go
+          - Monitoring-Plugins
+            - add check_curl
 
 2.70     Mar 14 2018
           - OMD:

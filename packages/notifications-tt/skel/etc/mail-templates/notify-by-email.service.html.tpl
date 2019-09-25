@@ -31,13 +31,14 @@ Content-Transfer-Encoding: 7bit
 ----------------------------------
 - Author:      [% ACKAUTHOR %]
 - Comment:     [% ACKCOMMENT %]
-[% END %]
 ----------------------------------
-[% IF NOTIFICATIONCOMMENT %]
+[% ELSIF NOTIFICATIONCOMMENT %]
+----------------------------------
 - Comment:     [% NOTIFICATIONCOMMENT %]
 ----------------------------------
+[% ELSE %]
+----------------------------------
 [% END %]
-
 
 
 ------=_alternative_mail

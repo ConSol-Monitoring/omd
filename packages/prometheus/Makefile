@@ -3,10 +3,10 @@ include ../../Makefile.omd
 .PHONY: skel
 
 NAME       = prometheus
-VERSION    = 2.3.2
+VERSION    = 2.11.1
 BRANCH     = master
 SRC        = $(NAME)-$(VERSION).tar.gz
-GOPKG      = 1.10
+GOPKG      = 1.12
 GOVERSION  = $(shell grep ^VERSION ../go-${GOPKG}/Makefile | awk '{ print $$3 }')
 PWD        = $(shell pwd)
 GOFOLDER   = go

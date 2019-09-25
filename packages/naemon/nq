@@ -1,0 +1,52 @@
+#!/usr/bin/perl
+
+use warnings;
+use strict;
+use Term::ReadLine;
+use IO::Socket;
+use IO::Select;
+
+if($ARGV[0] && $ARGV[0] =~ /^\-+(h|help)$/mx) {
+  print "Naemon Query Handler Client\n";
+  print "Usage:\n";
+  print "$0 [<path to naemon.qh>]\n";
+  exit 1;
+}
+
+my $history = glob('~/.nq_history');
+my $term    = Term::ReadLine->new('naemon query handler');
+$term->read_history($history) if -s $history && $term->Features->{'readHistory'};
+my $prompt  = "naemon qh %> ";
+my $OUT     = $term->OUT || \*STDOUT;
+my $s       = IO::Select->new();
+$s->add(\*STDIN);
+if ($s->can_read(.1)) {
+  chomp(my $in = <STDIN>);
+  _send($in);
+  exit;
+}
+
+while(defined ($_ = $term->readline($prompt))) {
+  $term->addhistory($_) if $_ =~ /\S/mx;
+  $term->write_history($history) if $term->Features->{'writeHistory'};
+  _send($_);
+}
+print "\n";
+
+sub _send {
+  my($in) = @_;
+  my $client = _open();
+  print $client $in,chr(0);
+  while(chomp(my $res = <$client>)) {
+    print $OUT $res, "\n";
+  }
+  close($client);
+}
+
+sub _open {
+  my $client = IO::Socket::UNIX->new(
+    Type => SOCK_STREAM(),
+    Peer => ($ARGV[0] || 'var/naemon/naemon.qh'),
+  ) or die "Could not connect: $!";
+  return($client);
+}

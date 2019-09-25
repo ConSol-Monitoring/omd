@@ -287,6 +287,7 @@ if ($Pocet>1){
   curl_setopt($ch, CURLOPT_HEADER, 1);
   curl_setopt($ch, CURLOPT_USERAGENT, $Agent );
   curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, $Timeout);
+  curl_setopt($ch, CURLOPT_TIMEOUT, $Timeout);
 // Maybe cert path has to be configurable sometimes
 //  curl_setopt($ch, CURLOPT_CAPATH, "/etc/pki/tls/certs");
 //  curl_setopt($ch, CURLOPT_CAINFO, "ca-bundle.crt");

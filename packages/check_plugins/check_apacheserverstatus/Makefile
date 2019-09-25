@@ -13,8 +13,8 @@ build:
 	#done
 
 install:
-	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins
-	install -m 755 ./build/check_apache_serverstatus.pl $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins/
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/monitoring-plugins
+	install -m 755 ./build/check_apache_serverstatus.pl $(DESTDIR)$(OMD_ROOT)/lib/monitoring-plugins/
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/pnp4nagios/htdocs/templates.dist
 	install -m 644 ./check_apache_serverstatus.php $(DESTDIR)$(OMD_ROOT)/share/pnp4nagios/htdocs/templates.dist
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/histou/templates/default/

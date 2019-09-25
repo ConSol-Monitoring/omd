@@ -5,10 +5,9 @@
 
 set -e
 
-NAGIOS_PLUGIN_PATH="/omd/versions/###OMD_VERSION###/lib/nagios/plugins"
+MONITORING_PLUGIN_PATH="/omd/versions/###OMD_VERSION###/lib/monitoring-plugins"
 SUID_PLUGINS="check_icmp check_dhcp"
 PROGRAM_PATH="/omd/versions/###OMD_VERSION###/bin"
-SUID_PROGRAMS="mkeventd_open514"
 APACHE_OMD_CONF="/etc/apache2/conf.d/zzz_omd.conf"
 
 # Source debconf library.
@@ -42,6 +41,7 @@ setperm() {
 case "$1" in
   configure)
     ln -sfn /opt/omd /omd
+    mkdir -p /etc/bash_completion.d
     update-alternatives --install /omd/versions/default \
        omd /omd/versions/###OMD_VERSION### ###OMD_SERIAL### \
        --slave /usr/bin/omd omd.bin /omd/versions/###OMD_VERSION###/bin/omd \
@@ -55,17 +55,9 @@ case "$1" in
       addgroup --system --force-badname omd > /dev/null
     fi
 
-    db_get omd/nagios-plugins-suid || true
-    if [ "$RET" = "true" ]; then
-      PLUGPERM="4754"
-    else
-      PLUGPERM="0755"
-    fi
+    PLUGPERM="4754"
     for PLUGIN in $SUID_PLUGINS; do
-      setperm root omd $PLUGPERM $NAGIOS_PLUGIN_PATH/$PLUGIN
-    done
-    for PROGRAM in $SUID_PROGRAMS; do
-      setperm root omd $PLUGPERM $PROGRAM_PATH/$PROGRAM
+      setperm root omd $PLUGPERM $MONITORING_PLUGIN_PATH/$PLUGIN
     done
 
     db_stop

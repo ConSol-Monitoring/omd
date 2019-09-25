@@ -14,11 +14,11 @@ if [ $? -eq 0 ]; then
   exit 0
 fi
 
-# if we are not on a exact tag, use the last tag and add the date
+# if we are not on a exact tag, use the current version and add the date
 # ex.: v0.43.20101018
 # "git describe --tag --abbrev=0 --always" does not work correctly with git versions < 1.7
 # see issue #198
-version=`git tag -l | sed -e 's/^v//g' | sort -n | tail -n 1 | sed -e 's/-labs-edition//g'`
+version=`grep OMD_VERSION Makefile.omd | head -n 1 | awk '{print $3}' |sed -e 's/-labs-edition//g'`
 if [ $? -eq 0 ]; then
   date=`date +%Y%m%d`
   major=`echo $version | cut -d . -f 1`
@@ -31,8 +31,15 @@ if [ $? -eq 0 ]; then
   fi
   version="$major.$minor"
 
+  # get current git branch
+  branch=$(git rev-parse --abbrev-ref HEAD)
+  if [[ ! $branch =~ labs|.*maint ]]; then
+    echo $version.$date-$branch | tr -d 'v'
+    exit 0
+  fi
+
   echo $version.$date-labs-edition | tr -d 'v'
-  exit 1
+  exit 0
 fi
 
 echo "unknown"

@@ -1,4 +1,4 @@
-#! /bin/sh
+#! /bin/bash
 
 REMUSER=
 REMPORT=22
@@ -25,8 +25,11 @@ LSPORT=6557
 # -l ${REMUSER} -H hostname/address -p 22
 # ->
 
-while getopts "l:H:p:c:m:s:Px" opt; do
+while getopts "dl:H:p:c:m:s:Px" opt; do
     case $opt in 
+    d)
+        DEBUG=1
+        ;;
     l)
         REMUSER=$OPTARG
         ;;
@@ -76,7 +79,6 @@ fi
 
 CMOPTS="-o ControlMaster=yes \
         -o UserKnownHostsFile=${CMDIR}/known_hosts \
-        -o IdentityFile=${HOME}/.ssh/id_rsa\
         -o IdentitiesOnly=yes \
         -o StrictHostKeyChecking=no \
         -o PreferredAuthentications=publickey \
@@ -84,7 +86,6 @@ CMOPTS="-o ControlMaster=yes \
 
 CMCOPTS="-o ControlMaster=no \
         -o UserKnownHostsFile=${CMDIR}/known_hosts \
-        -o IdentityFile=${HOME}/.ssh/id_rsa\
         -o IdentitiesOnly=yes \
         -o StrictHostKeyChecking=no \
         -o PreferredAuthentications=publickey \
@@ -97,7 +98,7 @@ CONTROLPATH=${CMDIR}/controlpath/ssh-${REMUSER}@${REMHOST}
 # check basic reachability
 #
 if [ -n "$REMPING" ]; then
-  pingout=$($OMD_ROOT/lib/nagios/plugins/check_host $REMHOSTADDR > /dev/null 2>&1)
+  pingout=$($OMD_ROOT/lib/monitoring-plugins/check_host $REMHOSTADDR > /dev/null 2>&1)
   if [ $? != 0 ]; then
       printf "CRITICAL - could not ping $REMHOST (%s)\n" "$pingout"
       exit 2
@@ -108,7 +109,7 @@ fi
 # check basic ssh connection
 #
 
-sshout=$($OMD_ROOT/lib/nagios/plugins/check_ssh -t15 -p$REMPORT $REMHOSTADDR > /dev/null 2>&1)
+sshout=$($OMD_ROOT/lib/monitoring-plugins/check_ssh -t15 -p$REMPORT $REMHOSTADDR > /dev/null 2>&1)
 if [ $? != 0 ]; then
     printf "CRITICAL - no basic ssh session available (%s)\n" "$sshout"
     exit 2
@@ -181,7 +182,7 @@ function responding() {
   local restart="n"
   # test if the connection is working
   home=$(remoteid "$host" "$port" "$user" "$sshopts" "$controlpath")
-  if [[ "$home" =~ .*mux_client_request_session.* ]]; then
+  if [[ "$home" =~ .*mux_client_request_session.*(session request|read from master)\s+failed ]]; then
     # ...session: session request failed: Session open refused by peer
     # maybe kill longrunning processes
     restart="n"
@@ -243,13 +244,13 @@ function killcm() {
   local restart="n"
   local pid=$(pidof "$host" "$port" "$user" "$sshopts" "$controlpath")
   if [ -n "$pid" ]; then
-    test -e $controlpath && mv $controlpath ${controlpath}old
+    test -e $controlpath && mv -f $controlpath ${controlpath}old
     kill -9 $pid
     sleep 1
     test $DEBUG && echo killcm $controlpath $pid >1 >&2
     echo "y killed"
   else
-    test -e $controlpath && mv $controlpath ${controlpath}old
+    test -e $controlpath && mv -f $controlpath ${controlpath}old
     echo "n nopid"
     test $DEBUG && echo killcm $controlpath nopid >1 >&2
   fi
@@ -321,8 +322,11 @@ do
       elif [ "$text" = "ConnectionTimeout" ]; then
         echo "remote sshd connection timed out"
         exit 2
+      elif [ "$text" = "MuxClientRequestSession" ]; then
+        #echo "controlmaster running"
+        :
       else
-        echo "controlmaster hangs"
+        echo "controlmaster hangs $text"
         exit 2
       fi
     else
@@ -331,7 +335,7 @@ do
   else
     # wenn info file juenger als 1 min ist, dann pruefen
     INFOAGE=$(($NOW - $(stat -c "%Y" ${CONTROLPATH}.info)))
-    if [ $INFOAGE -lt 60 ]; then
+    if [ $INFOAGE -lt 60 -o ! -f $CONTROLPATHX ]; then
       # only if the info file was renewed (after 1/2h) we check. otherwise we trust in stabiluity
       ret=$(responding "$REMHOSTADDR" "$REMPORT" "$REMUSER" "$CMCOPTS" "$CONTROLPATHX")
       mustrestart=${ret%% *}
@@ -360,7 +364,7 @@ elif [ $RUNNING -lt $FORKS ]; then
   printf "WARNING - session partially established (%d of %d)\n" $RUNNING $FORKS
   exit 1
 else
-  printf "OK - session established\n"
+  printf "OK - session established (%d connections)\n" $RUNNING
   exit 0
 fi
 

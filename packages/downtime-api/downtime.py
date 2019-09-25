@@ -24,7 +24,8 @@ class ThrukCli(object):
     def __init__(self):
         self.thruk = os.environ["OMD_ROOT"] + '/bin/thruk'
         self.user = 'omdadmin'
-        self.active_backend = 'ALL'
+        self.preferred_backend = 'ALL'
+        self.temporary_backend = 'ALL'
         self.backends = {}
         self.hosts = []
         self.services = []
@@ -32,147 +33,216 @@ class ThrukCli(object):
         self.get_backends()
 
     def prefer_backend(self, backend='ALL'):
-        self.active_backend = backend
+        logger.debug("prefer backend "+backend)
+        self.temporary_backend = self.preferred_backend
+        self.preferred_backend = backend
 
-    def get(self, url):
-        cmd = '%s -b %s -A omdadmin \'%s\'' % (self.thruk, self.active_backend, url)
+    def reset_backend(self):
+        self.preferred_backend = self.temporary_backend
+        self.temporary_backend = "ALL"
+
+    def get(self, format, params=()):
+        return self.run("GET", format, params)
+
+    def post(self, format, params=(), data=None):
+        return self.run("GET", format, params, data)
+
+    def run(self, method="GET", format="", params=(), data=None):
+        params = tuple([p.replace('NQ', '', 1) if p.startswith('NQ') else urllib.quote_plus(p) for p in params])
+        uri = format % params
+        cmd = "%s r " % self.thruk
+        if method == "POST":
+            cmd += "-m POST "
+        if self.preferred_backend and self.preferred_backend != "ALL":
+            cmd += "-b '%s' " % self.preferred_backend
+        if data:
+            cmd += "-d '%s' " % data
+        cmd += "'%s'" % uri
         logger.debug(cmd)
         p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         output = p.stdout.read()
         p.wait()
-        return output
+        try:
+            return json.loads(output)
+        except Exception, e:
+            #logger.debug("output is not json: "+str(e))
+            return ()
+
+    def set_thruk_timezone(self):
+        try:
+            thruk_config = self.get('/thruk/config')
+            tz = thruk_config["server_timezone"]
+            logger.debug("thruk timezone is " + tz)
+            os.environ["TZ"] = tz.strip()
+            time.tzset()
+        except Exception, e:
+            pass
 
     def get_backends(self):
         try:
-            backends = self.get('extinfo.cgi?type=0&view_mode=json')
-            self.backends = json.loads(backends)
+            self.backends = self.get('/sites')
+            self.backend_dict = dict([ (b["id"], b["name"]) for b in self.backends ])
         except Exception, e:
             pass
 
     def get_backend_names(self):
         logger.debug("backends %s", str(self.backends))
         try:
-            return [b['peer_name'] for b in self.backends.values() if 'peer_name' in b]
+            return [b['name'] for b in self.backends if 'name' in b]
         except Exception, e:
-            for b in self.backends.values():
+            for b in self.backends:
                 logger.error("get_backend_names %s", str(b))
+
+    def add_peer_names(self, items):
+        for i in items:
+            # sometimes (with lmd?) peer_name is missing
+            if not "peer_name" in i and "peer_key" in i and i["peer_key"] in self.backend_dict:
+                i["peer_name"] = self.backend_dict[i["peer_key"]]
+        return items
 
     def get_host(self, host):
         try:
-            hosts = self.get('status.cgi?view_mode=json&host=%s&style=hostdetail' % host)
-            hosts = json.loads(hosts)
-            for h in hosts:
-                # sometimes (with lmd?) peer_name is missing
-                if not "peer_name" in h and "peer_key" in h and h["peer_key"] in self.backends:
-                    h["peer_name"] = self.backends[h["peer_key"]]["peer_name"]
+            hosts = self.get('/hosts/%s', (host,))
         except Exception, e:
             hosts = []
-        return hosts
+        return self.add_peer_names(hosts)
 
     def get_hostgroup(self, hostgroup):
         try:
-            hosts = self.get('status.cgi?view_mode=json&hostgroup=%s&style=hostdetail' % hostgroup)
-            hosts = json.loads(hosts)
-            for h in hosts:
-                if not "peer_name" in h and "peer_key" in h and h["peer_key"] in self.backends:
-                    h["peer_name"] = self.backends[h["peer_key"]]["peer_name"]
+            hosts = self.get('/hosts?q=groups >= "%s"', ('NQ'+hostgroup,))
         except Exception, e:
             hosts = []
-        return hosts
+        return self.add_peer_names(hosts)
 
     def get_services(self, host, service):
         try:
-            services = self.get('status.cgi?view_mode=json&host=%s&service=%s&style=detail' % (host, service))
-            self.services = json.loads(services)
-            for s in self.services:
-                if not "peer_name" in s and "peer_key" in s and s["peer_key"] in self.backends:
-                    s["peer_name"] = self.backends[s["peer_key"]]["peer_name"]
+            services = self.get('/services?host_name=%s&description=%s', (host, service))
         except Exception, e:
-            self.services = []
-        #return self.services
-        return [s for s in self.services if s["description"] == service]
+            services = []
+        return self.add_peer_names(services)
 
-    def set_host_downtimes(self, hosts, author, comment, start, end, plus_svc):
-        backends = set([h["peer_name"] for h in hosts])
-        for backend in backends:
+    def get_hostgroup_services(self, hostgroup, service):
+        try:
+            services = self.get('/services?q=(host_groups >= "%s") and description = "%s"', ('NQ'+hostgroup, 'NQ'+service))
+        except Exception, e:
+            services = []
+        return self.add_peer_names(services)
+
+    def get_host_services(self, host):
+        try:
+            services = self.get('/services?host_name=%s', (host,))
+        except Exception, e:
+            services = []
+        return self.add_peer_names(services)
+
+    def downtime_match(self, item, downtime):
+        if "description" in item and item["description"]:
+            if item["host_name"] == downtime["host_name"] and item["peer_name"] == downtime["peer_name"] and item["description"] == downtime["service_description"] and " apiset" in downtime["comment"]:
+                return True
+        else:
+            if item["name"] == downtime["host_name"] and item["peer_name"] == downtime["peer_name"] and "service_description" not in item and not downtime["service_description"] and " apiset" in downtime["comment"]:
+                return True
+        return False
+
+    def item_chunks(self, items):
+        chunks = {}
+        for item in items:
+            if not item["peer_name"] in chunks:
+                chunks[item["peer_name"]] = []
+            chunks[item["peer_name"]].append(item)
+        return chunks
+
+    def set_host_downtimes(self, hosts, context):
+        data = {
+            'start_time': context['start_time'],
+            'end_time': context['end_time'],
+            'comment_data': context['comment'],
+            'comment_author': 'api',
+        }
+        for backend, hosts in self.item_chunks(hosts).items():
             self.prefer_backend(backend)
-            for host in [h for h in hosts if h["peer_name"] == backend]:
-                logger.debug("set_host_downtimes %s@%s", host["name"], backend)
-                self.get('cmd.cgi?cmd_typ=55&cmd_mod=2&host=%s&com_author=%s&com_data=%s&fixed=1&childoptions=1&start_time=%s&end_time=%s' % (host["name"], author, comment, start, end))
-                if plus_svc:
-                    self.get('cmd.cgi?cmd_typ=86&cmd_mod=2&host=%s&com_author=%s&com_data=%s&fixed=1&childoptions=1&start_time=%s&end_time=%s' % (host["name"], author, comment, start, end))
+            for host in hosts:
+                self.post('/hosts/%s/cmd/schedule_host_downtime', (host["name"],), json.dumps(data))
+                if context["plus_svc"]:
+                    self.post('/hosts/%s/cmd/schedule_host_svc_downtime', (host["name"],), json.dumps(data))
+            self.reset_backend()
+            
+    def del_host_downtimes(self, hosts, context):
+        for downtime in self.get_host_downtimes(hosts, context):
+            data = {
+                'downtime_id': downtime["id"],
+            }
+            self.prefer_backend(downtime["peer_name"])
+            self.post('/system/cmd/del_host_downtime', (), json.dumps(data))
+            if context["plus_svc"]:
+                for service in self.get_host_services(downtime["host_name"]):
+                    self.del_service_downtimes([service], context)
+            self.reset_backend()
 
-    def get_host_downtimes(self, hosts, author, comment, start, end):
-        down_hosts = []
-        down_hosts_backend_wanted = {}
-        found_down_hosts = {}
+    def get_host_downtimes(self, hosts, context):
+        host_downtimes = []
+        for backend, hosts in self.item_chunks(hosts).items():
+            self.prefer_backend(backend)
+            for host in hosts:
+                for downtime in self.add_peer_names(self.get('/downtimes?host_name=%s', (host["name"],))):
+                    if self.downtime_match(host, downtime):
+                        host_downtimes.append(downtime)
+            self.reset_backend()
+        return host_downtimes
+
+    def check_host_downtimes(self, hosts, context):
         max_attempts = 10
-        backends = set([h["peer_name"] for h in hosts])
-        for backend in backends:
-            down_hosts_backend_wanted[backend] = [h for h in hosts if h["peer_name"] == backend]
+        downtimes = []
         for attempt in range(max_attempts):
             logger.debug("get_host_downtimes attempt %d", attempt)
-            for backend in backends:
-                if len([dh for dh in down_hosts if dh["peer_name"] == backend]) == len(down_hosts_backend_wanted[backend]):
-                    continue
-                logger.debug("get_host_downtimes check backend %s", backend)
-                self.prefer_backend(backend)
-                downtimes = self.get('extinfo.cgi?view_mode=json&type=6')
-                downtimes = json.loads(downtimes)
-                for downtime in downtimes["host"]:
-                    if downtime["comment"] == comment:
-                        if not [dh for dh in down_hosts if dh["name"] == downtime["host_name"] and dh["peer_name"] == backend]:
-                            logger.debug("get_host_downtimes found %s@%s", downtime["host_name"], backend)
-                            down_hosts.extend([dh for dh in hosts if dh["name"] == downtime["host_name"] and dh["peer_name"] == backend])
-            if len(down_hosts) == len(hosts):
-                logger.debug("get_host_downtimes found all %d hosts", len(hosts))
+            downtimes = self.get_host_downtimes(hosts, context)
+            logger.debug("get_host_downtimes attempt %d found %d downtimes for %d hosts" % (attempt, len(downtimes), len(hosts)))
+            if (context["delete"] and len(downtimes) == 0) or (not context["delete"] and (len(downtimes) == len(hosts))):
                 break
-            # in bigger environments it may take a while...
-            time.sleep(1)
-        return down_hosts
+        return downtimes
 
-    def set_service_downtimes(self, services, author, comment, start, end):
-        backends = set([s["peer_name"] for s in services])
-        for backend in backends:
+    def set_service_downtimes(self, services, context):
+        data = {
+            'start_time': context['start_time'],
+            'end_time': context['end_time'],
+            'comment_data': context['comment'],
+            'comment_author': 'api',
+        }
+        for backend, services in self.item_chunks(services).items():
             self.prefer_backend(backend)
-            for service in [s for s in services if s["peer_name"] == backend]:
-                logger.debug("set_service_downtimes %s:%s@%s", service["host_name"], service["description"], backend)
-                self.get('cmd.cgi?cmd_typ=56&cmd_mod=2&host=%s&service=%s&com_author=%s&com_data=%s&fixed=1&childoptions=1&start_time=%s&end_time=%s' % (service["host_name"], service["description"], author, comment, start, end))
+            for service in services:
+                self.post('/services/%s/%s/cmd/schedule_svc_downtime', (service["host_name"], service["description"]), json.dumps(data))
+            self.reset_backend()
 
-    def get_service_downtimes(self, services, author, comment, start, end):
-        down_services = []
-        down_services_backend_wanted = {}
-        found_down_services = {}
+    def del_service_downtimes(self, services, context):
+        for downtime in self.get_service_downtimes(services, context):
+            data = {
+                'downtime_id': downtime["id"],
+            }
+            self.prefer_backend(downtime["peer_name"])
+            self.post('/system/cmd/del_svc_downtime', (), json.dumps(data))
+            self.reset_backend()
+
+    def get_service_downtimes(self, services, context):
+        service_downtimes = []
+        for backend, services in self.item_chunks(services).items():
+            self.prefer_backend(backend)
+            for service in services:
+                for downtime in self.add_peer_names(self.get('/downtimes?host_name=%s&service_description=%s', (service["host_name"], service["description"]))):
+                    if self.downtime_match(service, downtime):
+                        service_downtimes.append(downtime)
+            self.reset_backend()
+        return service_downtimes
+
+    def check_service_downtimes(self, services, context):
         max_attempts = 10
-        try:
-            backends = set([s["peer_name"] for s in services])
-        except Exception, e:
-            logger.error("in get_service_downtimes %s", str(e))
-        for backend in backends:
-            down_services_backend_wanted[backend] = [s for s in services if s["peer_name"] == backend]
+        downtimes = []
         for attempt in range(max_attempts):
-            logger.debug("get_service_downtimes attempt %d", attempt)
-            for backend in backends:
-                if len([ds for ds in down_services if ds["peer_name"] == backend]) == len(down_services_backend_wanted[backend]):
-                    continue
-                logger.debug("get_service_downtimes check backend %s", backend)
-                self.prefer_backend(backend)
-                downtimes = self.get('extinfo.cgi?view_mode=json&type=6')
-                downtimes = json.loads(downtimes)
-                logger.debug("get_service_downtimes dt backend %s", str(downtimes))
-                for downtime in downtimes["service"]:
-                    if downtime["comment"] == comment:
-                        logger.debug("found downtime %s", str(downtime))
-                        if not [ds for ds in down_services if ds["host_name"] == downtime["host_name"] and ds["peer_name"] == backend]:
-                            logger.debug("get_service_downtimes found %s@%s", downtime["host_name"], backend)
-                            down_services.extend([ds for ds in services if ds["host_name"] == downtime["host_name"] and ds["peer_name"] == backend])
-            if len(down_services) == len(services):
-                logger.debug("get_service_downtimes found all %d services", len(services))
+            downtimes = self.get_service_downtimes(services, context)
+            logger.debug("get_host_downtimes attempt %d found %d downtimes for %d services" % (attempt, len(downtimes), len(services)))
+            if (context["delete"] and len(downtimes) == 0) or (not context["delete"] and (len(downtimes) == len(services))):
                 break
-            # in bigger environments it may take a while...
-            time.sleep(1)
-        return down_services
-                
+        return downtimes
 
 def originating_ip():
     for vars in ["HTTP_CLIENT_IP", "HTTP_X_FORWARDED_FOR",
@@ -205,6 +275,9 @@ try:
     logger = logging.getLogger('downtime-api')
 
     params = cgi.FieldStorage()
+    logger.debug(os.environ['REQUEST_METHOD'])
+    logger.debug(params)
+    logger.debug(params.getfirst("host", None))
     host_name = params.getfirst("host", None)
     hostgroup_name = params.getfirst("hostgroup", None)
     service_description = params.getfirst("service", None)
@@ -213,6 +286,7 @@ try:
     dtauthtoken = params.getfirst("dtauthtoken", None)
     backend = params.getfirst("backend", None)
     plus_svc = params.getfirst("plus_svc", None)
+    delete = params.getfirst("delete", None)
     address = originating_ip()
 
     hosts = []
@@ -227,18 +301,31 @@ try:
     # duration=
     # comment=
     ######################################################################
-    if not (host_name or hostgroup_name or service_description) or not comment or not duration:
+    if plus_svc != None:
+        if plus_svc == "0" or plus_svc == "false":
+            plus_svc = False
+        else:
+            plus_svc = True
+
+    if delete != None:
+        if delete == "0" or delete == "false":
+            delete = False
+        else:
+            delete = True
+
+    if not (host_name or hostgroup_name or service_description) or not delete and (not comment or not duration):
         result["error"] = "Missing Required Parameters"
         status = 400
         raise CGIAbort
 
-    try:
-        duration = int(duration)
-    except Exception, e:
-        result["error"] = "Duration is not a number"
-        status = 400
-        raise CGIAbort
-
+    if not delete:
+        try:
+            duration = int(duration)
+        except Exception, e:
+            result["error"] = "Duration is not a number"
+            status = 400
+            raise CGIAbort
+    
     if not address:
         result["error"] = "Unknown Originating IP"
         status = 401
@@ -263,20 +350,38 @@ try:
     elif backend:
         thruk.prefer_backend(backend)
 
-    if plus_svc != None:
-        if plus_svc == "0" or plus_svc == "false":
-            plus_svc = False
-        else:
-            plus_svc = True
-
+    if not delete:
+        thruk.set_thruk_timezone()
+        start_time = int(time.time())
+        comment = comment + " apiset" + urllib.quote_plus(time.strftime("%s", time.localtime(start_time)))
+        end_time = start_time + 60 * duration
+        context = {
+            'start_time': time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(start_time)),
+            'end_time': time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(end_time)),
+            'comment': comment,
+            'delete': False,
+            'plus_svc': plus_svc,
+            'author': 'omdadmin',
+        }
+    else:
+        context = {
+            'delete': True,
+            'plus_svc': plus_svc,
+            'author': 'omdadmin',
+        }
+    
     if service_description:
         ##################################################################
         # to be done. i start implementing as soon as you pay
         ##################################################################
-        if host_name == None:
-            host_name = "all"
-        services = thruk.get_services(host_name, service_description) # may exist many times
-        logger.info("service downtime request from %s for %s/%s (%d found), duration %s, comment %s", address, host_name, service_description, len(services), duration, comment)
+        if hostgroup_name:
+            services = thruk.get_hostgroup_services(hostgroup_name, service_description)
+            logger.info("service downtime request from %s for group(%s)/%s (%d found), duration %s, comment %s", address, hostgroup_name, service_description, len(services), duration, comment)
+        elif host_name:
+            services = thruk.get_services(host_name, service_description) # may exist many times
+            logger.info("service downtime request from %s for %s/%s (%d found), duration %s, comment %s", address, host_name, service_description, len(services), duration, comment)
+        else:
+            services = []
         if len(services) < 1:
             result["error"] = "Service not found"
             status = 400
@@ -304,11 +409,6 @@ try:
             raise CGIAbort
         logger.debug("found hosts %s", " ".join([h["name"] + "@" + h["peer_name"] for h in hosts]))
 
-    if not backend:
-        backends = [h["peer_name"] for h in hosts] + [s["peer_name"] for s in services]
-    else:
-        backends = [backend]
-
     if hosts:
         ######################################################################
         # check the list of hosts for matching address or authtoken
@@ -316,7 +416,6 @@ try:
         ######################################################################
         real_hosts = []
         for host in hosts:
-            logger.debug("try host %s", str(host))
             if dtauthtoken:
                 macros = dict(zip(host["custom_variable_names"], host["custom_variable_values"]))
                 if "DTAUTHTOKEN" in macros and macros["DTAUTHTOKEN"] == dtauthtoken:
@@ -356,31 +455,34 @@ try:
         ######################################################################
         # add a downtime for every host in real_hosts
         ######################################################################
-        start_time = int(time.time())
-        comment = comment + " apiset" + urllib.quote_plus(time.strftime("%s", time.localtime(start_time)))
-        end_time = start_time + 60 * duration
-        thruk.set_host_downtimes(real_hosts, "omdadmin", comment,
-            urllib.quote_plus(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(start_time))),
-            urllib.quote_plus(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(end_time))),
-            plus_svc,
-        )
+        if delete:
+            thruk.del_host_downtimes(real_hosts, context)
+        else:
+            thruk.set_host_downtimes(real_hosts, context)
+        time.sleep(1) # in bigger environments it may take a while...
 
         ######################################################################
         # get all hosts with this downtime in down_hosts
         ######################################################################
-        down_hosts = thruk.get_host_downtimes(
-            real_hosts, "omdadmin", comment,
-            start_time, end_time,
-        )
-        if len(down_hosts) == 0:
-            status = 202
-            result["error"] = "downtime was not set"
-        elif len(real_hosts) > len(down_hosts):
-            status = 202
-            result["error"] = "downtime not set in some backends"
-        elif len(real_hosts) < len(hosts):
-            status = 202
-            result["error"] = "%d of %d hosts were not authorized" % (len(hosts) - len(real_hosts), len(hosts))
+        if delete:
+            downtimes = thruk.check_host_downtimes(real_hosts, context)
+            if len(downtimes) != 0:
+                status = 202
+                result["error"] = "downtime(s) still set"
+        else:
+            downtimes = thruk.check_host_downtimes(real_hosts, context)
+            if len(downtimes) == 0:
+                status = 202
+                result["error"] = "downtime was not set"
+            elif len(real_hosts) > len(downtimes):
+                status = 202
+                result["error"] = "downtime not set in some backends"
+            elif len(real_hosts) < len(hosts):
+                status = 202
+                result["error"] = "%d of %d hosts were not authorized" % (len(hosts) - len(real_hosts), len(hosts))
+            elif len(real_hosts) == len(downtimes):
+                logger.debug("%d from %d hosts are down" % (len(real_hosts), len(downtimes)))
+
     if services:
         ######################################################################
         # check the list of services/hosts for matching address or authtoken
@@ -433,34 +535,32 @@ try:
         # add a downtime for every service in real_services
         ######################################################################
         logger.debug("services ok, real: %d", len(real_services))
-        start_time = int(time.time())
-        comment = comment + " apiset" + urllib.quote_plus(time.strftime("%s", time.localtime(start_time)))
-        end_time = start_time + 60 * duration
-        logger.debug("%s - %s",
-            time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(start_time)),
-            time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(start_time)))
-        thruk.set_service_downtimes(real_services, "omdadmin", comment,
-            urllib.quote_plus(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(start_time))),
-            urllib.quote_plus(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(end_time))),
-        )
-
+        if delete:
+            thruk.del_service_downtimes(real_services, context)
+        else:
+            thruk.set_service_downtimes(real_services, context)
+        time.sleep(1) # in bigger environments it may take a while...
+    
         ######################################################################
         # get all services with this downtime in down_services
         ######################################################################
-        down_services = thruk.get_service_downtimes(
-            real_services, "omdadmin", comment,
-            start_time, end_time,
-        )
-        if len(down_services) == 0:
-            status = 202
-            result["error"] = "downtime was not set"
-        elif len(real_services) > len(down_services):
-            status = 202
-            result["error"] = "downtime not set in some backends"
-        elif len(real_services) < len(services):
-            status = 202
-            result["error"] = "%d of %d services were not authorized" % (len(services) - len(real_services), len(services))
-
+        if delete:
+            downtimes = thruk.check_service_downtimes(real_services, context)
+            if len(downtimes) != 0:
+                status = 202
+                result["error"] = "downtime(s) still set"
+        else:
+            downtimes = thruk.check_service_downtimes(real_services, context)
+            if len(downtimes) == 0:
+                status = 202
+                result["error"] = "downtime was not set"
+            elif len(real_services) > len(downtimes):
+                status = 202
+                result["error"] = "downtime not set in some backends"
+            elif len(real_services) < len(services):
+                status = 202
+                result["error"] = "%d of %d services were not authorized" % (len(services) - len(real_services), len(services))
+    
 except Exception, e:
     if not "error" in result:
         status = 500

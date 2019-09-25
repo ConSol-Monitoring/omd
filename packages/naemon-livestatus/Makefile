@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 NAME = naemon-livestatus
-VERSION = 1.0.4
+VERSION = 1.1.0
 DIR = $(NAME)-$(VERSION)
 
 CONFIGUREOPTS = \
@@ -9,10 +9,10 @@ CONFIGUREOPTS = \
 
 build:
 	tar xzf $(NAME)-$(VERSION).tar.gz
-	set -e ; for p in patches/*.patch ; do \
-	    echo "applying $$p..." ; \
-	    ( cd $(DIR) ; patch -p1 -b ) < $$p ; \
-	done
+	#set -e ; for p in patches/*.patch ; do \
+	#    echo "applying $$p..." ; \
+	#    ( cd $(DIR) ; patch -p1 -b ) < $$p ; \
+	#done
 	cd $(DIR); \
 		autoreconf -s; \
 		automake --add-missing; \
@@ -26,21 +26,32 @@ build:
 
 install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/naemon
-	cp $(DIR)/src/.libs/livestatus.so $(DESTDIR)$(OMD_ROOT)/lib/naemon/livestatus.o
+	install -m 755 $(DIR)/src/.libs/livestatus.so $(DESTDIR)$(OMD_ROOT)/lib/naemon/livestatus.o.dbg
+	install -sm 755 $(DIR)/src/.libs/livestatus.so $(DESTDIR)$(OMD_ROOT)/lib/naemon/livestatus.o
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/bin
+	install -m 755 $(DIR)/src/unixcat $(DESTDIR)$(OMD_ROOT)/bin/unixcat
+	install -m 755 lq $(DESTDIR)$(OMD_ROOT)/bin
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/python
+	install -m 644 livestatus.py $(DESTDIR)$(OMD_ROOT)/lib/python
 
 skel:
-	mkdir -p $(SKEL)/etc/naemon
-	sed -e 's/mk-livestatus\/livestatus.o/naemon\/livestatus.o/g' $(SKEL)/etc/mk-livestatus/nagios.cfg > $(SKEL)/etc/naemon/livestatus.cfg
 
 clean:
 	rm -rf $(DIR)
 
 upstream:
-	rm -f livestatus.tar.gz
+	rm -f *.gz
 	wget https://github.com/naemon/naemon-livestatus/tarball/master -O tmp.tar.gz
 	tar zxf tmp.tar.gz
 	mv naemon-naemon-livestatus-??????? naemon-livestatus-master
-	cd naemon-livestatus-master && autoreconf -i
-	tar cfz naemon-livestatus-master.tar.gz naemon-livestatus-master
+	#set -e ; for p in patches/*.patch ; do \
+	#    echo "applying $$p..." ; \
+	#    ( cd naemon-livestatus-master && patch -p1 -b ) < $$p ; \
+	#done
+	cd naemon-livestatus-master && touch .naemon.official && autoreconf -i && ./configure && make dist && mv *.gz ..
 	rm -rf tmp.tar.gz naemon-livestatus-master
-	git add naemon-livestatus-master.tar.gz
+	tar zxf naemon-livestatus-*.tar.gz
+	rm naemon-livestatus-*.tar.gz
+	mv naemon-livestatus-* naemon-livestatus-master
+	tar cfz naemon-livestatus-master.tar.gz naemon-livestatus-master
+	rm -rf naemon-livestatus-master

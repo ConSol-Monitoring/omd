@@ -17,12 +17,13 @@ BEGIN {
 # create our test site
 my $omd_bin = TestUtils::get_omd_bin();
 my $site    = TestUtils::create_test_site() or TestUtils::bail_out_clean("no further testing without site");
+my $network_exceptions = '/^(\s*|.*01mailrc.txt.gz.*saved.*|.*Network is unreachable.*|.*Temporary failure in name resolution.*|.*Name or service not known.*|200 OK)$/s';
 
 ##################################################
 # execute some checks
 my $tests = [
-  { cmd => "/bin/su - $site -c '/usr/bin/env cpan.wrapper'", stdin => "yes\n", like => '/cpan\[1\]>/' },
-  { cmd => "/bin/su - $site -c '/usr/bin/env cpan'",         stdin => "yes\n", like => '/cpan\[1\]>/' },
+  { cmd => "/bin/su - $site -c '/usr/bin/env cpan.wrapper'", stdin => "yes\n", like => '/cpan\[1\]>/', errlike => $network_exceptions },
+  { cmd => "/bin/su - $site -c '/usr/bin/env cpan'",         stdin => "yes\n", like => '/cpan\[1\]>/', errlike => $network_exceptions },
 ];
 for my $test (@{$tests}) {
     TestUtils::test_command($test);
@@ -60,18 +61,10 @@ for my $tarball (glob("packages/perl-modules/src/*.gz packages/perl-modules/src/
 }
 
 ##################################################
-for my $file (qw|/*/Class/MethodMaker/scalar.pm /*/Class/MethodMaker/hash.pm /*/Class/MethodMaker/array.pm|) {
-    my $pattern = "/omd/sites/$site/lib/perl5/lib/perl5".$file;
-    my @files   = glob($pattern);
-    ok(scalar @files > 0, "found file(s) for pattern: ".$pattern);
-    ok(-s $files[0], $files[0]." must not be empty");
-}
-
-##################################################
 SKIP: {
     skip('Author test. Set $ENV{TEST_AUTHOR} to a true value to run.', 4) unless $ENV{TEST_AUTHOR};
     my $author_tests = [
-      { cmd => "/bin/su - $site -c '/usr/bin/env cpan'", stdin => "notest install Traceroute::Similar\n", like => '/install\s+\-\-\s+OK/' },
+      { cmd => "/bin/su - $site -c '/usr/bin/env cpan'", stdin => "notest install Traceroute::Similar\n", like => '/install\s+\-\-\s+OK/', errlike => $network_exceptions },
     ];
     for my $author_test (@{$author_tests}) {
         TestUtils::test_command($author_test);

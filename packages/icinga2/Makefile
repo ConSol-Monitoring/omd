@@ -1,10 +1,8 @@
 include ../../Makefile.omd
 
 NAME = icinga2
-VERSION = 2.8.4
+VERSION = 2.9.2
 DIR = $(NAME)-$(VERSION)
-BOOSTDIR=boost_1_60_0
-BOOSTDEST=$(shell pwd)/$(BOOSTDIR)-dest
 CMAKE=cmake
 CMAKEDIR=cmake-3.5.0
 CMAKEDEST=$(shell pwd)/$(CMAKEDIR)-dest
@@ -20,51 +18,11 @@ CONFIGUREOPTS = \
     -DCMAKE_INSTALL_SYSCONFDIR=$(OMD_ROOT)/etc \
     -DCMAKE_INSTALL_LOCALSTATEDIR=$(OMD_ROOT)/var \
     -DINSTALL_SBINDIR=$(OMD_ROOT)/bin \
-    -DICINGA2_PLUGINDIR=$(OMD_ROOT)/lib/nagios/plugins \
+    -DICINGA2_PLUGINDIR=$(OMD_ROOT)/lib/monitoring-plugins \
     -DICINGA2_GIT_VERSION_INFO=ON \
     -DICINGA2_USER=root \
     -DICINGA2_WITH_TESTS=OFF \
     -DICINGA2_GROUP=root
-
-BUILD_BOOST=
-ifeq ($(DISTRO_INFO),CENTOS 6)
-BUILD_BOOST=1
-endif
-ifneq (,$(findstring SLES 11SP,$(DISTRO_INFO)))
-BUILD_BOOST=1
-endif
-ifdef BUILD_BOOST
-EXTRA_BUILD_DEPS=build_env_for_sles11
-CONFIGUREOPTS+=-DCMAKE_EXE_LINKER_FLAGS=-lrt
-# workaround for https://bugzilla.redhat.com/show_bug.cgi?id=849791#c8
-CONFIGUREOPTS+=-DBoost_NO_BOOST_CMAKE=ON
-CONFIGUREOPTS+=-DBoost_NO_SYSTEM_PATHS=ON
-CONFIGUREOPTS+=-DBoost_USE_STATIC_LIBS=ON
-CONFIGUREOPTS+=-DBOOST_ROOT=$(BOOSTDEST)
-CONFIGUREOPTS+=-DBOOST_INCLUDEDIR=$(BOOSTDEST)/include
-CONFIGUREOPTS+=-DBOOST_LIBRARYDIR=$(BOOSTDEST)/lib
-#CONFIGUREOPTS+=-DBoost_DEBUG=ON
-CMAKE=$(CMAKEDEST)/bin/cmake
-else
-EXTRA_BUILD_DEPS=
-endif
-
-TMPGCC = $(shell pwd)/../gcc/tmp_gcc
-export PATH := $(TMPGCC)/bin/:$(PATH)
-export LD_LIBRARY_PATH := $(TMPGCC)/lib64:$(LD_LIBRARY_PATH)
-ifneq (,$(findstring CENTOS 6,$(DISTRO_INFO)))
-export CC := gcc
-export CXX := g++
-else ifneq (,$(findstring SLES 11SP4,$(DISTRO_INFO)))
-export CC := gcc-4.8
-export CXX := g++-4.8
-else ifneq (,$(findstring SLES 11SP2,$(DISTRO_INFO)))
-export CC := gcc
-export CXX := g++
-else ifneq (,$(findstring SLES 11SP,$(DISTRO_INFO)))
-export CC := gcc-4.7
-export CXX := g++-4.7
-endif
 
 build: $(EXTRA_BUILD_DEPS)
 	tar xzf $(DIR).tar.gz
@@ -78,17 +36,6 @@ build: $(EXTRA_BUILD_DEPS)
 		$(CMAKE) .. $(CONFIGUREOPTS) && \
 		make -j1
 
-build_env_for_sles11:
-	tar xzf $(CMAKEDIR).tar.gz
-	cd $(CMAKEDIR) && \
-		./configure --prefix=$(CMAKEDEST) && \
-		make -j 4 && \
-		make install
-	tar xjf $(BOOSTDIR).tar.bz2
-	cd $(BOOSTDIR) && \
-		./bootstrap.sh --with-libraries=thread,system,program_options,regex,chrono,date_time,atomic --prefix=$(BOOSTDEST) && \
-		./bjam cxxflags=-fPIC cflags=-fPIC install
-
 install:
 	$(MAKE) DESTDIR=$(DESTDIR) -C $(DIR)/build install
 	rm -rf $(DESTDIR)$(OMD_ROOT)/etc
@@ -99,24 +46,27 @@ install:
 	rm -rf $(DESTDIR)$(OMD_ROOT)/lib*/icinga2
 	sed   -e "s#/lib/icinga2/sbin/icinga2#/lib/sbin/icinga2#g" -i $(DESTDIR)$(OMD_ROOT)/bin/icinga2
 	sed -e "s#/lib64/icinga2/sbin/icinga2#/lib/sbin/icinga2#g" -i $(DESTDIR)$(OMD_ROOT)/bin/icinga2
+	strip $(DESTDIR)$(OMD_ROOT)/lib/monitoring-plugins/check_nscp_api
+	find $(DESTDIR)$(OMD_ROOT)/lib/ -name icinga2 -type f -exec strip {} \;
+	rm -rf $(DESTDIR)$(OMD_ROOT)/share/doc/icinga2
 
 skel:
 	mkdir -p $(SKEL)/etc/icinga2
 	cp -rp $(DIR)/etc/icinga2/* $(SKEL)/etc/icinga2/
-	chmod 755 $(SKEL)/etc/icinga2/scripts/*
+	chmod 644 $(SKEL)/etc/icinga2/scripts/*
 	rm -rf $(SKEL)/etc/icinga2/conf.d/win32
 	mv $(SKEL)/etc/icinga2/constants.conf.cmake $(SKEL)/etc/icinga2/constants.conf
 	mkdir -p $(SKEL)/etc/bash_completion.d
-	install $(DIR)/etc/bash_completion.d/icinga2 $(SKEL)/etc/bash_completion.d
+	install -m 0644 $(DIR)/etc/bash_completion.d/icinga2 $(SKEL)/etc/bash_completion.d
 	sed -i -e 's/@ICINGA2_USER@/###SITE###/g' \
 	       -e 's/@ICINGA2_GROUP@/###SITE###/g' \
-	       -e 's/@ICINGA2_PLUGINDIR@/###ROOT###\/lib\/nagios\/plugins/g' \
+	       -e 's/@ICINGA2_PLUGINDIR@/###ROOT###\/lib\/monitoring\-plugins/g' \
 	    $(SKEL)/etc/icinga2/constants.conf
-	sed -i -e '/const PluginDir/a /* The directory which contains your local site plugins */\nconst LocalPluginDir = "###ROOT###/local/lib/nagios/plugins"' \
+	sed -i -e '/const PluginDir/a /* The directory which contains your local site plugins */\nconst LocalPluginDir = "###ROOT###/local/lib/monitoring-plugins"' \
 	    $(SKEL)/etc/icinga2/constants.conf
 	printf '\n/* The OMD site name */\nconst OMD_SITE = "###SITE###"\nconst OmdSite = "###SITE###"\n' >> $(SKEL)/etc/icinga2/constants.conf
 	printf '\n/* Root folder of this OMD site */\nconst OMD_ROOT = "###ROOT###"\nconst OmdRoot = "###ROOT###"\n' >> $(SKEL)/etc/icinga2/constants.conf
-	sed -i -e 's%^const PluginContribDir.*%const PluginContribDir = "###ROOT###/local/lib/nagios/plugins"%g' \
+	sed -i -e 's%^const PluginContribDir.*%const PluginContribDir = "###ROOT###/local/lib/monitoring-plugins"%g' \
 	    $(SKEL)/etc/icinga2/constants.conf
 	# enable livestatus
 	ln -sf ../features-available/livestatus.conf $(SKEL)/etc/icinga2/features-enabled/livestatus.conf
@@ -155,8 +105,6 @@ skel:
 
 clean:
 	rm -rf $(DIR)
-	rm -rf $(BOOSTDIR)
-	rm -rf $(BOOSTDEST)
 	rm -rf $(CMAKEDIR)
 	rm -rf $(CMAKEDEST)
 

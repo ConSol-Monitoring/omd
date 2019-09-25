@@ -3,28 +3,22 @@ SHELL = /bin/bash
 # variale, e.g. make PACKAGES='nagios rrdtool' pack
 PACKAGES=freetds \
          perl-modules \
-         gcc \
          go-1.4 \
-         go-1.9 \
-         go-1.10 \
+         go-1.12 \
          influxdb \
          nagflux \
          python-modules \
          apache-omd \
          mod_python \
-         check_mk \
          check_multi \
          dokuwiki \
          example \
          jmx4perl \
-         mk-livestatus \
          mysql-omd \
-         icinga \
          icinga2 \
-         nagios \
          naemon \
          naemon-livestatus \
-         nagvis \
+         logos \
          nrpe \
          nsca \
          omd \
@@ -41,6 +35,7 @@ PACKAGES=freetds \
          maintenance \
          gearmand \
          mod-gearman \
+         mod-gearman-worker-go \
          patch \
          nail \
          notifications-tt \
@@ -53,7 +48,7 @@ PACKAGES=freetds \
          prometheus_alertmanager \
          prometheus_blackbox_exporter \
          prometheus_pushgateway \
-         dataScryer \
+         thanos \
          snmptrapd \
          downtime-api \
          grafana-pnp-datasource \
@@ -112,14 +107,16 @@ pack:
 	rm -rf $(DESTDIR)
 	mkdir -p $(DESTDIR)$(OMD_PHYSICAL_BASE)
 	A="$(OMD_PHYSICAL_BASE)" ; ln -s $${A:1} $(DESTDIR)/omd
-	@set -e ; cd packages ; for p in $(PACKAGES) ; do \
+	@set -e; MB1=0 ; cd packages ; for p in $(PACKAGES) ; do \
             NOW=$$(date +%s); \
             $(MAKE) -C $$p DESTDIR=$(DESTDIR) install ; \
             for hook in $$(cd $$p ; ls *.hook 2>/dev/null) ; do \
                 mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/omd/hooks ; \
                 install -m 755 $$p/$$hook $(DESTDIR)$(OMD_ROOT)/lib/omd/hooks/$${hook%.hook} ; \
             done ; \
-            echo "pack: $$p (took $$(( $$(date +%s) - NOW ))s)"; \
+            MB2=$$(du -sm $(DESTDIR) | awk '{ print $$1 }'); \
+            echo "pack: $$p (took $$(( $$(date +%s) - NOW ))s) disk usage: $$(( MB2 - MB1 ))MB"; \
+            MB1=$$MB2; \
         done
 
 	sed -i -e 's|###APACHE_MODULE_DIR###|$(MODULE_DIR)|g' $(DESTDIR)$(OMD_ROOT)/lib/omd/hooks/*
@@ -174,7 +171,7 @@ pack:
 
 clean:
 	rm -rf $(DESTDIR)
-	@for p in packages/* ; do \
+	@set -e ; cd packages ; for p in $(PACKAGES) ; do \
             $(MAKE) -C $$p clean ; \
         done
 
@@ -261,7 +258,7 @@ rpm:
 	sed -e 's/^Requires:.*/Requires:        $(OS_PACKAGES)/' \
 	    -e 's/%{version}/$(OMD_VERSION)/g' \
 	    -e 's/^Version:.*/Version: $(DISTRO_CODE)/' \
-	    -e 's/^Release:.*/Release: $(OMD_SERIAL)/' \
+	    -e 's/^Release:.*/Release: $(OMD_PATCH_LEVEL)/' \
 	    -e 's#@APACHE_CONFDIR@#$(APACHE_CONF_DIR)#g' \
 	    -e 's#@APACHE_NAME@#$(APACHE_NAME)#g' \
 	    -e 's#@APACHE_INCLUDEOPT@#$(APACHE_INCLUDEOPT)#g' \
@@ -273,10 +270,9 @@ rpm:
 	# NO_BRP_STALE_LINK_ERROR ignores errors when symlinking from skel to
 	# share,lib,bin because the link has a invalid target until the site is created
 	NO_BRP_STALE_LINK_ERROR="yes" \
-	rpmbuild -ba --define "_topdir $(RPM_TOPDIR)" \
+	rpmbuild -bb --define "_topdir $(RPM_TOPDIR)" \
 	     --buildroot=$$(pwd)/rpm.buildroot omd.spec
 	mv -v $(RPM_TOPDIR)/RPMS/*/*.rpm .
-	mv -v $(RPM_TOPDIR)/SRPMS/*.src.rpm .
 	rm -rf $(RPM_TOPDIR) rpm.buildroot
 
 # Build DEB from prebuild binary. This currently needs 'make dist' and thus only
@@ -292,7 +288,7 @@ deb-changelog: deb-environment
 	# this is a hack!
 	rm -f debian/changelog
 	dch --create --package omd-$(OMD_VERSION) \
-	    --newversion 0.$(DISTRO_CODE) "`cat debian/changelog.tmpl`"
+	    --newversion $(OMD_PATCH_LEVEL).$(DISTRO_CODE) "`cat debian/changelog.tmpl`"
 	dch --release "releasing ...."
 
 deb: deb-changelog
@@ -321,7 +317,6 @@ setup: pack xzf alt
 xzf:
 	tar xzf $(BIN_TGZ) -C / # HACK: Add missing suid bits if compiled as non-root
 	chmod 4755 $(OMD_ROOT)/lib/nagios/plugins/check_{icmp,dhcp}
-	chmod 4775 $(OMD_ROOT)/bin/mkeventd_open514
 	$(APACHE_CTL) -k graceful
 
 # On debian based systems register the alternative switches
@@ -343,6 +338,7 @@ version:
 	if [ -n "$$newversion" ] && [ "$$newversion" != "$(OMD_VERSION)" ]; then \
 	    sed -ri 's/^(OMD_VERSION[[:space:]]*= *).*/\1'"$$newversion/" Makefile.omd ; \
 	    sed -ri 's/^(OMD_SERIAL[[:space:]]*= *).*/\1'"$(NEWSERIAL)/" Makefile.omd ; \
+	    sed -ri 's/^(OMD_PATCH_LEVEL[[:space:]]*= *).*/\1'"1/" Makefile.omd ; \
 	    sed -ri 's/^(OMD_VERSION[[:space:]]*= *).*/\1"'"$$newversion"'"/' packages/omd/omd ; \
 	fi ;
 

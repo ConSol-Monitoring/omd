@@ -1,7 +1,7 @@
 include ../../../Makefile.omd
 
 NAME = check_oracle_health
-VERSION = 3.1.2.2
+VERSION = 3.2
 DIR = $(NAME)-$(VERSION)
 
 .PHONY: skel
@@ -20,8 +20,8 @@ build:
 	$(MAKE) -C $(DIR)
 
 install:
-	[ -d $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins ] || mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins
-	install -m 755 $(DIR)/plugins-scripts/check_oracle_health $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/monitoring-plugins
+	install -m 755 $(DIR)/plugins-scripts/check_oracle_health $(DESTDIR)$(OMD_ROOT)/lib/monitoring-plugins
 
 skel:
 

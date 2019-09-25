@@ -291,12 +291,21 @@ class SNMPTT(coshsh.datasource.Datasource):
                 for svcmib, mib in application_mibs_known:
                     mobj = self.get('mibconfigs', mib)
                     trap_events[svcmib] = [e for e in mobj.events]
+                    host = self.get('hosts', application.host_name)
                     mobj.add_agent([
-                        self.get('hosts', application.host_name).address,
+                        host.address,
                         application.host_name,
                         application.trap_service_prefix,
                         svcmib,
                     ])
+                    if hasattr(application, "agent_addresses"):
+                        for agent_address in application.agent_addresses:
+                            mobj.add_agent([
+                                agent_address,
+                                application.host_name,
+                                application.trap_service_prefix,
+                                svcmib,
+                            ])
 
                 if trap_events:
                     application.monitoring_details.append(MonitoringDetail({

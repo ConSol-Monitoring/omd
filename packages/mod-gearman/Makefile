@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 NAME     = mod_gearman
-VERSION  = 3.0.6
+VERSION  = 3.1.0
 GEARMAND = $(shell grep "^VERSION " ../gearmand/Makefile | awk '{ print $$3 }')
 DIR      = mod_gearman-$(VERSION)
 
@@ -14,24 +14,31 @@ build:
 	#    ( cd $(DIR) ; patch -p1 ) < $$p || exit 1; \
 	#done
 	cd $(DIR) && \
-	export PKG_CONFIG_PATH=$(shell ls -d1 $$(pwd)/../naemon/naemon-*/.) C_INCLUDE_PATH=$(shell pwd)/$(DIR)/include:$(shell ls -d1 $$(pwd)/../naemon/naemon-*/.)/src; \
-	./configure --prefix=$(OMD_ROOT) --enable-embedded-perl --with-gearman=$(shell pwd)/../gearmand/gearmand-${GEARMAND} && \
-	$(MAKE) -j 1
+	  export PKG_CONFIG_PATH=$(shell ls -d1 $$(pwd)/../naemon/naemon-*/.) C_INCLUDE_PATH=$(shell pwd)/$(DIR)/include:$(shell ls -d1 $$(pwd)/../naemon/naemon-*/.)/src; \
+	  ./configure --prefix=$(OMD_ROOT) --enable-debug --enable-embedded-perl --with-gearman=$(shell pwd)/../gearmand/gearmand-${GEARMAND} && \
+	  $(MAKE) -j 1
 
 install:
 	$(MAKE) DESTDIR=$(DESTDIR) -C $(DIR) -j 1 install
 	# fix path for plugin
-	[ -d $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins ] || mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins
-	mv $(DESTDIR)$(OMD_ROOT)/bin/check_gearman $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins/
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/monitoring-plugins
+	mv $(DESTDIR)$(OMD_ROOT)/bin/check_gearman $(DESTDIR)$(OMD_ROOT)/lib/monitoring-plugins/
 	rm -rf $(DESTDIR)$(OMD_ROOT)/share/mod_gearman/*.conf
 	rm -f $(DESTDIR)$(OMD_ROOT)/lib/mod_gearman/mod_gearman.so
+	cp $(DESTDIR)$(OMD_ROOT)/lib/mod_gearman/mod_gearman_naemon.o $(DESTDIR)$(OMD_ROOT)/lib/mod_gearman/mod_gearman_naemon.o.dbg
+	rm -rf $(DESTDIR)$(OMD_ROOT)/lib/mod_gearman/mod_gearman_nagios*
+	cp $(DESTDIR)$(OMD_ROOT)/bin/mod_gearman_worker $(DESTDIR)$(OMD_ROOT)/bin/mod_gearman_worker.dbg
+	chmod 0755 $(DESTDIR)$(OMD_ROOT)/share/mod_gearman/gearman_proxy.pl
 	rm -rf $(DESTDIR)$(OMD_ROOT)/etc
 	rm -rf $(DESTDIR)$(OMD_ROOT)/var
 
 skel:
 	mkdir -p $(SKEL)/etc/mod-gearman
+	mkdir -p $(SKEL)/tmp/run
 	cp $(DIR)/etc/mod_gearman_neb.conf.in    $(SKEL)/etc/mod-gearman/server.cfg
 	cp $(DIR)/etc/mod_gearman_worker.conf.in $(SKEL)/etc/mod-gearman/worker.cfg
+	cp $(DIR)/contrib/gearman_proxy.cfg      $(SKEL)/etc/mod-gearman/gearman_proxy.cfg
+	sed -i -e 's/mod_gearman\/gearman_proxy.cfg/mod-gearman\/gearman_proxy.cfg/g' $(SKEL)/etc/init.d/gearman_proxy
 	for p in patches/*.skel_patch ; do \
 	    echo "applying $$p..." ; \
 	    ( cd $(SKEL) ; patch -p1 ) < $$p || exit 1; \

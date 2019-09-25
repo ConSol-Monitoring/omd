@@ -13,7 +13,7 @@ TESTDIR  = ../../t/packages/check_multi/t
 #--with-nagios-name=<nagios|icinga>       set nagios name (there might be some clones ;)) (default:nagios)
 #--with-action_url="$(OMD_SITE)/pnp4nagios/index.php/graph?host=\\\$$HOSTNAME\\\$$&srv=\\\$$SERVICEDESC\\\$$"
 CONFIGUREOPTS = \
-	--libexecdir="$(ROOTDIR)/lib/nagios/plugins" \
+	--libexecdir="$(ROOTDIR)/lib/monitoring-plugins" \
 	--prefix="$(ROOTDIR)" \
 	--with-action_mouseover=1 \
 	--with-add_tag_to_list_entries=0 \
@@ -57,7 +57,7 @@ CONFIGUREOPTS = \
 	--with-parent_timeout=60 \
 	--with-perfdata_pass_through=0 \
 	--with-persistent=0 \
-	--with-plugin_path="$(ROOTDIR)/lib/nagios/plugins" \
+	--with-plugin_path="$(ROOTDIR)/lib/monitoring-plugins" \
 	--with-pnp_add2url="" \
 	--with-pnp_url="/$(SITE)/pnp4nagios" \
 	--with-pnp_version=0.6 \
@@ -85,9 +85,8 @@ build:
 
 install:
 	#--- plugin
-	test -d $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins || \
-		mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins
-	install -m 755 $(SRCDIR)/plugins/check_multi $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/monitoring-plugins
+	install -m 755 $(SRCDIR)/plugins/check_multi $(DESTDIR)$(OMD_ROOT)/lib/monitoring-plugins
 
 	#--- readme
 	test -d $(DESTDIR)$(OMD_ROOT)/share/doc/check_multi || \

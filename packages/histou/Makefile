@@ -10,10 +10,10 @@ DIR         = $(NAME)
 
 build:
 	tar zxf $(SRC) --exclude=histou.js --exclude=.git
-	set -e ; for p in patches/*.patch ; do \
-	    echo "applying $$p..." ; \
-	    ( cd $(DIR) && patch -p1 -b -F 5 ) < $$p ; \
-	done
+#	set -e ; for p in patches/*.patch ; do \
+#	    echo "applying $$p..." ; \
+#	    ( cd $(DIR) && patch -p1 -b -F 5 ) < $$p ; \
+#	done
 
 install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/$(DIR)
@@ -30,7 +30,8 @@ clean:
 	rm -rf histou
 
 package:
-	git clone  --depth=1 --branch "v$(VERSION)" https://github.com/Griesbacher/histou
+	#git clone  --depth=1 --branch "v$(VERSION)" https://github.com/Griesbacher/histou
+	git clone  --depth=1 --branch "master" https://github.com/Griesbacher/histou
 	tar zcf $(SRC) histou --exclude=.git --exclude=histou/tests --exclude=histou/conf --exclude=histou/stylecheck.sh
-	sed  "s#var url = 'http://localhost/histou/';#var site = window.location.href.match(/(https?:\\\\/\\\\/.*?\\\\/.*?)\\\\/grafana\\\\/.*/);\n    if(site \&\& site.length > 1){\n        url = site[1]+'/histou/';\n    }#" histou/histou.js > omd-histou.js
+	sed  "s#var url = location.protocol+'//'+window.location.hostname+'/histou/';#var site = window.location.href.match(/(https?:\\\\/\\\\/.*?\\\\/.*?)\\\\/grafana\\\\/.*/);\n    if(site \&\& site.length > 1){\n        url = site[1]+'/histou/';\n    }#" histou/histou.js > omd-histou.js
 	rm -rf histou

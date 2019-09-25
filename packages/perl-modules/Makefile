@@ -22,7 +22,7 @@ MODULES = \
           Crypt-Blowfish_PP-1.12.tar.gz \
           Crypt-DES-2.07.tar.gz \
           Crypt-RC4-2.02.tar.gz \
-          Crypt-Rijndael-1.13.tar.gz \
+          Crypt-Rijndael-1.14.tar.gz \
           DBI-1.639.tar.gz \
           DBD-Sybase-1.16.tar.gz \
           Data-Dumper-2.161.tar.gz \
@@ -32,6 +32,7 @@ MODULES = \
           Digest-HMAC-1.03.tar.gz \
           Digest-MD5-2.55.tar.gz \
           Digest-Perl-MD5-1.9.tar.gz \
+          Digest-SHA-6.02.tar.gz \
           Digest-SHA1-2.13.tar.gz \
           Email-Address-1.908.tar.gz \
           Email-Date-Format-1.005.tar.gz \
@@ -51,7 +52,7 @@ MODULES = \
           File-Copy-Recursive-0.40.tar.gz \
           File-Path-2.15.tar.gz \
           File-Remove-1.57.tar.gz \
-          File-Slurp-9999.19.tar.gz \
+          File-Slurp-9999.27.tar.gz \
           GD-2.50.tar.gz \
           Getopt-Long-2.50.tar.gz \
           HTML-Tagset-3.20.tar.gz \
@@ -125,7 +126,8 @@ MODULES = \
           Bit-Vector-7.4.tar.gz \
           CPAN-Meta-2.150010.tar.gz \
           CPAN-Meta-YAML-0.018.tar.gz \
-          DBD-mysql-4.041.tar.gz \
+          Devel-CheckLib-1.13.tar.gz \
+          DBD-mysql-4.050.tar.gz \
           Date-Calc-6.4.tar.gz \
           Date-Calc-XS-6.4.tar.gz \
           Devel-GlobalDestruction-0.14.tar.gz \
@@ -141,14 +143,12 @@ MODULES = \
           XML-SAX-0.99.tar.gz \
           XML-Simple-2.24.tar.gz \
           autodie-2.29.tar.gz \
-          Class-MethodMaker-2.24.tar.gz \
           HTML-Lint-2.30.tar.gz \
           HTTP-Message-6.14.tar.gz \
           HTTP-Negotiate-6.01.tar.gz \
           Module-Load-Conditional-0.68.tar.gz \
           Monitoring-Livestatus-0.78.tar.gz \
           Net-HTTP-6.17.tar.gz \
-          Term-ProgressBar-2.21.tar.gz \
           XML-LibXML-2.0132.tar.gz \
           HTTP-Body-1.22.tar.gz \
           HTTP-Cookies-6.04.tar.gz \
@@ -175,7 +175,6 @@ MODULES = \
           XML-Twig-3.52.tar.gz \
           CPAN-2.16.tar.gz \
           Cookie-Baker-0.08.tar.gz \
-          Crypt-SSLeay-0.72.tar.gz \
           Dist-CheckConflicts-0.11.tar.gz \
           Email-MIME-1.946.tar.gz \
           Error-0.17025.tar.gz \
@@ -208,7 +207,8 @@ MODULES = \
           DateTime-TimeZone-1.88.tar.gz \
           DateTime-1.18.tar.gz \
           File-Tail-1.3.tar.gz \
-          Monitoring-GLPlugin-3.0.4.1.tar.gz
+          Thruk-Utils-XS-0.02.tar.gz \
+          Monitoring-GLPlugin-3.2.13.1.tar.gz
 
 
 
@@ -243,7 +243,7 @@ build:
 	    export PERL_JSON_BACKEND='Cpanel::JSON::XS'; \
 	    cd $(P5TMPDIST)/src && \
 	        ./build_module.pl -d "$(DISTRO)" -p $(P5TMPDIST)/dest $(MODULES)
-	cd $(P5TMPDIST)/dest/lib/perl5/ && rm -f utils.pm && ln -s ../../../nagios/plugins/utils.pm .
+	cd $(P5TMPDIST)/dest/lib/perl5/ && rm -f utils.pm && ln -s ../../../monitoring-plugins/utils.pm .
 	mkdir -p $(P5TMPDIST)/dest/lib/perl5/CPAN
 	cp MyConfig.pm $(P5TMPDIST)/dest/lib/perl5/CPAN/MyConfig.skel
 

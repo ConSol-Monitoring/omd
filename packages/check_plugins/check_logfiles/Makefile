@@ -1,7 +1,7 @@
 include ../../../Makefile.omd
 
 NAME = check_logfiles
-VERSION = 3.9
+VERSION = 3.11.0.2
 DIR = $(NAME)-$(VERSION)
 
 .PHONY: skel
@@ -20,8 +20,8 @@ build:
 	$(MAKE) -C $(DIR)
 
 install:
-	[ -d $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins ] || mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins
-	install -m 755 $(DIR)/plugins-scripts/check_logfiles $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins/
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/monitoring-plugins
+	install -m 755 $(DIR)/plugins-scripts/check_logfiles $(DESTDIR)$(OMD_ROOT)/lib/monitoring-plugins/
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/check_logfiles
 	cp check_logfiles.exe \
 	    $(DESTDIR)$(OMD_ROOT)/share/check_logfiles

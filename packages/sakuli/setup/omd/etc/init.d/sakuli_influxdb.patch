@@ -1,0 +1,23 @@
+--- /omd/versions/default/skel/etc/init.d/influxdb	2017-10-21 03:49:15.000000000 +0000
++++ etc/init.d/influxdb	2017-10-27 07:22:53.304331690 +0000
+@@ -123,6 +123,20 @@
+                                 echo 'ALTER RETENTION POLICY "default" ON "nagflux" DURATION '${CONFIG_INFLUXDB_RETENTION}w' DEFAULT' | influx $CONNECT -username $USER -password $PASS >/dev/null
+                         fi
+                 fi
++
++
++		# create the Sakuli database
++		echo "CREATE DATABASE sakuli" | influx $CONNECT -username $USER -password $PASS >/dev/null
++		echo "GRANT READ ON sakuli TO $GRAFANA_USER" | influx $CONNECT -username $USER -password $PASS >/dev/null
++                # check for default retention policy
++		echo 'SHOW RETENTION POLICIES ON sakuli' | influx $CONNECT -username $USER -password $PASS 2>/dev/null | grep -q ^default
++		if [ $? -ne 0 ]; then
++			echo 'CREATE RETENTION POLICY "default" ON "sakuli" DURATION '${CONFIG_INFLUXDB_RETENTION}w' REPLICATION 1 DEFAULT' | influx $CONNECT -username $USER -password $PASS >/dev/null
++		else
++			echo 'ALTER RETENTION POLICY "default" ON "sakuli" DURATION '${CONFIG_INFLUXDB_RETENTION}w' DEFAULT' | influx $CONNECT -username $USER -password $PASS >/dev/null
++		fi
++
++
+                 echo "OK"        
+                 exit 0;
+             else

@@ -110,31 +110,12 @@ def page_welcome(req):
                               'It is designed for large installations and can handle '
                               'multiple sites. SLA Reporting is included as well as comprehensive '
                               'Dashboards.'),
-                             ('check_mk', 'Check_MK Multisite',
-                              'share/check_mk/web',
-                              'Check_MK Multisite is a fast and flexible status GUI written '
-                              'in Python. It supports user definable views and is able to '
-                              'display the status of several sites in one combined view. It '
-                              'uses MK Livestatus for getting the status data from the sites.'),
                              ('nagios', 'Classic Nagios GUI', 
                               'share/nagios/htdocs',
                               'The classic Nagios GUI is based on CGI program written '
                               'in C. It retrieves its status information from <tt>status.dat</tt>. '
                               'This interface is not longer actively developed and does not perform '
                               'well in large installations.'),
-                             ('icinga', 'Classic Icinga GUI',
-                              'share/icinga/htdocs',
-                              'Icinga\'s "classical" GUI is a derivate of the classical Nagios GUI '
-                              'and has been directly evolved from the original '
-                              'CGI programs in C. It has its own look and feel and brings useful '
-                              'improvements. It is not bound to Icinga and can be used with the '
-                              'other monitoring cores as well.'),
-                             ('nagvis', 'NagVis - The visualization addon', 
-                              'share/nagvis/htdocs',
-                              '<p>NagVis is the leading visualization addon for Nagios.</p>'
-                              '<p>NagVis can be used to visualize Nagios status data, e.g.  '
-                              'to display IT processes like a mail system or a '
-                              'network infrastructure.</p>'),
                              ('pnp4nagios', 'PNP4Nagios',
                               'share/pnp4nagios/htdocs',
                               'PNP is an addon to Nagios which analyzes performance data '

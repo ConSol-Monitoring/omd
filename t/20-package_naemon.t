@@ -12,7 +12,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 34 );
+plan( tests => 46 );
 
 ##################################################
 # create our test site
@@ -26,9 +26,13 @@ my $tests = [
 
   { cmd => $omd_bin." start $site" },
 
-  { cmd => "/bin/su - $site -c 'lib/naemon/plugins/check_http -H localhost -u /$site/nagios -e 401'",                  like => '/HTTP OK:/' },
-  { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -H localhost -a omdadmin:omd -u /$site/nagios -e 301'",  like => '/HTTP OK:/' },
-  { cmd => "/bin/su - $site -c 'lib/nagios/plugins/check_http -H localhost -a omdadmin:omd -u /$site/nagios/ -e 200'", like => '/HTTP OK:/' },
+  { cmd => "/bin/su - $site -c 'test -S tmp/run/live'", like => '/^$/' },
+  { cmd => "/bin/su - $site -c 'test -p tmp/run/naemon.cmd'", like => '/^$/' },
+  { cmd => "/bin/su - $site -c 'test -f var/naemon/livestatus.log'", like => '/^$/' },
+
+  { cmd => "/bin/su - $site -c 'file bin/naemon.dbg'", like => '/not stripped/' },
+  { cmd => "/bin/su - $site -c 'file lib/naemon/livestatus.o.dbg'", like => '/not stripped/' },
+  { cmd => "/bin/su - $site -c 'file lib/mod_gearman/mod_gearman_naemon.o.dbg'", like => '/not stripped/' },
 
   { cmd => $omd_bin." stop $site naemon", unlike => '/kill/i' },
   { cmd => $omd_bin." stop $site" },

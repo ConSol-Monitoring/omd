@@ -23,6 +23,7 @@ install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/samplicate
 	cp samplicate.service $(DESTDIR)$(OMD_ROOT)/share/samplicate
 	cp samplicate_watch.service $(DESTDIR)$(OMD_ROOT)/share/samplicate
+	-test -d /run/. && sed -i -e 's/\/var\/run\//\/run\//g' $(DESTDIR)$(OMD_ROOT)/share/samplicate/*.service
 	cp README.systemd $(DESTDIR)$(OMD_ROOT)/share/samplicate
 
 skel:

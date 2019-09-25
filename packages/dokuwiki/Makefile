@@ -22,28 +22,21 @@ build:
 		( cd $(DIR) ; patch -p1 -b ) < $$p ; \
 	done
 	find $(DIR)/ -name \*.orig -exec rm {} \;
+	find $(DIR)/ -name ._\* -exec rm {} \;
 
 install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/dokuwiki
 	cp preload.php $(DIR)/inc/
-	cp -r authmultisite $(DIR)/lib/plugins/
-#	touch $(DIR)/conf $(DIR)/data
-#	rm -r $(DIR)/conf $(DIR)/data
 	cp -r $(DIR) $(DESTDIR)$(OMD_ROOT)/share/dokuwiki/htdocs
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/doc/dokuwiki
 	install -m 644 $(DIR)/README $(DESTDIR)$(OMD_ROOT)/share/doc/dokuwiki
 	install -m 644 $(DIR)/COPYING $(DESTDIR)$(OMD_ROOT)/share/doc/dokuwiki
 	install -m 644 $(DIR)/VERSION $(DESTDIR)$(OMD_ROOT)/share/doc/dokuwiki
-
-#install:
-#	$(MAKE) DESTDIR=$(DESTDIR) -C $(DIR) -j 1 install
-#	# fix path for plugin
-#	[ -d $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins ] || mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins
-#	mv $(DESTDIR)$(OMD_ROOT)/bin/check_gearman $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins/
-#	rm -rf $(DESTDIR)$(OMD_ROOT)/share/mod_gearman/*.conf
-#	rm -f $(DESTDIR)$(OMD_ROOT)/lib/mod_gearman/mod_gearman.so
-#	rm -rf $(DESTDIR)$(OMD_ROOT)/etc
-#	rm -rf $(DESTDIR)$(OMD_ROOT)/var
+	# remove the biggest 4 fonts
+	rm -f $(DESTDIR)$(OMD_ROOT)/share/dokuwiki/htdocs/lib/plugins/dw2pdf/vendor/mpdf/mpdf/ttfonts/Aegyptus.otf
+	rm -f $(DESTDIR)$(OMD_ROOT)/share/dokuwiki/htdocs/lib/plugins/dw2pdf/vendor/mpdf/mpdf/ttfonts/UnBatang_0613.ttf
+	rm -f $(DESTDIR)$(OMD_ROOT)/share/dokuwiki/htdocs/lib/plugins/dw2pdf/vendor/mpdf/mpdf/ttfonts/Sun-ExtB.ttf
+	rm -f $(DESTDIR)$(OMD_ROOT)/share/dokuwiki/htdocs/lib/plugins/dw2pdf/vendor/mpdf/mpdf/ttfonts/Sun-ExtA.ttf
 
 skel:
 	mkdir -p $(SKEL)/etc/dokuwiki

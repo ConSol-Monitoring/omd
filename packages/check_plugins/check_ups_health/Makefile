@@ -1,7 +1,7 @@
 include ../../../Makefile.omd
 
 NAME = check_ups_health
-VERSION = 2.8.3.1
+VERSION = 2.8.3.3
 DIR = $(NAME)-$(VERSION)
 
 .PHONY: skel
@@ -14,8 +14,8 @@ build:
 	$(MAKE) -C $(DIR)
 
 install:
-	[ -d $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins ] || mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins
-	install -m 755 $(DIR)/plugins-scripts/check_ups_health $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/monitoring-plugins
+	install -m 755 $(DIR)/plugins-scripts/check_ups_health $(DESTDIR)$(OMD_ROOT)/lib/monitoring-plugins
 
 skel:
 

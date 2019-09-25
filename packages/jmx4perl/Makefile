@@ -22,12 +22,13 @@ install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/skel/etc/jmx4perl
 	rsync -a $(DIR)/config $(DESTDIR)$(OMD_ROOT)/skel/etc/jmx4perl/
 	chmod 644 $(DESTDIR)$(OMD_ROOT)/skel/etc/jmx4perl/config/*.cfg
+	chmod 644 $(DESTDIR)$(OMD_ROOT)/skel/etc/jmx4perl/config/*/*.cfg
 	cp -p $(DIR)/blib/script/jmx4perl $(DESTDIR)$(OMD_ROOT)/bin/
 	cp -p $(DIR)/blib/script/j4psh $(DESTDIR)$(OMD_ROOT)/bin/
 	cp -p $(DIR)/blib/script/jolokia $(DESTDIR)$(OMD_ROOT)/bin/
-	[ -d $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins ] || mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins
-	cp -p $(DIR)/blib/script/check_jmx4perl $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins/
-	[ -d $(DESTDIR)$(OMD_ROOT)/lib/perl5/lib/perl5 ] || mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/perl5/lib/perl5
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/monitoring-plugins
+	cp -p $(DIR)/blib/script/check_jmx4perl $(DESTDIR)$(OMD_ROOT)/lib/monitoring-plugins/
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/perl5/lib/perl5
 	rsync -a $(DIR)/blib/lib/ $(DESTDIR)$(OMD_ROOT)/lib/perl5/lib/perl5
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/man/man1
 	rsync -a $(DIR)/blib/bindoc/ $(DESTDIR)$(OMD_ROOT)/share/man/man1

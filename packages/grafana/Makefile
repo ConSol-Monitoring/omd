@@ -1,10 +1,10 @@
 include ../../Makefile.omd
 
 NAME       = grafana
-VERSION    = 5.2.4
+VERSION    = 6.3.5
 SRC        = $(NAME)-$(VERSION).tar.gz
 GOPATH     = go
-GOPKG      = 1.10
+GOPKG      = 1.12
 GOVERSION  = $(shell grep ^VERSION ../go-${GOPKG}/Makefile | awk '{ print $$3 }')
 PWD        = $(shell pwd)
 GO         = export GOROOT=$(PWD)/../go-$(GOPKG)/go-$(GOVERSION) && export GOPATH=$(PWD)/$(GOPATH)/ && PATH=$$GOROOT/bin:$$PATH && go
@@ -37,18 +37,25 @@ install:
 	install -m 755 grafana_utils.py $(DESTDIR)$(OMD_ROOT)/lib/python/grafana_utils.py
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/var/tmp
 	install -m 755 grafanactl $(DESTDIR)$(OMD_ROOT)/bin/
+	# clean up
+	rm -rf $(DESTDIR)$(OMD_ROOT)/share/grafana/public/test
+	rm -rf $(DESTDIR)$(OMD_ROOT)/share/grafana/public/sass
+	rm -rf $(DESTDIR)$(OMD_ROOT)/share/grafana/public/build/*.map
 
 skel:
 	sed -i -e 's|###APACHE_MODULE_DIR###|$(MODULE_DIR)|g' \
 	       $(SKEL)/etc/apache/conf.d/grafana.conf
 	mkdir -p $(SKEL)/var/grafana/plugins
 	tar zxf clock-panel-plugin-0.1.0.tar.gz -C $(SKEL)/var/grafana/plugins
+	chmod 644 $(SKEL)/var/grafana/plugins/clock-panel/src/external/moment-duration-format.js
 	tar zxf piechart-panel-plugin-1.3.3.tar.gz -C $(SKEL)/var/grafana/plugins
+	tar zxf snuids-trafficlights-panel-1.4.5.tar.gz -C $(SKEL)/var/grafana/plugins
+
 
 clean:
 	rm -rf $(GOPATH)
 
-package: public
+package: public clean
 	$(GO) env
 	mkdir -p $(GOPATH)/src/github.com/grafana/
 	cd $(GOPATH)/src/github.com/grafana && \
@@ -64,18 +71,14 @@ package: public
 	cd $(GOPATH)/src/github.com/grafana/grafana && \
 		$(GO) run build.go setup
 	echo "packageing"
-	tar zcf $(SRC) $(GOPATH)/src/ --exclude=.git
+	tar zcf $(SRC) --exclude=.git $(GOPATH)/src/
 
 public:
-	wget --no-check-certificate https://s3-us-west-2.amazonaws.com/grafana-releases/release/grafana-$(VERSION).linux-amd64.tar.gz
+	wget https://dl.grafana.com/oss/release/grafana-$(VERSION).linux-amd64.tar.gz
 	tar zxf grafana-$(VERSION).linux-amd64.tar.gz
 	cd grafana-*/. && tar cfz ../public.tar.gz public
 	rm grafana-$(VERSION).linux-amd64.tar.gz
 	rm -rf grafana-*/
 	wget "https://raw.githubusercontent.com/grafana/grafana/v$(VERSION)/conf/defaults.ini" -O defaults.ini
 	sed -i -e 's/^default_theme.*$$/default_theme = light/' defaults.ini
-
-plugins:
-	git clone --depth=1 https://github.com/grafana/piechart-panel.git
-	tar zcf plugins.tar.gz piechart-panel --exclude=.git
-	rm -rf piechart-panel
+	sed -i -e 's/^allow_embedding.*$$/allow_embedding = true/' defaults.ini

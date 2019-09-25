@@ -24,11 +24,11 @@ inventory() {
     done
     if [ -z "$PORTS" ]; then
       logger samplicate_watch stops samplicate
-      service samplicate stop
+      systemctl stop samplicate
     elif [ "$PORTS" != " $ACTIVE_PORTS" ]; then
       logger samplicate_watch restarts samplicate
       printf "SAMPLICATE_TARGETS=\"%s\"\n" "$PORTS" > /tmp/samplicate_targets.env
-      service samplicate restart
+      systemctl restart samplicate
       rm /tmp/samplicate_targets.env
     else
       :

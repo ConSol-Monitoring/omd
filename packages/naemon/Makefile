@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 NAME = naemon
-VERSION = 1.0.8
+VERSION = 1.1.0
 DIR = $(NAME)-$(VERSION)
 
 # Configure options for Naemon. Since we want to compile
@@ -30,18 +30,23 @@ build:
 	    ( cd $(DIR) && patch -p1 -b -F 5 ) < $$p ; \
 	done
 	sed -i $(DIR)/configure -e 's/$(VERSION)\-source/$(VERSION)-omd/g'
-	cd $(DIR) && CFLAGS="$(CFLAGS)" ./configure $(CONFIGUREOPTS)
+	cd $(DIR) && CFLAGS="$(CFLAGS) -g3" ./configure $(CONFIGUREOPTS)
 	$(MAKE) -C $(DIR) all
 
 install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/bin
-	install -m 755 $(DIR)/src/naemon/.libs/naemon             $(DESTDIR)$(OMD_ROOT)/bin
-	install -m 755 $(DIR)/src/naemonstats/.libs/naemonstats   $(DESTDIR)$(OMD_ROOT)/bin
+	install -m 755 $(DIR)/src/naemon/.libs/naemon             $(DESTDIR)$(OMD_ROOT)/bin/naemon.dbg
+	install -sm 755 $(DIR)/src/naemon/.libs/naemon             $(DESTDIR)$(OMD_ROOT)/bin
+	install -sm 755 $(DIR)/src/naemonstats/.libs/naemonstats   $(DESTDIR)$(OMD_ROOT)/bin
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib
-	install -m 755 $(DIR)/.libs/libnaemon*.so*                $(DESTDIR)$(OMD_ROOT)/lib
+	install -m 755 $(DIR)/.libs/libnaemon.so.0.0.0            $(DESTDIR)$(OMD_ROOT)/lib/libnaemon.so.0.0.0.dbg
+	install -sm 755 $(DIR)/.libs/libnaemon.so.0.0.0            $(DESTDIR)$(OMD_ROOT)/lib
+	ln -s libnaemon.so.0.0.0                                   $(DESTDIR)$(OMD_ROOT)/lib/libnaemon.so
+	ln -s libnaemon.so.0.0.0                                   $(DESTDIR)$(OMD_ROOT)/lib/libnaemon.so.0
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/doc/naemon
 	install -m 644 example.cfg                                $(DESTDIR)$(OMD_ROOT)/share/doc/naemon
-	install -m 755 purge_naemon    		                      $(DESTDIR)$(OMD_ROOT)/bin
+	install -m 755 purge_naemon                               $(DESTDIR)$(OMD_ROOT)/bin
+	install -m 755 nq                                         $(DESTDIR)$(OMD_ROOT)/bin
 
 skel:
 

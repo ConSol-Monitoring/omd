@@ -24,9 +24,11 @@ Content-Transfer-Encoding: 8bit
 ----------------------------------
 - Author:      [% ACKAUTHOR %]
 - Comment:     [% ACKCOMMENT %]
-[% END %]
 ----------------------------------
-[% IF NOTIFICATIONCOMMENT %]
+[% ELSIF NOTIFICATIONCOMMENT %]
+----------------------------------
 - Comment:     [% NOTIFICATIONCOMMENT %]
+----------------------------------
+[% ELSE %]
 ----------------------------------
 [% END %]

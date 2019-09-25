@@ -9,7 +9,7 @@
 
 case "$1" in
    default)
-       echo "localhost:4730"
+       echo "127.0.0.1:4730"
    ;;
    choices)
        echo "[a-zA-Z0-9\.\-,:]*"

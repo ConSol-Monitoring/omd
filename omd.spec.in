@@ -56,15 +56,16 @@ rm -f $RPM_BUILD_ROOT/usr/bin/omd
 rm -f $RPM_BUILD_ROOT/usr/share/man/man8/omd.8.gz
 rm -f $RPM_BUILD_ROOT/@APACHE_CONFDIR@/*
 rm -f $RPM_BUILD_ROOT/etc/init.d/omd
-find $RPM_BUILD_ROOT/opt/omd/versions/%{version}/bin/ -type f | grep -v waitmax | grep -v agent_modbus | xargs strip 2>&1 | grep -v 'File format not recognized' ||:
-find $RPM_BUILD_ROOT/opt/omd/versions/%{version}/lib/nagios/plugins/ -type f | xargs strip 2>&1 | grep -v 'File format not recognized' ||:
+find $RPM_BUILD_ROOT/opt/omd/versions/%{version}/bin/ -type f | grep -v waitmax | grep -v agent_modbus | grep -v \.dbg | xargs strip 2>&1 | grep -v 'File format not recognized' ||:
+find $RPM_BUILD_ROOT/opt/omd/versions/%{version}/sbin/ -type f | grep -v waitmax | grep -v agent_modbus | grep -v \.dbg | xargs strip 2>&1 | grep -v 'File format not recognized' ||:
+find $RPM_BUILD_ROOT/opt/omd/versions/%{version}/lib/nagios/plugins/ -type f | grep -v \.dbg | xargs strip 2>&1 | grep -v 'File format not recognized' ||:
+find $RPM_BUILD_ROOT/opt/omd/versions/%{version}/lib/ -type f | grep -v waitmax | grep -v agent_modbus | grep -v \.dbg | xargs strip 2>&1 | grep -v 'File format not recognized' ||:
 
 %files
 %defattr(-,root,root)
 /opt/omd
-%attr(4750,root,omd) /opt/omd/versions/%{version}/lib/nagios/plugins/check_icmp
-%attr(4750,root,omd) /opt/omd/versions/%{version}/lib/nagios/plugins/check_dhcp
-%attr(4750,root,omd) /opt/omd/versions/%{version}/bin/mkeventd_open514
+%attr(4750,root,omd) /opt/omd/versions/%{version}/lib/monitoring-plugins/check_icmp
+%attr(4750,root,omd) /opt/omd/versions/%{version}/lib/monitoring-plugins/check_dhcp
 
 %pre
 groupadd -r omd 2>/dev/null || true
@@ -81,7 +82,7 @@ fi
 # not want to make it implicitely active again.
 ACTIVATE_INIT=0
 if [ ! -e /omd/versions/default ] ; then
-    echo "Activating init script /etc/init.d/omd"
+    echo "Activating init script /etc/init.d/omd or systemd service"
     ACTIVATE_INIT=1
 fi
 
@@ -91,22 +92,24 @@ ln -sfn /omd/versions/default/bin/omd /usr/bin/omd
 ln -sfn /omd/versions/default/share/man/man8/omd.8.gz /usr/share/man/man8/omd.8.gz
 ln -sfn /omd/versions/default/share/omd/omd.init /etc/init.d/omd
 ln -sfn /omd/versions/default/share/omd/apache.conf @APACHE_CONFDIR@/zzz_omd.conf
+mkdir -p /etc/bash_completion.d
 ln -sfn /omd/versions/default/lib/omd/omd_bash_completion /etc/bash_completion.d/omd
 
 # If the init script has been marked as to be activated
 # really activate the init script now
 if [ $ACTIVATE_INIT -eq 1 ]; then
-    chkconfig --add omd
-    chkconfig omd on
+    chkconfig --add omd >/dev/null 2>&1
+    chkconfig omd on >/dev/null 2>&1
+fi
+
 %if 0%{?_unitdir:1}
 if test -e /omd/versions/default/share/omd/omd.service; then
-cp /omd/versions/default/share/omd/omd.service %{_unitdir}/omd.service
-%systemd_post omd.service
-systemctl disable omd.service
-systemctl enable omd.service
+    cp /omd/versions/default/share/omd/omd.service %{_unitdir}/omd.service
+    %systemd_post omd.service
+    systemctl disable omd.service
+    systemctl enable omd.service
 fi
 %endif
-fi
 
 
 
@@ -167,10 +170,7 @@ setsebool -P httpd_can_network_connect on >/dev/null 2>&1
 exit 0
 
 %preun
-# ON UNINSTALL: Make sure no sites use that version
-# Do not check this on new release of the same OMD version
-# (I know this has not happend yet in official releases, but might
-#  happen in future? At least I had such a case with my own builds now.)
+# on run if uninstalled, not during updates
 if [ $1 = 0 ] ; then
     for link in /omd/sites/*/version
     do
@@ -180,8 +180,13 @@ if [ $1 = 0 ] ; then
         then
             site=${link#/omd/sites/}
             site=${site%/version}
-            echo "Site $site is still using this version!" >&2
-            exit 1
+            echo "Site $site is still using this version, saving skel/ folder for later upgrade" >&2
+            omd stop $site >/dev/null 2>&1
+            rm -rf /omd/sites/$site/.backup_meta
+            mkdir /omd/sites/$site/.backup_meta
+            cp /omd/versions/$version/share/omd/skel.permissions /omd/sites/$site/.backup_meta/skel.permissions
+            cp -r /omd/versions/$version/skel /omd/sites/$site/.backup_meta/
+            chown -R $site:$site /omd/sites/$site/.backup_meta
         fi
     done
 fi
@@ -189,6 +194,8 @@ exit 0
 
 
 %postun
+# on run if uninstalled, not during updates
+if [ $1 = 0 ] ; then
 # sles12 sometimes does not remove some empty folders
 rm -rf /omd/versions/%{version}
 rm -f /omd/versions/default
@@ -237,4 +244,6 @@ else
       echo "#> setsebool -P httpd_can_network_connect off"
     fi
 fi
+fi
+exit 0
 

@@ -100,10 +100,13 @@ case "$1" in
         ulimit -m unlimited >/dev/null 2>&1
         ulimit -v unlimited >/dev/null 2>&1
 
+        # influx uses lots memory when hitting open files limit
+        ulimit -n $(ulimit -Hn) >/dev/null 2>&1
+
         nohup $DAEMON $OPTIONS >>$LOGFILE 2>&1 &
         if [ $? -eq 0 ]; then
             for x in $(seq 60); do
-                $OMD_ROOT/lib/nagios/plugins/check_influxdb m ping --address $INFLUXD_PROTO://$ADDRESS:$PORT $CHECK_INFLUXDB_OPTIONS > /dev/null && break;
+                $OMD_ROOT/lib/monitoring-plugins/check_influxdb m ping --address $INFLUXD_PROTO://$ADDRESS:$PORT $CHECK_INFLUXDB_OPTIONS > /dev/null && break;
                 printf "."
                 sleep 1
             done

@@ -5,6 +5,7 @@ test -e $OMD_ROOT/.${OMD_LANDSCAPE}_profile && . $OMD_ROOT/.${OMD_LANDSCAPE}_pro
 OMD_GIT_BASE=${OMD_GIT_BASE:=${OMD_ROOT}/var/coshsh/configs}
 OMD_GIT_BASE_STATIC=${OMD_GIT_BASE_STATIC:=${OMD_GIT_BASE}/${OMD_LANDSCAPE}}
 OMD_GIT_BASE_DYNAMIC=${OMD_GIT_BASE_DYNAMIC:=${OMD_GIT_BASE}/${OMD_SITE}}
+OMD_GIT_MAX_RUNTIME=${OMD_GIT_MAX_RUNTIME:=3600}
 
 # OMD_GIT_BASE ${OMD_ROOT}/var/coshsh/configs
 # OMD_GIT_BASE ${GIT_SERVER}:var/coshsh/configs
@@ -50,8 +51,19 @@ function set_lock {
   if [ -f "$lockfile" ]; then
     pid=$(<"$lockfile")
     if kill -0 "$pid"; then
-      : "running normally"
-      logger_info "already running"
+      pcreated=$(stat -c%X /proc/${pid}/stat)
+      age=$(($(date +"%s") - $pcreated))
+      if [ $age -gt $((2 * $OMD_GIT_MAX_RUNTIME)) ]; then
+        logger_info "already running since $age seconds. killing it..."
+        # -$pid kills the whole process group, because killing check_git_updates
+        # leaves hanging git-pull round
+        kill -KILL -$pid
+      elif [ $age -gt $OMD_GIT_MAX_RUNTIME ]; then
+        logger_info "already running since $age seconds. terminating it..."
+        kill -TERM -$pid
+      else
+        logger_info "already running"
+      fi
       exit 0
     else
       : "terminated somehow"
@@ -115,6 +127,8 @@ else
   OLDSTATICREV=""
   if [[ ${OMD_GIT_BASE_STATIC} =~ ^http ]] && [[ ! $OMD_GIT_BASE_STATIC =~ ^http[s]*://([0-9a-zA-Z._-:]+)/([0-9a-zA-Z._-]+)/api/git/ ]]; then
     git clone ${OMD_GIT_BASE_STATIC}_static static
+  elif [[ ${OMD_GIT_BASE_STATIC} =~ ^git ]] && [[ ! $OMD_GIT_BASE_STATIC =~ ^git@([0-9a-zA-Z._-:]+)([0-9a-zA-Z._-/]+)/api/git/ ]]; then
+    git clone ${OMD_GIT_BASE_STATIC}_static static
   else
     git clone ${OMD_GIT_BASE_STATIC}/static
   fi
@@ -137,6 +151,8 @@ else
   pushd ${OMD_ROOT}/etc/${CORE}/conf.d/${OMD_LANDSCAPE}/${OMD_SITE}
   OLDDYNAMICREV=""
   if [[ ${OMD_GIT_BASE_DYNAMIC} =~ ^http ]] && [[ ! $OMD_GIT_BASE_DYNAMIC =~ ^http[s]*://([0-9a-zA-Z._-:]+)/([0-9a-zA-Z._-]+)/api/git/ ]]; then
+    git clone ${OMD_GIT_BASE_DYNAMIC}_dynamic dynamic
+  elif [[ ${OMD_GIT_BASE_DYNAMIC} =~ ^git ]] && [[ ! $OMD_GIT_BASE_DYNAMIC =~ ^git@([0-9a-zA-Z._-:]+)([0-9a-zA-Z._-/]+)/api/git/ ]]; then
     git clone ${OMD_GIT_BASE_DYNAMIC}_dynamic dynamic
   else
     git clone ${OMD_GIT_BASE_DYNAMIC}/dynamic

@@ -1,0 +1,35 @@
+#!/bin/bash
+
+# Alias: Restrict livestatus port to IP addresses
+# Menu: Distributed Monitoring
+# Description:
+#  If Livestatus is configured to listen on a TCP port, you
+#  can configure the IP addresses that are allowed to
+#  connect to livestatus here. The setting 0.0.0.0 makes the
+#  port available to all clients.
+
+case "$1" in
+    default)
+        # use current value as default to not break existing sites
+        if ! test -f $OMD_ROOT/skel/etc/naemon/xinetd.conf ||  [ $(grep 'only_from\ *=' $OMD_ROOT/skel/etc/naemon/xinetd.conf | grep -v ^# | wc -l) -eq 0 ]; then
+            echo "no restriction"
+        else
+            grep only_from $OMD_ROOT/skel/etc/naemon/xinetd.conf | sed -e 's/^.*=\ *//' | tail -n 1
+        fi
+    ;;
+    choices)
+        echo "(?:(?:[\d]{1,3})\.(?:[\d]{1,3})\.(?:[\d]{1,3})\.(?:[\d]{1,3})(/[0-9]{1,2})?\s?)+|no restriction"
+    ;;
+    set)
+        # comment all entrys if there is no restriction
+        if [ "$2" = "no restriction" ]; then
+            sed -e '/only_from/ s/^\ *#*\ */    #/' -i $OMD_ROOT/etc/naemon/xinetd.conf
+        else
+            sed -ri "s@#?([[:space:]]*only_from[[:space:]]*=[[:space:]]*)(.*)@\1$2@" $OMD_ROOT/etc/naemon/xinetd.conf
+        fi
+    ;;
+    depends)
+        [ "$CONFIG_CORE" != none -a "$CONFIG_LIVESTATUS_TCP" = on ]
+    ;;
+esac
+

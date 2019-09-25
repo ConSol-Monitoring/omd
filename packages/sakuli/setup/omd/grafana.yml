@@ -1,0 +1,18 @@
+---
+- name: Configure Grafana feature
+  gather_facts: False
+  hosts: all
+  tasks:
+    - name: pretask
+      include: pretasks.yml
+    - name: enable InfluxDB + Grafana
+      command: omd config set {{item}}
+      with_items:
+        - "PNP4NAGIOS off"
+        - "GRAFANA on"
+        - "INFLUXDB on"
+        - "NAGFLUX on"
+    - name: apply influxdb patch to create sakuli db
+      patch:
+        src: ./etc/init.d/sakuli_influxdb.patch
+        basedir: "{{ OMD_ROOT }}"

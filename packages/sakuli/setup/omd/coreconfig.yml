@@ -1,0 +1,50 @@
+---
+- name: Configure core
+  gather_facts: False
+  hosts: all
+  tasks:
+    - name: pretask
+      include: pretasks.yml
+    - name: initialize tmp dir
+      command: "mkdir -p {{ OMD_ROOT }}/tmp"
+    - name: Core - eventhandler script
+      copy:
+        src: ./local/lib/nagios/plugins/sakuli_screenshot_eventhandler.sh
+        dest: "{{ OMD_ROOT }}/local/lib/nagios/plugins/"
+        mode: 0775
+    - name: Core - eventhandler command
+      copy:
+        src: ./etc/nagios/conf.d/sakuli_screenshot_eventhandler.cfg
+        dest: "{{ OMD_ROOT }}/etc/core/conf.d/"
+    - name: Core - logo directory
+      file:
+        path: "{{ OMD_ROOT }}/local/share/nagios/htdocs/images/logos/"
+        state: directory
+        recurse: yes
+    - name: Core - Sakuli logo
+      copy:
+        src: ./local/share/nagios/htdocs/images/logos/sakuli.png
+        dest: "{{ OMD_ROOT }}/local/share/nagios/htdocs/images/logos/"
+    - name: Core - Sakuli templates
+      copy:
+        src: ./etc/nagios/conf.d/sakuli_nagios_templates.cfg
+        dest: "{{ OMD_ROOT }}/etc/core/conf.d/"
+    - name: Enable obsessing
+      lineinfile: 
+        path: "{{ OMD_ROOT }}/etc/nagios/nagios.d/obsess.cfg"
+        regexp: '^obsess_over_services=\d$'
+        line: 'obsess_over_services=1'
+    - name: Change obsessing command
+      lineinfile: 
+        path: "{{ OMD_ROOT }}/etc/nagios/nagios.d/obsess.cfg"
+        regexp: '#ocsp_command=somecommand$'
+        line: 'ocsp_command=sakuli_screenshot_eventhandler'
+
+    - name: Escape HTML tags
+      lineinfile:
+        path: "{{ item }}"
+        regexp: '^escape_html_tags=\d$'
+        line: 'escape_html_tags=0'
+      ignore_errors: yes
+      with_items:
+        - "{{ OMD_ROOT }}/etc/thruk/cgi.cfg"

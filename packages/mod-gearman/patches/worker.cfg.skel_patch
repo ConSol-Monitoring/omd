@@ -1,5 +1,5 @@
---- a/etc/mod-gearman/worker.cfg	2011-12-30 00:16:28.000000000 +0100
-+++ b/etc/mod-gearman/worker.cfg	2011-12-30 00:16:28.000000000 +0100
+--- a/etc/mod-gearman/worker.cfg	2017-03-24 01:36:02.000000000 +0100
++++ a/etc/mod-gearman/worker.cfg	2018-10-14 11:43:18.834555496 +0200
 @@ -21,12 +21,11 @@
  debug=0
  
@@ -17,7 +17,7 @@
  
  # sets the address of your 2nd (duplicate) gearman job server. Can
  # be specified more than once o add more servers.
-@@ -83,13 +82,13 @@
+@@ -77,13 +76,13 @@
  # A shared password which will be used for
  # encryption of data pakets. Should be at least 8
  # bytes long. Maximum length is 32 characters.
@@ -31,14 +31,22 @@
 -#keyfile=/path/to/secret.file
 +keyfile=###ROOT###/etc/mod-gearman/secret.key
  
- 
- ###############################################################################
-@@ -156,7 +155,7 @@
+ # Path to the pidfile. Usually set by the init script
+ #pidfile=%PIDFILE%
+@@ -166,7 +165,7 @@
  
  # path to p1 file which is used to execute and cache the
  # perl scripts run by the embedded perl interpreter
 -p1_file=%P1FILE%
 +p1_file=###ROOT###/share/mod_gearman/mod_gearman_p1.pl
  
- 
- # Workarounds
+ # Gearman connection timeout(in milliseconds) while submitting jobs to
+ # gearmand server
+@@ -193,3 +192,7 @@
+ # Sending results (when exit code is 25 ) will be skipped with this
+ # enabled.
+ workaround_rc_25=off
++
++# Prometheus
++# export prometheus metrics (only available in the go-worker)
++#prometheus_server=127.0.0.1:9050

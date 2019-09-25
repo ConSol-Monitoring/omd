@@ -1,0 +1,99 @@
+#!/bin/bash
+
+### BEGIN INIT INFO
+# Provides:          mod_gearman_proxy
+# Required-Start:    $local_fs
+# Required-Stop:     $local_fs
+# Should-Start:
+# Should-Stop:
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Start/Stop the mod_gearman proxy daemon
+### END INIT INFO
+
+# OMD
+if [ -n $OMD_ROOT ]; then
+    # Check if Mod-Gearman is enabled in OMD. If not terminate.
+    cd $OMD_ROOT
+    . $OMD_ROOT/.profile
+    . $OMD_ROOT/etc/omd/site.conf
+    # not integrated in omds config menu yet
+    if [ "$CONFIG_MOD_GEARMAN" != "on" -o "$CONFIG_GEARMAN_PROXY" != "on" ] ; then
+        exit 5
+    fi
+    PROXY=$OMD_ROOT/share/mod_gearman/gearman_proxy.pl
+    PIDFILE=$OMD_ROOT/tmp/run/gearman_proxy.pid
+    LOGFILE=$OMD_ROOT/var/log/gearman/proxy.log
+    CONFIGFILE=$OMD_ROOT/etc/mod_gearman/gearman_proxy.cfg
+    mkdir -p $OMD_ROOT/tmp/run
+else
+    PROXY=/usr/share/mod_gearman/gearman_proxy.pl
+    PIDFILE=/var/run/gearman_proxy.pid
+    LOGFILE=/var/log/gearman/proxy.log
+    CONFIGFILE=/etc/mod_gearman/gearman_proxy.cfg
+fi
+
+NAME=gearman_proxy
+USER=$USER
+USERID=`id -u`
+
+# create state dir
+if [ "$USERID" -eq 0 ]; then
+  mkdir -p $(dirname $PIDFILE)
+  chown $USER: $(dirname $PIDFILE)
+fi
+
+case "$1" in
+    start)
+        echo -n "Starting $NAME..."
+        if [ ! -f $PIDFILE ]; then
+            $PROXY --log=$LOGFILE --pid=$PIDFILE --config=$CONFIGFILE &
+            if [ $? -eq 0 ]; then
+                echo "OK"
+            else
+                echo "failed"
+            fi
+        else
+            echo "Already running"
+        fi
+        ;;
+    stop)
+        echo -n "Stopping $NAME..."
+        pid=`cat $PIDFILE 2>/dev/null`
+        if [ -f $PIDFILE  ]; then
+            kill $pid
+            rm $PIDFILE
+            if [ $? -eq 0 ]; then
+                echo "OK"
+                exit 0;
+            else
+                echo "failed"
+                exit 1;
+            fi
+        else
+            echo "Not running."
+        fi
+        ;;
+    status)
+        pid=`cat $PIDFILE 2>/dev/null`
+        if [ "$pid" != "" ]; then
+            ps -p $pid > /dev/null 2>&1
+            if [ $? -eq 0 ]; then
+                echo "$NAME is running with pid $pid"
+                exit 0;
+            fi
+        fi
+        echo "$NAME is not running"
+        exit 1;
+    ;;
+    reload|restart)
+        $0 stop && sleep 1 && $0 start
+        exit $?
+        ;;
+    *)
+        echo "Usage: $NAME {start|stop|status|restart}"
+        exit 1
+        ;;
+esac
+
+exit 0

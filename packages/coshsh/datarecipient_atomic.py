@@ -159,12 +159,30 @@ class RemoteAtomicRecipient(AtomicRecipient):
                     logger.info("writing %s atomic ..." % item)
                     for itemobj in self.objects[item].values():
                         self.item_write_config(itemobj, local_tempdir, '')
-        logger.info('copy items to object_dir %s:%s' % (self.remote, self.objects_dir))
-        status, stdout, stderr = self.process("rsync -ac %s/ %s:%s" % (local_tempdir, self.remote, self.objects_dir))
-        if not status:
+        write_me = True
+        if self.delta_watch:
+            status, stdout, stderr = self.process("rsync --dry-run --stats -ac %s/ %s:%s" % (local_tempdir, self.remote, self.objects_dir))
+            if [out for out in stdout.split("\n") if "Number of regular files transferred: 0" in out]:
+                logger.debug('rsync dry-run did not detect changes')
+                write_me = False
+        if write_me:
+            logger.info('copy items to object_dir %s:%s' % (self.remote, self.objects_dir))
+            status, stdout, stderr = self.process("rsync --stats -ac %s/ %s:%s" % (local_tempdir, self.remote, self.objects_dir))
             shutil.rmtree(local_tempdir)
-            raise DatarecipientNotAvailable
-        else:
-            shutil.rmtree(local_tempdir)
+            written = True
+            if [out for out in stdout.split("\n") if "Number of regular files transferred: 0" in out]:
+                written = False
+            else:
+                for transferred in [out for out in stdout.split("\n") if "Number of regular files transferred:" in out]:
+                    logger.debug(transferred.strip("\n"))
+            if not status:
+                raise DatarecipientNotAvailable
+            if written and self.delta_action:
+                logger.info('running ' + self.delta_action)
+                status, stdout, stderr = self.process(self.delta_action)
+                logger.debug('stdout: ' + stdout.strip("\n"))
+                logger.debug('stderr: ' + stderr.strip("\n"))
+                if not status:
+                    raise DatarecipientNotAvailable
 
 

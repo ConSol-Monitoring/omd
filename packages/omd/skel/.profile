@@ -14,7 +14,8 @@ export MANPATH="$OMD_ROOT/share/man:$MANPATH"
 export PYTHONPATH="$OMD_ROOT/lib/python:$OMD_ROOT/local/lib/python"
 export MAILRC="$OMD_ROOT/etc/mail.rc"
 export GF_PLUGIN_DIR="$OMD_ROOT/var/grafana/plugins"
-
+# uncomment to save core files
+#ulimit -c unlimited
 
 if [ -f "$OMD_ROOT/etc/environment" ]
 then
@@ -22,6 +23,9 @@ then
     . "$OMD_ROOT/etc/environment"
     set +a
 fi
+
+# remove duplicates from PATH, so PATH does not grow in cases the profile is sourced multiple times.
+export PATH=$(echo -n $PATH | awk -v RS=: -v ORS=: '!arr[$0]++')
 
 # Only load bashrc when in a bash shell and not loaded yet.
 # The load once is ensured by the variable $BASHRC.

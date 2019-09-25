@@ -1,0 +1,14 @@
+# rename this file to "vars" to activate
+
+# The listening address for cluster mode
+CLUSTER_LISTEN_ADDRESS=0.0.0.0:7511
+
+# cluster addresses of the other alertmanagers
+# we are host 2 in this case and have 3 alertmanagers
+CLUSTER_PEERS=(
+	host1:7511
+	host3:7511
+)
+
+# extra options you want to provide to the alertmanager
+EXTRA_OPTIONS=""
