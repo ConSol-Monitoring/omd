@@ -36,6 +36,9 @@ install:
 	install -m 755 thruk.post-update $(DESTDIR)$(OMD_ROOT)/lib/omd/scripts/post-update/thruk
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/monitoring-plugins
 	install -m 755 $(DIR)/script/check_thruk_rest $(DESTDIR)$(OMD_ROOT)/lib/monitoring-plugins/check_thruk_rest
+	# dokuwiki auth plugin
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/dokuwiki/htdocs/lib/plugins
+	cp -rp dokuwiki_auththruk $(DESTDIR)$(OMD_ROOT)/share/dokuwiki/htdocs/lib/plugins/auththruk
 
 
 skel:
@@ -73,6 +76,7 @@ skel:
 	cp $(DIR)/cgi.cfg $(SKEL)/etc/thruk/
 	sed -e 's/thrukadmin/omdadmin/g' -i $(SKEL)/etc/thruk/cgi.cfg
 	sed -e 's/^default_user_name=.*/default_user_name=/g' -i $(SKEL)/etc/thruk/cgi.cfg
+	cat dokuwiki.cgi.cfg >> $(SKEL)/etc/thruk/cgi.cfg
 
 clean:
 	rm -rf $(DIR)

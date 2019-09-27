@@ -12,7 +12,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 73 );
+plan( tests => 89 );
 
 ##################################################
 # create our test site
@@ -45,6 +45,9 @@ TestUtils::restart_system_apache();
 TestUtils::test_command({ cmd => "/bin/su - $site -c 'omd start'",  like => '/Starting dedicated Apache.*?OK/' });
 TestUtils::test_command({ cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_http -H localhost -S -a omdadmin:omd -u /$site/thruk/startup.html -e 200 -vvv'", like => ['/HTTP OK:/', '/Please stand by, Thruks FastCGI Daemon is warming/'] });
 
+TestUtils::test_command({ cmd => "/bin/su - $site -c 'omd stop'",  like => '/Stopping dedicated Apache/' });
+TestUtils::test_command({ cmd => "/bin/su - $site -c 'omd config set THRUK_COOKIE_AUTH on'",  like => '/^$/' });
+
 # omd diff should list no files after creating a site, otherwise hooks are wrong and create lots of conflicts on every update
 {
     my $test = { cmd => $omd_bin." diff $site",     unlike => '/Changed content/', like => '/^$/' };
@@ -57,6 +60,8 @@ TestUtils::test_command({ cmd => "/bin/su - $site -c 'lib/monitoring-plugins/che
         diag($test->{'stdout'});
     }
 }
+TestUtils::test_command({ cmd => "/bin/su - $site -c 'omd config set THRUK_COOKIE_AUTH off'",  like => '/^$/' });
+TestUtils::test_command({ cmd => "/bin/su - $site -c 'omd start'",  like => '/Starting dedicated Apache.*?OK/' });
 
 ##################################################
 # test if nagios cgis are no longer in place

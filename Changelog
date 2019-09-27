@@ -5,6 +5,7 @@ next:
             - omd cleanup will keep current default version installed
             - add build support for Fedora 30
             - add build support for Ubuntu 19.04 Disco
+            - add dokuwiki auth plugin for thruk
           - Naemon:
             - update core to 1.1.0
             - update livestatus to 1.1.0

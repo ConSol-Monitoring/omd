@@ -201,7 +201,6 @@ my $cookie_urls = [
   { url => '/thruk/cgi-bin/tac.cgi', like => '/Password/', unlike => [ '/internal server error/'], code => 401 },
 ];
 
-
 # complete the url
 for my $url ( @{$urls}, @{$own_urls}, @{$cookie_urls} ) {
     $url->{'url'} = "http://localhost/".$site.$url->{'url'};

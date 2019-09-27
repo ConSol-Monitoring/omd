@@ -14,8 +14,6 @@ BEGIN {
 
 my $php_version = `php -v`;
 $php_version =~ s%^PHP\ (\d\.\d).*%$1%gmsx;
-plan( skip_all => 'dokuwiki requires at least php 5.6') if $php_version < 5.6;
-plan( tests => 39 );
 
 ##################################################
 # create our test site
@@ -34,12 +32,18 @@ my $tests = [
   { cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_http -H localhost -a omdadmin:omd -u \"/$site/wiki/doku.php?id=start&do=export_pdf\" -e 200 -t 60'", like => '/HTTP OK:/' },
   { cmd => "/bin/su - $site -c 'test -h var/dokuwiki/lib/plugins/acl'", like => '/^\s*$/' },
 
-  { cmd => $omd_bin." stop $site" },
 ];
 for my $test (@{$tests}) {
+    if($php_version < 5.6 && $test->{'cmd'} =~ m/export_pdf/) {
+        diag('dokuwiki pdf export requires at least php 5.6') ;
+        next;
+    }
     TestUtils::test_command($test);
 }
 
 ##################################################
 # cleanup test site
+TestUtils::test_command({ cmd => $omd_bin." stop $site" });
 TestUtils::remove_test_site($site);
+
+done_testing();

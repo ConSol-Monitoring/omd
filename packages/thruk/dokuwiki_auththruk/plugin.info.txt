@@ -1,0 +1,7 @@
+base   auththruk
+author Sven Nierlein
+email  sven.nierlein@consol.de
+date   2013-12-02
+name   thruk cookie auth plugin
+desc   Provides authentication against thruk cookie auth
+url    http://labs.consol.de/omd/

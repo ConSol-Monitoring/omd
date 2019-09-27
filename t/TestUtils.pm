@@ -317,6 +317,28 @@ sub create_fake_cookie_login {
     return($sessionid);
 }
 
+##################################################
+
+=head2 set_cookie
+
+    set_cookie($name, $value, $expire)
+
+  Sets cookie. Expire date is in seconds. A value <= 0 will remove the cookie.
+
+=cut
+sub set_cookie {
+    my($var, $val, $expire) = @_;
+    our($cookie_jar, $cookie_file);
+    if(!defined $cookie_jar) {
+        my $fh;
+        ($fh, $cookie_file) = tempfile(TEMPLATE => 'tempXXXXX', UNLINK => 1);
+        unlink($cookie_file);
+        $cookie_jar = HTTP::Cookies::Netscape->new(file => $cookie_file);
+    }
+    $cookie_jar->set_cookie( 0, $var, $val, '/', 'localhost.local', undef, 1, 0, $expire, 1, {});
+    $cookie_jar->save();
+    return;
+}
 
 ##################################################
 
@@ -754,8 +776,8 @@ sub _request {
     our($fh, $cookie_jar, $cookie_file);
 
     if(!defined $cookie_jar) {
-        ($fh, $cookie_file) = tempfile();
-        unlink ($cookie_file);
+        ($fh, $cookie_file) = tempfile(TEMPLATE => 'tempXXXXX', UNLINK => 1);
+        unlink($cookie_file);
         $cookie_jar = HTTP::Cookies::Netscape->new(
                                        file     => $cookie_file,
                                        autosave => 1,
@@ -794,6 +816,9 @@ sub _request {
     $return->{'code'}         = $response->code;
     $return->{'content'}      = $response->decoded_content || $response->content;
     $return->{'content_type'} = $response->header('Content-Type');
+
+    $cookie_jar->extract_cookies($response);
+    $cookie_jar->save();
 
     return($return);
 }

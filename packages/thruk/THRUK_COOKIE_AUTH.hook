@@ -32,10 +32,15 @@ case "$1" in
        if [ "$2" == "on" ]; then
           ln -sfn ../../thruk/apache_cookie_auth.conf $APACHE_CFG
           sed -i ${OMD_ROOT}/etc/thruk/apache_cookie_auth.conf -e "s%^\ *Mutex.*%${MUTEX}%g"
+          sed -i -e "/authtype/ s|'authplain'|'auththruk'|" ${OMD_ROOT}/etc/dokuwiki/dokuwiki.php
        fi
        if [ "$2" == "sso-support" ]; then
           ln -sfn ../../thruk/apache_cookie_auth_sso-support.conf $APACHE_CFG
           sed -i ${OMD_ROOT}/etc/thruk/apache_cookie_auth_sso-support.conf -e "s%^\ *Mutex.*%${MUTEX}%g"
+          sed -i -e "/authtype/ s|'authplain'|'auththruk'|" ${OMD_ROOT}/etc/dokuwiki/dokuwiki.php
+       fi
+       if [ "$2" == "off" ]; then
+          sed -i -e "/authtype/ s|'auththruk'|'authplain'|" ${OMD_ROOT}/etc/dokuwiki/dokuwiki.php
        fi
    ;;
 esac
