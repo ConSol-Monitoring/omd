@@ -12,7 +12,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 360 );
+plan( tests => 364 );
 
 my $omd_bin = TestUtils::get_omd_bin();
 
@@ -20,6 +20,11 @@ my $omd_bin = TestUtils::get_omd_bin();
 my $vtest = { cmd => $omd_bin." version", "exit" => undef };
 TestUtils::test_command($vtest) or TestUtils::bail_out_clean("no further testing without working omd");
 diag($vtest->{'stdout'});
+
+# there should be no sbin/ folder, all binaries should be in bin/
+chomp(my $omd_version = $vtest->{'stdout'});
+$omd_version =~ s/^.*\s+(\S+)$/$1/gmx;
+TestUtils::test_command({ cmd => "/bin/sh -c 'test -e /omd/versions/$omd_version/sbin && ls -la /omd/versions/$omd_version/sbin'", like => ['/^$/'], exit => 1 });
 
 ########################################
 # execute some commands
