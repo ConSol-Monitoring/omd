@@ -19,7 +19,7 @@ fi
 . lib/omd/init_profile
 
 NAME=gearmand
-DAEMON="$OMD_ROOT/version/sbin/gearmand"
+DAEMON="$OMD_ROOT/version/bin/gearmand"
 OPTIONS="--daemon -q libsqlite3 --libsqlite3-db=$OMD_ROOT/var/gearmand.db --store-queue-on-shutdown"
 PORT=`echo $CONFIG_GEARMAND_PORT | awk -F: {'print $2'}`
 LISTEN=`echo $CONFIG_GEARMAND_PORT | awk -F: {'print $1'}`

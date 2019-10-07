@@ -12,6 +12,7 @@ CONFIGUREOPTS = \
     --disable-libdrizzle \
     --disable-libpq \
     --disable-libtokyocabinet \
+    --sbindir=$(OMD_ROOT)/bin \
     --prefix=$(OMD_ROOT)
 
 .PHONY: skel
@@ -23,11 +24,12 @@ build: clean
 	    ( cd $(DIR) ; patch -p1 ) < $$p || exit 1; \
 	done
 	cd $(DIR) && \
-	./configure $(CONFIGUREOPTS)
+	CFLAGS="-g3" ./configure $(CONFIGUREOPTS)
 	$(MAKE) -C $(DIR)
 
 install:
 	$(MAKE) DESTDIR=$(DESTDIR) -C $(DIR) install
+	cp $(DESTDIR)/$(OMD_ROOT)/bin/gearmand $(DESTDIR)/$(OMD_ROOT)/bin/gearmand.dbg
 
 skel:
 

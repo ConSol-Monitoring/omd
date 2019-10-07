@@ -14,7 +14,7 @@ BEGIN {
 
 plan skip_all => 'Author test. Set $ENV{TEST_AUTHOR} to a true value to run.' unless $ENV{TEST_AUTHOR};
 plan skip_all => 'Root permissions required' unless $> == 0;
-plan( tests => 110 );
+plan( tests => 107 );
 
 my $omd_bin  = TestUtils::get_omd_bin();
 my $site     = TestUtils::create_test_site() or TestUtils::bail_out_clean("no further testing without site");
