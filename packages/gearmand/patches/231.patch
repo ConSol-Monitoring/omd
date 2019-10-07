@@ -1,0 +1,86 @@
+--- a/libgearman/interface/universal.hpp	2017-10-06 18:15:57.000000000 +0200
++++ b/libgearman/interface/universal.hpp	2019-10-07 10:03:54.002033307 +0200
+@@ -51,7 +51,8 @@
+   GEARMAN_UNIVERSAL_NON_BLOCKING,
+   GEARMAN_UNIVERSAL_DONT_TRACK_PACKETS,
+   GEARMAN_UNIVERSAL_IDENTIFY,
+-  GEARMAN_UNIVERSAL_MAX
++  GEARMAN_UNIVERSAL_MAX,
++  GEARMAN_UNIVERSAL_STOP_WAIT_ON_SIGNAL
+ };
+ 
+ /**
+@@ -66,12 +67,14 @@
+   struct Options {
+     bool dont_track_packets;
+     bool non_blocking;
++    bool stop_wait_on_signal;
+     bool no_new_data;
+     bool _ssl;
+ 
+     Options() :
+       dont_track_packets(false),
+       non_blocking(false),
++      stop_wait_on_signal(false),
+       no_new_data(false),
+       _ssl(false)
+     { }
+@@ -125,6 +128,15 @@
+     options.non_blocking= arg_;
+   }
+ 
++  bool is_stop_wait_on_signal() const
++  {
++      return options.stop_wait_on_signal;
++  }
++  void stop_wait_on_signal(bool arg_)
++  {
++    options.stop_wait_on_signal = arg_;
++  }
++
+   const char *error() const
+   {
+     if (_error.error() == NULL)
+--- a/libgearman/universal.cc	2017-10-06 18:15:57.000000000 +0200
++++ b/libgearman/universal.cc	2019-10-07 10:02:50.158031526 +0200
+@@ -97,6 +97,7 @@
+   destination.wakeup(source.has_wakeup());
+ 
+   (void)gearman_universal_set_option(destination, GEARMAN_UNIVERSAL_NON_BLOCKING, source.options.non_blocking);
++  (void)gearman_universal_set_option(destination, GEARMAN_UNIVERSAL_STOP_WAIT_ON_SIGNAL, source.options.stop_wait_on_signal);
+ 
+   destination.ssl(source.ssl());
+ 
+@@ -146,6 +147,10 @@
+     self.options.non_blocking= value;
+     break;
+ 
++  case GEARMAN_UNIVERSAL_STOP_WAIT_ON_SIGNAL:
++    self.options.stop_wait_on_signal= value;
++    break;
++
+   case GEARMAN_UNIVERSAL_DONT_TRACK_PACKETS:
+     break;
+ 
+@@ -319,6 +324,10 @@
+       switch(errno)
+       {
+       case EINTR:
++        if (universal.is_stop_wait_on_signal())
++        {
++          return GEARMAN_IO_WAIT;
++        }
+         continue;
+ 
+       case EINVAL:
+@@ -449,6 +458,10 @@
+       non_blocking(value);
+       break;
+ 
++    case GEARMAN_UNIVERSAL_STOP_WAIT_ON_SIGNAL:
++        stop_wait_on_signal(value);
++      break;
++
+     case GEARMAN_UNIVERSAL_DONT_TRACK_PACKETS:
+       break;
+ 
