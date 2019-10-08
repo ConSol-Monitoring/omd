@@ -3,6 +3,7 @@ This file documents the revision history for the Open Monitoring Distribution (L
 next:
           - OMD:
             - omd cleanup will keep current default version installed
+            - add build support for Centos 8
             - add build support for Fedora 30
             - add build support for Ubuntu 19.04 Disco
             - add dokuwiki auth plugin for thruk
