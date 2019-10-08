@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python2
 
 from mod_python import apache,util
 import os, pwd, re

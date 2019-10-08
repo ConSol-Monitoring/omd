@@ -9,12 +9,12 @@ LOCALPYTHONDIR=$(OMD_ROOT)/lib/python
 
 build:
 	( gzip -d < $(ANSIBLE).tar.gz | tar xf - )
-	( cd $(ANSIBLE) ; python setup.py build )
+	( cd $(ANSIBLE) ; python2 setup.py build )
 
 install:
 	mkdir -p $(DESTDIR)/$(LOCALPYTHONDIR)
 	export PYTHONPATH=$$PYTHONPATH:$(LOCALPYTHONDIR); \
-	cd $(ANSIBLE) ; python setup.py  install \
+	cd $(ANSIBLE) ; python2 setup.py  install \
 		--home=$(OMD_ROOT) \
 		--root=$(DESTDIR) \
 		--prefix='' \

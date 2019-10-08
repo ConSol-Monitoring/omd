@@ -6,6 +6,7 @@ VERSION = 3.3.1
 DIR = $(NAME)-$(VERSION)
 
 CONFIGUREOPTS = \
+    --with-python=/usr/bin/python2 \
     --prefix=$(OMD_ROOT)
     
 APACHE_VERSION      = $(shell $(APACHE_BIN) -v | awk '/version/ {print $$3}' | awk -F/ '{print $$2}')

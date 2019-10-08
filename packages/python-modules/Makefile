@@ -92,10 +92,10 @@ build:
 		    sed -ri "/setuptools_git/d" setup.py; \
 		    sed -ri "s#include_dirs = \[\]#include_dirs = \['$(FREETDS)/include'\]#" setup.py; \
 		    sed -ri "s#library_dirs = \[\]#library_dirs = \['$(FREETDS)/lib'\]#" setup.py; \
-	            python setup.py build_ext -I $(FREETDS)/include -L $(FREETDS)/lib ; \
+	            python2 setup.py build_ext -I $(FREETDS)/include -L $(FREETDS)/lib ; \
 		else \
 		    sed -ri "/setuptools_git/d" setup.py; \
-	            python setup.py build ; \
+	            python2 setup.py build ; \
 		fi ; \
 	        cd .. ; \
 	    done
@@ -111,7 +111,7 @@ install:
 	        MDIR=$$(echo $$M | sed -e 's/.tar.gz//g' -e 's/.zip//g') ; \
 	        cd $$MDIR ; \
 	        echo PYTHONINSTALL $$M ; \
-	        python setup.py install --home=$(DESTDIR)$(OMD_ROOT) \
+	        python2 setup.py install --home=$(DESTDIR)$(OMD_ROOT) \
 	            --prefix='' \
 	            --install-platlib=$(LOCALPYTHONDIR) \
 	            --install-purelib=$(LOCALPYTHONDIR) ; \

@@ -38,8 +38,8 @@ TestUtils::test_command({ cmd => "/bin/su - $site -c 'echo \"localhost\n\" > inv
 if($os =~ /centos 6/i) {
     TestUtils::test_command({ cmd => qq{/bin/su - $site -c 'printf "[ssh_connection]\nssh_args = -o ControlMaster=no -o ControlPath=none -o ControlPersist=no\n" > .ansible.cfg'}, like => '/^$/'});
 }
-TestUtils::test_command({ cmd => "/bin/su - $site -c 'ansible all -m ping -i inventory'", like => '/localhost \| (?i:success)/' });
-TestUtils::test_command({ cmd => "/bin/su - $site -c 'ansible -i inventory -a \"omd status\" localhost'", like => '/localhost \| (?i:FAILED) \| rc=1/', exit => 2 });
+TestUtils::test_command({ cmd => "/bin/su - $site -c 'ansible all -m ping -e 'ansible_python_interpreter=/usr/bin/python2' -i inventory'", like => '/localhost \| (?i:success)/' });
+TestUtils::test_command({ cmd => "/bin/su - $site -c 'ansible -i inventory -e 'ansible_python_interpreter=/usr/bin/python2' -a \"omd status\" localhost'", like => '/localhost \| (?i:FAILED) \| rc=1/', exit => 2 });
 
 TestUtils::test_command({ cmd => $omd_bin." stop $site" });
 TestUtils::remove_test_site($site);
