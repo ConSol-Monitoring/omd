@@ -95,7 +95,6 @@ OS_PACKAGES      += php-gd
 OS_PACKAGES      += readline
 OS_PACKAGES      += rsync
 OS_PACKAGES      += uuid
-OS_PACKAGES      += uuidd
 OS_PACKAGES      += xinetd
 OS_PACKAGES      += cronie
 OS_PACKAGES      += python-ldap # needed for ldap support in multisite
