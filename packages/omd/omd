@@ -1068,8 +1068,9 @@ def merge_update_file(relpath, old_version, new_version, skel_path = None):
             return 0
 
     if try_merge() == 0:
-        # ACHTUNG: Hier müssen die Dateien $DATEI-alt, $DATEI-neu und $DATEI.orig
-        # gelöscht werden
+        os.unlink("%s-%s" % (user_path, old_version))
+        os.unlink("%s-%s" % (user_path, new_version))
+        os.unlink("%s.orig" % user_path)
         sys.stdout.write(good + " Merged         %s\n" % fn)
         return
 
@@ -1313,7 +1314,10 @@ def update_file(relpath, old_version, new_version, userdir, old_perms, old_skel 
 
     # 3d) same, but it is a directory which is not empty
     elif not new_type and non_empty_directory:
-        if user_confirms("Non empty obsolete directory %s" % (relpath),
+        if "var/log/" in relpath:
+            # do not complain about old logfiles
+            pass
+        elif user_confirms("Non empty obsolete directory %s" % (relpath),
                 "The directory %s has become obsolete in "
                 "the new version, but you have contents in it. "
                 "Do you want to keep your directory or "
