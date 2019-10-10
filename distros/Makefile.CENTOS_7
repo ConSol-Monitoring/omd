@@ -84,7 +84,6 @@ OS_PACKAGES          += net-tools
 OS_PACKAGES          += nmap-ncat
 OS_PACKAGES          += pango
 OS_PACKAGES          += patch
-OS_PACKAGES          += perl-Crypt-SSLeay
 OS_PACKAGES          += perl-IO-Zlib
 OS_PACKAGES          += perl-Locale-Maketext-Simple
 OS_PACKAGES          += perl-Net-SNMP

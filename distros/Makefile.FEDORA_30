@@ -100,7 +100,6 @@ OS_PACKAGES          += patch
 OS_PACKAGES          += perl-Attribute-Handlers
 OS_PACKAGES          += perl-autodie
 OS_PACKAGES          += perl-CPAN
-OS_PACKAGES          += perl-Crypt-SSLeay
 OS_PACKAGES          += perl-Devel-PPPort
 OS_PACKAGES          += perl-IO-Zlib
 OS_PACKAGES          += perl-Locale-Maketext-Simple

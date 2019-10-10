@@ -61,7 +61,6 @@ OS_PACKAGES          += libboost-program-options1.62.0
 OS_PACKAGES          += libboost-regex1.62.0
 OS_PACKAGES          += libboost-system1.62.0
 OS_PACKAGES          += libboost-thread1.62.0
-OS_PACKAGES          += libcrypt-ssleay-perl
 OS_PACKAGES          += libdbi1
 OS_PACKAGES          += libevent-2.0-5
 OS_PACKAGES          += libgd3

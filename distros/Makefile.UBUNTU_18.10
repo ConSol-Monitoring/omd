@@ -60,7 +60,6 @@ OS_PACKAGES          += libboost-program-options1.67.0
 OS_PACKAGES          += libboost-regex1.67.0
 OS_PACKAGES          += libboost-system1.67.0
 OS_PACKAGES          += libboost-thread1.67.0
-OS_PACKAGES          += libcrypt-ssleay-perl
 OS_PACKAGES          += libdbi1
 OS_PACKAGES          += libevent-1.4-2
 OS_PACKAGES          += libicu60
