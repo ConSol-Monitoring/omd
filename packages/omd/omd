@@ -1067,10 +1067,19 @@ def merge_update_file(relpath, old_version, new_version, skel_path = None):
         else:
             return 0
 
+    def clean_local_temp_files():
+        # Clean up temporary files
+        for p in [ "%s-%s" % (user_path, old_version),
+                   "%s-%s" % (user_path, new_version),
+                   "%s.orig" % user_path,
+                   "%s.rej" % user_path]:
+            try:
+                os.remove(p)
+            except:
+                pass
+
     if try_merge() == 0:
-        os.unlink("%s-%s" % (user_path, old_version))
-        os.unlink("%s-%s" % (user_path, new_version))
-        os.unlink("%s.orig" % user_path)
+        clean_local_temp_files()
         sys.stdout.write(good + " Merged         %s\n" % fn)
         return
 
@@ -1158,6 +1167,7 @@ def merge_update_file(relpath, old_version, new_version, skel_path = None):
             os.rename(user_path + ".orig", user_path)
             os.system("%s '%s'" % (editor, user_path))
             if 0 == try_merge():
+                clean_local_temp_files()
                 sys.stdout.write("Successfully merged changes from %s -> %s into %s\n" %
                         (old_version, new_version, fn))
                 return
@@ -1170,15 +1180,7 @@ def merge_update_file(relpath, old_version, new_version, skel_path = None):
             sys.stdout.write("Installed default file of version %s.\n" % new_version)
             break
 
-    # Clean up temporary files
-    for p in [ "%s-%s" % (user_path, old_version),
-               "%s-%s" % (user_path, new_version),
-               "%s.orig" % user_path,
-               "%s.rej" % user_path]:
-        try:
-            os.remove(p)
-        except:
-            pass
+    clean_local_temp_files()
 
 # Compares two files and returns infos wether the file type or contants have changed """
 def file_status(source_path, target_path):
@@ -1870,7 +1872,6 @@ def create_config_environment():
         putenv("CONFIG_" + varname, value)
 
 
-# TODO: RENAME
 def save_site_conf():
     confdir = g_sitedir + "/etc/omd"
 
