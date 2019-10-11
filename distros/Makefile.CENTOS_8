@@ -90,6 +90,7 @@ OS_PACKAGES          += net-snmp-utils
 OS_PACKAGES          += net-tools
 OS_PACKAGES          += pango
 OS_PACKAGES          += patch
+OS_PACKAGES          += perl-IO-Socket-SSL
 OS_PACKAGES          += perl-IO-Zlib
 OS_PACKAGES          += perl-Locale-Maketext-Simple
 OS_PACKAGES          += php

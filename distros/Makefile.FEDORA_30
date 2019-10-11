@@ -101,6 +101,7 @@ OS_PACKAGES          += perl-Attribute-Handlers
 OS_PACKAGES          += perl-autodie
 OS_PACKAGES          += perl-CPAN
 OS_PACKAGES          += perl-Devel-PPPort
+OS_PACKAGES          += perl-IO-Socket-SSL
 OS_PACKAGES          += perl-IO-Zlib
 OS_PACKAGES          += perl-Locale-Maketext-Simple
 OS_PACKAGES          += perl-Net-SNMP
