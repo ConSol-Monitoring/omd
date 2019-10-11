@@ -1,7 +1,7 @@
 include ../../../Makefile.omd
 
 NAME = check_oracle_health
-VERSION = 3.2.0.3
+VERSION = 3.2.1
 DIR = $(NAME)-$(VERSION)
 
 .PHONY: skel
