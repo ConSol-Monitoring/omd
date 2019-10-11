@@ -45,10 +45,12 @@ install:
 skel:
 	sed -i -e 's|###APACHE_MODULE_DIR###|$(MODULE_DIR)|g' \
 	       $(SKEL)/etc/apache/conf.d/grafana.conf
+    # Take care of path and format of plugin zip/tgz files
+    # Download from https://grafana.com/grafana/plugins
 	mkdir -p $(SKEL)/var/grafana/plugins
-	tar zxf clock-panel-plugin-0.1.0.tar.gz -C $(SKEL)/var/grafana/plugins
+	tar zxf clock-panel-plugin-1.0.3.tar.gz -C $(SKEL)/var/grafana/plugins
 	chmod 644 $(SKEL)/var/grafana/plugins/clock-panel/src/external/moment-duration-format.js
-	tar zxf piechart-panel-plugin-1.3.3.tar.gz -C $(SKEL)/var/grafana/plugins
+	tar zxf piechart-panel-plugin-1.3.9.tar.gz -C $(SKEL)/var/grafana/plugins
 	tar zxf snuids-trafficlights-panel-1.4.5.tar.gz -C $(SKEL)/var/grafana/plugins
 
 
