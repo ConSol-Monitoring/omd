@@ -4,7 +4,6 @@ NAME     = gearmand
 VERSION  = 1.1.18
 DIR      = gearmand-$(VERSION)
 SHELL    = /bin/bash
-BOOST    = $(shell grep '^\#define\s*BOOST_VERSION\s*[0-9][0-9]*' /usr/include/boost/version.hpp /usr/include/boost*/boost/version.hpp 2>/dev/null | awk '{ print $$3 }' )
 
 CONFIGUREOPTS = \
     --disable-libmemcached \
