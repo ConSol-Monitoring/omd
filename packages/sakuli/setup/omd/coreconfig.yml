@@ -9,34 +9,34 @@
       command: "mkdir -p {{ OMD_ROOT }}/tmp"
     - name: Core - eventhandler script
       copy:
-        src: ./local/lib/nagios/plugins/sakuli_screenshot_eventhandler.sh
-        dest: "{{ OMD_ROOT }}/local/lib/nagios/plugins/"
+        src: ./local/lib/monitoring-plugins/sakuli_screenshot_eventhandler.sh
+        dest: "{{ OMD_ROOT }}/local/lib/monitoring-plugins/"
         mode: 0775
     - name: Core - eventhandler command
       copy:
-        src: ./etc/nagios/conf.d/sakuli_screenshot_eventhandler.cfg
+        src: ./etc/naemon/conf.d/sakuli_screenshot_eventhandler.cfg
         dest: "{{ OMD_ROOT }}/etc/core/conf.d/"
     - name: Core - logo directory
       file:
-        path: "{{ OMD_ROOT }}/local/share/nagios/htdocs/images/logos/"
+        path: "{{ OMD_ROOT }}/local/share/naemon/htdocs/images/logos/"
         state: directory
         recurse: yes
     - name: Core - Sakuli logo
       copy:
-        src: ./local/share/nagios/htdocs/images/logos/sakuli.png
-        dest: "{{ OMD_ROOT }}/local/share/nagios/htdocs/images/logos/"
+        src: ./local/share/logos/sakuli.png
+        dest: "{{ OMD_ROOT }}/local/share/naemon/htdocs/images/logos/"
     - name: Core - Sakuli templates
       copy:
-        src: ./etc/nagios/conf.d/sakuli_nagios_templates.cfg
+        src: ./etc/naemon/conf.d/sakuli_nagios_templates.cfg
         dest: "{{ OMD_ROOT }}/etc/core/conf.d/"
     - name: Enable obsessing
-      lineinfile: 
-        path: "{{ OMD_ROOT }}/etc/nagios/nagios.d/obsess.cfg"
+      lineinfile:
+        path: "{{ OMD_ROOT }}/etc/naemon/naemon.d/obsess.cfg"
         regexp: '^obsess_over_services=\d$'
         line: 'obsess_over_services=1'
     - name: Change obsessing command
-      lineinfile: 
-        path: "{{ OMD_ROOT }}/etc/nagios/nagios.d/obsess.cfg"
+      lineinfile:
+        path: "{{ OMD_ROOT }}/etc/naemon/naemon.d/obsess.cfg"
         regexp: '#ocsp_command=somecommand$'
         line: 'ocsp_command=sakuli_screenshot_eventhandler'
 

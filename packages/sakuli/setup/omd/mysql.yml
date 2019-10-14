@@ -35,12 +35,12 @@
 
     - name: check_mysql_health command
       copy:
-        src: ./etc/nagios/conf.d/sakuli_nagios_check_mysql.cfg
+        src: ./etc/naemon/conf.d/sakuli_nagios_check_mysql.cfg
         dest: "{{ OMD_ROOT}}/etc/core/conf.d/"
 
     - name: sample resource cfg file
       copy:
-        src: ./etc/nagios/resource.cfg.sakuli-db.sample
+        src: ./etc/naemon/resource.cfg.sakuli-db.sample
         dest: "{{ OMD_ROOT}}/etc/core/"
 
     - name: database cleanup script
