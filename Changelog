@@ -5,7 +5,8 @@ next:
             - omd cleanup will keep current default version installed
             - add build support for Centos 8
             - add build support for Fedora 30
-            - add build support for Ubuntu 19.04 Disco
+            - add build support for Ubuntu 19.04 Disco Dingo
+            - add build support for Ubuntu 19.10 Eoan Ermine
             - add dokuwiki auth plugin for thruk
           - Thruk: update to 2.32-2
           - Naemon:
