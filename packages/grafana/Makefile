@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 NAME       = grafana
-VERSION    = 6.3.5
+VERSION    = 6.4.3
 SRC        = $(NAME)-$(VERSION).tar.gz
 GOPATH     = go
 GOPKG      = 1.12
@@ -45,8 +45,8 @@ install:
 skel:
 	sed -i -e 's|###APACHE_MODULE_DIR###|$(MODULE_DIR)|g' \
 	       $(SKEL)/etc/apache/conf.d/grafana.conf
-    # Take care of path and format of plugin zip/tgz files
-    # Download from https://grafana.com/grafana/plugins
+	# Take care of path and format of plugin zip/tgz files
+	# Download from https://grafana.com/grafana/plugins
 	mkdir -p $(SKEL)/var/grafana/plugins
 	tar zxf clock-panel-plugin-1.0.3.tar.gz -C $(SKEL)/var/grafana/plugins
 	chmod 644 $(SKEL)/var/grafana/plugins/clock-panel/src/external/moment-duration-format.js
