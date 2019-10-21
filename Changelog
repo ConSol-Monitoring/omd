@@ -19,7 +19,7 @@ next:
             - node_exporter update to 0.18.1
             - blackbox_exporter update to 0.15.0
           - Gearman
-            - Mod-Gearman update 3.1.0
+            - Mod-Gearman update 3.2.1
             - update mod-gearman-worker-go to 1.1.3
             - Gearmand: update 1.1.18
           - LMD: Update 1.7.1
