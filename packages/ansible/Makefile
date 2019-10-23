@@ -1,6 +1,6 @@
 include ../../Makefile.omd
 
-ANSIBLE_VERSION=2.7.10
+ANSIBLE_VERSION=2.8.6
 ANSIBLE=ansible-$(ANSIBLE_VERSION)
 
 # This is where the python modules are going to be installed to
