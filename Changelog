@@ -1,6 +1,6 @@
 This file documents the revision history for the Open Monitoring Distribution (Labs Edition)
 
-next:
+3.20     Oct 30 2019
           - OMD:
             - omd cleanup will keep current default version installed
             - add build support for Centos 8
