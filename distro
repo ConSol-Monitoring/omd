@@ -23,6 +23,7 @@ if [ -e /etc/debian_version ]; then
     if [ $VERSION = 'jessie/sid'  ]; then VERSION="8";  fi
     if [ $VERSION = 'stretch/sid' ]; then VERSION="9";  fi
     if [ $VERSION = 'buster/sid'  ]; then VERSION="10"; fi
+    if [ $VERSION = 'bullseye/sid']; then VERSION="11"; fi
     echo "DEBIAN$SEP$VERSION"
     exit 0
 fi
