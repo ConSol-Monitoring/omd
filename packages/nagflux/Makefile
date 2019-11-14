@@ -1,18 +1,19 @@
 include ../../Makefile.omd
 
 NAME        = nagflux
-VERSION     = 0.4.1
+VERSION     = master
 SRC         = $(NAME)-$(VERSION).tar.gz
-GOPKG       = 1.12
+GOPKG       = 1.13
 GOVERSION   = $(shell grep ^VERSION ../go-${GOPKG}/Makefile | awk '{ print $$3 }')
 GOPATH      = go
 PWD         = $(shell pwd)
 CONFIG_FILE = $(DESTDIR)$(OMD_ROOT)/etc/nagflux/config.gcfg
+SRC_URL     = github.com/ConSol
 
 build:
 	tar zxf $(SRC)
 	export GOROOT=$(PWD)/../go-$(GOPKG)/go-$(GOVERSION)/ && export GOPATH=$(PWD)/$(GOPATH)/ && PATH=$$GOROOT/bin:$$PATH && \
-	go install -ldflags "-s -w" github.com/griesbacher/nagflux
+	go install -ldflags "-s -w" $(SRC_URL)/$(NAME)
 
 install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/bin
@@ -28,9 +29,9 @@ clean:
 package: clean
 	mkdir -p $(GOPATH)
 	export GOROOT=$(PWD)/../go-$(GOPKG)/go-$(GOVERSION)/ && export GOPATH=$(PWD)/$(GOPATH)/ && PATH=$$GOROOT/bin:$$PATH && \
-		mkdir -p $(GOPATH)/src/github.com/griesbacher && \
-		cd $(GOPATH)/src/github.com/griesbacher && \
-		git clone --depth=1 --branch "v$(VERSION)" https://github.com/griesbacher/nagflux && \
+		mkdir -p $(GOPATH)/src/$(SRC_URL) && \
+		cd $(GOPATH)/src/$(SRC_URL) && \
+		git clone --depth=1 https://$(SRC_URL)/$(NAME) && \
 		cd $(PWD) && \
 		tar zcf $(SRC) $(GOPATH)/src/ --exclude=.git --exclude=*_test.go
 
