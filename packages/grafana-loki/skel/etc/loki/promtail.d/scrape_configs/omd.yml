@@ -1,0 +1,10 @@
+- job_name: varlogs
+  entry_parser: raw
+  static_configs:
+  - targets:
+      - localhost
+    labels:
+        # cannot use all logs here, since it would overwrite existing scrape configs
+        #__path__: var/log/*log
+        __path__: var/log/{rrdcached,logrotate,update,notify}.log
+        job: omd

@@ -1,0 +1,24 @@
+- job_name: grafana
+  entry_parser: raw
+  static_configs:
+  - targets:
+      - localhost
+    labels:
+        __path__: var/log/{loki,promtail,influxdb}.log
+        job: omd
+- job_name: grafana
+  entry_parser: raw
+  static_configs:
+  - targets:
+      - localhost
+    labels:
+        __path__: var/log/grafana/grafana.log
+        job: omd
+- job_name: nagflux
+  entry_parser: raw
+  static_configs:
+  - targets:
+      - localhost
+    labels:
+        __path__: var/log/nagflux/nagflux.log
+        job: omd

@@ -49,6 +49,7 @@ BUILD_PACKAGES       += readline-devel
 BUILD_PACKAGES       += rpm-devel                      # needed for "make rpm"
 BUILD_PACKAGES       += samba-client                   # otherwise path to smblient missing in util.pm
 BUILD_PACKAGES       += sqlite3-devel
+BUILD_PACKAGES       += systemd-devel                  # grafana-loki
 BUILD_PACKAGES       += tar                            # needed for "make rpm"
 BUILD_PACKAGES       += unzip                          # unpack src files of packages
 OS_PACKAGES           =

@@ -2,7 +2,7 @@ This file documents the revision history for the Open Monitoring Distribution (L
 
 next:
           - Grafana update to 6.4.5
-            - add grafana-loki 1.0.0
+            - add grafana-loki 1.2.0
           - InfluxDB: update to 1.7.8
 
 3.20     Oct 30 2019

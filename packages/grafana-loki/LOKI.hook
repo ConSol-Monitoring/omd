@@ -1,0 +1,26 @@
+#!/bin/bash
+
+# Alias: Grafana-Loki Daemon
+# Menu: Addons
+# Description:
+#  Grafana-Loki is prometheus for logs.
+
+case "$1" in
+    default)
+        echo "off"
+    ;;
+    choices)
+        echo "on: enable grafana-loki"
+        echo "off: disable grafana-loki"
+    ;;
+    set)
+        rm -f $OMD_ROOT/etc/prometheus/prometheus.d/scrape_configs/static/01-loki.yml
+        rm -f $OMD_ROOT/etc/grafana/provisioning/datasources/loki.yml
+        if [ "$2" == "on" ]; then
+            ln -s $OMD_ROOT/etc/loki/prometheus_datasource_loki.yml \
+              $OMD_ROOT/etc/prometheus/prometheus.d/scrape_configs/static/01-loki.yml
+            ln -s $OMD_ROOT/etc/loki/grafana_datasource.yml \
+              $OMD_ROOT/etc/grafana/provisioning/datasources/loki.yml
+        fi
+    ;;
+esac

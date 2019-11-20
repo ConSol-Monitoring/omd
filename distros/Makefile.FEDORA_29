@@ -65,6 +65,7 @@ BUILD_PACKAGES       += readline-devel
 BUILD_PACKAGES       += rpm-build
 BUILD_PACKAGES       += rsync
 BUILD_PACKAGES       += samba-client
+BUILD_PACKAGES       += systemd-devel                  # grafana-loki
 BUILD_PACKAGES       += which
 OS_PACKAGES           =
 OS_PACKAGES          += boost-date-time                # icinga 2

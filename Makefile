@@ -32,6 +32,7 @@ PACKAGES=freetds \
          thruk-plugins \
          thruk-consol-theme \
          grafana \
+         grafana-loki \
          histou \
          maintenance \
          gearmand \

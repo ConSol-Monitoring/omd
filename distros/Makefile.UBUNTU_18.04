@@ -38,6 +38,7 @@ BUILD_PACKAGES       += libsmbclient-dev
 BUILD_PACKAGES       += libsnmp-dev
 BUILD_PACKAGES       += libsqlite3-dev                 # gearmand
 BUILD_PACKAGES       += libssl-dev
+BUILD_PACKAGES       += libsystemd-dev                 # grafana-loki
 BUILD_PACKAGES       += libxml2-dev
 BUILD_PACKAGES       += patch
 BUILD_PACKAGES       += python-dev

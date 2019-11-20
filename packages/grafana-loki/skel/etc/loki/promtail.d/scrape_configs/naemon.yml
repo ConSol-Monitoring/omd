@@ -1,0 +1,23 @@
+- job_name: naemon
+  pipeline_stages:
+  - regex:
+      expression: '^\[(?P<timestamp>\d+)\] (?P<type>[\ A-Za-z]+): (?P<message>.+)$'
+  - timestamp:
+      source: timestamp
+      format: Unix
+  - labels:
+      type:
+  static_configs:
+  - targets:
+      - localhost
+    labels:
+        __path__: var/naemon/naemon.log
+        job: omd
+- job_name: naemon_livestatus
+  entry_parser: raw
+  static_configs:
+  - targets:
+      - localhost
+    labels:
+        __path__: var/naemon/livestatus.log
+        job: omd

@@ -1,0 +1,23 @@
+#!/bin/bash
+
+# Alias: Grafana-Loki-Promtail Daemon
+# Menu: Addons
+# Description:
+#  Promtail fetches logs for loki.
+
+case "$1" in
+    default)
+        echo "off"
+    ;;
+    choices)
+        echo "on: enable promtail"
+        echo "off: disable promtail"
+    ;;
+    set)
+        rm -f $OMD_ROOT/etc/prometheus/prometheus.d/scrape_configs/static/01-promtail.yml
+        if [ "$2" == "on" ]; then
+            ln -s $OMD_ROOT/etc/loki/prometheus_datasource_promtail.yml \
+              $OMD_ROOT/etc/prometheus/prometheus.d/scrape_configs/static/01-promtail.yml
+        fi
+    ;;
+esac

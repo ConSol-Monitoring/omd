@@ -1,0 +1,2 @@
+etc/init.d/loki 0775
+etc/init.d/promtail 0775

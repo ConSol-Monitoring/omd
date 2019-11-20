@@ -1,0 +1,24 @@
+- job_name: thruk
+  entry_parser: raw
+  static_configs:
+  - targets:
+      - localhost
+    labels:
+        __path__: var/log/thruk.log
+        job: omd
+- job_name: thruk_cron
+  entry_parser: raw
+  static_configs:
+  - targets:
+      - localhost
+    labels:
+        __path__: var/thruk/cron.log
+        job: omd
+- job_name: thruk_lmd
+  entry_parser: raw
+  static_configs:
+  - targets:
+      - localhost
+    labels:
+        __path__: tmp/thruk/lmd/lmd.log
+        job: omd

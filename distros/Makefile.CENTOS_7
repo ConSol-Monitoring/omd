@@ -52,6 +52,7 @@ BUILD_PACKAGES       += readline-devel
 BUILD_PACKAGES       += rpm-build
 BUILD_PACKAGES       += rsync
 BUILD_PACKAGES       += samba-client                   # needed for samba monitoring-plugins
+BUILD_PACKAGES       += systemd-devel                  # grafana-loki
 BUILD_PACKAGES       += which
 OS_PACKAGES           =
 OS_PACKAGES          += bind-utils

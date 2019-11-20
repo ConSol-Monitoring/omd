@@ -1,0 +1,8 @@
+- job_name: apache
+  entry_parser: raw
+  static_configs:
+  - targets:
+      - localhost
+    labels:
+        __path__: var/log/apache/*_log
+        job: omd
