@@ -1,3 +1,9 @@
+1) as site-user
+omd config set SNMPTRAPD on
+omd start snmptrapd
+
+2) as root
+/bin/cp /opt/omd/versions/default/share/samplicate/*.service /etc/systemd/system
 systemctl enable samplicate
 systemctl enable samplicate_watch
 systemctl restart samplicate_watch
