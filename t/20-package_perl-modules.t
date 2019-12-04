@@ -52,6 +52,7 @@ for my $tarball (glob("packages/perl-modules/src/*.gz packages/perl-modules/src/
     if($mod eq 'LWP::Protocol::connect')      { next; } # requires IO::Socket::SSL which cannot be included
     if($mod eq 'Plack::Middleware::RemoveRedundantBody') { $version = ""; } # has broken version
     if($mod eq 'YAML::LibYAML')               { $mod = "YAML::XS"; $version = ""; }
+    if($mod eq 'TimeDate')                    { $mod = "Date::Parse"; }
 
     my $check = "use $mod";
     # Use with version doesnt work here, because of weird version numbers

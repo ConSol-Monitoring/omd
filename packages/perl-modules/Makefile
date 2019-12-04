@@ -101,12 +101,14 @@ MODULES = \
           Test-Simple-1.302120.tar.gz \
           Text-Abbrev-1.02.tar.gz \
           Text-Balanced-2.03.tar.gz \
+          Text-Template-1.55.tar.gz \
           Text-ParseWords-3.30.tar.gz \
           Text-Tabs+Wrap-2013.0523.tar.gz \
           Thread-Queue-3.12.tar.gz \
           Thread-Semaphore-2.13.tar.gz \
           Tie-RefHash-1.39.tar.gz \
           Time-Duration-1.20.tar.gz \
+          TimeDate-2.30.tar.gz \
           Time-HiRes-1.9753.tar.gz \
           Try-Tiny-0.30.tar.gz \
           Variable-Magic-0.62.tar.gz \
@@ -207,6 +209,7 @@ MODULES = \
           DateTime-TimeZone-1.88.tar.gz \
           DateTime-1.18.tar.gz \
           File-Tail-1.3.tar.gz \
+          UUID-0.28.tar.gz \
           Thruk-Utils-XS-0.02.tar.gz \
           Monitoring-GLPlugin-3.2.13.5.tar.gz
 
