@@ -1,7 +1,7 @@
 include ../../../Makefile.omd
 
 NAME = check_tl_health
-VERSION = 1.7
+VERSION = 1.8
 DIR = $(NAME)-$(VERSION)
 
 .PHONY: skel
