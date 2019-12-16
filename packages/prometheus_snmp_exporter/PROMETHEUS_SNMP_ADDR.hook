@@ -16,6 +16,9 @@ case "$1" in
     choices)
         echo "([a-z0-9-]+|(?:[\d]{1,3})\.(?:[\d]{1,3})\.(?:[\d]{1,3})\.(?:[\d]{1,3}))"
     ;;
+    set)
+        sed -e 's/^\(\s\+replacement: \).*:\(.*\)/\1'$2':\2/' -i $OMD_ROOT/etc/snmp_exporter/config/snmp_exporter_scrape.yml
+    ;;
     depends)
         [ "$CONFIG_PROMETHEUS_SNMP_EXPORTER" == "on" ]
     ;;

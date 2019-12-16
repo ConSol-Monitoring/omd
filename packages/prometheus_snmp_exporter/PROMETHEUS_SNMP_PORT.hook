@@ -21,6 +21,7 @@ case "$1" in
         if [ "$PORT" != "$2" ] ; then
             [ "$CONFIG_PROMETHEUS_SNMP_EXPORTER" = on ] && echo "SNMP Exporter port $2 is in use. I've choosen $PORT instead." >&2
         fi
+        sed -e 's/^\(\s\+replacement:.*\):.*/\1:'$PORT'/' -i $OMD_ROOT/etc/snmp_exporter/config/snmp_exporter_scrape.yml
         echo "$PORT"
     ;;
     depends)
