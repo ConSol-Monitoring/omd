@@ -4,6 +4,8 @@ next:
           - Grafana update to 6.4.5
             - add grafana-loki 1.2.0
           - InfluxDB: update to 1.7.8
+          - Prometheus:
+            - Prometheus update to 2.15.2
 
 3.20     Oct 30 2019
           - OMD:

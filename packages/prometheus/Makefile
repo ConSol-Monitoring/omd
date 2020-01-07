@@ -3,7 +3,7 @@ include ../../Makefile.omd
 .PHONY: skel
 
 NAME       = prometheus
-VERSION    = 2.15.1
+VERSION    = 2.15.2
 BRANCH     = master
 SRC        = $(NAME)-$(VERSION).tar.gz
 GOPKG      = 1.13
@@ -25,13 +25,13 @@ LDFLAGS    = "\
 build:
 	tar zxf $(SRC)
 	export GOROOT=$(GOROOT) && export GOPATH=$(GOPATH) && PATH=$$GOROOT/bin:$$PATH && \
-		go install -ldflags $(LDFLAGS) github.com/prometheus/$(NAME)/cmd/prometheus && \
-		go install -ldflags $(LDFLAGS) github.com/prometheus/$(NAME)/cmd/promtool
+		cd $(GOPATH)/src/github.com/prometheus/$(NAME) && \
+		make build
 
 install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/bin
-	install -m 755 $(GOPATH)/bin/prometheus $(DESTDIR)$(OMD_ROOT)/bin
-	install -m 755 $(GOPATH)/bin/promtool $(DESTDIR)$(OMD_ROOT)/bin
+	install -m 755 $(GOPATH)/src/github.com/prometheus/prometheus/prometheus $(DESTDIR)$(OMD_ROOT)/bin
+	install -m 755 $(GOPATH)/src/github.com/prometheus/prometheus/promtool   $(DESTDIR)$(OMD_ROOT)/bin
 
 skel:
 	mkdir -p $(SKEL)/etc/prometheus
@@ -50,6 +50,7 @@ skel:
 	done	
 
 clean:
+	-test -d $(GOPATH) && find $(GOPATH)/. -type d -exec chmod 755 {} \;
 	rm -rf $(GOPATH)
 
 package: clean
@@ -57,7 +58,7 @@ package: clean
 		mkdir -p $(GOPATH)/src/github.com/prometheus/ && \
 		cd $(GOPATH)/src/github.com/prometheus/ && \
 		git clone --depth=1 --branch "v$(VERSION)" https://github.com/prometheus/$(NAME).git && \
-		cd $(NAME)/cmd/prometheus/ && go get -d && cd ../promtool && go get -d && \
-		cd $(PWD) && \
-		tar zcf $(SRC) $(GOFOLDER)/src/ --exclude=.git
+		cd $(NAME) && make build && \
+		rm prometheus promtool tsdb/tsdb
+	tar zcf $(SRC) --exclude=.git $(GOFOLDER)/src/
 
