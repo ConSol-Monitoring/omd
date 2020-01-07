@@ -3,7 +3,7 @@ include ../../Makefile.omd
 .PHONY: skel
 
 NAME       = alertmanager
-VERSION    = 0.18.0
+VERSION    = 0.20.0
 BRANCH     = master
 SRC        = $(NAME)-$(VERSION).tar.gz
 GOPKG      = 1.12
@@ -71,5 +71,5 @@ package: clean
 		git clone --depth=1 --branch "v$(VERSION)" https://github.com/prometheus/$(NAME).git && \
 		cd $(NAME)/cmd/$(NAME)/ && go get -d && \
 		cd $(PWD) && \
-		tar zcf $(SRC) $(GOFOLDER)/src/ --exclude=.git
+		tar zcf $(SRC) --exclude=.git $(GOFOLDER)/src/
 
