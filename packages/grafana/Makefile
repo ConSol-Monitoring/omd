@@ -1,10 +1,10 @@
 include ../../Makefile.omd
 
 NAME       = grafana
-VERSION    = 6.4.5
+VERSION    = 6.5.2
 SRC        = $(NAME)-$(VERSION).tar.gz
 GOPATH     = go
-GOPKG      = 1.12
+GOPKG      = 1.13
 GOVERSION  = $(shell grep ^VERSION ../go-${GOPKG}/Makefile | awk '{ print $$3 }')
 PWD        = $(shell pwd)
 GO         = export GOROOT=$(PWD)/../go-$(GOPKG)/go-$(GOVERSION) && export GOPATH=$(PWD)/$(GOPATH)/ && PATH=$$GOROOT/bin:$$PATH && go
@@ -84,3 +84,4 @@ public:
 	wget "https://raw.githubusercontent.com/grafana/grafana/v$(VERSION)/conf/defaults.ini" -O defaults.ini
 	sed -i -e 's/^default_theme.*$$/default_theme = light/' defaults.ini
 	sed -i -e 's/^allow_embedding.*$$/allow_embedding = true/' defaults.ini
+	sed -i -e 's/^disable_initial_admin_creation.*$$/disable_initial_admin_creation = true/' defaults.ini
