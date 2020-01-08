@@ -54,4 +54,4 @@ package: clean
 		git clone --depth=1 --branch "v$(VERSION)" https://github.com/prometheus/$(NAME).git && \
 		cd $(NAME) && go get -d && \
 		cd $(PWD) && \
-		tar zcf $(SRC) $(GOFOLDER)/src/ --exclude=.git
+		tar zcf $(SRC) --exclude=.git $(GOFOLDER)/src/

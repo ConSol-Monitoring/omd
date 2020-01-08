@@ -42,7 +42,7 @@ deps: clean
 		go get ./... && \
 		cd $(PWD) && \
 		rm -rf  $(GOPATH)/src/$(GITBASE)
-		tar zcf $(DEPS_SRC) $(GOPATH)/src/ --exclude=.git --exclude=*_test.go
+		tar zcf $(DEPS_SRC) --exclude=.git --exclude=*_test.go $(GOPATH)/src/
 
 package: clean
 	mkdir -p $(GOPATH)
@@ -53,6 +53,6 @@ package: clean
 		cd $(NAME) && \
 		sed -i $(PWD)/Makefile -e 's/^GIT_TAG.*$$/GIT_TAG     = '$$(git describe --always --tags)'/g' && \
 		cd $(PWD) && \
-		tar zcf $(SRC) $(GOPATH)/src/$(GITURL) --exclude=.git --exclude=*_test.go
+		tar zcf $(SRC) --exclude=.git --exclude=*_test.go $(GOPATH)/src/$(GITURL)
 
 upstream: clean deps package
