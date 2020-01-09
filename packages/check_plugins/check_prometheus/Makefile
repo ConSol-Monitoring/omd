@@ -1,17 +1,21 @@
 include ../../../Makefile.omd
 
 NAME        = check_prometheus
-VERSION     = 0.0.1
+VERSION     = master
 SRC         = $(NAME)-$(VERSION).tar.gz
-GOPKG       = 1.12
+GOPKG       = 1.13
 GOVERSION   = $(shell grep ^VERSION ../../go-${GOPKG}/Makefile | awk '{ print $$3 }')
 GOPATH      = go
 PWD         = $(shell pwd)
+GITBASE     = github.com/consol
+GITURL      = $(GITBASE)/$(NAME)
+# GIT_TAG: TODO: still set manually for new master version in git repo!
+GIT_TAG     = 0.0.2
 
 build:
 	tar zxf $(SRC)
 	export GOROOT=$(PWD)/../../go-$(GOPKG)/go-$(GOVERSION)/ && export GOPATH=$(PWD)/$(GOPATH)/ && PATH=$$GOROOT/bin:$$PATH && \
-	go install -ldflags "-s -w" github.com/griesbacher/check_prometheus
+	go install -ldflags "-s -w -X main.Build=$(OMD_VERSION)-$(GIT_TAG)" $(GITURL)
 
 install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/monitoring-plugins
@@ -25,9 +29,8 @@ clean:
 package: clean
 	mkdir -p $(GOPATH)
 	export GOROOT=$(PWD)/../go-$(GOPKG)/go-$(GOVERSION)/ && export GOPATH=$(PWD)/$(GOPATH)/ && PATH=$$GOROOT/bin:$$PATH && \
-		mkdir -p $(GOPATH)/src/github.com/griesbacher && \
-		cd $(GOPATH)/src/github.com/griesbacher && \
-		git clone --depth=1 --branch "$(VERSION)" https://github.com/griesbacher/check_prometheus && \
-		cd $(PWD) && \
-		tar zcf $(SRC) $(GOPATH)/src/ --exclude=.git --exclude=*_test.go
-
+                mkdir -p $(GOPATH)/src/$(GITBASE) && \
+                cd $(GOPATH)/src/$(GITBASE) && \
+                git clone --depth=1 --branch "$(VERSION)" https://$(GITURL) && \
+                cd $(PWD) && \
+                tar zcf $(SRC) --exclude=.git --exclude=*_test.go $(GOPATH)/src/$(GITURL)
