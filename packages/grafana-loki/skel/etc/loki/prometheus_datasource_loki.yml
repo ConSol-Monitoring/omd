@@ -7,4 +7,4 @@
     metrics_path: /metrics
 
     static_configs:
-      - targets: ['127.0.0.1:3100']
+      - targets: ['127.0.0.1:###CONFIG_LOKI_HTTP_PORT###']

@@ -1,7 +1,7 @@
 auth_enabled: false
 
 server:
-  http_listen_port: 3100
+  http_listen_port: ###CONFIG_LOKI_HTTP_PORT###
 
 ingester:
   lifecycler:
