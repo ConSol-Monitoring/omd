@@ -13,6 +13,7 @@
     labels:
         __path__: var/naemon/naemon.log
         job: omd
+
 - job_name: naemon_livestatus
   entry_parser: raw
   static_configs:

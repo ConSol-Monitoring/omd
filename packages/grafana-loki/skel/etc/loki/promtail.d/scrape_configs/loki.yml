@@ -1,8 +1,8 @@
-- job_name: grafana
+- job_name: loki
   entry_parser: raw
   static_configs:
   - targets:
       - localhost
     labels:
-        __path__: var/log/grafana/grafana.log
+        __path__: var/log/{loki,promtail}.log
         job: omd
