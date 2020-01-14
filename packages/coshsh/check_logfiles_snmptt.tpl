@@ -1,22 +1,27 @@
 # {{ mib.mib }} {{ mib.miblabel }}
+# common prefix {{ mib.common_prefix }}
 
 my $VERBOSE = 0;
 our @commands = ();
+my @ips = (
+{% for ip in mib.agent_ips %}
+{{ ip }},
+{% endfor %}
+);
+my @pointers = (
+{% for pointer in mib.service_pointers %}
+["{{ pointer[0] }}", "{{ pointer[1] }}", "{{ pointer[2] }}"],
+{% endfor %}
+);
+my @combinations = (
+{% for combi in mib.ip_oid_combinations %}
+{{ combi }},
+{% endfor %}
+);
 
 sub get_host_from_ip {
   my ($ip) = @_;
   my $num_ip = int(sprintf "%d%03d%03d%03d", split /\./, $ip);
-  my @ips = (
-{% for ip in mib.agent_ips %}
-{{ ip }},
-{% endfor %}
-  );
-  my @pointers = (
-{% for pointer in mib.service_pointers %}
-["{{ pointer[0] }}", "{{ pointer[1] }}", "{{ pointer[2] }}"],
-{% endfor %}
-  );
-
   my $found = 0;
   my ($left, $right) = (0, scalar(@ips) - 1);
   my $idx;
@@ -35,6 +40,32 @@ sub get_host_from_ip {
     return $pointers[$idx];
   } else {
     return undef;
+  }
+}
+
+sub find_ip_oid_combi {
+  my ($ip, $oid) = @_;
+  my $combi = sprintf("%d%03d%03d%03d", split /\./, $ip).$oid;
+  $combi =~ tr/.//d;
+  my $num_combi = int($combi);
+  my $found = 0;
+  my ($left, $right) = (0, scalar(@combinations) - 1);
+  my $idx;
+  while ($left <= $right) {
+    $idx = int(($left + $right)/2);
+    if ($combinations[$idx] < $num_combi) {
+      $left = $idx + 1;
+    } elsif ($combinations[$idx] > $num_combi) {
+      $right = $idx - 1;
+    } else {
+      $found = 1;
+      last;
+    }
+  }
+  if ($found) {
+    return 1;
+  } else {
+    return 0;
   }
 }
 
@@ -177,7 +208,17 @@ $options = 'report=short,supersmartpostscript';
     my $event_text = undef;
     my $event_recovers = undef;
     my $nagioslevel = undef;
-
+{% if mib.mib == "RAGPICKER-MIB" %}
+    if (! find_ip_oid_combi($address, $trap_oid)) {
+      $known_event = 1; # means here: i know how to submit the info
+      $severity = {{ mib.unexpected_level }};
+      $event_name = "unexpectedTrap";
+      $event_recovers = "";
+      $resolved_text = "received unexpected oid: ".$trap_oid;
+    } else {
+      $known_event = 0; # means here: ignore, because this trap is wanted
+    }
+{% else %}
 {% for event in mib.events %}
 {%   if loop.first %}
     if ("{{ event.oid }}" eq $trap_oid) {
@@ -209,6 +250,7 @@ $options = 'report=short,supersmartpostscript';
     }
 {%   endif %}
 {% endfor %}
+{% endif %}
     if (! defined $severity && $known_event) {
       # there are no sub-events at all or none of them matched
       $resolved_text = snmptt_resolve($address, $event_text, $flat_trap);

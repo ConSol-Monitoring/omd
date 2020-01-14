@@ -30,6 +30,8 @@ logger = logging.getLogger('coshsh')
 def __ds_ident__(params={}):
     if coshsh.util.compare_attr("type", params, "snmptt"):
         return SNMPTT
+    elif coshsh.util.compare_attr("type", params, "ragpickify"):
+        return SNMPTTRagpickify
 
 
 class MIB(coshsh.item.Item):
@@ -41,8 +43,8 @@ class MIB(coshsh.item.Item):
             unique_attr="mib", unique_config="%s"),
     ]
 
-    def __init__(self, **kwargs):
-        super(self.__class__, self).__init__(kwargs)
+    def __init__(self, *args, **kwargs):
+        super(MIB, self).__init__(kwargs)
         self.mib = kwargs["mib"]
         self.events = kwargs["events"]
         self.extcmd = kwargs.get("extcmd", "nagios.cmd")
@@ -50,6 +52,43 @@ class MIB(coshsh.item.Item):
 
     def fingerprint(self):
         return self.mib
+
+    def add_agent(self, agent):
+        self.agents["%03d%03d%03d%03d" % tuple([int(n) for n in agent[0].split(".")])] = [agent[1], agent[2], agent[3]]
+
+    def sort_agents(self):
+        self.agent_ips = []
+        self.service_pointers = []
+        sortme = [(
+            # ohne fuehrende 0, damit's richtig numerisch zugeht hier
+            int("%d%03d%03d%03d" % tuple([int(n) for n in textwrap.wrap(str_ip, 3)])),
+            str_ip
+        ) for str_ip in self.agents.keys()]
+        sortme.sort(key=lambda x: x[0])
+        for num_ip, str_ip in sortme:
+            self.agent_ips.append(num_ip)
+            self.service_pointers.append(self.agents[str_ip])
+
+class RagpickerMIB(MIB):
+    id = 101
+    template_rules = [
+        TemplateRule(needsattr=None,
+            template="check_logfiles_snmptt",
+            self_name="mib",
+            unique_attr="mib", unique_config="%s"),
+    ]
+
+    def __init__(self, *args, **kwargs):
+        super(self.__class__, self).__init__(**kwargs)
+        self.ip_oid_combinations = []
+
+    def add_ip_oid_combi(self, ip, oid):
+        self.ip_oid_combinations.append(
+            int(("%d%03d%03d%03d" % tuple([int(n) for n in ip.split(".")])) + oid.replace(".", ""))
+        )
+
+    def sort_ip_oid_combis(self):
+        self.ip_oid_combinations.sort()
 
     def add_agent(self, agent):
         self.agents["%03d%03d%03d%03d" % tuple([int(n) for n in agent[0].split(".")])] = [agent[1], agent[2], agent[3]]
@@ -75,7 +114,17 @@ class SNMPTT(coshsh.datasource.Datasource):
         self.dir = kwargs["dir"]
         self.trapdest = kwargs.get("trapdest", "trapdest")
         self.extcmd = kwargs.get("extcmd", "nagios.cmd")
+        self.unexpected_level = kwargs.get("unexpected_level", "ok")
         self.objects = {}
+        try:
+            self.unexpected_level = {
+                "ok": 0,
+                "warning": 1,
+                "critical": 2,
+                "unknown": 3,
+            }[self.unexpected_level.lower()]
+        except Exception:
+            self.unexpected_level = 0
 
     def open(self):
         logger.info('open datasource %s' % self.name)
@@ -84,7 +133,7 @@ class SNMPTT(coshsh.datasource.Datasource):
             raise coshsh.datasource.DatasourceNotAvailable
 
     def read(self, filter=None, objects={}, force=False, **kwargs):
-        pp = pprint.PrettyPrinter(indent=4)
+        self.pp = pprint.PrettyPrinter(indent=4)
         self.objects = objects
         if filter:
             for f in [filt.strip() for filt in filter.split(',')]:
@@ -151,6 +200,9 @@ class SNMPTT(coshsh.datasource.Datasource):
                                 'NORMAL': 0, # return to normal state
                                 # some Mibs have --#SEVERITY hints
                                 'INFORMATIONAL': 0,
+                                'AUTHENTICATION': 0, # sucess or failed. you decide
+                                'CONFIGURATION CHANGE': 0, # same here
+                                'CHANGE': 0, # because only the last word matches
                                 'WARNING': 1,
                                 'MINOR': 1,
                                 'MAJOR': 2,
@@ -264,6 +316,19 @@ class SNMPTT(coshsh.datasource.Datasource):
                 m.common_prefix = '.*'
             self.add('mibconfigs', m)
 
+        # Eine Fake-MIB dient dazu, unbekannte Traps (welche nicht ueber
+        # application.implemented_mibs identifiziert werden kann, an einen
+        # Lumpensammlerservice weiterzuleiten
+        ragpicker = RagpickerMIB(mib="RAGPICKER-MIB", miblabel="RAGPICKERMIB", extcmd=self.extcmd, events=[], unexpected_level=self.unexpected_level)
+        self.add('mibconfigs', ragpicker)
+        mib_traps["RAGPICKER-MIB"] = []
+
+        hosts_with_ragpicker_mib = {}
+        hosts_with_known_oids = []
+        for host in self.getall('hosts'):
+            if hasattr(host, 'implements_mibs') and "RAGPICKER-MIB" in host.implements_mibs:
+                hosts_with_ragpicker_mib[host.address] = host.host_name
+
         for application in self.getall('applications'):
             # hier werden applikationen um ein hash mit mibs -> events
             # versorgt, welches in *traps.tpl die services erzeugt
@@ -288,12 +353,12 @@ class SNMPTT(coshsh.datasource.Datasource):
                 application.implements_mibs = [m[0] for m in application_mibs_known]
                 trap_events = {}
 
+                address = self.get('hosts', application.host_name).address
                 for svcmib, mib in application_mibs_known:
                     mobj = self.get('mibconfigs', mib)
                     trap_events[svcmib] = [e for e in mobj.events]
-                    host = self.get('hosts', application.host_name)
                     mobj.add_agent([
-                        host.address,
+                        address,
                         application.host_name,
                         application.trap_service_prefix,
                         svcmib,
@@ -316,8 +381,36 @@ class SNMPTT(coshsh.datasource.Datasource):
                         'monitoring_0': 'trap_events',
                         'monitoring_1': trap_events,
                     }))
-    
-        
+
+                if "RAGPICKER-MIB" in application.implements_mibs:
+                    hosts_with_ragpicker_mib[address] = application.host_name
+                if address in hosts_with_ragpicker_mib:
+                    # through an application setting in the line above
+                    # or through a host setting before the app loop
+                    for mib in trap_events:
+                        for event in trap_events[mib]:
+                            ragpicker.add_ip_oid_combi(address, event["oid"])
+                            if hasattr(application, "agent_addresses"):
+                                for agent_address in application.agent_addresses:
+                                    ragpicker.add_ip_oid_combi(agent_address, event["oid"])
+
+
+        for address, host_name in hosts_with_ragpicker_mib.items():
+            ragpicker.add_agent([
+                address,
+                host_name,
+                "app_snmp_agent",
+                "RAGPICKER-MIB",
+            ])
+            # this app renders a tpl with a ragpicker service
+            snmp_agent_for_unexpected_traps = Application({
+                'host_name': host_name,
+                'name': 'app_snmp_agent',
+                'type': 'snmp_agent_for_unexpected_traps',
+            })
+            self.add('applications', snmp_agent_for_unexpected_traps)
+        ragpicker.sort_ip_oid_combis()
+
         for mib in self.getall('mibconfigs'):
             mib.sort_agents()
 
@@ -346,3 +439,25 @@ class SNMPTT(coshsh.datasource.Datasource):
                 'monitoring_1': mib_traps.keys(),
             })
         )
+
+
+
+class SNMPTTRagpickify(coshsh.datasource.Datasource):
+    def __init__(self, **kwargs):
+        super(self.__class__, self).__init__(**kwargs)
+        self.selected_groups = [s.strip() for s in kwargs.get('selected_groups', 'apps_with_mibs').split(',')]
+
+    def read(self, filter=None, objects={}, force=False, **kwargs):
+        self.objects = objects
+        hosts_with_ragpicker = {}
+        if 'apps_with_mibs' in self.selected_groups:
+            for app in self.getall('applications'):
+                if hasattr(app, 'implements_mibs'):
+                    hosts_with_ragpicker[app.host_name] = 1
+        if 'all' in self.selected_groups:
+            for host in self.getall('hosts'):
+                hosts_with_ragpicker[host.host_name] = 1
+ 
+        for host in [h for h in self.getall('hosts') if h.host_name in hosts_with_ragpicker]:
+            host.implements_mibs = ["RAGPICKER-MIB"]
+        
