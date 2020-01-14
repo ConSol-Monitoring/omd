@@ -33,5 +33,5 @@ package: clean
 		cd $(GOPATH)/src/$(SRC_URL) && \
 		git clone --depth=1 https://$(SRC_URL)/$(NAME) && \
 		cd $(PWD) && \
-		tar zcf $(SRC) $(GOPATH)/src/ --exclude=.git --exclude=*_test.go
+		tar zcf $(SRC) --exclude=.git --exclude=*_test.go $(GOPATH)/src/
 

@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 NAME       = influxdb
-VERSION    = 1.7.8
+VERSION    = 1.7.9
 SRC        = $(NAME)-$(VERSION).tar.gz
 GOPATH     = go
 GOPKG      = 1.12
@@ -49,5 +49,5 @@ package: clean
 		cd $(PWD) && \
 		find $(GOPATH)/src/ -type d -name ".git*" -exec chmod -R u+w {} \; && \
 		find $(GOPATH)/src/ -name ".git*" -exec rm -R {} \; ; \
-		tar zcf $(SRC) $(GOPATH)/src/ --exclude=.git
+		tar zcf $(SRC) --exclude=.git $(GOPATH)/src/
 

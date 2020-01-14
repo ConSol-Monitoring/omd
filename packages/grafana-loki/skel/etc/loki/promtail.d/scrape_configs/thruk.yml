@@ -6,6 +6,7 @@
     labels:
         __path__: var/log/thruk.log
         job: omd
+
 - job_name: thruk_cron
   entry_parser: raw
   static_configs:
@@ -13,7 +14,9 @@
       - localhost
     labels:
         __path__: var/thruk/cron.log
+          - tmp/thruk/lmd/lmd.log
         job: omd
+
 - job_name: thruk_lmd
   entry_parser: raw
   static_configs:

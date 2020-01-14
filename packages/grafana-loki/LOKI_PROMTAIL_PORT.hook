@@ -1,0 +1,25 @@
+#!/bin/bash
+
+# Alias: Port for the Grafana Loki Promtail Daemon
+# Menu: Addons
+# Description:
+#  Set the listen port for lokis promtail.
+
+case "$1" in
+   default)
+       echo "3200"
+   ;;
+   choices)
+       echo "[0-9]{1,4}"
+   ;;
+   set)
+        PORT=$($OMD_ROOT/lib/omd/port_is_used LOKI_PROMTAIL_PORT $2)
+        sed -e 's/^\ *http_listen_port:.*$/  http_listen_port: '$PORT'/' -i $OMD_ROOT/etc/loki/promtail.yaml
+        if [ "$PORT" != "$2" ] ; then
+            echo "$PORT"
+        fi
+   ;;
+    depends)
+       [ "$CONFIG_LOKI_PROMTAIL" = "on" ]
+    ;;
+esac

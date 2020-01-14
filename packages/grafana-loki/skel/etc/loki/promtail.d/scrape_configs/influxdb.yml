@@ -1,0 +1,17 @@
+- job_name: influxdb
+  entry_parser: raw
+  static_configs:
+  - targets:
+      - localhost
+    labels:
+        __path__: var/log/influxdb.log
+        job: omd
+
+- job_name: nagflux
+  entry_parser: raw
+  static_configs:
+  - targets:
+      - localhost
+    labels:
+        __path__: var/log/nagflux/nagflux.log
+        job: omd

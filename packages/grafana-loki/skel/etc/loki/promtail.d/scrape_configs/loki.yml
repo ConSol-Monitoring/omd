@@ -1,0 +1,8 @@
+- job_name: loki
+  entry_parser: raw
+  static_configs:
+  - targets:
+      - localhost
+    labels:
+        __path__: var/log/{loki,promtail}.log
+        job: omd
