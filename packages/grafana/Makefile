@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 NAME       = grafana
-VERSION    = 6.5.2
+VERSION    = 6.5.3
 SRC        = $(NAME)-$(VERSION).tar.gz
 GOPATH     = go
 GOPKG      = 1.13
@@ -55,6 +55,7 @@ skel:
 
 
 clean:
+	-test -d $(GOPATH) && find $(GOPATH)/. -type d -exec chmod 755 {} \;
 	rm -rf $(GOPATH)
 
 package: public clean
