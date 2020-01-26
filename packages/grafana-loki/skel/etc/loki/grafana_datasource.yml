@@ -10,3 +10,10 @@ datasources:
     editable: false
     jsonData:
       maxLines: 10000
+  - name: loki-prom
+    type: prometheus
+    access: proxy
+    orgId: 1 
+    url: http://localhost:###CONFIG_LOKI_HTTP_PORT###/loki
+    isDefault: false
+    editable: false
