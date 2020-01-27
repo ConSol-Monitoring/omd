@@ -73,50 +73,63 @@ OPTIONS="--config.file $CFG_FILE --web.listen-address=$CONFIG_PROMETHEUS_TCP_ADD
 #
 #
 rebuild_config() {
-    # 
-    cat ###ROOT###/etc/prometheus/prometheus.yml |\
-        sed -n '1,/# - start of rule files/p' > $CFG_FILE
-    # all files in ###ROOT###/etc/prometheus/prometheus.d/rules/*/*.yml
-    for rules in ###ROOT###/etc/prometheus/prometheus.d/rules/*.yml
-    do
-        [ -f $rules ] && echo "  - $rules" >> $CFG_FILE
-    done
-    for rules in ###ROOT###/etc/prometheus/prometheus.d/rules/*
-    do
-        if [ -d $rules ]; then
-            for subrules in ${rules}/*.yml
-            do
-                [ -f $subrules ] && echo "  - $subrules" >> $CFG_FILE
-            done
+    cp ###ROOT###/etc/prometheus/prometheus.yml $CFG_FILE
+    WORK_CFG=###ROOT###/tmp/prometheus.yml.$$
+    if grep -q "# - start of rule files" $CFG_FILE && grep -q "# - end of rule files" $CFG_FILE; then
+        cat $CFG_FILE |\
+            sed -n '1,/# - start of rule files/p' > $WORK_CFG
+        # all files in ###ROOT###/etc/prometheus/prometheus.d/rules/*/*.yml
+        for rules in ###ROOT###/etc/prometheus/prometheus.d/rules/*.yml
+        do
+            [ -f $rules ] && echo "  - $rules" >> $WORK_CFG
+        done
+        for rules in ###ROOT###/etc/prometheus/prometheus.d/rules/*
+        do
+            if [ -d $rules ]; then
+                for subrules in ${rules}/*.yml
+                do
+                    [ -f $subrules ] && echo "  - $subrules" >> $WORK_CFG
+                done
+            fi
+        done
+        cat $CFG_FILE |\
+            sed -n '/# - end of rule files/,$p' >> $WORK_CFG
+        cp $WORK_CFG $CFG_FILE
+    fi
+
+    if grep -q "# - start of scrape configs" $CFG_FILE && grep -q "# - end of scrape configs" $CFG_FILE; then
+        cat $CFG_FILE |\
+            sed -n '1,/# - start of scrape configs/p' > $WORK_CFG
+        # all files in ###ROOT###/etc/prometheus/prometheus.d/scrape_configs/*.yml
+        for scrapes in ###ROOT###/etc/prometheus/prometheus.d/scrape_configs/*.yml
+        do
+            echo >> $WORK_CFG
+            [ -f $scrapes ] && cat $subscrapes >> $WORK_CFG
+        done
+        for scrapes in ###ROOT###/etc/prometheus/prometheus.d/scrape_configs/*
+        do
+            if [ -d $scrapes ]; then
+                for subscrapes in ${scrapes}/*.yml
+                do
+                    [ -f $subscrapes ] && cat $subscrapes >> $WORK_CFG
+                done
+            fi
+        done
+        cat $CFG_FILE |\
+            sed -n '/# - end of scrape configs/,$p' >> $WORK_CFG
+        cp $WORK_CFG $CFG_FILE
+    fi
+
+    if ! grep -q "alertmanagers:" $CFG_FILE; then
+        if [ "$CONFIG_ALERTMANAGER" = "on" ]; then
+            echo >> $CFG_FILE
+            echo '# Alertmanager configuration' >> $CFG_FILE
+            echo 'alerting:' >> $CFG_FILE
+            echo '  alertmanagers:' >> $CFG_FILE
+            echo '  - static_configs:' >> $CFG_FILE
+            echo '    - targets:' >> $CFG_FILE
+            echo '      - ###ALERTMANAGER_TCP_ADDR###:###ALERTMANAGER_TCP_PORT###' >> $CFG_FILE
         fi
-    done
-    cat ###ROOT###/etc/prometheus/prometheus.yml |\
-        sed -n '/# - end of rule files/,/# - start of scrape configs/p' >> $CFG_FILE
-    # all files in ###ROOT###/etc/prometheus/prometheus.d/scrape_configs/*.yml
-    for scrapes in ###ROOT###/etc/prometheus/prometheus.d/scrape_configs/*.yml
-    do
-        echo >> $CFG_FILE
-        [ -f $scrapes ] && cat $scrapes >> $CFG_FILE
-    done
-    for scrapes in ###ROOT###/etc/prometheus/prometheus.d/scrape_configs/*
-    do
-        if [ -d $scrapes ]; then
-            for subscrapes in ${scrapes}/*.yml
-            do
-                [ -f $subscrapes ] && cat $subscrapes >> $CFG_FILE
-            done
-        fi
-    done
-    cat ###ROOT###/etc/prometheus/prometheus.yml |\
-        sed -n '/# - end of scrape configs/,$p' >> $CFG_FILE
-    
-    if [ "$CONFIG_ALERTMANAGER" = "on" ]; then
-      echo '# Alertmanager configuration' >> $CFG_FILE
-      echo 'alerting:' >> $CFG_FILE
-      echo '  alertmanagers:' >> $CFG_FILE
-      echo '  - static_configs:' >> $CFG_FILE
-      echo '    - targets:' >> $CFG_FILE
-      echo '      - ###ALERTMANAGER_TCP_ADDR###:###ALERTMANAGER_TCP_PORT###' >> $CFG_FILE
     fi
 
     sed -ri "s&""#""#""#ROOT#""#""#""&###ROOT###&g" $CFG_FILE
