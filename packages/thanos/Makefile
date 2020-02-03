@@ -1,17 +1,20 @@
 include ../../Makefile.omd
 
 NAME       = thanos
-VERSION    = 0.4.0
+VERSION    = 0.10.1
 
 .PHONY: skel
 
-build:
+get_thanos: get_thanos.in
+	sed 's|###VERSION###|$(VERSION)|g' get_thanos.in > get_thanos
+
+build: get_thanos
 
 install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/bin
 	install -m 755 get_thanos $(DESTDIR)$(OMD_ROOT)/bin
-	sed -i 's|###VERSION###|$(VERSION)|g' $(DESTDIR)$(OMD_ROOT)/bin/get_thanos
 
 skel:
 
 clean:
+	rm -f get_thanos
