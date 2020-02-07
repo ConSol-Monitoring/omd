@@ -51,6 +51,7 @@ BUILD_PACKAGES       += perl-IO-Zlib
 BUILD_PACKAGES       += perl-libs
 BUILD_PACKAGES       += perl-Locale-Maketext-Simple
 BUILD_PACKAGES       += perl-Module-Build
+BUILD_PACKAGES       += perl-Module-Install
 BUILD_PACKAGES       += perl-Storable
 BUILD_PACKAGES       += perl-Test-Simple
 BUILD_PACKAGES       += perl-Time-HiRes

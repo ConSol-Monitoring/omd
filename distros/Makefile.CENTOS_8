@@ -46,6 +46,7 @@ BUILD_PACKAGES       += perl-devel
 BUILD_PACKAGES       += perl-ExtUtils-Embed
 BUILD_PACKAGES       += perl-IO-Zlib
 BUILD_PACKAGES       += perl-Locale-Maketext-Simple
+BUILD_PACKAGES       += perl-Module-Install
 BUILD_PACKAGES       += perl-Time-HiRes
 BUILD_PACKAGES       += php
 BUILD_PACKAGES       += pkgconfig
