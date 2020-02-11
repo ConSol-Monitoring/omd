@@ -8,6 +8,7 @@ next:
             - Prometheus update to 2.15.2
             - Alertmanager update to 0.20.0
           - LMD: Update 1.8.1
+          - Gearmand: update 1.1.19
 
 3.20     Oct 30 2019
           - OMD:
