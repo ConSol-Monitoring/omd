@@ -1,0 +1,12 @@
+--- a/neb_module/mod_gearman.c
++++ b/neb_module/mod_gearman.c
+@@ -1143,7 +1143,7 @@ static int handle_svc_check( int event_type, void *data ) {
+     if( svcdata->type != NEBTYPE_SERVICECHECK_INITIATE)
+         return NEB_OK;
+ #endif
+-#ifdef USENAEMON3
++#ifdef USENAGIOS3
+     if( svcdata->type != NEBTYPE_SERVICECHECK_ASYNC_PRECHECK )
+         return NEB_OK;
+ #endif
+
