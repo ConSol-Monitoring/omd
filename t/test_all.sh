@@ -48,7 +48,7 @@ if [ ! -z "$OMD_PACKAGE" ]; then
     elif [ -x /usr/bin/zypper  ]; then
         # remove version if alread installed
         /usr/bin/zypper --quiet --non-interactive remove `rpm -qp $OMD_PACKAGE`
-        /usr/bin/zypper --quiet --non-interactive install $OMD_PACKAGE
+        /usr/bin/zypper --quiet --non-interactive --no-gpg-checks install $OMD_PACKAGE
     fi
 
     rc=$?
