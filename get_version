@@ -18,7 +18,11 @@ fi
 # ex.: v0.43.20101018
 # "git describe --tag --abbrev=0 --always" does not work correctly with git versions < 1.7
 # see issue #198
-version=`git tag -l | sed -e 's/^v//g' | sort -n | tail -n 1 | sed -e 's/-labs-edition//g'`
+version=$( git describe --tags --long \
+  | sed -e 's/^v//' \
+        -e 's/-[0-9][0-9]*-[a-f0-9][a-f0-9]*$//' \
+        -e 's/-labs-edition.*//g'
+)
 if [ $? -eq 0 ]; then
   date=`date +%Y%m%d`
   major=`echo $version | cut -d . -f 1`
