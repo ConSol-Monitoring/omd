@@ -9,6 +9,8 @@ next:
             - Alertmanager update to 0.20.0
           - LMD: Update 1.8.1
           - Gearmand: update 1.1.19
+          - Naemon:
+            - update core to 1.2.0
 
 3.20     Oct 30 2019
           - OMD:
