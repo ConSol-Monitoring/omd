@@ -26,6 +26,7 @@ BUILD_PACKAGES       += libicu-dev                     # naemon-livestatus
 BUILD_PACKAGES       += libldap2-dev
 BUILD_PACKAGES       += libltdl-dev
 BUILD_PACKAGES       += libmcrypt-dev
+BUILD_PACKAGES       += libmodule-install-perl
 BUILD_PACKAGES       += libmysqlclient-dev
 BUILD_PACKAGES       += libncurses5-dev                # compiling mod-gearman
 BUILD_PACKAGES       += libpango1.0-dev

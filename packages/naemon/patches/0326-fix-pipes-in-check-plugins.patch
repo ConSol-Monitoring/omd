@@ -1,0 +1,38 @@
+From 1d3a3558fb068bd8f5b3977883cab6bd0081ede2 Mon Sep 17 00:00:00 2001
+From: Sven Nierlein <sven@nierlein.de>
+Date: Mon, 17 Feb 2020 16:11:57 +0100
+Subject: [PATCH] fix using pipes in commands (fixes #319)
+
+using a simple shell script like this runs into timeout when run
+by naemon because SIGPIPE is beeing ignored for unknown reasons.
+
+```
+
+random-string()
+{
+  /bin/cat /dev/urandom | /bin/tr -dc 'a-zA-Z0-9' | /bin/fold -w ${1:-32} | /bin/head -n 1
+}
+
+echo "OK - rand: $(random-string)"
+exit 0
+```
+
+using the default signal handling right before we run child commands fixes this.
+---
+ lib/runcmd.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/lib/runcmd.c b/lib/runcmd.c
+index 609aa351..507d5d66 100644
+--- a/lib/runcmd.c
++++ b/lib/runcmd.c
+@@ -315,6 +315,9 @@ void runcmd_init(void)
+ 	}
+ #endif
+ 
++	/* reset pipe handling so child processes can use shell pipes */
++	signal(SIGPIPE, SIG_DFL);
++
+ 	if (!pids)
+ 		pids = calloc(maxfd, sizeof(pid_t));
+ }

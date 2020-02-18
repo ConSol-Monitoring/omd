@@ -1,9 +1,12 @@
 include ../../Makefile.omd
 
-NAME     = mod_gearman
-VERSION  = 3.2.1
-GEARMAND = $(shell grep "^VERSION " ../gearmand/Makefile | awk '{ print $$3 }')
-DIR      = mod_gearman-$(VERSION)
+NAME         = mod_gearman
+VERSION      = 3.2.1
+GEARMAND     = $(shell grep "^VERSION " ../gearmand/Makefile | awk '{ print $$3 }')
+DIR          = mod_gearman-$(VERSION)
+PROXY        = GearmanProxy
+PROXYVERSION = 2.01
+PROXYDIR     = $(PROXY)-$(PROXYVERSION)
 
 .PHONY: skel
 
@@ -17,6 +20,9 @@ build:
 	  export PKG_CONFIG_PATH=$(shell ls -d1 $$(pwd)/../naemon/naemon-*/.) C_INCLUDE_PATH=$(shell pwd)/$(DIR)/include:$(shell ls -d1 $$(pwd)/../naemon/naemon-*/.)/src; \
 	  ./configure --prefix=$(OMD_ROOT) --enable-debug --enable-embedded-perl --with-gearman=$(shell pwd)/../gearmand/gearmand-${GEARMAND} && \
 	  $(MAKE) -j 1
+	tar zxf $(PROXYDIR).tar.gz
+	cd $(PROXYDIR) && perl Makefile.PL
+	make -C $(PROXYDIR) gearman_proxy.pl
 
 install:
 	$(MAKE) DESTDIR=$(DESTDIR) -C $(DIR) -j 1 install
@@ -28,17 +34,16 @@ install:
 	cp $(DESTDIR)$(OMD_ROOT)/lib/mod_gearman/mod_gearman_naemon.o $(DESTDIR)$(OMD_ROOT)/lib/mod_gearman/mod_gearman_naemon.o.dbg
 	rm -rf $(DESTDIR)$(OMD_ROOT)/lib/mod_gearman/mod_gearman_nagios*
 	cp $(DESTDIR)$(OMD_ROOT)/bin/mod_gearman_worker $(DESTDIR)$(OMD_ROOT)/bin/mod_gearman_worker.dbg
-	chmod 0755 $(DESTDIR)$(OMD_ROOT)/share/mod_gearman/gearman_proxy.pl
 	rm -rf $(DESTDIR)$(OMD_ROOT)/etc
 	rm -rf $(DESTDIR)$(OMD_ROOT)/var
+	install -m 0755 $(PROXYDIR)/gearman_proxy.pl $(DESTDIR)$(OMD_ROOT)/share/mod_gearman/gearman_proxy.pl
 
 skel:
 	mkdir -p $(SKEL)/etc/mod-gearman
 	mkdir -p $(SKEL)/tmp/run
 	cp $(DIR)/etc/mod_gearman_neb.conf.in    $(SKEL)/etc/mod-gearman/server.cfg
 	cp $(DIR)/etc/mod_gearman_worker.conf.in $(SKEL)/etc/mod-gearman/worker.cfg
-	cp $(DIR)/contrib/gearman_proxy.cfg      $(SKEL)/etc/mod-gearman/gearman_proxy.cfg
-	sed -i -e 's/mod_gearman\/gearman_proxy.cfg/mod-gearman\/gearman_proxy.cfg/g' $(SKEL)/etc/init.d/gearman_proxy
+	cp $(PROXYDIR)/gearman_proxy.cfg         $(SKEL)/etc/mod-gearman/gearman_proxy.cfg
 	for p in patches/*.skel_patch ; do \
 	    echo "applying $$p..." ; \
 	    ( cd $(SKEL) ; patch -p1 ) < $$p || exit 1; \
@@ -51,3 +56,4 @@ skel:
 
 clean:
 	rm -rf $(DIR)
+	rm -rf $(PROXYDIR)

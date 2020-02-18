@@ -83,6 +83,4 @@ public:
 	rm grafana-$(VERSION).linux-amd64.tar.gz
 	rm -rf grafana-*/
 	wget "https://raw.githubusercontent.com/grafana/grafana/v$(VERSION)/conf/defaults.ini" -O defaults.ini
-	sed -i -e 's/^default_theme.*$$/default_theme = light/' defaults.ini
-	sed -i -e 's/^allow_embedding.*$$/allow_embedding = true/' defaults.ini
-	sed -i -e 's/^disable_initial_admin_creation.*$$/disable_initial_admin_creation = true/' defaults.ini
+# DO NOT TOUCH defaults.ini, update grafana.ini in skel instead

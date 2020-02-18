@@ -1,0 +1,241 @@
+#!/usr/bin/env perl
+
+BEGIN{ $main::regular_exit = 0 }
+END { exit 3 unless($main::regular_exit > 0) }
+
+use strict;
+use warnings;
+use Getopt::Long;
+use List::Util qw/min/;
+use 5.010;
+# exit with unknown if we exit unexpectedly
+
+# write stderr to where stdout is written to
+open(my $oldstderr, ">&STDERR") or die "Can't dup STDERR: $!";
+open(STDERR, ">&STDOUT") or die "Can't dup STDOUT";
+
+use constant OK => 0;
+use constant WARNING => 1;
+use constant CRITICAL => 2;
+use constant UNKNOWN => 3;
+
+use constant MIN_FREE_FILE => $ENV{MIN_FREE_FILE} || '/proc/sys/vm/min_free_kbytes';
+use constant MEMINFO_FILE => $ENV{MEMINFO_FILE}   || '/proc/meminfo';
+
+my %known_metrics = (
+   MEMFREE => 'memory_free',
+   MEMAVAIL => 'memory_available',
+   MEMUSED => 'memory_used',
+
+   BUFFERS => 'buffers',
+   CACHED => 'cached',
+   SHARED => 'shared',
+   BUFFERS_CACHED => 'buffers_cached',
+
+   SWAPFREE => 'swap_free',
+   SWAPUSED => 'swap_used',
+
+   P_MEMAVAIL => 'memory_available%',
+   P_MEMFREE => 'memory_free%',
+   P_MEMUSED => 'memory_used%',
+
+   P_SWAPFREE => 'swap_free%',
+   P_SWAPUSED => 'swap_used%',
+);
+my %ops = (
+    'lt' => sub { ("below", $_[0] < $_[1]) },
+    'gt' => sub { ("above", $_[0] > $_[1]) },
+);
+
+my $getopt = Getopt::Long::Parser->new;
+$getopt->configure("no_auto_abbrev");
+my %opts = ('op' => 'lt');
+my @options = (
+    'warning|w=i',
+    'critical|c=i',
+    'metric|m=s',
+    'op|o=s',
+    'help|h',
+);
+
+$getopt->getoptions(\%opts, @options);
+help() if($opts{help});
+help("metric is mandatory") unless($opts{metric});
+$opts{metric} = uc($opts{metric});
+help("unknown metric") unless($known_metrics{ $opts{metric} });
+help("one of --warning or --critical is required") unless ($opts{warning} || $opts{critical});
+help("unknown operator") unless (exists $ops{ $opts{op} });
+
+# M values from meminfo
+my %M = ();
+# C calculated values
+my %C = ();
+
+fill_MC();
+
+my ($adverb, $fail);
+my $metric_long_name = $known_metrics{ $opts{metric} };
+if(defined $opts{critical}) {
+    ($adverb, $fail) = $ops{ $opts{op} }->($C{ $opts{metric} }, $opts{critical});
+    if($fail) {
+        _exit(CRITICAL, "CRITICAL - $metric_long_name is $adverb threshold ($opts{critical}): $C{ $opts{metric} }");
+    }
+}
+
+if(defined $opts{warning}) {
+    ($adverb, $fail) = $ops{ $opts{op} }($C{ $opts{metric} }, $opts{warning});
+    if($fail) {
+        _exit(WARNING, "WARNING - $metric_long_name is $adverb threshold ($opts{warning}): $C{ $opts{metric} }");
+    }
+}
+
+_exit(OK, "OK - $metric_long_name is ok: $C{ $opts{metric} }");
+
+sub fill_MC {
+    # parse meminfo
+    my $meminfo_file = MEMINFO_FILE;
+    open(my $f, "<", $meminfo_file) or die("cannot open $meminfo_file");
+    while(defined(my $line = <$f>)) {
+        if($line =~ /\A([^:]+):\s*(\d+)/) {
+            $M{$1} = $2;
+        }
+    }
+    close($f) or die("cannot close $meminfo_file");
+
+    check_M();
+
+    $C{MEMTOTAL} = $M{MemTotal};
+    $C{MEMAVAIL} = $M{MemAvailable};
+    $C{MEMFREE} = $M{MemFree};
+    $C{BUFFERS} = $M{Buffers};
+    $C{CACHED} = $M{Cached};
+    $C{SHARED} = $M{Shmem};
+    $C{SRECLAIM} = $M{SReclaimable};
+    $C{SWAPTOTAL} = $M{SwapTotal};
+    $C{SWAPFREE} = $M{SwapFree};
+    $C{SWAPUSED} = $C{SWAPTOTAL} - $C{SWAPFREE};
+    $C{CACHED} += $C{SRECLAIM};
+    $C{BUFFERS_CACHED} = $C{BUFFERS} + $C{CACHED};
+
+    if(! defined $C{MEMAVAIL}) {
+        $C{MEMAVAIL} = getMemAvail(); # It's ridiculously complicated
+    }
+
+    if($C{MEMTOTAL} > 0) {
+        $C{MEMUSED} = $C{MEMTOTAL} - $C{MEMFREE} - $C{BUFFERS} - $C{CACHED};
+        if($C{MEMUSED} < 0) {
+            $C{MEMUSED} = $C{MEMTOTAL} - $C{MEMFREE};
+        }
+    } else {
+        die("MEMTOTAL not greater zero?")
+    }
+
+    $C{P_MEMUSED} = sprintf '%.3f', ( $C{MEMUSED} / $C{MEMTOTAL} ) * 100;
+    $C{P_MEMFREE}  = sprintf '%.3f', ( $C{MEMFREE} / $C{MEMTOTAL} ) * 100;
+    $C{P_MEMAVAIL} = sprintf '%.3f', ( $C{MEMAVAIL} / $C{MEMTOTAL} ) * 100;
+    $C{P_SWAPFREE} = sprintf '%.3f', ( $C{SWAPFREE} / $C{SWAPTOTAL} ) * 100;
+    $C{P_SWAPUSED} = sprintf '%.3f', ( $C{SWAPUSED} / $C{SWAPTOTAL} ) * 100;
+}
+
+sub help {
+print $_[0]."\n\n" if($_[0]);
+print << "EOT";
+--help, -h this
+
+--op, -o on of 'lt' or 'gt' (less than, greater than)
+  if omitted 'lt' (less than) is assumed
+
+--critical=THRESHOLD, -c THRESHOLD
+  the plugin exits in state warning when the value of the metric specified
+  with --metric
+  mandatory if no --warning is defined
+
+--warning=THRESHOLD, -w THRESHOLD
+  the plugin exits in state warning when the value of the metric specified
+  with --metric
+  mandatory if no --critical is defined
+
+--metric=METRIC, -m METRIC   on of (case doesn't matter)
+   mandatory
+
+   MEMFREE  amount of ununsed memory
+   MEMAVAIL amount of available memory
+            this is usually greater than MEMFREE because the kernel is
+            is using available memory for caching, but if someone needs memory
+            it drops the caches.
+   MEMUSED  amount of used memory
+
+   BUFFERS  amount of memory used for buffers by the kernel
+   CACHED   amount of memory used for caches by the kernel
+   SHARED   amount of memory that is shared between processes
+   BUFFERS_CACHED BUFFERS + CACHED
+
+   SWAPFREE  free swap space
+   SWAPUSED  used swap space
+   SWAPTOTAL total swap space
+
+   P_MEMAVAIL available memory in %
+   P_MEMFREE  free memory in %
+   P_MEMUSED  used memory in %
+   P_SWAPUSED used swap in %
+   P_SWAPFREE free swap in %
+EOT
+$main::regular_exit++;
+exit;
+}
+
+sub getMemAvail {
+    return $M{MemAvailable} if exists $M{MemAvailable};
+    my $min_free = int(readFile(MIN_FREE_FILE));
+    my $watermark_low = $min_free * 5 / 4;
+
+    my $mem_available = $M{MemFree} - $watermark_low
+    + $M{'Inactive(file)'} + $M{'Active(file)'}
+    + min(($M{'Inactive(file)'}  + $M{'Active(file)'}) / 2, $watermark_low)
+    + $M{SReclaimable} - min($M{SReclaimable} / 2, $watermark_low);
+
+    $mem_available = 0 if($mem_available < 0);
+    return $mem_available;
+}
+
+sub readFile {
+    my $f = shift;
+    open(my $fd, "<", $f);
+    return do { local $/; scalar <$fd> }
+}
+
+sub check_M {
+    for (qw/MemTotal MemFree Buffers Cached SReclaimable SwapTotal SwapFree/) {
+        die("$_ is not defined in /proc/meminfo, this linux version is not supported yet") unless defined $M{$_};
+    }
+}
+
+sub perf_data {
+    my @p = ();
+    my %km = %known_metrics;
+    $km{MEMTOTAL}  = "memory_total";
+    $km{SWAPTOTAL} = "swap_total";
+    for my $metric (sort keys %km) {
+        my $uom = ('kB', '%')[($metric =~ /^P_/) // 0];
+        my $warning  = $opts{warning}  // "";
+        my $critical = $opts{critical} // "";
+        push @p, sprintf("'%s'=%s%s;%s;%s;%s;%s",
+            $km{$metric},
+            $C{$metric},
+            $uom,
+            $opts{metric} eq $metric ? $warning : "",
+            $opts{metric} eq $metric ? $critical : "",
+            $uom eq '%' ? 0 : "",
+            $uom eq '%' ? 100 : ""
+        );
+    }
+    return '| '. join("\n", sort map { "$_" } @p);
+}
+
+sub _exit {
+    my $code = shift;
+    say $_ for @_;
+    say perf_data();
+    $main::regular_exit++;
+    exit(($code =~ /^[0123]$/) ? $code : 3);
+}

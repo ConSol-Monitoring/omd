@@ -11,27 +11,20 @@
 # Short-Description: Start/Stop the mod_gearman proxy daemon
 ### END INIT INFO
 
-# OMD
-if [ -n $OMD_ROOT ]; then
-    # Check if Mod-Gearman is enabled in OMD. If not terminate.
-    cd $OMD_ROOT
-    . $OMD_ROOT/.profile
-    . $OMD_ROOT/etc/omd/site.conf
-    # not integrated in omds config menu yet
-    if [ "$CONFIG_MOD_GEARMAN" != "on" -o "$CONFIG_GEARMAN_PROXY" != "on" ] ; then
-        exit 5
-    fi
-    PROXY=$OMD_ROOT/share/mod_gearman/gearman_proxy.pl
-    PIDFILE=$OMD_ROOT/tmp/run/gearman_proxy.pid
-    LOGFILE=$OMD_ROOT/var/log/gearman/proxy.log
-    CONFIGFILE=$OMD_ROOT/etc/mod_gearman/gearman_proxy.cfg
-    mkdir -p $OMD_ROOT/tmp/run
-else
-    PROXY=/usr/share/mod_gearman/gearman_proxy.pl
-    PIDFILE=/var/run/gearman_proxy.pid
-    LOGFILE=/var/log/gearman/proxy.log
-    CONFIGFILE=/etc/mod_gearman/gearman_proxy.cfg
+# Check if Mod-Gearman is enabled in OMD. If not terminate.
+cd $OMD_ROOT
+. $OMD_ROOT/.profile
+. $OMD_ROOT/etc/omd/site.conf
+# not integrated in omds config menu yet
+if [ "$CONFIG_MOD_GEARMAN" != "on" -o "$CONFIG_GEARMAN_PROXY" != "on" ] ; then
+    exit 5
 fi
+PROXY=$OMD_ROOT/share/mod_gearman/gearman_proxy.pl
+PIDFILE=$OMD_ROOT/tmp/run/gearman_proxy.pid
+LOGFILE=$OMD_ROOT/var/log/gearman/proxy.log
+CONFIGFILE=$OMD_ROOT/etc/mod-gearman/gearman_proxy.cfg
+CONFIGFOLDER=$OMD_ROOT/etc/mod-gearman/gearman_proxy.cfg.d
+mkdir -p $OMD_ROOT/tmp/run
 
 NAME=gearman_proxy
 USER=$USER
@@ -47,7 +40,7 @@ case "$1" in
     start)
         echo -n "Starting $NAME..."
         if [ ! -f $PIDFILE ]; then
-            $PROXY --log=$LOGFILE --pid=$PIDFILE --config=$CONFIGFILE &
+            $PROXY --log=$LOGFILE --pid=$PIDFILE --config=$CONFIGFILE --config=$CONFIGFOLDER &
             if [ $? -eq 0 ]; then
                 echo "OK"
             else
@@ -62,7 +55,7 @@ case "$1" in
         pid=`cat $PIDFILE 2>/dev/null`
         if [ -f $PIDFILE  ]; then
             kill $pid
-            rm $PIDFILE
+            rm -f $PIDFILE
             if [ $? -eq 0 ]; then
                 echo "OK"
                 exit 0;
@@ -86,7 +79,17 @@ case "$1" in
         echo "$NAME is not running"
         exit 1;
     ;;
-    reload|restart)
+    reload)
+        pid=`cat $PIDFILE 2>/dev/null`
+        if [ "$pid" != "" ]; then
+            echo "Reloading $NAME configuration files..."
+            kill -HUP $pid
+            exit 0;
+        fi
+        echo "$NAME is not running"
+        exit 1;
+    ;;
+    restart)
         $0 stop && sleep 1 && $0 start
         exit $?
         ;;
