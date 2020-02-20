@@ -1,0 +1,84 @@
+#!/bin/sh
+
+RELEASE="###VERSION###"
+
+usage() {
+    echo "Download of Telegraf has failed"
+    echo "Please try by your self"
+    echo " "
+    echo "wget -P ${OMD_ROOT}/tmp/ https://dl.influxdata.com/telegraf/releases/telegraf-$1_linux_$2.tar.gz"
+    echo " "
+    echo "Afterwards call : $0 ${OMD_ROOT}/tmp/telegraf-$1_linux_$2.tar.gz"
+    echo " "
+    exit 3
+}
+
+if [ "x$OMD_ROOT" = "x" ]; then
+  echo "installer must be run as as site user."
+  exit 3;
+fi
+
+if [ $# -eq 0 ]; then
+    if [[ "$(uname -s)" == "Linux" ]]; then
+        if [[ "$(uname -m)" == "x86_64" ]]; then
+            echo "Downloading Telegraf ${RELEASE} for x86_64 ..."
+            wget -q -t 1 -P ${OMD_ROOT}/tmp/ https://dl.influxdata.com/telegraf/releases/telegraf-${RELEASE}_linux_amd64.tar.gz
+            if [[ $? -ne 0 ]]; then
+              usage "${RELEASE}" "amd64"
+            fi
+            TARBALL=${OMD_ROOT}/tmp/telegraf-${RELEASE}_linux_amd64.tar.gz
+        elif [[ "$(uname -m)" == "arm64" ]]; then
+            echo "Downloading Telegraf ${RELEASE} for arm64 ..."
+            wget -t 1 -P ${OMD_ROOT}/tmp/ https://dl.influxdata.com/telegraf/releases/telegraf-${RELEASE}_linux_armhf.tar.gz
+            if [[ $? -ne 0 ]]; then
+              usage "${RELEASE}" "armhf"
+            fi
+            TARBALL=${OMD_ROOT}/tmp/telegraf-${RELEASE}_linux_armfh.tar.gz
+        else
+            echo "Telegraf on OMD is only supported on x86_64 or arm64"
+            exit 3
+        fi
+    else
+        echo "Telegraf on OMD is only supported on Linux."
+        exit 3
+    fi
+
+else
+    TARBALL=$1
+    if ! test -e $TARBALL; then
+        echo "$TARBALL not found"
+        exit 3;
+    fi
+fi
+
+echo "install files"
+tar -zxf $TARBALL -C ${OMD_ROOT}/local/bin --strip-components=4 ./telegraf/usr/bin/telegraf
+rm -f $TARBALL
+
+if [ ! -d ${OMD_ROOT}/etc/telegraf ]; then
+    mkdir -p ${OMD_ROOT}/etc/telegraf
+fi
+if [ ! -d §{OMD_ROOT}/etc/telegraf/telegraf.d ]; then
+    mkdir -p ${OMD_ROOT}/etc/telegraf/telegraf.d
+fi
+if [ ! -d ${OMD_ROOT}/var/log/telegraf ]; then
+    mkdir -p ${OMD_ROOT}/var/log/telegraf
+fi
+if [ ! -f ${OMD_ROOT}/etc/telegraf/telegraf.conf ]; then
+    ${OMD_ROOT}/local/bin/telegraf config > ${OMD_ROOT}/etc/telegraf/telegraf.conf
+fi
+
+cat << EOF > ${OMD_ROOT}/etc/logrotate.d/telegraf
+${OMD_ROOT}/var/log/telegraf/telegraf.log
+{
+    rotate 6
+    daily
+    missingok
+    dateext
+    copytruncate
+    notifempty
+    compress
+}
+EOF
+
+echo "---- done ----"

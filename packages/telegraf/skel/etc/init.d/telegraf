@@ -1,0 +1,116 @@
+#!/bin/bash
+
+### BEGIN INIT INFO
+# Provides:          telegraf
+# Required-Start:    $local_fs
+# Required-Stop:     $local_fs
+# Should-Start:
+# Should-Stop:
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Start/Stop telegraf 
+### END INIT INFO
+
+# Check if telegraf is enabled in OMD. If not terminate.
+. etc/omd/site.conf
+#if [ "$CONFIG_TELEGRAF" != "on" ] ; then
+#    exit 5
+#fi
+
+NAME=telegraf
+DAEMON="$OMD_ROOT/local/bin/telegraf"
+PIDFILE="$OMD_ROOT/tmp/run/telegraf.pid"
+LOGFILE="$OMD_ROOT/var/log/telegraf/telegraf.log"
+OPTIONS="--config $OMD_ROOT/etc/telegraf/telegraf.conf --config-directory $OMD_ROOT/etc/telegraf/telegraf.d --pidfile $PIDFILE"
+
+# create state dir
+mkdir -p $OMD_ROOT/tmp/run 
+
+get_status() {
+        pid=$( cat $PIDFILE 2>/dev/null )
+        if [ -n "$pid" ]; then
+            if ps -p $pid > /dev/null 2>&1 ; then
+                echo "$NAME is running with pid $pid"
+                return 0;
+            fi
+        fi
+        echo "$NAME is not running"
+        return 1;
+}
+
+stop_telegraf() {
+    pid=$( cat $PIDFILE 2>/dev/null )
+    if [ -z "$pid" ]; then
+        echo ". Not running."
+    else
+        ps -p $pid > /dev/null 2>&1 && kill $pid
+        for x in $(seq 50); do
+            printf "."
+            ps -p $pid > /dev/null 2>&1 || break
+            if [ $x -gt 3 ]; then
+                ps -p $pid > /dev/null 2>&1 && kill $pid
+            fi
+            sleep 0.2;
+        done
+        if ! ps -p $pid > /dev/null 2>&1 ; then
+            echo "OK"
+            exit 0;
+        else
+            echo "failed"
+            exit 1;
+        fi
+    fi
+}
+
+case "$1" in
+    start)
+        printf '%s' "Starting $NAME..."
+        if get_status > /dev/null ; then
+            echo "failed"
+            echo "$NAME already running"
+            exit 0;
+        fi
+
+        # remove memory limits which cause startup problems
+        ulimit -m unlimited >/dev/null 2>&1
+        ulimit -v unlimited >/dev/null 2>&1
+
+        nohup $DAEMON $OPTIONS >>$LOGFILE 2>&1 &
+        ;;
+    stop)
+        printf '%s' "Stopping $NAME..."
+        pid=$( cat $PIDFILE 2>/dev/null )
+        if [ -z "$pid" ]; then
+            echo ". Not running."
+        else
+            stop_telegraf;
+        fi
+        ;;
+    reload|force-reload)
+        printf '%s' "Reloading $NAME configuration files..."
+        pid=$( cat $PIDFILE 2>/dev/null )
+        if [ -n "$pid" ]; then
+            kill -HUP $pid
+            exit 0
+        else
+            echo "$NAME is not running"
+            exit 1;
+        fi
+    ;;
+    status)
+        get_status;
+        exit $?;
+    ;;
+    restart)
+        $0 stop && sleep 1
+        $0 start
+        exit $?
+        ;;
+    *)
+        echo "Usage: $NAME {start|stop|kill|status|restart}"
+        exit 1
+        ;;
+esac
+
+exit 0
+
