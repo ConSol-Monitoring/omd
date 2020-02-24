@@ -3,10 +3,10 @@ include ../../Makefile.omd
 .PHONY: skel
 
 NAME       = snmp_exporter
-VERSION    = 0.15.0
+VERSION    = 0.17.0
 BRANCH     = master
 SRC        = $(NAME)-$(VERSION).tar.gz
-GOPKG      = 1.12
+GOPKG      = 1.13
 GOVERSION  = $(shell grep ^VERSION ../go-${GOPKG}/Makefile | awk '{ print $$3 }')
 PWD        = $(shell pwd)
 GOFOLDER   = go
@@ -32,6 +32,7 @@ build:
 		go install -ldflags $(LDFLAGS) github.com/prometheus/$(NAME) && \
 		cd $(GOPATH)/src/github.com/prometheus/snmp_exporter/generator && \
 		go build
+	-chmod -R 777 $(GOPATH)
 
 
 install:
@@ -45,6 +46,7 @@ skel:
 	cp $(GOPATH)/src/github.com/prometheus/snmp_exporter/generator/generator.yml $(SKEL)/etc/prometheus_snmp_exporter/generator/
 
 clean:
+	-chmod -R 777 $(GOPATH)
 	rm -rf $(GOPATH)
 
 package: clean
