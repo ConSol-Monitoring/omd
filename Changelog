@@ -12,6 +12,7 @@ next:
           - Naemon:
             - update core to 1.2.0
             - update livestatus to 1.2.0
+          - Go updated to 1.14
 
 3.20     Oct 30 2019
           - OMD:
