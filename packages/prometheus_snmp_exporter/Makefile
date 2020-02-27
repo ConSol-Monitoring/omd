@@ -39,6 +39,7 @@ install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/bin
 	install -m 755 $(GOPATH)/bin/$(NAME) $(DESTDIR)$(OMD_ROOT)/bin
 	install -m 755 $(GOPATH)/src/github.com/prometheus/snmp_exporter/generator/generator $(DESTDIR)$(OMD_ROOT)/bin
+	cp create_snmp_scrape_config.py $(DESTDIR)$(OMD_ROOT)/bin
 
 skel:
 	mkdir -p $(SKEL)/etc/prometheus_snmp_exporter/generator/
