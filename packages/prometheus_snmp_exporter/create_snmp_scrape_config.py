@@ -77,7 +77,7 @@ def arguments():
                         type=str, required=False)
     parser.add_argument('--menu',dest='menu',
                         help='Thruk action menu to set',
-                        type=str, required=false)
+                        type=str, required=False)
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument('--create',action="store_true",
                         help='Create scrape config')
