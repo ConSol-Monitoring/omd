@@ -195,7 +195,7 @@ MODULES = \
           Params-Validate-1.29.tar.gz \
           B-Hooks-EndOfScope-0.21.tar.gz \
           File-ShareDir-1.104.tar.gz \
-          Gearman-1.12.tar.gz \
+          Gearman-2.004.015.tar.gz \
           List-SomeUtils-0.56.tar.gz \
           Log-Dispatch-2.44.tar.gz \
           Monitoring-Plugin-0.40.tar.gz \
