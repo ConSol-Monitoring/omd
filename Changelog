@@ -8,7 +8,10 @@ next:
             - Prometheus update to 2.15.2
             - Alertmanager update to 0.20.0
           - LMD: Update 1.8.1
-          - Gearmand: update 1.1.19
+          - Gearman:
+            - Mod-Gearman update 3.3.0
+            - Gearmand: update 1.1.19
+            - Gearman-Proxy update 2.02
           - Naemon:
             - update core to 1.2.0
             - update livestatus to 1.2.0
@@ -32,7 +35,7 @@ next:
             - Alertmanager update to 0.18.0
             - node_exporter update to 0.18.1
             - blackbox_exporter update to 0.15.0
-          - Gearman
+          - Gearman:
             - Mod-Gearman update 3.2.1
             - update mod-gearman-worker-go to 1.1.3
             - Gearmand: update 1.1.18
