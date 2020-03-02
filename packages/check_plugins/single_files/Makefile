@@ -4,6 +4,8 @@ NAME = single_file_plugins
 
 PLUGINS=$(shell ls -1d check_*)
 
+.PHONY: skel
+
 build:
 
 install:
@@ -13,5 +15,6 @@ install:
 	done
 
 skel:
+	install -D -m 644 skel/etc/histou/templates/custom/check_meminfo.php.example $(SKEL)/etc/histou/templates/custom/check_meminfo.php.example
 
 clean:

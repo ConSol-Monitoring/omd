@@ -26,6 +26,7 @@ skel:
 		$(MAKE) DESTDIR=$(DESTDIR) SKEL=$(SKEL) -C $$plugin skel; \
 		[ ! -d $$plugin/skel ] || rsync -a $$plugin/skel/. $(SKEL)/. ; \
 	done
+	$(MAKE) DESTDIR=$(DESTDIR) -C single_files skel
 
 clean:
 	set -e; for plugin in $(PLUGINS); do \
