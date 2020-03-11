@@ -1,11 +1,13 @@
 include ../../Makefile.omd
 
 NAME = icinga2
-VERSION = 2.9.2
+VERSION = 2.11.3
 DIR = $(NAME)-$(VERSION)
+BOOSTDIR=boost_1_72_0
+BOOSTDEST=$(BOOSTDIR)-dest
 CMAKE=cmake
-CMAKEDIR=cmake-3.5.0
-CMAKEDEST=$(shell pwd)/$(CMAKEDIR)-dest
+CMAKEDIR=cmake-3.16.5
+CMAKEDEST=$(CMAKEDIR)-dest
 
 .PHONY: skel
 
@@ -24,6 +26,22 @@ CONFIGUREOPTS = \
     -DICINGA2_WITH_TESTS=OFF \
     -DICINGA2_GROUP=root
 
+EXTRA_BUILD_DEPS=
+BOOST_MINOR_VERSION=$(shell grep BOOST_LIB_VERSION /usr/include/boost/version.hpp | grep ^\# | awk -F _ '{ print $$4 }' | tr -d '"')
+ifeq ($(shell test $(BOOST_MINOR_VERSION) -lt 66; echo $$?),0)
+  EXTRA_BUILD_DEPS=$(BOOSTDEST)
+  CONFIGUREOPTS+=-DCMAKE_EXE_LINKER_FLAGS=-lrt
+  # workaround for https://bugzilla.redhat.com/show_bug.cgi?id=849791#c8
+  CONFIGUREOPTS+=-DBoost_NO_BOOST_CMAKE=ON
+  CONFIGUREOPTS+=-DBoost_NO_SYSTEM_PATHS=ON
+  CONFIGUREOPTS+=-DBoost_USE_STATIC_LIBS=ON
+  CONFIGUREOPTS+=-DBOOST_ROOT=$(shell pwd)/$(BOOSTDEST)
+  CONFIGUREOPTS+=-DBOOST_INCLUDEDIR=$(shell pwd)/$(BOOSTDEST)/include
+  CONFIGUREOPTS+=-DBOOST_LIBRARYDIR=$(shell pwd)/$(BOOSTDEST)/lib
+  #CONFIGUREOPTS+=-DBoost_DEBUG=ON
+  CMAKE=$(shell pwd)/$(CMAKEDEST)/bin/cmake
+endif
+
 build: $(EXTRA_BUILD_DEPS)
 	tar xzf $(DIR).tar.gz
 	mkdir -p $(DIR)/build
@@ -35,6 +53,22 @@ build: $(EXTRA_BUILD_DEPS)
 		export CXXFLAGS=-O2; \
 		$(CMAKE) .. $(CONFIGUREOPTS) && \
 		make -j1
+
+$(CMAKEDEST):
+	tar xzf $(CMAKEDIR).tar.gz
+	cd $(CMAKEDIR) && \
+		./configure --prefix=$(shell pwd)/$(CMAKEDEST) && \
+		make -j 4 && \
+		make install
+
+$(BOOSTDEST): $(CMAKEDEST)
+	tar xJf $(BOOSTDIR).tar.xz
+	cd $(BOOSTDIR) && patch -p1 < ../boost_1_72_0-0001-revert-cease-dependence-on-range.patch
+	cd $(BOOSTDIR) && \
+		./bootstrap.sh --with-libraries=thread,system,program_options,regex,chrono,date_time,atomic,coroutine,filesystem,context --prefix=$(shell pwd)/$(BOOSTDEST) && \
+		./b2 cxxflags=-fPIC cflags=-fPIC install
+
+build_boost: $(BOOSTDEST)
 
 install:
 	$(MAKE) DESTDIR=$(DESTDIR) -C $(DIR)/build install
@@ -105,6 +139,8 @@ skel:
 
 clean:
 	rm -rf $(DIR)
+	rm -rf $(BOOSTDIR)
+	rm -rf $(BOOSTDEST)
 	rm -rf $(CMAKEDIR)
 	rm -rf $(CMAKEDEST)
 

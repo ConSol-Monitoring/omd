@@ -1,0 +1,41 @@
+--- a/icinga-app/icinga.cpp	2020-03-02 13:58:18.000000000 +0100
++++ b/icinga-app/icinga.cpp	2020-03-06 15:43:20.433871117 +0100
+@@ -203,20 +203,20 @@
+ 		Log(LogWarning, "icinga-app", "Registry key could not be read. Falling back to built-in paths.");
+ 
+ #endif /* _WIN32 */
+-		Configuration::ConfigDir = ICINGA_CONFIGDIR;
++		Configuration::ConfigDir = std::string(getenv("OMD_ROOT")) + "/etc/icinga2";
+ 
+-		Configuration::DataDir = ICINGA_DATADIR;
+-		Configuration::LogDir = ICINGA_LOGDIR;
+-		Configuration::CacheDir = ICINGA_CACHEDIR;
+-		Configuration::SpoolDir = ICINGA_SPOOLDIR;
++		Configuration::DataDir = std::string(getenv("OMD_ROOT")) + "/var/icinga2";
++		Configuration::LogDir = std::string(getenv("OMD_ROOT")) + "/var/log/icinga2";
++		Configuration::CacheDir = std::string(getenv("OMD_ROOT")) + "/tmp/icinga2";
++		Configuration::SpoolDir = std::string(getenv("OMD_ROOT")) + "/tmp/icinga2";
+ 
+-		Configuration::PrefixDir = ICINGA_PREFIX;
++		Configuration::PrefixDir = std::string(getenv("OMD_ROOT"));
+ 
+ 		/* Internal constants. */
+-		Configuration::PkgDataDir = ICINGA_PKGDATADIR;
+-		Configuration::IncludeConfDir = ICINGA_INCLUDECONFDIR;
++		Configuration::PkgDataDir = std::string(getenv("OMD_ROOT")) + "/share/icinga2";
++		Configuration::IncludeConfDir = std::string(getenv("OMD_ROOT")) + "/share/icinga2/include";
+ 
+-		Configuration::InitRunDir = ICINGA_INITRUNDIR;
++		Configuration::InitRunDir = std::string(getenv("OMD_ROOT")) + "/tmp/icinga2";
+ 
+ #ifdef _WIN32
+ 	}
+@@ -457,7 +457,7 @@
+ 	Configuration::ModAttrPath = Configuration::DataDir + "/modified-attributes.conf";
+ 	Configuration::ObjectsPath = Configuration::CacheDir + "/icinga2.debug";
+ 	Configuration::VarsPath = Configuration::CacheDir + "/icinga2.vars";
+-	Configuration::PidPath = Configuration::InitRunDir + "/icinga2.pid";
++	Configuration::PidPath = std::string(getenv("OMD_ROOT")) + "/tmp/run/icinga2.pid";
+ 
+ 	ConfigCompiler::AddIncludeSearchDir(Configuration::IncludeConfDir);
+ 

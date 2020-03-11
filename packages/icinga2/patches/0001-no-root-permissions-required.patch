@@ -1,37 +1,5 @@
 --- a/icinga-app/icinga.cpp	2018-10-02 13:50:28.355916250 +0200
 +++ b/icinga-app/icinga.cpp	2018-10-02 14:21:58.344916567 +0200
-@@ -142,12 +142,12 @@
- 		Log(LogWarning, "icinga-app", "Registry key could not be read. Falling back to built-in paths.");
- 
- #endif /* _WIN32 */
--		Application::DeclarePrefixDir(ICINGA_PREFIX);
--		Application::DeclareSysconfDir(ICINGA_SYSCONFDIR);
--		Application::DeclareRunDir(ICINGA_RUNDIR);
--		Application::DeclareLocalStateDir(ICINGA_LOCALSTATEDIR);
--		Application::DeclarePkgDataDir(ICINGA_PKGDATADIR);
--		Application::DeclareIncludeConfDir(ICINGA_INCLUDECONFDIR);
-+		Application::DeclarePrefixDir(std::string(getenv("OMD_ROOT")));
-+		Application::DeclareSysconfDir(std::string(getenv("OMD_ROOT")) + "/etc");
-+		Application::DeclareRunDir(std::string(getenv("OMD_ROOT")) + "/tmp/icinga2");
-+		Application::DeclareLocalStateDir(std::string(getenv("OMD_ROOT")) + "/var/icinga2");
-+		Application::DeclarePkgDataDir(std::string(getenv("OMD_ROOT")) + "/share/icinga2");
-+		Application::DeclareIncludeConfDir(std::string(getenv("OMD_ROOT")) + "/share/icinga2/include");
- #ifdef _WIN32
- 	}
- #endif /* _WIN32 */
-@@ -366,9 +366,9 @@
- 
- 	Application::DeclareStatePath(Application::GetLocalStateDir() + "/lib/icinga2/icinga2.state");
- 	Application::DeclareModAttrPath(Application::GetLocalStateDir() + "/lib/icinga2/modified-attributes.conf");
--	Application::DeclareObjectsPath(Application::GetLocalStateDir() + "/cache/icinga2/icinga2.debug");
--	Application::DeclareVarsPath(Application::GetLocalStateDir() + "/cache/icinga2/icinga2.vars");
--	Application::DeclarePidPath(Application::GetRunDir() + "/icinga2/icinga2.pid");
-+	Application::DeclareObjectsPath(std::string(getenv("OMD_ROOT")) + "/tmp/icinga2/icinga2.debug");
-+	Application::DeclareVarsPath(std::string(getenv("OMD_ROOT")) + "/tmp/icinga2/icinga2.vars");
-+	Application::DeclarePidPath(std::string(getenv("OMD_ROOT")) + "/tmp/run/icinga2.pid");
- 
- 	ConfigCompiler::AddIncludeSearchDir(Application::GetIncludeConfDir());
- 
 @@ -475,10 +475,10 @@
  		Logger::DisableTimestamp();
  #ifndef _WIN32
