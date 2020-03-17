@@ -57,6 +57,9 @@ install:
 	mkdir -p skel/var/pnp4nagios/log
 	mkdir -p skel/var/pnp4nagios/spool
 	mkdir -p skel/tmp/pnp4nagios/run
+	
+	# override custom template
+	install -m 644 check_gearman.php $(DESTDIR)$(OMD_ROOT)/share/pnp4nagios/htdocs/templates.dist/check_gearman.php
 
 clean:
 	rm -rf $(DIR)

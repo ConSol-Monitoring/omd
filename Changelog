@@ -11,7 +11,7 @@ next:
           - Gearman:
             - Mod-Gearman update 3.3.0
             - Gearmand: update 1.1.19
-            - Gearman-Proxy update 2.02
+            - Gearman-Proxy update 2.04
           - Naemon:
             - update core to 1.2.0
             - update livestatus to 1.2.0
