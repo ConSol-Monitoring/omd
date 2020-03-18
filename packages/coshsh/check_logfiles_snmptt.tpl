@@ -1,6 +1,8 @@
 # {{ mib.mib }} {{ mib.miblabel }}
 # common prefix {{ mib.common_prefix }}
-
+{% if mib.mib == "RAGPICKER-MIB" %}
+use bigint;
+{% endif %}
 my $VERBOSE = 0;
 our @commands = ();
 my @ips = (

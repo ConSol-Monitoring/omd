@@ -197,9 +197,12 @@ class SNMPTT(coshsh.datasource.Datasource):
                         last_severity = eventname_m.group(3).upper()
                         try:
                             last_nagios = {
-                                'NORMAL': 0, # return to normal state
+                                'NORMAL': 0, # return to normal state, this is the default.
+                                # Yes, the default is OK! So immediately change this in your snmptt files
                                 # some Mibs have --#SEVERITY hints
                                 'INFORMATIONAL': 0,
+                                'INFO': 0,
+                                'EVENT': 0, # many possible severities, you decide
                                 'AUTHENTICATION': 0, # sucess or failed. you decide
                                 'CONFIGURATION CHANGE': 0, # same here
                                 'CHANGE': 0, # because only the last word matches
@@ -209,7 +212,7 @@ class SNMPTT(coshsh.datasource.Datasource):
                                 'CRITICAL': 2,
                                 'FATAL': 2,
                                 'NON-RECOVERABLE': 2,
-                                # manually edited severities. The best you can do
+                                # manually edited severities. The best you can do.
                                 'OK': 0,
                                 'WARNING': 1,
                                 'CRITICAL': 2,
