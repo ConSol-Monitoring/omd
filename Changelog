@@ -1,6 +1,8 @@
 This file documents the revision history for the Open Monitoring Distribution (Labs Edition)
 
 next:
+          - OMD:
+            - add build support for Debian 11
           - Grafana update to 6.5.3
             - add grafana-loki 1.3.0
           - InfluxDB: update to 1.7.8
