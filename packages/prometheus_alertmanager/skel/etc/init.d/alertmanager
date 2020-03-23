@@ -105,7 +105,7 @@ rebuild_config() {
 
     if grep -q "# - start of inhibit_rules" $CFG_FILE && grep -q "# - end of inhibit_rules" $CFG_FILE; then
         cat $CFG_FILE |\
-            sed -n '1,/# - start of inhibit_rules/p' >> $WORK_CFG
+            sed -n '1,/# - start of inhibit_rules/p' > $WORK_CFG
         # all files in ###ROOT###/etc/alertmanager/alertmanager.d/inhibit_rules/*/*.yml
         for inhibits in ###ROOT###/etc/alertmanager/alertmanager.d/inhibit_rules/*.yml
         do
@@ -121,13 +121,13 @@ rebuild_config() {
             fi
         done
         cat $CFG_FILE |\
-            sed -n '/# - end of inhibit_rules/,pp' >> $WORK_CFG
+            sed -n '/# - end of inhibit_rules/,$p' >> $WORK_CFG
         cp $WORK_CFG $CFG_FILE
     fi
 
     if grep -q "# - start of receivers" $CFG_FILE && grep -q "# - end of receivers" $CFG_FILE; then
         cat $CFG_FILE |\
-            sed -n '1,/# - start of receivers/p' >> $WORK_CFG
+            sed -n '1,/# - start of receivers/p' > $WORK_CFG
         # all files in ###ROOT###/etc/alertmanager/alertmanager.d/receivers/*/*.yml
         for receivers in ###ROOT###/etc/alertmanager/alertmanager.d/receivers/*.yml
         do
