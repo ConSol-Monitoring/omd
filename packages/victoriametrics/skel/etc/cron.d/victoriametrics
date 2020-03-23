@@ -1,0 +1,3 @@
+10 * * * * ${OMD_ROOT}/bin/vmbackup-cron
+05 * * * * ${OMD_ROOT}/bin/vmbackup-cleanup-cron
+

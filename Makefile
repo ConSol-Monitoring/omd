@@ -57,7 +57,8 @@ PACKAGES=freetds \
          downtime-api \
          grafana-pnp-datasource \
          grafana-thruk-datasource \
-         sakuli
+         sakuli\
+         victoriametrics
 
 include Makefile.omd
 

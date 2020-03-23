@@ -1,0 +1,25 @@
+#!/bin/bash
+
+# Alias: Victoriametrics Daemon
+# Menu: Addons
+# Description:
+#  Victoriametrics is an open-source, distributed, time series database.
+
+case "$1" in
+    default)
+        echo "off"
+    ;;
+    choices)
+        echo "on: enable victoriametrics database"
+        echo "off: disable victoriametrics database"
+    ;;
+    set)
+       mkdir -p $OMD_ROOT/etc/grafana/provisioning/datasources
+       rm -f $OMD_ROOT/etc/grafana/provisioning/datasources/victoriametrics.yml
+       # TODO: replace PWD
+       #if [ "$2" == "on" ]; then
+       #    ln -s $OMD_ROOT/etc/victoriametrics/grafana_datasources.yml \
+       #          $OMD_ROOT/etc/grafana/provisioning/datasources/victoriametrics.yml
+       #fi
+    ;;
+esac

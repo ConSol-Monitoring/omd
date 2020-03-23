@@ -1,0 +1,18 @@
+###ROOT###/var/victoriametrics/victioriametrics*.log {
+        missingok
+        rotate 52
+        compress
+        delaycompress
+        create 640 ###SITE### ###SITE###
+        copytruncate
+}
+
+###ROOT###/var/victoriametrics/vmbackup*.log {
+        missingok
+        rotate 52
+        compress
+        delaycompress
+        create 640 ###SITE### ###SITE###
+        copytruncate
+}
+

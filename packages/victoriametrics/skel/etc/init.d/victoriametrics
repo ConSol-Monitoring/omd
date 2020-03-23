@@ -1,0 +1,326 @@
+#!/bin/bash
+
+# chkconfig: 345 99 01
+# description: VictoriaMetrics time series db
+
+### BEGIN INIT INFO
+# Provides:       victoriametrics
+# Required-Start:
+# Required-Stop:
+# Default-Start:  2 3 5
+# Default-Stop:
+# Description:   VictoriaMetrics time series db
+### END INIT INFO
+
+# Author: Ulrike Klusik <ulrike.klusik@consol.de>
+
+# Notes for OMD init script requirements
+# - Must handle omd config options like daemon enabling/disabling
+# - When a daemon is disabled by omd config it needs
+#   to return an exit code of 5.
+# - The init script must output an exit code of 2 when
+#   an unknown param is used.
+# - In general the exit code for succeeded actions is
+#   0 and for failed actions it is 1.
+# - There are exceptions for the exit code handling:
+#   - When a service is already stopped and should be
+#     restarted/stopped, it should result in an exit code of 0.
+#   - When a service is already running and should be started
+#     this also should result in an exit code of 0.
+# - When a restart is requested and the program is still not running
+#   the script should only execute a start
+# - When a restart is requested and the program can not be stopped the
+#   script should terminate without starting the daemon
+# - When a reload is requested and the program is not running
+#   the init script should execute a start instead
+
+cd ###ROOT###
+. .profile
+. lib/omd/init_profile
+. etc/omd/site.conf
+[ "$CONFIG_VICTORIAMETRICS" = "on" ] || exit 5
+
+mkdir -p ###ROOT###/tmp/victoriametrics
+
+BIN=###ROOT###//bin/victoria-metrics-prod
+USR=###SITE###
+GRP=###SITE###
+
+
+# TODO: adapt the following variables to instance loop
+
+CFGIN_FILE=###ROOT###/etc/victoriametrics/db.secrets
+CFGTEMP_FILE=###ROOT###/etc/victoriametrics/db.secrets_template 
+
+LOG_DIR=###ROOT###/var/victoriametrics
+LOGFILE=###ROOT###/var/victoriametrics/victoriametrics.log
+PID_FILE=###ROOT###/tmp/lock/victoriametrics.lock
+DATA_DIR=###ROOT###/var/victoriametrics/data
+USR=###SITE###
+GRP=###SITE###
+
+mkdir -p ${DATA_DIR}
+
+
+
+# Make sure that check plugins do not run localized.
+# check_icmp outputs performance data with german
+# comma instead of dot and makes it unparsable.
+unset LANG
+export LC_ALL=C
+
+if [ ! -f ${CFGIN_FILE} ] ; then
+  echo "create db_secrets..."
+  if [ ! -f ${CFGTEMP_FILE} ] ; then
+    echo "Config File ${CFGTEMP_FILE} does not exists -> Abort"
+    exit 8
+  fi
+
+  # generate random passwords
+
+  # determine python installed:
+  which python > /dev/null 2>&1
+  if [ $? -eq 0 ] ; then
+    PYTHON_BIN=python
+  else
+    which python3  > /dev/null 2>&1
+    if [  $? -eq 0 ] ; then
+       PYTHON_BIN=python3
+    else
+       PYTHON_BIN=python2
+    fi
+  fi
+
+  #generate_password
+  httpAuth_password=$(${PYTHON_BIN} -c 'import random; import string; print ("".join(random.choice(string.ascii_letters + string.digits) for i in range(16)))')
+  #generate_password
+  snapshotAuthKey=$(${PYTHON_BIN} -c 'import random; import string; print ("".join(random.choice(string.ascii_letters + string.digits) for i in range(16)))')
+  sed -e "s/httpAuth_password=###generated###/httpAuth_password=${httpAuth_password}/; s/snapshotAuthKey=###generated###/snapshotAuthKey=${snapshotAuthKey}/"  ${CFGTEMP_FILE} > ${CFGIN_FILE}
+
+  echo "create ${CFGIN_FILE}  with random passwords, for remote access check this file"
+
+fi
+
+. ${CFGIN_FILE}
+if [ $? -gt 0 ] ; then
+  exit 8
+fi
+
+generate_password(){
+  export PASSWORD=$(python -c 'import random; import string; print ("".join(random.choice(string.ascii_letters + string.digits) for i in range(16)))')
+  exit 0
+}
+
+
+
+# base option to identify instance
+# TODO for multiple instances: BASE_PORT to instance port
+BASE_OPTIONS="-httpListenAddr=$CONFIG_VICTORIAMETRICS_TCP_ADDR:$CONFIG_VICTORIAMETRICS_BASE_PORT -enableTCP6 -storageDataPath $DATA_DIR"
+
+# config options including from db.secrets file which can be changed before restart:
+# Note: via envflag.enable get...AuthKey fron emv varialble!
+# -httpAuth.password ${httpAuth_password} -httpAuth.username ${httpAuth_username} 
+export httpAuth_password httpAuth_username snapshotAuthKey deleteAuthKey
+CONFIG_OPTIONS="-envflag.enable -search.maxLookback ${search_maxLookback:-5m} -retentionPeriod ${retentionPeriod:-1} -loggerLevel INFO -loggerOutput stdout -influxSkipSingleField -selfScrapeInterval ${selfScrapeInterval:-30s} -search.maxPointsPerTimeseries ${search_maxPointsPerTimeseries:-1000000000} -dedup.minScrapeInterval ${dedup_minScrapeInterval:-30s}"
+
+if [ "${CONFIG_VICTORIAMETRICS_MODE}" == "ssl" ] ; then
+  if [  -z "$tlsCertFile" ] ; then echo "tlsCertFile missing"; exit 8; fi
+  if [  -z "$tlsKeyFile" ] ; then echo "tlsKeyFile missing"; exit 8; fi
+  if [ ! -f $tlsCertFile ] ; then echo $tlsCertFile does not exists; exit 8; fi
+  if [ ! -f $tlsKeyFile ] ; then echo $tlsKeyFile does not exists; exit 8; fi
+
+  CONFIG_OPTIONS="$CONFIG_OPTIONS -tls -tlsCertFile ${tlsCertFile} -tlsKeyFile ${tlsKeyFile}"
+fi
+
+# interesssting parameters to chek
+# -dedup.minScrapeInterval <duration>
+#  -influxMeasurementFieldSeparator string
+#        Separator for '{measurement}{separator}{field_name}' metric name when inserted via Influx line protocol (default "_")
+#  -influxSkipSingleField
+#        Uses '{measurement}' instead of '{measurement}{separator}{field_name}' for metic name if Influx line contains
+
+# Put together fragments and build a new victoriadb.yml
+#
+# -maxConcurrentInserts int
+#     The maximum number of concurrent inserts; see also -insert.maxQueueDuration (default 16)
+# -search.maxQueueDuration duration
+#   The maximum time the request waits for execution when -search.maxConcurrentRequests limit is reached (default 10s)
+
+
+#
+rebuild_config() {
+  return 0
+}
+
+# Fetches the pid of the currently running victoriadb process of the given
+# user.
+#
+# --ppid 1 in ps seem not to filter by direct ppid but by the whole
+# parent process tree. So filter by hand again.
+#
+# It returns 1 when no process can be found and echos the PID while
+# returning 0 when a process can be found.
+victoriadb_proc() {
+    PID=$(pgrep -u $USR -o -fx "$BIN $BASE_OPTIONS.*"  2>/dev/null)
+    if [ "$PID" != "" ]; then
+        echo "$PID"
+        return 0
+    else
+        return 1
+    fi
+}
+
+# First try to use the process list to gather a victoriadb process,
+# when no process is found via ps take a look at the lock file
+#
+# It returns 1 when no process can be found and echos the PID while
+# returning 0 when a process can be found.
+pidof_victoriadb() {
+    victoriadb_proc
+    return $?
+}
+
+
+verify_config() {
+    return 0
+    #TODO: check parameters from db1.secrets against help page
+}
+
+prep_start() {
+    touch $PID_FILE
+    chown $USR:$GRP $PID_FILE
+}
+
+victoriadb_wait_stop() {
+    pid=$(pidof_victoriadb) || true
+    if ! kill -0 "${pid:-}" >/dev/null 2>&1; then
+        echo -n 'Not running. '
+        return 0
+    fi
+
+    # wait until really stopped.
+    # it might happen that victoriadb has a subprocess which
+    # is left running and becomes ppid 1 after killing the
+    # main victoriadb process. So fetch the process id again
+    # multiple times to fetch new processes until all are gone.
+    if [ -n "${pid:-}" ]; then
+        I=0
+        while kill -0 ${pid:-} >/dev/null 2>&1; do
+            # Send single kill per process
+            kill $pid
+            while kill -0 ${pid:-} >/dev/null 2>&1;  do
+                if [ $I = '60' ]; then
+                    return 1
+                else
+                    echo -n "."
+                    I=$(($I+1))
+                    sleep 1
+                fi
+            done
+            # Is there another proc with ppid 1?
+            pid=$(pidof_victoriadb | head -n1) || true
+        done
+    fi
+
+    [ -f "$PID_FILE" ] && rm -f "$PID_FILE"
+    return 0
+
+}
+
+victoriadb_wait_start() {
+    prep_start
+    nohup $BIN $BASE_OPTIONS $CONFIG_OPTIONS >>$LOGFILE 2>&1 &
+    I=0
+    while ! pidof_victoriadb >/dev/null 2>&1;  do
+        if [ $I = '10' ]; then
+            return 1
+        else
+            echo -n "."
+            I=$(($I+1))
+            sleep 1
+        fi
+    done
+    return 0
+}
+
+if [ ! -f $BIN ]; then
+    echo "Victoriametrics binary $BIN not found. Terminating..."
+    exit 1
+fi
+
+__init_hook $0 $1 pre
+case "$1" in
+    start)
+        echo -n "Starting victoriametrics..."
+        if pidof_victoriadb >/dev/null 2>&1; then
+            echo 'Already running.'
+            exit 1
+        fi
+
+        if ! verify_config quiet; then
+            exit 1
+        fi
+
+        if victoriadb_wait_start; then
+            echo 'OK'
+            __init_hook $0 $1 post 0
+            exit 0
+        else
+            echo 'ERROR'
+            __init_hook $0 $1 post 1
+            exit 1
+        fi
+    ;;
+    stop)
+        echo -n "Stopping victoriadb..."
+        if victoriadb_wait_stop; then
+            echo 'OK'
+             __init_hook $0 $1 post 0
+            exit 0
+        else
+            echo 'ERROR'
+             __init_hook $0 $1 post 1
+            exit 1
+        fi
+    ;;
+    check|checkconfig)
+        if ! verify_config; then
+            exit 1
+        fi
+        exit 0
+    ;;
+    status)
+        PID=$(pidof_victoriadb 2>&1) || true
+        if kill -0 "${PID:-}" >/dev/null 2>&1; then
+            echo "Running ($PID)."
+            exit 0
+        else
+            echo 'Not running. '
+            exit 1
+        fi
+    ;;
+    restart)
+        if ! verify_config quiet; then
+            exit 1
+        fi
+
+        $0 stop || (echo "Unable to stop Victoriametrics. Terminating..." && exit 1)
+        echo -n "Starting Victoriametrics ..."
+        if victoriadb_wait_start; then
+            echo 'OK'
+            exit 0
+        else
+            echo 'ERROR'
+            exit 1
+        fi
+    ;;
+
+
+    *)
+        echo "Usage: victoriametrics {start|stop|restart|status|checkconfig}"
+        exit 2
+    ;;
+esac
+
+# EOF
+

@@ -1,0 +1,77 @@
+#!/bin/bash
+
+LOG_DIR=${OMD_ROOT}/var/victoriametrics
+DATA_PATH=${OMD_ROOT}/var/victoriametrics/data
+
+(
+. ${OMD_ROOT}/etc/victoriadb/db.secrets
+
+if [ $? != 0 ] ; then
+  echo "source of config failed"
+  exit 8
+fi
+
+export storageDataPath=${DATA_PATH}
+export httpListenAddr="localhost:$(omd config show VICTORIAMETRICS_BASE_PORT)"
+
+# echo $httpAuth_password
+# echo $httpAuth_username
+# ech0 $snapshotAuthKey
+# echo $metricsAuthKey
+# echo $storageDataPath
+# echo $backupPath
+# echo $httpListenAddr
+
+BACKUP_DAILY=$backupPath/daily_$(date +%Y-%m-%d)
+BACKUP_HOURLY=$backupPath/hourly$(date +%H)
+BACKUP_RETENTION_DAYS=2
+SNAPSHOT_RETENTION_HOURS=4
+
+AUTH_ENCODED=$(echo -n "$httpAuth_username:$httpAuth_password" | base64 - )
+
+
+if [ "$(omd config show VICTORIAMETRICS_MODE)" == "ssl" ] ; then
+  URITYPE=https
+else
+  URITYPE=http
+fi
+
+SNAPSHOT_OUT=$(curl -k -H "Authorization: Basic ${AUTH_ENCODED}" $URITYPE://localhost:${httpListenAddr}/snapshot/list?authKey=$snapshotAuthKey)
+
+if [ $? != 0 ] ; then
+  echo "snaphot failed"
+  echo $SNAPSHOT_OUT
+  exit 4
+fi
+
+echo ">> retention at $( date +%Y-%m-%d-%h) "
+
+RC=0
+LL=$(echo -n $SNAPSHOT_OUT | jsonpath.py '$.snapshots[*]')
+for SNAPSHOT_NAME in $(echo -n $SNAPSHOT_OUT | jsonpath.py '$.snapshots[*]')
+do
+  echo "snapshots: ${SNAPSHOT_NAME}"
+  du -ch -d1 $storageDataPath/snapshots/${SNAPSHOT_NAME}
+  du -ch -d1 $storageDataPath/indexdb/snapshots/${SNAPSHOT_NAME}
+
+  if [ $(($(date +%s)-$(date -r $storageDataPath/snapshots/${SNAPSHOT_NAME}  +%s))) -gt $((60 * 60 * ${SNAPSHOT_RETENTION_HOURS})) ] ; then
+   rm -rf $storageDataPath/snapshots/${SNAPSHOT_NAME}
+   echo "$storageDataPath/snapshots/${SNAPSHOT_NAME} deleted"
+  fi
+done
+
+OLD_BACKUPS=$(find $backupPath -type f -cmin +$((24*60*${BACKUP_RETENTION_DAYS})) -name "backup_complete.ignore")
+
+for state_file in ${OLD_BACKUPS}
+do
+  #echo "${state_file}"
+  backup_dir=$(dirname "${state_file}")
+  rm -rf ${backup_dir}
+  echo "${backup_dir} deleted"
+
+done
+
+) >> ${LOG_DIR}/vmbackup_cleanup.log 2>&1
+
+echo "RC = $?"
+
