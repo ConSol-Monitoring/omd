@@ -23,7 +23,6 @@ case "$1" in
         LOCAL_ADDRESS='localhost:'
 
         #TODO:
-        #sed -e '/^\[http\]/,/^\[/{s/bind-address = .*$/bind-address = "'i$LOCAL_ADDRESS$PORT'"/}' -i $OMD_ROOT/etc/influxdb/influxdb.conf
         #sed -e '/^\[InfluxDB \"nagflux\"\]/,/^\[/{s%^\s*Address = "http.*$%\tAddress = "http://'$LOCAL_ADDRESS$PORT'"%}' -i $OMD_ROOT/etc/nagflux/config.gcfg
         #sed -e 's%^url = "http.*/query?\(.*$\)%url = "http://'$LOCAL_ADDRESS$PORT'/query?\1%' -i $OMD_ROOT/etc/histou/histou.ini
 

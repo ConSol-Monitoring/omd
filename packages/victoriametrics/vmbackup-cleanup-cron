@@ -3,6 +3,8 @@
 LOG_DIR=${OMD_ROOT}/var/victoriametrics
 DATA_PATH=${OMD_ROOT}/var/victoriametrics/data
 
+mkdir -p $LOG_DIR
+
 (
 . ${OMD_ROOT}/etc/victoriadb/db.secrets
 

@@ -15,7 +15,7 @@ datasources:
     basicAuth: true
     basicAuthUser: TODOgenerated
     basicAuthPassword: TODOgenerated
-    isDefault: true
+    isDefault: false
     editable: false
     jsonData:
      tlsSkipVerify: true

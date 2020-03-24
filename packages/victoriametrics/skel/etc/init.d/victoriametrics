@@ -95,9 +95,18 @@ if [ ! -f ${CFGIN_FILE} ] ; then
   httpAuth_password=$(${PYTHON_BIN} -c 'import random; import string; print ("".join(random.choice(string.ascii_letters + string.digits) for i in range(16)))')
   #generate_password
   snapshotAuthKey=$(${PYTHON_BIN} -c 'import random; import string; print ("".join(random.choice(string.ascii_letters + string.digits) for i in range(16)))')
-  sed -e "s/httpAuth_password=###generated###/httpAuth_password=${httpAuth_password}/; s/snapshotAuthKey=###generated###/snapshotAuthKey=${snapshotAuthKey}/"  ${CFGTEMP_FILE} > ${CFGIN_FILE}
+  sed -e "s/httpAuth_password=.*/httpAuth_password=${httpAuth_password}/; s/snapshotAuthKey=.*/snapshotAuthKey=${snapshotAuthKey}/"  ${CFGTEMP_FILE} > ${CFGIN_FILE}
 
   echo "create ${CFGIN_FILE}  with random passwords, for remote access check this file"
+
+  echo "patching password in grafana_datasources.yml"
+  sed -e "s/basicAuthPassword: .*/basicAuthPassword: ${httpAuth_password}/; s/basicAuthUser: .*/basicAuthUser: prom/" -i ${OMD_ROOT}/etc/victoriametrics/grafana_datasources.yml
+  omd status grafana | grep "grafana.*running" > /dev/null 2>&1
+  if [ $? -eq 0 ] ; then
+    omd restart grafana
+  fi
+
+
 
 fi
 
@@ -105,12 +114,6 @@ fi
 if [ $? -gt 0 ] ; then
   exit 8
 fi
-
-generate_password(){
-  export PASSWORD=$(python -c 'import random; import string; print ("".join(random.choice(string.ascii_letters + string.digits) for i in range(16)))')
-  exit 0
-}
-
 
 
 # base option to identify instance

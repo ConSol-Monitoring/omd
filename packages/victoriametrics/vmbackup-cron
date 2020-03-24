@@ -3,7 +3,10 @@
 LOG_DIR=${OMD_ROOT}/var/victoriametrics
 DATA_PATH=${OMD_ROOT}/var/victoriametrics/data
 
+mkdir -p $LOG_DIR
+
 (
+
 . ${OMD_ROOT}/etc/victoriametrics/db.secrets
 
 if [ $? != 0 ] ; then
@@ -21,6 +24,13 @@ httpListenAddr="localhost:$(omd config show VICTORIAMETRICS_BASE_PORT)"
 # echo $storageDataPath
 # echo $backupPath
 # echo $httpListenAddr
+
+
+if [ -z "$backupPath" ] ; then
+  echo "variable backupPath to set in ${OMD_ROOT}/etc/victoriametrics/db.secrets -> no backup"
+  exit 0
+fi
+
 
 BACKUP_DAILY=$backupPath/daily_$(date +%Y-%m-%d)
 BACKUP_HOURLY=$backupPath/hourly

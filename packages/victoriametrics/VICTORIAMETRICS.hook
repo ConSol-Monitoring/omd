@@ -16,10 +16,9 @@ case "$1" in
     set)
        mkdir -p $OMD_ROOT/etc/grafana/provisioning/datasources
        rm -f $OMD_ROOT/etc/grafana/provisioning/datasources/victoriametrics.yml
-       # TODO: replace PWD
-       #if [ "$2" == "on" ]; then
-       #    ln -s $OMD_ROOT/etc/victoriametrics/grafana_datasources.yml \
-       #          $OMD_ROOT/etc/grafana/provisioning/datasources/victoriametrics.yml
-       #fi
+       if [ "$2" == "on" ]; then
+           ln -s $OMD_ROOT/etc/victoriametrics/grafana_datasources.yml \
+                 $OMD_ROOT/etc/grafana/provisioning/datasources/victoriametrics.yml
+       fi
     ;;
 esac
