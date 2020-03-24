@@ -1,4 +1,4 @@
-#!/usr/bin/python2
+#!/usr/bin/python3
 # -*- encoding: utf-8; py-indent-offset: 4 -*-
 # vim: tabstop=8 expandtab shiftwidth=4 softtabstop=4
 #
@@ -197,7 +197,7 @@ def run_dialog(args):
     }
     p = Popen(["dialog", "--shadow"] + args, env = env, stderr = PIPE)
     response = p.stderr.read()
-    return 0 == os.waitpid(p.pid, 0)[1], response
+    return 0 == os.waitpid(p.pid, 0)[1], response.decode('utf-8')
 
 
 def dialog_menu(title, text, choices, defvalue, oktext, canceltext):
@@ -252,7 +252,7 @@ def user_confirms(title, message, relpath, yes_choice, yes_text, no_choice, no_t
         if choice == "abort":
             bail_out("Update aborted.")
         elif choice == "shell":
-	    thedir = "/".join(user_path.split("/")[:-1])
+            thedir = os.path.dirname(user_path)
             sys.stdout.write("\n Starting BASH. Type CTRL-D to continue.\n\n")
             os.system("cd '%s' ; bash -i" % thedir)
         else:
@@ -517,7 +517,7 @@ def switch_to_site_user():
     os.setuid(uid)
 
 def groups_of(username):
-    return map(int, os.popen("id -G '%s'" % username).read().split())
+    return list(map(int, os.popen("id -G '%s'" % username).read().split()))
 
 
 
@@ -626,7 +626,7 @@ def load_skel_permissions(version):
 def load_skel_permissions_for_path(file_path):
     perms = {}
     try:
-        for line in file(file_path):
+        for line in open(file_path):
             line = line.strip()
             if line == "" or line[0] == "#":
                 continue
@@ -647,7 +647,7 @@ def get_skel_permissions(version, perms, relpath, skel_path = None):
 
 def get_file_permissions(path):
     try:
-        return os.stat(path).st_mode & 07777
+        return os.stat(path).st_mode & 0o07777
     except:
         return 0
 
@@ -731,15 +731,15 @@ def create_skeleton_file(skelbase, userbase, relpath, replacements):
     elif os.path.isdir(skel_path):
         os.makedirs(user_path)
     else:
-        file(user_path, "w").write(replace_tags(file(skel_path).read(), replacements))
+        open(user_path, "wb").write(replace_tags(open(skel_path, "rb").read(), replacements))
 
     if not os.path.islink(skel_path):
         mode = g_skel_permissions.get(relpath)
         if mode == None:
             if os.path.isdir(skel_path):
-                mode = 0755
+                mode = 0o755
             else:
-                mode = 0644
+                mode = 0o644
         os.chmod(user_path, mode)
 
 
@@ -758,14 +758,14 @@ def try_chown(filename, user):
             uid = pwd.getpwnam(user).pw_uid
             gid = pwd.getpwnam(user).pw_gid
             os.chown(filename, uid, gid)
-        except Exception, e:
+        except Exception as e:
             sys.stderr.write("Cannot chown %s to %s: %s\n" % (filename, user, e))
             pass
 
 
 def instantiate_skel(path):
     try:
-        t = file(path).read()
+        t = open(path, "rb").read()
         replacements = {
             "###SITE###" : g_sitename,
             "###ROOT###" : g_sitedir,
@@ -823,7 +823,7 @@ def walk_skel(root, handler, args, depth_first, exclude_if_in = None, relbase = 
                 try:
                     handler(path, *args)
                     todo = False
-                except Exception, e:
+                except Exception as e:
                     todo = False
                     sys.stderr.write(error * 40 + "\n")
                     sys.stderr.write(error + " Exception      %s\n" % (path))
@@ -881,13 +881,14 @@ def patch_skeleton_files(old, new, skelroot=None):
                 and os.path.exists(dst): # not deleted by user
                 try:
                     patch_template_file(src, dst, old, new)
-                except Exception, e:
+                except Exception as e:
+                    traceback.print_exc(file=sys.stdout)
                     sys.stderr.write("Error patching template file '%s': %s\n" %
                             (dst, e))
 
 def patch_template_file(src, dst, old, new):
     # Create patch from old instantiated skeleton file to new one
-    content = file(src).read()
+    content = open(src, "rb").read()
     for site in [ old, new ]:
         replacements = {
             "###SITE###" : site,
@@ -896,13 +897,13 @@ def patch_template_file(src, dst, old, new):
         for hook_name in g_site_conf:
             replacements["###CONFIG_%s###" % hook_name] = g_site_conf[hook_name]
         filename = "%s.skel.%s" % (dst, site)
-        file(filename, "w").write(replace_tags(content, replacements))
+        open(filename, "wb").write(replace_tags(content, replacements))
         try_chown(filename, new)
 
     # If old and new skeleton file are identical, then do nothing
     old_orig_path = "%s.skel.%s" % (dst, old)
     new_orig_path = "%s.skel.%s" % (dst, new)
-    if file(old_orig_path).read() == file(new_orig_path).read():
+    if open(old_orig_path, "rb").read() == open(new_orig_path, "rb").read():
         os.remove(old_orig_path)
         os.remove(new_orig_path)
         return
@@ -1024,7 +1025,7 @@ def merge_update_file(relpath, old_version, new_version, skel_path = None):
     for hook_name in g_site_conf:
         replacements["###CONFIG_%s###" % hook_name] = g_site_conf[hook_name]
     user_path = g_sitedir + "/" + relpath
-    content = file(user_path).read()
+    content = open(user_path, "rb").read()
     permissions = os.stat(user_path).st_mode
 
     def try_merge():
@@ -1034,7 +1035,7 @@ def merge_update_file(relpath, old_version, new_version, skel_path = None):
                 p = "/omd/versions/%s/skel/%s" % (new_version, relpath)
             while True:
                 try:
-                    skel_content = file(p).read()
+                    skel_content = open(p, "rb").read()
                     break
                 except:
                     # Do not ask the user in non-interactive mode.
@@ -1054,7 +1055,7 @@ def merge_update_file(relpath, old_version, new_version, skel_path = None):
                         "ignore", "Assume the file to be empty"):
                         skel_content = ""
                         break
-            file("%s-%s" % (user_path, version), "w").write(replace_tags(skel_content, replacements))
+            open("%s-%s" % (user_path, version), "wb").write(replace_tags(skel_content, replacements))
         version_patch = os.popen("diff -u %s-%s %s-%s" % (user_path, old_version, user_path, new_version)).read()
 
         # First try to merge the changes in the version into the users' file
@@ -1127,7 +1128,7 @@ def merge_update_file(relpath, old_version, new_version, skel_path = None):
             os.system("diff -u %s.orig %s-%s%s" % (user_path, user_path, new_version, pipe_pager()))
         elif choice == "vimdiff":
             # restore our version and call vimdiff
-            file(user_path, "w").write(file(user_path + ".orig").read())
+            open(user_path, "w").write(open(user_path + ".orig").read())
             os.chmod(user_path, permissions)
             os.system("vimdiff %s %s-%s" % (user_path, user_path, new_version))
             if user_confirms("Is the conflict at " + user_path + " resolved?",
@@ -1142,7 +1143,7 @@ def merge_update_file(relpath, old_version, new_version, skel_path = None):
             os.system("diff -u %s-%s %s-%s%s" % (user_path, old_version, user_path, new_version, pipe_pager()))
         elif choice == "missing":
             if os.path.exists(reject_file):
-                sys.stdout.write(tty_bgblue + tty_white + file(reject_file).read() + tty_normal)
+                sys.stdout.write(tty_bgblue + tty_white + open(reject_file).read() + tty_normal)
             else:
                 sys.stdout.write("File %s not found.\n" % reject_file)
 
@@ -1202,7 +1203,6 @@ def file_status(source_path, target_path):
                        and target_type == "link" \
                        and os.readlink(source_path) != os.readlink(target_path))
     changed = changed_type or changed_content
-
     return (changed_type, changed_content, changed)
 
 
@@ -1374,7 +1374,7 @@ def update_file(relpath, old_version, new_version, userdir, old_perms, old_skel 
             merge_update_file(relpath, old_version, new_version, old_skel)
         except KeyboardInterrupt:
             raise
-        except Exception, e:
+        except Exception as e:
             sys.stdout.write(error + " Cannot merge: %s\n" % e)
 
     # D ---> SYMLINKS
@@ -1517,7 +1517,7 @@ def update_file(relpath, old_version, new_version, userdir, old_perms, old_skel 
             try:
                 os.chmod(user_path, new_perm)
                 sys.stdout.write(good + " Permissions    %04o -> %04o %s\n" % (user_perm, new_perm, fn))
-            except Exception, e:
+            except Exception as e:
                 sys.stdout.write(error + " Permission:    cannot change %04o -> %04o %s: %s\n" % (user_perm, new_perm, fn, e))
 
 
@@ -1542,7 +1542,7 @@ def file_contents(path):
     if '/skel/' in path:
         return instantiate_skel(path)
     else:
-        return file(path).read()
+        return open(path, "rb").read()
 
 
 #.
@@ -1562,7 +1562,7 @@ def tmpfs_mounted(sitename):
     # then in /proc/mounts the physical path will appear and be
     # different from tmp_path. We resolve the path prior to comparing.
     tmp = tmp_dir(sitename)
-    for line in file("/proc/mounts"):
+    for line in open("/proc/mounts"):
         try:
             device, mp, fstype, options, dump, fsck = line.split()
             if mp == os.path.realpath(tmp) and fstype == 'tmpfs':
@@ -1657,14 +1657,14 @@ def add_to_fstab(sitename, tmpfs_size = None):
     if tmpfs_size != None and re.match('^[0-9]+(G|M|%)$', tmpfs_size):
         sizespec = ',size=%s' % tmpfs_size
 
-    file("/etc/fstab", "a+").write("tmpfs  %s tmpfs noauto,user,mode=755,uid=%s,gid=%s%s 0 0\n" % \
+    open("/etc/fstab", "a+").write("tmpfs  %s tmpfs noauto,user,mode=755,uid=%s,gid=%s%s 0 0\n" % \
         (mountpoint, sitename, sitename, sizespec))
 
 def remove_from_fstab(sitename):
     mountpoint = tmp_dir(sitename)
     sys.stdout.write("Removing %s from /etc/fstab..." % mountpoint)
-    newtab = file("/etc/fstab.new", "w")
-    for line in file("/etc/fstab"):
+    newtab = open("/etc/fstab.new", "w")
+    for line in open("/etc/fstab"):
         if "uid=%s," % sitename in line and mountpoint in line:
             continue
         newtab.write(line)
@@ -1699,7 +1699,7 @@ def call_init_script(scriptpath, command):
         return False
     try:
         return subprocess.call([scriptpath, command]) in [ 0, 5 ]
-    except OSError, e:
+    except OSError as e:
         sys.stderr.write("ERROR: Failed to run '%s': %s\n" % (scriptpath, e))
         if e.errno == 13: # [Errno 13] Permission denied
             return False
@@ -1832,7 +1832,7 @@ def parse_site_conf(sitename):
     if not os.path.exists(confpath):
         return {}
 
-    for line in file(confpath):
+    for line in open(confpath):
         line = line.strip()
         if line == "" or line[0] == "#":
             continue
@@ -1868,19 +1868,20 @@ def load_site_conf():
 # Put all site configuration (explicit and defaults) into environment
 # variables beginning with CONFIG_
 def create_config_environment():
-    for varname, value in g_site_conf.items():
+    for varname, value in list(g_site_conf.items()):
         putenv("CONFIG_" + varname, value)
 
 
+# TODO: RENAME
 def save_site_conf():
     confdir = g_sitedir + "/etc/omd"
 
     if not os.path.exists(confdir):
         os.mkdir(confdir)
 
-    f = file(g_sitedir + "/etc/omd/site.conf", "w")
+    f = open(g_sitedir + "/etc/omd/site.conf", "w")
 
-    for hook_name, value in sorted(g_site_conf.items(), key=lambda x: x[0]):
+    for hook_name, value in sorted(list(g_site_conf.items()), key=lambda x: x[0]):
         f.write("CONFIG_%s='%s'\n" % (hook_name, value))
 
 
@@ -1907,7 +1908,7 @@ def config_load_hook(hook_name):
 
     description = ""
     description_active = False
-    for line in file(g_sitedir + "/lib/omd/hooks/" + hook_name):
+    for line in open(g_sitedir + "/lib/omd/hooks/" + hook_name):
         if line.startswith("# Alias:"):
             hook["alias"] = line[8:].strip()
         elif line.startswith("# Menu:"):
@@ -1949,7 +1950,7 @@ def load_hook_choices(hook):
     return
 
 def load_hook_dependencies():
-    for hook_name, hook in g_config_hooks.items():
+    for hook_name, hook in list(g_config_hooks.items()):
         exitcode, content = call_hook(hook_name, ["depends"])
         if exitcode:
             hook["active"] = False
@@ -2010,7 +2011,7 @@ def read_config_change_commands():
         try:
             key, value = line.split("=", 1)
             settings.append((key, value))
-        except ValueError, e:
+        except ValueError as e:
             bail_out("Invalid config change command: %r" % line)
     return settings
 
@@ -2071,7 +2072,7 @@ def config_set(args):
 
 
 def config_set_all():
-    for hook_name, value in sorted(g_site_conf.items(), key=lambda x: x[0]):
+    for hook_name, value in sorted(list(g_site_conf.items()), key=lambda x: x[0]):
         # Hooks might vanish after and up- or downdate
         if hook_exists(hook_name):
             exitcode, output = call_hook(hook_name, [ "set", value ])
@@ -2119,7 +2120,7 @@ omd config change        - change multiple at once. Provide newline separated
 def config_show(args):
     load_hook_dependencies()
     if len(args) == 0:
-        hook_names = g_config_hooks.keys()
+        hook_names = list(g_config_hooks.keys())
         hook_names.sort()
         for hook_name in hook_names:
             hook = g_config_hooks[hook_name]
@@ -2139,7 +2140,7 @@ def config_show(args):
 
 def config_configure():
     load_hook_dependencies()
-    hook_names = g_config_hooks.keys()
+    hook_names = list(g_config_hooks.keys())
     hook_names.sort()
     current_hook_name = ""
     menu_open = False
@@ -2190,7 +2191,7 @@ def config_configure():
             if change:
                 try:
                     config_configure_hook(current_hook_name)
-                except Exception, e:
+                except Exception as e:
                     bail_out("Error in hook %s: %s" % (current_hook_name, e))
             else:
                 menu_open = False
@@ -2268,7 +2269,7 @@ def read_info():
     info_dir = omd_root() + "/share/omd"
     for f in os.listdir(info_dir):
         if f.endswith(".info"):
-            for line in file(info_dir + "/" + f):
+            for line in open(info_dir + "/" + f):
                 try:
                     line = line.strip()
                     # Skip comment and empty lines
@@ -2284,12 +2285,12 @@ def read_info():
                         g_info[var.strip()] += " " + value
                     else:
                         g_info[var.strip()] = value
-                except Exception, e:
+                except Exception as e:
                     bail_out('Unable to parse line "%s" in file "%s"' % (line, info_dir + "/" + f))
 
 def fstab_verify(name):
     mountpoint = tmp_dir(name)
-    for line in file("/etc/fstab"):
+    for line in open("/etc/fstab"):
         if "uid=%s," % name in line and mountpoint in line:
             return True
     bail_out(tty_error + ": fstab entry for %s does not exist" % mountpoint )
@@ -2318,7 +2319,7 @@ def getenv(key, default = None):
 def clear_environment():
     # first remove *all* current environment variables
     keep = [ "TERM" ]
-    for key in os.environ.keys():
+    for key in list(os.environ.keys()):
         if key not in keep:
             del os.environ[key]
 
@@ -2337,7 +2338,7 @@ def set_environment():
     envfile = g_sitedir + "/etc/environment"
     if os.path.exists(envfile):
         lineno = 0
-        for line in file(envfile):
+        for line in open(envfile):
             lineno += 1
             line = line.strip()
             if line == "" or line[0] == "#":
@@ -2369,9 +2370,9 @@ def hostname():
         return "localhost"
 
 def create_apache_hook(sitename):
-    file("/omd/apache/%s.conf" % sitename, "w")\
+    open("/omd/apache/%s.conf" % sitename, "w")\
         .write("Include %s/etc/apache/mode.conf\n" % site_dir(sitename))
-    file("/omd/apache/%s.include" % sitename, "w")\
+    open("/omd/apache/%s.include" % sitename, "w")\
         .write("Include %s/etc/apache/system.d/*.conf\n" % site_dir(sitename))
 
 def delete_apache_hook(sitename):
@@ -2380,14 +2381,14 @@ def delete_apache_hook(sitename):
         return
     try:
         os.remove(hook_path)
-    except Exception, e:
+    except Exception as e:
         sys.stderr.write("Cannot remove apache hook %s: %s\n" % (hook_path, e))
     hook_path = "/omd/apache/%s.include" % sitename
     if not os.path.exists(hook_path):
         return
     try:
         os.remove(hook_path)
-    except Exception, e:
+    except Exception as e:
         sys.stderr.write("Cannot remove apache hook %s: %s\n" % (hook_path, e))
 
 
@@ -2409,8 +2410,8 @@ def restart_apache():
         show_success(os.system(init_cmd(g_info['APACHE_INIT_NAME'], 'restart') + ' >/dev/null') >> 8)
 
 def replace_tags(content, replacements):
-    for var, value in replacements.items():
-        content = content.replace(var, value)
+    for var, value in list(replacements.items()):
+        content = content.replace(var.encode("utf-8"), value.encode("utf-8"))
     return content
 
 def get_editor():
@@ -2556,6 +2557,7 @@ def main_version(args, options={}):
             version += (", Addons: " + ", ".join(os.listdir("/omd/versions/%s/addon/" % version)))
         except:
             pass
+        version += (", Python version " + ".".join(str(x) for x in sys.version_info[:3]))
         sys.stdout.write("OMD - Open Monitoring Distribution Version %s\n" % version)
 
 
@@ -2577,7 +2579,7 @@ def default_version():
 def omd_versions():
     try:
         return sorted([ v for v in os.listdir("/omd/versions") if v != "default" ])
-    except OSError, e:
+    except OSError as e:
         if e.errno == 2:
             return []
         else:
@@ -2741,7 +2743,7 @@ def init_site(config_settings = None, options=False):
 
     load_site_conf() # load default values from all hooks
     if config_settings: # add specific settings
-        for hook_name, value in config_settings.items():
+        for hook_name, value in list(config_settings.items()):
             g_site_conf[hook_name] = value
     create_config_environment()
 
@@ -2788,7 +2790,7 @@ def finalize_site(what, apache_reload):
 
             call_scripts('post-' + what)
             sys.exit(0)
-        except Exception, e:
+        except Exception as e:
             bail_out(e)
     else:
         wpid, status = os.waitpid(pid, 0)
@@ -3175,7 +3177,7 @@ def print_diff(rel_path, source_path, target_path, source_version, source_perms,
                     diff = "diff"
                 if diff_binary:
                     skel_tmp_file = target_file + '.skel_default'
-                    file(skel_tmp_file, "w").write(source_content)
+                    open(skel_tmp_file, "wb").write(source_content)
                     os.system("%s %s %s" % (diff_binary, target_file, skel_tmp_file))
                     os.remove(skel_tmp_file)
                 else:
@@ -3337,7 +3339,7 @@ def main_umount(args, options = {}):
                 continue
 
             sys.stdout.write("%sUnmounting tmpfs of site %s%s..." % (tty_bold, site, tty_normal))
-	    sys.stdout.flush()
+            sys.stdout.flush()
 
             if not show_success(unmount_tmpfs(site, False, kill="kill" in options)):
                 exit_status = 1
@@ -3434,7 +3436,7 @@ def main_init_action(command, args, options={}):
                     if not b:
                         break
                     buf += b
-            except IOError, e:
+            except IOError as e:
                 if e.errno == 11: # Resource temporarily unavailable
                     pass
                 else:
@@ -3504,7 +3506,7 @@ def main_su(args, options={}):
         bail_out("Cannot open a shell for user %s" % g_sitename)
 
 
-def backup_site_files_to_tarfile(tar, options):
+def backup_site_files_to_taropen(tar, options):
     exclude = get_exclude_patterns(options)
 
     # exclude tmp/* from hot backups
@@ -3533,7 +3535,7 @@ def backup_site_files_to_tarfile(tar, options):
                                      ".".join(map(str, sys.version_info[:3])))
 
 
-def backup_site_to_tarfile(fh, options):
+def backup_site_to_taropen(fh, options):
     tar = tarfile.open(fileobj=fh, mode='w:gz')
     try:
         # Add the version symlink as first file to be able to
@@ -3542,9 +3544,9 @@ def backup_site_to_tarfile(fh, options):
         # The file is added twice to get the first for validation
         # and the second for excration during restore.
         tar.add(g_sitedir + "/version", g_sitename + "/version")
-        backup_site_files_to_tarfile(tar, options)
+        backup_site_files_to_taropen(tar, options)
         tar.close()
-    except IOError, e:
+    except IOError as e:
         bail_out("Failed to perform backup: %s" % e)
 
 
@@ -3564,13 +3566,15 @@ def main_backup(args, options={}):
     dest = args[0]
 
     if dest == '-':
-        fh = sys.stdout
+        if sys.stdout.isatty():
+            bail_out("won't backup to tty")
+        fh = sys.stdout.buffer
     else:
         if dest[0] != '/':
             dest = g_orig_wd + '/' + dest
-        fh = file(dest, 'w')
+        fh = open(dest, 'wb')
 
-    backup_site_to_tarfile(fh, options)
+    backup_site_to_taropen(fh, options)
 
 
 def main_restore(args, options={}):
@@ -3584,17 +3588,17 @@ def main_restore(args, options={}):
 
     source = args[-1]
     if source == '-':
-        fh = sys.stdin
+        fh = sys.stdin.buffer
         tar_mode = 'r|gz'
     elif os.path.exists(source):
-        fh = file(source)
+        fh = open(source, "rb")
         tar_mode = 'r:gz'
     else:
         bail_out("The backup archive does not exist.")
 
     try:
         tar = tarfile.open(fileobj=fh, mode=tar_mode)
-    except tarfile.ReadError, e:
+    except tarfile.ReadError as e:
         bail_out("Failed to open the backup: %s" % e)
 
     # Get the first file of the tar archive. Expecting <site>/version symlink
@@ -3705,6 +3709,13 @@ def main_restore(args, options={}):
             if parts[0] == sitename:
                 parts = parts[1:]
             tarinfo.linkname = '/'.join(parts)
+
+        # workaround https://bugs.python.org/issue40049
+        if tarinfo.issym():
+            targetpath = os.path.join(g_sitedir, tarinfo.name)
+            if os.path.lexists(targetpath):
+                os.unlink(targetpath)
+
         tar.extract(tarinfo, path=g_sitedir)
     tar.close()
 
@@ -3897,7 +3908,7 @@ def _cleanup_global_files():
         ]:
         try:
             os.unlink(path)
-        except OSError, e:
+        except OSError as e:
             if e.errno == 2:
                 pass
             else:
@@ -3908,9 +3919,7 @@ def _cleanup_global_files():
 
 
 
-class PackageManager:
-    __metaclass__ = abc.ABCMeta
-
+class PackageManager(metaclass=abc.ABCMeta):
     @classmethod
     def factory(self):
         distro_code = g_info["DISTRO_CODE"]
