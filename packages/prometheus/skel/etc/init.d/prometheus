@@ -126,15 +126,14 @@ rebuild_config() {
             echo '# Alertmanager configuration' >> $CFG_FILE
             echo 'alerting:' >> $CFG_FILE
             echo '  alertmanagers:' >> $CFG_FILE
-            if [ "$CONFIG_APACHE_MODE" = "ssl" ]; then
-                echo '  - scheme: https' >> $CFG_FILE
-            else
-                echo '  - scheme: http' >> $CFG_FILE
-            fi
-            echo '    path_prefix: /###SITE###/alertmanager' >> $CFG_FILE
+
+            # access always via localhost -> always http
+            echo '  - scheme: http' >> $CFG_FILE
+            echo '    path_prefix: /prom/alertmanager' >> $CFG_FILE
             echo '    static_configs:' >> $CFG_FILE
             echo '    - targets:' >> $CFG_FILE
             echo '      - ###ALERTMANAGER_TCP_ADDR###:###ALERTMANAGER_TCP_PORT###' >> $CFG_FILE
+            echo '      - 127.0.0.1:###ALERTMANAGER_TCP_PORT###' >> $CFG_FILE
         fi
     fi
 
