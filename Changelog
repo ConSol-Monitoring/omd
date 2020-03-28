@@ -9,6 +9,7 @@ next:
           - Prometheus:
             - Prometheus update to 2.15.2
             - Alertmanager update to 0.20.0
+          - Thruk: update to 2.34
           - LMD: Update 1.8.1
           - Gearman:
             - Mod-Gearman update 3.3.0
