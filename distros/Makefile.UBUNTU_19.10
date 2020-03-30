@@ -69,6 +69,7 @@ OS_PACKAGES          += libboost-system1.67.0
 OS_PACKAGES          += libboost-thread1.67.0
 OS_PACKAGES          += libdbi1
 OS_PACKAGES          += libevent-2.1-6
+OS_PACKAGES          += libevent-pthreads-2.1-6
 OS_PACKAGES          += libicu63
 OS_PACKAGES          += libio-socket-ssl-perl
 OS_PACKAGES          += libltdl7
