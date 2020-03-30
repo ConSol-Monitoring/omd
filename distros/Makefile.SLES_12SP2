@@ -60,7 +60,6 @@ OS_PACKAGES          += dialog
 OS_PACKAGES          += fping
 OS_PACKAGES          += freeradius-client-libs
 OS_PACKAGES          += gd
-OS_PACKAGES          += graphviz
 OS_PACKAGES          += libboost_atomic1_54_0
 OS_PACKAGES          += libboost_chrono1_54_0
 OS_PACKAGES          += libboost_context1_54_0
