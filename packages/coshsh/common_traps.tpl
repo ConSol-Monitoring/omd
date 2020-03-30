@@ -12,6 +12,9 @@
   host_name                       {{ application.host_name }}
   _MIB                            {{ event.mib }}
   _OID                            {{ event.oid|replace('\\', '') }}
+{% if application.agent_addresses %}
+  _AGENT_ADDRESSES                {{ application.agent_addresses|join(', ') }}
+{% endif %}
 }
 {% endif %}
 {% endfor %}
