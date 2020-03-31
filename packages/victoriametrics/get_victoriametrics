@@ -1,0 +1,46 @@
+#!/bin/sh
+
+RELEASE=$1
+
+BASE_URL="https://github.com/VictoriaMetrics/VictoriaMetrics/releases/download/"
+
+echo "called: $0 $*"
+
+case "$2" in
+ download)
+    DEST_DIR=$3
+    if [[ "$(uname -s)" == "Linux" ]]; then
+        if [[ "$(uname -m)" == "x86_64" ]]; then
+            echo "Downloading Victoriametrics ${RELEASE} for x86_64 ..."
+            mkdir -p ${DEST_DIR}
+
+            # note: cluster version needs extra tarball: victoria-metrics-${RELEASE}-cluster.tar.gz
+            for DOWNLOAD_FILE in "victoria-metrics-${RELEASE}.tar.gz" "vmutils-${RELEASE}.tar.gz" ; do
+
+              wget -P ${DEST_DIR} ${BASE_URL}/${RELEASE}/${DOWNLOAD_FILE}
+              if [[ $? -ne 0 ]]; then
+                echo "download failed, abort"
+                exit 8
+              fi
+
+            done
+
+
+        else
+            echo "Victoriametrics on OMD is only supported on x86_64"
+            exit 3
+        fi
+    else
+        echo "victoriametrics on OMD is only supported on Linux."
+        exit 3
+    fi
+    ;;
+  extract)
+    SRC_DIR=$3
+    DEST_DIR=$4
+    for tarball in $(ls ${SRC_DIR}/*${RELEASE}.tar.gz ) ; do
+      tar xvzf $tarball -C ${DEST_DIR} ;
+    done
+   ;;
+esac
+

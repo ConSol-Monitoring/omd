@@ -1,0 +1,23 @@
+#!/bin/bash
+
+# Alias: Listening address for Victoriametrics
+# Menu: Addons
+# Description:
+#  Configure the bind address used for the Victoriametrics
+#  process of this site.
+#  After changing this variable, the Victoriametrics daemon
+#  must be restarted.
+#
+
+case "$1" in
+    default)
+        echo "127.0.0.1"
+    ;;
+    choices)
+        echo "([a-z0-9-]+|(?:[\d]{1,3})\.(?:[\d]{1,3})\.(?:[\d]{1,3})\.(?:[\d]{1,3}))"
+    ;;
+    depends)
+        [ "$CONFIG_VICTORIAMETRICS" == "on" ]
+    ;;
+esac
+

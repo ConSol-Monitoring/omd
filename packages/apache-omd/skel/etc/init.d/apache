@@ -8,6 +8,8 @@ if [ "$CONFIG_APACHE_MODE" == none ]; then
   exit 5
 fi
 
+. "$OMD_ROOT/.profile"
+
 # Start httpd in the C locale by default.
 HTTPD_LANG="C"
 

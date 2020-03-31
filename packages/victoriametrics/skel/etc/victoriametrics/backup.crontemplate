@@ -1,0 +1,4 @@
+# Standard job for backup to local path
+10 * * * * ${OMD_ROOT}/bin/vmbackup-cron
+05 * * * * ${OMD_ROOT}/bin/vmbackup-cleanup-cron
+

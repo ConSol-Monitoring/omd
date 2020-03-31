@@ -1,0 +1,104 @@
+#!/bin/bash
+
+LOG_DIR=${OMD_ROOT}/var/victoriametrics
+DATA_PATH=${OMD_ROOT}/var/victoriametrics/data
+
+mkdir -p $LOG_DIR
+
+(
+
+. ${OMD_ROOT}/etc/victoriametrics/db.secrets
+
+if [ $? != 0 ] ; then
+  echo "source of config failed"
+  exit 8
+fi
+
+export storageDataPath=${DATA_PATH}
+httpListenAddr="localhost:$(omd config show VICTORIAMETRICS_BASE_PORT)"
+
+# echo $httpAuth_password
+# echo $httpAuth_username
+# ech0 $snapshotAuthKey
+# echo $metricsAuthKey
+# echo $storageDataPath
+# echo $backupPath
+# echo $httpListenAddr
+
+
+if [ -z "$backupPath" ] ; then
+  echo "variable backupPath to set in ${OMD_ROOT}/etc/victoriametrics/db.secrets -> no backup"
+  exit 0
+fi
+
+
+BACKUP_DAILY=$backupPath/daily_$(date +%Y-%m-%d)
+BACKUP_HOURLY=$backupPath/hourly
+
+BACKUP_OPTIONS="-loggerLevel INFO -maxBytesPerSecond 0  -memory.allowedPercent 10"
+
+mkdir -p ${BACKUP_DAILY}
+if [ $? -gt 0 ] ; then
+  echo "failed to create dir ${BACKUP_DAILY}"
+  exit 8
+fi
+
+mkdir -p ${BACKUP_HOURLY}
+if [ $? -gt 0 ] ; then
+  echo "failed to create dir ${BACKUP_HOURLY}"
+  exit 8
+fi
+
+
+
+
+AUTH_ENCODED=$(echo -n "$httpAuth_username:$httpAuth_password" | base64 - )
+
+if [ "$(omd config show VICTORIAMETRICS_MODE)" == "ssl" ] ; then
+  URITYPE=https
+else
+  URITYPE=http
+fi
+
+SNAPSHOT_OUT=$(curl -k -H "Authorization: Basic ${AUTH_ENCODED}" $URITYPE://${httpListenAddr}/snapshot/create?authKey=$snapshotAuthKey)
+
+if [ $? != 0 ] ; then
+  echo "snaphot failed"
+  echo $SNAPSHOT_OUT
+  exit 4
+fi
+
+echo $SNAPSHOT_OUT
+
+SNAPSHOT_NAME=$(echo -n $SNAPSHOT_OUT | jsonpath.py '$.snapshot')
+
+if [ "${SNAPSHOT_NAME}" == "" ] ; then
+  echo "snaphot failed"
+  echo $SNAPSHOT_OUT
+  exit 4
+fi
+
+set -x
+echo " incremental hourly backup"
+vmbackup-prod -dst fs://${BACKUP_HOURLY}  -storageDataPath ${storageDataPath} -snapshotName ${SNAPSHOT_NAME} ${BACKUP_OPTIONS}
+
+if [ $? -gt 0 ] ; then
+   echo "hourly backup failed -> exit"
+fi
+
+
+if [[  $(date +%H) -ge 2 && -f ${BACKUP_HOURLY}/backup_complete.ignore ]] ; then
+  if [ -f ${BACKUP_DAILY}/backup_complete.ignore ] ; then
+     echo "daily backup already exists"
+  else
+    echo "daily full backup, cased on hourly"
+    vmbackup-prod -dst fs://${BACKUP_DAILY} -origin fs://${BACKUP_HOURLY} -storageDataPath ${storageDataPath} -snapshotName ${SNAPSHOT_NAME} ${BACKUP_OPTIONS}
+
+   fi
+fi
+
+
+) >> ${LOG_DIR}/vmbackup.log 2>&1
+
+echo "RC = $?"
+
