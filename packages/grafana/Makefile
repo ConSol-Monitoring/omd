@@ -1,10 +1,10 @@
 include ../../Makefile.omd
 
 NAME       = grafana
-VERSION    = 6.6.2
+VERSION    = 6.7.2
 SRC        = $(NAME)-$(VERSION).tar.gz
 GOPATH     = go
-GOPKG      = 1.13
+GOPKG      = 1.14
 GOVERSION  = $(shell grep ^VERSION ../go-${GOPKG}/Makefile | awk '{ print $$3 }')
 PWD        = $(shell pwd)
 GO         = export GOROOT=$(PWD)/../go-$(GOPKG)/go-$(GOVERSION) && export GOPATH=$(PWD)/$(GOPATH)/ && PATH=$$GOROOT/bin:$$PATH && go
@@ -50,7 +50,7 @@ skel:
 	mkdir -p $(SKEL)/var/grafana/plugins
 	tar zxf clock-panel-plugin-1.0.3.tar.gz -C $(SKEL)/var/grafana/plugins
 	chmod 644 $(SKEL)/var/grafana/plugins/clock-panel/src/external/moment-duration-format.js
-	tar zxf piechart-panel-plugin-1.3.9.tar.gz -C $(SKEL)/var/grafana/plugins
+	tar zxf piechart-panel-plugin-1.4.0.tar.gz -C $(SKEL)/var/grafana/plugins
 	tar zxf snuids-trafficlights-panel-1.4.5.tar.gz -C $(SKEL)/var/grafana/plugins
 
 
@@ -66,10 +66,8 @@ package: public clean
 	cd $(GOPATH)/src/github.com/grafana/grafana && \
 		$(GO) fmt ./...
 	echo "Get everything"
-	-cd $(GOPATH)/src/github.com/grafana/grafana && \
-		$(GO) get -u -f -v ./...
 	cd $(GOPATH)/src/github.com/grafana/grafana && \
-		$(GO) get github.com/go-macaron/binding
+		$(GO) mod vendor
 	echo "build app"
 	cd $(GOPATH)/src/github.com/grafana/grafana && \
 		$(GO) run build.go setup
