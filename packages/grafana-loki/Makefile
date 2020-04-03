@@ -1,10 +1,10 @@
 include ../../Makefile.omd
 
 NAME       = grafana-loki
-VERSION    = 1.3.0
+VERSION    = 1.4.0
 DIR        = loki-$(VERSION)
 SRC        = $(DIR).tar.gz
-GOPKG      = 1.13
+GOPKG      = 1.14
 GOVERSION  = $(shell grep ^VERSION ../go-${GOPKG}/Makefile | awk '{ print $$3 }')
 PWD        = $(shell pwd)
 GOENV      = export GOROOT=$(PWD)/../go-$(GOPKG)/go-$(GOVERSION) && export PATH=$$GOROOT/bin:$$PATH
