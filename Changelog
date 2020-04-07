@@ -4,7 +4,7 @@ next:
           - OMD:
             - add build support for Debian 11
           - Grafana update to 6.7.2
-            - add grafana-loki 1.4.0
+            - add grafana-loki 1.4.1
           - InfluxDB: update to 1.7.8
           - Prometheus:
             - Prometheus update to 2.15.2
