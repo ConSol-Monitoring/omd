@@ -46,19 +46,19 @@ if [ $? != 0 ] ; then
   exit 4
 fi
 
-echo ">> retention at $( date +%Y-%m-%d-%h) "
+echo ">> retention at $( date +%Y-%m-%d-%H) "
 
 RC=0
 LL=$(echo -n $SNAPSHOT_OUT | jsonpath.py '$.snapshots[*]')
 for SNAPSHOT_NAME in $(echo -n $SNAPSHOT_OUT | jsonpath.py '$.snapshots[*]')
 do
   echo "snapshots: ${SNAPSHOT_NAME}"
-  du -ch -d1 $storageDataPath/snapshots/${SNAPSHOT_NAME}
-  du -ch -d1 $storageDataPath/indexdb/snapshots/${SNAPSHOT_NAME}
+  #du -ch -d1 $storageDataPath/snapshots/${SNAPSHOT_NAME}
+  #du -ch -d1 $storageDataPath/indexdb/snapshots/${SNAPSHOT_NAME}
 
-  if [ $(($(date +%s)-$(date -r $storageDataPath/snapshots/${SNAPSHOT_NAME}  +%s))) -gt $((60 * 60 * ${SNAPSHOT_RETENTION_HOURS})) ] ; then
-   rm -rf $storageDataPath/snapshots/${SNAPSHOT_NAME}
-   echo "$storageDataPath/snapshots/${SNAPSHOT_NAME} deleted"
+  if [[ $(date --universal -d "${SNAPSHOT_RETENTION_HOURS} hour ago" +%Y%m%d%H00-) > "${SNAPSHOT_NAME}" ]] ; then
+     curl -i -k -H "Authorization: Basic ${AUTH_ENCODED}" "${URITYPE}://${httpListenAddr}/snapshot/delete?snapshot=${SNAPSHOT_NAME}&authKey=$snapshotAuthKey"
+     #echo "${SNAPSHOT_NAME} deleted"
   fi
 done
 
