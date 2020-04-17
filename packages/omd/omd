@@ -3552,8 +3552,7 @@ def backup_site_to_taropen(fh, options):
 
 def main_backup(args, options={}):
     if len(args) == 0:
-        bail_out("You need to provide either a path to the destination "
-                 "file or \"-\" for backup to stdout.")
+        bail_out("You need to provide a path to the destination file.")
 
     if site_needs_update(g_sitename):
         bail_out("This site needs to be updated with: omd update")
@@ -3566,9 +3565,7 @@ def main_backup(args, options={}):
     dest = args[0]
 
     if dest == '-':
-        if sys.stdout.isatty():
-            bail_out("won't backup to tty")
-        fh = sys.stdout.buffer
+        bail_out("backup to stdout not supported anymore")
     else:
         if dest[0] != '/':
             dest = g_orig_wd + '/' + dest
@@ -3583,13 +3580,11 @@ def main_restore(args, options={}):
     set_conflict_option(options)
 
     if len(args) == 0:
-        bail_out("You need to provide either a path to the source "
-                 "file or \"-\" for restore from stdin.")
+        bail_out("You need to provide a path to the source file.")
 
     source = args[-1]
     if source == '-':
-        fh = sys.stdin.buffer
-        tar_mode = 'r|gz'
+        bail_out("backup from stdin not supported anymore")
     elif os.path.exists(source):
         fh = open(source, "rb")
         tar_mode = 'r:gz'
