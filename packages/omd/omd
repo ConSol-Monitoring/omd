@@ -3405,8 +3405,13 @@ def main_init_action(command, args, options={}):
         stdout = sys.stdout if not parallel else subprocess.PIPE
         stderr = sys.stderr if not parallel else subprocess.STDOUT
         bare_arg = [ "--bare" ] if bare else []
-        p = subprocess.Popen([sys.argv[0], command ] + bare_arg + [ site ] + args,
-                              stdin=open(os.devnull, "r"), stdout=stdout, stderr=stderr)
+        p = subprocess.Popen(
+            [sys.argv[0], command ] + bare_arg + [ site ] + args,
+            stdin=open(os.devnull, "r"),
+            stdout=stdout,
+            stderr=stderr,
+            encoding="UTF-8"
+        )
 
         if parallel:
             # Make the output non blocking
