@@ -45,6 +45,7 @@ BUILD_PACKAGES       += postgresql-devel
 BUILD_PACKAGES       += python
 BUILD_PACKAGES       += python-devel
 BUILD_PACKAGES       += python-setuptools
+BUILD_PACKAGES       += python3
 BUILD_PACKAGES       += readline-devel
 BUILD_PACKAGES       += rpm-devel                      # needed for "make rpm"
 BUILD_PACKAGES       += samba-client                   # otherwise path to smblient missing in util.pm

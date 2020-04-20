@@ -3365,7 +3365,7 @@ def main_init_action(command, args, options={}):
     max_site_len = max([ 8 ] + [ len(site_id) for site_id in all_sites() ])
 
     def parallel_output(site_id, line):
-        sys.stdout.write(("%-"+str(max_site_len)+"s - %s") % (site_id, line))
+        sys.stdout.write(("%-"+str(max_site_len)+"s - %s") % (site_id, line.decode("UTF-8")))
 
     exit_states, processes = [], []
     for site in all_sites():
@@ -3389,7 +3389,7 @@ def main_init_action(command, args, options={}):
                 elif not parallel:
                     sys.stdout.write("Ignoring site '%s': AUTOSTART != on\n" % site)
                 else:
-                    parallel_output(site, "Ignoring since autostart is disabled\n")
+                    parallel_output(site, b"Ignoring since autostart is disabled\n")
                 continue
 
         if command == "status" and bare:
@@ -3397,7 +3397,7 @@ def main_init_action(command, args, options={}):
         elif not parallel:
             sys.stdout.write("%sDoing '%s' on site %s:%s\n" % (tty_bold, command, site, tty_normal))
         else:
-            parallel_output(site, "Invoking '%s'\n" % (command))
+            parallel_output(site, ("Invoking '%s'\n" % (command)).encode('UTF-8'))
         sys.stdout.flush()
 
         # We need to open a subprocess, because each site must be started with the account of the
@@ -3409,8 +3409,7 @@ def main_init_action(command, args, options={}):
             [sys.argv[0], command ] + bare_arg + [ site ] + args,
             stdin=open(os.devnull, "r"),
             stdout=stdout,
-            stderr=stderr,
-            encoding="UTF-8"
+            stderr=stderr
         )
 
         if parallel:
@@ -3434,7 +3433,7 @@ def main_init_action(command, args, options={}):
     site_buf = {}
     while parallel and processes:
         for site_id, p in processes[:]:
-            buf = site_buf.get(site_id, "")
+            buf = site_buf.get(site_id, b"")
             try:
                 while True:
                     b = p.stdout.read(1024)
@@ -3448,7 +3447,7 @@ def main_init_action(command, args, options={}):
                     raise
 
             while True:
-                pos = buf.find("\n")
+                pos = buf.find(b"\n")
                 if pos == -1:
                     break
                 line, buf = buf[:pos+1], buf[pos+1:]
