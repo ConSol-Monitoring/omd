@@ -4,8 +4,8 @@
  
  	if (result == -1) {
  		/* Failure reading from remote, so try version 2 packet */
--		logit(LOG_INFO, "Remote %s does not support Version 3 Packets", rem_host);
-+		logit(LOG_DEBUG, "Remote %s does not support Version 3 Packets", rem_host);
+-		logit(LOG_INFO, "Remote %s does not support version 3/4 packets", rem_host);
++		logit(LOG_DEBUG, "Remote %s does not support version 3/4 packets", rem_host);
  		packet_ver = NRPE_PACKET_VERSION_2;
  
  		/* Rerun the setup */
@@ -66,7 +66,7 @@
 @@ -367,7 +367,7 @@ int process_arguments(int argc, char **a
  
  		case '2':
- 			if (from_config_file && packet_ver != NRPE_PACKET_VERSION_3) {
+ 			if (from_config_file && packet_ver != NRPE_DEFAULT_PACKET_VERSION) {
 -				logit(LOG_WARNING, "WARNING: Command-line v2-packets-only (-2) overrides the config file option.");
 +				logit(LOG_DEBUG, "WARNING: Command-line v2-packets-only (-2) overrides the config file option.");
  				break;
