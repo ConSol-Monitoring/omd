@@ -5,9 +5,13 @@ VERSION = 1.0
 DIR = $(NAME)-$(VERSION)
 FCGI_FILE="mod_fcgid-2.3.9"
 MOD_RPAF_VERSION="0.8"
+MOD_PROMETHEUS_STATUS_VERSION="0.0.3"
 
-APACHE_MODULES=modrpaf
-APACHE_MODULES_INSTALL=modrpaf_install
+GOPKG       = 1.14
+GOVERSION   = $(shell grep ^VERSION ../go-${GOPKG}/Makefile | awk '{ print $$3 }')
+
+APACHE_MODULES=modrpaf modprometheus_status
+APACHE_MODULES_INSTALL=modrpaf_install modprometheus_status_install
 APACHE_FCGID_PATH=$(MODULE_DIR)/$(APACHE_FCGID_MODULE)
 INSTALL_FCGID=0
 
@@ -83,6 +87,7 @@ clean:
 	# Remove files created by build/install
 	rm -rf $(FCGI_FILE)
 	rm -rf mod_rpaf-$(MOD_RPAF_VERSION)
+	rm -rf mod_prometheus_status-$(MOD_PROMETHEUS_STATUS_VERSION)
 
 modfcgid:
 	tar zxf $(FCGI_FILE).tar.gz
@@ -104,3 +109,12 @@ modrpaf:
 modrpaf_install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/apache
 	cp mod_rpaf-$(MOD_RPAF_VERSION)/.libs/mod_rpaf.so $(DESTDIR)$(OMD_ROOT)/lib/apache/
+
+modprometheus_status:
+	tar zxf mod_prometheus_status-$(MOD_PROMETHEUS_STATUS_VERSION).tar.gz
+	PATH=$(shell pwd)/../go-$(GOPKG)/go-$(GOVERSION)/bin:$$PATH \
+		make -C mod_prometheus_status-$(MOD_PROMETHEUS_STATUS_VERSION)
+
+modprometheus_status_install:
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/apache
+	cp mod_prometheus_status-$(MOD_PROMETHEUS_STATUS_VERSION)/mod_prometheus_status*.so $(DESTDIR)$(OMD_ROOT)/lib/apache/
