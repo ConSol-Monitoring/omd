@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>OMD - Open Monitoring Distribution</title>
+  <style>
+  body {
+      font-family:Verdana,sans-serif;
+      font-size:14px;
+      color:#484848;
+      margin:0;
+      padding:0;
+      min-width:900px;
+  }
+  h1 {
+      margin-top:20px;
+      margin-bottom:20px;
+      text-align:center;
+  }
+  div {
+      width:100%;
+      padding:0;
+      margin:0;
+  }
+  div#body {
+      height:100%;
+      width:700px;
+      margin:auto;
+  }
+  div.note {
+      border:1px #DADADA solid;
+      background-color:#FFFFDD;
+      padding:5px;
+      padding-left:15px
+  }
+  a.gui {
+      border:1px #DADADA solid;
+      height:193px;
+      display:block;
+      width:100%;
+      color:#484848;
+      text-decoration:none;
+      padding:10px;
+      background-color:#EEEEEE;
+      margin-top:20px;
+      margin-bottom:20px;
+      overflow: hidden;
+  }
+  a.gui:hover {
+      background-color:#759FCF
+  }
+  a.gui h2 {
+      margin-top:0
+  }
+  a.gui img {
+      border:0;
+      float: right;
+      vertical-align:middle;
+      margin-left: 10px;
+  }
+  p.footer {
+      text-align:center;
+  }
+  </style>
+</head>
+<body>
+<div id="body">
+<h1>OMD - Open Monitoring Distribution</h1>
+<b>Version: 3.20-labs-edition</b>
+<p>This page gives you a central view on the available GUIs in OMD.
+   Just have a look and feel free to choose your favorite GUI. At the
+   bottom of this page you can find short instructions on how to change
+   the default GUI of OMD.</p>
+
+<a class="gui" href="../thruk/">
+<img src="img/thruk-small.png" title="thruk" />
+<h2>Thruk Monitoring Webinterface</h2>
+Thruk is a complete rework of the classic interface. It is designed for large installations and can handle multiple sites. SLA Reporting is included as well as comprehensive Dashboards.
+</a>
+
+<a class="gui" href="../pnp4nagios/">
+<img src="img/pnp4nagios-small.png" title="pnp4nagios" />
+<h2>PNP4Nagios</h2>
+PNP is an addon to Nagios which analyzes performance data provided by plugins and stores them automatically into RRD-databases (Round Robin Databases, see RRDTool).
+</a>
+
+<a class="gui" href="../grafana/">
+<img src="img/grafana-small.png" title="grafana" />
+<h2>Grafana</h2>
+Grafana is an open source metric analytics & visualization suite. It is most commonly used for visualizing time series data from InfluxDB
+</a>
+
+<a class="gui" href="../wiki/">
+<img src="img/wiki-small.png" title="wiki" />
+<h2>DokuWiki</h2>
+DokuWiki is a standards compliant, simple to use Wiki, mainly aimed at creating documentation of any kind.
+</a>
+
+<div class="note">
+<p>You can replace this page by logging into your sites system account
+and execute the commands:</p>
+<pre>omd stop
+omd config</pre>
+Then browse to &quot;Web Gui -&gt; DEFAULT_GUI&quot; entry in the list and hit enter. Select
+the default GUI and quit all dialogs. After that start your site again by
+executing:
+<pre>
+omd start
+</pre>
+</div>
+<p class="footer">
+Copyright (c) 2010-2017 OMD Team and Contributors -
+<a href="https://labs.consol.de/omd/" title="Official OMD-Labs Homepage"
+target="_blank">labs.consol.de/omd/</a>
+</p>
+</div>
+</body>
+</html>
