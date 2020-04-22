@@ -1,7 +1,7 @@
 DISTRO_CODE           = debian11
 BUILD_PACKAGES        =
-BUILD_PACKAGES       += apache2                        # compiling mod_python
-BUILD_PACKAGES       += apache2-dev                    # compiling mod_python
+BUILD_PACKAGES       += apache2
+BUILD_PACKAGES       += apache2-dev
 BUILD_PACKAGES       += bison                          # icinga 2
 BUILD_PACKAGES       += build-essential
 BUILD_PACKAGES       += cmake                          # icinga 2
