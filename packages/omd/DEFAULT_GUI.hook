@@ -22,4 +22,17 @@ case "$1" in
     depends)
         [ "$CONFIG_APACHE_MODE" != none ]
     ;;
+    set)
+        conf_file=$OMD_ROOT/etc/apache/conf.d/default_gui.conf
+        case "$2" in
+            welcome)
+                rm -f "$conf_file"
+                ;;
+            *)
+                printf > "$conf_file" '%s\n' \
+                  "# File handled by DEFAULT_GUI hook" \
+                  "RedirectMatch ^/$OMD_SITE/omd/ /$OMD_SITE/$2/"
+                ;;
+        esac
+    ;;
 esac
