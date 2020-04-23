@@ -6,6 +6,7 @@ BUILD_PACKAGES       += bison                          # icinga 2
 BUILD_PACKAGES       += boost
 BUILD_PACKAGES       += boost-devel
 BUILD_PACKAGES       += cmake                          # icinga 2
+BUILD_PACKAGES       += Cython
 BUILD_PACKAGES       += curl-devel                     # needed by perl modules / thruk
 BUILD_PACKAGES       += expat-devel
 BUILD_PACKAGES       += flex                           # icinga 2
