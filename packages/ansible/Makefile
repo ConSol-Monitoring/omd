@@ -1,6 +1,6 @@
 include ../../Makefile.omd
 
-ANSIBLE_VERSION=2.8.6
+ANSIBLE_VERSION=2.9.7
 ANSIBLE=ansible-$(ANSIBLE_VERSION)
 
 # This is where the python modules are going to be installed to
@@ -9,12 +9,12 @@ LOCALPYTHONDIR=$(OMD_ROOT)/lib/python
 
 build:
 	( gzip -d < $(ANSIBLE).tar.gz | tar xf - )
-	( cd $(ANSIBLE) ; python2 setup.py build )
+	( cd $(ANSIBLE) ; python3 setup.py build )
 
 install:
 	mkdir -p $(DESTDIR)/$(LOCALPYTHONDIR)
 	export PYTHONPATH=$$PYTHONPATH:$(LOCALPYTHONDIR); \
-	cd $(ANSIBLE) ; python2 setup.py  install \
+	cd $(ANSIBLE) ; python3 setup.py  install \
 		--home=$(OMD_ROOT) \
 		--root=$(DESTDIR) \
 		--prefix='' \
