@@ -78,23 +78,10 @@ if [ ! -f ${CFGIN_FILE} ] ; then
 
   # generate random passwords
 
-  # determine python installed:
-  which python > /dev/null 2>&1
-  if [ $? -eq 0 ] ; then
-    PYTHON_BIN=python
-  else
-    which python3  > /dev/null 2>&1
-    if [  $? -eq 0 ] ; then
-       PYTHON_BIN=python3
-    else
-       PYTHON_BIN=python2
-    fi
-  fi
-
   #generate_password
-  httpAuth_password=$(${PYTHON_BIN} -c 'import random; import string; print ("".join(random.choice(string.ascii_letters + string.digits) for i in range(16)))')
+  httpAuth_password=$( LC_ALL=C tr -cd A-Za-z0-9 < /dev/urandom | head -c 16 )
   #generate_password
-  snapshotAuthKey=$(${PYTHON_BIN} -c 'import random; import string; print ("".join(random.choice(string.ascii_letters + string.digits) for i in range(16)))')
+  snapshotAuthKey=$( LC_ALL=C tr -cd A-Za-z0-9 < /dev/urandom | head -c 16 )
   sed -e "s/httpAuth_password=.*/httpAuth_password=${httpAuth_password}/; s/snapshotAuthKey=.*/snapshotAuthKey=${snapshotAuthKey}/"  ${CFGTEMP_FILE} > ${CFGIN_FILE}
 
   echo "create ${CFGIN_FILE}  with random passwords, for remote access check this file"
