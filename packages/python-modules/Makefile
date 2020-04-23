@@ -3,6 +3,7 @@ include ../../Makefile.omd
 NAME     = python-modules
 SHELL    = /bin/bash
 FREETDS  = $(shell readlink -m ../freetds/tmpinstall$(OMD_ROOT))
+HAS_CYTHON   = $(shell if python3 -c 'from Cython.Build import cythonize' ; then echo 1 ; else echo 0; fi)
 
 # This is where the python modules are going to be installed to
 LOCALPYTHONDIR=$(DESTDIR)$(OMD_ROOT)/lib/python
@@ -20,8 +21,6 @@ MODULES += pyexcel-ods-0.3.0.tar.gz
 MODULES += jdcal-1.3.tar.gz
 MODULES += et_xmlfile-1.0.1.tar.gz
 MODULES += openpyxl-2.4.2.tar.gz
-MODULES += importlib-1.0.4.zip
-MODULES += argparse-1.4.0.tar.gz
 MODULES += future-0.16.0.tar.gz
 MODULES += xlwt-future-0.8.0.tar.gz
 MODULES += xlrd-1.0.0.tar.gz
@@ -31,12 +30,12 @@ MODULES += pyexcel-xls-0.3.1.tar.gz
 MODULES += MarkupSafe-0.23.tar.gz
 MODULES += Jinja2-2.8.tar.gz
 MODULES += wstools-0.4.tar.gz
-MODULES += fpconst-0.7.2.tar.gz
+#MODULES += fpconst-0.7.2.tar.gz
 MODULES += docutils-0.12.tar.gz
-MODULES += SOAPpy-0.12.5.tar.gz
-MODULES += PyYAML-3.10.tar.gz
+MODULES += SOAPpy-py3-0.52.25.tar.gz
+MODULES += PyYAML-5.3.1.tar.gz
 MODULES += ecdsa-0.13.tar.gz
-MODULES += gearman-2.0.2.tar.gz
+MODULES += gearman3-0.2.0.tar.gz
 MODULES += six-1.10.0.tar.gz
 MODULES += orderedmultidict-0.7.5.tar.gz
 MODULES += pycrypto-2.6.1.tar.gz
@@ -44,7 +43,7 @@ MODULES += paramiko-1.18.2.tar.gz
 MODULES += pyasn1-0.2.3.tar.gz
 MODULES += ply-3.11.tar.gz
 MODULES += pysmi-0.3.4.tar.gz
-MODULES += pywbem-0.7.0.tar.gz
+MODULES += pywbem-0.17.2.tar.gz
 MODULES += requests-2.10.0.tar.gz
 MODULES += prometheus_client-0.3.1.tar.gz
 MODULES += nagiosplugin-1.2.4.tar.gz
@@ -55,7 +54,10 @@ MODULES += pysnmp-4.4.9.tar.gz
 
 # More datasources for coshsh
 MODULES += mysqlclient-1.3.12.tar.gz
-MODULES += pymssql-2.1.3.tar.gz
+ifeq ($(HAS_CYTHON),1)
+# SUSE has no cython in the repos
+MODULES += pymssql-py38-2.1.4.tar.gz
+endif
 
 # for check_json_health
 MODULES += decorator-4.4.0.tar.gz
@@ -95,7 +97,7 @@ build:
 	            python3 setup.py build_ext -I $(FREETDS)/include -L $(FREETDS)/lib ; \
 		else \
 		    sed -ri "/setuptools_git/d" setup.py; \
-	            python2 setup.py build ; \
+	            python3 setup.py build ; \
 		fi ; \
 	        cd .. ; \
 	    done

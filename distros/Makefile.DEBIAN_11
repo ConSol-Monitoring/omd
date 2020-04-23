@@ -5,6 +5,7 @@ BUILD_PACKAGES       += apache2-dev
 BUILD_PACKAGES       += bison                          # icinga 2
 BUILD_PACKAGES       += build-essential
 BUILD_PACKAGES       += cmake                          # icinga 2
+BUILD_PACKAGES       += cython3
 BUILD_PACKAGES       += dnsutils                       # nagios-plugins check_dns
 BUILD_PACKAGES       += dpatch
 BUILD_PACKAGES       += flex                           # icinga 2
