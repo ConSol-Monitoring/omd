@@ -3,7 +3,7 @@ include ../../Makefile.omd
 NAME     = python-modules
 SHELL    = /bin/bash
 FREETDS  = $(shell readlink -m ../freetds/tmpinstall$(OMD_ROOT))
-HAS_CYTHON   = $(shell if python3 -c 'from Cython.Build import cythonize' ; then echo 1 ; else echo 0; fi)
+HAS_CYTHON   = $(shell python3 has_cython.py)
 
 # This is where the python modules are going to be installed to
 LOCALPYTHONDIR=$(DESTDIR)$(OMD_ROOT)/lib/python
@@ -90,6 +90,7 @@ build:
 	        MDIR=$$(echo $$M | sed -e 's/.tar.gz//g' -e 's/.zip//g') ; \
 	        cd $$MDIR; \
 	        echo PYTHONBUILD $$M ; \
+	        [[ "$$M" =~ .*pymssql.* ]] && ln -sf freetds0.95 freetds ; \
 		if [ `uname -m` = 'armv7l' ] && [[ "$$M" =~ .*pymssql.* ]]; then \
 		    sed -ri "/setuptools_git/d" setup.py; \
 		    sed -ri "s#include_dirs = \[\]#include_dirs = \['$(FREETDS)/include'\]#" setup.py; \
