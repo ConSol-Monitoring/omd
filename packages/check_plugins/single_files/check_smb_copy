@@ -1,6 +1,6 @@
-#!/usr/bin/python2
+#!/usr/bin/python3
 
-from __future__ import unicode_literals, print_function
+
 import argparse
 import nagiosplugin
 import logging
@@ -19,13 +19,13 @@ class SmbConnectSummary(nagiosplugin.Summary):
 
     def ok(self, results):
         return "connected to share %s in %.4fs" % (self.share, results[0].metric.value)
-        
+
 
 class SmbCopySummary(nagiosplugin.Summary):
     def __init__(self, file):
         self.file = file
 
-    def output(self, results): 
+    def output(self, results):
         if str(results.most_significant_state) == "unknown":
             # won't have perf values, so special handling 
             return results.most_significant[0].hint.splitlines()[0]
@@ -65,19 +65,26 @@ class Smb(nagiosplugin.Resource):
             else:
                 self.unc_share = "smb://" + server + "/" + share
                 self.unc_file = "smb://" + server + "/" + share + "/" + file
-            self.auth_fn = lambda e, sh, wg, us, pw: (domain, user, password)
-        except Exception, exp:
+
+            self.auth_fn = None
+            if user:
+                    self.auth_fn = lambda e, sh, wg, us, pw: (domain, user, password)
+        except Exception as exp:
             raise nagiosplugin.CheckError(exp.__str__())
 
     def probe(self):
         #_log.warning('list share contents')
         try:
-            self.context = smbc.Context(auth_fn=self.auth_fn)
+            if self.auth_fn:
+                self.context = smbc.Context(auth_fn=self.auth_fn)
+            else:
+                self.context = smbc.Context()
             _log.debug("created context")
             if self.mode == "connection-time":
                 tic = time.time()
                 _log.debug("dir " + self.unc_share)
-                entries = self.context.opendir(self.unc_share).getdents()
+                dir = self.context.opendir(self.unc_share)
+                entries = dir.getdents()
                 #for entry in entries:
                 #    print entry
                 tac = time.time()
@@ -101,7 +108,12 @@ class Smb(nagiosplugin.Resource):
                 yield nagiosplugin.Metric('read_time', self.time_read, min=0, context='read_time')
                 yield nagiosplugin.Metric('open_time', self.time_open, min=0, context='open_time')
                 yield nagiosplugin.Metric('transfer_speed', (size / 1048576) / self.time_read + self.time_open, context='transfer_speed')
-        except Exception, exp:
+        except Exception as exp:
+            # The exception may be hidden, nagiosplugin is catching it, and may
+            # raise a different exception further down the road, so we don't know
+            # anymore what went wrong in the first place
+            import traceback, sys
+            sys.stderr.write(traceback.format_exc())
             raise nagiosplugin.CheckError(exp.__str__())
 
 
@@ -127,6 +139,7 @@ def main():
         Smb(args.mode, args.user, args.password, args.domain,
             args.server, args.share, args.file)
     )
+
     if args.mode == "connection-time":
         check.add(
             nagiosplugin.ScalarContext('connect', args.warning, args.critical,
@@ -145,6 +158,7 @@ def main():
             nagiosplugin.ScalarContext('transfer_speed', args.warning_speed, args.critical_speed),
             SmbCopySummary(args.file)
         )
+
     check.main(args.verbose, args.timeout)
 
 if __name__ == '__main__':
