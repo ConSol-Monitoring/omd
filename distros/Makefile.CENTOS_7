@@ -79,6 +79,7 @@ OS_PACKAGES          += libmcrypt
 OS_PACKAGES          += libsmbclient
 OS_PACKAGES          += libsqlite3x
 OS_PACKAGES          += libtool-ltdl
+OS_PACKAGES          += logrotate
 OS_PACKAGES          += mariadb-server
 OS_PACKAGES          += mod_fcgid
 OS_PACKAGES          += mod_ssl
