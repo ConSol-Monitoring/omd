@@ -9,7 +9,7 @@ HAS_CYTHON   = $(shell python3 has_cython.py)
 LOCALPYTHONDIR=$(DESTDIR)$(OMD_ROOT)/lib/python
 
 MODULES =
-MODULES += setuptools-24.2.0.tar.gz
+MODULES += setuptools-46.1.3.zip
 MODULES += six-1.14.0.tar.gz
 MODULES += mock-3.0.5.tar.gz
 MODULES += defusedxml-0.6.0.tar.gz
@@ -36,7 +36,7 @@ MODULES += wstools-py3-0.54.4.tar.gz
 #MODULES += fpconst-0.7.2.tar.gz
 MODULES += docutils-0.12.tar.gz
 MODULES += SOAPpy-py3-0.52.25.tar.gz
-MODULES += PyYAML-3.10.tar.gz
+MODULES += PyYAML-5.1.tar.gz
 MODULES += ecdsa-0.13.tar.gz
 MODULES += gearman3-0.2.0.tar.gz
 MODULES += six-1.10.0.tar.gz
