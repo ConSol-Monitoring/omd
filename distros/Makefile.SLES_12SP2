@@ -42,6 +42,7 @@ BUILD_PACKAGES       += openldap2-devel
 BUILD_PACKAGES       += pango-devel
 BUILD_PACKAGES       += patch
 BUILD_PACKAGES       += postgresql-devel
+BUILD_PACKAGES       += python3
 BUILD_PACKAGES       += python3-devel
 BUILD_PACKAGES       += python3-setuptools
 BUILD_PACKAGES       += readline-devel
