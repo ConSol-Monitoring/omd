@@ -39,6 +39,15 @@ TestUtils::test_command({ cmd => "/bin/su - $site -c 'lib/monitoring-plugins/che
 TestUtils::test_command({ cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_http -t 60 -H 127.0.0.1 -p 9115 -u \"/metrics\" -s \"process_open_fds\"'", like => '/HTTP OK:/' });
 TestUtils::test_command({ cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_http -t 60 -H 127.0.0.1 --onredirect=follow -a omdadmin:omd -u \"/$site/grafana/api/datasources/proxy/2/api/v1/query_range?query=go_goroutines&start=1535520675&end=1535542290&step=15\" -s \"success\"'", like => '/HTTP OK:/', waitfor => 'OK:' });
 
+sleep(2);
+# test
+#  removed datasource for grafana:
+TestUtils::test_command({ cmd => $omd_bin." stop $site" });
+TestUtils::test_command({ cmd => "/bin/su - $site -c 'mv etc/prometheus/grafana_datasources.yml etc/prometheus/grafana_datasources_ignore.yml'", like => '' });
+TestUtils::test_command({ cmd => $omd_bin." config $site set PROMETHEUS on" });
+TestUtils::test_command({ cmd => $omd_bin." start $site" });
+TestUtils::test_command({ cmd => "/bin/su - $site -c 'ls -l etc/grafana/provisioning/datasources/prometheus.yml'", like => '/No such file or directory/' });
+
 # cleanup
 TestUtils::remove_test_site($site);
 

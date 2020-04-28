@@ -26,7 +26,9 @@ case "$1" in
         #sed -e '/^\[InfluxDB \"nagflux\"\]/,/^\[/{s%^\s*Address = "http.*$%\tAddress = "http://'$LOCAL_ADDRESS$PORT'"%}' -i $OMD_ROOT/etc/nagflux/config.gcfg
         #sed -e 's%^url = "http.*/query?\(.*$\)%url = "http://'$LOCAL_ADDRESS$PORT'/query?\1%' -i $OMD_ROOT/etc/histou/histou.ini
 
-        sed -e 's%^.*url:.*$%    url: http://'$LOCAL_ADDRESS$PORT'%' -i $OMD_ROOT/etc/victoriametrics/grafana_datasources.yml
+        if [ -f $OMD_ROOT/etc/victoriametrics/grafana_datasources.yml ] ; then
+          sed -E 's%^(.*)url:.*$%\1url: http://'$LOCAL_ADDRESS$PORT'%' -i $OMD_ROOT/etc/victoriametrics/grafana_datasources.yml
+        fi
         sed -e 's%- url: ".*/api\(.*\)$%- url: "http://'$LOCAL_ADDRESS$PORT'/api\1%' -i $OMD_ROOT/etc/victoriametrics/remote_write.yml_template
 
     ;;

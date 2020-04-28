@@ -17,8 +17,10 @@ case "$1" in
        mkdir -p $OMD_ROOT/etc/grafana/provisioning/datasources
        rm -f $OMD_ROOT/etc/grafana/provisioning/datasources/victoriametrics.yml
        if [ "$2" == "on" ]; then
-           ln -s $OMD_ROOT/etc/victoriametrics/grafana_datasources.yml \
+           if [ -f $OMD_ROOT/etc/victoriametrics/grafana_datasources.yml ] ; then
+             ln -s $OMD_ROOT/etc/victoriametrics/grafana_datasources.yml \
                  $OMD_ROOT/etc/grafana/provisioning/datasources/victoriametrics.yml
+           fi
        fi
     ;;
 esac

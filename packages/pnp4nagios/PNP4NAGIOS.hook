@@ -74,8 +74,10 @@ EOT
              DEFAULT="true"
            fi
            sed -e 's%^.*url:.*$%    url: '$PROTO'://127.0.0.1:'$CONFIG_APACHE_TCP_PORT'/'$OMD_SITE'/pnp4nagios%' -i $OMD_ROOT/etc/pnp4nagios/grafana_datasource.yml
-           ln -s $OMD_ROOT/etc/pnp4nagios/grafana_datasource.yml \
+           if [ -f $OMD_ROOT/etc/pnp4nagios/grafana_datasource.yml ] ; then
+             ln -s $OMD_ROOT/etc/pnp4nagios/grafana_datasource.yml \
                  $OMD_ROOT/etc/grafana/provisioning/datasources/pnp4nagios.yml
+           fi
        fi
    ;;
 

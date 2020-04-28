@@ -27,8 +27,10 @@ case "$1" in
             rm -f $OMD_ROOT/etc/apache/conf.d/prometheus.conf
             ln -s $OMD_ROOT/etc/prometheus/apache.conf \
                 $OMD_ROOT/etc/apache/conf.d/prometheus.conf
-            ln -s $OMD_ROOT/etc/prometheus/grafana_datasources.yml \
+            if [ -f $OMD_ROOT/etc/prometheus/grafana_datasources.yml ] ; then
+               ln -s $OMD_ROOT/etc/prometheus/grafana_datasources.yml \
                   $OMD_ROOT/etc/grafana/provisioning/datasources/prometheus.yml
+            fi
         fi
     ;;
 esac
