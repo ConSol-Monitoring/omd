@@ -31,12 +31,15 @@ case "$1" in
           # -tlsKeyFile string
 
 
-
-          sed -e 's/url: http:/url: https:/' -i $OMD_ROOT/etc/victoriametrics/grafana_datasources.yml
+          if [ -f $OMD_ROOT/etc/victoriametrics/grafana_datasources.yml ] ; then
+            sed -e 's/url: http:/url: https:/' -i $OMD_ROOT/etc/victoriametrics/grafana_datasources.yml
+          fi
           # TODO     sed -e '/^\[influxdb\]/,/^\[/{s%^url = "http\(.*$\)%url = "https\1%}' -i $OMD_ROOT/etc/histou/histou.ini
           # TODO     sed -e '/^\[InfluxDB \"nagflux\"\]/,/^\[/{s%^\s*Address = "http\(.*$\)%\tAddress = "https\1%}' -i $OMD_ROOT/etc/nagflux/config.gcfg
         else
-          sed -e 's/url: https:/url: http:/' -i $OMD_ROOT/etc/victoriametrics/grafana_datasources.yml
+          if [ -f $OMD_ROOT/etc/victoriametrics/grafana_datasources.yml ] ; then
+            sed -e 's/url: https:/url: http:/' -i $OMD_ROOT/etc/victoriametrics/grafana_datasources.yml
+          fi
           # TODO     sed -e '/^\[influxdb\]/,/^\[/{s%^url = "https\(.*$\)%url = "http\1%}' -i $OMD_ROOT/etc/histou/histou.ini
           # TODO     sed -e '/^\[InfluxDB \"nagflux\"\]/,/^\[/{s%^\s*Address = "https\(.*$\)%\tAddress = "http\1%}' -i $OMD_ROOT/etc/nagflux/config.gcfg
         fi
