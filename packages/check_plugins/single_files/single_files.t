@@ -1,8 +1,8 @@
 chomp(my $os = qx(./distro));
-if($os !~ /(centos 6)|(sles 11)/i) {
+if($os !~ /(sles 1[12])/i) {
   TestUtils::test_command({ cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_smb_copy -h'", exit => 0, like => '/show this help message and exit/' });
 } else {
-  diag($os." needs a newer libsmbclient than the one that comes with the distro");
+  diag($os." check_smb_copy cannot be built with SLES12' python3.4");
 }
 
 TestUtils::test_command({ cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_livestatus_stats.pl -h'", exit => 3, like => '/Usage: check_livestatus_stats.pl/' });
