@@ -1,9 +1,3 @@
-#!/bin/sh
-''':' FIXME
-unset PYTHONPATH
-unset LD_LIBRARY_PATH
-exec python3 "$0" "$@"
-'''
 #!/usr/bin/python3
 
 import cgi
@@ -19,7 +13,7 @@ try: import simplejson as json
 except ImportError: import json
 import logging
 
-#from coshsh.util import setup_logging
+from coshsh.util import setup_logging
 
 #cgi.enable()
 
@@ -278,7 +272,7 @@ try:
         result["error"] = "This script must be run in an OMD environment"
         status = 400
         #raise CGIAbort
-    #setup_logging(logdir=os.environ["OMD_ROOT"]+"/var/log", logfile="downtime-api.log", scrnloglevel=logging.CRITICAL, txtloglevel=logging.INFO, format="[%(asctime)s][%(process)d] - %(levelname)s - %(message)s")
+    setup_logging(logdir=os.environ["OMD_ROOT"]+"/var/log", logfile="downtime-api.log", scrnloglevel=logging.CRITICAL, txtloglevel=logging.INFO, format="[%(asctime)s][%(process)d] - %(levelname)s - %(message)s")
     logger = logging.getLogger('downtime-api')
 
     params = cgi.FieldStorage()
