@@ -1,7 +1,6 @@
 #!/bin/sh
 
 set -u
-set -x
 
 PYTHONPATH=${PYTHON2PATH:-}${PYTHON2PATH+:}:${OMD_ROOT}/lib/python2
 
