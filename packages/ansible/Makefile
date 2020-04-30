@@ -1,18 +1,23 @@
 include ../../Makefile.omd
 
-PYTHON3_VERSION=$(shell python3 -c 'import sys;print(sys.hexversion)')
-# 50659328 is 0x03050000 which represents python 3.5.0
-HAS_PYTHON35=$(shell test $(PYTHON3_VERSION) -ge 50659328  && echo 1 || echo 0 )
-ifeq ($(HAS_PYTHON35), 1)
-PYTHON=python3
-else
+SLES12   = $(shell echo $(DISTRO_INFO) | grep -c 'SLES 12' )
+ifeq ($(SLES12), 1)
 PYTHON=python2
+else
+PYTHON=python3
 endif
 ANSIBLE_VERSION=2.9.7
 ANSIBLE=ansible-$(ANSIBLE_VERSION)
 
 # This is where the python modules are going to be installed to
+ifeq ($(PYTHON), python2)
+LOCALPYTHONDIR=$(OMD_ROOT)/lib/python2
+SCRIPT_PATH=$(OMD_ROOT)/bin/.ansible
+else
 LOCALPYTHONDIR=$(OMD_ROOT)/lib/python
+SCRIPT_PATH=$(OMD_ROOT)/bin
+endif
+
 
 
 build:
@@ -21,16 +26,29 @@ build:
 
 install:
 	mkdir -p $(DESTDIR)/$(LOCALPYTHONDIR)
-	export PYTHONPATH=$$PYTHONPATH:$(LOCALPYTHONDIR); \
+	export PYTHONPATH=$(LOCALPYTHONDIR); \
 	cd $(ANSIBLE) ; $(PYTHON) setup.py  install \
 		--home=$(OMD_ROOT) \
 		--root=$(DESTDIR) \
 		--prefix='' \
 		--install-purelib=$(LOCALPYTHONDIR) \
 		--install-platlib=$(LOCALPYTHONDIR) \
-		--install-scripts=$(OMD_ROOT)/bin \
+		--install-scripts=$(SCRIPT_PATH) \
 		--install-data=$(OMD_ROOT)/tmp
-
+	if [ $(PYTHON) = python2 ] ; then \
+	    install -D -m 755 ansible_wrapper $(DESTDIR)/$(SCRIPT_PATH)/ansible_wrapper && \
+	    ln -s $(SCRIPT_PATH)/ansible_wrapper $(DESTDIR)/$(OMD_ROOT)/bin/ansible && \
+	    ln -s $(SCRIPT_PATH)/ansible_wrapper $(DESTDIR)/$(OMD_ROOT)/bin/ansible-config && \
+	    ln -s $(SCRIPT_PATH)/ansible_wrapper $(DESTDIR)/$(OMD_ROOT)/bin/ansible-connection && \
+	    ln -s $(SCRIPT_PATH)/ansible_wrapper $(DESTDIR)/$(OMD_ROOT)/bin/ansible-console && \
+	    ln -s $(SCRIPT_PATH)/ansible_wrapper $(DESTDIR)/$(OMD_ROOT)/bin/ansible-doc && \
+	    ln -s $(SCRIPT_PATH)/ansible_wrapper $(DESTDIR)/$(OMD_ROOT)/bin/ansible-galaxy && \
+	    ln -s $(SCRIPT_PATH)/ansible_wrapper $(DESTDIR)/$(OMD_ROOT)/bin/ansible-inventory && \
+	    ln -s $(SCRIPT_PATH)/ansible_wrapper $(DESTDIR)/$(OMD_ROOT)/bin/ansible-playbook && \
+	    ln -s $(SCRIPT_PATH)/ansible_wrapper $(DESTDIR)/$(OMD_ROOT)/bin/ansible-pull && \
+	    ln -s $(SCRIPT_PATH)/ansible_wrapper $(DESTDIR)/$(OMD_ROOT)/bin/ansible-test && \
+	    ln -s $(SCRIPT_PATH)/ansible_wrapper $(DESTDIR)/$(OMD_ROOT)/bin/ansible-vault ; \
+	fi
 skel:
 
 clean:
