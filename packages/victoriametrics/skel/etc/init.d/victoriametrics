@@ -99,11 +99,13 @@ if [ ! -f ${CFGIN_FILE} ] ; then
 
   echo "create ${CFGIN_FILE}  with random passwords, for remote access check this file"
 
-  echo "patching password in grafana_datasources.yml"
-  sed -e "s/basicAuthPassword: .*/basicAuthPassword: ${httpAuth_password}/; s/basicAuthUser: .*/basicAuthUser: prom/" -i ${OMD_ROOT}/etc/victoriametrics/grafana_datasources.yml
-  omd status grafana | grep "grafana.*running" > /dev/null 2>&1
-  if [ $? -eq 0 ] ; then
-    omd restart grafana
+  if [ -f ${OMD_ROOT}/etc/victoriametrics/grafana_datasources.yml ] ; then
+    echo "patching password in grafana_datasources.yml"
+    sed -e "s/basicAuthPassword: .*/basicAuthPassword: ${httpAuth_password}/; s/basicAuthUser: .*/basicAuthUser: prom/" -i ${OMD_ROOT}/etc/victoriametrics/grafana_datasources.yml
+    omd status grafana | grep "grafana.*running" > /dev/null 2>&1
+    if [ $? -eq 0 ] ; then
+     omd restart grafana
+    fi
   fi
 
 

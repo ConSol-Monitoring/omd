@@ -73,7 +73,7 @@ echo $SNAPSHOT_OUT
 SNAPSHOT_NAME=$(echo -n $SNAPSHOT_OUT | jsonpath.py '$.snapshot')
 
 if [ "${SNAPSHOT_NAME}" == "" ] ; then
-  echo "snaphot failed"
+  echo "snapshot failed"
   echo $SNAPSHOT_OUT
   exit 4
 fi
