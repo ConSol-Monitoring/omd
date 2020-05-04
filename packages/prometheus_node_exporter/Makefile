@@ -3,10 +3,10 @@ include ../../Makefile.omd
 .PHONY: skel
 
 NAME       = node_exporter
-VERSION    = 0.18.1
+VERSION    = 1.0.0-rc.0
 BRANCH     = master
 SRC        = $(NAME)-$(VERSION).tar.gz
-GOPKG      = 1.12
+GOPKG      = 1.14
 GOVERSION  = $(shell grep ^VERSION ../go-${GOPKG}/Makefile | awk '{ print $$3 }')
 PWD        = $(shell pwd)
 GOFOLDER   = go
