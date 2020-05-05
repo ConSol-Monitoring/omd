@@ -63,7 +63,7 @@ class MIB(coshsh.item.Item):
             # ohne fuehrende 0, damit's richtig numerisch zugeht hier
             int("%d%03d%03d%03d" % tuple([int(n) for n in textwrap.wrap(str_ip, 3)])),
             str_ip
-        ) for str_ip in self.agents.keys()]
+        ) for str_ip in list(self.agents.keys())]
         sortme.sort(key=lambda x: x[0])
         for num_ip, str_ip in sortme:
             self.agent_ips.append(num_ip)
@@ -100,7 +100,7 @@ class RagpickerMIB(MIB):
             # ohne fuehrende 0, damit's richtig numerisch zugeht hier
             int("%d%03d%03d%03d" % tuple([int(n) for n in textwrap.wrap(str_ip, 3)])),
             str_ip
-        ) for str_ip in self.agents.keys()]
+        ) for str_ip in list(self.agents.keys())]
         sortme.sort(key=lambda x: x[0])
         for num_ip, str_ip in sortme:
             self.agent_ips.append(num_ip)
@@ -220,7 +220,7 @@ class SNMPTT(coshsh.datasource.Datasource):
 
                                 'HIDDEN': -1,
                             }[last_severity]
-                        except Exception, e:
+                        except Exception as e:
                             logger.debug('trap severity %s unknown' %  eventname_m.group(3))
                             last_nagios = 2
                         last_eventtext = None
@@ -260,7 +260,7 @@ class SNMPTT(coshsh.datasource.Datasource):
                         }]
             try:
                 logger.debug('mib %s counts %d traps' % (mib, len(mib_traps[mib])))
-            except Exception, e:
+            except Exception as e:
                 logger.debug('mib %s counts 0 traps' % mib)
                 empty_mibs.append(mib)
 
@@ -315,7 +315,7 @@ class SNMPTT(coshsh.datasource.Datasource):
             #   und haben ein Attribut "matches" mit den Sub-Events
             try:
                 m.common_prefix = os.path.commonprefix([event['oid'].replace('.', '\.').replace('*', '.*?') for event in m.events])
-            except Exception, e:
+            except Exception as e:
                 m.common_prefix = '.*'
             self.add('mibconfigs', m)
 
@@ -398,7 +398,7 @@ class SNMPTT(coshsh.datasource.Datasource):
                                     ragpicker.add_ip_oid_combi(agent_address, event["oid"])
 
 
-        for address, host_name in hosts_with_ragpicker_mib.items():
+        for address, host_name in list(hosts_with_ragpicker_mib.items()):
             ragpicker.add_agent([
                 address,
                 host_name,
@@ -439,7 +439,7 @@ class SNMPTT(coshsh.datasource.Datasource):
                 'type': 'snmptrapdlog',
                 'monitoring_type': 'KEYVALUES',
                 'monitoring_0': 'mibs',
-                'monitoring_1': mib_traps.keys(),
+                'monitoring_1': list(mib_traps.keys()),
             })
         )
 
