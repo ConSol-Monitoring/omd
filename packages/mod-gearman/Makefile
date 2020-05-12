@@ -5,7 +5,7 @@ VERSION      = 3.3.0
 GEARMAND     = $(shell grep "^VERSION " ../gearmand/Makefile | awk '{ print $$3 }')
 DIR          = mod_gearman-$(VERSION)
 PROXY        = GearmanProxy
-PROXYVERSION = 2.05
+PROXYVERSION = 2.06
 PROXYDIR     = $(PROXY)-$(PROXYVERSION)
 
 .PHONY: skel
