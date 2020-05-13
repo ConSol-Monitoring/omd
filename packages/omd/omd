@@ -3211,6 +3211,9 @@ def main_update(args, options={}):
     if not site_is_stopped(g_sitename):
         bail_out("Please completely stop '%s' before updating it." % g_sitename)
 
+    if int(os.popen("df -Pm /omd/sites/%s/. | tail -n 1 | awk '{ print $4 }'" % g_sitename).read()) < 100:
+        bail_out("Not enough free disk space. Pleace free at least 100MB!")
+
     # Unmount tmp. We need to recreate the files and directories
     # from the new version after updating.
     unmount_tmpfs(g_sitename)
