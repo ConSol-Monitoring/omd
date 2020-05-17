@@ -2,8 +2,11 @@ include ../../Makefile.omd
 
 NAME = monitoring-plugins
 VERSION = master
+BRANCH  = feature_check_curl
 DIR = $(NAME)-$(VERSION)
 URIPARSER=0.8.6
+# GIT TAG is set automatically by "make upstream"
+GIT_TAG     = 53e6f29
 
 CONFIGUREOPTS = \
     --prefix=$(OMD_ROOT) \
@@ -16,7 +19,7 @@ build: uriparser
 	    echo "applying $$p..." ; \
 	    ( cd $(DIR) ; patch -p1 -b ) < $$p ; \
 	done
-	sed -e 's/\.git/_$(OMD_VERSION)/g' -i $(DIR)/NP-VERSION-GEN
+	sed -e 's/\.git/_$(shell date +%F)_$(GIT_TAG)/g' -i $(DIR)/NP-VERSION-GEN
 	rm -f $(DIR)/release
 	cd $(DIR) && \
 		URIPARSER="$(shell pwd)/uriparser-$(URIPARSER)/.libs/liburiparser.a" \
@@ -33,7 +36,7 @@ install:
 
 	# Copy package documentations to have these information in the binary packages
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/doc/$(NAME)
-	set -e; for file in ACKNOWLEDGEMENTS AUTHORS CODING COPYING FAQ NEWS README REQUIREMENTS SUPPORT THANKS ; do \
+	set -e; for file in ACKNOWLEDGEMENTS AUTHORS CODING COPYING FAQ NEWS README REQUIREMENTS SUPPORT; do \
 	   install -m 644 $(DIR)/$$file $(DESTDIR)$(OMD_ROOT)/share/doc/$(NAME); \
 	done
 
@@ -50,3 +53,12 @@ skel:
 clean:
 	rm -rf $(DIR)
 	rm -rf uriparser-$(URIPARSER)
+
+upstream:
+	git clone --depth=1 -b $(BRANCH) https://github.com/monitoring-plugins/monitoring-plugins monitoring-plugins-master
+	cd monitoring-plugins-master/ \
+		&& ./autogen.sh \
+		&& sed -i $(PWD)/Makefile -e 's/^GIT_TAG.*$$/GIT_TAG     = '$$(git describe --always --tags)'/g'
+	tar cvfz monitoring-plugins-master.tar.gz monitoring-plugins-master
+	rm -rf monitoring-plugins-master
+	rm -rf master.tar.gz
