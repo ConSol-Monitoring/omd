@@ -11,7 +11,6 @@ PACKAGES=freetds \
          nagflux \
          python-modules \
          apache-omd \
-         mod_python \
          check_multi \
          dokuwiki \
          example \

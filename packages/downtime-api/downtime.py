@@ -1,17 +1,18 @@
-#!/usr/bin/python2
+#!/usr/bin/python3
 
 import cgi
 import os
 import time
 import sys
 import subprocess
-import urllib
+import urllib.request, urllib.parse, urllib.error
 import re
 import socket
 import time
 try: import simplejson as json
 except ImportError: import json
 import logging
+
 from coshsh.util import setup_logging
 
 #cgi.enable()
@@ -48,7 +49,7 @@ class ThrukCli(object):
         return self.run("GET", format, params, data)
 
     def run(self, method="GET", format="", params=(), data=None):
-        params = tuple([p.replace('NQ', '', 1) if p.startswith('NQ') else urllib.quote_plus(p) for p in params])
+        params = tuple([p.replace('NQ', '', 1) if p.startswith('NQ') else urllib.parse.quote_plus(p) for p in params])
         uri = format % params
         cmd = "%s r " % self.thruk
         if method == "POST":
@@ -64,7 +65,7 @@ class ThrukCli(object):
         p.wait()
         try:
             return json.loads(output)
-        except Exception, e:
+        except Exception as e:
             #logger.debug("output is not json: "+str(e))
             return ()
 
@@ -75,21 +76,21 @@ class ThrukCli(object):
             logger.debug("thruk timezone is " + tz)
             os.environ["TZ"] = tz.strip()
             time.tzset()
-        except Exception, e:
+        except Exception as e:
             pass
 
     def get_backends(self):
         try:
             self.backends = self.get('/sites')
             self.backend_dict = dict([ (b["id"], b["name"]) for b in self.backends ])
-        except Exception, e:
+        except Exception as e:
             pass
 
     def get_backend_names(self):
         logger.debug("backends %s", str(self.backends))
         try:
             return [b['name'] for b in self.backends if 'name' in b]
-        except Exception, e:
+        except Exception as e:
             for b in self.backends:
                 logger.error("get_backend_names %s", str(b))
 
@@ -103,35 +104,35 @@ class ThrukCli(object):
     def get_host(self, host):
         try:
             hosts = self.get('/hosts/%s', (host,))
-        except Exception, e:
+        except Exception as e:
             hosts = []
         return self.add_peer_names(hosts)
 
     def get_hostgroup(self, hostgroup):
         try:
             hosts = self.get('/hosts?q=groups >= "%s"', ('NQ'+hostgroup,))
-        except Exception, e:
+        except Exception as e:
             hosts = []
         return self.add_peer_names(hosts)
 
     def get_services(self, host, service):
         try:
             services = self.get('/services?host_name=%s&description=%s', (host, service))
-        except Exception, e:
+        except Exception as e:
             services = []
         return self.add_peer_names(services)
 
     def get_hostgroup_services(self, hostgroup, service):
         try:
             services = self.get('/services?q=(host_groups >= "%s") and description = "%s"', ('NQ'+hostgroup, 'NQ'+service))
-        except Exception, e:
+        except Exception as e:
             services = []
         return self.add_peer_names(services)
 
     def get_host_services(self, host):
         try:
             services = self.get('/services?host_name=%s', (host,))
-        except Exception, e:
+        except Exception as e:
             services = []
         return self.add_peer_names(services)
 
@@ -159,14 +160,14 @@ class ThrukCli(object):
             'comment_data': context['comment'],
             'comment_author': 'api',
         }
-        for backend, hosts in self.item_chunks(hosts).items():
+        for backend, hosts in list(self.item_chunks(hosts).items()):
             self.prefer_backend(backend)
             for host in hosts:
                 self.post('/hosts/%s/cmd/schedule_host_downtime', (host["name"],), json.dumps(data))
                 if context["plus_svc"]:
                     self.post('/hosts/%s/cmd/schedule_host_svc_downtime', (host["name"],), json.dumps(data))
             self.reset_backend()
-            
+
     def del_host_downtimes(self, hosts, context):
         for downtime in self.get_host_downtimes(hosts, context):
             data = {
@@ -181,7 +182,7 @@ class ThrukCli(object):
 
     def get_host_downtimes(self, hosts, context):
         host_downtimes = []
-        for backend, hosts in self.item_chunks(hosts).items():
+        for backend, hosts in list(self.item_chunks(hosts).items()):
             self.prefer_backend(backend)
             for host in hosts:
                 for downtime in self.add_peer_names(self.get('/downtimes?host_name=%s', (host["name"],))):
@@ -208,7 +209,7 @@ class ThrukCli(object):
             'comment_data': context['comment'],
             'comment_author': 'api',
         }
-        for backend, services in self.item_chunks(services).items():
+        for backend, services in list(self.item_chunks(services).items()):
             self.prefer_backend(backend)
             for service in services:
                 self.post('/services/%s/%s/cmd/schedule_svc_downtime', (service["host_name"], service["description"]), json.dumps(data))
@@ -225,7 +226,7 @@ class ThrukCli(object):
 
     def get_service_downtimes(self, services, context):
         service_downtimes = []
-        for backend, services in self.item_chunks(services).items():
+        for backend, services in list(self.item_chunks(services).items()):
             self.prefer_backend(backend)
             for service in services:
                 for downtime in self.add_peer_names(self.get('/downtimes?host_name=%s&service_description=%s', (service["host_name"], service["description"]))):
@@ -270,7 +271,7 @@ try:
     if not os.environ["OMD_ROOT"].startswith("/omd/sites/"):
         result["error"] = "This script must be run in an OMD environment"
         status = 400
-        raise CGIAbort
+        #raise CGIAbort
     setup_logging(logdir=os.environ["OMD_ROOT"]+"/var/log", logfile="downtime-api.log", scrnloglevel=logging.CRITICAL, txtloglevel=logging.INFO, format="[%(asctime)s][%(process)d] - %(levelname)s - %(message)s")
     logger = logging.getLogger('downtime-api')
 
@@ -292,9 +293,9 @@ try:
     hosts = []
     services = []
     result["params"] = {}
-    for key in params.keys():
+    for key in list(params.keys()):
         result["params"][key] = params[key].value
-    
+
     ######################################################################
     # validate parameters
     # host= or hostgroup=
@@ -321,11 +322,11 @@ try:
     if not delete:
         try:
             duration = int(duration)
-        except Exception, e:
+        except Exception as e:
             result["error"] = "Duration is not a number"
             status = 400
             raise CGIAbort
-    
+
     if not address:
         result["error"] = "Unknown Originating IP"
         status = 401
@@ -353,7 +354,7 @@ try:
     if not delete:
         thruk.set_thruk_timezone()
         start_time = int(time.time())
-        comment = comment + " apiset" + urllib.quote_plus(time.strftime("%s", time.localtime(start_time)))
+        comment = comment + " apiset" + urllib.parse.quote_plus(time.strftime("%s", time.localtime(start_time)))
         end_time = start_time + 60 * duration
         context = {
             'start_time': time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(start_time)),
@@ -369,7 +370,7 @@ try:
             'plus_svc': plus_svc,
             'author': 'omdadmin',
         }
-    
+
     if service_description:
         ##################################################################
         # to be done. i start implementing as soon as you pay
@@ -417,7 +418,7 @@ try:
         real_hosts = []
         for host in hosts:
             if dtauthtoken:
-                macros = dict(zip(host["custom_variable_names"], host["custom_variable_values"]))
+                macros = dict(list(zip(host["custom_variable_names"], host["custom_variable_values"])))
                 if "DTAUTHTOKEN" in macros and macros["DTAUTHTOKEN"] == dtauthtoken:
                     logger.debug("dtauthtoken is valid for host %s", host["name"])
                     real_hosts.append(host)
@@ -430,7 +431,7 @@ try:
                     socket.setdefaulttimeout(5)
                     hostname, aliaslist, ipaddrlist = socket.gethostbyname_ex(host["address"])
                     logger.debug("resolves to %s", str(ipaddrlist))
-                except Exception, e:
+                except Exception as e:
                     logger.critical(e)
                     ipaddrlist = []
                 if address in ipaddrlist:
@@ -491,8 +492,8 @@ try:
         real_services = []
         for service in services:
             if dtauthtoken:
-                hmacros = dict(zip(service["host_custom_variable_names"], service["host_custom_variable_values"]))
-                smacros = dict(zip(service["custom_variable_names"], service["custom_variable_values"]))
+                hmacros = dict(list(zip(service["host_custom_variable_names"], service["host_custom_variable_values"])))
+                smacros = dict(list(zip(service["custom_variable_names"], service["custom_variable_values"])))
                 logger.debug("dtauth services %s", str(smacros))
                 logger.debug("dtauth hosts %s", str(hmacros))
                 if "DTAUTHTOKEN" in smacros and smacros["DTAUTHTOKEN"] == dtauthtoken:
@@ -510,7 +511,7 @@ try:
                     socket.setdefaulttimeout(5)
                     hostname, aliaslist, ipaddrlist = socket.gethostbyname_ex(service["host_address"])
                     logger.debug("resolves to %s", str(ipaddrlist))
-                except Exception, e:
+                except Exception as e:
                     logger.critical(e)
                     ipaddrlist = []
                 if address in ipaddrlist:
@@ -540,7 +541,7 @@ try:
         else:
             thruk.set_service_downtimes(real_services, context)
         time.sleep(1) # in bigger environments it may take a while...
-    
+
         ######################################################################
         # get all services with this downtime in down_services
         ######################################################################
@@ -560,15 +561,18 @@ try:
             elif len(real_services) < len(services):
                 status = 202
                 result["error"] = "%d of %d services were not authorized" % (len(services) - len(real_services), len(services))
-    
-except Exception, e:
+
+except Exception as e:
     if not "error" in result:
         status = 500
         result["error"] = str(e)
 
-print "Content-Type: application/json"
-print "Status: %d - %s" % (status, statuus[status])
-print
+print("Content-Type: application/json")
+print("Status: %d - %s" % (status, statuus[status]))
+print()
 result["status"] = status
-print json.dumps(result, indent=4)
-logger.info(str(result))
+print(json.dumps(result, indent=4))
+try:
+    logger.info(str(result))
+except:
+    sys.stderr.write(str(result) + "\n")

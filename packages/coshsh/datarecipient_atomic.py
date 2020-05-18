@@ -68,7 +68,7 @@ class AtomicRecipient(coshsh.datarecipient.Datarecipient):
             for item in self.items.split(','):
                 if item in self.objects:
                     logger.info("writing %s atomic ..." % item)
-                    for itemobj in self.objects[item].values():
+                    for itemobj in list(self.objects[item].values()):
                         if self.item_write_config(itemobj, self.objects_dir, ''):
                             written= True
         if written and self.delta_action:
@@ -115,7 +115,7 @@ class AtomicRecipient(coshsh.datarecipient.Datarecipient):
             if status != 0:
                 raise DatarecipientNotAvailable
             status = True
-        except Exception, e:
+        except Exception as e:
             status = False
         return status, stdout if stdout else "", stderr if stderr else ""
 
@@ -157,7 +157,7 @@ class RemoteAtomicRecipient(AtomicRecipient):
             for item in self.items.split(','):
                 if item in self.objects:
                     logger.info("writing %s atomic ..." % item)
-                    for itemobj in self.objects[item].values():
+                    for itemobj in list(self.objects[item].values()):
                         self.item_write_config(itemobj, local_tempdir, '')
         write_me = True
         if self.delta_watch:

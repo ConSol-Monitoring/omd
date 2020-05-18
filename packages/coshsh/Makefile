@@ -1,14 +1,14 @@
 include ../../Makefile.omd
 
 NAME=coshsh
-VERSION=5.6.0.1
+VERSION=6.0
 COSHSH=$(NAME)-$(VERSION)
 
 build:
 	tar xvzf $(COSHSH).tar.gz
 	cd $(COSHSH) && \
 	    export PYTHONPATH=$$PYTHONPATH:$(DESTDIR)$(OMD_ROOT)/lib/python ; \
-	    python2 setup.py build
+	    python3 setup.py build
 
 install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/bin
@@ -17,7 +17,7 @@ install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/var/coshsh
 	cd $(COSHSH) && \
 	    export PYTHONPATH=$$PYTHONPATH:$(DESTDIR)$(OMD_ROOT)/lib/python ; \
-	    python2 setup.py install \
+	    python3 setup.py install \
 	        --prefix= \
 	        --home=$(DESTDIR)$(OMD_ROOT) \
                 --install-platlib=$(DESTDIR)$(OMD_ROOT)/lib/python \

@@ -22,7 +22,7 @@ install:
 	install -m 755 create_site_selfsigned_cert $(DESTDIR)$(OMD_ROOT)/bin
 	install -m 755 set_admin_password $(DESTDIR)$(OMD_ROOT)/bin
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/omd/htdocs
-	install -m 644 index.py $(DESTDIR)$(OMD_ROOT)/share/omd/htdocs
+	install -m 644 index.html $(DESTDIR)$(OMD_ROOT)/share/omd/htdocs
 	install -m 644 logout.php $(DESTDIR)$(OMD_ROOT)/share/omd/htdocs
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/omd/htdocs/img
 	install -m 644 img/* $(DESTDIR)$(OMD_ROOT)/share/omd/htdocs/img

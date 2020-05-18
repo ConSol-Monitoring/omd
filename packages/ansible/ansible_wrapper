@@ -1,0 +1,7 @@
+#!/bin/sh
+
+set -u
+
+PYTHONPATH=${PYTHON2PATH:-}${PYTHON2PATH+:}:${OMD_ROOT}/lib/python2
+
+exec "${OMD_ROOT}/bin/.ansible/${0##*/}" "$@"
