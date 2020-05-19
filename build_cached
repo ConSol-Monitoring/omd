@@ -60,12 +60,24 @@ replace_strings_in_ascii_file() {
     mv ${FILE}.tmp ${FILE}
 }
 
+calc_hashsum() {
+    DIR="$1"
+    MD5=$(cd "$DIR" && find . -exec md5sum {} \; 2>&1 | sort | md5sum | awk '{ print $1 }')
+    # add go version to hash, we want to rebuild package if go source file has changed
+    GOVERSION=$(grep -P 'GOPKG\ *=' $DIR/Makefile $DIR/*/Makefile 2>/dev/null | awk -F = '{ print $2 }' | tr -d ' ' | sort -u)
+    if [ -n "$GOVERSION" ]; then
+        for GO in $GOVERSION; do
+            MD5=$(echo packages/go-$GO/*.gz $MD5 | md5sum | awk '{ print $1 }')
+        done
+    fi
+    echo "$MD5"
+}
 
 BUILD_CACHE=$BUILD_CACHE/$CACHESUBDIR
 mkdir -p $BUILD_CACHE
 
 $MAKE -C "$SRC" clean
-MD5=$(cd "$SRC" && find . -exec md5sum {} \; 2>&1 | sort | md5sum | awk '{ print $1 }')
+MD5=$(calc_hashsum $SRC)
 CACHE_FILE="$BUILD_CACHE/${SRC}_${MD5}_v${OMD_VERSION}.tgz"
 CACHE_PATTERN="$BUILD_CACHE/${SRC}_${MD5}_v*.tgz"
 
@@ -138,9 +150,9 @@ set +e
 echo "cache file $CACHE_FILE created"
 rm $EXCLUDES_FILE
 
-# check md5 sum0
+# check md5 sum
 $MAKE -C "$SRC" clean
-MD5_CHECK=$(cd "$SRC" && find . -exec md5sum {} \; 2>&1 | sort | md5sum | awk '{ print $1 }')
+MD5_CHECK=$(calc_hashsum $SRC)
 if [ "$MD5" != "$MD5_CHECK" ]; then
   echo "ERROR: make clean is broken and did not clean everything"
   exit 1
