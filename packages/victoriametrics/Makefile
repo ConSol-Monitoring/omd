@@ -11,7 +11,7 @@ VERSION    = v1.34.7
 # GIT_TAG: TODO: still set manually for new master version in git repo main.go! no release/version Branches
 GIT_TAG     = 0.0.2
 SRC         = vmctl-$(GIT_TAG).tar.gz
-GOPKG       = 1.13
+GOPKG       = 1.14
 GOVERSION   = $(shell grep ^VERSION ../go-${GOPKG}/Makefile | awk '{ print $$3 }')
 GOPATH      = go
 GITBASE     = github.com/VictoriaMetrics
