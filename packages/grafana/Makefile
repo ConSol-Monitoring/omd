@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 NAME       = grafana
-VERSION    = 6.7.3
+VERSION    = 7.0.0
 SRC        = $(NAME)-$(VERSION).tar.gz
 GOPATH     = go
 GOPKG      = 1.14
@@ -28,11 +28,7 @@ install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/grafana/conf
 	install -m 644 defaults.ini $(DESTDIR)$(OMD_ROOT)/share/grafana/conf/
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/grafana/tools/
-	cp -rp go/src/github.com/grafana/grafana/tools/phantomjs $(DESTDIR)$(OMD_ROOT)/share/grafana/tools/
 	cp -rp 01-grafana.yml $(DESTDIR)$(OMD_ROOT)/share/grafana/
-	# This link is needed due to grafana does not ship with the binary
-	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/grafana/tools/phantomjs
-	ln -s ../../../../bin/phantomjs $(DESTDIR)$(OMD_ROOT)/share/grafana/tools/phantomjs/phantomjs
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/python
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/var/tmp
 	install -m 755 grafanactl $(DESTDIR)$(OMD_ROOT)/bin/
