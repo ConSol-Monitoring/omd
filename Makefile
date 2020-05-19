@@ -4,8 +4,6 @@ SHELL = /bin/bash
 PACKAGES=freetds \
          perl-modules \
          go-1.4 \
-         go-1.12 \
-         go-1.13 \
          go-1.14 \
          influxdb \
          nagflux \
