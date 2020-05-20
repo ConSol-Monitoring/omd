@@ -10,7 +10,7 @@ next:
             - Prometheus update to 2.18.1
             - Alertmanager update to 0.20.0
             - add mod_prometheus_status apache module
-          - Thruk: update to 2.34
+          - Thruk: update to 2.34-2
           - LMD: Update 1.8.1
           - Gearman:
             - Mod-Gearman update 3.3.0
