@@ -4,7 +4,7 @@ next 4.x:
           - Grafana update to 7.0.0
             - grafana-loki update to 1.5.0
 
-next:
+3.30     May 20 2020
           - OMD:
             - add build support for Debian 11
           - Grafana update to 6.7.3
