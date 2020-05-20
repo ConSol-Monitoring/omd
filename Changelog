@@ -1,6 +1,6 @@
 This file documents the revision history for the Open Monitoring Distribution (Labs Edition)
 
-next:
+3.30     May 20 2020
           - OMD:
             - add build support for Debian 11
           - Grafana update to 6.7.3
