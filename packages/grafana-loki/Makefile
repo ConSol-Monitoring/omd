@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 NAME       = grafana-loki
-VERSION    = 1.4.1
+VERSION    = 1.5.0
 DIR        = loki-$(VERSION)
 SRC        = $(DIR).tar.gz
 GOPKG      = 1.14
@@ -42,6 +42,9 @@ package: clean
 	    cd loki-$(VERSION) && \
 		make clean
 	cp $(DIR)/cmd/loki/loki-local-config.yaml skel/etc/loki/loki.yaml
-	sed -e 's=/tmp/loki/=var/loki/=g' -i skel/etc/loki/loki.yaml
+	sed \
+		-e 's=/tmp/loki/=var/loki/=g' \
+		-e 's/http_listen_port: 3100/http_listen_port: ###CONFIG_LOKI_HTTP_PORT###/g' \
+		-i skel/etc/loki/loki.yaml
 	tar zcf $(SRC) loki-$(VERSION)
 	$(MAKE) clean
