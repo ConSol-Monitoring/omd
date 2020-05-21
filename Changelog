@@ -1,5 +1,9 @@
 This file documents the revision history for the Open Monitoring Distribution (Labs Edition)
 
+next 4.x:
+          - Grafana update to 7.0.0
+            - grafana-loki update to 1.5.0
+
 next:
           - OMD:
             - add build support for Debian 11
