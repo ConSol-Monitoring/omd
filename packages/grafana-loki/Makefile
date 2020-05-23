@@ -15,7 +15,10 @@ build:
 	tar zxf $(SRC)
 	$(GOENV) && \
 		cd $(DIR) && \
-		make loki promtail logcli chunks-inspect
+		make loki promtail logcli
+	$(GOENV) && \
+		cd $(DIR)/cmd/chunks-inspect/ && \
+		go build
 
 install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/bin
