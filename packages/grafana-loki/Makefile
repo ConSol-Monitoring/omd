@@ -49,7 +49,7 @@ package: clean
 		-e 's=/tmp/loki/=var/loki/=g' \
 		-e 's/http_listen_port: 3100/http_listen_port: ###CONFIG_LOKI_HTTP_PORT###/g' \
 		-e 's/retention_deletes_enabled: false/retention_deletes_enabled: true/g' \
-		-e 's/retention_period: 0s/retention_period: 720h/g' \
+		-e 's/retention_period: 0s/retention_period: 840h/g' \
 		-i skel/etc/loki/loki.yaml
 	tar zcf $(SRC) loki-$(VERSION)
 	$(MAKE) clean
