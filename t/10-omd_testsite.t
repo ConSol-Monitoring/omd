@@ -12,7 +12,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 364 );
+plan( tests => 368 );
 
 my $omd_bin = TestUtils::get_omd_bin();
 
@@ -117,6 +117,7 @@ my $tests = [
   { cmd => "/bin/sh -c \"echo '# test newline in profile' >> /omd/sites/$site/.profile\""},
   { cmd => "/bin/sh -c \"rm -rf /omd/sites/$site/etc/rc.d/80-naemon\""},
   { cmd => "/bin/su - $site -c 'omd diff'", like => ['/Changed content .profile/', '/Deleted etc\/rc\.d/80\-naemon/'] },
+  { cmd => "/bin/su - $site -c 'omd -v diff .profile'", like => ['/test newline in profile/'] },
   { cmd => "/bin/su - $site -c 'omd reset .profile etc/rc.d/80-naemon'"  },
   { cmd => "/bin/su - $site -c 'omd reset etc/htpasswd'", like => '/^$/' },
   { cmd => "/bin/su - $site -c 'omd -v diff'", like => ['/^$/'] },
