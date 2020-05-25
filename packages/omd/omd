@@ -3260,8 +3260,8 @@ def main_update(args, options={}):
     if int(version_numeric(from_version)) != int(version_numeric(to_version)) and not opt_force and dialog_yesno(
             "*******        MAJOR UPDATE TO %s        ******\n"
             "You are going to update the site %s from version %s to version %s. "
-            "Please read the migration guide at: https://labs.consol.de/omd/migration_3.html "
-            "and ensure you have a backup. You have been warned." % (to_version, g_sitename, from_version, to_version),
+            "Please read the migration guide at: https://labs.consol.de/omd/migration_%s.html "
+            "and ensure you have a backup. You have been warned." % (to_version, g_sitename, from_version, to_version, to_version[:1]),
             "Abort", "Continue"):
         bail_out("Aborted.")
 
