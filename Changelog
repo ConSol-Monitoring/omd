@@ -3,6 +3,8 @@ This file documents the revision history for the Open Monitoring Distribution (L
 next 4.x:
           - Grafana update to 7.0.0
             - grafana-loki update to 1.5.0
+          - Gearman:
+            - Gearman-Proxy update 2.07
 
 3.30     May 20 2020
           - OMD:
