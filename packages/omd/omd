@@ -3181,7 +3181,9 @@ def print_diff(rel_path, source_path, target_path, source_version, source_perms,
                     os.system("%s %s %s" % (diff_binary, target_file, skel_tmp_file))
                     os.remove(skel_tmp_file)
                 else:
-                    os.popen("bash -c \"%s -u <(cat) '%s'\"" % (diff, target_file), "w").write(source_content)
+                    process = subprocess.Popen([diff, '-u', '-', file2], stdin=subprocess.PIPE)
+                    process.stdin.write(source_content)
+                    process.stdin.close()
             elif status == 'p':
                 sys.stdout.write("    %s %s %s\n" % (source_perm, arrow, target_perm))
             elif 't' in status:
