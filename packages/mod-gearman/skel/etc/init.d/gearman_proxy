@@ -36,18 +36,32 @@ if [ "$USERID" -eq 0 ]; then
   chown $USER: $(dirname $PIDFILE)
 fi
 
+get_status() {
+    pid=$( cat $PIDFILE 2>/dev/null )
+    if [ -n "$pid" ]; then
+        if ps -p $pid > /dev/null 2>&1 ; then
+            echo "$NAME is running with pid $pid"
+            return 0;
+        fi
+    fi
+    echo "$NAME is not running"
+    return 1;
+}
+
 case "$1" in
     start)
         echo -n "Starting $NAME..."
-        if [ ! -f $PIDFILE ]; then
-            $PROXY --log=$LOGFILE --pid=$PIDFILE --config=$CONFIGFILE --config=$CONFIGFOLDER &
-            if [ $? -eq 0 ]; then
-                echo "OK"
-            else
-                echo "failed"
-            fi
+        if get_status > /dev/null ; then
+            echo "failed"
+            echo "$NAME already running"
+            exit 0;
+        fi
+
+        $PROXY --log=$LOGFILE --pid=$PIDFILE --config=$CONFIGFILE --config=$CONFIGFOLDER &
+        if [ $? -eq 0 ]; then
+            echo "OK"
         else
-            echo "Already running"
+            echo "failed"
         fi
         ;;
     stop)
@@ -68,16 +82,8 @@ case "$1" in
         fi
         ;;
     status)
-        pid=`cat $PIDFILE 2>/dev/null`
-        if [ "$pid" != "" ]; then
-            ps -p $pid > /dev/null 2>&1
-            if [ $? -eq 0 ]; then
-                echo "$NAME is running with pid $pid"
-                exit 0;
-            fi
-        fi
-        echo "$NAME is not running"
-        exit 1;
+        get_status;
+        exit $?;
     ;;
     reload)
         pid=`cat $PIDFILE 2>/dev/null`
