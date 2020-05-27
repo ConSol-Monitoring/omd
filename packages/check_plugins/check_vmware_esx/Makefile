@@ -1,7 +1,7 @@
 include ../../../Makefile.omd
 
 NAME        = check_vmware_esx
-VERSION     = master
+VERSION     = consol
 DIR         = $(NAME)-$(VERSION)
 SRC         = $(DIR).tar.gz
 
@@ -25,4 +25,4 @@ clean:
 	rm -rf $(DIR)
 
 update:
-	wget "https://github.com/BaldMansMojo/check_vmware_esx/archive/master.tar.gz" -O check_vmware_esx-master.tar.gz
+	wget "https://github.com/ConSol/check_vmware_esx/archive/consol.tar.gz" -O check_vmware_esx-consol.tar.gz
