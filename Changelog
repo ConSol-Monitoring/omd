@@ -4,6 +4,7 @@ next 4.x:
           - Grafana update to 7.0.1
             - grafana-loki update to 1.5.0
           - Gearman:
+            - Gearmand: update 1.1.19.1
             - Gearman-Proxy update 2.07
 
 3.30     May 20 2020
