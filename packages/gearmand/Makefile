@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 NAME     = gearmand
-VERSION  = 1.1.19
+VERSION  = 1.1.19.1
 DIR      = gearmand-$(VERSION)
 SHELL    = /bin/bash
 
