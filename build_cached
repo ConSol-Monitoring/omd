@@ -63,11 +63,19 @@ replace_strings_in_ascii_file() {
 calc_hashsum() {
     DIR="$1"
     MD5=$(cd "$DIR" && find . -type f -exec md5sum {} \; 2>&1 | sort | md5sum | awk '{ print $1 }')
-    # add go version to hash, we want to rebuild package if go source file has changed
+
+    # add dependencies and rebuild if any of the dependency has changed
+    DEPS=$(grep -P 'DEPENDS\ *=' $DIR/Makefile 2>/dev/null | awk -F = '{ print $2 }' | tr -d ' ' | sort -u)
+    # add go dependencies
     GOVERSION=$(grep -P 'GOPKG\ *=' $DIR/Makefile $DIR/*/Makefile 2>/dev/null | awk -F = '{ print $2 }' | tr -d ' ' | sort -u)
     if [ -n "$GOVERSION" ]; then
         for GO in $GOVERSION; do
-            MD5=$(echo packages/go-$GO/*.gz $MD5 | md5sum | awk '{ print $1 }')
+            DEPS="$DEPS go-$GO"
+        done
+    fi
+    if [ -n "$DEPS" ]; then
+        for DEP in $DEPS; do
+            MD5=$(echo $(md5sum packages/$DEP/*.gz packages/$DEP/Makefile packages/$DEP/patches/* 2>/dev/null) $MD5 | md5sum | awk '{ print $1 }')
         done
     fi
     echo "$MD5"

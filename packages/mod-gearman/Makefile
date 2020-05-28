@@ -7,6 +7,7 @@ DIR          = mod_gearman-$(VERSION)
 PROXY        = GearmanProxy
 PROXYVERSION = 2.07
 PROXYDIR     = $(PROXY)-$(PROXYVERSION)
+DEPENDS      = naemon gearmand
 
 .PHONY: skel
 
