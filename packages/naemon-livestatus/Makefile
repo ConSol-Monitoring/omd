@@ -1,8 +1,9 @@
 include ../../Makefile.omd
 
-NAME = naemon-livestatus
+NAME    = naemon-livestatus
 VERSION = 1.2.0
-DIR = $(NAME)-$(VERSION)
+DIR     = $(NAME)-$(VERSION)
+DEPENDS = naemon
 
 CONFIGUREOPTS = \
     --prefix=$(OMD_ROOT)
