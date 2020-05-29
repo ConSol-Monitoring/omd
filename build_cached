@@ -5,7 +5,7 @@ SRC=$2
 CACHESUBDIR=$3
 
 # skip caching if cache folder is not set or does not exist or omd version length is too small, which would be error prone
-if [ "x$BUILD_CACHE" = "x" ] || ! test -d $BUILD_CACHE || [ ${#OMD_VERSION} -lt 5 ]; then
+if [ "x$BUILD_CACHE" = "x" ] || ! test -d $BUILD_CACHE/. || [ ${#OMD_VERSION} -lt 5 ]; then
     $MAKE -C "$SRC" build
     exit $?
 fi
