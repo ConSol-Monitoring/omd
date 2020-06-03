@@ -5,6 +5,7 @@ next 4.x:
 
 next:
           - Grafana
+            - Grafana update to 6.7.4
             - grafana-loki update to 1.5.0
           - Gearman:
             - Gearmand: update 1.1.19.1
