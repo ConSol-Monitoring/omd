@@ -1,6 +1,6 @@
 include ../../Makefile.omd
 
-SAMPLICATOR=samplicator-f4ba263
+SAMPLICATOR=samplicator-4230b82
 
 build:
 	tar xvzf $(SAMPLICATOR).tar.gz
