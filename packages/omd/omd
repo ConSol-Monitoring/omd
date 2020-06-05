@@ -33,7 +33,7 @@ import random
 import string
 from subprocess import *
 
-OMD_VERSION = "4.00-labs-edition"
+OMD_VERSION = ""4.00-labs-edition""
 
 # Some global variables
 opt_verbose     = False
@@ -3968,9 +3968,9 @@ class PackageManagerDEB(PackageManager):
         if p.wait() != 0:
             bail_out("Failed to find packages:\n%s" % output)
 
-        for line in output.split("\n"):
-            if line.endswith(": %s" % real_path):
-                return line.split(": ", 1)[0].split(", ")
+        for line in output.split(b"\n"):
+            if line.endswith(b": %s" % real_path.encode("UTF-8")):
+                return line.split(b": ", 1)[0].split(b", ")
 
         return []
 
@@ -3994,7 +3994,7 @@ class PackageManagerRPM(PackageManager):
         elif p.wait() != 0:
             bail_out("Failed to find packages:\n%s" % stderr)
 
-        return output.strip().split("\n")
+        return output.strip().split(b"\n")
 
 
 exclude_options = [
