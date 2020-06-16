@@ -9,6 +9,7 @@ export LD_LIBRARY_PATH=$OMD_ROOT/local/lib:$OMD_ROOT/lib
 export PERL5LIB="$OMD_ROOT/local/lib/perl5/lib/perl5:$OMD_ROOT/lib/perl5/lib/perl5:$PERL5LIB"
 export PATH="$OMD_ROOT/lib/perl5/bin:$PATH"
 export MODULEBUILDRC="$OMD_ROOT/.modulebuildrc"
+export PERL_MB_OPT="--install_base \"$OMD_ROOT/local/lib/perl5\""
 export PERL_MM_OPT=INSTALL_BASE="$OMD_ROOT/local/lib/perl5/"
 export MANPATH="$OMD_ROOT/share/man:$MANPATH"
 export PYTHONPATH="$OMD_ROOT/lib/python:$OMD_ROOT/local/lib/python"
