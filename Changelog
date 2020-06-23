@@ -1,6 +1,11 @@
 This file documents the revision history for the Open Monitoring Distribution (Labs Edition)
 
 next 4.x:
+          - OMD:
+            - add build support for sles12sp4
+            - add build support for ubuntu20.04
+            - add build support for fedora31
+            - add build support for fedora32
           - Grafana update to 7.0.3
 
 next:
