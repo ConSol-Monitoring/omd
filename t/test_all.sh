@@ -31,23 +31,17 @@ if [ ! -z "$OMD_PACKAGE" ]; then
 
     # Debian / Ubuntu
     if [ -x /usr/bin/apt-get  ]; then
-        VERSION=`dpkg-deb -W --showformat='${Package}\n' $OMD_PACKAGE | sed -e 's/^omd-//'`
-        DEPENDS=`dpkg-deb -W --showformat='${Depends}\n' $OMD_PACKAGE | sed -e 's/debconf.*debconf-2.0,//' | sed -e 's/ [|] [|a-z -]*,/ /g' | tr -d ','`
-        apt-get -qq update && \
-        DEBIAN_FRONTEND=noninteractive apt-get -q -y --no-install-recommends install $DEPENDS && \
-        dpkg -i $OMD_PACKAGE && \
-        update-alternatives --set omd /omd/versions/$VERSION
+        apt-get -qq update
+        DEBIAN_FRONTEND=noninteractive apt-get -q -y --no-install-recommends install $OMD_PACKAGE
 
     # Centos
     elif [ -x /usr/bin/yum  ]; then
         # remove version if alread installed
-        /usr/bin/yum remove -y `rpm -qp $OMD_PACKAGE`
         /usr/bin/yum install -y --nogpgcheck $OMD_PACKAGE
 
     # Suse
     elif [ -x /usr/bin/zypper  ]; then
         # remove version if alread installed
-        /usr/bin/zypper --quiet --non-interactive remove `rpm -qp $OMD_PACKAGE`
         /usr/bin/zypper --quiet --non-interactive --no-gpg-checks install $OMD_PACKAGE
     fi
 
