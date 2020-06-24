@@ -1,0 +1,11 @@
+--- pnp4nagios-0.6.25/share/pnp/application/vendor/fpdf/fpdi_pdf_parser.php	2020-06-24 17:34:04.933123052 +0200
++++ pnp4nagios-0.6.25/share/pnp/application/vendor/fpdf/fpdi_pdf_parser.php	2020-06-24 17:35:48.105006264 +0200
+@@ -340,7 +340,7 @@
+     			return false;
+     		} else {
+                 $res = $this->_getPageRotation($obj[1][1]['/Parent']);
+-                if ($res[0] == PDF_TYPE_OBJECT)
++                if (is_array($res) && $res[0] == PDF_TYPE_OBJECT)
+                     return $res[1];
+                 return $res;
+     		}

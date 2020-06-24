@@ -1,0 +1,11 @@
+--- pnp4nagios-0.6.25/share/pnp/application/vendor/fpdf/fpdf.php	2020-06-24 17:20:23.489180830 +0200
++++ pnp4nagios-0.6.25/share/pnp/application/vendor/fpdf/fpdf.php	2020-06-24 17:21:21.355386573 +0200
+@@ -1055,7 +1055,7 @@
+ 	if(ini_get('mbstring.func_overload') & 2)
+ 		$this->Error('mbstring overloading must be disabled');
+ 	// Ensure runtime magic quotes are disabled
+-	if(get_magic_quotes_runtime())
++	if(version_compare(PHP_VERSION, '7.4.0', '<') && get_magic_quotes_runtime())
+ 		@set_magic_quotes_runtime(0);
+ }
+ 
