@@ -10,12 +10,14 @@ if [ "x$BUILD_CACHE" = "x" ] || ! test -d $BUILD_CACHE/. || [ ${#OMD_VERSION} -l
     exit $?
 fi
 
+XXD="xxd -g 0 -u -ps -c 256"
+
 replace_strings_in_binary() {
     local FILE="$1"
     local PATTERN="$2"
     local REPLACEMENT="$3"
 
-    xxd -p -u ${FILE} | tr -d '\n' > ${FILE}.hex
+    $XXD ${FILE} | tr -d '\n' > ${FILE}.hex
 
     # Find all unique strings in FILE that contain the pattern
     strings --all ${FILE} | grep ${PATTERN} | sort -u -r | \
@@ -26,8 +28,8 @@ replace_strings_in_binary() {
         # newlines will not be printed from "strings --all" so try to replace null byte termined strings and newline + null byte
         for ENDING in 00 0A00; do
             # Create null terminated ASCII HEX representations of the strings
-            OLD_STRING_HEX="$(echo -n ${OLD_STRING} | xxd -g 0 -u -ps -c 256 | tr -d '\n')$ENDING"
-            NEW_STRING_HEX="$(echo -n ${NEW_STRING} | xxd -g 0 -u -ps -c 256 | tr -d '\n')$ENDING"
+            OLD_STRING_HEX="$(echo -n ${OLD_STRING} | $XXD | tr -d '\n')$ENDING"
+            NEW_STRING_HEX="$(echo -n ${NEW_STRING} | $XXD | tr -d '\n')$ENDING"
 
             if [ ${#NEW_STRING_HEX} -le ${#OLD_STRING_HEX} ] ; then
                 # Pad the replacement string with null terminations so the length matches the original string
@@ -42,9 +44,9 @@ replace_strings_in_binary() {
         done
     done
 
-    xxd -p -r ${FILE}.hex > ${FILE}.bin
+    $XXD -r ${FILE}.hex ${FILE}.bin
     chmod --reference ${FILE} ${FILE}.bin
-    touch -r ${FILE} ${FILE}.tmp2
+    touch -r ${FILE} ${FILE}.bin
     mv ${FILE}.bin ${FILE}
     rm ${FILE}.hex
 }
