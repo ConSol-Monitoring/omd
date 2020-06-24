@@ -18,6 +18,7 @@ use File::Temp qw/ tempfile /;
 use File::Copy qw/ cp /;
 use File::Basename;
 use Test::Cmd;
+use Encode qw/encode_utf8/;
 
 if($> != 0) {
     plan( skip_all => "creating testsites requires root permission" );
@@ -114,7 +115,7 @@ sub test_command {
     my $return = 1;
 
     # run the command
-    isnt($test->{'cmd'}, undef, "running cmd: ".$test->{'cmd'}) or $return = 0;
+    isnt($test->{'cmd'}, undef, "running cmd: ".encode_utf8($test->{'cmd'})) or $return = 0;
 
     my($prg,$arg) = split(/\s+/, $test->{'cmd'}, 2);
     my $t = Test::Cmd->new(prog => $prg, workdir => '') or die($!);
@@ -1006,11 +1007,11 @@ sub _tail_apache_logs {
 sub restart_system_apache {
     my($action) = @_;
     $action = "reload" unless $action;
-    my $name  = TestUtils::config('APACHE_INIT_NAME');
-    my $init  = TestUtils::config('INIT_CMD');
-    my $cmd   = $init;
-    $cmd      =~ s/\Q%(name)s\E/$name/mx;
-    $cmd      =~ s/\Q%(action)s\E/$action/mx;
+    my $name = TestUtils::config('APACHE_INIT_NAME');
+    my $init = TestUtils::config('INIT_CMD');
+    my $cmd  = $init;
+    $cmd     =~ s/\Q%(name)s\E/$name/mx;
+    $cmd     =~ s/\Q%(action)s\E/$action/mx;
     TestUtils::test_command({ cmd => $cmd });
 }
 
