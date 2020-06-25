@@ -4,7 +4,7 @@ NAME       = victoriametrics
 PWD        = $(shell pwd)
 
 #for binary downloads
-VERSION    = v1.34.7
+VERSION    = v1.37.2
 # url defined in get_victoriametrics
 
 # for vmctl build
