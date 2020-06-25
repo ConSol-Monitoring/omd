@@ -13,6 +13,7 @@ next:
             - Grafana update to 6.7.4
             - grafana-loki update to 1.5.0
           - Gearman:
+            - Mod-Gearman update 3.3.1
             - Gearmand: update 1.1.19.1
             - Gearman-Proxy update 2.07
 
