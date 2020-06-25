@@ -46,7 +46,6 @@ replace_strings_in_binary() {
 
     $XXD -r ${FILE}.hex ${FILE}.bin
     chmod --reference ${FILE} ${FILE}.bin
-    touch -r ${FILE} ${FILE}.bin
     mv ${FILE}.bin ${FILE}
     rm ${FILE}.hex
 }
@@ -58,7 +57,6 @@ replace_strings_in_ascii_file() {
 
     sed -e "s%${PATTERN}%${REPLACEMENT}%g" ${FILE} > ${FILE}.tmp
     chmod --reference ${FILE} ${FILE}.tmp
-    touch -r ${FILE} ${FILE}.tmp
     mv ${FILE}.tmp ${FILE}
 }
 
@@ -131,6 +129,13 @@ if [ "x$CACHED_FILE" != "x" ] && test -s "$CACHED_FILE"; then
             echo "ERROR: replace did not work, files $MISSED still contains old version."
             exit 1
         fi
+        # update timestamps, so make does not rebuild everything
+        touch .
+        find "$SRC/" | \
+            while read FILE; do
+                touch -h -c -r . $FILE
+            done
+
         exit 0
     else
         echo "cannot use $CACHED_FILE, version string $OMD_VERSION longer than $OLD_VERSION"
