@@ -347,3 +347,15 @@ version:
 
 test:
 	t/test_all.sh
+
+timedtest:
+	for file in $$(ls -1 t/*.t); do \
+		printf "%-60s" $$file; \
+		output=$$(/usr/bin/time -f %e ./t/test_all.sh $$file 2>&1); \
+		if [ $$? != 0 ]; then \
+			printf "% 8s \n" "FAILED"; \
+		else \
+			time=$$(echo "$$output" | tail -n1); \
+			printf "% 8ss\n" $$time; \
+		fi; \
+	done
