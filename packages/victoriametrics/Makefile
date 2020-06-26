@@ -4,12 +4,12 @@ NAME       = victoriametrics
 PWD        = $(shell pwd)
 
 #for binary downloads
-VERSION    = v1.37.2
+VERSION    = v1.37.3
 # url defined in get_victoriametrics
 
 # for vmctl build
-# GIT_TAG: TODO: still set manually for new master version in git repo main.go! no release/version Branches
-GIT_TAG     = 0.0.2
+# GIT_TAG: TODO: still set manually for new master version in git repo main.go! no release/version Branches, and adapation in main.go!
+GIT_TAG     = 0.0.2-20200626
 SRC         = vmctl-$(GIT_TAG).tar.gz
 GOPKG       = 1.14
 GOVERSION   = $(shell grep ^VERSION ../go-${GOPKG}/Makefile | awk '{ print $$3 }')
