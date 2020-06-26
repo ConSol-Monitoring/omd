@@ -350,6 +350,7 @@ sub set_cookie {
 =cut
 sub remove_test_site {
     my $site = shift;
+    `/usr/bin/crontab -u $site -r`; # remove crontab first, so no new processes get started
     # kill all processes, sometimes checks are still running and prevent us from removing the site
     # sometimes systemd is still running:
     # ps: UID        PID  PPID  C STIME TTY          TIME CMD
