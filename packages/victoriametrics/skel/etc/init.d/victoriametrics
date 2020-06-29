@@ -126,7 +126,7 @@ BASE_OPTIONS="-httpListenAddr=$CONFIG_VICTORIAMETRICS_TCP_ADDR:$CONFIG_VICTORIAM
 # Note: via envflag.enable get...AuthKey fron emv varialble!
 # -httpAuth.password ${httpAuth_password} -httpAuth.username ${httpAuth_username} 
 export httpAuth_password httpAuth_username snapshotAuthKey deleteAuthKey
-CONFIG_OPTIONS="-envflag.enable -search.maxLookback ${search_maxLookback:-5m} -retentionPeriod ${retentionPeriod:-1} -loggerLevel INFO -loggerOutput stdout -influxSkipSingleField -selfScrapeInterval ${selfScrapeInterval:-30s} -search.maxPointsPerTimeseries ${search_maxPointsPerTimeseries:-1000000000} -dedup.minScrapeInterval ${dedup_minScrapeInterval:-30s}"
+CONFIG_OPTIONS="-envflag.enable -search.maxLookback ${search_maxLookback:-5m} -retentionPeriod ${retentionPeriod:-1} -loggerLevel INFO -loggerOutput stdout -influxSkipSingleField -selfScrapeInterval ${selfScrapeInterval:-30s} -search.maxPointsPerTimeseries ${search_maxPointsPerTimeseries:-1000000000} -search.maxUniqueTimeseries ${search_maxUniqueTimeseries:-1000000000} -search.minStalenessInterval ${search_minStalenessInterval:-5m} -dedup.minScrapeInterval ${dedup_minScrapeInterval:-30s}"
 
 if [ "${CONFIG_VICTORIAMETRICS_MODE}" == "ssl" ] ; then
   if [  -z "$tlsCertFile" ] ; then echo "tlsCertFile missing"; exit 8; fi
