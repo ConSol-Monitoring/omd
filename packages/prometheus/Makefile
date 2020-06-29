@@ -3,7 +3,7 @@ include ../../Makefile.omd
 .PHONY: skel
 
 NAME       = prometheus
-VERSION    = 2.18.1
+VERSION    = 2.19.2
 BRANCH     = master
 SRC        = $(NAME)-$(VERSION).tar.gz
 GOPKG      = 1.14
@@ -60,5 +60,6 @@ package: clean
 		git clone --depth=1 --branch "v$(VERSION)" https://github.com/prometheus/$(NAME).git && \
 		cd $(NAME) && make build && \
 		rm prometheus promtool tsdb/tsdb
+	rm -f prometheus-*.tar.gz
 	tar zcf $(SRC) --exclude=.git $(GOFOLDER)/src/
 

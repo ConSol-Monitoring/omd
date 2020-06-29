@@ -8,6 +8,7 @@ next 4.x:
             - add build support for fedora32
           - Grafana update to 7.0.4
           - InfluxDB: update to 1.8.0
+          - Prometheus update to 2.19.2
 
 next:
           - Grafana
