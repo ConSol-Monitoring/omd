@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 NAME       = grafana-thruk-datasource
-VERSION    = master
+VERSION    = 1.0.4
 SRC        = $(NAME)-$(VERSION).tar.gz
 
 .PHONY: skel
@@ -19,4 +19,4 @@ clean:
 
 upstream:
 	rm -f $(SRC)
-	wget https://github.com/sni/grafana-thruk-datasource/archive/master.tar.gz -O $(SRC)
+	wget https://github.com/sni/grafana-thruk-datasource/archive/v$(VERSION).tar.gz -O $(SRC)
