@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 NAME       = grafana-pnp-datasource
-VERSION    = master
+VERSION    = 1.0.6
 SRC        = $(NAME)-$(VERSION).tar.gz
 APINAME    = pnp-metrics-api
 APIVERSION = master
@@ -26,6 +26,6 @@ clean:
 
 upstream:
 	rm -f $(SRC)
-	wget https://github.com/sni/grafana-pnp-datasource/archive/master.tar.gz -O $(SRC)
+	wget https://github.com/sni/grafana-pnp-datasource/archive/v$(VERSION).tar.gz -O $(SRC)
 	rm -f $(APISRC)
 	wget https://github.com/sni/pnp-metrics-api/archive/master.tar.gz -O $(APISRC)
