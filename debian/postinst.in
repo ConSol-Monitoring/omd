@@ -38,6 +38,27 @@ setperm() {
     fi
 }
 
+setcap() {
+    local user="$1"
+    local group="$2"
+    local mode="$3"
+    local cap="$4"
+    local file="$5"
+
+    if command -v setcap > /dev/null; then
+        if ! setcap "$cap" "$file"; then
+            echo "Setcap failed on $file, falling back to setuid" >&2
+            return 1
+        fi
+    else
+        echo "Setcap is not installed, falling back to setuid" >&2
+        return 1
+    fi
+
+    setperm "$user" "$group" "$mode" "$file"
+    return 0
+}
+
 case "$1" in
   configure)
     ln -sfn /opt/omd /omd
@@ -57,8 +78,13 @@ case "$1" in
 
     PLUGPERM="4754"
     for PLUGIN in $SUID_PLUGINS; do
-      setperm root omd $PLUGPERM $MONITORING_PLUGIN_PATH/$PLUGIN
+      setcap root omd 0754 cap_net_raw+ep "$MONITORING_PLUGIN_PATH/$PLUGIN" ||
+      setperm root omd $PLUGPERM "$MONITORING_PLUGIN_PATH/$PLUGIN"
     done
+
+    BLACKBOX_EXPORTER=/omd/versions/###OMD_VERSION###/bin/blackbox_exporter
+    setcap root omd 0754 cap_net_raw+ep "$BLACKBOX_EXPORTER" ||
+    setperm root omd $PLUGPERM "$BLACKBOX_EXPORTER"
 
     db_stop
     # -- create apache config include if not exist
