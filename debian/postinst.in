@@ -38,12 +38,14 @@ setperm() {
     fi
 }
 
-setcap() {
+setcapabilities() {
     local user="$1"
     local group="$2"
     local mode="$3"
     local cap="$4"
     local file="$5"
+
+    setperm "$user" "$group" "$mode" "$file"
 
     if command -v setcap > /dev/null; then
         if ! setcap "$cap" "$file"; then
@@ -55,7 +57,6 @@ setcap() {
         return 1
     fi
 
-    setperm "$user" "$group" "$mode" "$file"
     return 0
 }
 
@@ -78,12 +79,14 @@ case "$1" in
 
     PLUGPERM="4754"
     for PLUGIN in $SUID_PLUGINS; do
-      setcap root omd 0754 cap_net_raw+ep "$MONITORING_PLUGIN_PATH/$PLUGIN" ||
+      cap=${PLUGIN#*;}
+      PLUGIN=${PLUGIN%;*}
+      setcapabilities root omd 0754 "$cap" "$MONITORING_PLUGIN_PATH/$PLUGIN" ||
       setperm root omd $PLUGPERM "$MONITORING_PLUGIN_PATH/$PLUGIN"
     done
 
-    BLACKBOX_EXPORTER=/omd/versions/###OMD_VERSION###/bin/blackbox_exporter
-    setcap root omd 0754 cap_net_raw+ep "$BLACKBOX_EXPORTER" ||
+    BLACKBOX_EXPORTER=/omd/versions/4.01.20200630-labs-edition/bin/blackbox_exporter
+    setcapabilities root omd 0754 cap_net_raw+ep "$BLACKBOX_EXPORTER" ||
     setperm root omd $PLUGPERM "$BLACKBOX_EXPORTER"
 
     db_stop
