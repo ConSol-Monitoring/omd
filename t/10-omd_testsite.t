@@ -140,8 +140,7 @@ my $tests = [
 
 # run tests
 for my $test (@{$tests}) {
-    #TestUtils::test_command($test) or TestUtils::bail_out_clean("no further testing without working omd");
-    TestUtils::test_command($test) or BAIL_OUT("failed");
+    TestUtils::test_command($test) || TestUtils::bail_out_clean("no further testing without working omd", $test);
 }
 
 # bulk config change I
