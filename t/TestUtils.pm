@@ -119,6 +119,7 @@ sub test_command {
 
     my($prg,$arg) = split(/\s+/, $test->{'cmd'}, 2);
     my $t = Test::Cmd->new(prog => $prg, workdir => '') or die($!);
+    $test->{'test_cmd'} = $t;
 
     # wait for something?
     if(defined $test->{'waitfor'}) {
@@ -175,7 +176,7 @@ sub test_command {
     # exit code?
     $test->{'exit'} = 0 unless exists $test->{'exit'};
     if(defined $test->{'exit'} and $test->{'exit'} != -1) {
-        ok($rc == $test->{'exit'}, "exit code: ".$rc." == ".$test->{'exit'}) or do { _diag_cmd($test, $t); $return = 0 };
+        ok($rc == $test->{'exit'}, "exit code: ".$rc." == ".$test->{'exit'}) or do { _diag_cmd($test); $return = 0 };
     }
 
     # matches on stdout?
@@ -710,12 +711,17 @@ sub prepare_obj_config {
 
 =cut
 sub bail_out_clean {
-    my $msg = shift;
+    my($msg, $test) = @_;
+
+    _diag_cmd($test) if $test;
 
     carp("cleaning up before bailout");
 
     my $omd_bin = get_omd_bin();
     for my $site (qw/testsite testsite2 testsite3/) {
+        next unless -d "/omd/sites/$site/.";
+        diag("%> ps -fu $site");
+        diag(`ps -fu $site 2>&1`);
         test_command({ cmd => $omd_bin." rm $site", stdin => "yes\n", 'exit' => undef, errlike => undef });
     }
 
@@ -904,8 +910,8 @@ sub _clean_stderr {
 
 =cut
 sub _diag_cmd {
-    my $test = shift;
-    my $cmd  = shift;
+    my($test) = @_;
+    my $cmd = $test->{'test_cmd'};
     my $stdout = $cmd->stdout || '';
     my $stderr = $cmd->stderr || '';
     diag("\ncmd: '".$test->{'cmd'}."' failed\n");
@@ -926,6 +932,10 @@ sub _diag_cmd {
         _tail_apache_logs();
     }
     if( $stderr =~ m/User '(\w+)' still logged in or running processes/ ) {
+        my $site = $1;
+        diag("ps: ".`ps -fu $site`) if $site;
+    }
+    if( $stderr =~ m/while there are processes owned by ([^.]+)./ ) {
         my $site = $1;
         diag("ps: ".`ps -fu $site`) if $site;
     }
