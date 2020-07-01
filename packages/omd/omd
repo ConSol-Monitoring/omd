@@ -183,7 +183,7 @@ patch_supports_merge = None
 def patch_has_merge():
     # check wether our version of patch supports the option '--merge'
     global patch_supports_merge
-    if patch_supports_merge == None:
+    if patch_supports_merge is None:
         patch_supports_merge = (0 == os.system("true | PATH=/omd/versions/default/bin:$PATH patch --merge >/dev/null 2>&1"))
         if not patch_supports_merge:
             sys.stdout.write("Your version of patch does not support --merge.\n")
@@ -489,7 +489,7 @@ def user_verify(name, allow_populated=False):
         bail_out(tty_error + ": home directory (%s) is not owned by user %s and group %s" % ( site_dir(name), name, name ) )
 
     group = group_by_id(user.pw_gid)
-    if group == None or group.gr_name != name:
+    if group is None or group.gr_name != name:
         bail_out(tty_error + ": primary group for siteuser must be %s" % name )
 
     if not user_has_group(g_info["APACHE_USER"], name):
@@ -734,7 +734,7 @@ def create_skeleton_file(skelbase, userbase, relpath, replacements):
 
     if not os.path.islink(skel_path):
         mode = g_skel_permissions.get(relpath)
-        if mode == None:
+        if mode is None:
             if os.path.isdir(skel_path):
                 mode = 0o755
             else:
@@ -2426,7 +2426,7 @@ def pipe_pager():
         return ""
 
 def call_scripts(phase, prefix=None):
-    if prefix == None:
+    if prefix is None:
         prefix = g_sitedir
     path = prefix + "/lib/omd/scripts/" + phase
     exited_ok = True
@@ -2594,7 +2594,7 @@ def main_sites(args, options={}):
             disabled = site_is_disabled(site)
             needs_update = site_needs_update(site)
             v = site_version(site)
-            if v == None:
+            if v is None:
                 v = "(none)"
                 tags.append("empty site dir")
             elif v == default_version():
@@ -3368,7 +3368,7 @@ def main_init_action(command, args, options={}):
     exit_states, processes = [], []
     for site in all_sites():
         v = site_version(site)
-        if v == None: # skip partially created sites
+        if v is None: # skip partially created sites
             continue
 
         if only_version and v != only_version:
@@ -4405,7 +4405,7 @@ check_site_user(site_must_exist)
 # That command must be run in the target version
 if g_sitename and site_must_exist and command != "update" and command != "restore":
     v = site_version(g_sitename)
-    if v == None: # Site has no homedirectory
+    if v is None: # Site has no homedirectory
         if command == "rm":
             sys.stdout.write("WARNING: This site has an empty home directory and is not\n"
                              "assigned to any OMD version. You are running version %s.\n" % OMD_VERSION)
