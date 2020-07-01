@@ -2721,7 +2721,7 @@ def main_init(args, options):
     welcome_message(admin_password)
 
 def init_site(config_settings = None, options=False):
-    apache_reload = "apache-reload" in options
+    apache_reload = options and "apache-reload" in options
 
     # Create symbolic link to version
     create_version_symlink(g_sitename, OMD_VERSION)
