@@ -5,9 +5,10 @@
 
 set -e
 
-MONITORING_PLUGIN_PATH="/omd/versions/###OMD_VERSION###/lib/monitoring-plugins"
-SUID_PLUGINS="check_icmp check_dhcp"
-PROGRAM_PATH="/omd/versions/###OMD_VERSION###/bin"
+OMD_ROOT="/omd/versions/###OMD_VERSION###"
+MONITORING_PLUGIN_PATH="$OMD_ROOT/lib/monitoring-plugins"
+SUID_PLUGINS="check_icmp;cap_net_raw+ep check_dhcp;cap_net_bind_service+ep"
+PROGRAM_PATH="$OMD_ROOT/bin"
 APACHE_OMD_CONF="/etc/apache2/conf.d/zzz_omd.conf"
 
 # Source debconf library.
@@ -65,11 +66,11 @@ case "$1" in
     ln -sfn /opt/omd /omd
     mkdir -p /etc/bash_completion.d
     update-alternatives --install /omd/versions/default \
-       omd /omd/versions/###OMD_VERSION### ###OMD_SERIAL### \
-       --slave /usr/bin/omd omd.bin /omd/versions/###OMD_VERSION###/bin/omd \
-       --slave /etc/bash_completion.d/omd omd.bash_completion /omd/versions/###OMD_VERSION###/lib/omd/omd_bash_completion \
+       omd "$OMD_ROOT" ###OMD_SERIAL### \
+       --slave /usr/bin/omd omd.bin $OMD_ROOT/bin/omd \
+       --slave /etc/bash_completion.d/omd omd.bash_completion "$OMD_ROOT/lib/omd/omd_bash_completion" \
        --slave /usr/share/man/man8/omd.8.gz omd.man8 \
-               /omd/versions/###OMD_VERSION###/share/man/man8/omd.8.gz
+               "$OMD_ROOT/share/man/man8/omd.8.gz"
 
     # -- looking for group nagios, create it, if not exist
     if ! getent group omd > /dev/null ; then
@@ -85,7 +86,7 @@ case "$1" in
       setperm root omd $PLUGPERM "$MONITORING_PLUGIN_PATH/$PLUGIN"
     done
 
-    BLACKBOX_EXPORTER=/omd/versions/4.01.20200630-labs-edition/bin/blackbox_exporter
+    BLACKBOX_EXPORTER="$OMD_ROOT/bin/blackbox_exporter"
     setcapabilities root omd 0754 cap_net_raw+ep "$BLACKBOX_EXPORTER" ||
     setperm root omd $PLUGPERM "$BLACKBOX_EXPORTER"
 
@@ -129,7 +130,7 @@ case "$1" in
     fi
 
     echo "New default version is ###OMD_VERSION###."
-    update-alternatives --set omd /omd/versions/###OMD_VERSION###
+    update-alternatives --set omd "$OMD_ROOT"
 
     ;;
 

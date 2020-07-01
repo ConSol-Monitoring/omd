@@ -64,7 +64,7 @@ find $RPM_BUILD_ROOT/opt/omd/versions/%{version}/lib/ -type f | grep -v waitmax 
 %files
 %defattr(-,root,root)
 /opt/omd
-%caps(cap_net_bind_service,cap_net_raw+ep) /opt/omd/versions/%{version}/lib/monitoring-plugins/check_dhcp
+%caps(cap_net_bind_service+ep) /opt/omd/versions/%{version}/lib/monitoring-plugins/check_dhcp
 %caps(cap_net_raw+ep) /opt/omd/versions/%{version}/lib/monitoring-plugins/check_icmp
 %caps(cap_net_raw+ep) /opt/omd/versions/%{version}/bin/blackbox_exporter
 
