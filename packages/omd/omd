@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import sys, os, shutil, pwd, grp, re, time, pprint, tty, termios, traceback
+import sys, os, shutil, pwd, grp, re, time, tty, termios, traceback
 import abc
 import fcntl
 import subprocess
@@ -619,7 +619,6 @@ def read_skel_permissions():
         bail_out("%s is missing or currupted." % file_path)
 
 def load_skel_permissions(version):
-    perms = {}
     file_path = "/omd/versions/%s/share/omd/skel.permissions" % version
     return load_skel_permissions_for_path(file_path)
 
@@ -760,7 +759,6 @@ def try_chown(filename, user):
             os.chown(filename, uid, gid)
         except Exception as e:
             sys.stderr.write("Cannot chown %s to %s: %s\n" % (filename, user, e))
-            pass
 
 
 def instantiate_skel(path):
@@ -1025,7 +1023,7 @@ def merge_update_file(relpath, old_version, new_version, skel_path = None):
     for hook_name in g_site_conf:
         replacements["###CONFIG_%s###" % hook_name] = g_site_conf[hook_name]
     user_path = g_sitedir + "/" + relpath
-    content = open(user_path, "rb").read()
+    open(user_path, "rb").read()
     permissions = os.stat(user_path).st_mode
 
     def try_merge():
@@ -1247,7 +1245,6 @@ def update_file(relpath, old_version, new_version, userdir, old_perms, old_skel 
 
     # Handle cases with missing files first. At least old or new are present,
     # or this function would never have been invoked.
-    fn = tty_bold + tty_bgblue + tty_white + relpath + tty_normal
     fn = tty_bold + relpath + tty_normal
 
     # 1) New version ships new skeleton file -> simply install
@@ -2150,8 +2147,6 @@ def config_configure():
     menu_choices = [ "Basic", "Web GUI", "Addons", "Distributed Monitoring" ]
 
     while True:
-        choices = []
-
         # Rebuild hook information (values possible changed)
         menu = {}
         for hook_name in hook_names:
@@ -3059,7 +3054,6 @@ def main_vimdiff(args, options={}):
 
 def main_reset(args, options={}):
     from_version  = site_version(g_sitename)
-    from_skelroot = "/omd/versions/%s/skel" % from_version
     sitedir = site_dir(g_sitename)
 
     if len(args) == 0:
@@ -3159,7 +3153,6 @@ def print_diff(rel_path, source_path, target_path, source_version, source_perms,
     if not changed:
         return
 
-    fn = tty_bold + tty_bgblue + tty_white + rel_path + tty_normal
     fn = tty_bold + rel_path + tty_normal
 
     def print_status(color, f, status, long_out):
@@ -3859,9 +3852,6 @@ def site_user_processes(site, exclude_current_and_parents):
 
 
 def main_cleanup(args, options=None):
-    if options is None:
-        options = {}
-
     package_manager = PackageManager.factory()
     if package_manager is None:
         bail_out("Command is not supported on this platform")

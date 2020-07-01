@@ -19,7 +19,6 @@ import os
 import sys
 import time
 import json
-import pprint
 from jinja2 import Template
 
 #-- Jinja2 template
