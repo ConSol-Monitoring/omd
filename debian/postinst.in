@@ -26,6 +26,10 @@ APACHE_OMD_CONF="/etc/apache2/conf.d/zzz_omd.conf"
 # for details, see http://www.debian.org/doc/debian-policy/ or
 # the debian-policy package
 
+running_on_debian() {
+    grep -q '^ID=debian' /etc/os-release
+}
+
 setperm() {
     local user="$1"
     local group="$2"
@@ -87,8 +91,15 @@ case "$1" in
     done
 
     BLACKBOX_EXPORTER="$OMD_ROOT/bin/blackbox_exporter"
-    setcapabilities root omd 0754 cap_net_raw+ep "$BLACKBOX_EXPORTER" ||
-    setperm root omd $PLUGPERM "$BLACKBOX_EXPORTER"
+    # something is utterly broken on debian systems
+    # compiling and running with cap_net_raw makes blackbox_exporter segfault
+    #
+    # blackbox_export[5628] vsyscall attempted with vsyscall=none ip:ffffffffff600000 cs:33 sp:7ffd7b312318 ...
+    # blackbox_export[5628]: segfault at ffffffffff600000 ip ffffffffff600000 sp 00007ffd7b312318 error 15
+    # Code: Bad RIP value.
+    if ! running_on_debian ; then
+        setcapabilities root omd 0754 cap_net_raw+ep "$BLACKBOX_EXPORTER" || true
+    fi
 
     db_stop
     # -- create apache config include if not exist
