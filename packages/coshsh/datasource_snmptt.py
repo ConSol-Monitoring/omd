@@ -206,10 +206,8 @@ class SNMPTT(coshsh.datasource.Datasource):
                                 'AUTHENTICATION': 0, # sucess or failed. you decide
                                 'CONFIGURATION CHANGE': 0, # same here
                                 'CHANGE': 0, # because only the last word matches
-                                'WARNING': 1,
                                 'MINOR': 1,
                                 'MAJOR': 2,
-                                'CRITICAL': 2,
                                 'FATAL': 2,
                                 'NON-RECOVERABLE': 2,
                                 # manually edited severities. The best you can do.
