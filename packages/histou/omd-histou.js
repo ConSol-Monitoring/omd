@@ -27,7 +27,8 @@ return function (callback) {
     jQuery('body').on('DOMNodeInserted', 'DIV.drop-popover', function (e) {
         var cssUrl = url+'lightbox/css/light.css'
         if (!cssLoaded) {
-            $('head').append('<link rel="stylesheet" href="'+url+'lightbox/css/light.css" type="text/css" />');
+            var link = $('<link type="text/css" rel="stylesheet" />').attr("href", cssUrl);
+            $('head').append(link);
             $.getScript(url+'lightbox/js/light.js', function(){});
             cssLoaded = true;
         }
