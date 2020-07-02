@@ -19,6 +19,7 @@ set -e
 # the debian-policy package
 
 APACHE_OMD_CONF="/etc/apache2/conf.d/zzz_omd.conf"
+SYSCTL_OMD_CONF="/etc/sysctl.d/01-omd.conf"
 OMD="omd-###OMD_VERSION###"
 
 case "$1" in
@@ -44,7 +45,8 @@ case "$1" in
             APACHE_OMD_CONF="/etc/apache2/conf-available/zzz_omd.conf"
           fi
 	  ! test -x /usr/sbin/a2disconf || a2disconf zzz_omd
-	  rm -f $APACHE_OMD_CONF
+	  rm -f "$APACHE_OMD_CONF"
+          rm -f "$SYSCTL_OMD_CONF"
       ls -1 /etc/apache2/sites-available/*default*.conf 2>/dev/null | \
         while read file; do
           if grep /omd/apache/ $file >/dev/null 2>&1; then

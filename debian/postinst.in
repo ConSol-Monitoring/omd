@@ -10,6 +10,7 @@ MONITORING_PLUGIN_PATH="$OMD_ROOT/lib/monitoring-plugins"
 SUID_PLUGINS="check_icmp;cap_net_raw+ep check_dhcp;cap_net_bind_service+ep"
 PROGRAM_PATH="$OMD_ROOT/bin"
 APACHE_OMD_CONF="/etc/apache2/conf.d/zzz_omd.conf"
+SYSCTL_OMD_CONF="/etc/sysctl.d/01-omd.conf"
 
 # Source debconf library.
 . /usr/share/debconf/confmodule
@@ -76,11 +77,13 @@ case "$1" in
        --slave /usr/share/man/man8/omd.8.gz omd.man8 \
                "$OMD_ROOT/share/man/man8/omd.8.gz"
 
-    # -- looking for group nagios, create it, if not exist
+    # -- looking for group omd, create it, if not exist
     if ! getent group omd > /dev/null ; then
       echo 'Adding system group omd' 1>&2
       addgroup --system --force-badname omd > /dev/null
     fi
+
+    GROUP_ID=$( getent group omd | awk -F: '{print $3}' )
 
     PLUGPERM="4754"
     for PLUGIN in $SUID_PLUGINS; do
@@ -99,6 +102,12 @@ case "$1" in
     # Code: Bad RIP value.
     if ! running_on_debian ; then
         setcapabilities root omd 0754 cap_net_raw+ep "$BLACKBOX_EXPORTER" || true
+    else
+        ping_group_range=$( sysctl -n net.ipv4.ping_group_range || true )
+        # if /etc/sysctl.d exists and the range is kernels default, then take this setting
+        if [ -d "$( dirname $SYSCTL_OMD_CONF )"  ] && [ "$(echo $ping_group_range)" = "1 0" ] ; then
+            printf '%s\n' "net.ipv4.ping_group_range = $GROUP_ID $GROUP_ID" > $SYSCTL_OMD_CONF
+        fi
     fi
 
     db_stop
