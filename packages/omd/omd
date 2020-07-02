@@ -3053,7 +3053,6 @@ def main_vimdiff(args, options={}):
         diff_list(from_skelroot, g_sitedir, from_version, arg, "vimdiff")
 
 def main_reset(args, options={}):
-    from_version  = site_version(g_sitename)
     sitedir = site_dir(g_sitename)
 
     if len(args) == 0:
