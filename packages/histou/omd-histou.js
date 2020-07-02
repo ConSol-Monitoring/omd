@@ -208,8 +208,8 @@ function clearUi()
         .row-control-inner removes the row controll button on the left
         .span12 removes the add new row button on the bottom
     */
-    divs = ['.panel-header','.navbar-static-top','.row-control-inner','.span12']
-    for (index = 0; index < divs.length; index++) {
+    var divs = ['.panel-header','.navbar-static-top','.row-control-inner','.span12']
+    for (var index = 0; index < divs.length; index++) {
         waitForDivAndDeleteIt(divs[index]);
     }
     function waitForDivAndDeleteIt(div)
