@@ -369,7 +369,7 @@ def ask_user_choices(title, message, choices):
 def find_processes_of_user(username):
     try:
         return os.popen("pgrep -u '%s'" % username).read().split()
-    except:
+    except Exception:
         return []
 
 def groupdel(groupname):
@@ -416,20 +416,20 @@ def userdel(name):
 def user_by_id(id):
     try:
         return pwd.getpwuid(id)
-    except:
+    except Exception:
         return None
 
 def user_id(name):
     try:
         return pwd.getpwnam(name).pw_uid
-    except:
+    except Exception:
         return False
 
 def user_exists(name):
     try:
         pwd.getpwnam(name)
         return True
-    except:
+    except Exception:
         return False
 
 def user_has_group(user, group):
@@ -441,7 +441,7 @@ def user_has_group(user, group):
         g = group_by_id(group_id(group))
         if user in g.gr_mem:
             return True;
-    except:
+    except Exception:
         return False
 
 
@@ -449,21 +449,21 @@ def group_exists(name):
     try:
         grp.getgrnam(name)
         return True
-    except:
+    except Exception:
         return False
 
 
 def group_by_id(id):
     try:
         return grp.getgrgid(id)
-    except:
+    except Exception:
         return None
 
 def group_id(name):
     try:
         g = grp.getgrnam(name)
         return g.gr_gid
-    except:
+    except Exception:
         return None
 
 def user_logged_in(name):
@@ -584,7 +584,7 @@ def site_version(sitename):
     try:
         version = os.readlink(version_link).split("/")[-1]
         return version
-    except:
+    except Exception:
         return None
 
 def start_site(sitename):
@@ -633,7 +633,7 @@ def load_skel_permissions_for_path(file_path):
             mode = int(perm, 8)
             perms[path] = mode
         return perms
-    except:
+    except Exception:
         return None
 
 def get_skel_permissions(version, perms, relpath, skel_path = None):
@@ -641,19 +641,19 @@ def get_skel_permissions(version, perms, relpath, skel_path = None):
         skel_path = "/omd/versions/%s/skel" % (version)
     try:
         return perms[relpath]
-    except:
+    except Exception:
         return get_file_permissions("%s/%s" % (skel_path, relpath))
 
 def get_file_permissions(path):
     try:
         return os.stat(path).st_mode & 0o07777
-    except:
+    except Exception:
         return 0
 
 def get_file_owner(path):
     try:
         return pwd.getpwuid(os.stat(path).st_uid)[0]
-    except:
+    except Exception:
         return None
 
 def create_version_symlink(sitename, version):
@@ -678,7 +678,7 @@ def file_owner_verify(path, user_id, group_id):
         s = os.stat(path)
         if s.st_uid != user_id or s.st_gid != group_id:
             return False
-    except:
+    except Exception:
         return False
     return True
 
@@ -771,7 +771,7 @@ def instantiate_skel(path):
         for hook_name in g_site_conf:
             replacements["###CONFIG_%s###" % hook_name] = g_site_conf[hook_name]
         return replace_tags(t, replacements)
-    except:
+    except Exception:
         return "" # e.g. due to permission error
 
 
@@ -1006,7 +1006,7 @@ def patch_template_file(src, dst, old, new):
         os.remove(dst + ".skel." + new)
         os.remove(dst + ".orig")
         os.remove(dst + ".rej")
-    except:
+    except Exception:
         pass
 
 # Try to merge changes from old->new version and
@@ -1035,7 +1035,7 @@ def merge_update_file(relpath, old_version, new_version, skel_path = None):
                 try:
                     skel_content = open(p, "rb").read()
                     break
-                except:
+                except Exception:
                     # Do not ask the user in non-interactive mode.
                     if opt_conflict in [ "abort", "install" ]:
                         bail_out("Skeleton file '%s' of version %s not readable." % (p, version))
@@ -1074,7 +1074,7 @@ def merge_update_file(relpath, old_version, new_version, skel_path = None):
                    "%s.rej" % user_path]:
             try:
                 os.remove(p)
-            except:
+            except Exception:
                 pass
 
     if try_merge() == 0:
@@ -1564,7 +1564,7 @@ def tmpfs_mounted(sitename):
             device, mp, fstype, options, dump, fsck = line.split()
             if mp == os.path.realpath(tmp) and fstype == 'tmpfs':
                 return True
-        except:
+        except Exception:
             continue
     return False
 
@@ -1687,7 +1687,7 @@ def init_scripts(sitename):
         scripts = os.listdir(rc_dir)
         scripts.sort()
         return rc_dir, scripts
-    except:
+    except Exception:
         return rc_dir, []
 
 def call_init_script(scriptpath, command):
@@ -1896,7 +1896,7 @@ def load_config_hooks():
                 # only load configuration hooks
                 if hook.get("menu", None) != None:
                     g_config_hooks[hook_name] = hook
-        except:
+        except Exception:
             pass
     create_config_environment()
 
@@ -1940,7 +1940,7 @@ def load_hook_choices(hook):
                 val = val.strip()
                 descr = descr.strip()
                 choices.append( (val, descr) )
-        except:
+        except Exception:
             bail_out("Invalid output of hook: %s" % choicestxt)
 
     hook["choices"] = choices
@@ -2361,7 +2361,7 @@ def set_environment():
 def hostname():
     try:
         return os.popen("hostname").read().strip()
-    except:
+    except Exception:
         return "localhost"
 
 def create_apache_hook(sitename):
@@ -2550,7 +2550,7 @@ def main_version(args, options={}):
     else:
         try:
             version += (", Addons: " + ", ".join(os.listdir("/omd/versions/%s/addon/" % version)))
-        except:
+        except Exception:
             pass
         version += (", Python version " + ".".join(str(x) for x in sys.version_info[:3]))
         sys.stdout.write("OMD - Open Monitoring Distribution Version %s\n" % version)
@@ -2561,7 +2561,7 @@ def main_versions(args, options={}):
         addons=""
         try:
             addons = (", addons: " + ", ".join(os.listdir("/omd/versions/%s/addon/" % v)))
-        except:
+        except Exception:
             pass
         if v == default_version() and not "bare" in options:
             sys.stdout.write("%s (default%s)\n" % (v, addons))
@@ -2605,7 +2605,7 @@ def main_sites(args, options={}):
                 tags.append(tty_bold + tty_red + "uninstalled" + tty_normal)
             try:
                 tags.append("addons: " + ", ".join(os.listdir("/omd/versions/%s/addon/" % v)))
-            except:
+            except Exception:
                 pass
             sys.stdout.write("%-16s %-16s %s " % (site, v, ", ".join(tags)))
             sys.stdout.write("\n")
@@ -4320,7 +4320,7 @@ def version_numeric(version):
     num = re.findall(r'^(\d+\.\d+)', version)
     try:
         return(float(num[0]))
-    except:
+    except Exception:
         return(0)
 
 def random_password():

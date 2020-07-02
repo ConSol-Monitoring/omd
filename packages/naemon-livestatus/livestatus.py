@@ -521,7 +521,7 @@ class SingleSiteConnection(Helpers):
             code = resp[0:3].decode("ascii")
             try:
                 length = int(resp[4:15].lstrip())
-            except:
+            except Exception:
                 self.disconnect()
                 raise MKLivestatusSocketError(
                     "Malformed output. Livestatus TCP socket might be unreachable or wrong"
@@ -532,7 +532,7 @@ class SingleSiteConnection(Helpers):
             if code == "200":
                 try:
                     return ast.literal_eval(data)
-                except:
+                except Exception:
                     self.disconnect()
                     raise MKLivestatusSocketError("Malformed output")
 

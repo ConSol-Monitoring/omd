@@ -574,5 +574,5 @@ result["status"] = status
 print(json.dumps(result, indent=4))
 try:
     logger.info(str(result))
-except:
+except Exception:
     sys.stderr.write(str(result) + "\n")
