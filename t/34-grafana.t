@@ -13,7 +13,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 107 );
+plan( tests => 109 );
 
 ##################################################
 # create our test site
@@ -52,7 +52,7 @@ TestUtils::test_command({ cmd => $omd_bin." stop $site" });
 my $sessionid = TestUtils::create_fake_cookie_login($site);
 TestUtils::test_command({ cmd => $omd_bin." config $site set THRUK_COOKIE_AUTH on", like => '/^$/' });
 TestUtils::test_command({ cmd => $omd_bin." start $site", like => '/Starting Grafana/' });
-TestUtils::test_command({ cmd => "/omd/sites/$site/lib/monitoring-plugins/check_http -t 60 -H localhost -S -k 'Cookie: thruk_auth=$sessionid' -u '/$site/grafana/' -s '\"login\":\"omdadmin\"'", like => '/HTTP OK:/' });
+TestUtils::test_command({ cmd => "/omd/sites/$site/lib/monitoring-plugins/check_http -t 60 -H localhost -S -k 'Cookie: thruk_auth=$sessionid' -u '/$site/grafana/' -s '\"login\":\"omdadmin\"'", like => '/HTTP OK:/', waitfor => 'HTTP\ OK:' });
 TestUtils::test_command({ cmd => "/omd/sites/$site/lib/monitoring-plugins/check_http -t 60 -H localhost -S -k 'Cookie: thruk_auth=$sessionid' -u '/$site/grafana/api/datasources/proxy/1/index.php/api/hosts' -vv -s '[{\"name\":\"omd-testsite\"}]'", like => '/HTTP OK:/' });
 
 #grafana interface with http and thruk cookie auth
@@ -60,7 +60,7 @@ TestUtils::test_command({ cmd => $omd_bin." stop $site" });
 TestUtils::test_command({ cmd => $omd_bin." config $site set APACHE_MODE own", like => '/^$/' });
 TestUtils::restart_system_apache();
 TestUtils::test_command({ cmd => $omd_bin." start $site", like => '/Starting Grafana/' });
-TestUtils::test_command({ cmd => "/omd/sites/$site/lib/monitoring-plugins/check_http -t 60 -H localhost -k 'Cookie: thruk_auth=$sessionid' -u '/$site/grafana/' -s '\"login\":\"omdadmin\"'", like => '/HTTP OK:/' });
+TestUtils::test_command({ cmd => "/omd/sites/$site/lib/monitoring-plugins/check_http -t 60 -H localhost -k 'Cookie: thruk_auth=$sessionid' -u '/$site/grafana/' -s '\"login\":\"omdadmin\"'", like => '/HTTP OK:/', waitfor => 'HTTP\ OK:'  });
 
 
 # make sure grafana listens to localhost only

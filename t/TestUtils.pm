@@ -182,14 +182,14 @@ sub test_command {
     # matches on stdout?
     if(defined $test->{'like'}) {
         for my $expr (ref $test->{'like'} eq 'ARRAY' ? @{$test->{'like'}} : $test->{'like'} ) {
-            like($t->stdout, $expr, "stdout like ".$expr) or do { diag("\ncmd: '".$test->{'cmd'}."' failed\n"); $return = 0 };
+            like($t->stdout, $expr, "stdout like ".$expr) or do { _diag_cmd($test); $return = 0 };
         }
     }
 
     # unlike matches on stdout?
     if(defined $test->{'unlike'}) {
         for my $expr (ref $test->{'unlike'} eq 'ARRAY' ? @{$test->{'unlike'}} : $test->{'unlike'} ) {
-            unlike($t->stdout, $expr, "stdout unlike ".$expr) or do { diag("\ncmd: '".$test->{'cmd'}."' failed\n"); $return = 0 };
+            unlike($t->stdout, $expr, "stdout unlike ".$expr) or do { _diag_cmd($test); $return = 0 };
         }
     }
 
@@ -197,7 +197,7 @@ sub test_command {
     $test->{'errlike'} = '/^\s*$/' unless exists $test->{'errlike'};
     if(defined $test->{'errlike'}) {
         for my $expr (ref $test->{'errlike'} eq 'ARRAY' ? @{$test->{'errlike'}} : $test->{'errlike'} ) {
-            like($stderr, $expr, "stderr like ".$expr) or do { diag("\ncmd: '".$test->{'cmd'}."' failed"); $return = 0 };
+            like($stderr, $expr, "stderr like ".$expr) or do { _diag_cmd($test); $return = 0 };
         }
     }
 
