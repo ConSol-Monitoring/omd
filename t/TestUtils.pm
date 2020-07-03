@@ -333,7 +333,7 @@ sub set_cookie {
     our($cookie_jar, $cookie_file);
     if(!defined $cookie_jar) {
         my $fh;
-        ($fh, $cookie_file) = tempfile(TEMPLATE => 'tempXXXXX', UNLINK => 1);
+        ($fh, $cookie_file) = tempfile(TEMPLATE => 'tempXXXXX', UNLINK => 1, TMPDIR => 1);
         unlink($cookie_file);
         $cookie_jar = HTTP::Cookies::Netscape->new(file => $cookie_file);
     }
@@ -784,7 +784,7 @@ sub _request {
     our($fh, $cookie_jar, $cookie_file);
 
     if(!defined $cookie_jar) {
-        ($fh, $cookie_file) = tempfile(TEMPLATE => 'tempXXXXX', UNLINK => 1);
+        ($fh, $cookie_file) = tempfile(TEMPLATE => 'tempXXXXX', UNLINK => 1, TMPDIR => 1);
         unlink($cookie_file);
         $cookie_jar = HTTP::Cookies::Netscape->new(
                                        file     => $cookie_file,
