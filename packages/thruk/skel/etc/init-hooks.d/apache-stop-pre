@@ -1,0 +1,10 @@
+#!/bin/sh
+
+# arguments are:
+# <initscriptname> <start|stop> <pre|post> <init script exitcode>
+
+# clean up background starting processes which could still be running when doing a stop right after a start
+
+for pid in $(ps -fu $USER | grep "etc/init.d/thruk start" | grep -v grep | awk '{ print $2}'); do
+  pkill -P $pid 2>/dev/null
+done
