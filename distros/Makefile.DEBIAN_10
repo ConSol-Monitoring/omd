@@ -82,6 +82,7 @@ OS_PACKAGES          += libsnmp-perl
 OS_PACKAGES          += libsqlite3-0
 OS_PACKAGES          += libuuid1
 OS_PACKAGES          += mariadb-server|mysql-server|virtual-mysql-server
+OS_PACKAGES          += pango1.0
 OS_PACKAGES          += patch
 OS_PACKAGES          += perl-base
 OS_PACKAGES          += php
