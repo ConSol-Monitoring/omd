@@ -12,7 +12,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 368 );
+plan( tests => 419 );
 
 my $omd_bin = TestUtils::get_omd_bin();
 
@@ -20,6 +20,11 @@ my $omd_bin = TestUtils::get_omd_bin();
 my $vtest = { cmd => $omd_bin." version", "exit" => undef };
 TestUtils::test_command($vtest) or TestUtils::bail_out_clean("no further testing without working omd");
 diag($vtest->{'stdout'});
+
+# print apache version
+my $atest = { cmd => "/bin/sh -c '".TestUtils::config('APACHE_INIT_NAME')." -V | grep \"Server version\"'", "exit" => undef, errlike => undef };
+TestUtils::test_command($atest) or TestUtils::bail_out_clean("no further testing without working omd");
+diag("Apache ".$atest->{'stdout'});
 
 # there should be no sbin/ folder, all binaries should be in bin/
 chomp(my $omd_version = $vtest->{'stdout'});
@@ -145,7 +150,6 @@ for my $test (@{$tests}) {
 
 # bulk config change I
 TestUtils::test_command({ cmd => "/bin/sh -c 'echo \"APACHE_MODE=ssl\nWEB_REDIRECT=on\nWEB_ALIAS=sitealias\" | omd config $site change'", like => ['/Stopping dedicated Apache/', '/Stopping naemon/', '/Starting naemon/'] });
-
 TestUtils::restart_system_apache();
 
 # WEB_REDIRECT
@@ -155,6 +159,23 @@ TestUtils::test_command({ cmd => "/omd/sites/$site/lib/monitoring-plugins/check_
 TestUtils::test_command({ cmd => "/omd/sites/$site/lib/monitoring-plugins/check_http -S -t 60 -H localhost -u '/$site' -s 'https://localhost/sitealias'", like => '/HTTP OK:/' });
 TestUtils::test_command({ cmd => "/omd/sites/$site/lib/monitoring-plugins/check_http    -t 60 -H localhost -u '/' -f follow -s 'login.cgi'", like => '/HTTP WARN/', exit => 1 });
 TestUtils::test_command({ cmd => "/omd/sites/$site/lib/monitoring-plugins/check_http -S -t 60 -H localhost -u '/' -f follow -s 'login.cgi'", like => '/HTTP WARN/', exit => 1 });
+
+# redirects with custom ports (http mode)
+TestUtils::test_command({ cmd => "/bin/sh -c 'echo \"APACHE_MODE=own\nWEB_REDIRECT=off\nWEB_ALIAS=\n\" | omd config $site change'", like => ['/Stopping dedicated Apache/'] });
+TestUtils::restart_system_apache();
+TestUtils::test_command({ cmd => "/bin/sh -c 'curl -sk http://localhost/$site/'", like => [qr%\Qhttp://localhost:80/$site/\E%] }) or BAIL_OUT("kaputt");
+TestUtils::test_command({ cmd => "/bin/sh -c 'curl -sk http://localhost/$site/omd/'", like => [qr%\Qhttp://localhost:80/$site/thruk/cgi-bin/login.cgi\E%] }) or BAIL_OUT("kaputt");
+TestUtils::test_command({ cmd => "/bin/sh -c 'curl -sk -H \"X-Forwarded-Proto: http\" -H \"X-Forwarded-Port: 1234\" http://localhost/$site/'", like => [qr%\Qhttp://localhost:1234/$site/omd/\E%] }) or BAIL_OUT("kaputt");
+TestUtils::test_command({ cmd => "/bin/sh -c 'curl -sk -H \"X-Forwarded-Proto: https\" -H \"X-Forwarded-Port: 1234\" http://localhost/$site/'", like => [qr%\Qhttps://localhost:1234/$site/omd/\E%] }) or BAIL_OUT("kaputt");
+
+# redirects with custom ports (https mode)
+TestUtils::test_command({ cmd => "/bin/sh -c 'echo \"APACHE_MODE=ssl\n\" | omd config $site change'", like => ['/Stopping dedicated Apache/'] }) or BAIL_OUT("kaputt");
+TestUtils::restart_system_apache();
+TestUtils::test_command({ cmd => "/bin/sh -c 'curl -sk http://localhost/$site/'", like => [qr%\Qhttps://localhost/$site/\E%] }) or BAIL_OUT("kaputt");
+TestUtils::test_command({ cmd => "/bin/sh -c 'curl -sk https://localhost/$site/'", like => [qr%\Qhttps://localhost:443/$site/omd/\E%] }) or BAIL_OUT("kaputt");
+TestUtils::test_command({ cmd => "/bin/sh -c 'curl -sk https://localhost/$site/omd/'", like => [qr%\Qhttps://localhost:443/$site/thruk/cgi-bin/login.cgi\E%] }) or BAIL_OUT("kaputt");
+TestUtils::test_command({ cmd => "/bin/sh -c 'curl -sk -H \"X-Forwarded-Proto: http\" -H \"X-Forwarded-Port: 1234\" https://localhost/$site/'", like => [qr%\Qhttp://localhost:1234/$site/omd/\E%] }) or BAIL_OUT("kaputt");
+TestUtils::test_command({ cmd => "/bin/sh -c 'curl -sk -H \"X-Forwarded-Proto: https\" -H \"X-Forwarded-Port: 1234\" https://localhost/$site/'", like => [qr%\Qhttps://localhost:1234/$site/omd/\E%] }) or BAIL_OUT("kaputt");
 
 # bulk config change II
 TestUtils::test_command({ cmd => "/bin/sh -c 'echo \"APACHE_MODE=none\nAUTOSTART=off\" | omd config $site change'", like => ['/Stopping dedicated Apache/', '/Stopping naemon/', '/Starting naemon/'] });
