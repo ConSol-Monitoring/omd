@@ -98,6 +98,9 @@ if [ ! -f ${CFGIN_FILE} ] ; then
 
 
 fi
+# special: default parameter for deduplication
+# maybe overwritten by exports from CFGIN_FILE:
+dedup_minScrapeInterval='30s'
 
 . ${CFGIN_FILE}
 if [ $? -gt 0 ] ; then
@@ -113,7 +116,9 @@ BASE_OPTIONS="-httpListenAddr=$CONFIG_VICTORIAMETRICS_TCP_ADDR:$CONFIG_VICTORIAM
 # Note: via envflag.enable get...AuthKey fron emv varialble!
 # -httpAuth.password ${httpAuth_password} -httpAuth.username ${httpAuth_username} 
 export httpAuth_password httpAuth_username snapshotAuthKey deleteAuthKey
-CONFIG_OPTIONS="-envflag.enable -search.maxLookback ${search_maxLookback:-5m} -retentionPeriod ${retentionPeriod:-1} -loggerLevel INFO -loggerOutput stdout -influxSkipSingleField -selfScrapeInterval ${selfScrapeInterval:-30s} -search.maxPointsPerTimeseries ${search_maxPointsPerTimeseries:-1000000000} -search.maxUniqueTimeseries ${search_maxUniqueTimeseries:-1000000000} -search.minStalenessInterval ${search_minStalenessInterval:-5m} -dedup.minScrapeInterval ${dedup_minScrapeInterval:-30s}"
+
+#Note: additional options can be set via enviroment variables, e.g. via the etc/victoriametrics/db.secrets configuration file
+CONFIG_OPTIONS="-envflag.enable -search.maxLookback ${search_maxLookback:-5m} -retentionPeriod ${retentionPeriod:-1} -loggerLevel INFO -loggerOutput stdout -influxSkipSingleField -selfScrapeInterval ${selfScrapeInterval:-30s} -search.maxPointsPerTimeseries ${search_maxPointsPerTimeseries:-1000000000} -search.maxUniqueTimeseries ${search_maxUniqueTimeseries:-1000000000} -search.minStalenessInterval ${search_minStalenessInterval:-5m}"
 
 if [ "${CONFIG_VICTORIAMETRICS_MODE}" == "ssl" ] ; then
   if [  -z "$tlsCertFile" ] ; then echo "tlsCertFile missing"; exit 8; fi
@@ -121,11 +126,15 @@ if [ "${CONFIG_VICTORIAMETRICS_MODE}" == "ssl" ] ; then
   if [ ! -f $tlsCertFile ] ; then echo $tlsCertFile does not exists; exit 8; fi
   if [ ! -f $tlsKeyFile ] ; then echo $tlsKeyFile does not exists; exit 8; fi
 
-  CONFIG_OPTIONS="$CONFIG_OPTIONS -tls -tlsCertFile ${tlsCertFile} -tlsKeyFile ${tlsKeyFile}"
+  CONFIG_OPTIONS+=" -tls -tlsCertFile ${tlsCertFile} -tlsKeyFile ${tlsKeyFile}"
 fi
 
-if [[ ${CONFIG_OPTIONS} =~ "dedup.minScrapeInterval" ]] ; then
+if [[ ${dedup_minScrapeInterval:0:1} == "0" || "${dedup_minScrapeInterval}" == "" ]] ; then
+  # export must be removed, otherwise used via env!
+  export -n dedup_minScrapeInterval
+else
   echo "Note: Deduplication is activated! "
+  CONFIG_OPTIONS+=" -dedup.minScrapeInterval ${dedup_minScrapeInterval}"
 fi
 
 
