@@ -1993,6 +1993,7 @@ def config_change():
             config_set_value(key, value, save=False)
 
         save_site_conf()
+        config_set_all()
     finally:
         if site_was_stopped:
             start_site(g_sitename)
