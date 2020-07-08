@@ -1,7 +1,7 @@
 include ../../../Makefile.omd
 
 NAME = check_wut_health
-VERSION = 2.5.1.1
+VERSION = 2.6
 DIR = $(NAME)-$(VERSION)
 
 .PHONY: skel
