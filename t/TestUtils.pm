@@ -156,7 +156,10 @@ sub test_command {
             sleep(1);
             $now = time();
         }
-        fail("content ".$expr." did not occur within 120 seconds") unless $found;
+        if(!$found) {
+            fail("content ".$expr." did not occur within 120 seconds");
+            _diag_cmd($test);
+        }
     }
 
     alarm(300);
@@ -939,6 +942,7 @@ sub _diag_cmd {
         my $site = $1;
         diag("ps: ".`ps -fu $site`) if $site;
     }
+    diag(Carp::longmess("started here"));
     diag("\n#################################\n");
     return;
 }

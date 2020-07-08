@@ -68,6 +68,17 @@ EOF
   </Proxy>
 
   <Location /$OMD_SITE>
+    # set protocol/port hint, ex.: if system apache is https but site apache is not
+    <IfModule mod_headers.c>
+      # apache 2.4 only
+      <IfModule mod_authz_core.c>
+        <If "-z %{req:X-Forwarded-Proto} && -z %{req:X-Forwarded-Port}">
+          RequestHeader set X-Forwarded-Proto "%{REQUEST_SCHEME}s"
+          RequestHeader set X-Forwarded-Port  "%{SERVER_PORT}s"
+        </If>
+      </IfModule>
+    </IfModule>
+
     # Setting "retry=0" to prevent 60 second caching of problem states e.g. when
     # the site apache is down and someone tries to access the page.
     # "disablereuse=On" prevents the apache from keeping the connection which leads to
