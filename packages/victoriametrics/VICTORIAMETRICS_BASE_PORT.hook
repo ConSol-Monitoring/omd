@@ -10,7 +10,7 @@ case "$1" in
         echo 8428
     ;;
     choices)
-        echo "8[45][0-9]8"
+        echo "[1-9][0-9]{0,4}"
     ;;
     set)
         # Scan for a free port number by looking at the
