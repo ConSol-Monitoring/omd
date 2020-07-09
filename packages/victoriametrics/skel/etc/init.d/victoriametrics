@@ -48,7 +48,7 @@ USR=###SITE###
 # TODO: adapt the following variables to instance loop
 
 CFGIN_FILE=###ROOT###/etc/victoriametrics/db.secrets
-CFGTEMP_FILE=###ROOT###/etc/victoriametrics/db.secrets_template 
+CFGTEMP_FILE=###ROOT###/etc/victoriametrics/db.secrets_template
 
 LOG_DIR=###ROOT###/var/victoriametrics
 LOGFILE=###ROOT###/var/victoriametrics/victoriametrics.log
@@ -57,12 +57,6 @@ DATA_DIR=###ROOT###/var/victoriametrics/data
 
 mkdir -p ${DATA_DIR}
 
-
-
-# Make sure that check plugins do not run localized.
-# check_icmp outputs performance data with german
-# comma instead of dot and makes it unparsable.
-unset LANG
 export LC_ALL=C
 
 if [ ! -f ${CFGIN_FILE} ] ; then
@@ -75,9 +69,9 @@ if [ ! -f ${CFGIN_FILE} ] ; then
   # generate random passwords
 
   #generate_password
-  httpAuth_password=$( LC_ALL=C tr -cd A-Za-z0-9 < /dev/urandom | head -c 16 )
+  httpAuth_password=$( tr -cd A-Za-z0-9 < /dev/urandom | head -c 16 )
   #generate_password
-  snapshotAuthKey=$( LC_ALL=C tr -cd A-Za-z0-9 < /dev/urandom | head -c 16 )
+  snapshotAuthKey=$( tr -cd A-Za-z0-9 < /dev/urandom | head -c 16 )
   sed -e "s/httpAuth_password=.*/httpAuth_password=${httpAuth_password}/; s/snapshotAuthKey=.*/snapshotAuthKey=${snapshotAuthKey}/"  ${CFGTEMP_FILE} > ${CFGIN_FILE}
 
   echo "create ${CFGIN_FILE}  with random passwords, for remote access check this file"
@@ -90,10 +84,8 @@ if [ ! -f ${CFGIN_FILE} ] ; then
      omd restart grafana
     fi
   fi
-
-
-
 fi
+
 # special: default parameter for deduplication
 # maybe overwritten by exports from CFGIN_FILE:
 dedup_minScrapeInterval='30s'
@@ -116,7 +108,7 @@ export httpAuth_password httpAuth_username snapshotAuthKey deleteAuthKey
 #Note: additional options can be set via enviroment variables, e.g. via the etc/victoriametrics/db.secrets configuration file
 CONFIG_OPTIONS="-envflag.enable -search.maxLookback ${search_maxLookback:-5m} -retentionPeriod ${retentionPeriod:-1} -loggerLevel INFO -loggerOutput stdout -influxSkipSingleField -selfScrapeInterval ${selfScrapeInterval:-30s} -search.maxPointsPerTimeseries ${search_maxPointsPerTimeseries:-1000000000} -search.maxUniqueTimeseries ${search_maxUniqueTimeseries:-1000000000} -search.minStalenessInterval ${search_minStalenessInterval:-5m}"
 
-if [ "${CONFIG_VICTORIAMETRICS_MODE}" == "ssl" ] ; then
+if [ "${CONFIG_VICTORIAMETRICS_MODE}" = "ssl" ] ; then
   if [  -z "$tlsCertFile" ] ; then echo "tlsCertFile missing"; exit 8; fi
   if [  -z "$tlsKeyFile" ] ; then echo "tlsKeyFile missing"; exit 8; fi
   if [ ! -f $tlsCertFile ] ; then echo $tlsCertFile does not exists; exit 8; fi
@@ -125,7 +117,7 @@ if [ "${CONFIG_VICTORIAMETRICS_MODE}" == "ssl" ] ; then
   CONFIG_OPTIONS+=" -tls -tlsCertFile ${tlsCertFile} -tlsKeyFile ${tlsKeyFile}"
 fi
 
-if [[ ${dedup_minScrapeInterval:0:1} == "0" || "${dedup_minScrapeInterval}" == "" ]] ; then
+if [[ ${dedup_minScrapeInterval:0:1} = "0" || "${dedup_minScrapeInterval}" = "" ]] ; then
   # export must be removed, otherwise used via env!
   export -n dedup_minScrapeInterval
 else
