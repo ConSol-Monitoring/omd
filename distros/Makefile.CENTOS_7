@@ -14,6 +14,7 @@ BUILD_PACKAGES       += fping
 BUILD_PACKAGES       += gcc
 BUILD_PACKAGES       += gcc-c++
 BUILD_PACKAGES       += gd-devel                       # RHEL Server Optional
+BUILD_PACKAGES       += glibc-static
 BUILD_PACKAGES       += gperf
 BUILD_PACKAGES       += help2man                       # required by naemon
 BUILD_PACKAGES       += httpd-devel
