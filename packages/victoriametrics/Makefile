@@ -34,7 +34,7 @@ APPS = \
 build-app:
 	cd VictoriaMetrics-$(VERSION) && \
 	  https_proxy=http://127.7.7.7:50000 http_proxy=http://127.7.7.7:50000 \
-      go build -mod=vendor -trimpath -ldflags "-extldflags '-static' $(GO_BUILDINFO)" -tags 'netgo osusergo nethttpomithttp2' \
+      $(GOROOT)/bin/go build -mod=vendor -trimpath -ldflags "-extldflags '-static' $(GO_BUILDINFO)" -tags 'netgo osusergo nethttpomithttp2' \
       -o bin/$(APP_NAME)-prod $(PKG_PREFIX)/app/$(APP_NAME)
 
 install-app:
@@ -43,7 +43,7 @@ install-app:
 build:
 	tar zxf $(VMCTL_SRC)
 	cd vmctl-master && https_proxy=http://127.7.7.7:50000 http_proxy=http://127.7.7.7:50000 \
-	  go build -mod=vendor -o bin/vmctl
+	  $(GOROOT)/bin/go build -mod=vendor -o bin/vmctl
 	tar xf $(VM_SRC)
 	for i in $(APPS) ; do \
 	make build-app APP_NAME=$${i} || exit 1; \
