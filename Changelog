@@ -11,6 +11,7 @@ next 4.x:
           - Prometheus update to 2.19.2
 
 next:
+          - Thruk: update to 2.36
           - Grafana
             - Grafana update to 6.7.4
             - grafana-loki update to 1.5.0
