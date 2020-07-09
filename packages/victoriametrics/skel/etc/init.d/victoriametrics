@@ -44,8 +44,6 @@ mkdir -p ###ROOT###/tmp/victoriametrics
 
 BIN=###ROOT###//bin/victoria-metrics-prod
 USR=###SITE###
-GRP=###SITE###
-
 
 # TODO: adapt the following variables to instance loop
 
@@ -56,8 +54,6 @@ LOG_DIR=###ROOT###/var/victoriametrics
 LOGFILE=###ROOT###/var/victoriametrics/victoriametrics.log
 PID_FILE=###ROOT###/tmp/lock/victoriametrics.lock
 DATA_DIR=###ROOT###/var/victoriametrics/data
-USR=###SITE###
-GRP=###SITE###
 
 mkdir -p ${DATA_DIR}
 
@@ -207,7 +203,6 @@ verify_config() {
 
 prep_start() {
     touch $PID_FILE
-    chown $USR:$GRP $PID_FILE
 }
 
 victoriadb_wait_stop() {
