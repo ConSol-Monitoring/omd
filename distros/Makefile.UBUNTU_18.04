@@ -14,6 +14,7 @@ BUILD_PACKAGES       += gettext                        # needed for german l10n
 BUILD_PACKAGES       += git-buildpackage
 BUILD_PACKAGES       += gperf
 BUILD_PACKAGES       += help2man                       # required by naemon
+BUILD_PACKAGES       += libc6-dev
 BUILD_PACKAGES       += libboost1.65-all-dev
 BUILD_PACKAGES       += libcloog-ppl1
 BUILD_PACKAGES       += libcurl4-openssl-dev           # needed by perl modules / thruk
