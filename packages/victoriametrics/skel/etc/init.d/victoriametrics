@@ -45,10 +45,8 @@ mkdir -p ###ROOT###/tmp/victoriametrics
 BIN=###ROOT###//bin/victoria-metrics-prod
 USR=###SITE###
 
-# TODO: adapt the following variables to instance loop
-
-CFGIN_FILE=###ROOT###/etc/victoriametrics/db.secrets
-CFGTEMP_FILE=###ROOT###/etc/victoriametrics/db.secrets_template
+CFGIN_FILE=###ROOT###/etc/victoriametrics/victoriametrics.conf
+CFGTEMP_FILE=###ROOT###/etc/victoriametrics/victoriametrics.conf_template
 
 LOG_DIR=###ROOT###/var/victoriametrics
 LOGFILE=###ROOT###/var/victoriametrics/victoriametrics.log
@@ -60,21 +58,20 @@ mkdir -p ${DATA_DIR}
 export LC_ALL=C
 
 if [ ! -f ${CFGIN_FILE} ] ; then
-  echo "create db_secrets..."
   if [ ! -f ${CFGTEMP_FILE} ] ; then
-    echo "Config File template ${CFGTEMP_FILE} does not exists -> Abort"
+    echo "Config File template ${CFGTEMP_FILE} does not exist -> Abort"
     exit 8
   fi
+  echo "create victoriametrics.conf..."
 
   # generate random passwords
-
   #generate_password
   httpAuth_password=$( tr -cd A-Za-z0-9 < /dev/urandom | head -c 16 )
   #generate_password
   snapshotAuthKey=$( tr -cd A-Za-z0-9 < /dev/urandom | head -c 16 )
-  sed -e "s/httpAuth_password=.*/httpAuth_password=${httpAuth_password}/; s/snapshotAuthKey=.*/snapshotAuthKey=${snapshotAuthKey}/"  ${CFGTEMP_FILE} > ${CFGIN_FILE}
+  sed -e "s/vm_httpAuth_password=.*/vm_httpAuth_password=${httpAuth_password}/; s/vm_snapshotAuthKey=.*/vm_snapshotAuthKey=${snapshotAuthKey}/"  ${CFGTEMP_FILE} > ${CFGIN_FILE}
 
-  echo "create ${CFGIN_FILE}  with random passwords, for remote access check this file"
+  echo "created ${CFGIN_FILE} with random passwords, for remote access check this file"
 
   if [ -f ${OMD_ROOT}/etc/victoriametrics/grafana_datasources.yml ] ; then
     echo "patching password in grafana_datasources.yml"
@@ -86,43 +83,49 @@ if [ ! -f ${CFGIN_FILE} ] ; then
   fi
 fi
 
-# special: default parameter for deduplication
-# maybe overwritten by exports from CFGIN_FILE:
-dedup_minScrapeInterval='30s'
+# export every parameter thet is set after this line
+set -a
+# default parameters maybe overwritten by exports from CFGIN_FILE:
+vm_enableTCP6=1
+vm_search_maxLookback=5m
+vm_retentionPeriod=1
+vm_loggerLevel=INFO
+vm_loggerOutput=stdout
+vm_influxSkipSingleField=1
+vm_selfScrapeInterval=30s
+vm_search_maxPointsPerTimeseries=1000000000
+vm_search_maxUniqueTimeseries=1000000000
+vm_search_minStalenessInterval=5m
 
 . ${CFGIN_FILE}
 if [ $? -gt 0 ] ; then
   exit 8
 fi
-
+set +a # stop that behavior again
 
 # base option to identify instance
-# TODO for multiple instances: BASE_PORT to instance port
-BASE_OPTIONS="-httpListenAddr=$CONFIG_VICTORIAMETRICS_TCP_ADDR:$CONFIG_VICTORIAMETRICS_BASE_PORT -enableTCP6 -storageDataPath $DATA_DIR"
-
-# config options including from db.secrets file which can be changed before restart:
-# Note: via envflag.enable get...AuthKey fron emv varialble!
-# -httpAuth.password ${httpAuth_password} -httpAuth.username ${httpAuth_username} 
-export httpAuth_password httpAuth_username snapshotAuthKey deleteAuthKey
-
-#Note: additional options can be set via enviroment variables, e.g. via the etc/victoriametrics/db.secrets configuration file
-CONFIG_OPTIONS="-envflag.enable -search.maxLookback ${search_maxLookback:-5m} -retentionPeriod ${retentionPeriod:-1} -loggerLevel INFO -loggerOutput stdout -influxSkipSingleField -selfScrapeInterval ${selfScrapeInterval:-30s} -search.maxPointsPerTimeseries ${search_maxPointsPerTimeseries:-1000000000} -search.maxUniqueTimeseries ${search_maxUniqueTimeseries:-1000000000} -search.minStalenessInterval ${search_minStalenessInterval:-5m}"
+BASE_OPTIONS=(
+    "-envflag.enable"
+    "-envflag.prefix=vm_"
+    "-httpListenAddr=$CONFIG_VICTORIAMETRICS_TCP_ADDR:$CONFIG_VICTORIAMETRICS_BASE_PORT"
+    "-storageDataPath=$DATA_DIR"
+)
 
 if [ "${CONFIG_VICTORIAMETRICS_MODE}" = "ssl" ] ; then
-  if [  -z "$tlsCertFile" ] ; then echo "tlsCertFile missing"; exit 8; fi
-  if [  -z "$tlsKeyFile" ] ; then echo "tlsKeyFile missing"; exit 8; fi
-  if [ ! -f $tlsCertFile ] ; then echo $tlsCertFile does not exists; exit 8; fi
-  if [ ! -f $tlsKeyFile ] ; then echo $tlsKeyFile does not exists; exit 8; fi
-
-  CONFIG_OPTIONS+=" -tls -tlsCertFile ${tlsCertFile} -tlsKeyFile ${tlsKeyFile}"
+  if [  -z "$vm_tlsCertFile" ] ; then echo "vm_tlsCertFile missing"; exit 8; fi
+  if [  -z "$vm_tlsKeyFile" ] ; then echo "vm_tlsKeyFile missing"; exit 8; fi
+  if [ ! -f $vm_tlsCertFile ] ; then echo $vm_tlsCertFile does not exist; exit 8; fi
+  if [ ! -f $vm_tlsKeyFile ] ; then echo $vm_tlsKeyFile does not exist; exit 8; fi
+  export vm_tls=1
+else
+  unset vm_tls
+  unset vm_tlsCertFile
+  unset vm_tlsKeyFile
 fi
 
-if [[ ${dedup_minScrapeInterval:0:1} = "0" || "${dedup_minScrapeInterval}" = "" ]] ; then
+if [ "$( printf '%s' "${vm_dedup_minScrapeInterval}" | tr -cd 1-9 )" = "" ] ; then
   # export must be removed, otherwise used via env!
-  export -n dedup_minScrapeInterval
-else
-  echo "Note: Deduplication is activated! "
-  CONFIG_OPTIONS+=" -dedup.minScrapeInterval ${dedup_minScrapeInterval}"
+  unset vm_dedup_minScrapeInterval
 fi
 
 
@@ -155,7 +158,7 @@ rebuild_config() {
 # It returns 1 when no process can be found and echos the PID while
 # returning 0 when a process can be found.
 victoriadb_proc() {
-    PID=$(pgrep -u $USR -o -fx "$BIN $BASE_OPTIONS.*"  2>/dev/null)
+    PID=$(pgrep -u $USR -o -fx "$BIN ${BASE_OPTIONS[*]}"  2>/dev/null)
     if [ "$PID" != "" ]; then
         echo "$PID"
         return 0
@@ -222,7 +225,8 @@ victoriadb_wait_stop() {
 
 victoriadb_wait_start() {
     prep_start
-    nohup $BIN $BASE_OPTIONS $CONFIG_OPTIONS >>$LOGFILE 2>&1 &
+    nohup $BIN "${BASE_OPTIONS[@]}" >>$LOGFILE 2>&1 &
+    printf '%d' $! > $PID_FILE
     I=0
     while ! pidof_victoriadb >/dev/null 2>&1;  do
         if [ $I = '10' ]; then

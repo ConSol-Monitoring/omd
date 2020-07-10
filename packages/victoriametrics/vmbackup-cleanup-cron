@@ -6,7 +6,7 @@ DATA_PATH=${OMD_ROOT}/var/victoriametrics/data
 mkdir -p $LOG_DIR
 
 (
-. ${OMD_ROOT}/etc/victoriametrics/db.secrets
+. ${OMD_ROOT}/etc/victoriametrics/victoriametrics.conf
 
 if [ $? != 0 ] ; then
   echo "source of config failed"

@@ -23,7 +23,7 @@ case "$1" in
         fi
         if [ "$2" == "ssl" ]; then
 
-          # note: Parameter switch implemented in db.secrets
+          # note: Parameter switch implemented in victoriametrics.conf
           #  -tls
           #     Whether to enable TLS (aka HTTPS) for incoming requests. -tlsCertFile and -tlsKeyFile must be set if -tls is set
           # -tlsCertFile string

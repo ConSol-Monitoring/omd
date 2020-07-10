@@ -4,6 +4,7 @@
 
 ## special config for backup cron scripts
 # if the following variable backupPath is set, hourly backups are performed
+# no vm_ prefix, since it is not an option for victoriametrics itself
 #backupPath=$OMD_ROOT/backup-vm
 
 # TODO: move backup retentions from cron here!
@@ -14,25 +15,24 @@
 # Authentification settings
 # if user or password are set, basic auth is required for read and write access.
 # Only /health and /metrics url are unprotected
-httpAuth_password=###generated###
-httpAuth_username=prom
+vm_httpAuth_password=###generated###
+vm_httpAuth_username=prom
 # needed only for backups
-snapshotAuthKey=###generated###
+vm_snapshotAuthKey=###generated###
 # no key for metrics access
 #metricsAuthKey=
 
 #Path to files for TLS certificate. Used only if -tls is set. Prefer ECDSA certs instead of RSA certs, since RSA certs are slow
 # default; use key from local apache
 # if separate server name used, a separate certificate is needed
-export tlsCertFile=$OMD_ROOT/etc/apache/site.cert
-export tlsKeyFile=$OMD_ROOT/etc/apache/site.key
+vm_tlsCertFile=$OMD_ROOT/etc/apache/site.cert
+vm_tlsKeyFile=$OMD_ROOT/etc/apache/site.key
 
 
-# here other command line parameters can be overwritten or extented via env using EXPORT.
-# replace "." with "_" from command line flags
-# use export 
+# here other command line parameters can be overwritten or extented via env
+# replace "." with "_" from command line flags and prefix with vm_
 # eg.
 # - metrics retention:
-# export retentionPeriod=1
-# - no deduplication:
-# export retentionPeriod=0s
+# vm_retentionPeriod=1
+# special: default parameter for deduplication
+# vm_dedup_minScrapeInterval='30s'
