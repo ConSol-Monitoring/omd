@@ -15,7 +15,7 @@ if [ $? != 0 ] ; then
 fi
 
 export storageDataPath=${DATA_PATH}
-httpListenAddr="localhost:$(omd config show VICTORIAMETRICS_BASE_PORT)"
+httpListenAddr="localhost:$(omd config show VICTORIAMETRICS_PORT)"
 
 # echo $httpAuth_password
 # echo $httpAuth_username

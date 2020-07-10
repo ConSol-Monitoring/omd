@@ -107,7 +107,7 @@ set +a # stop that behavior again
 BASE_OPTIONS=(
     "-envflag.enable"
     "-envflag.prefix=vm_"
-    "-httpListenAddr=$CONFIG_VICTORIAMETRICS_TCP_ADDR:$CONFIG_VICTORIAMETRICS_BASE_PORT"
+    "-httpListenAddr=$CONFIG_VICTORIAMETRICS_TCP_ADDR:$CONFIG_VICTORIAMETRICS_PORT"
     "-storageDataPath=$DATA_DIR"
 )
 

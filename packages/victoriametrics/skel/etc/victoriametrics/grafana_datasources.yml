@@ -11,7 +11,7 @@ datasources:
     type: prometheus
     access: proxy
     orgId: 1
-    url: http://localhost:###CONFIG_VICTORIAMETRICS_BASE_PORT###
+    url: http://localhost:###CONFIG_VICTORIAMETRICS_PORT###
     basicAuth: true
     basicAuthUser: TODOgenerated
     basicAuthPassword: TODOgenerated

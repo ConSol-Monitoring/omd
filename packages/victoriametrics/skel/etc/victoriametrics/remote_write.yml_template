@@ -1,5 +1,5 @@
 remote_write:
-- url: "http://localhost:###CONFIG_VICTORIAMETRICS_BASE_PORT###/api/v1/write"
+- url: "http://localhost:###CONFIG_VICTORIAMETRICS_PORT###/api/v1/write"
   tls_config:
     insecure_skip_verify: true
   basic_auth:
