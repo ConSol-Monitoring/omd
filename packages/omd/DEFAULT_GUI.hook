@@ -31,7 +31,7 @@ case "$1" in
             *)
                 printf > "$conf_file" '%s\n' \
                   "# File handled by DEFAULT_GUI hook" \
-                  "RedirectMatch ^/$OMD_SITE/omd/ /$OMD_SITE/$2/"
+                  "RedirectMatch ^/$OMD_SITE/omd/?$ /$OMD_SITE/$2/"
                 ;;
         esac
     ;;
