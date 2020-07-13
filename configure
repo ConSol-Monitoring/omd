@@ -16,8 +16,8 @@ then
     exit 1
 fi
 
-if ! which make >/dev/null 2>&1; then
-    echo "Please install \"make\" before executing this script."
+if ! make --version >/dev/null 2>&1; then
+    echo 'Please install "make" before executing this script.'
     exit 1
 fi
 
