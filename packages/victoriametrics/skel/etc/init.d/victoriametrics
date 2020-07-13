@@ -86,9 +86,11 @@ fi
 # export every parameter thet is set after this line
 set -a
 # default parameters maybe overwritten by exports from CFGIN_FILE:
+# the following parameter cannot be overwritten: 
+# - retentionPeriod, httpListenAddr (from omd config) and 
+# - storageDataPath (fix)
 vm_enableTCP6=1
 vm_search_maxLookback=5m
-vm_retentionPeriod=1
 vm_loggerLevel=INFO
 vm_loggerOutput=stdout
 vm_influxSkipSingleField=1
@@ -101,7 +103,6 @@ vm_search_minStalenessInterval=5m
 if [ $? -gt 0 ] ; then
   exit 8
 fi
-set +a # stop that behavior again
 
 # base option to identify instance
 BASE_OPTIONS=(
@@ -110,6 +111,9 @@ BASE_OPTIONS=(
     "-httpListenAddr=$CONFIG_VICTORIAMETRICS_TCP_ADDR:$CONFIG_VICTORIAMETRICS_PORT"
     "-storageDataPath=$DATA_DIR"
 )
+
+# Retention taken from Config
+vm_retentionPeriod="${CONFIG_VICTORIAMETRICS_RETENTION}"
 
 if [ "${CONFIG_VICTORIAMETRICS_MODE}" = "ssl" ] ; then
   if [  -z "$vm_tlsCertFile" ] ; then echo "vm_tlsCertFile missing"; exit 8; fi
@@ -128,21 +132,7 @@ if [ "$( printf '%s' "${vm_dedup_minScrapeInterval}" | tr -cd 1-9 )" = "" ] ; th
   unset vm_dedup_minScrapeInterval
 fi
 
-
-# interesssting parameters to chek
-# -dedup.minScrapeInterval <duration>
-#  -influxMeasurementFieldSeparator string
-#        Separator for '{measurement}{separator}{field_name}' metric name when inserted via Influx line protocol (default "_")
-#  -influxSkipSingleField
-#        Uses '{measurement}' instead of '{measurement}{separator}{field_name}' for metic name if Influx line contains
-
-# Put together fragments and build a new victoriadb.yml
-#
-# -maxConcurrentInserts int
-#     The maximum number of concurrent inserts; see also -insert.maxQueueDuration (default 16)
-# -search.maxQueueDuration duration
-#   The maximum time the request waits for execution when -search.maxConcurrentRequests limit is reached (default 10s)
-
+set +a # stop that behavior again
 
 #
 rebuild_config() {

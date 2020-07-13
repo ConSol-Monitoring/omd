@@ -7,7 +7,6 @@
 # no vm_ prefix, since it is not an option for victoriametrics itself
 #backupPath=$OMD_ROOT/backup-vm
 
-# TODO: move backup retentions from cron here!
 
 # from here the normal command line parameters, just replace "." in "_"
 
@@ -31,8 +30,9 @@ vm_tlsKeyFile=$OMD_ROOT/etc/apache/site.key
 
 # here other command line parameters can be overwritten or extented via env
 # replace "." with "_" from command line flags and prefix with vm_
+# Note: the following parameter cannot be overwritten:
+# - retentionPeriod, httpListenAddr (from omd config) and
+# - storageDataPath (fix init.d)
 # eg.
-# - metrics retention:
-# vm_retentionPeriod=1
 # special: default parameter for deduplication
 # vm_dedup_minScrapeInterval='30s'

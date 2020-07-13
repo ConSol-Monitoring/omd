@@ -84,4 +84,59 @@ if [ $OLD_VERSION -le 300 ]; then
   rm -f etc/check_mk/multisite.d/mkeventd.mk
 fi
 
+if [ $OLD_VERSION -le 400 ]; then
+
+  # apply only if victoriametrics was used before:
+  if  [ -f etc/victoriametrics/db.secrets ] ; then
+    echo "migration for victoriametrics"
+    # renaming of CONFIG VARS
+    sed -e 's%VICTORIAMETRICS_BASE_PORT%VICTORIAMETRICS_PORT%' -i etc/omd/site.conf
+
+    # create new config file
+    cp etc/victoriametrics/db.secrets etc/victoriametrics/victoriametrics.conf
+
+    # load old config file into env:
+    . etc/victoriametrics/db.secrets
+    if [ $? -gt 0 ] ; then
+      echo "error processing old config "
+      exit 8
+    fi
+    # retention to OMD Config
+    #check for manual change in init.d script:
+    omd diff etc/init.d/victoriametrics | grep -e "+.*retentionPeriod=" > /dev/null
+    if [ $? -eq 0 ] ; then
+       echo "manual change to rentention in etc/init.d/victoriametrics -> Abort Upgrade"
+       exit 8
+    else
+       echo "CONFIG_VICTORIAMETRICS_RETENTION=${retentionPeriod:-1}" >> etc/omd/site.conf
+       sed -E 's/^(.*retentionPeriod=.*)/# moved to OMD Config var: \1/' -i etc/victoriametrics/victoriametrics.conf
+    fi
+
+    # migration of old defaults to new config file:
+
+    if [[ "${dedup_minScrapeInterval+defined}" != "defined"  ]] ; then
+      grep dedup.minScrapeInterval etc/init.d/victoriametrics >/dev/null
+      if [ $? -eq 0 ] ; then
+        echo "export dedup_minScrapeInterval='30s'" >> etc/victoriametrics/victoriametrics.conf
+      fi
+    fi
+
+    #add prefic to config vars in config file:
+    # get all config vars:
+    envvars=$(victoria-metrics-prod -h | grep "^\W*-" | awk '{print $1;}' | sed -E 's/^-//; s/[\.-]/_/g')
+    envvars_regex=""
+    for placeholder in $envvars ; do
+          envvars_regex+="$placeholder|"
+    done
+    # prefixing:
+    sed -E "s/([^_]?)(${envvars_regex}version)/\1vm_\2/g" -i.bak etc/victoriametrics/victoriametrics.conf
+
+    #finally move old config_file
+    mv etc/victoriametrics/db.secrets etc/victoriametrics/db.secrets_omd3x
+
+    # env victoriametrics migration
+  fi
+  #end pre omd 4
+fi
+
 exit 0
