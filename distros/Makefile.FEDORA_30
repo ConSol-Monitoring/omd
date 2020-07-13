@@ -17,6 +17,7 @@ BUILD_PACKAGES       += glibc-devel
 BUILD_PACKAGES       += gperf
 BUILD_PACKAGES       += help2man                       # required by naemon
 BUILD_PACKAGES       += httpd-devel
+BUILD_PACKAGES       += glibc-static
 BUILD_PACKAGES       += libcom_err-devel               # freetds
 BUILD_PACKAGES       += libdbi-devel                   # required for rrdtool
 BUILD_PACKAGES       += libevent-devel                 # RHEL Server Optional
