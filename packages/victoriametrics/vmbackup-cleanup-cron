@@ -29,7 +29,7 @@ BACKUP_HOURLY=$backupPath/hourly$(date +%H)
 BACKUP_RETENTION_DAYS=2
 SNAPSHOT_RETENTION_HOURS=4
 
-AUTH_ENCODED=$(echo -n "$httpAuth_username:$httpAuth_password" | base64 - )
+AUTH_ENCODED=$(echo -n "$vm_httpAuth_username:$vm_httpAuth_password" | base64 - )
 
 
 if [ "$(omd config show VICTORIAMETRICS_MODE)" == "ssl" ] ; then
@@ -38,7 +38,7 @@ else
   URITYPE=http
 fi
 
-SNAPSHOT_OUT=$(curl -k -H "Authorization: Basic ${AUTH_ENCODED}" $URITYPE://${httpListenAddr}/snapshot/list?authKey=$snapshotAuthKey)
+SNAPSHOT_OUT=$(curl -k -H "Authorization: Basic ${AUTH_ENCODED}" $URITYPE://${httpListenAddr}/snapshot/list?authKey=$vm_snapshotAuthKey)
 
 if [ $? != 0 ] ; then
   echo "snaphot failed"
