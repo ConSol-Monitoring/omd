@@ -73,6 +73,7 @@ OS_PACKAGES          += boost-thread                   # icinga 2
 OS_PACKAGES          += cronie
 OS_PACKAGES          += curl
 OS_PACKAGES          += dialog
+OS_PACKAGES          += diffutils
 OS_PACKAGES          += expat
 OS_PACKAGES          += fping
 OS_PACKAGES          += httpd
