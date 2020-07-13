@@ -178,6 +178,9 @@ install:
 	        echo PYTHON2INSTALL $$M ; \
 	        python2 setup.py install --home=$(DESTDIR)$(OMD_ROOT) \
 	            --prefix='' \
+	            --install-scripts=$(DESTDIR)$(OMD_ROOT)/bin/py2 \
+	            --install-headers=$(DESTDIR)$(OMD_ROOT)/include/python2 \
+	            --install-data=$(DESTDIR)$(OMD_ROOT)/share/python2 \
 	            --install-platlib=$(LOCALPYTHONDIR2) \
 	            --install-purelib=$(LOCALPYTHONDIR2) ; \
 	        cd .. ; \
