@@ -2220,11 +2220,25 @@ def config_configure_hook(hook_name):
         config_set_all()
         load_hook_dependencies()
 
+def call_init_hook(command, when):
+    try:
+        subprocess.check_call("etc/init-hooks.d/omd-%s-%s" % (command, when))
+    except (FileNotFoundError, PermissionError) as e:
+        if(opt_verbose):
+            sys.stderr.write(str(e)+"\n")
+    except subprocess.CalledProcessError as e:
+        bail_out(g_sitename + ": " + str(e))
+
 def init_action(command, args, options):
     if site_is_disabled(g_sitename):
         bail_out("This site is disabled.")
     if site_needs_update(g_sitename):
         bail_out("This site needs to be updated with: omd update")
+
+    # restart is special, if there is a failing start-pre
+    # hook but not a failing restart-pre hook `omd restart' can
+    # start a stopped site
+    call_init_hook(command, "pre")
 
     if command in [ "start", "restart" ]:
         prepare_and_populate_tmpfs(g_sitename)
