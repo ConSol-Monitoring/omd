@@ -12,7 +12,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 89 );
+plan( tests => 97 );
 
 ##################################################
 # create our test site
@@ -29,10 +29,12 @@ my $tests = [
 
   { cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_http -H localhost -u /$site -e 302'",                      like => '/HTTP OK:/' },
   { cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_http -H localhost -u /$site/ -e 302'",                     like => '/HTTP OK:/' },
-  { cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_http -H localhost -u /$site/omd -e 401'",                  like => '/HTTP OK:/' },
+  { cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_http -H localhost -u /$site/omd -e 302'",                  like => '/HTTP OK:/' },
   { cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_http -H localhost -a omdadmin:omd -u /$site -e 302'",      like => '/HTTP OK:/' },
-  { cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_http -H localhost -a omdadmin:omd -u /$site/omd -e 301'",  like => '/HTTP OK:/' },
+  { cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_http -H localhost -a omdadmin:omd -u /$site/omd -e 301,302'",  like => '/HTTP OK:/' },
   { cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_http -H localhost -a omdadmin:omd -u /$site/omd/ -e 302'", like => '/HTTP OK:/' },
+  { cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_http -H localhost -a omdadmin:omd -u /$site/omd/vierhundertvier -e 404'", like => '/HTTP OK:/' },
+  { cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_http -H localhost -u /$site/omd/vierhunderteins -e 401'", like => '/HTTP OK:/' },
 
   { cmd => $omd_bin." stop $site" },
 ];
