@@ -1,10 +1,19 @@
 This file documents the revision history for the Open Monitoring Distribution (Labs Edition)
 
 next 4.x:
-          - Grafana update to 7.0.0
+          - OMD:
+            - add build support for sles12sp4
+            - add build support for ubuntu20.04
+            - add build support for fedora31
+            - add build support for fedora32
+          - Grafana update to 7.0.4
+          - InfluxDB: update to 1.8.0
+          - Prometheus update to 2.19.2
 
 next:
           - Thruk: update to 2.36
+          - Naemon:
+            - update livestatus to 1.2.1
           - Grafana
             - Grafana update to 6.7.4
             - grafana-loki update to 1.5.0
@@ -18,7 +27,7 @@ next:
             - add build support for Debian 11
           - Grafana update to 6.7.3
             - add grafana-loki 1.4.1
-          - InfluxDB: update to 1.7.8
+          - InfluxDB: update to 1.7.10
           - Prometheus:
             - Prometheus update to 2.18.1
             - Alertmanager update to 0.20.0
