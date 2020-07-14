@@ -13,6 +13,7 @@ next 4.x:
 next:
           - Thruk: update to 2.36
           - Naemon:
+            - update core to 1.2.1
             - update livestatus to 1.2.1
           - Grafana
             - Grafana update to 6.7.4
