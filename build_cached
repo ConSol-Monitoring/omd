@@ -65,7 +65,7 @@ calc_hashsum() {
     MD5=$(cd "$DIR" && find . -type f -exec md5sum {} \; 2>&1 | sort | md5sum | awk '{ print $1 }')
 
     # add dependencies and rebuild if any of the dependency has changed
-    DEPS=$(grep -P 'DEPENDS\ *=' $DIR/Makefile 2>/dev/null | awk -F = '{ print $2 }' | tr -d ' ' | sort -u)
+    DEPS=$(grep -P 'DEPENDS\ *=' $DIR/Makefile 2>/dev/null | awk -F = '{ print $2 }' | sort -u)
     # add go dependencies
     GOVERSION=$(grep -P 'GOPKG\ *=' $DIR/Makefile $DIR/*/Makefile 2>/dev/null | awk -F = '{ print $2 }' | tr -d ' ' | sort -u)
     if [ -n "$GOVERSION" ]; then
