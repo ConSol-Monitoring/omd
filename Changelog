@@ -6,6 +6,8 @@ next 4.x:
             - add build support for ubuntu20.04
             - add build support for fedora31
             - add build support for fedora32
+          - Naemon:
+            - update livestatus to 1.2.1
           - Grafana update to 7.0.4
           - InfluxDB: update to 1.8.0
           - Prometheus update to 2.19.2
