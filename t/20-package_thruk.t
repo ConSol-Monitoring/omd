@@ -42,7 +42,7 @@ set_test_user_token();
 
 ##################################################
 # test examples
-TestUtils::test_command({ cmd => "/bin/su - $site -c './share/thruk/examples/get_logs -n ./var/naemon/naemon.log'", like => '/^$/' });
+TestUtils::test_command({ cmd => "/bin/su - $site -c 'cp ./var/naemon/naemon.log ./var/naemon/naemon.log.test && ./share/thruk/examples/get_logs -n ./var/naemon/naemon.log.test'", like => '/^$/' });
 
 
 my $reports = [
