@@ -7,6 +7,10 @@
 # no vm_ prefix, since it is not an option for victoriametrics itself
 #backupPath=$OMD_ROOT/backup-vm
 
+# backup retention
+#backupRetentionDays=2
+#backupSnapshotRetentionHours=4
+
 
 # from here the normal command line parameters, just replace "." in "_"
 

@@ -26,8 +26,8 @@ export httpListenAddr="localhost:$(omd config show VICTORIAMETRICS_PORT)"
 
 BACKUP_DAILY=$backupPath/daily_$(date +%Y-%m-%d)
 BACKUP_HOURLY=$backupPath/hourly$(date +%H)
-BACKUP_RETENTION_DAYS=2
-SNAPSHOT_RETENTION_HOURS=4
+BACKUP_RETENTION_DAYS=${backupRetentionDays:-2}
+SNAPSHOT_RETENTION_HOURS=${backupSnapshotRetentionHours:-4}
 
 AUTH_ENCODED=$(echo -n "$vm_httpAuth_username:$vm_httpAuth_password" | base64 - )
 
@@ -57,7 +57,7 @@ do
   #du -ch -d1 $storageDataPath/indexdb/snapshots/${SNAPSHOT_NAME}
 
   if [[ $(date --universal -d "${SNAPSHOT_RETENTION_HOURS} hour ago" +%Y%m%d%H00-) > "${SNAPSHOT_NAME}" ]] ; then
-     curl -i -k -H "Authorization: Basic ${AUTH_ENCODED}" "${URITYPE}://${httpListenAddr}/snapshot/delete?snapshot=${SNAPSHOT_NAME}&authKey=$snapshotAuthKey"
+     curl -i -k -H "Authorization: Basic ${AUTH_ENCODED}" "${URITYPE}://${httpListenAddr}/snapshot/delete?snapshot=${SNAPSHOT_NAME}&authKey=$vm_snapshotAuthKey"
      #echo "${SNAPSHOT_NAME} deleted"
   fi
 done
