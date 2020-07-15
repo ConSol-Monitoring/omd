@@ -27,7 +27,6 @@ TestUtils::test_command({ cmd => $omd_bin." config $site set LOKI_PROMTAIL on" }
 TestUtils::test_command({ cmd => $omd_bin." start $site", like => ['/Starting Loki\.+OK/',
                                                                    '/Starting Promtail\.+OK/',
                                                                   ]});
-sleep(2);
 TestUtils::test_command({ cmd => $omd_bin." status $site", like => ['/loki:\s+running/',
                                                                     '/promtail:\s+running/',
                                                                   ]});
