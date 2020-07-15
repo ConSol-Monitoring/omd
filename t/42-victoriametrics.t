@@ -32,11 +32,11 @@ TestUtils::test_command({ cmd => qq[/bin/su - $site -c 'vmauth-prod --version'],
 TestUtils::test_command({ cmd => qq[/bin/su - $site -c 'vmbackup-prod --version'],  like => '/^vmbackup/' });
 TestUtils::test_command({ cmd => qq[/bin/su - $site -c 'vmalert-prod --version'],  like => '/^vmalert/' });
 TestUtils::test_command({ cmd => qq[/bin/su - $site -c 'vmctl --version'],  like => '/vmctl version/', errlike => '/^/' });
-sleep(2);
 TestUtils::test_command({
   cmd => qq[/bin/su - $site -c 'lib/monitoring-plugins/check_http ].
          qq[-t 60 -H 127.0.0.1 -p 8428 --onredirect=follow -u "/metrics" -s "vm_app_version"'],
-  like => '/HTTP OK:/'
+  like => '/HTTP OK:/',
+  waitfor => 'HTTP\ OK:',
 });
 TestUtils::remove_test_site($site);
 done_testing();
