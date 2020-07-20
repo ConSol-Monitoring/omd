@@ -10,28 +10,33 @@ GOPKG      = 1.14
 GOVERSION  = $(shell grep ^VERSION ../go-${GOPKG}/Makefile | awk '{ print $$3 }')
 PWD        = $(shell pwd)
 GOFOLDER   = go
-GOPATH     = $(PWD)/$(GOFOLDER)/
+GOPATH     = /dev/null # should not be used on vendor build
 GOROOT     = $(PWD)/../go-$(GOPKG)/go-$(GOVERSION)
-DATE       = $(shell date -u '+%Y-%m-%d_%H:%M:%S%p')
+DATE       = $(shell TZ=UTC date -u '+%FT%TZ')
 LDFLAGS    = "\
--X github.com/prometheus/$(NAME)/vendor/github.com/prometheus/common/version.Version=$(VERSION) \
--X github.com/prometheus/$(NAME)/vendor/github.com/prometheus/common/version.Revision=OMD-Labs \
--X github.com/prometheus/$(NAME)/vendor/github.com/prometheus/common/version.Branch=$(BRANCH) \
--X github.com/prometheus/$(NAME)/vendor/github.com/prometheus/common/version.BuildUser=OMD-Labs \
--X github.com/prometheus/$(NAME)/vendor/github.com/prometheus/common/version.BuildDate=$(DATE) \
+-X github.com/prometheus/common/version.Version=$(VERSION) \
+-X github.com/prometheus/common/version.Revision=release-tar-ball \
+-X github.com/prometheus/common/version.Branch=$(BRANCH) \
+-X github.com/prometheus/common/version.BuildUser=OMD-Labs \
+-X github.com/prometheus/common/version.BuildDate=$(DATE) \
 -s -w \
 "
 
 build:
 	tar zxf $(SRC)
-	export GOROOT=$(GOROOT) && export GOPATH=$(GOPATH) && PATH=$$GOROOT/bin:$$PATH && \
-		cd $(GOPATH)/src/github.com/prometheus/$(NAME) && \
-		make build
+	mkdir -p prometheus-$(VERSION)/build
+	cd $(NAME)-$(VERSION) && \
+		$(GOROOT)/bin/go build -trimpath -ldflags $(LDFLAGS) -o build/prometheus -mod=vendor github.com/prometheus/prometheus/cmd/prometheus
+	cd $(NAME)-$(VERSION) && \
+		$(GOROOT)/bin/go build -trimpath -ldflags $(LDFLAGS) -o build/promtool -mod=vendor github.com/prometheus/prometheus/cmd/promtool
+	cd $(NAME)-$(VERSION) && \
+		$(GOROOT)/bin/go build -trimpath -ldflags $(LDFLAGS) -o build/tsdb -mod=vendor github.com/prometheus/prometheus/tsdb/cmd/tsdb
 
 install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/bin
-	install -m 755 $(GOPATH)/src/github.com/prometheus/prometheus/prometheus $(DESTDIR)$(OMD_ROOT)/bin
-	install -m 755 $(GOPATH)/src/github.com/prometheus/prometheus/promtool   $(DESTDIR)$(OMD_ROOT)/bin
+	install -m 755 prometheus-$(VERSION)/build/prometheus $(DESTDIR)$(OMD_ROOT)/bin
+	install -m 755 prometheus-$(VERSION)/build/promtool $(DESTDIR)$(OMD_ROOT)/bin
+	install -m 755 prometheus-$(VERSION)/build/tsdb $(DESTDIR)$(OMD_ROOT)/bin
 
 skel:
 	mkdir -p $(SKEL)/etc/prometheus
@@ -39,27 +44,18 @@ skel:
 	echo "Use this dir for your hand-crafted configs." > $(SKEL)/etc/prometheus/conf.d/custom/README
 	mkdir -p $(SKEL)/etc/prometheus/conf.d/dynamic
 	echo "Use this dir for your automatically created configs. Use coshsh" > $(SKEL)/etc/prometheus/conf.d/dynamic/README
-	cp -rp $(GOPATH)/src/github.com/prometheus/prometheus/consoles $(SKEL)/etc/prometheus
-	cp -rp $(GOPATH)/src/github.com/prometheus/prometheus/console_libraries $(SKEL)/etc/prometheus
+	cp -rp $(NAME)-$(VERSION)/consoles $(SKEL)/etc/prometheus
+	cp -rp $(NAME)-$(VERSION)/console_libraries $(SKEL)/etc/prometheus
 	mv $(SKEL)/etc/prometheus/consoles/index.html.example $(SKEL)/etc/prometheus/consoles/index.html
 	sed -ri 's/index.html.example/index.html/g' $(SKEL)/etc/prometheus/console_libraries/menu.lib
 
 	for p in patches/*.skel_patch ; do \
 		echo "applying $$p..." ; \
 		( cd $(SKEL) ; patch -p1 ) < $$p || exit 1; \
-	done	
+	done
 
 clean:
-	-test -d $(GOPATH) && find $(GOPATH)/. -type d -exec chmod 755 {} \;
-	rm -rf $(GOPATH)
+	rm -rf $(NAME)-$(VERSION)
 
 package: clean
-	export GOROOT=$(GOROOT) && export GOPATH=$(GOPATH) && PATH=$$GOROOT/bin:$$PATH && \
-		mkdir -p $(GOPATH)/src/github.com/prometheus/ && \
-		cd $(GOPATH)/src/github.com/prometheus/ && \
-		git clone --depth=1 --branch "v$(VERSION)" https://github.com/prometheus/$(NAME).git && \
-		cd $(NAME) && make build && \
-		rm prometheus promtool tsdb/tsdb
-	rm -f prometheus-*.tar.gz
-	tar zcf $(SRC) --exclude=.git $(GOFOLDER)/src/
-
+	curl -fLo prometheus-$(VERSION).tar.gz https://github.com/prometheus/prometheus/archive/v$(VERSION).tar.gz
