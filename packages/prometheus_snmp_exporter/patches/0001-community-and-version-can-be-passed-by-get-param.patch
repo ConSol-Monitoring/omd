@@ -1,5 +1,5 @@
---- go/src/github.com/prometheus/snmp_exporter/main.go	2020-02-24 09:41:32.000000000 +0100
-+++ go/src/github.com/prometheus/snmp_exporter/main.go	2020-02-24 15:42:28.699410065 +0100
+--- main.go	2020-02-24 09:41:32.000000000 +0100
++++ main.go	2020-02-24 15:42:28.699410065 +0100
 @@ -33,6 +33,8 @@
  	"gopkg.in/alecthomas/kingpin.v2"
  	yaml "gopkg.in/yaml.v2"

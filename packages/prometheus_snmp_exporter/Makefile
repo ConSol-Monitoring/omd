@@ -10,51 +10,45 @@ GOPKG      = 1.14
 GOVERSION  = $(shell grep ^VERSION ../go-${GOPKG}/Makefile | awk '{ print $$3 }')
 PWD        = $(shell pwd)
 GOFOLDER   = go
-GOPATH     = $(PWD)/$(GOFOLDER)/
+GOPATH     = /dev/null
 GOROOT     = $(PWD)/../go-$(GOPKG)/go-$(GOVERSION)
-DATE       = $(shell date -u '+%Y-%m-%d_%H:%M:%S%p')
+DATE       = $(shell date -u '+%FT%TZ')
 LDFLAGS    = "\
--X github.com/prometheus/$(NAME)/vendor/github.com/prometheus/common/version.Version=$(VERSION) \
--X github.com/prometheus/$(NAME)/vendor/github.com/prometheus/common/version.Revision=OMD-Labs \
--X github.com/prometheus/$(NAME)/vendor/github.com/prometheus/common/version.Branch=$(BRANCH) \
--X github.com/prometheus/$(NAME)/vendor/github.com/prometheus/common/version.BuildUser=OMD-Labs \
--X github.com/prometheus/$(NAME)/vendor/github.com/prometheus/common/version.BuildDate=$(DATE) \
+-X github.com/prometheus/common/version.Version=$(VERSION)+omd \
+-X github.com/prometheus/common/version.Revision=release-tar-ball \
+-X github.com/prometheus/common/version.Branch=$(BRANCH) \
+-X github.com/prometheus/common/version.BuildUser=OMD-Labs \
+-X github.com/prometheus/common/version.BuildDate=$(DATE) \
 -s -w \
 "
 
 build:
 	tar zxf $(SRC)
+	mkdir -p $(NAME)-$(VERSION)/build
 	set -e ; for p in patches/*.patch ; do \
 		echo "applying $$p..." ; \
-		( cd $(GOPATH) ; patch -p1 ) < $$p ; \
+		( cd $(NAME)-$(VERSION) ; patch ) < $$p ; \
 	done
-	export GOROOT=$(GOROOT) && export GOPATH=$(GOPATH) && PATH=$$GOROOT/bin:$$PATH && \
-		go install -ldflags $(LDFLAGS) github.com/prometheus/$(NAME) && \
-		cd $(GOPATH)/src/github.com/prometheus/snmp_exporter/generator && \
-		go build
-	-chmod -R 777 $(GOPATH)
+	cd $(NAME)-$(VERSION) && \
+	    $(GOROOT)/bin/go build -mod=vendor -trimpath -ldflags $(LDFLAGS) -o build/$(NAME) github.com/prometheus/$(NAME)
+	cd $(NAME)-$(VERSION) && \
+	    $(GOROOT)/bin/go build -mod=vendor -trimpath -ldflags $(LDFLAGS) -o build/generator github.com/prometheus/$(NAME)/generator
 
 
 install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/bin
-	install -m 755 $(GOPATH)/bin/$(NAME) $(DESTDIR)$(OMD_ROOT)/bin
-	install -m 755 $(GOPATH)/src/github.com/prometheus/snmp_exporter/generator/generator $(DESTDIR)$(OMD_ROOT)/bin
-	cp create_snmp_scrape_config.py $(DESTDIR)$(OMD_ROOT)/bin
+	install -m 755 $(NAME)-$(VERSION)/build/$(NAME) $(DESTDIR)$(OMD_ROOT)/bin
+	install -m 755 $(NAME)-$(VERSION)/build/generator $(DESTDIR)$(OMD_ROOT)/bin
+	install -m 755  create_snmp_scrape_config.py $(DESTDIR)$(OMD_ROOT)/bin/create_snmp_scrape_config
+	ln -fs create_snmp_scrape_config $(DESTDIR)$(OMD_ROOT)/bin/create_snmp_scrape_config.py
 
 skel:
-	mkdir -p $(SKEL)/etc/prometheus_snmp_exporter/generator/
-	cp $(GOPATH)/src/github.com/prometheus/snmp_exporter/snmp.yml $(SKEL)/etc/prometheus_snmp_exporter/config/
-	cp $(GOPATH)/src/github.com/prometheus/snmp_exporter/generator/generator.yml $(SKEL)/etc/prometheus_snmp_exporter/generator/
+	mkdir -p $(SKEL)/etc/prometheus_snmp_exporter/generator $(SKEL)/etc/prometheus_snmp_exporter/config
+	cp $(NAME)-$(VERSION)/snmp.yml $(SKEL)/etc/prometheus_snmp_exporter/config/
+	cp $(NAME)-$(VERSION)/generator/generator.yml $(SKEL)/etc/prometheus_snmp_exporter/generator/
 
 clean:
-	-chmod -R 777 $(GOPATH)
-	rm -rf $(GOPATH)
+	rm -rf $(NAME)-$(VERSION)
 
 package: clean
-	export GOROOT=$(GOROOT) && export GOPATH=$(GOPATH) && PATH=$$GOROOT/bin:$$PATH && \
-		mkdir -p $(GOPATH)/src/github.com/prometheus/ && \
-		cd $(GOPATH)/src/github.com/prometheus/ && \
-		git clone --depth=1 --branch "v$(VERSION)" https://github.com/prometheus/$(NAME).git && \
-		cd $(NAME) && go get -d && \
-		cd $(PWD) && \
-		tar zcf $(SRC) --exclude=.git $(GOFOLDER)/src/
+	curl -fLo $(NAME)-$(VERSION).tar.gz https://github.com/prometheus/$(NAME)/archive/v$(VERSION).tar.gz
