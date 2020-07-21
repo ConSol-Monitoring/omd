@@ -314,7 +314,6 @@ TestUtils::remove_test_site($site);
 sub set_test_user_token {
     my $file = '/omd/sites/'.$site.'/var/thruk/token';
     local $ENV{'THRUK_CONFIG'} = '/omd/sites/'.$site.'/etc/thruk/';
-    my $config = Thruk::Config::get_config();
     my $store  = Thruk::Utils::Cache->new($file);
     my $tokens = $store->get('token');
     $tokens->{'omdadmin'} = { token => 'test', time => time() };
