@@ -107,7 +107,7 @@ case "$1" in
         # if /etc/sysctl.d exists and the range is kernels default, then take this setting
         if [ -d "$( dirname $SYSCTL_OMD_CONF )"  ] && [ "$(echo $ping_group_range)" = "1 0" ] ; then
             printf '%s\n' "net.ipv4.ping_group_range = $GROUP_ID $GROUP_ID" > "$SYSCTL_OMD_CONF"
-            sysctl -p "$SYSCTL_OMD_CONF"
+            sysctl -p "$SYSCTL_OMD_CONF" || echo "warning: activating $SYSCTL_OMD_CONF via sysctl failed" >&2
         fi
     fi
 
