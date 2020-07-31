@@ -1,13 +1,15 @@
 include ../../../Makefile.omd
 
 NAME        = check_nsc_web
-VERSION     = 0.5.3
+VERSION     = 0.5.3-consol
 SRC         = $(NAME)-$(VERSION).tar.gz
 GOPKG       = 1.14
 GOVERSION   = $(shell grep ^VERSION ../../go-${GOPKG}/Makefile | awk '{ print $$3 }')
 PWD         = $(shell pwd)
-BRANCH      = v$(VERSION)
-GITURL      = github.com/m-kraus
+#BRANCH      = v$(VERSION)
+#GITURL      = github.com/m-kraus
+BRANCH      = fix_unsolicited_response
+GITURL      = github.com/ConSol
 GOFOLDER    = go
 GOPATH      = $(PWD)/$(GOFOLDER)/
 GOROOT      = $(PWD)/../../go-$(GOPKG)/go-$(GOVERSION)
@@ -39,5 +41,5 @@ package: clean
 		git clone --depth=1 --branch "$(BRANCH)" https://$(GITURL)/$(NAME) && \
 		cd $(NAME) && go get -d && \
 		cd $(PWD) && \
-		tar zcf $(SRC) $(GOFOLDER)/src/ --exclude=.git
+		tar zcf $(SRC) --exclude=.git $(GOFOLDER)/src/
 
