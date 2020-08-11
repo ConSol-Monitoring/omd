@@ -93,7 +93,6 @@ vm_enableTCP6=1
 vm_search_maxLookback=5m
 vm_loggerLevel=INFO
 vm_loggerOutput=stdout
-vm_influxSkipSingleField=1
 vm_selfScrapeInterval=30s
 vm_search_maxPointsPerTimeseries=1000000000
 vm_search_maxUniqueTimeseries=1000000000
@@ -259,7 +258,7 @@ case "$1" in
         fi
     ;;
     stop)
-        echo -n "Stopping victoriadb..."
+        echo -n "Stopping victoriametrics..."
         if victoriadb_wait_stop; then
             echo 'OK'
              __init_hook $0 $1 post 0

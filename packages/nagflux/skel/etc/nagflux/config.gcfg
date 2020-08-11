@@ -61,6 +61,26 @@
 	# Set it to false if you're using gearman, because gearman will probably not buffer your data
 	StopPullingDataIfDown = true
 
+[InfluxDB "victoriametrics"]
+	Enabled = false
+	Version = 1.0
+	##############
+	# The address is controlled by omd itself. Do not change it here.
+	# Instead use 'omd config VICTORIAMETRICS_HTTP_PORT/TCP_ADDR set <port>/<ip|name>'
+	# and 'omd config VICTORIAMETRICS_MODE set (ssl|http)'
+	# Note: per default not activated!
+ 
+	# Victoriametrics HTTP port access line protocol on /write URL: 
+	Address = "http://localhost:###CONFIG_VICTORIAMETRICS_PORT###"
+	#
+	# also keep this comments to reduce the merge conflicts during updates
+	##############
+	Arguments = "precision=ms"
+	# If set on true nagflux will not parse Spoolfiles if this Influxdb is not running
+	# Set it to false if you're using gearman, because gearman will probably not buffer your data
+	StopPullingDataIfDown = true
+	HealthUrl = "/health"
+
 [Livestatus]
 	#tcp or file
 	Type = "file"

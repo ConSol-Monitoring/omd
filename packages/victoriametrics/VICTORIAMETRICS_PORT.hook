@@ -22,9 +22,18 @@ case "$1" in
         fi
         LOCAL_ADDRESS='localhost:'
 
-        #TODO:
-        #sed -e '/^\[InfluxDB \"nagflux\"\]/,/^\[/{s%^\s*Address = "http.*$%\tAddress = "http://'$LOCAL_ADDRESS$PORT'"%}' -i $OMD_ROOT/etc/nagflux/config.gcfg
-        #sed -e 's%^url = "http.*/query?\(.*$\)%url = "http://'$LOCAL_ADDRESS$PORT'/query?\1%' -i $OMD_ROOT/etc/histou/histou.ini
+        # adapt configs:
+        if [ -f  $OMD_ROOT/etc/victoriametrics/victoriametrics.conf ] ; then
+           . $OMD_ROOT/etc/victoriametrics/victoriametrics.conf
+        fi
+        if [ "$vm_httpAuth_username:$vm_httpAuth_password" == ":" ] ; then
+           auth=""
+        else
+           auth="$vm_httpAuth_username:$vm_httpAuth_password"'@'
+        fi
+        sed -e '/^\[InfluxDB \"victoriametrics\"\]/,/^\[/{s%^\s*Address = \("https\{0,1\}:\).*%\tAddress = \1//'$auth$LOCAL_ADDRESS$PORT'"%}' -i $OMD_ROOT/etc/nagflux/config.gcfg
+
+        sed -e '/^\[promql\]/,/^\[/{s%^url = "\(http.?\)://.*/query?\(.*$\)%url = "\1://'$auth$LOCAL_ADDRESS$PORT'/query?\2%}' -i $OMD_ROOT/etc/histou/histou.ini
 
         if [ -f $OMD_ROOT/etc/victoriametrics/grafana_datasources.yml ] ; then
           sed -E 's%^(.*)url:.*$%\1url: http://'$LOCAL_ADDRESS$PORT'%' -i $OMD_ROOT/etc/victoriametrics/grafana_datasources.yml
