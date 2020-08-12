@@ -14,8 +14,9 @@ CRONTAB_OPTS=""
 USER="###SITE###"
 
 # check for root
-if [ `id -u` -eq "0" ]; then
-	CRONTAB_OPTS="-u ###SITE###"
+if [ $(id -un) != "$USER" ]; then
+    echo "must be run as site user"
+	exit 1
 fi
 
 # See how we were called.
@@ -35,7 +36,12 @@ case "$1" in
 
     stop)
         echo -n "Removing Crontab..."
-        $CRONTAB $CRONTAB_OPTS -r || exit 0
+        $CRONTAB $CRONTAB_OPTS -l >/dev/null 2>&1
+        if [ $? -eq 0 ]; then
+            $CRONTAB $CRONTAB_OPTS -r
+        else
+            echo "...already empty. "
+        fi
         echo OK
         exit 0
         ;;
