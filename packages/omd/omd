@@ -385,7 +385,7 @@ def groupadd(groupname, gid = None):
     cmd += groupname
 
     if 0 != os.system(cmd):
-        bail_out("Cannot create group for site user.")
+        bail_out(tty_error + ": Cannot create group for site user.")
 
 def useradd(sitename, uid = None, gid = None):
     # Create user for running site 'name'
@@ -396,7 +396,7 @@ def useradd(sitename, uid = None, gid = None):
     if 0 != os.system("useradd %s -r -d '%s' -c 'OMD site %s' -g %s -G omd %s -s /bin/bash" % \
                       (useradd_options, site_dir(sitename), sitename, sitename, sitename)):
         groupdel(sitename)
-        bail_out("Error creating site user.")
+        bail_out(tty_error + ": Error creating site user.")
 
     # Add Apache to new group. It needs to be able to write in to the
     # command pipe and possible other stuff
@@ -616,7 +616,7 @@ def read_skel_permissions():
     global g_skel_permissions
     g_skel_permissions = load_skel_permissions(OMD_VERSION)
     if not g_skel_permissions:
-        bail_out("%s is missing or currupted." % file_path)
+        bail_out(tty_error + ": %s is missing or currupted." % file_path)
 
 def load_skel_permissions(version):
     file_path = "/omd/versions/%s/share/omd/skel.permissions" % version
@@ -722,6 +722,8 @@ def create_skeleton_file(skelbase, userbase, relpath, replacements):
 
     # Remove old version, if existing (needed during update)
     if os.path.islink(user_path) and os.path.lexists(user_path) or os.path.exists(user_path):
+        if relpath in [ './bin', './include', './lib', './share', './version' ]:
+            bail_out(tty_error + " %s would overwrite base symlink %s, check your skeleton folder." % (skel_path, user_path))
         delete_user_file(user_path)
 
     # Create directories, symlinks and files
@@ -1038,7 +1040,7 @@ def merge_update_file(relpath, old_version, new_version, skel_path = None):
                 except Exception:
                     # Do not ask the user in non-interactive mode.
                     if opt_conflict in [ "abort", "install" ]:
-                        bail_out("Skeleton file '%s' of version %s not readable." % (p, version))
+                        bail_out(tty_error + ": Skeleton file '%s' of version %s not readable." % (p, version))
                     elif opt_conflict == "keepold" or not user_confirms("Skeleton file of version %s not readable" % version,
                         "The file '%s' is not readable for the site user. "
                         "This is most probably due a bug in release 0.42. "
@@ -1941,7 +1943,7 @@ def load_hook_choices(hook):
                 descr = descr.strip()
                 choices.append( (val, descr) )
         except Exception:
-            bail_out("Invalid output of hook: %s" % choicestxt)
+            bail_out(tty_error + ": Invalid output of hook: %s" % choicestxt)
 
     hook["choices"] = choices
     return
@@ -1985,7 +1987,7 @@ def config_change():
         settings = read_config_change_commands()
 
         if not settings:
-            bail_out("You need to provide config change commands via stdin: KEY=value\n")
+            bail_out(tty_error + ": You need to provide config change commands via stdin: KEY=value\n")
 
         validate_config_change_commands(settings)
 
@@ -2010,7 +2012,7 @@ def read_config_change_commands():
             key, value = line.split("=", 1)
             settings.append((key, value))
         except ValueError as e:
-            bail_out("Invalid config change command: %r" % line)
+            bail_out(tty_error + ": Invalid config change command: %r" % line)
     return settings
 
 
@@ -2019,7 +2021,7 @@ def validate_config_change_commands(settings):
     for key, value in settings:
         hook = g_config_hooks.get(key)
         if not hook:
-            bail_out("Invalid config option: %r" % key)
+            bail_out(tty_error + ": Invalid config option: %r" % key)
 
         # Check if value is valid. Choices are either a list of allowed
         # keys or a regular expression
@@ -2027,11 +2029,11 @@ def validate_config_change_commands(settings):
         if type(hook["choices"]) == list:
             choices = [ var for (var, descr) in hook["choices"] ]
             if value not in choices:
-                bail_out("Invalid value %r for %r. Allowed are: %s\n" % \
+                bail_out(tty_error + ": Invalid value %r for %r. Allowed are: %s\n" % \
                         (value, key, ", ".join(choices)))
         else:
             if not hook["choices"].match(value):
-                bail_out("Invalid value %r for %r. Does not match allowed pattern.\n" %
+                bail_out(tty_error + ": Invalid value %r for %r. Does not match allowed pattern.\n" %
                            (value, key))
 
 
@@ -2188,7 +2190,7 @@ def config_configure():
                 try:
                     config_configure_hook(current_hook_name)
                 except Exception as e:
-                    bail_out("Error in hook %s: %s" % (current_hook_name, e))
+                    bail_out(tty_error + ": Error in hook %s: %s" % (current_hook_name, e))
             else:
                 menu_open = False
 
@@ -2227,13 +2229,13 @@ def call_init_hook(command, when):
         if(opt_verbose):
             sys.stderr.write(str(e)+"\n")
     except subprocess.CalledProcessError as e:
-        bail_out(g_sitename + ": " + str(e))
+        bail_out(tty_error + ": %s: %s" % (g_sitename, e))
 
 def init_action(command, args, options):
     if site_is_disabled(g_sitename):
-        bail_out("This site is disabled.")
+        bail_out(tty_error + ": This site is disabled.")
     if site_needs_update(g_sitename):
-        bail_out("This site needs to be updated with: omd update")
+        bail_out(tty_error + ": This site needs to be updated with: omd update")
 
     # restart is special, if there is a failing start-pre
     # hook but not a failing restart-pre hook `omd restart' can
@@ -2296,7 +2298,7 @@ def read_info():
                     else:
                         g_info[var.strip()] = value
                 except Exception as e:
-                    bail_out('Unable to parse line "%s" in file "%s"' % (line, info_dir + "/" + f))
+                    bail_out(tty_error + ': Unable to parse line "%s" in file "%s"' % (line, info_dir + "/" + f))
 
 def fstab_verify(name):
     mountpoint = tmp_dir(name)
@@ -2355,7 +2357,7 @@ def set_environment():
                 continue # allow empty lines and comments
             parts = line.split("=")
             if len(parts) != 2:
-                bail_out("%s: syntax error in line %d" % (envfile, lineno))
+                bail_out(tty_error + ": %s: syntax error in line %d" % (envfile, lineno))
             varname = parts[0]
             value = parts[1]
             if value.startswith('"'):
@@ -2472,9 +2474,9 @@ def call_scripts(phase, prefix=None):
 def check_site_user(site_must_exist):
     if g_sitename != None and site_must_exist and not site_exists(g_sitename):
         if os.getuid() == 0:
-            bail_out("omd: no such site: %s" % g_sitename)
+            bail_out(tty_error + ": omd: no such site: %s" % g_sitename)
         else:
-            bail_out("omd: You need to execute omd as root or site user. %s is not a omd site." % g_sitename)
+            bail_out(tty_error + ": omd: You need to execute omd as root or site user. %s is not a omd site." % g_sitename)
 
 
 #.
@@ -2531,9 +2533,9 @@ def main_setversion(args, options={}):
         version = args[0]
 
     if version != 'auto' and not version_exists(version):
-        bail_out("The given version does not exist.")
+        bail_out(tty_error + ": The given version does not exist.")
     if version == default_version():
-        bail_out("The given version is already default.")
+        bail_out(tty_error + ": The given version is already default.")
 
     # Special handling for debian based distros which use update-alternatives
     # to control the path to the omd binary, manpage and so on
@@ -2556,7 +2558,7 @@ def main_version(args, options={}):
     if len(args) > 0:
         site = args[0]
         if not site_exists(site):
-            bail_out("No such site: %s" % site)
+            bail_out(tty_error + ": No such site: %s" % site)
         version = site_version(site)
     else:
         version = g_info["OMD_VERSION"]
@@ -2629,13 +2631,13 @@ def main_sites(args, options={}):
 def sitename_must_be_valid(name, reuse = False):
     # Make sanity checks before starting any action
     if not reuse and site_exists(name):
-        bail_out("Site '%s' already existing." % name)
+        bail_out(tty_error + ": Site '%s' already existing." % name)
     if not reuse and group_exists(name):
-        bail_out("Group '%s' already existing." % name)
+        bail_out(tty_error + ": Group '%s' already existing." % name)
     if not reuse and user_exists(name):
-        bail_out("User '%s' already existing." % name)
+        bail_out(tty_error + ": User '%s' already existing." % name)
     if not re.match("^[a-zA-Z_][a-zA-Z_0-9]{0,15}$", name):
-        bail_out("Invalid site name. Must begin with a character, may contain characters, digits and _ and have length 1 up to 16")
+        bail_out(tty_error + ": Invalid site name. Must begin with a character, may contain characters, digits and _ and have length 1 up to 16")
 
 
 def main_create(args, options={}):
@@ -2643,14 +2645,14 @@ def main_create(args, options={}):
     if "reuse" in options:
         reuse = True
         if not user_verify(g_sitename):
-            bail_out("Error verifying site user.")
+            bail_out(tty_error + ": Error verifying site user.")
 
     sitename_must_be_valid(g_sitename, reuse)
 
     sitedir = site_dir(g_sitename)
     real_version_path = os.path.realpath("%s/../../versions" % sitedir)
     if not os.path.exists(real_version_path):
-        bail_out("Error verifying versions folder: %s" % real_version_path)
+        bail_out(tty_error + ": Error verifying versions folder: %s" % real_version_path)
 
     # Create operating system user for site
     uid = options.get("uid")
@@ -2699,12 +2701,12 @@ def welcome_message(admin_password):
 
 def main_init(args, options):
     if not site_is_disabled(g_sitename):
-        bail_out("Cannot initialize site that is not disabled.\n"
+        bail_out(tty_error + ": Cannot initialize site that is not disabled.\n"
                  "Please call 'omd disable %s' first." % g_sitename)
 
     if not site_is_empty(g_sitename):
         if not opt_force:
-            bail_out("The site's home directory is not empty. Please add use\n"
+            bail_out(tty_error + ": The site's home directory is not empty. Please add use\n"
                      "'omd --force init %s' if you want to erase all data." % g_sitename)
 
         sitedir = site_dir(g_sitename)
@@ -2801,11 +2803,11 @@ def finalize_site(what, apache_reload):
             call_scripts('post-' + what)
             sys.exit(0)
         except Exception as e:
-            bail_out("finalize_site: %s" % e)
+            bail_out(tty_error + ": finalize_site: %s" % e)
     else:
         wpid, status = os.waitpid(pid, 0)
         if status:
-            bail_out("Error in non-priviledged sub-process.")
+            bail_out(tty_error + ": Error in non-priviledged sub-process.")
 
     # Finally reload global apache - with root permissions - and
     # create include-hook for Apache and reload apache
@@ -2829,7 +2831,7 @@ def main_rm(args, options={}):
 
     if user_logged_in(g_sitename):
         if not kill:
-            bail_out("User '%s' still logged in or running processes." % g_sitename)
+            bail_out(tty_error + ": User '%s' still logged in or running processes." % g_sitename)
         else:
             kill_site_user_processes(exclude_current_and_parents=True)
 
@@ -2898,7 +2900,7 @@ def set_conflict_option(options):
     opt_conflict = options.get("conflict", "ask")
 
     if opt_conflict not in [ "ask", "install", "keepold", "abort" ]:
-        bail_out("Argument to --conflict must be one of ask, install, keepold and abort.")
+        bail_out(tty_error + ": Argument to --conflict must be one of ask, install, keepold and abort.")
 
 
 def get_exclude_patterns(options):
@@ -2934,25 +2936,25 @@ def main_mv_or_cp(what, args, options={}):
     global g_sitename
     global g_sitedir
     if len(args) != 1:
-        bail_out("omd: Usage: omd %s oldname newname" % what)
+        bail_out(tty_error + ": omd: Usage: omd %s oldname newname" % what)
     new = args[0]
 
     reuse = False
     if "reuse" in options:
         reuse = True
         if not user_verify(new):
-            bail_out("Error verifying site user.")
+            bail_out(tty_error + ": Error verifying site user.")
         fstab_verify(new)
 
     sitename_must_be_valid(new, reuse)
 
     old = g_sitename
     if not site_is_stopped(old):
-        bail_out("Cannot %s site '%s' while it is running." % (action, old))
+        bail_out(tty_error + ": Cannot %s site '%s' while it is running." % (action, old))
 
     pids = find_processes_of_user(old)
     if pids:
-        bail_out("Cannot %s site '%s' while there are processes owned by %s.\n"
+        bail_out(tty_error + ": Cannot %s site '%s' while there are processes owned by %s.\n"
                  "PIDs: %s" % (action, old, old, " ".join(pids)))
 
     if what == "mv":
@@ -3062,7 +3064,7 @@ def main_vimdiff(args, options={}):
     opt_verbose = True
 
     if len(args) == 0:
-        bail_out("Sorry, 'omd vimdiff' requires a filename as argument.")
+        bail_out(tty_error + ": Sorry, 'omd vimdiff' requires a filename as argument.")
 
     for arg in args:
         diff_list(from_skelroot, g_sitedir, from_version, arg, "vimdiff")
@@ -3071,7 +3073,7 @@ def main_reset(args, options={}):
     sitedir = site_dir(g_sitename)
 
     if len(args) == 0:
-        bail_out("Sorry, 'omd reset' requires a filename as argument.")
+        bail_out(tty_error + ": Sorry, 'omd reset' requires a filename as argument.")
 
     replacements = {
         "###SITE###" : g_sitename,
@@ -3084,7 +3086,7 @@ def main_reset(args, options={}):
 
     for arg in args:
         if not os.path.exists(skelroot + '/' + arg):
-            bail_out("file %s does not exist in skeleton"  % (arg))
+            bail_out(tty_error + ": file %s does not exist in skeleton"  % (arg))
         if os.path.isdir(skelroot + '/' +arg) and not os.path.islink(skelroot + '/' + arg):
             for dirpath, dirnames, filenames in os.walk(arg):
                 for entry in filenames:
@@ -3141,7 +3143,7 @@ def diff_list(from_skelroot, g_sitedir, from_version, orig_path, diff_binary = N
     elif abs_path.startswith(abs_sitedir):
         rel_path = abs_path[len(abs_sitedir) + 1:]
     else:
-        bail_out("Sorry, 'omd diff' only works for files in the site's directory.")
+        bail_out(tty_error + ": Sorry, 'omd diff' only works for files in the site's directory.")
 
     if not os.path.isdir(abs_path):
         print_diff(rel_path, from_skelroot, g_sitedir, from_version, old_perms, diff_binary)
@@ -3218,10 +3220,10 @@ def main_update(args, options={}):
     set_conflict_option(options)
 
     if not site_is_stopped(g_sitename):
-        bail_out("Please completely stop '%s' before updating it." % g_sitename)
+        bail_out(tty_error + ": Please completely stop '%s' before updating it." % g_sitename)
 
     if int(os.popen("df -Pm /omd/sites/%s/. | tail -n 1 | awk '{ print $4 }'" % g_sitename).read()) < 100:
-        bail_out("Not enough free disk space. Pleace free at least 100MB!")
+        bail_out(tty_error + ": Not enough free disk space. Pleace free at least 100MB!")
 
     # Unmount tmp. We need to recreate the files and directories
     # from the new version after updating.
@@ -3243,7 +3245,7 @@ def main_update(args, options={}):
         possible_versions = [ v for v in omd_versions() if v != from_version ]
         possible_versions.sort(reverse=True)
         if len(possible_versions) == 0:
-            bail_out("There is no other OMD version to update to.")
+            bail_out(tty_error + ": There is no other OMD version to update to.")
         elif len(possible_versions) == 1:
             to_version = possible_versions[0]
         else:
@@ -3358,7 +3360,7 @@ def main_umount(args, options = {}):
     else:
         # Skip the site even when it is partly running
         if not site_is_stopped(g_sitename):
-            bail_out("Cannot unmount tmpfs of site '%s' while it is running." % g_sitename)
+            bail_out(tty_error + ": Cannot unmount tmpfs of site '%s' while it is running." % g_sitename)
         unmount_tmpfs(g_sitename, kill="kill" in options)
     sys.exit(exit_status)
 
@@ -3488,7 +3490,7 @@ def main_init_action(command, args, options={}):
 
 def main_config(args, options={}):
     if site_needs_update(g_sitename):
-        bail_out("This site needs to be updated with: omd update")
+        bail_out(tty_error + ": This site needs to be updated with: omd update")
 
     if (len(args) == 0 or args[0] != "show") and \
         opt_force and not site_is_stopped(g_sitename):
@@ -3519,7 +3521,7 @@ def main_su(args, options={}):
     try:
         os.execl("/bin/su", "su", "-", "%s" % g_sitename)
     except OSError:
-        bail_out("Cannot open a shell for user %s" % g_sitename)
+        bail_out(tty_error + ": Cannot open a shell for user %s" % g_sitename)
 
 
 def backup_site_files_to_taropen(tar, options):
@@ -3546,7 +3548,7 @@ def backup_site_files_to_taropen(tar, options):
         try:
             tar.add(g_sitedir, g_sitename, exclude=filter_files)
         except TypeError:
-            bail_out("You can not exclude files from your backup using your "
+            bail_out(tty_error + ": You can not exclude files from your backup using your "
                      "Python version %s. You may need to update." %
                                      ".".join(map(str, sys.version_info[:3])))
 
@@ -3563,15 +3565,15 @@ def backup_site_to_taropen(fh, options):
         backup_site_files_to_taropen(tar, options)
         tar.close()
     except IOError as e:
-        bail_out("Failed to perform backup: %s" % e)
+        bail_out(tty_error + ": Failed to perform backup: %s" % e)
 
 
 def main_backup(args, options={}):
     if len(args) == 0:
-        bail_out("You need to provide a path to the destination file.")
+        bail_out(tty_error + ": You need to provide a path to the destination file.")
 
     if site_needs_update(g_sitename):
-        bail_out("This site needs to be updated with: omd update")
+        bail_out(tty_error + ": This site needs to be updated with: omd update")
     if not site_is_stopped(g_sitename):
         sys.stdout.write("Warning: The site should be stopped for a backup.\n")
 
@@ -3581,7 +3583,7 @@ def main_backup(args, options={}):
     dest = args[0]
 
     if dest == '-':
-        bail_out("backup to stdout not supported anymore")
+        bail_out(tty_error + ": backup to stdout not supported anymore")
     else:
         if dest[0] != '/':
             dest = g_orig_wd + '/' + dest
@@ -3596,21 +3598,21 @@ def main_restore(args, options={}):
     set_conflict_option(options)
 
     if len(args) == 0:
-        bail_out("You need to provide a path to the source file.")
+        bail_out(tty_error + ": You need to provide a path to the source file.")
 
     source = args[-1]
     if source == '-':
-        bail_out("backup from stdin not supported anymore")
+        bail_out(tty_error + ": backup from stdin not supported anymore")
     elif os.path.exists(source):
         fh = open(source, "rb")
         tar_mode = 'r:gz'
     else:
-        bail_out("The backup archive does not exist.")
+        bail_out(tty_error + ": The backup archive does not exist.")
 
     try:
         tar = tarfile.open(fileobj=fh, mode=tar_mode)
     except tarfile.ReadError as e:
-        bail_out("Failed to open the backup: %s" % e)
+        bail_out(tty_error + ": Failed to open the backup: %s" % e)
 
     # Get the first file of the tar archive. Expecting <site>/version symlink
     # for validation reasons.
@@ -3618,18 +3620,18 @@ def main_restore(args, options={}):
     try:
         sitename, version_name = site_tarinfo.name.split("/", 1)
     except ValueError:
-        bail_out("Failed to detect version of backed up site. "
+        bail_out(tty_error + ": Failed to detect version of backed up site. "
                  "Maybe the backup is from an incompatible version.")
 
     if version_name == "version":
         version = site_tarinfo.linkname.split('/')[-1]
     else:
-        bail_out("Failed to detect version of backed up site.")
+        bail_out(tty_error + ": Failed to detect version of backed up site.")
 
     if not version_exists(version):
         backup_skel_tarinfo = tar.next()
         if backup_skel_tarinfo.name.find("/version/skel") == -1 and backup_skel_tarinfo.name.find("/.backup_meta/skel") == -1:
-            bail_out("This is an old incomplete backup and its version is not installed.\n"
+            bail_out(tty_error + ": This is an old incomplete backup and its version is not installed.\n"
                      "Either install version %s or create the backup manually with this command:\n"
                      "cd /omd/sites/ && tar cfz /tmp/$OMD_SITE.backup.tgz $OMD_SITE/version $OMD_SITE/version/skel $OMD_SITE/share/omd/skel.permissions $OMD_SITE\n"
                      % version)
@@ -3643,7 +3645,7 @@ def main_restore(args, options={}):
     am_root = os.getuid() == 0
     if not am_root:
         if new_sitename != sitename:
-            bail_out("Only root can restore to a new site!")
+            bail_out(tty_error + ": Only root can restore to a new site!")
         reuse = True
         new_sitename = site_name()
         g_sitename = new_sitename
@@ -3655,7 +3657,7 @@ def main_restore(args, options={}):
     if "reuse" in options:
         reuse = True
         if not user_verify(g_sitename, allow_populated=True):
-            bail_out("Error verifying site user.")
+            bail_out(tty_error + ": Error verifying site user.")
         fstab_verify(g_sitename)
 
     sitename_must_be_valid(g_sitename, reuse)
@@ -3680,7 +3682,7 @@ def main_restore(args, options={}):
     if reuse:
         if not site_is_stopped(g_sitename):
             if not "kill" in options:
-                bail_out("Cannot restore '%s' while it is running." % (g_sitename))
+                bail_out(tty_error + ": Cannot restore '%s' while it is running." % (g_sitename))
             else:
                 if am_root:
                     os.system('omd stop %s' % g_sitename)
@@ -3699,7 +3701,7 @@ def main_restore(args, options={}):
     else:
         sys.stdout.write("Deleting existing site data...")
         # remove site folder (when doing this as user, skip only on errors below the sitefolder itself)
-        shutil.rmtree(g_sitedir, onerror=lambda f,p,e: p != g_sitedir and not am_root and bail_out(str(e[1])))
+        shutil.rmtree(g_sitedir, onerror=lambda f,p,e: p != g_sitedir and not am_root and bail_out(tty_error + ": %s" % e[1]))
         ok()
 
     if not os.path.exists(g_sitedir):
@@ -3825,7 +3827,7 @@ def kill_site_user_processes(site, exclude_current_and_parents=False):
         tries -= 1
 
     if pids:
-        bail_out("Failed to kill site processes: %s" % ", ".join(map(str, pids)))
+        bail_out(tty_error + ": Failed to kill site processes: %s" % ", ".join(map(str, pids)))
 
 
 def get_current_and_parent_pids():
@@ -3868,7 +3870,7 @@ def site_user_processes(site, exclude_current_and_parents):
 def main_cleanup(args, options=None):
     package_manager = PackageManager.factory()
     if package_manager is None:
-        bail_out("Command is not supported on this platform")
+        bail_out(tty_error + ": Command is not supported on this platform")
 
     for version in omd_versions():
         site_ids = [ s for s in all_sites() if site_version(s) == version ]
@@ -3946,7 +3948,7 @@ class PackageManager(metaclass=abc.ABCMeta):
         p = self._execute(cmd)
         output = p.communicate()[0]
         if p.wait() != 0:
-            bail_out("Failed to uninstall package:\n%s" % output)
+            bail_out(tty_error + ": Failed to uninstall package:\n%s" % output)
 
 
     def _execute(self, cmd):
@@ -3970,7 +3972,7 @@ class PackageManagerDEB(PackageManager):
         p = self._execute(["dpkg", "-S", real_path])
         output = p.communicate()[0]
         if p.wait() != 0:
-            bail_out("Failed to find packages:\n%s" % output)
+            bail_out(tty_error + ": Failed to find packages:\n%s" % output)
 
         for line in output.split(b"\n"):
             if line.endswith(b": %s" % real_path.encode("UTF-8")):
@@ -3996,7 +3998,7 @@ class PackageManagerRPM(PackageManager):
             return []
 
         elif p.wait() != 0:
-            bail_out("Failed to find packages:\n%s" % stderr)
+            bail_out(tty_error + ": Failed to find packages:\n%s" % stderr)
 
         return output.strip().split(b"\n")
 
@@ -4237,7 +4239,7 @@ def handle_global_option(opt, orig):
     def opt_arg():
         global main_args
         if len(main_args) < 1:
-            bail_out("Option %s needs an argument." % opt)
+            bail_out(tty_error + ": Option %s needs an argument." % opt)
         arg = main_args[0]
         main_args = main_args[1:]
         return arg
@@ -4248,9 +4250,9 @@ def handle_global_option(opt, orig):
         if version != OMD_VERSION:
             omd_path = "/omd/versions/%s/bin/omd" % version
             if not os.path.exists(omd_path):
-                bail_out("OMD version '%s' is not installed." % version)
+                bail_out(tty_error + ": OMD version '%s' is not installed." % version)
             os.execv(omd_path, sys.argv)
-            bail_out("Cannot execute %s." % omd_path)
+            bail_out(tty_error + ": Cannot execute %s." % omd_path)
     elif opt in [ 'f', 'force' ]:
         opt_force = True
         opt_interactive = False
@@ -4260,7 +4262,7 @@ def handle_global_option(opt, orig):
     elif opt in [ 'v', 'verbose' ]:
         opt_verbose = True
     else:
-        bail_out("Invalid global option %s.\n"
+        bail_out(tty_error + ": Invalid global option %s.\n"
                  "Call omd help for available options." % orig)
 
 def parse_command_options(args, options_spec):
@@ -4286,7 +4288,7 @@ def parse_command_options(args, options_spec):
                 args = [ optarg ] + args
                 for e in options_spec:
                     if e[0] == opt[2:] and not e[2]:
-                        bail_out("The option %s does not take an argument" % opt)
+                        bail_out(tty_error + ": The option %s does not take an argument" % opt)
 
             for e in options_spec:
                 if e[0] == opt[2:]:
@@ -4298,13 +4300,13 @@ def parse_command_options(args, options_spec):
                         entries.append(e)
 
         if len(entries) == 0:
-            bail_out("Invalid option '%s'" % opt)
+            bail_out(tty_error + ": Invalid option '%s'" % opt)
 
         for llong, sshort, needs_arg, help in entries:
             arg = None
             if needs_arg:
                 if len(args) == 0:
-                    bail_out("Option '%s' needs an argument." % opt)
+                    bail_out(tty_error + ": Option '%s' needs an argument." % opt)
                 arg = args[0]
                 args = args[1:]
             options[llong] = arg
@@ -4316,9 +4318,9 @@ def exec_other_omd(version):
     omd_path = "/omd/versions/%s/bin/omd" % version
     if os.path.exists(omd_path):
         os.execv(omd_path, sys.argv)
-        bail_out("Cannot run bin/omd of version %s." % version)
+        bail_out(tty_error + ": Cannot run bin/omd of version %s." % version)
     else:
-        bail_out("Site %s uses version %s which is not installed.\n"
+        bail_out(tty_error + ": Site %s uses version %s which is not installed.\n"
                 "Please reinstall that version and retry this command.\n"
                 "Or use the --force option to run the command with this version." %
                 (g_sitename, version))
@@ -4392,7 +4394,7 @@ if not found:
     sys.exit(1)
 
 if os.getuid() != 0 and only_root:
-    bail_out("omd: root permissions are needed for this command.")
+    bail_out(tty_error + ": omd: root permissions are needed for this command.")
 
 # Parse command options. We need to do this now in order to know,
 # if a site name has been specified or not
@@ -4408,7 +4410,7 @@ if needs_site > 0:
             g_sitename = args[0]
             args = args[1:]
         elif needs_site == 1:
-            bail_out("omd: please specify site.")
+            bail_out(tty_error + ": omd: please specify site.")
     else:
         g_sitename = site_name()
 
@@ -4424,7 +4426,7 @@ if g_sitename and site_must_exist and command != "update" and command != "restor
             sys.stdout.write("WARNING: This site has an empty home directory and is not\n"
                              "assigned to any OMD version. You are running version %s.\n" % OMD_VERSION)
         elif command != "init":
-            bail_out("This site has an empty home directory /omd/sites/%s.\n"
+            bail_out(tty_error + ": This site has an empty home directory /omd/sites/%s.\n"
                      "If you have created that site with 'omd create --no-init %s'\n"
                      "then please first do an 'omd init %s'." % (3*(g_sitename,)))
     elif OMD_VERSION != v:
