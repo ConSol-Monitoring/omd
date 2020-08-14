@@ -40,7 +40,7 @@ case "$1" in
         if [ $? -eq 0 ]; then
             $CRONTAB $CRONTAB_OPTS -r
         else
-            echo "...already empty. "
+            echo -n "(already empty)..."
         fi
         echo OK
         exit 0
