@@ -2801,7 +2801,7 @@ def finalize_site(what, apache_reload):
             call_scripts('post-' + what)
             sys.exit(0)
         except Exception as e:
-            bail_out(e)
+            bail_out("finalize_site: %s" % e)
     else:
         wpid, status = os.waitpid(pid, 0)
         if status:
