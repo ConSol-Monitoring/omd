@@ -13,7 +13,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 51 );
+plan( tests => 54 );
 
 ##################################################
 # create our test site
@@ -80,5 +80,4 @@ TestUtils::test_url({
 TestUtils::test_command({ cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_http -t 60 -H 127.0.0.1 -p 8428 -u \"/api/v1/query?query=sum(max_over_time(\{__name__=~\\\"metrics.*\\\",host=\\\"xxx\\\",service=\\\"range\\\",performanceLabel=\\\"a%20used\\\"\}\[10m\]))\"  -r\"\\\"value\\\":\\\[.*,\\\"91\\\"\\\]\" -v '", like => '/HTTP OK:/' });
 
 #Clean up
-#TestUtils::test_command({ cmd => $omd_bin." stop $site" });
-#TestUtils::remove_test_site($site);
+TestUtils::remove_test_site($site);
