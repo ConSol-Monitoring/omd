@@ -37,3 +37,17 @@ if [ "${BASH-}" ] && [ "$BASH" != "/bin/sh" ]; then
     fi
 fi
 
+# Source any additional scripts which make changes to the environment.
+# Use them where the possibilities of ~/etc/environment are not sufficient.
+if [ -z "${PROFILEDOTD:-}" ]; then
+    PROFILEDOTD=1
+    for i in $OMD_ROOT/etc/profile.d/*.sh ; do
+        if [ -r "$i" ]; then
+            if [ "${-#*i}" != "$-" ]; then
+                . "$i"
+            else
+                . "$i" >/dev/null
+            fi
+        fi
+    done
+fi
