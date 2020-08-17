@@ -13,7 +13,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 54 );
+plan( tests => 55 );
 
 ##################################################
 # create our test site
@@ -62,7 +62,7 @@ END
 
 
 #Test if database is up
-TestUtils::test_command({ cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_http -t 60 -H 127.0.0.1 -p 8428 -u \"/health\"  '", like => '/HTTP OK:/' });
+TestUtils::test_command({ cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_http -t 60 -H 127.0.0.1 -p 8428 -u \"/health\"  '", like => '/HTTP OK:/', waitfor => 'HTTP\ OK:' });
 
 #Mock Nagios and write spoolfiles
 TestUtils::test_command({ cmd => "/bin/su - $site -c 'cat > var/pnp4nagios/spool/ranges $ranges'"});
