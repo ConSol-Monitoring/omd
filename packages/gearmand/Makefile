@@ -11,6 +11,7 @@ CONFIGUREOPTS = \
     --disable-libdrizzle \
     --disable-libpq \
     --disable-libtokyocabinet \
+    --without-mysql \
     --sbindir=$(OMD_ROOT)/bin \
     --prefix=$(OMD_ROOT)
 
