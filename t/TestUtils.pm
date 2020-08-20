@@ -111,7 +111,7 @@ sub get_omd_bin {
 =cut
 sub test_command {
     my $test = shift;
-    my($rc, $stderr) = ( -1, '') ;
+    my($rc, $stderr, $err) = ( -1, '', '') ;
     my $return = 1;
 
     # run the command
@@ -137,7 +137,11 @@ sub test_command {
             eval {
                 local $SIG{ALRM} = sub { die "timeout on cmd: ".$test->{'cmd'}."\n" };
                 $t->run(args => $arg, stdin => $test->{'stdin'});
+                $rc = $?>>8;
             };
+            if($@) {
+                $err = $@;
+            }
             alarm(0);
 
             if($waitfor =~ m/^\!/) {
@@ -160,21 +164,24 @@ sub test_command {
             fail("content ".$expr." did not occur within 120 seconds");
             _diag_cmd($test);
         }
+    } else {
+        alarm(300);
+        eval {
+            local $SIG{ALRM} = sub { die "timeout on cmd: ".$test->{'cmd'}."\n" };
+            $t->run(args => $arg, stdin => $test->{'stdin'});
+            $rc = $?>>8;
+        };
+        if($@) {
+            $err = $@;
+        }
+        alarm(0);
     }
-
-    alarm(300);
-    eval {
-        local $SIG{ALRM} = sub { die "timeout on cmd: ".$test->{'cmd'}."\n" };
-        $t->run(args => $arg, stdin => $test->{'stdin'});
-        $rc = $?>>8;
-    };
-    if($@) {
-        $stderr = $@;
+    if($err) {
+        $stderr = $err;
     } else {
         $stderr = $t->stderr;
         $stderr = TestUtils::_clean_stderr($stderr);
     }
-    alarm(0);
 
     # exit code?
     $test->{'exit'} = 0 unless exists $test->{'exit'};
