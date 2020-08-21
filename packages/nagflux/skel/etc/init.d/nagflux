@@ -66,8 +66,7 @@ case "$1" in
         touch "$PID_FILE"
         nohup $DAEMON $OPTIONS >>$LOGFILE 2>&1 &
         if [ $? -eq 0 ]; then
-			sleep 1
-            pgrep nagflux -u `id -u` > $PID_FILE
+            echo "$!" > $PID_FILE
             echo "OK"
             exit 0;
         else
