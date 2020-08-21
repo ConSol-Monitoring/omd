@@ -129,6 +129,8 @@ else
     git clone ${OMD_GIT_BASE_STATIC}_static static
   elif [[ ${OMD_GIT_BASE_STATIC} =~ ^git ]] && [[ ! $OMD_GIT_BASE_STATIC =~ ^git@([0-9a-zA-Z._-:]+)([0-9a-zA-Z._-/]+)/api/git/ ]]; then
     git clone ${OMD_GIT_BASE_STATIC}_static static
+  elif [[ ${OMD_GIT_BASE_STATIC} =~ ^[A-Za-z0-9_\-]+@ ]] && [[ ! $OMD_GIT_BASE_STATIC =~ ^git@([0-9a-zA-Z._-:]+)([0-9a-zA-Z._-/]+)/api/git/ ]]; then
+    git clone ${OMD_GIT_BASE_STATIC} static
   else
     git clone ${OMD_GIT_BASE_STATIC}/static
   fi
@@ -154,6 +156,8 @@ else
     git clone ${OMD_GIT_BASE_DYNAMIC}_dynamic dynamic
   elif [[ ${OMD_GIT_BASE_DYNAMIC} =~ ^git ]] && [[ ! $OMD_GIT_BASE_DYNAMIC =~ ^git@([0-9a-zA-Z._-:]+)([0-9a-zA-Z._-/]+)/api/git/ ]]; then
     git clone ${OMD_GIT_BASE_DYNAMIC}_dynamic dynamic
+  elif [[ ${OMD_GIT_BASE_DYNAMIC} =~ ^[A-Za-z0-9_\-]+@ ]] && [[ ! $OMD_GIT_BASE_DYNAMIC =~ ^git@([0-9a-zA-Z._-:]+)([0-9a-zA-Z._-/]+)/api/git/ ]]; then
+    git clone ${OMD_GIT_BASE_DYNAMIC} dynamic
   else
     git clone ${OMD_GIT_BASE_DYNAMIC}/dynamic
   fi
