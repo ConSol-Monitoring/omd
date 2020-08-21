@@ -88,6 +88,8 @@ TestUtils::test_command({ cmd => "$snmptrap -Ln -v 2c -c $site2 127.0.0.1 '' 1.3
 TestUtils::test_command({ cmd => "$snmptrap -Ln -v 2c -c public 127.0.0.1 '' 1.3.6.1.4.1.8072.2.3.0.1 1.3.6.1.4.1.8072.2.3.2.1 i 33333" });
 TestUtils::test_command({ cmd => "$snmptrap -Ln -v 2c -c gsjcuh 127.0.0.1 '' 1.3.6.1.4.1.8072.2.3.0.1 1.3.6.1.4.1.8072.2.3.2.1 i 44444" });
 
+TestUtils::wait_for_file("/omd/sites/$site1/var/log/snmp/traps.log");
+TestUtils::wait_for_file("/omd/sites/$site2/var/log/snmp/traps.log");
 TestUtils::test_command({ cmd => "/bin/grep 11111 /omd/sites/$site1/var/log/snmp/traps.log", like => '/____.1.3.6.1.4.1.8072.2.3.2.1 11111/', exit => undef });
 TestUtils::test_command({ cmd => "/bin/grep 11111 /omd/sites/$site2/var/log/snmp/traps.log", unlike => '/____.1.3.6.1.4.1.8072.2.3.2.1 11111/', exit => undef });
 TestUtils::test_command({ cmd => "/bin/grep 22222 /omd/sites/$site1/var/log/snmp/traps.log", unlike => '/____.1.3.6.1.4.1.8072.2.3.2.1 22222/', exit => undef });
