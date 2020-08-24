@@ -11,7 +11,7 @@ next 4.x:
             - update livestatus to 1.2.1
           - Gearman:
             - Mod-Gearman update 3.3.2
-          - Grafana update to 7.0.4
+          - Grafana update to 7.1.5
           - InfluxDB: update to 1.8.0
           - Prometheus update to 2.19.2
 
