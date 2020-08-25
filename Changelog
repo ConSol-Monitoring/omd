@@ -6,7 +6,8 @@ next 4.x:
             - add build support for ubuntu20.04
             - add build support for fedora31
             - add build support for fedora32
-          - Grafana update to 7.0.4
+          - Gearman:
+            - Mod-Gearman update 3.3.2
           - InfluxDB: update to 1.8.0
           - Prometheus update to 2.19.2
           - LMD: Update 1.9.1
@@ -17,8 +18,8 @@ next:
             - update core to 1.2.1
             - update livestatus to 1.2.1
           - Grafana
-            - Grafana update to 6.7.4
-            - grafana-loki update to 1.5.0
+            - Grafana update to 7.1.5
+            - Grafana-Loki update to 1.6.1
           - Gearman:
             - Mod-Gearman update 3.3.1
             - Gearmand: update 1.1.19.1
