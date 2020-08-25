@@ -1,4 +1,4 @@
-###ROOT###/var/victoriametrics/victioriametrics*.log {
+###ROOT###/var/victoriametrics/victoriametrics*.log {
         missingok
         rotate 52
         compress
