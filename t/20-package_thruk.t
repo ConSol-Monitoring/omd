@@ -176,7 +176,7 @@ my $urls = [
   { url => '/thruk/cgi-bin/reports2.cgi', like => '/Reporting/' },
   { url => '/thruk/cgi-bin/reports2.cgi', post => { 'action' => 'save', 'report' => '9999', 'name' => 'Service SLA Report for '.$host.' - '.$servicep, 'template' => 'sla_service.tt', 'params.sla' => 95, 'params.timeperiod' => 'last12months', 'params.host' => $host, 'params.service' => $servicep, 'params.breakdown' => 'months', 'params.unavailable' => ['critical', 'unknown' ], 'params.decimals' => 2, 'params.graph_min_sla' => 90 }, like => '/success_message/' },
   { url => '/thruk/cgi-bin/reports2.cgi?report=9999&action=update' },
-  { url => '/thruk/cgi-bin/reports2.cgi', waitfor => 'reports2.cgi\?report=9999\&amp;refresh=0' },
+  { url => '/thruk/cgi-bin/reports2.cgi', waitfor => 'reports2.cgi\?report=9999\&amp;refreshreport=0' },
   { url => '/thruk/cgi-bin/reports2.cgi?report=9999', like => [ '/%PDF-1.4/', '/%%EOF/' ] },
   { url => '/thruk/cgi-bin/reports2.cgi', post => { 'action' => 'remove', 'report' => 9999 }, like => '/report removed/' },
 
