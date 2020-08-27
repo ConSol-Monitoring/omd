@@ -1,0 +1,11 @@
+--- pnp4nagios-0.6.25/scripts/process_perfdata.pl.in	2020-08-27 22:58:46.729715447 +0200
++++ pnp4nagios-0.6.25/scripts/process_perfdata.pl.in	2020-08-27 22:59:26.443203883 +0200
+@@ -1478,7 +1478,7 @@
+         my $worker = Gearman::Worker->new();
+         my @job_servers = split(/,/, $conf{'GEARMAN_HOST'}); # allow multiple gearman job servers 
+         $worker->job_servers(@job_servers);
+-        $worker->register_function("perfdata", 2, sub { return main(@_); });
++        $worker->register_function("perfdata", undef, sub { return main(@_); });
+         my %opt = ( 
+                     on_complete => sub { $req++; }, 
+                     stop_if => sub { if ( $req > $conf{'REQUESTS_PER_CHILD'} ) { return 1;}; } 
