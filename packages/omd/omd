@@ -616,7 +616,8 @@ def read_skel_permissions():
     global g_skel_permissions
     g_skel_permissions = load_skel_permissions(OMD_VERSION)
     if not g_skel_permissions:
-        bail_out("%s is missing or currupted." % file_path)
+        file_path = "/omd/versions/%s/share/omd/skel.permissions" % OMD_VERSION
+        bail_out(tty_error + ": %s is missing or currupted." % file_path)
 
 def load_skel_permissions(version):
     perms = {}
