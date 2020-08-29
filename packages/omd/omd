@@ -381,7 +381,9 @@ def groupdel(groupname):
 def groupadd(groupname, gid = None):
     cmd = "groupadd "
     if gid != None:
-        cmd += "-r -g %d " % int(gid)
+        cmd += "-g %d " % int(gid)
+    else:
+        cmd += "-r "
     cmd += groupname
 
     if 0 != os.system(cmd):
