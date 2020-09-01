@@ -10,7 +10,7 @@ next 4.x:
             - update core to 1.2.1
             - update livestatus to 1.2.1
           - Gearman:
-            - Mod-Gearman update 3.3.2
+            - Mod-Gearman update 3.3.3
           - Grafana
             - Grafana update to 7.1.5
             - Grafana-Loki update to 1.6.1
