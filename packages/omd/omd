@@ -46,6 +46,11 @@ g_sitename      = None # "mysite"
 g_sitedir       = None # "/omd/sites/mysite"
 g_site_conf     = None # { "CORE" : "nagios", ... } (contents of etc/omd/site.conf plus defaults from hooks)
 
+# set default file modes and mask
+g_dir_mode      = 0o755
+g_file_mode     = 0o644
+os.umask(0o022);
+
 #   .--Logging-------------------------------------------------------------.
 #   |                _                      _                              |
 #   |               | |    ___   __ _  __ _(_)_ __   __ _                  |
@@ -741,9 +746,9 @@ def create_skeleton_file(skelbase, userbase, relpath, replacements):
         mode = g_skel_permissions.get(relpath)
         if mode is None:
             if os.path.isdir(skel_path):
-                mode = 0o755
+                mode = g_dir_mode
             else:
-                mode = 0o644
+                mode = g_file_mode
         os.chmod(user_path, mode)
 
 
@@ -1874,7 +1879,6 @@ def create_config_environment():
         putenv("CONFIG_" + varname, value)
 
 
-# TODO: RENAME
 def save_site_conf():
     confdir = g_sitedir + "/etc/omd"
 
