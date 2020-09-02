@@ -44,7 +44,7 @@ opt_force       = False
 # one specific site. They are set by set_site_globals()
 g_sitename      = None # "mysite"
 g_sitedir       = None # "/omd/sites/mysite"
-g_site_conf     = None # { "CORE" : "nagios", ... } (contents of etc/omd/site.conf plus defaults from hooks)
+g_site_conf     = None # { "CORE" : "naemon", ... } (contents of etc/omd/site.conf plus defaults from hooks)
 
 # set default file modes and mask
 g_dir_mode      = 0o755
