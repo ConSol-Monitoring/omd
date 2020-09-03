@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 NAME       = influxdb
-VERSION    = 1.8.0
+VERSION    = 1.8.2
 SRC        = $(NAME)-$(VERSION).tar.gz
 GOPATH     = go
 GOPKG      = 1.14
@@ -33,6 +33,7 @@ install:
 skel:
 
 clean:
+	-test -d $(GOPATH) && find $(GOPATH)/. -type d -exec chmod 755 {} \;
 	rm -rf $(GOPATH)
 
 package: clean
