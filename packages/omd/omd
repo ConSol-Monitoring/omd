@@ -2957,7 +2957,10 @@ def main_mv_or_cp(what, args, options={}):
 
     old = g_sitename
     if not site_is_stopped(old):
-        bail_out(tty_error + ": Cannot %s site '%s' while it is running." % (action, old))
+        if what == "cp":
+            sys.stdout.write("Warning: The site should be stopped when creating a copy.\n")
+        else:
+            bail_out(tty_error + ": Cannot %s site '%s' while it is running." % (action, old))
 
     pids = find_processes_of_user(old)
     if pids:
