@@ -6,9 +6,25 @@ import nagiosplugin
 import logging
 import smbc
 import time
+import os
+import re
+from pprint import pprint as pp
 
 _log = logging.getLogger('nagiosplugin')
 
+class SmbFileAge(nagiosplugin.Summary):
+    def __init__(self, file , age):
+        self.share = file
+        self.age = age
+
+    def output(self, results):
+        return "found %s files older then %ds" % (results[0].metric.value, self.age)
+
+    def problem(self, results):
+        return self.output(results)
+
+    def ok(self, results):
+        return self.output(results)
 
 class SmbConnectSummary(nagiosplugin.Summary):
     def __init__(self, file):
@@ -35,7 +51,6 @@ class SmbCopySummary(nagiosplugin.Summary):
             results["transfer_time"].metric.value,
             results["transfer_speed"].metric.value)
 
-
     def ok(self, results):
         return self.output(results)
 
@@ -56,7 +71,7 @@ class SmbCopySummary(nagiosplugin.Summary):
 
 class Smb(nagiosplugin.Resource):
 
-    def __init__(self, mode, user, password, domain, server, share, file):
+    def __init__(self, mode, user, password, domain, server, share, file, age):
         try:
             self.mode = mode
             if self.mode == "connection-time":
@@ -67,6 +82,8 @@ class Smb(nagiosplugin.Resource):
                 self.unc_file = "smb://" + server + "/" + share + "/" + file
 
             self.auth_fn = None
+            self.file = file
+            self.age = age
             if user:
                     self.auth_fn = lambda e, sh, wg, us, pw: (domain, user, password)
         except Exception as exp:
@@ -91,6 +108,7 @@ class Smb(nagiosplugin.Resource):
                 self.time_connect = tac - tic
                 self.context = None
                 yield nagiosplugin.Metric('connect', self.time_connect, min=0, context='connect')
+                print(type(self.time_connect))
             elif self.mode == "read-file":
                 tic = time.time()
                 file = self.context.open(self.unc_file)
@@ -108,6 +126,33 @@ class Smb(nagiosplugin.Resource):
                 yield nagiosplugin.Metric('read_time', self.time_read, min=0, context='read_time')
                 yield nagiosplugin.Metric('open_time', self.time_open, min=0, context='open_time')
                 yield nagiosplugin.Metric('transfer_speed', (size / 1048576) / self.time_read + self.time_open, context='transfer_speed')
+            elif self.mode == "file-age":
+                now = int(time.time())
+                freg = re.compile(self.file)
+                dir = self.context.opendir(self.unc_share)
+                entries = dir.getdents()
+                count=0
+                ftotal=0
+                fmatched=0
+                for e in entries:
+                    if e.smbc_type == 8:
+                        ftotal+=1
+                        if freg.match(e.name):
+                            fmatched+=1
+                            f = self.context.open(self.unc_share+"/"+e.name, os.O_RDONLY)
+                            mode, ino, dev, nlink, uid, gid, size, atime, mtime, ctime = f.fstat()
+                            human_time = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(mtime))
+                            if now - mtime >= self.age:
+                                _log.debug("MATCH AGE - file : {} - mtime: {} - age: {}s".format(e.name,human_time,now - mtime))
+                                count+=1
+                            else:
+                                _log.debug("MATCH     - file : {} - mtime: {} ".format(e.name,human_time))
+                        else:
+                            _log.debug("NO Match  - file : {}".format(e.name))
+                self.context = None
+                yield nagiosplugin.Metric('file_age_count', count, min=0, context='file_age_count')
+                yield nagiosplugin.Metric('files_total', ftotal, min=0)
+                yield nagiosplugin.Metric('files_match_regex', fmatched, min=0)
         except Exception as exp:
             # The exception may be hidden, nagiosplugin is catching it, and may
             # raise a different exception further down the road, so we don't know
@@ -126,18 +171,19 @@ def main():
     argp.add_argument('-s', '--server', action='store')
     argp.add_argument('-x', '--share', action='store')
     argp.add_argument('-f', '--file', action='store')
-    argp.add_argument('-m', '--mode', action='store', default='connection-time')
+    argp.add_argument('-m', '--mode', action='store', choices=['connection-time','read-file','file-age'],default='connection-time')
     argp.add_argument('-w', '--warning', type=str, action='store')
     argp.add_argument('-c', '--critical', type=str, action='store')
     argp.add_argument('--warning_speed', type=str, action='store')
     argp.add_argument('--critical_speed', type=str, action='store')
     argp.add_argument('-t', '--timeout', action='store', default=60)
     argp.add_argument('-v', '--verbose', action='count', default=0)
+    argp.add_argument('-a', '--age', type=int, action='store', default=86400)
     args = argp.parse_args()
     check = nagiosplugin.Check()
     check.add(
         Smb(args.mode, args.user, args.password, args.domain,
-            args.server, args.share, args.file)
+            args.server, args.share, args.file, args.age)
     )
 
     if args.mode == "connection-time":
@@ -158,7 +204,13 @@ def main():
             nagiosplugin.ScalarContext('transfer_speed', args.warning_speed, args.critical_speed),
             SmbCopySummary(args.file)
         )
-
+    elif args.mode == "file-age":
+        check.add(
+            nagiosplugin.ScalarContext('file_age_count', args.warning, args.critical),
+            nagiosplugin.ScalarContext('files_total', fmt_metric='%d files found'),
+            nagiosplugin.ScalarContext('files_match_regex', fmt_metric='%d files matched'),
+            SmbFileAge(args.file, args.age)
+        )
     check.main(args.verbose, args.timeout)
 
 if __name__ == '__main__':
