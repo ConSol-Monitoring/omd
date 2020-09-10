@@ -75,6 +75,7 @@ OS_PACKAGES          += libltdl7
 OS_PACKAGES          += libmcrypt4
 OS_PACKAGES          += libnet-snmp-perl
 OS_PACKAGES          += libpango-1.0-0
+OS_PACKAGES          += libpangocairo-1.0-0
 OS_PACKAGES          += libperl5.24
 OS_PACKAGES          += libpython2.7                   # debian has python-2.6 and 2.7 installed by default, we prefer 2.7, add this missing lib
 OS_PACKAGES          += libradcli4
