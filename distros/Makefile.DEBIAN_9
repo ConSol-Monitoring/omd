@@ -78,6 +78,7 @@ OS_PACKAGES          += libltdl7
 OS_PACKAGES          += libmcrypt4
 OS_PACKAGES          += libnet-snmp-perl
 OS_PACKAGES          += libpango-1.0-0
+OS_PACKAGES          += libpangocairo-1.0-0
 OS_PACKAGES          += libperl5.24
 OS_PACKAGES          += libpython3.5
 OS_PACKAGES          += libradcli4
