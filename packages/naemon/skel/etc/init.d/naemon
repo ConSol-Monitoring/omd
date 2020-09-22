@@ -272,7 +272,8 @@ case "$1" in
             exit $?
         fi
     ;;
-
+    check)
+    ;;
     *)
         echo "Usage: ${CONFIG_CORE} {start|stop|restart|reload|status|checkconfig}"
         exit 2

@@ -2249,7 +2249,7 @@ def init_action(command, args, options):
     # start a stopped site
     call_init_hook(command, "pre")
 
-    if command in [ "start", "restart" ]:
+    if command in [ "start", "restart", "check" ]:
         prepare_and_populate_tmpfs(g_sitename)
 
     if len(args) > 0:
@@ -4184,6 +4184,14 @@ commands = [
       ( "bare", "b", False, "output plain format optimized for parsing"),
     ],
     "Show status of services of site(s)",
+    ""),
+
+  ( "check",    False, False, 2, 1, False, "[SERVICE]", lambda args, opts: main_init_action("check", args, opts),
+    [ ( "version", "V", True, "show only sites having version ARG" ),
+      ( "auto", None, False, "show only sites with AUTOSTART = on"),
+      ( "bare", "b", False, "output plain format optimized for parsing"),
+    ],
+    "Do config check of services of site(s)",
     ""),
 
   ( "config",    False, False, 1, 1, False, "...", main_config,

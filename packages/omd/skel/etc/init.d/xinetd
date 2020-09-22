@@ -74,6 +74,8 @@ case "$1" in
         echo "stopped"
         exit 1
     ;;
+    check)
+    ;;
     *)
         echo "Usage: $0 {start|stop|restart|reload|status}"
     ;;

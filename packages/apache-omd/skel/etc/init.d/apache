@@ -162,6 +162,8 @@ case $1 in
       exit 1
     fi
   ;;
+  check)
+  ;;
   *)
     echo "Usage: $0 {start|stop|restart|reload|status}"
   ;;

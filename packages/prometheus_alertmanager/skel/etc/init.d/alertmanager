@@ -345,7 +345,8 @@ case "$1" in
     reload|force-reload)
         $0 restart
     ;;
-
+    check)
+    ;;
     *)
         echo "Usage: alertmanager {start|stop|restart|reload|status|checkconfig}"
         exit 2

@@ -182,6 +182,8 @@ case "$1" in
         $0 start
         exit $?
         ;;
+  check)
+    ;;
     *)
         echo "Usage: $NAME {start|stop|kill|status|restart}"
         exit 1
