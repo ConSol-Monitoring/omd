@@ -28,6 +28,7 @@ build:
 	  export PERL_MM_OPT=INSTALL_BASE=$(DESTDIR)$(OMD_ROOT)/lib/perl5; \
 	  export MODULEBUILDRC=$$(pwd)/.modulebuildrc; \
 	  export LDFLAGS="-lglib-2.0"; \
+	  export PYTHON=python2; \
 	  cd $(DIR) && \
 	  ./configure $(CONFIGUREOPTS) && \
 	  $(MAKE) all
