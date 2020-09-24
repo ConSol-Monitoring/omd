@@ -7,10 +7,12 @@ __init_hook() {
   # 3. A fixed string, either "pre" os "post"
   # 4. return code of the command (optional, and only for post hooks)
   if [ -h $1 ]; then file=$(readlink $1); else file=$1; fi
-  hook=$(printf "$OMD_ROOT/etc/init-hooks.d/%s-%s-%s" ${file##*/} $2 $3)
-  if [ -x "$hook" ]; then
-    $hook ${file##*/} $2 $3 $4
-  elif [ -e "$hook" ]; then
-    echo "WARNING: hook $hook exists but is not executable."
-  fi
+  hook_prefix=$(printf "$OMD_ROOT/etc/init-hooks.d/%s-%s-%s" ${file##*/} $2 $3)
+  for hook in "$hook_prefix" "$hook_prefix".*; do
+    if [ -x "$hook" ]; then
+      "$hook" ${file##*/} $2 $3 $4
+    elif [ -e "$hook" ]; then
+      echo "WARNING: hook $hook exists but is not executable."
+    fi
+  done
 }
