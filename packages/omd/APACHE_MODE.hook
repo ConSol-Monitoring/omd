@@ -32,12 +32,18 @@ case "$1" in
             else
                 # renew certificate if current certificate is our selfsigned omd certificate and
                 # if the key length is less than 2048 bit
+                MINBITS=2048
                 if [ $(openssl x509 -noout -subject -in $OMD_ROOT/etc/apache/site.cert | grep -c "Selfsigned ROOT CA") -gt 0 ]; then
                     if [ $(openssl x509 -noout -subject -in $OMD_ROOT/etc/apache/site.cert | grep -c "OMD") -gt 0 ]; then
-                        if [ $(openssl x509 -noout -text -in $OMD_ROOT/etc/apache/site.cert | grep "RSA Public-Key:" | awk '{ print $3 }' | tr -d '(') -lt 2048 ]; then
+                        if [ $(openssl x509 -noout -text -in $OMD_ROOT/etc/apache/site.cert | grep "Public-Key:" | sed -e 's/[^0-9]//g') -lt $MINBITS ]; then
                             $OMD_ROOT/bin/create_site_selfsigned_cert
                             if [ $? -ne 0 ]; then
                                 echo "failed to renew ssl certificate"
+                                exit 1
+                            fi
+                            # it should now have at least 2048bit
+                            if [ $(openssl x509 -noout -text -in $OMD_ROOT/etc/apache/site.cert | grep "Public-Key:" | sed -e 's/[^0-9]//g') -lt $MINBITS ]; then
+                                echo "failed to create ssl certificate with at least $MINBITS bit"
                                 exit 1
                             fi
                         fi
