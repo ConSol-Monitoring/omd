@@ -25,6 +25,7 @@ MODULES = \
           Crypt-Rijndael-1.14.tar.gz \
           DBI-1.639.tar.gz \
           DBD-Sybase-1.16.tar.gz \
+          DBD-SQLite-1.66.tar.gz \
           Data-Dumper-2.161.tar.gz \
           Date-Manip-6.60.tar.gz \
           Devel-GlobalDestruction-XS-0.03.tar.gz \
