@@ -1,0 +1,16 @@
+dacretain
+=========
+
+dac is an acronym for downtimes, acknowledgements and comments.
+
+It enabled it saves all this objects into an SQLite database just
+before naemon is stopped or reloaded. If services or hosts with
+downtimes, acks or comments are missing they will retain in the
+SQLite database for 24h.
+
+If the host or services come back, the acknowledgements, comments
+and downtimes will be restored.
+
+This is useful if your config generation is not so reliable. If you
+loose hosts or services by accident dacs are restored from the
+database.

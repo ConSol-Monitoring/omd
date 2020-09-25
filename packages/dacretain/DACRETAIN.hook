@@ -1,0 +1,32 @@
+#!/bin/bash
+
+# Alias: retain status
+# Menu: Addons
+# Description:
+#  It saves downtimes, comments and acknowledgements
+#  in an SQLite database.
+#  Use it if your config generation tends to be unreliable.
+
+case "$1" in
+    default)
+        echo "off"
+    ;;
+    choices)
+        echo "on: enable dacretain"
+        echo "off: disable dacretain"
+    ;;
+    set)
+       if [ "$2" == "off" ]; then
+           rm -f $OMD_ROOT/etc/init-hooks.d/naemon*dacretain
+       fi
+       if [ "$2" == "on" ]; then
+           rm -f $OMD_ROOT/etc/init-hooks.d/naemon*dacretain
+           for i in $OMD_ROOT/share/dacretain/naemon*dacretain; do
+               ln -s "$i" $OMD_ROOT/etc/init-hooks.d/
+           done
+       fi
+    ;;
+    depends)
+        [ "$CONFIG_CORE" = "naemon" ]
+    ;;
+esac

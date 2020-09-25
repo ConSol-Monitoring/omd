@@ -1,0 +1,4 @@
+#!/bin/bash
+[ $DACRETAIN_HOOK_RUNNING ] && exit
+export DACRETAIN_HOOK_RUNNING=1
+dacretain save_livestatus

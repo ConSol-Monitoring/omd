@@ -1,0 +1,440 @@
+#!/usr/bin/env perl
+
+use 5.016;
+use strict;
+use File::Spec::Functions qw(catfile);
+use Monitoring::Livestatus;
+use DBI;
+use Data::Dumper;
+use Fcntl qw(:flock);
+use File::Temp qw(tempfile);
+use File::Copy qw(copy move);
+use File::stat;
+use constant ONE_DAY => 60 * 60 * 3600;
+use constant HR => { Slice => {} };
+
+chdir($ENV{OMD_ROOT}) or die($!);
+my $retention_file = catfile($ENV{OMD_ROOT},qw(var naemon retention.dat));
+my $dbfile = catfile($ENV{OMD_ROOT}, qw(var dacretain.db));
+my $livestatus_file = catfile($ENV{OMD_ROOT}, qw(tmp run live));
+my $db = DBI->connect("dbi:SQLite:dbname=$dbfile","","", {
+    RaiseError => 1,
+    PrintError => 0,
+    AutoCommit => 1,
+});
+sub live {
+    state $live = Monitoring::Livestatus->new(
+        socket => $livestatus_file,
+        @_
+    );
+    return $live;
+}
+
+init_db();
+my $insert_comment = $db->prepare("insert into comments (type,id,host,service,entry_type,timestamp,missing,deleteme,backup) values (?,?,ifnull(?,''),?,?,?,?,0,?)");
+my $insert_ack = $db->prepare("insert into acks (host,service,timestamp,missing,deleteme,backup) values(?,ifnull(?,''),?,?,0,?)");
+my $update_comment = $db->prepare("update comments set deleteme=0, timestamp = ?, backup = ? where id=? and type = ?");
+my $update_ack = $db->prepare("update acks set timestamp = ?, backup=?, deleteme=0 where host = ? and service = ifnull(?,'')");
+
+my $cmd = shift @ARGV;
+my $time = time;
+
+my %cmds = (
+    save_livestatus => \&save_livestatus,
+    is_backup_missing => \&is_backup_missing,
+    insert_missing_backups => \&insert_missing_backups,
+    wait_for_timestamp => \&wait_for_timestamp,
+    mark_missing_objects => \&mark_missing_objects,
+    is_restore_needed => \&is_restore_needed,
+    restore => \&restore,
+);
+
+if($cmds{$cmd}) {
+    $cmds{$cmd}->();
+} else {
+    say STDERR "no or unknown command. Known commands:";
+    say STDERR $_ for sort keys %cmds;
+}
+
+
+# Call this just before stop or reload
+sub save_livestatus {
+    trace_me();
+    my $comments = get_comments();
+    my $downtimes = get_downtimes();
+    my $host_acks = get_host_acks();
+    my $service_acks = get_service_acks();
+    my $retention = parse_retention($retention_file);
+
+    # remove objects that reapeared
+    for my $row (@{ $db->selectall_arrayref(q{select * from acks where missing = 1}, HR) // [] }) {
+        if(length($row->{service}) && check_service($row->{host}, $row->{service})) {
+            $db->do("delete from acks where host = ? and service = ?", undef, $row->{host}, $row->{service});
+        } elsif( check_host($row->{host}) ) {
+            $db->do("delete from acks where host = ? and ifnull(service,'') = ''", undef, $row->{host});
+        }
+    }
+
+    for my $row (@{ $db->selectall_arrayref(q{select * from comments where missing = 1}, HR) // [] }) {
+        if(length($row->{type} eq "comment") && check_comment($row->{id})) {
+            $db->do("delete from comments where type = 'comment' and id = ?", undef, $row->{id});
+        } elsif( check_downtime($row->{id}) ) {
+            $db->do("delete from comments where type = 'downtime' and id = ?", undef, $row->{id});
+        }
+    }
+
+    # this cleans up things that are not there anymore
+    $db->do("update comments set deleteme = 1 where missing = 0");
+    $db->do("update acks set deleteme = 1 where missing = 0");
+
+    # Get rid of things that are missing for too long
+    $db->do("delete from comments where missing = 1 and timestamp < ?", undef, $time -  ONE_DAY);
+    $db->do("delete from acks where missing = 1 and timestamp < ?", undef, $time -  ONE_DAY);
+
+    for my $c (@{ $comments // [] }) {
+        my $backup = $retention->{comment}->{$c->{id}}->{_raw};
+        unless( eval { $insert_comment->execute("comment",$c->{id},$c->{host_name},$c->{service_description} // "", $c->{entry_type}, $time, 0, $backup); 1 }) {
+           $update_comment->execute($time, $backup, $c->{id}, "comment");
+        }
+    }
+
+    for my $c (@{ $downtimes // [] }) {
+        my $backup = $retention->{downtime}->{$c->{id}}->{_raw};
+        unless( eval { $insert_comment->execute("downtime",$c->{id},$c->{host_name},$c->{service_description} // "", "", $time, 0, $backup); 1 }) {
+           $update_comment->execute($time, $backup, $c->{id}, "downtime");
+        }
+    }
+
+    for my $c (@{ $host_acks // [] }, @{ $service_acks // [] }) {
+        my $backup;
+
+        if(length($c->{service_description})) {
+            $backup = $retention->{service}->{$c->{host_name}}->{$c->{service_description}};
+        } else {
+            $backup = $retention->{host}->{$c->{host_name}};
+        }
+        $backup //= {};
+
+        # The host object is too old, do not store it into the db
+        unless($backup->{problem_has_been_acknowledged}) {
+            $backup->{_raw} = undef;
+        }
+
+        unless( eval { $insert_ack->execute($c->{host_name}, $c->{service_description}, $time, 0, $backup->{_raw} || undef); 1 }) {
+            $update_ack->execute($time, $backup->{_raw} || undef, $c->{host_name}, $c->{service_description} // "");
+        }
+    }
+
+    $db->do("delete from comments where deleteme = 1 and missing = 0");
+    $db->do("delete from acks where deleteme = 1 and missing = 0");
+    # A race condigtion might occur, that whe remove the service/host from the ack table
+    # but the acknowledgement comment will be marked as missing then, so we delete any
+    # acknowledgement comments (entry_type = 4) if there is no corresponding entry in the ack table
+    $db->do(q{
+      delete from comments where oid in (
+         select c.oid
+         from comments c left join acks a on ( ifnull(c.service, '') = ifnull(a.service,'') and c.host = a.host )
+         where c.entry_type = 4
+         and a.oid is null
+      );
+    });
+}
+
+# after save_livestatus, to check if we need to stop naemon and read the retention file again
+sub is_backup_missing {
+    trace_me();
+    my $test;
+    ($test) = $db->selectrow_array("select count(*) from comments where ifnull(backup,'') = ''");
+    if($test > 0) { exit 0 };
+    ($test) = $db->selectrow_array("select count(*) from acks where ifnull(backup,'') = ''");
+    if($test > 0) { exit 0 };
+    exit 1;
+}
+
+# when naemon is stopped, to insert backups that where not yet in the retention while naemon was running 
+sub insert_missing_backups {
+    trace_me();
+    my $retention = parse_retention($retention_file);
+
+    for my $row (@{ $db->selectall_arrayref("select * from comments where ifnull(backup,'') = ''", HR) // [] }) {
+        $update_comment->execute($time, $retention->{$row->{type}}->{$row->{id}}->{_raw}, $row->{id}, $row->{type});
+    }
+
+    for my $row (@{ $db->selectall_arrayref("select * from acks where ifnull(backup,'') = ''", HR) // [] }) {
+        my $backup = "";
+        if(length($row->{service})) {
+            $backup = $retention->{service}->{$row->{host}}->{$row->{service}};
+        } else {
+            $backup = $retention->{host}->{$row->{host}};
+        }
+        $update_ack->execute($time, $backup->{_raw} || "", $row->{host}, $row->{service});
+    }
+}
+
+# after reload/restart to check if some downtimes or acknowledged hosts/services are missing
+sub mark_missing_objects {
+    trace_me();
+    for my $row (@{ $db->selectall_arrayref("select * from comments where missing = 0", HR) // [] }) {
+        if($row->{type} eq "downtime") {
+            unless(check_downtime($row->{id})) {
+                $db->do("update comments set missing = 1, timestamp = ?  where type = 'downtime' and id = ?", undef, $time, $row->{id});
+            }
+        } else {
+            unless(check_comment($row->{id})) {
+                $db->do("update comments set missing = 1, timestamp = ?  where type = 'comment' and id = ?", undef, $time, $row->{id});
+            }
+        }
+    }
+    for my $row (@{ $db->selectall_arrayref("select * from acks where missing = 0", HR) // [] }) {
+        if(length($row->{service})) {
+            unless(check_service($row->{host}, $row->{service})) {
+                $db->do("update acks set missing = 1, timestamp = ? where host = ? and service = ?", undef, $time, $row->{host}, $row->{service});
+            }
+        } else {
+            unless(check_host($row->{host})) {
+                $db->do("update acks set missing = 1, timestamp = ? where host = ? and ifnull(service,'') = ''", undef, $time, $row->{host});
+            }
+        }
+    }
+}
+
+# wait until livestatus reports a timestamp that is >= the supplied one
+sub wait_for_timestamp {
+    trace_me();
+    my $waitfor = shift @ARGV;
+    my $MAX_WAIT=60;
+    my $waited = 0;
+    while(1) {
+        my $st = stat($livestatus_file);
+        if($st and $st->mtime > $waitfor) {
+            sleep 3; # some extra sleep, the socket hangs if queried to early for some reason
+            exit 0;
+        }
+        $waited++;
+        sleep(1);
+        if($waited > $MAX_WAIT) {
+            die("timed out");
+        }
+    }
+}
+
+# did any of the referenced objects came back?
+sub is_restore_needed {
+    trace_me();
+    for my $row (@{ $db->selectall_arrayref("select * from comments where missing = 1", HR) // [] }) {
+        if(length($row->{service})) {
+            exit 0 if(check_service($row->{host}, $row->{service}));
+        } else {
+            exit 0 if(check_host($row->{host}, $row->{service}));
+        }
+    }
+    exit 1;
+}
+
+# call this after is_restore_needed was true and the core is stopped, this alters the retention file
+# Just restore everything, naemon should ignore unknown things
+sub restore {
+    trace_me();
+    my $host = my $service = 1;
+
+    my ($tfh, $tf) = tempfile();
+
+    my $restore_hosts = sub {
+        state $restored = 0;
+        return if $restored;
+        my $rows = $db->selectcol_arrayref(q{ select backup from acks where missing = 1 and ifnull(service,'') = '' });
+        for my $backup (@{ $rows // [] }) {
+            print $tfh $backup;
+        }
+        $restored = 1;
+    };
+
+    my $restore_services = sub {
+        state $restored = 0;
+        return if $restored;
+        my $rows = $db->selectcol_arrayref(q{ select backup from acks where missing = 1 and ifnull(service,'') <> '' });
+        for my $backup (@{ $rows // [] }) {
+            print $tfh $backup;
+        }
+        $restored = 1;
+    };
+
+    my $restore_comments = sub {
+        state $restored = 0;
+        return if $restored;
+        my $rows = $db->selectcol_arrayref(q{ select backup from comments where missing = 1 });
+        for my $backup (@{ $rows // [] }) {
+            print $tfh $backup;
+        }
+        $restored = 1;
+    };
+
+    open(my $f, "<", $retention_file) or die("cannot open $retention_file: $!");
+    
+    my $seen_hosts = my $seen_services = 0;
+    while(defined(my $line = <$f>)) {
+        if($line =~ /^host \{$/) {
+            $seen_hosts = 1;
+        }
+        if($seen_hosts && ($line =~ /^(\w+) \{$/) && ($1 ne "host")) {
+            $restore_hosts->();
+        }
+
+        if($line =~ /^service {$/) {
+            $seen_services = 1;
+        }
+        if($seen_services && ($line =~ /^(\w+) \{$/) && ($1 ne "service")) {
+            $restore_services->();
+        }
+
+        print $tfh $line;
+    }
+
+    # Brute force restore if not happened yet and hope for the best
+    $restore_hosts->();
+    $restore_services->();
+
+    $restore_comments->();
+
+    close($tfh);
+    move $tf, $retention_file;
+}
+
+# this is called automatically if the db does not exist.
+sub init_db {
+    my $test = eval { $db->selectrow_array('select count(*) from sqlite_master') };
+    unless($test) { # db is empty create tables
+        trace_me();
+        $db->do(q{create table comments (
+            type text,
+            id integer,
+            host text,
+            service text,
+            entry_type integer,
+            timestamp integer,
+            missing integer,
+            deleteme integer,
+            backup text) });
+        $db->do(q{ create unique index uq_comments  on comments(type,id) });
+        $db->do(q{ create table acks (host text,
+          service text not null,
+          timestamp integer,
+          missing integer,
+          deleteme integer,
+          backup text) });
+        $db->do(q{ create unique index uq_acks  on acks(host, service) });
+        $db->do(q{ create view vstate as
+            select type,host,service,id,entry_type,missing,deleteme from comments
+            union
+            select iif(ifnull(service,'') = '', 'host', 'service') type,host,service,null,null,missing,deleteme from acks
+        });
+    }
+}
+
+sub get_comments {
+    my $query = "GET comments
+Columns: id entry_type host_name service_description
+Filter: entry_type != 3\n"; # don't care about flapping
+    live->selectall_arrayref($query, HR)
+}
+
+sub get_downtimes {
+    my $query = "GET downtimes
+Columns: id host_name service_description\n";
+    live->selectall_arrayref($query, HR)
+}
+
+sub get_host_acks {
+    my $query = "GET hosts
+Columns: host_name
+Filter: acknowledged = 1\n";
+    live->selectall_arrayref($query, HR);
+}
+
+sub get_service_acks {
+    my $query = "GET services
+Columns: host_name description
+Filter: acknowledged = 1\n";
+    live->selectall_arrayref($query, { Slice => {} , rename => { description => 'service_description' }})
+}
+
+sub check_host {
+    my $host = shift;
+    my $query = "GET hosts
+Columns: host_name
+Filter: name = $host\n";
+    return defined live->selectrow_array($query);
+}
+
+sub check_service {
+    my $host = shift;
+    my $service = shift;
+    my $query = "GET services
+Columns: host_name
+Filter: host_name = $host
+Filter: service_description = $service\n";
+    return defined live->selectrow_array($query);
+}
+
+sub check_comment {
+    my $id = shift;
+    my $query  = "GET comments
+Columns: id
+Filter: id = $id\n";
+    return defined live->selectrow_array($query);
+}
+
+sub check_downtime {
+    my $id = shift;
+    my $query  = "GET downtimes
+Columns: id
+Filter: id = $id\n";
+    return defined live->selectrow_array($query);
+}
+
+sub parse_retention {
+    my $retention_file = shift;
+    open(my $f, "<", $retention_file) or return {};
+    my %objects;
+    my $current;
+    my $curtype;
+    while(defined(my $line = <$f>)) {
+        $line =~ s/\A\s+//;
+        $line =~ s/\s+\z//g;
+        if(substr($line, -1) eq '{' and $line =~ /^(\w+)\s+\{$/) {
+            if(defined $curtype) { die("found define before end tag in $retention_file:$."); }
+            $curtype = $1;
+            $current = sub { {} }->(); # get a new hashref
+        } elsif($line eq '}') {
+            $current->{_raw} .= $line."\n";
+            if( ! defined $curtype ) { die("end tag before begin in $retention_file:$."); }
+            if( $curtype eq "host" ) {
+                $objects{$curtype}{$current->{host_name}} = $current;
+            } elsif( $curtype eq "service" ) {
+                $objects{$curtype}{$current->{host_name}}{$current->{service_description}} = $current;
+            } elsif( $curtype =~ /\A(service|host)comment/ ) {
+                $objects{comment}{$current->{comment_id}} = $current;
+            } elsif ($curtype =~ /\A(service|host)downtime/ ) {
+                $objects{downtime}{$current->{downtime_id}} = $current;
+            }
+            undef $current;
+            undef $curtype;
+        } elsif(defined $curtype) {
+            if($line =~ /=/) {
+                my($key,$value) = split /=/,$line,2;
+                $current->{_raw} //= "$curtype {\n";
+                $current->{$key} = $value;
+                $current->{_raw} .= $line."\n";
+            }
+        }
+    }
+    return \%objects;
+}
+
+sub trace_me {
+    my @caller = caller(1);
+    say STDERR sprintf('%s: %s',
+        ($caller[1]=~s{\A.*/}{}r),
+        ($caller[3]=~s/^main:://r),
+    );
+}
