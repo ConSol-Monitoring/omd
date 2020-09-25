@@ -12,7 +12,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 89 );
+plan( tests => 96 );
 
 ##################################################
 # create our test site
@@ -62,6 +62,11 @@ TestUtils::test_command({ cmd => "/bin/su - $site -c 'omd config set THRUK_COOKI
 }
 TestUtils::test_command({ cmd => "/bin/su - $site -c 'omd config set THRUK_COOKIE_AUTH off'",  like => '/^$/' });
 TestUtils::test_command({ cmd => "/bin/su - $site -c 'omd start'",  like => '/Starting dedicated Apache.*?OK/' });
+
+########
+# call dacretain
+TestUtils::test_command({ cmd => "/bin/su - $site -c 'dacretain save_livestatus'", exit => 0, errlike => ['/dacretain: init_db/', '/dacretain: save_livestatus/'] });
+TestUtils::test_command({ cmd => "/bin/su - $site -c 'test -f var/dacretain.db'", exit => 0 });
 
 ##################################################
 # test if nagios cgis are no longer in place
