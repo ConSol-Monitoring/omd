@@ -1,0 +1,10 @@
+#!/bin/bash
+[ $DACRETAIN_HOOK_RUNNING ] && exit
+export DACRETAIN_HOOK_RUNNING=1
+dacretain save_livestatus
+
+if dacretain is_backup_missing ; then
+  # we did not find all needed objects in the retention file, we need to stop naemon to generate a fresh one
+  $OMD_ROOT/etc/init.d/naemon checkconfig 2>/dev/null && ~/etc/init.d/naemon stop
+  dacretain insert_missing_backups
+fi

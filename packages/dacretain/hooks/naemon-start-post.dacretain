@@ -1,0 +1,15 @@
+#!/bin/bash
+[ $DACRETAIN_HOOK_RUNNING ] && exit
+export DACRETAIN_HOOK_RUNNING=1
+
+time=$(date +%s)
+time=$((time - 10))
+
+dacretain wait_for_timestamp $time
+dacretain mark_missing_objects
+
+if dacretain is_restore_needed ; then
+    $OMD_ROOT/etc/init.d/naemon stop
+    dacretain restore
+    $OMD_ROOT/etc/init.d/naemon start
+fi

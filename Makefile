@@ -53,6 +53,7 @@ PACKAGES=freetds \
          thanos \
          snmptrapd \
          downtime-api \
+         dacretain \
          grafana-pnp-datasource \
          grafana-thruk-datasource \
          sakuli\
