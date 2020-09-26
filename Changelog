@@ -9,6 +9,7 @@ next 4.x:
           - Grafana update to 7.0.4
           - InfluxDB: update to 1.8.0
           - Prometheus update to 2.19.2
+          - LMD: Update 1.9.1
 
 next:
           - Thruk: update to 2.36
