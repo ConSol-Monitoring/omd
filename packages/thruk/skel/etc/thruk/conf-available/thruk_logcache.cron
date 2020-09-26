@@ -1,0 +1,17 @@
+#
+# this file will be managed by the THRUK_LOGCACHE hook
+#
+# update logcache data
+* * * * *    /usr/bin/env thruk logcache update         >>$OMD_ROOT/var/log/thruk.log 2>&1
+
+# update authentication data in our logcache
+0   2 * * *  /usr/bin/env thruk logcache authupdate     >>$OMD_ROOT/var/log/thruk.log 2>&1
+
+# optimize and repair tables
+0  20 * * *  /usr/bin/env thruk logcache optimize       >>$OMD_ROOT/var/log/thruk.log 2>&1
+
+# clean old entries, set duration by `logcache_clean_duration`
+0   1 * * *  /usr/bin/env thruk logcache clean          >>$OMD_ROOT/var/log/thruk.log 2>&1
+
+# compact old entries, set duration by `logcache_compact_duration`
+0  19 * * *  /usr/bin/env thruk logcache compact        >>$OMD_ROOT/var/log/thruk.log 2>&1
