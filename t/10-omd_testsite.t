@@ -25,6 +25,8 @@ diag($vtest->{'stdout'});
 my $atest = { cmd => "/bin/sh -c '".TestUtils::config('APACHE_INIT_NAME')." -V | grep \"Server version\"'", "exit" => undef, errlike => undef };
 TestUtils::test_command($atest) or TestUtils::bail_out_clean("no further testing without working omd");
 diag("Apache ".$atest->{'stdout'});
+use Config;
+diag(sprintf("Perl: %s - Arch: %s", $^V, $Config{'archname'}));
 
 # there should be no sbin/ folder, all binaries should be in bin/
 chomp(my $omd_version = $vtest->{'stdout'});
