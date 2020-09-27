@@ -280,7 +280,7 @@ sub restore {
             $restore_hosts->();
         }
 
-        if($line =~ /^service {$/) {
+        if($line =~ /^service \{$/) {
             $seen_services = 1;
         }
         if($seen_services && ($line =~ /^(\w+) \{$/) && ($1 ne "service")) {
