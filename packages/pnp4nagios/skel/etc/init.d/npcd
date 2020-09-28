@@ -175,7 +175,8 @@ case "$1" in
         $0 stop
         $0 start
         ;;
-
+    check)
+        ;;
     *)
         echo "Usage: $servicename {start|stop|restart|reload|status}"
         exit 1

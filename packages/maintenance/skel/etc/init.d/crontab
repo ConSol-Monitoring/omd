@@ -60,6 +60,8 @@ case "$1" in
             exit 1
         fi
         ;;
+    check)
+        ;;
     *)
         echo "Usage: crontab {start|stop|restart|reload|status}"
         exit 1

@@ -348,7 +348,8 @@ case "$1" in
             exit 1
         fi
     ;;
-
+    check)
+    ;;
     *)
         echo "Usage: prometheus {start|stop|restart|reload|status|checkconfig}"
         exit 2

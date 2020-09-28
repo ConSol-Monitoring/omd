@@ -104,6 +104,8 @@ case "$1" in
         $0 stop && sleep 1 && $0 start
         exit $?
         ;;
+    check)
+        ;;
     *)
         echo "Usage: $NAME {start|stop|status|restart}"
         exit 1

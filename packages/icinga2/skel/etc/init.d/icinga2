@@ -234,7 +234,8 @@ case "$1" in
             exit $?
         fi
     ;;
-
+  check)
+    ;;
     *)
         echo "Usage: icinga2 {start|stop|restart|reload|status|checkconfig}"
         exit 2

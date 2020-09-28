@@ -22,11 +22,27 @@ case "$1" in
             echo "none: Do not run or configure a webserver"
     ;;
     set)
-        if [ "$2" == "ssl" ] && ! test -f $OMD_ROOT/etc/apache/site.key; then
-            $OMD_ROOT/bin/create_site_selfsigned_cert
-            if [ $? -ne 0 ]; then
-                echo "failed to create ssl certificates"
-                exit 1
+        if [ "$2" == "ssl" ]; then
+            if ! test -f $OMD_ROOT/etc/apache/site.key; then
+                $OMD_ROOT/bin/create_site_selfsigned_cert
+                if [ $? -ne 0 ]; then
+                    echo "failed to create ssl certificate"
+                    exit 1
+                fi
+            else
+                # renew certificate if current certificate is our selfsigned omd certificate and
+                # if the key length is less than 2048 bit
+                if [ $(openssl x509 -noout -subject -in $OMD_ROOT/etc/apache/site.cert | grep -c "Selfsigned ROOT CA") -gt 0 ]; then
+                    if [ $(openssl x509 -noout -subject -in $OMD_ROOT/etc/apache/site.cert | grep -c "OMD") -gt 0 ]; then
+                        if [ $(openssl x509 -noout -text -in $OMD_ROOT/etc/apache/site.cert | grep "RSA Public-Key:" | awk '{ print $3 }' | tr -d '(') -lt 2048 ]; then
+                            $OMD_ROOT/bin/create_site_selfsigned_cert
+                            if [ $? -ne 0 ]; then
+                                echo "failed to renew ssl certificate"
+                                exit 1
+                            fi
+                        fi
+                    fi
+                fi
             fi
         fi
         if [ "$2" == "ssl" ]; then

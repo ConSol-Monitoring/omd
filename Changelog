@@ -6,6 +6,7 @@ next 4.x:
             - add build support for ubuntu20.04
             - add build support for fedora31
             - add build support for fedora32
+            - add omd check command to run configuration check
           - Naemon:
             - update core to 1.2.1
             - update livestatus to 1.2.1

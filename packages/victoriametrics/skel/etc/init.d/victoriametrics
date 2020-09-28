@@ -301,6 +301,8 @@ case "$1" in
         fi
     ;;
 
+    check)
+    ;;
 
     *)
         echo "Usage: victoriametrics {start|stop|restart|status|checkconfig}"

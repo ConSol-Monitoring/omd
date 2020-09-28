@@ -84,6 +84,8 @@ status)
     echo "$NAME is NOT running."
     exit 1
 ;;
+check)
+;;
 *)
     echo "Usage: $NAME {start|stop|restart|reload|status}"
     exit 2
