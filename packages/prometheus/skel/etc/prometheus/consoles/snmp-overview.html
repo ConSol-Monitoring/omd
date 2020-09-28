@@ -5,7 +5,9 @@
 
 <table class="table table-condensed table-striped table-bordered" style="width: 0%">
 <tr>
-  <th>Port</th>
+  <th>Description</th>
+  <th>Name</th>
+  <th>Alias</th>
   <th>Status</th>
   <th>Speed</th>
   <th>In</th>
@@ -16,6 +18,8 @@
 {{ range query (printf "ifOperStatus{job='snmp',instance='%s'}" .Params.instance) | sortByLabel "ifDescr" }}
 <tr>
   <td class="text-right">{{ .Labels.ifDescr }}</a></td>
+  <td class="text-right">{{ .Labels.ifName }}</a></td>
+  <td class="text-right">{{ .Labels.ifAlias }}</a></td>
   <td class="text-right {{ if eq (. | value) 1.0 }}success">up
      {{ else if eq (. | value) 2.0}}">down
      {{ else if eq (. | value) 3.0}}">testing
