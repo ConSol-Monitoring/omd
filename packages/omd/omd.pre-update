@@ -139,4 +139,9 @@ if [ $OLD_VERSION -le 400 ]; then
   #end pre omd 4
 fi
 
+# make sure tmpfs is not mounted and tmp/ is empty
+omd umount > /dev/null 2>&1
+rm -rf $OMD_ROOT/tmp
+mkdir $OMD_ROOT/tmp
+
 exit 0
