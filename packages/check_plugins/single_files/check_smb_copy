@@ -8,7 +8,6 @@ import smbc
 import time
 import os
 import re
-from pprint import pprint as pp
 
 _log = logging.getLogger('nagiosplugin')
 
@@ -108,7 +107,6 @@ class Smb(nagiosplugin.Resource):
                 self.time_connect = tac - tic
                 self.context = None
                 yield nagiosplugin.Metric('connect', self.time_connect, min=0, context='connect')
-                print(type(self.time_connect))
             elif self.mode == "read-file":
                 tic = time.time()
                 file = self.context.open(self.unc_file)
@@ -137,6 +135,7 @@ class Smb(nagiosplugin.Resource):
                 for e in entries:
                     if e.smbc_type == 8:
                         ftotal+=1
+                        _log.debug("FILE {}".format(e.name))
                         if freg.match(e.name):
                             fmatched+=1
                             f = self.context.open(self.unc_share+"/"+e.name, os.O_RDONLY)
