@@ -84,4 +84,9 @@ if [ $OLD_VERSION -le 300 ]; then
   rm -f etc/check_mk/multisite.d/mkeventd.mk
 fi
 
+# make sure tmpfs is not mounted and tmp/ is empty
+omd umount > /dev/null 2>&1
+rm -rf $OMD_ROOT/tmp
+mkdir $OMD_ROOT/tmp
+
 exit 0

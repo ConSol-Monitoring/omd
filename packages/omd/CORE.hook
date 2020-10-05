@@ -42,7 +42,6 @@ case "$1" in
         rm -f $OMD_ROOT/etc/init.d/core
         rm -f $OMD_ROOT/etc/core
         rm -f $OMD_ROOT/var/core
-        rm -f $OMD_ROOT/tmp/core
         make_link ../nagios/livestatus.log $OMD_ROOT/var/log/livestatus.log
 
         # now setup the new selection
@@ -53,7 +52,6 @@ case "$1" in
             make_link $2 $OMD_ROOT/etc/init.d/core
             make_link $2 $OMD_ROOT/etc/core
             make_link $2 $OMD_ROOT/var/core
-            make_link $2 $OMD_ROOT/tmp/core
 
         elif [ "$2" == "icinga2"  ]; then
             make_link ../../nagios/apache.conf $OMD_ROOT/etc/apache/conf.d/nagios.conf
@@ -61,7 +59,6 @@ case "$1" in
             make_link $2 $OMD_ROOT/etc/init.d/core
             make_link $2 $OMD_ROOT/etc/core
             make_link $2 $OMD_ROOT/var/core
-            make_link $2 $OMD_ROOT/tmp/core
             THRUK_CFG=${OMD_ROOT}/etc/thruk/thruk_local.d/omd_core.conf
             cat > $THRUK_CFG <<EOF
 #
