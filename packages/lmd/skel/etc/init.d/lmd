@@ -51,7 +51,7 @@ start_lmd() {
     echo -n "already running. "
     return 1
   else
-    thruk --local -A omdadmin 'remote.cgi' >/dev/null 2>&1
+    thruk --local lmd start >/dev/null 2>&1
     I=0
     pid=$( cat $PID_FILE 2>/dev/null )
     while ! kill -0 $pid  >/dev/null 2>&1;  do
