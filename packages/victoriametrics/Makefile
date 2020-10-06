@@ -4,7 +4,7 @@ NAME       = victoriametrics
 PWD        = $(shell pwd)
 
 #for binary downloads
-VERSION    = 1.38.0
+VERSION    = 1.42.0
 VVERSION=v$(VERSION)
 
 # for vmctl build
@@ -12,7 +12,7 @@ VVERSION=v$(VERSION)
 GITBASE     = github.com/VictoriaMetrics
 VM_SRC      = VictoriaMetrics-$(VVERSION).tar.gz
 VMCTL_GITURL      = $(GITBASE)/vmctl
-VMCTL_GIT_TAG     = 0.0.2-20200709
+VMCTL_GIT_TAG     = 0.2.1
 VMCTL_SRC         = vmctl-$(VMCTL_GIT_TAG).tar.gz
 GOPKG       = 1.14
 GOVERSION   = $(shell grep ^VERSION ../go-${GOPKG}/Makefile | awk '{ print $$3 }')
@@ -20,6 +20,15 @@ GOPATH      = $(PWD)/go
 GOROOT=$(PWD)/../go-$(GOPKG)/go-$(GOVERSION)/
 PKG_PREFIX=github.com/VictoriaMetrics/VictoriaMetrics
 GO_BUILDINFO = -X '$(PKG_PREFIX)/lib/buildinfo.Version=$(APP_NAME)-$(shell date -u +'%Y%m%d-%H%M%S')-$(VVERSION)-omd-$(OMD_VERSION)'
+
+VMCTL_BUILD_CONSTS = \
+        -X main.buildTime=`date -u '+%Y-%m-%d_%H:%M:%S'` \
+        -X main.buildRevision=omd-build \
+        -X main.buildTag=$(VMCTL_GIT_TAG)
+
+VMCTL_BUILD_OPTS = -ldflags="$(VMCTL_BUILD_CONSTS)" -gcflags="-trimpath=$(GOPATH)/src"
+
+
 
 APPS = \
         victoria-metrics \
@@ -40,10 +49,12 @@ build-app:
 install-app:
 	install -m 755 VictoriaMetrics-$(VERSION)/bin/$(APP_NAME)-prod $(DESTDIR)$(OMD_ROOT)/bin
 
-build:
+build-vmctl:
 	tar zxf $(VMCTL_SRC)
-	cd vmctl-master && https_proxy=http://127.7.7.7:50000 http_proxy=http://127.7.7.7:50000 \
-	  $(GOROOT)/bin/go build -mod=vendor -o bin/vmctl
+	cd vmctl-$(VMCTL_GIT_TAG)&& https_proxy=http://127.7.7.7:50000 http_proxy=http://127.7.7.7:50000 \
+	  $(GOROOT)/bin/go build $(VMCTL_BUILD_OPTS) -mod=vendor -o bin/vmctl
+
+build: build-vmctl
 	tar xf $(VM_SRC)
 	for i in $(APPS) ; do \
 	make build-app APP_NAME=$${i} || exit 1; \
@@ -54,7 +65,7 @@ install:
 	for i in $(APPS); do \
 	make install-app APP_NAME=$${i} || exit 1; \
 	done
-	install -m 755 vmctl-master/bin/vmctl $(DESTDIR)$(OMD_ROOT)/bin
+	install -m 755 vmctl-$(VMCTL_GIT_TAG)/bin/vmctl $(DESTDIR)$(OMD_ROOT)/bin
 	install -m 755 *cron* $(DESTDIR)$(OMD_ROOT)/bin
 
 skel:
@@ -62,8 +73,8 @@ skel:
 clean:
 	rm -rf $(GOPATH)
 	rm -rf VictoriaMetrics-$(VERSION)
-	rm -rf vmctl-master
+	rm -rf vmctl-$(VMCTL_GIT_TAG)
 
 package: clean
-	curl -fL -o $(VMCTL_SRC) https://$(GITBASE)/vmctl/archive/master.tar.gz
+	curl -fL -o $(VMCTL_SRC) https://$(GITBASE)/vmctl/archive/$(VMCTL_GIT_TAG).tar.gz
 	curl -fL -o $(VM_SRC) https://$(GITBASE)/VictoriaMetrics/archive/$(VVERSION).tar.gz
