@@ -8,8 +8,11 @@ import smbc
 import time
 import os
 import re
+import sys
 
 _log = logging.getLogger('nagiosplugin')
+
+_version = '0.0.1'
 
 class SmbFileAge(nagiosplugin.Summary):
     def __init__(self, file , age):
@@ -24,6 +27,10 @@ class SmbFileAge(nagiosplugin.Summary):
 
     def ok(self, results):
         return self.output(results)
+
+    def unknown(self, results):
+        return self.output(results)
+
 
 class SmbConnectSummary(nagiosplugin.Summary):
     def __init__(self, file):
@@ -107,6 +114,7 @@ class Smb(nagiosplugin.Resource):
                 self.time_connect = tac - tic
                 self.context = None
                 yield nagiosplugin.Metric('connect', self.time_connect, min=0, context='connect')
+                print(type(self.time_connect))
             elif self.mode == "read-file":
                 tic = time.time()
                 file = self.context.open(self.unc_file)
@@ -127,7 +135,10 @@ class Smb(nagiosplugin.Resource):
             elif self.mode == "file-age":
                 now = int(time.time())
                 freg = re.compile(self.file)
-                dir = self.context.opendir(self.unc_share)
+                try:
+                    dir = self.context.opendir(self.unc_share)
+                except Exception as exc:
+                    _log.debug("Error open share {} : {}".format(self.unc_share,exc))
                 entries = dir.getdents()
                 count=0
                 ftotal=0
@@ -135,10 +146,15 @@ class Smb(nagiosplugin.Resource):
                 for e in entries:
                     if e.smbc_type == 8:
                         ftotal+=1
-                        _log.debug("FILE {}".format(e.name))
+                        _log.debug("found file %s" % e.name)
                         if freg.match(e.name):
+                            _log.debug("%s matched against '%s'" % (e.name, self.file))
                             fmatched+=1
-                            f = self.context.open(self.unc_share+"/"+e.name, os.O_RDONLY)
+                            try:
+                                f=self.context.open(self.unc_share+"/"+e.name, os.O_RDONLY)
+                            except Exception as exc:
+                                _log.debug("Error on {} : {}".format(e.name,exc))
+                                continue
                             mode, ino, dev, nlink, uid, gid, size, atime, mtime, ctime = f.fstat()
                             human_time = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(mtime))
                             if now - mtime >= self.age:
@@ -161,7 +177,7 @@ class Smb(nagiosplugin.Resource):
             raise nagiosplugin.CheckError(exp.__str__())
 
 
-#@nagiosplugin.guarded
+@nagiosplugin.guarded
 def main():
     argp = argparse.ArgumentParser()
     argp.add_argument('-u', '--user', action='store')
@@ -178,7 +194,14 @@ def main():
     argp.add_argument('-t', '--timeout', action='store', default=60)
     argp.add_argument('-v', '--verbose', action='count', default=0)
     argp.add_argument('-a', '--age', type=int, action='store', default=86400)
-    args = argp.parse_args()
+    argp.add_argument('-V','--version', action='version',version='%(prog)s {}'.format(_version))
+
+    try:
+        args = argp.parse_args()
+    except:
+        argp.print_help()
+        sys.exit(0)
+
     check = nagiosplugin.Check()
     check.add(
         Smb(args.mode, args.user, args.password, args.domain,
