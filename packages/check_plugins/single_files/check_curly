@@ -15,7 +15,7 @@ Originally written by Vit Safar, extended by Michael Kraus
     -f Follow redirects
     -k Ignore SSL certificate errors
 
-    -e Expected HTTP response code [HTTP_RESPONSE_CODE]
+    -e Expected HTTP response code [HTTP_RESPONSE_CODE[,HTTP_RESPONSE_CODE,...]]
 
     --proxy Proxy [http://PROXY:PORT]
     --agent Agent [USER_AGENT]
@@ -364,7 +364,7 @@ $body
 
 
   if (isset($Expected)) {
-    if ($http_code != $Expected) {
+    if (! in_array($http_code, explode(",", $Expected))) {
       $Msg.='CRITICAL http_response code '.$http_code.' does not match expected '.$Expected;
       nagios_exit(2);
     }
