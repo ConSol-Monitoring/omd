@@ -2921,6 +2921,7 @@ def get_exclude_patterns(options):
     if "no-dbs" in options or "no-past" in options:
         excludes.append("var/mysql/*")
         excludes.append("var/influxdb/*")
+        excludes.append("var/victoriametrics/*")
 
     if "no-logs" in options or "no-past" in options:
         excludes.append("var/log/*/*")
@@ -4015,7 +4016,7 @@ class PackageManagerRPM(PackageManager):
 
 exclude_options = [
     ( "no-rrds", None, False, "do not copy RRD files (performance data"),
-    ( "no-dbs", None, False, "do not copy database data (mysql, influxdb)"),
+    ( "no-dbs", None, False, "do not copy database data (mysql, influxdb, victoriametrics)"),
     ( "no-logs", None, False, "do not copy log files"),
     ( "no-past", "N", False,  "do not copy RRD file and log files"),
 ]
