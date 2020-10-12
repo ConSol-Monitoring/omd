@@ -104,14 +104,14 @@ rebuild_config() {
         for scrapes in ###ROOT###/etc/prometheus/prometheus.d/scrape_configs/*.yml
         do
             echo >> $WORK_CFG
-            [ -f $scrapes ] && cat $subscrapes >> $WORK_CFG
+            [ -f $scrapes ] && cat "$scrapes" >> $WORK_CFG
         done
         for scrapes in ###ROOT###/etc/prometheus/prometheus.d/scrape_configs/*
         do
             if [ -d $scrapes ]; then
                 for subscrapes in ${scrapes}/*.yml
                 do
-                    [ -f $subscrapes ] && cat $subscrapes >> $WORK_CFG
+                    [ -f $subscrapes ] && cat "$subscrapes" >> $WORK_CFG
                 done
             fi
         done
