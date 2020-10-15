@@ -1,0 +1,33 @@
+#!/bin/bash
+# Get current swap usage for all running processes
+# Original Author: Erik Ljungstrom 27/05/2011
+# Changed by: Sven Nierlein 09/04/2015
+UNIT="kB"
+FACTOR=1
+SPACE=7
+if [ "$1" = "-m" ]; then
+  UNIT="MB"
+  FACTOR=1024
+  SPACE=4
+fi
+OVERALL=0
+printf "%-10s %-10s %-${SPACE}s         %s\n" "PID" "SWAP" "USER" "CMD"
+for DIR in `find /proc/ -maxdepth 1 -type d | egrep "^/proc/[0-9]"` ; do
+    SUM=0
+    PID=`echo $DIR | cut -d / -f 3`
+    USER=`stat -c "%U" /proc/$PID/cmdline 2>/dev/null`
+    CMD=`cat /proc/$PID/cmdline 2>/dev/null`
+    if [ "$CMD" = "" ]; then
+        continue
+    fi
+    for SWAP in `grep Swap $DIR/smaps 2>/dev/null| awk '{ print $2 }'`; do
+        let SUM=$SUM+$SWAP
+    done
+    VAL=$((SUM / FACTOR))
+    if [ $VAL -gt 0 ]; then
+        printf "%-10s %-10s %-${SPACE}s %s      %s\n" $PID $VAL $UNIT $USER $CMD
+    fi
+    let OVERALL=$OVERALL+$SUM
+done
+VAL=$((OVERALL / FACTOR))
+echo "Overall swap used: $VAL $UNIT"
