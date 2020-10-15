@@ -8,11 +8,6 @@ remote_write:
 
   # Configures the queue used to write to remote storage.
   queue_config:
-    # significant capacity needed for queuing, if receiver is not available:
-    capacity: 100000
-    max_samples_per_send: 1000
-    # max_shards: Maximum number of shards, i.e. amount of concurrency.
-    max_shards: 3
     # Initial retry delay. default = 30ms , Gets doubled for every retry.
     min_backoff: 5s
     # Maximum retry delay. default = 100ms
