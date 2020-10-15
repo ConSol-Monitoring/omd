@@ -129,7 +129,7 @@ rebuild_config() {
 
             # access always via localhost -> always http
             echo '  - scheme: http' >> $CFG_FILE
-            echo '    path_prefix: /prom/alertmanager' >> $CFG_FILE
+            echo '    path_prefix: /###SITE###/alertmanager' >> $CFG_FILE
             echo '    static_configs:' >> $CFG_FILE
             echo '    - targets:' >> $CFG_FILE
             echo '      - 127.0.0.1:###ALERTMANAGER_TCP_PORT###' >> $CFG_FILE
