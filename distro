@@ -109,4 +109,16 @@ then
     fi
 fi
 
+# SLES > 15
+if [ -e /etc/os-release ]
+then
+    NAME=$(sed -rn 's/^NAME="(.*)"/\1/p' < /etc/os-release)
+    if [ "$NAME" = "SLES" ]
+    then
+        VERSION=$(sed -rn 's/^VERSION="(.*)"/\1/p' < /etc/os-release)
+        echo "$NAME$SEP${VERSION/-/}"
+        exit 0
+    fi
+fi
+
 exit 1
