@@ -155,6 +155,8 @@ rebuild_config() {
     sed -ri "s&""#""#""#SITE#""#""#""&###SITE###&g" $CFG_FILE
     sed -ri "s/###ALERTMANAGER_TCP_PORT###/$CONFIG_ALERTMANAGER_TCP_PORT/g" $CFG_FILE
     sed -ri "s/###ALERTMANAGER_TCP_ADDR###/$CONFIG_ALERTMANAGER_TCP_ADDR/g" $CFG_FILE
+
+    rm -f "$WORK_CFG"
 }
 
 # Fetches the pid of the currently running alertmanager process of the given

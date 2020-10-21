@@ -143,6 +143,8 @@ rebuild_config() {
     for var in "${!CONFIG_@}"; do
         sed -ri "s/###${var#CONFIG_}###/${!var}/g" $CFG_FILE
     done
+
+    rm -f "$WORK_CFG"
 }
 
 # Fetches the pid of the currently running prometheus process of the given
