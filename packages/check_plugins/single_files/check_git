@@ -1,0 +1,185 @@
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+use Getopt::Long;
+use Cwd qw/abs_path/;
+
+my $status;
+my $gitpath;
+my ($preout,$postout,$svcout);
+my ($file,$mode,$pre_hook,$post_hook);
+my $name = "GIT";
+
+GetOptions(
+  'name|n=s' => \$name,
+  'path|p=s' => \$file,
+  'mode|m=s' => \$mode,
+  'pre-hook=s' => \$pre_hook,
+  'post-hook=s' => \$post_hook,
+  'help|h' => \&help,
+) or die "Invalid options passed to $0\n";
+
+sub help {
+    print <<'END';
+    check_omd_git usage:
+      -n --name prepend serviceoutput
+      -p --path path to local git directory
+      -m --mode could be:
+                => status
+                => pull
+                => push
+      --pre-hook / --post-hook code which will be execute bevor and/or after mode command
+      -h --help show this message
+END
+    exit 3;
+}
+
+sub hook {
+    my $hook = `$_[0] 2>&1`;
+    my $rc = $?>>8;
+    if($rc != 0) {
+        print "CRITICAL - hook execution failed\n";
+        print "---- hook says ----\n";
+        print $hook;
+        exit $rc;
+    }
+    return $hook;
+}
+
+sub git_status {
+    my $fetch = `git fetch --all 2>&1`;
+    if($? != 0) {
+        print "$name UNKNOWN - git fetch in $gitpath failed\n";
+        print $fetch,"\n";
+        exit 3;
+    }
+    my $status = `git status 2>&1`;
+    if($? != 0) {
+        print "$name UNKNOWN - git status in $gitpath failed\n";
+        print $status,"\n";
+        exit 3;
+    }
+    if(defined $_[0]) {
+        if($status =~ m/Changes not staged for commit/ ){
+            print "$name WARNING - Changes not staged for commit\n";
+            exit 1;
+        } elsif($status =~ m/Your branch is ahead of (.*)/ ){
+            print "$name WARNING - Your branch is ahead of $1\n";
+            exit 1;
+        } else {
+            $status = "$name OK - working tree clean\n$status\n"
+        }
+
+    }
+    return $status;
+}
+
+sub git_push {
+    my $status = $_[0];
+    my $svcout = "";
+
+    if($status =~ m/Your branch is behind/) {
+        print "$name CRITICAL - local branch is behind\n";
+        print $status,"\n";
+        exit 2;
+    }
+    if($status =~ m/\QChanges not staged for commit\E/ or $status =~ m/Changes to be committed/ ) {
+        print "$name WARNING - uncommited changes\n";
+        print $status,"\n";
+        exit 1;
+    }
+    if($status =~ m/Untracked files/) {
+        print "$name WARNING - Untracked files\n";
+        print $status,"\n";
+        exit 1;
+    }
+    if($status =~m/\Quse "git push" to publish your local commits\E/) {
+        my $push = `git push 2>&1`;
+        if($? != 0) {
+            print "$name WARNING - git push in $gitpath failed\n";
+            print $push,"\n";
+            exit 3;
+        }
+        $svcout = "$name OK - git pushed\n$push\n";
+    }
+    if($status =~ m/\Qnothing to commit\E/ and $status =~ m/working (directory|tree) clean/) {
+        $svcout = "$name OK - nothing to commit\n$status\n";
+    }elsif($status =~ m/Your branch is up to date with (.*)/) {
+        $svcout = "$name OK - Your branch is up to date with $1\n$status\n";
+    }
+    return $svcout;
+}
+
+sub git_pull {
+    my $status = $_[0];
+    my $svcout = "";
+
+    if($status =~ m/\QYour branch is behind\E/) {
+        my $pull = `git pull`;
+        print "$name WARNING - new updates had been pulled\n";
+        print $status,"\n";
+        exit 1;
+    }
+
+    if($status =~ m/\QYour branch is ahead of\E/) {
+        print "$name WARNING - commits need to be pushed\n";
+        print $status,"\n";
+        exit 1;
+    }
+
+    if($status =~ m/\QChanges not staged for commit\E/) {
+        print "$name WARNING - uncommited changes\n";
+        print $status,"\n";
+        exit 1;
+    }
+
+    if($status =~ m/\Qnothing to commit\E/ and $status =~ m/working (directory|tree) clean/) {
+        $svcout = "$name OK - nothing to commit, working directory clean\n";
+    }
+    return $svcout;
+}
+
+$gitpath = abs_path($file);
+if(!$gitpath) {
+    print "$name UNKNOWN - $file not found?\n";
+    exit 3;
+}
+$gitpath =~ s|/[^\/]*?$||gmx unless -d $gitpath;
+
+if(! -d "$gitpath/.git") {
+    print "$name UNKNOWN - $gitpath/.git not found\n";
+    exit 3;
+}
+chdir($gitpath) or die("cannot change into $gitpath: $!");
+
+if(defined $pre_hook) {
+    $preout = hook($pre_hook);
+}
+
+if($mode =~ m/push/ ) {
+    $svcout = git_push(git_status());
+} elsif($mode =~ m/pull/ ){
+    $svcout = git_pull(git_status());
+} elsif($mode =~ m/status/ ) {
+    $svcout = git_status("mode");
+} else {
+    print "No valid mode\n";
+    help();
+    exit 3;
+}
+
+if(defined $post_hook) {
+    $postout = hook($post_hook);
+}
+
+if(defined $svcout) {
+    print $svcout;
+    if(defined $preout){print $preout,"\n";}
+    if(defined $postout){print $postout,"\n";}
+    exit 0;
+}
+
+print "$name WARNING - unclean\n";
+print $status,"\n";
+exit 1;
