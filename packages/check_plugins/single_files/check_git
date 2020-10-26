@@ -8,7 +8,7 @@ use Cwd qw/abs_path/;
 my $status;
 my $gitpath;
 my ($preout,$postout,$svcout);
-my ($file,$mode,$pre_hook,$post_hook);
+my ($file,$mode,$pre_hook,$post_hook,$ignore);
 my $name = "GIT";
 
 GetOptions(
@@ -17,6 +17,7 @@ GetOptions(
   'mode|m=s' => \$mode,
   'pre-hook=s' => \$pre_hook,
   'post-hook=s' => \$post_hook,
+  'ignore|i' => \$ignore,
   'help|h' => \&help,
 ) or die "Invalid options passed to $0\n";
 
@@ -30,20 +31,25 @@ sub help {
                 => pull
                 => push
       --pre-hook / --post-hook code which will be execute bevor and/or after mode command
+      -i --ignore Ignore exit code of hooks
       -h --help show this message
 END
     exit 3;
 }
 
 sub hook {
-    my $hook = `$_[0] 2>&1`;
+    my $hook = `$_[2] 2>&1`;
+    my $ignore = $_[1];
     my $rc = $?>>8;
     if($rc != 0) {
-        print "CRITICAL - hook execution failed\n";
-        print "---- hook says ----\n";
-        print $hook;
-        exit $rc;
+        if(!defined $ignore) {
+            print "CRITICAL - hook execution failed\n";
+            print "---- $_[0] hook says ----\n";
+            print $hook;
+            exit $rc;
+        }
     }
+    $hook = "---- $_[0] hook says ----\n$hook\n";
     return $hook;
 }
 
@@ -154,7 +160,7 @@ if(! -d "$gitpath/.git") {
 chdir($gitpath) or die("cannot change into $gitpath: $!");
 
 if(defined $pre_hook) {
-    $preout = hook($pre_hook);
+    $preout = hook("PRE",$ignore,$pre_hook);
 }
 
 if($mode =~ m/push/ ) {
@@ -170,7 +176,7 @@ if($mode =~ m/push/ ) {
 }
 
 if(defined $post_hook) {
-    $postout = hook($post_hook);
+    $postout = hook("POST",$ignore,$post_hook);
 }
 
 if(defined $svcout) {
