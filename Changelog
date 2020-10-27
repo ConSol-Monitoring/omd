@@ -12,7 +12,7 @@ next 4.x:
           - LMD: Update 1.9.1
 
 next:
-          - Thruk: update to 2.36
+          - Thruk: update to 2.38-2
           - Naemon:
             - update core to 1.2.1
             - update livestatus to 1.2.1
