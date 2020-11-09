@@ -208,6 +208,9 @@ function responding() {
   elif [[ "$home" =~ .*Control.*socket.*connect.*No.*such.*file ]]; then
     restart="y"
     reason="NoSuchFile"
+  elif [[ "$home" =~ .*password.*has.*expired ]]; then
+    restart="y"
+    reason="PasswordExpired"
   elif [[ "$home" =~ .*uid.*\(${REMUSER}\).* ]]; then
     restart="n"
     reason="Success"
@@ -293,13 +296,14 @@ do
     ret=$(responding "$REMHOSTADDR" "$REMPORT" "$REMUSER" "$CMCOPTS" "$CONTROLPATHX")
     mustrestart=${ret%% *}
     text=${ret#* }
+    respondingtext=$text
     if [ "$mustrestart" = "y" ]; then
       ret=$(killcm "$REMHOSTADDR" "$REMPORT" "$REMUSER" "$CMOPTS" "$CONTROLPATHX")
       ret=$(restartcm "$REMHOSTADDR" "$REMPORT" "$REMUSER" "$CMOPTS" "$CONTROLPATHX")
       mustrestart=${ret%% *}
       text=${ret#* }
       if [ "$mustrestart" = "y" ]; then
-        echo "could not start controlmaster"
+        echo "could not start controlmaster ($respondingtext)"
         exit 1
       fi
       ret=$(responding "$REMHOSTADDR" "$REMPORT" "$REMUSER" "$CMCOPTS" "$CONTROLPATHX")
