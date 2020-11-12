@@ -13,7 +13,7 @@ next 4.x:
           - Gearman:
             - Mod-Gearman update 3.3.3
           - Grafana
-            - Grafana update to 7.1.5
+            - Grafana update to 7.3.3
             - Grafana-Loki update to 1.6.1
           - InfluxDB: update to 1.8.0
           - Prometheus update to 2.19.2
