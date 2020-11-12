@@ -1,0 +1,20 @@
+diff --git a/share/pnp/application/views/zoom.php b/share/pnp/application/views/zoom.php
+index b85f866..21678be 100644
+--- a/share/pnp/application/views/zoom.php
++++ b/share/pnp/application/views/zoom.php
+@@ -57,7 +57,6 @@ jQuery.noConflict();
+ <div style="position:relative;">
+ <?php 
+ echo "<div start=$start end=$end style=\"width:".$graph_width."px; height:".$graph_height."px; position:absolute; top:33px\" class=\"graph\" id=\"".$this->url."\" ></div>";
+-$srv = urlencode($srv);
+ if(!empty($tpl)){
+     echo "<img class=\"graph\" src=\"image?source=$source"
+ 	."&tpl=$tpl"
+@@ -67,6 +66,7 @@ if(!empty($tpl)){
+ 	."&graph_height=$graph_height"
+ 	."&graph_width=$graph_width\">";
+ }else{
++   $srv = urlencode($srv);
+     echo "<img src=\"image?source=$source"
+ 	."&host=$host"
+ 	."&srv=$srv"
