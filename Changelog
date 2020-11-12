@@ -8,7 +8,7 @@ next 4.x:
             - add build support for fedora32
             - add omd check command to run configuration check
           - Gearman:
-            - Mod-Gearman update 3.3.2
+            - Mod-Gearman update 3.3.3
           - InfluxDB: update to 1.8.0
           - Prometheus update to 2.19.2
           - LMD: Update 1.9.1
@@ -19,7 +19,7 @@ next:
             - update core to 1.2.2
             - update livestatus to 1.2.2
           - Grafana
-            - Grafana update to 7.1.5
+            - Grafana update to 7.3.3
             - Grafana-Loki update to 1.6.1
           - Gearman:
             - Mod-Gearman update 3.3.1
