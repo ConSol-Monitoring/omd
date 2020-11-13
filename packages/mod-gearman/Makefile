@@ -38,6 +38,7 @@ install:
 	rm -rf $(DESTDIR)$(OMD_ROOT)/etc
 	rm -rf $(DESTDIR)$(OMD_ROOT)/var
 	install -m 0755 $(PROXYDIR)/gearman_proxy.pl $(DESTDIR)$(OMD_ROOT)/share/mod_gearman/gearman_proxy.pl
+	install -m 0755 calculate_required_worker $(DESTDIR)$(OMD_ROOT)/bin/calculate_required_worker
 
 skel:
 	mkdir -p $(SKEL)/etc/mod-gearman
