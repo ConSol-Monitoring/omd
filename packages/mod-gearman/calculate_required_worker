@@ -1,0 +1,45 @@
+#!/usr/bin/perl
+
+use warnings;
+use strict;
+use POSIX;
+use lib 'share/thruk/lib/';
+use Monitoring::Livestatus::Class::Lite;
+
+
+my $class = Monitoring::Livestatus::Class::Lite->new(
+    'tmp/run/live'
+);
+
+my $status   = $class->table('status'  )->columns(qw/interval_length/)->hashref_array();
+my $hosts    = $class->table('hosts'   )->columns(qw/state_type check_interval retry_interval execution_time/)->filter({active_checks_enabled => 1})->hashref_array();
+my $services = $class->table('services')->columns(qw/state_type check_interval retry_interval execution_time/)->filter({active_checks_enabled => 1})->hashref_array();
+
+my $interval_length = $status->[0]->{'interval_length'} // 60;
+my $total_time     = 0;
+my $total_interval = 0;
+my $total_exec     = 0;
+my $total_num      = (scalar @{$hosts} + scalar @{$services});
+my $soft_states    = 0;
+for my $check (@{$hosts}, @{$services}) {
+    $total_exec     += $check->{'execution_time'};
+    if($check->{'state_type'}) {
+        $total_time     += $check->{'execution_time'} / ($check->{'check_interval'}*$interval_length);
+        $total_interval += $check->{'check_interval'}*$interval_length;
+    } else {
+        $total_time += $check->{'execution_time'} / ($check->{'retry_interval'}*$interval_length);
+        $total_interval += $check->{'retry_interval'}*$interval_length;
+        $soft_states++;
+    }
+}
+
+printf("calculating number of required mod-gearman worker based on:\n");
+printf("active hosts:              % 7d\n", scalar @{$hosts});
+printf("active services:           % 7d\n", scalar @{$services});
+printf("(in soft state)            % 7d\n", $soft_states);
+printf("interval length:           % 7d\n", $interval_length);
+printf("average interval:          % 11ss\n", sprintf("%.3f", $total_interval/$total_num));
+printf("average execution time:    % 11ss\n", sprintf("%.3f", $total_exec/$total_num));
+printf("average check rate:        % 11s/s\n",  sprintf("%.3f", $total_num/($total_interval/$total_num)));
+printf("========================================\n");
+printf("minmum required worker:    % 7d\n", ceil($total_time));
