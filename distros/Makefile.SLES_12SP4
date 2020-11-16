@@ -102,6 +102,7 @@ OS_PACKAGES          += python3
 OS_PACKAGES          += rsync
 OS_PACKAGES          += samba-client
 OS_PACKAGES          += unzip
+OS_PACKAGES          += which
 OS_PACKAGES          += xinetd
 OS_PACKAGES          += xorg-x11-fonts
 USERADD_OPTIONS       = -M

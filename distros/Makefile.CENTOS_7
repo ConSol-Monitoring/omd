@@ -109,6 +109,7 @@ OS_PACKAGES          += radcli
 OS_PACKAGES          += readline
 OS_PACKAGES          += rsync
 OS_PACKAGES          += uuid
+OS_PACKAGES          += which
 OS_PACKAGES          += xinetd
 USERADD_OPTIONS       = -M
 ADD_USER_TO_GROUP     = gpasswd -a %(user)s %(group)s
