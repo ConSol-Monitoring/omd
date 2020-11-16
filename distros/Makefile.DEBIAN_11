@@ -51,6 +51,7 @@ BUILD_PACKAGES       += uuid-dev
 OS_PACKAGES           =
 OS_PACKAGES          += apache2
 OS_PACKAGES          += curl
+OS_PACKAGES          += debianutils                    # contains which, required by init scripts
 OS_PACKAGES          += dialog
 OS_PACKAGES          += dnsutils
 OS_PACKAGES          += fping
