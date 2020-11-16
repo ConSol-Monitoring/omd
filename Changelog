@@ -8,8 +8,8 @@ next 4.x:
             - add build support for fedora32
             - add omd check command to run configuration check
           - Naemon:
-            - update core to 1.2.1
-            - update livestatus to 1.2.1
+            - update core to 1.2.2
+            - update livestatus to 1.2.2
           - Gearman:
             - Mod-Gearman update 3.3.3
           - Grafana
