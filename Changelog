@@ -10,7 +10,7 @@ next 4.x:
           - Gearman:
             - Mod-Gearman update 3.3.3
           - InfluxDB: update to 1.8.0
-          - Prometheus update to 2.19.2
+          - Prometheus update to 2.22.2
           - LMD: Update 1.9.1
           - Go updated to 1.15
 
