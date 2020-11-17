@@ -28,6 +28,8 @@ install:
 	    $(DESTDIR)$(OMD_ROOT)/share/coshsh/recipes/default/classes
 	cp datarecipient_atomic.py \
 	    $(DESTDIR)$(OMD_ROOT)/share/coshsh/recipes/default/classes
+	cp datarecipient_prometheus_sd_files.py \
+	    $(DESTDIR)$(OMD_ROOT)/share/coshsh/recipes/default/classes
 	cp app_snmptrapdlog.py \
 	    $(DESTDIR)$(OMD_ROOT)/share/coshsh/recipes/default/classes
 	cp app_snmp_agent.py \
