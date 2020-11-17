@@ -16,7 +16,7 @@ next 4.x:
             - Grafana update to 7.3.3
             - Grafana-Loki update to 1.6.1
           - InfluxDB: update to 1.8.0
-          - Prometheus update to 2.19.2
+          - Prometheus update to 2.22.2
           - LMD: Update 1.9.1
           - Go updated to 1.15
 

@@ -3,7 +3,7 @@ include ../../Makefile.omd
 .PHONY: skel
 
 NAME       = prometheus
-VERSION    = 2.20.1
+VERSION    = 2.22.2
 BRANCH     = master
 SRC        = $(NAME)-$(VERSION).tar.gz
 GOPKG      = 1.15
@@ -29,14 +29,11 @@ build:
 		$(GOROOT)/bin/go build -a -tags netgo,builtinassets -trimpath -ldflags $(LDFLAGS) -o build/prometheus -mod=vendor github.com/prometheus/prometheus/cmd/prometheus
 	cd $(NAME)-$(VERSION) && \
 		$(GOROOT)/bin/go build -a -tags netgo -trimpath -ldflags $(LDFLAGS) -o build/promtool -mod=vendor github.com/prometheus/prometheus/cmd/promtool
-	cd $(NAME)-$(VERSION) && \
-		$(GOROOT)/bin/go build -a -tags netgo -trimpath -ldflags $(LDFLAGS) -o build/tsdb -mod=vendor github.com/prometheus/prometheus/tsdb/cmd/tsdb
 
 install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/bin
 	install -m 755 prometheus-$(VERSION)/build/prometheus $(DESTDIR)$(OMD_ROOT)/bin
 	install -m 755 prometheus-$(VERSION)/build/promtool $(DESTDIR)$(OMD_ROOT)/bin
-	install -m 755 prometheus-$(VERSION)/build/tsdb $(DESTDIR)$(OMD_ROOT)/bin
 
 skel:
 	mkdir -p $(SKEL)/etc/prometheus
