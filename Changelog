@@ -19,6 +19,7 @@ next 4.x:
           - Prometheus update to 2.22.2
           - LMD: Update 1.9.1
           - Go updated to 1.15
+          - VictoriaMetrics 1.47.0
 
 next:
           - Thruk: update to 2.38-2
