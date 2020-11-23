@@ -4,7 +4,7 @@ NAME       = victoriametrics
 PWD        = $(shell pwd)
 
 #for binary downloads
-VERSION    = 1.42.0
+VERSION    = 1.47.0
 VVERSION=v$(VERSION)
 
 # for vmctl build
@@ -12,7 +12,7 @@ VVERSION=v$(VERSION)
 GITBASE     = github.com/VictoriaMetrics
 VM_SRC      = VictoriaMetrics-$(VVERSION).tar.gz
 VMCTL_GITURL      = $(GITBASE)/vmctl
-VMCTL_GIT_TAG     = 0.2.1
+VMCTL_GIT_TAG     = 0.3.0
 VMCTL_SRC         = vmctl-$(VMCTL_GIT_TAG).tar.gz
 GOPKG       = 1.14
 GOVERSION   = $(shell grep ^VERSION ../go-${GOPKG}/Makefile | awk '{ print $$3 }')
