@@ -36,8 +36,6 @@ TestUtils::test_command({ cmd => $omd_bin." start $site" });
 
 # set token for post requests
 push @INC, '/omd/sites/'.$site.'/share/thruk/lib';
-use_ok('Thruk::Utils::Cache');
-use_ok('Thruk::Config');
 set_test_user_token();
 
 ##################################################
@@ -314,6 +312,9 @@ TestUtils::remove_test_site($site);
 sub set_test_user_token {
     my $file = '/omd/sites/'.$site.'/var/thruk/token';
     local $ENV{'THRUK_CONFIG'} = '/omd/sites/'.$site.'/etc/thruk/';
+    local $ENV{'THRUK_MODE'}   = 'TEST';
+    use_ok('Thruk::Utils::Cache');
+    use_ok('Thruk::Config');
     my $store  = Thruk::Utils::Cache->new($file);
     my $tokens = $store->get('token');
     $tokens->{'omdadmin'} = { token => 'test', time => time() };
