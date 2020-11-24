@@ -89,7 +89,7 @@ set -a
 # the following parameter cannot be overwritten: 
 # - retentionPeriod, httpListenAddr (from omd config) and 
 # - storageDataPath (fix)
-vm_selfScrapeInstance="$(uname -n)"
+vm_selfScrapeInstance="$(uname -n)-$(id -un)"
 vm_enableTCP6=1
 vm_search_maxLookback=5m
 vm_loggerLevel=INFO
