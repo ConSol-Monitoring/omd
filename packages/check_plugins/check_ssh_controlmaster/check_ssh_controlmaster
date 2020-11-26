@@ -25,7 +25,7 @@ LSPORT=6557
 # -l ${REMUSER} -H hostname/address -p 22
 # ->
 
-while getopts "dl:H:p:c:m:s:Px" opt; do
+while getopts "dl:H:p:i:c:m:s:Px" opt; do
     case $opt in 
     d)
         DEBUG=1
@@ -41,6 +41,9 @@ while getopts "dl:H:p:c:m:s:Px" opt; do
         ;;
     P)
         REMPING="yes"
+        ;;
+    i)
+        REMKEY=$OPTARG
         ;;
     c)
         CMDIR=$OPTARG
@@ -91,6 +94,10 @@ CMCOPTS="-o ControlMaster=no \
         -o PreferredAuthentications=publickey \
         -o PasswordAuthentication=no"
 
+if [ -n "$REMKEY" ]; then
+  CMOPTS="$CMOPTS -i $REMKEY"
+  CMCOPTS="$CMOPTS -i $REMKEY"
+fi
 
 CONTROLPATH=${CMDIR}/controlpath/ssh-${REMUSER}@${REMHOST}
 
