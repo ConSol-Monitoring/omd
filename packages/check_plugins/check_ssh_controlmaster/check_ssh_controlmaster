@@ -96,7 +96,7 @@ CMCOPTS="-o ControlMaster=no \
 
 if [ -n "$REMKEY" ]; then
   CMOPTS="$CMOPTS -i $REMKEY"
-  CMCOPTS="$CMOPTS -i $REMKEY"
+  CMCOPTS="$CMCOPTS -i $REMKEY"
 fi
 
 CONTROLPATH=${CMDIR}/controlpath/ssh-${REMUSER}@${REMHOST}
