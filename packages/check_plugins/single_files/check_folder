@@ -1,0 +1,251 @@
+#!/usr/bin/env perl
+
+use warnings;
+use strict;
+use Monitoring::Plugin;
+use Getopt::Long;
+
+Getopt::Long::Configure('pass_through');
+
+my $mp = Monitoring::Plugin->new(
+    shortname => "FOLDER",
+    usage     => "Usage: %s [options] <folder>\n\nThis plugin checks files in given folder for size, number of files and file age.",
+    version   => "v0.01",
+    extra     => "\n"
+                ."All thresholds use monitoring plugins format, ex.: -c @10:20 .\n"
+                ."See https://www.monitoring-plugins.org/doc/guidelines.html#THRESHOLDFORMAT for the threshold format.\n"
+                ."\n"
+                ."Example:\n"
+                ."check folder to not contain more than 10 (warning) or 20 (critical) files and size must not exceed 5MB (warning) or 10GB (critical):\n"
+                ."  $0 -c 10 -C 20 /folder\n"
+                ."\n"
+                ."check folders file size must not exceed 5MB (warning) or 10GB (critical):\n"
+                ."  $0 -s 5M -S 10G /folder\n"
+                ."\n"
+                ."check only file matching glob pattern *.log:\n"
+                ."  $0 -p '*.log' /folder\n"
+                ."\n"
+                ."check files matching glob pattern *.log to be not older than 10minutes:\n"
+                ."  $0 -p '*.log'-a 10m /folder\n"
+                ."\n"
+                ."verify there are no more than 10 files and none older than 5minutes in our spool folder\n"
+                ."  $0 /omd/sites/demo/var/pnp4nagios/spool/ -C 0:10 -A 5m\n",
+);
+
+$mp->add_arg(
+    spec    => 'pattern|p=s',
+    help    => '-p <pattern>, use pattern instead of all files of folder.',
+);
+$mp->add_arg(
+    spec    => 'recursive|r',
+    help    => '-r recurse into subfolder.',
+);
+$mp->add_arg(
+    spec    => 'maxerrors|m=i',
+    help    => '-m <num>, maximum number of errors to show. Defaults to 20.',
+    default => 20,
+);
+
+$mp->add_arg(
+    spec    => 'c=s',
+    help    => '-c <range>, count warning threshold',
+);
+$mp->add_arg(
+    spec    => 'C=s',
+    help    => '-C <range>, count critical threshold, defaults to 1: and will alert if there are no files.',
+    default => '1:',
+);
+
+$mp->add_arg(
+    spec    => 's=s',
+    help    => '-s <range>, total size warning threshold',
+);
+$mp->add_arg(
+    spec    => 'S=s',
+    help    => '-S <range>, total size critical threshold',
+);
+
+$mp->add_arg(
+    spec    => 'a=s',
+    help    => '-a <range>, file age warning threshold in seconds',
+);
+$mp->add_arg(
+    spec    => 'A=s',
+    help    => '-A <range>, file age critical threshold in seconds',
+);
+
+$mp->getopts();
+my @folder = @ARGV;
+alarm($mp->opts->timeout);
+
+$mp->plugin_exit(UNKNOWN, "folder argument is required. See --help for more information." ) if scalar @folder == 0;
+
+if(@folder == 1) {
+    $mp->shortname($folder[0]);
+}
+
+for my $f (@folder) {
+    $f =~ s|/$||gmx;
+    if(!-d $f."/.") {
+        $mp->plugin_exit(UNKNOWN, $f.": ".$! );
+    }
+    my $files = _get_files($f, $mp->opts->{'pattern'}, $mp->opts->{'recursive'});
+    my $count = scalar @{$files};
+    $mp->add_perfdata(
+        label     => $f.'::count',
+        value     => $count,
+        uom       => "",
+        threshold => $mp->set_thresholds(warning => $mp->opts->{'c'}, critical => $mp->opts->{'C'}),
+    );
+    my $code = $mp->check_threshold(
+        check    => $count,
+        warning  => $mp->opts->{'c'},
+        critical => $mp->opts->{'C'},
+    );
+    $mp->add_message($code, sprintf("number of files: %d", $count)) if($count > 1 || $count == 0);
+
+    $mp->opts->{'s'} =~ s/(\d+)([kmg])/&_expand_size($1, $2)/gemxi if $mp->opts->{'s'};
+    $mp->opts->{'S'} =~ s/(\d+)([kmg])/&_expand_size($1, $2)/gemxi if $mp->opts->{'S'};
+    $mp->opts->{'a'} =~ s/(\d+)([smhd])/&_expand_time($1, $2)/gemxi if $mp->opts->{'a'};
+    $mp->opts->{'A'} =~ s/(\d+)([smhd])/&_expand_time($1, $2)/gemxi if $mp->opts->{'A'};
+
+    if($mp->opts->{'s'} || $mp->opts->{'S'} || $mp->opts->{'a'} || $mp->opts->{'A'}) {
+        my $totalsize;
+        for my $f (@{$files}) {
+            my @stat = stat($f);
+            $totalsize += $stat[7];
+
+            if($mp->opts->{'a'} || $mp->opts->{'A'}) {
+                my $ago  = time() - $stat[9];
+                my $code = $mp->check_threshold(
+                    check    => $ago,
+                    warning  => $mp->opts->{'a'},
+                    critical => $mp->opts->{'A'},
+                );
+                $mp->add_message($code, sprintf("%s last modified %s ago (%s)", $f, _format_ago($ago), scalar localtime $stat[9])) if($code > 0 || $count == 1);
+            }
+        }
+        next unless ($mp->opts->{'s'} || $mp->opts->{'S'});
+        $mp->add_perfdata(
+            label     => $f.'::size',
+            value     => $totalsize,
+            uom       => "B",
+            threshold => $mp->set_thresholds(warning => $mp->opts->{'s'}, critical => $mp->opts->{'S'}),
+        );
+        my $code = $mp->check_threshold(
+            check    => $totalsize,
+            warning  => $mp->opts->{'s'},
+            critical => $mp->opts->{'S'},
+        );
+        my $prefix = "";
+        my $totalsizenum = $totalsize;
+        if($totalsizenum > 1e9) {
+            $totalsizenum = $totalsizenum / 1024 ** 3;
+            $prefix       = "Gi";
+        }
+        elsif($totalsizenum > 1e6) {
+            $totalsizenum = $totalsizenum /  1024 ** 2;
+            $prefix       = "Mi";
+        }
+        elsif($totalsizenum > 1e3) {
+            $totalsizenum = $totalsizenum / 1024;
+            $prefix       = "Ki";
+        }
+        $mp->add_message($code, sprintf("total size of files: %d%sB", $totalsizenum, $prefix));
+    }
+
+    if($mp->opts->{'a'} || $mp->opts->{'A'}) {
+        for my $f (@{$files}) {
+            my @stat = stat($f);
+        }
+    }
+}
+
+my($code, $msg) = $mp->check_messages(join => "\n - ");
+my @lines = split/\n/mx, $msg;
+my $maxerrors = $mp->opts->{'maxerrors'} // 20;
+if(scalar @lines > $maxerrors) {
+    my $num = scalar @lines;
+    @lines = splice(@lines, 0, $maxerrors);
+    $msg = join("\n", @lines);
+    $msg .= sprintf("\n... %d errors in total.", $num);
+}
+$mp->plugin_exit($code, $msg);
+
+
+########################################################################################################################
+sub _get_files {
+    my($dir, $pattern, $recursive) = @_;
+
+    my @files;
+    if($pattern) {
+        for my $file (glob($dir.'/'.$pattern)) {
+            push @files, $file;
+        }
+        return(\@files) unless $recursive;
+    }
+
+    opendir(my $dh, $dir) || $mp->plugin_die(sprintf("cannot open directory %s: %s", $dir, $!));
+    while(readdir $dh) {
+        my $file = $_;
+        next if $file eq '.' || $file eq '..';
+        if(-d "$dir/$file") {
+            if($recursive) {
+                my $subfiles = _get_files("$dir/$file", $pattern, $recursive);
+                push @files, @{$subfiles};
+            }
+            next;
+        }
+        next if $pattern;
+        push @files, "$dir/$file";
+
+    }
+    closedir $dh;
+    return(\@files);
+}
+
+########################################################################################################################
+sub _expand_size {
+    my($num, $unit) = @_;
+    $unit = lc($unit);
+    if($unit eq 'k') { return $num * 1024; }
+    if($unit eq 'm') { return $num * 1024 ** 2; }
+    if($unit eq 'g') { return $num * 1024 ** 3; }
+    $mp->plugin_die(sprintf("unknown unit %s", $unit));
+}
+
+########################################################################################################################
+sub _expand_time {
+    my($num, $unit) = @_;
+    $unit = lc($unit);
+    if($unit eq 's') { return $num; }
+    if($unit eq 'm') { return $num * 60; }
+    if($unit eq 'h') { return $num * 3600; }
+    if($unit eq 'd') { return $num * 86400; }
+    $mp->plugin_die(sprintf("unknown unit %s", $unit));
+}
+
+########################################################################################################################
+sub _format_ago {
+    my($seconds) = @_;
+    if($seconds > 86400*7) {
+        my $days = int($seconds / 86400);
+        return($days."d");
+    }
+    if($seconds > 86400) {
+        my $days  = int($seconds / 86400);
+        my $hours = int($seconds%86400 / 3600);
+        return($days."d".$hours."h");
+    }
+    if($seconds > 3600) {
+        my $hours = int($seconds / 3600);
+        my $min   = int($seconds%3600 / 60);
+        return($hours."h".$min."m");
+    }
+    if($seconds > 60) {
+        my $min   = int($seconds / 60);
+        my $sec   = int($seconds%60);
+        return($min."m".$sec."s");
+    }
+    return($seconds."s");
+}
