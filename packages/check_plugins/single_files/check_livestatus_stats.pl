@@ -36,7 +36,7 @@ $np->add_arg(
 );
 $np->add_arg(
     spec    => 'warning|w=s@',
-    help    => 'threshold, f.e.: -m host_checks_rate=@10:20 . See https://www.monitoring-plugins.org/doc/guidelines.html#THRESHOLDFORMAT for the threshold format.',
+    help    => 'threshold, f.e.: -w host_checks_rate=@10:20 . See https://www.monitoring-plugins.org/doc/guidelines.html#THRESHOLDFORMAT for the threshold format.',
 );
 $np->add_arg(
     spec    => 'critical|c=s@',
