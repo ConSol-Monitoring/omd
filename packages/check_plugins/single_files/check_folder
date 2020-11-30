@@ -110,7 +110,7 @@ for my $f (@folder) {
     $mp->opts->{'A'} =~ s/(\d+)([smhd])/&_expand_time($1, $2)/gemxi if $mp->opts->{'A'};
 
     if($mp->opts->{'s'} || $mp->opts->{'S'} || $mp->opts->{'a'} || $mp->opts->{'A'}) {
-        my $totalsize;
+        my $totalsize = 0;
         for my $f (@{$files}) {
             my @stat = stat($f);
             $totalsize += $stat[7];
