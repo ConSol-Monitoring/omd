@@ -10,6 +10,7 @@ next 4.x:
           - Gearman:
             - Mod-Gearman update 3.3.3
           - InfluxDB: update to 1.8.0
+          - Monitoring-Plugins: update to 2.3
 
 next:
           - Thruk: update to 2.38-2
