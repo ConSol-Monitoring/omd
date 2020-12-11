@@ -8,24 +8,23 @@ use File::Copy qw/move/;
 use XML::LibXML;
 use Term::ReadKey;
 
-my $ml;
-
-if($ARGV[0] && ($ARGV[0] eq '-h' || $ARGV[0] eq '--help')) {
-    print STDERR "usage: $0 [-l|--livestatus] [<pnp xml files>]";
-    exit(1);
-}
-
-if ($ARGV[0] && ($ARGV[0] eq '-l' || $ARGV[0] eq '--livestatus')) {    
-    use Monitoring::Livestatus;
-    $ml = Monitoring::Livestatus->new( socket => "$ENV{OMD_ROOT}/tmp/run/live");
-    shift @ARGV; 
-}
-
 if(!$ENV{'OMD_ROOT'}) {
     print  STDERR "ERROR: OMD_ROOT not set, this script is designed to run in an OMD environment.\n";
     exit 1;
 }
 chdir($ENV{'OMD_ROOT'});
+
+if($ARGV[0] && ($ARGV[0] eq '-h' || $ARGV[0] eq '--help')) {
+    print STDERR "usage: $0 [-f|-y] [-l|--livestatus] [<pnp xml files>]";
+    exit(1);
+}
+
+my $ml;
+if($ARGV[0] && ($ARGV[0] eq '-l' || $ARGV[0] eq '--livestatus')) {    
+    use Monitoring::Livestatus;
+    $ml = Monitoring::Livestatus->new( socket => "$ENV{OMD_ROOT}/tmp/run/live");
+    shift @ARGV; 
+}
 
 if(!-e "etc/nagflux/config.gcfg") {
     print STDERR "ERROR: cannot read etc/nagflux/config.gcfg, this script requires nagflux to work.\n";
@@ -34,7 +33,7 @@ if(!-e "etc/nagflux/config.gcfg") {
 
 my @xml_files = glob("var/pnp4nagios/perfdata/*/*.xml");
 if(scalar @ARGV > 0) {
-    @xml_files = @ARGV;
+    @xml_files = grep(!/^-/mx, @ARGV);
 }
 my $num           = scalar @xml_files;
 my $pnp_spool     = $ENV{OMD_ROOT}.'/var/pnp4nagios/spool';
@@ -48,20 +47,20 @@ if(!-d $nagflux_spool) {
 }
 
 sub object_exists {
-	return 1 if (! defined $ml);
-	my $xml = shift; 
+    return 1 if (! defined $ml);
+    my $xml = shift; 
 
-	my ($h) = `grep NAGIOS_AUTH_HOSTNAME $xml | sed -e 's/.*>\(.*\)<.*/\1/'`  =~ m/.*>(.*)<.*/ ;
-	my ($s) = `grep NAGIOS_AUTH_SERVICEDESC $xml | sed -e 's/.*>\(.*\)<.*/\1/'`  =~ m/.*>(.*)<.*/ ;
-	my $res;
-	if ($s eq "Host Perfdata" ) {
-		$res = $ml->selectscalar_value(sprintf "GET hosts\nColumns: host_name\nFilter: host_name = $h");
-		$s = "";
-	} else {
-		$res = $ml->selectscalar_value(sprintf "GET services\nColumns: host_name description\nFilter: host_name = $h\nFilter: description = $s");
-		$s = "/$s";
-	}
-	return (defined($res), sprintf ("%s%s",$h,$s) );
+    my ($h) = `grep NAGIOS_AUTH_HOSTNAME $xml | sed -e 's/.*>\(.*\)<.*/\1/'`  =~ m/.*>(.*)<.*/ ;
+    my ($s) = `grep NAGIOS_AUTH_SERVICEDESC $xml | sed -e 's/.*>\(.*\)<.*/\1/'`  =~ m/.*>(.*)<.*/ ;
+    my $res;
+    if ($s eq "Host Perfdata" ) {
+        $res = $ml->selectscalar_value(sprintf "GET hosts\nColumns: host_name\nFilter: host_name = $h");
+        $s = "";
+    } else {
+        $res = $ml->selectscalar_value(sprintf "GET services\nColumns: host_name description\nFilter: host_name = $h\nFilter: description = $s");
+        $s = "/$s";
+    }
+    return (defined($res), sprintf ("%s%s",$h,$s) );
 }
 
 
@@ -74,15 +73,18 @@ if($nagflux_spool eq $pnp_spool) {
     print STDERR "Make sure pnp4nagios is stopped or does not read from that spool folder.\n";
 }
 
-print STDERR "Press any key to start or Ctrl+c to cancel.";
-ReadMode('cbreak');
-ReadKey(0);
-ReadMode('normal');
-print "\n\n";
+unless(grep(/^\-(f|y)$/mxi, @ARGV)) {
+    print STDERR "Press any key to start or Ctrl+c to cancel.";
+    ReadMode('cbreak');
+    ReadKey(0);
+    ReadMode('normal');
+    print "\n\n";
+}
 
 my $x = 0;
 my $skipped_noxml = 0;
 my $skipped_noobject = 0;
+my $skipped_badxml = 0;
 my $skipped_norrd = 0;
 
 for my $xml_file (@xml_files) {
@@ -90,17 +92,25 @@ for my $xml_file (@xml_files) {
     printf(STDERR "%02i/%02i reading from %s\n", $x, $num, $xml_file);
     if(!-s $xml_file) {
         print STDERR "  !! SKIPPED, file does not exist or is empty\n";
-	$skipped_noxml++;
+        $skipped_noxml++;
         next;
     }
     my @exists = object_exists($xml_file);
     if (!  $exists[0]) {
         print STDERR "  !! SKIPPED, object $exists[1] does not exist in current config\n";
-	$skipped_noobject++;
-	next; 
+        $skipped_noobject++;
+        next; 
     }
     my ($fh, $filename) = tempfile();
-    my $xml     = XMLin($xml_file);
+    my $xml;
+    eval {
+        $xml = XMLin($xml_file);
+    };
+    if($@ || !$xml) {
+        print STDERR "  !! SKIPPED, cannot read xml file: $@\n";
+        $skipped_badxml++;
+        next;
+    }
     my $host    = $xml->{'NAGIOS_DISP_HOSTNAME'};
     my $service = $xml->{'NAGIOS_DISP_SERVICEDESC'};
     my $cmd     = $xml->{'NAGIOS_CHECK_COMMAND'};
@@ -123,9 +133,15 @@ for my $xml_file (@xml_files) {
         }
         print STDERR "  -> ".Encode::encode_utf8($rrd_file)."\n";
         if(!-s $rrd_file) {
-            print STDERR "    !! SKIPPED, file does not exist or is empty\n";
-	    $skipped_norrd++;
-            next;
+            my $basedir = $xml_file;
+            $basedir  =~ s%/[^/]*$%%gmx;
+            $rrd_file =~ s%^.*/%%gmx;
+            $rrd_file = $basedir.'/'.$rrd_file;
+            if(!-s $rrd_file) {
+                print STDERR "    !! SKIPPED, file does not exist or is empty\n";
+                $skipped_norrd++;
+                next;
+            }
         }
         my $warning  = $ds->{'WARN'};
         my $critical = $ds->{'CRIT'};
@@ -185,11 +201,12 @@ for my $xml_file (@xml_files) {
     close($fh);
     move($filename, $nagflux_spool.'/service-perfdata'.$x.time());
 }
-my $processed =  $num - $skipped_noxml - $skipped_noobject;
+my $processed =  $num - $skipped_noxml - $skipped_noobject - $skipped_badxml;
 print STDERR "\n\nfinished:\n";
 print STDERR "  Imported objects: $processed ($skipped_norrd RRD files were not found)\n";
-print STDERR "  Skipped objects (no XML): $skipped_noxml\n";
-print STDERR "  Skipped objects (no object in cfg): $skipped_noobject\n";
+print STDERR "  Skipped objects (no XML): $skipped_noxml\n" if $skipped_noxml;
+print STDERR "  Skipped objects (no object in cfg): $skipped_noobject\n" if $skipped_noobject;
+print STDERR "  Skipped objects (bad XML): $skipped_badxml\n" if $skipped_badxml;
 
 
 
