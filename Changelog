@@ -9,6 +9,7 @@ next 4.x:
             - add omd check command to run configuration check
           - Gearman:
             - Mod-Gearman update 3.3.3
+            - update mod-gearman-worker-go to 1.1.4
           - InfluxDB: update to 1.8.0
           - Monitoring-Plugins: update to 2.3
 
