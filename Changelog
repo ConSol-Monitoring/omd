@@ -14,7 +14,7 @@ next 4.x:
           - Monitoring-Plugins: update to 2.3
 
 next:
-          - Thruk: update to 2.38-2
+          - Thruk: update to 2.40-2
           - Naemon:
             - update core to 1.2.2
             - update livestatus to 1.2.2
