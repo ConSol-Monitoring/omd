@@ -12,6 +12,7 @@ next 4.x:
             - update mod-gearman-worker-go to 1.1.4
           - InfluxDB: update to 1.8.0
           - Monitoring-Plugins: update to 2.3
+          - nagflux: update 0.5.0
 
 next:
           - Thruk: update to 2.40-2

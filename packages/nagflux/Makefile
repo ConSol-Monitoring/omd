@@ -13,7 +13,7 @@ GITBASE     = github.com/ConSol
 GITURL      = $(GITBASE)/$(NAME)
 DEPS_SRC    = deps.tar.gz
 # GIT TAG is set automatically by "make upstream" or "make package"
-GIT_TAG     = 79f522a
+GIT_TAG     = 56b5026
 
 build:
 	tar zxf $(DEPS_SRC)
