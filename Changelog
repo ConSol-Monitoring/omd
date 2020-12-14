@@ -1,6 +1,6 @@
 This file documents the revision history for the Open Monitoring Distribution (Labs Edition)
 
-next 4.x:
+4.00     Dec 14 2020
           - OMD:
             - add build support for sles12sp4
             - add build support for ubuntu20.04
@@ -10,11 +10,11 @@ next 4.x:
           - Gearman:
             - Mod-Gearman update 3.3.3
             - update mod-gearman-worker-go to 1.1.4
+            - Gearmand: update 1.1.19.1
+            - Gearman-Proxy update 2.07
           - InfluxDB: update to 1.8.0
           - Monitoring-Plugins: update to 2.3
-          - nagflux: update 0.5.0
-
-next:
+          - Nagflux: update 0.5.0
           - Thruk: update to 2.40-2
           - Naemon:
             - update core to 1.2.2
@@ -22,10 +22,6 @@ next:
           - Grafana
             - Grafana update to 7.3.5
             - Grafana-Loki update to 1.6.1
-          - Gearman:
-            - Mod-Gearman update 3.3.1
-            - Gearmand: update 1.1.19.1
-            - Gearman-Proxy update 2.07
           - LMD: Update 1.9.2
           - Go updated to 1.15
           - Prometheus update to 2.22.2
