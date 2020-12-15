@@ -1,19 +1,6 @@
 This file documents the revision history for the Open Monitoring Distribution (Labs Edition)
 
-next 4.x:
-          - OMD:
-            - add build support for sles12sp4
-            - add build support for ubuntu20.04
-            - add build support for fedora31
-            - add build support for fedora32
-            - add omd check command to run configuration check
-          - Gearman:
-            - Mod-Gearman update 3.3.3
-            - update mod-gearman-worker-go to 1.1.4
-          - InfluxDB: update to 1.8.0
-          - Monitoring-Plugins: update to 2.3
-
-next:
+3.40     Dec 15 2020
           - Thruk: update to 2.40-2
           - Naemon:
             - update core to 1.2.2
@@ -25,10 +12,12 @@ next:
             - Mod-Gearman update 3.3.1
             - Gearmand: update 1.1.19.1
             - Gearman-Proxy update 2.07
+            - update mod-gearman-worker-go to 1.1.4
           - LMD: Update 1.9.2
           - Go updated to 1.15
           - Prometheus update to 2.22.2
           - VictoriaMetrics 1.47.0
+          - Monitoring-Plugins: update to 2.3
 
 3.30     May 20 2020
           - OMD:
