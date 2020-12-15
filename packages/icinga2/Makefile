@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 NAME = icinga2
-VERSION = 2.11.3
+VERSION = 2.11.8
 DIR = $(NAME)-$(VERSION)
 BOOSTDIR=boost_1_72_0
 BOOSTDEST=$(BOOSTDIR)-dest

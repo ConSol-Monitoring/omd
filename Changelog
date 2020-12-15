@@ -1,5 +1,8 @@
 This file documents the revision history for the Open Monitoring Distribution (Labs Edition)
 
+next:
+          - Icinga2 update to 2.11.8
+
 4.00     Dec 14 2020
           - OMD:
             - add build support for sles12sp4
