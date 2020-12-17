@@ -50,7 +50,7 @@ MODULES += six-1.10.0.tar.gz
 MODULES += orderedmultidict-0.7.5.tar.gz
 MODULES += pycrypto-2.6.1.tar.gz
 MODULES += paramiko-1.18.2.tar.gz
-MODULES += pyasn1-0.2.3.tar.gz
+MODULES += pyasn1-0.4.8.tar.gz
 MODULES += ply-3.11.tar.gz
 MODULES += pysmi-0.3.4.tar.gz
 ifeq ($(SLES12), 0)
@@ -62,7 +62,7 @@ MODULES += prometheus_client-0.3.1.tar.gz
 MODULES += nagiosplugin-1.3.2.tar.gz
 MODULES += pyvmomi-6.7.1.2018.12.tar.gz
 MODULES += pycryptodomex-3.8.1.tar.gz
-MODULES += pysnmp-4.4.9.tar.gz
+MODULES += pysnmp-4.4.12.tar.gz
 
 # More datasources for coshsh
 MODULES += mysqlclient-1.3.12.tar.gz
