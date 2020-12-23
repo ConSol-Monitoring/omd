@@ -25,6 +25,7 @@ MODULES += texttable-0.8.7.tar.gz
 MODULES += ordereddict-1.1.tar.gz
 MODULES += weakrefset-1.0.0.tar.gz
 MODULES += pyexcel-io-0.6.4.tar.gz
+MODULES += lml-0.1.0.tar.gz
 MODULES += pyexcel-0.6.6.tar.gz
 MODULES += odfpy-1.3.4.tar.gz
 MODULES += pyexcel-ods-0.6.0.tar.gz
