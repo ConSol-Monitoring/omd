@@ -4,6 +4,7 @@ MODULES2 += simplejson-3.8.2.tar.gz
 MODULES2 += texttable-0.8.7.tar.gz
 MODULES2 += ordereddict-1.1.tar.gz
 MODULES2 += weakrefset-1.0.0.tar.gz
+MODULES2 += lml-0.1.0.tar.gz
 MODULES2 += pyexcel-io-0.6.4.tar.gz
 MODULES2 += pyexcel-0.6.6.tar.gz
 MODULES2 += odfpy-1.3.4.tar.gz
