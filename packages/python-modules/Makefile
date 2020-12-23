@@ -19,7 +19,6 @@ MODULES += odfpy-1.3.4.tar.gz
 MODULES += pyexcel-ods-0.6.0.tar.gz
 MODULES += jdcal-1.3.tar.gz
 MODULES += et_xmlfile-1.0.1.tar.gz
-MODULES += openpyxl-3.0.5.tar.gz
 MODULES += importlib-1.0.4.zip
 MODULES += argparse-1.4.0.tar.gz
 MODULES += future-0.16.0.tar.gz
