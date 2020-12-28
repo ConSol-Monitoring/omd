@@ -28,7 +28,15 @@ CONFIGUREOPTS = \
 
 EXTRA_BUILD_DEPS=
 BOOST_MINOR_VERSION=$(shell grep BOOST_LIB_VERSION /usr/include/boost/version.hpp | grep ^\# | awk -F _ '{ print $$4 }' | tr -d '"')
+BUILD_BOOST=0
 ifeq ($(shell test $(BOOST_MINOR_VERSION) -lt 66; echo $$?),0)
+  BUILD_BOOST=1
+endif
+ifeq ($(shell test $(BOOST_MINOR_VERSION) -ge 74; echo $$?),0)
+  BUILD_BOOST=1
+endif
+
+ifeq ($(BUILD_BOOST),1)
   EXTRA_BUILD_DEPS=$(BOOSTDEST)
   CONFIGUREOPTS+=-DCMAKE_EXE_LINKER_FLAGS=-lrt
   # workaround for https://bugzilla.redhat.com/show_bug.cgi?id=849791#c8
