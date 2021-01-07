@@ -4,7 +4,7 @@ NAME       = victoriametrics
 PWD        = $(shell pwd)
 
 #for binary downloads
-VERSION    = 1.47.0
+VERSION    = 1.51.0
 VVERSION=v$(VERSION)
 
 # for vmctl build
@@ -65,7 +65,7 @@ install:
 	for i in $(APPS); do \
 	make install-app APP_NAME=$${i} || exit 1; \
 	done
-	install -m 755 vmctl-$(VMCTL_GIT_TAG)/bin/vmctl $(DESTDIR)$(OMD_ROOT)/bin
+	install -m 756 vmctl-$(VMCTL_GIT_TAG)/bin/vmctl $(DESTDIR)$(OMD_ROOT)/bin
 	install -m 755 *cron* $(DESTDIR)$(OMD_ROOT)/bin
 
 skel:
