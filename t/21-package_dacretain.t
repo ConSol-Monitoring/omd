@@ -52,7 +52,11 @@ for(1..6) {
 $ml->do("COMMAND [$t] SCHEDULE_FORCED_HOST_SVC_CHECKS;up1;$t");
 $ml->do("COMMAND [$t] SCHEDULE_FORCED_HOST_CHECK;up1;$t");
 
-sleep 2;
+# wait till there are no pending hosts / services
+for(1..30) {
+    last if($ml->selectscalar_value("GET hosts\nStats: has_been_checked = 0\n") == 0 && $ml->selectscalar_value("GET services\nStats: has_been_checked = 0\n") == 0);
+    sleep 1;
+}
 
 # Check if the expected number of services/hosts are down
 is( $ml->selectscalar_value("GET hosts\nStats: state = 1\n"), 6, "6 hosts are down");
