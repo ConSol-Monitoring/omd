@@ -249,7 +249,7 @@ for my $core (qw/naemon/) {
     my $tlog = '/tmp/thruk_test_error.log';
     is(-f $log, 1, "log exists");
     # grep out commands
-    `/bin/cat $log | /bin/grep -v 'cmd: COMMAND' | /bin/grep -v ' started ' | /bin/grep -v 'templates precompiled in' > $tlog 2>&1`;
+    `/bin/cat $log | /bin/grep -v 'cmd: COMMAND' | /bin/grep -v ' started ' | /bin/grep -v 'templates precompiled in' | grep -v 'business processes updated in' > $tlog 2>&1`;
     is(-s $tlog, 0, "log is empty") or diag(Dumper([`cat $log`]));
     unlink($tlog);
 }
