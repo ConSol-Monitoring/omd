@@ -55,7 +55,6 @@ MODULES += ply-3.11.tar.gz
 MODULES += pysmi-0.3.4.tar.gz
 ifeq ($(SLES12), 0)
 MODULES += pywbem-0.17.2.tar.gz
-#MODULES += pysmbc-1.0.15.8.tar.gz
 MODULES += pysmbc-1.0.23.tar.gz
 endif
 MODULES += requests-2.10.0.tar.gz
