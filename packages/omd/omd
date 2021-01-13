@@ -3542,13 +3542,14 @@ def backup_site_files_to_taropen(tar, options):
     if not site_is_stopped(g_sitename):
         exclude.append("tmp/*")
 
-    def filter_files(filename):
+    def filter_files(tarinfo):
+        filename = tarinfo.name
         for glob_pattern in exclude:
-            # patterns are relative to site dir, filename is full path.
-            # strip of the g_sitedir prefix from full path
-            if fnmatch.fnmatch(filename[len(g_sitedir)+1:], glob_pattern):
-                return True # exclude this file
-        return False
+            # patterns are relative to g_sitedir, filename is relative to /omd/site
+            # strip of the g_sitename/ prefix from filename
+            if fnmatch.fnmatch(filename[len(g_sitename)+1:], glob_pattern):
+                return None # exclude this file
+        return tarinfo
 
     # add skel, it doesn't take much space and we can restore to any version with that information
     tar.add(os.path.join(g_sitedir, 'version', 'skel'), g_sitename+"/.backup_meta/skel")
@@ -3557,7 +3558,7 @@ def backup_site_files_to_taropen(tar, options):
         tar.add(g_sitedir, g_sitename)
     else:
         try:
-            tar.add(g_sitedir, g_sitename, exclude=filter_files)
+            tar.add(g_sitedir, g_sitename, filter=filter_files)
         except TypeError:
             bail_out(tty_error + ": You can not exclude files from your backup using your "
                      "Python version %s. You may need to update." %
