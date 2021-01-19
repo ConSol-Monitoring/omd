@@ -10,6 +10,7 @@ HAS_CYTHON   = $(shell python3 has_cython.py)
 LOCALPYTHONDIR=$(DESTDIR)$(OMD_ROOT)/lib/python
 LOCALPYTHONDIR2=$(DESTDIR)$(OMD_ROOT)/lib/python2
 
+MODULES2 =
 include modules2.mk
 MODULES =
 ifeq ($(SLES12),1)
@@ -67,8 +68,8 @@ MODULES += pysnmp-4.4.12.tar.gz
 # More datasources for coshsh
 MODULES += mysqlclient-1.3.12.tar.gz
 ifeq ($(HAS_CYTHON),1)
-# SUSE has no cython in the repos
-MODULES += pymssql-py38-2.1.4.tar.gz
+# SLES12 doesn't have cython
+MODULES += pymssql-2.1.5.tar.gz
 endif
 
 # for check_json_health
@@ -102,16 +103,19 @@ build:
 	        MDIR=$$(echo $$M | sed -e 's/.tar.gz//g' -e 's/.zip//g') ; \
 	        cd $$MDIR; \
 	        echo PYTHONBUILD $$M ; \
-	        [[ "$$M" =~ .*pymssql.* ]] && ln -sf freetds0.95 freetds ; \
-		if [ `uname -m` = 'armv7l' ] && [[ "$$M" =~ .*pymssql.* ]]; then \
-		    sed -ri "/setuptools_git/d" setup.py; \
-		    sed -ri "s#include_dirs = \[\]#include_dirs = \['$(FREETDS)/include'\]#" setup.py; \
-		    sed -ri "s#library_dirs = \[\]#library_dirs = \['$(FREETDS)/lib'\]#" setup.py; \
-	            python3 setup.py build_ext -I $(FREETDS)/include -L $(FREETDS)/lib ; \
-		else \
-		    sed -ri "/setuptools_git/d" setup.py; \
-	            python3 setup.py build ; \
-		fi ; \
+			if [ `uname -m` = 'armv7l' ] && [[ "$$M" =~ .*pymssql.* ]]; then \
+				sed -ri "/setuptools_git/d" setup.py; \
+				sed -ri "s#include_dirs = \[\]#include_dirs = \['$(FREETDS)/include'\]#" setup.py; \
+				sed -ri "s#library_dirs = \[\]#library_dirs = \['$(FREETDS)/lib'\]#" setup.py; \
+					python3 setup.py build_ext -I $(FREETDS)/include -L $(FREETDS)/lib ; \
+			else \
+				sed -ri "/setuptools_git/d" setup.py; \
+				if [[ $$M =~ .*pymssql.* ]] ; then \
+					python3 setup.py build_ext --include-dirs=$(FREETDS)/include --library-dirs=$(FREETDS)/lib; \
+				else \
+					python3 setup.py build ; \
+				fi ; \
+			fi ; \
 	        cd .. ; \
 	    done
 	
@@ -136,15 +140,15 @@ build:
 	        cd $$MDIR; \
 	        echo PYTHON2BUILD $$M ; \
 	        [[ "$$M" =~ .*pymssql.* ]] && ln -sf freetds0.95 freetds ; \
-		if [ `uname -m` = 'armv7l' ] && [[ "$$M" =~ .*pymssql.* ]]; then \
-		    sed -ri "/setuptools_git/d" setup.py; \
-		    sed -ri "s#include_dirs = \[\]#include_dirs = \['$(FREETDS)/include'\]#" setup.py; \
-		    sed -ri "s#library_dirs = \[\]#library_dirs = \['$(FREETDS)/lib'\]#" setup.py; \
-	            python2 setup.py build_ext -I $(FREETDS)/include -L $(FREETDS)/lib ; \
-		else \
-		    sed -ri "/setuptools_git/d" setup.py; \
-	            python2 setup.py build ; \
-		fi ; \
+			if [ `uname -m` = 'armv7l' ] && [[ "$$M" =~ .*pymssql.* ]]; then \
+				sed -ri "/setuptools_git/d" setup.py; \
+				sed -ri "s#include_dirs = \[\]#include_dirs = \['$(FREETDS)/include'\]#" setup.py; \
+				sed -ri "s#library_dirs = \[\]#library_dirs = \['$(FREETDS)/lib'\]#" setup.py; \
+					python2 setup.py build_ext -I $(FREETDS)/include -L $(FREETDS)/lib ; \
+			else \
+				sed -ri "/setuptools_git/d" setup.py; \
+					python2 setup.py build ; \
+			fi ; \
 	        cd .. ; \
 	    done
 
