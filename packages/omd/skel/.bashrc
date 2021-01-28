@@ -14,21 +14,12 @@ fi
 alias cpan='cpan.wrapper'
 
 influx() {
-  typeset var val tcp mode host port cmd
-  while read var val; do
-    case "$var" in
-      INFLUXDB_HTTP_TCP_PORT:)
-        port=${val##*:}
-        host=${val%:*}
-      ;;
-      INFLUXDB_MODE:)
-        mode=$val
-      ;;
-    esac
-  done < <( omd config show )
+  typeset host port cmd
+  port=${CONFIG_INFLUXDB_HTTP_TCP_PORT##*:}
+  host=${val%:*}
   cmd=(command influx -host "$host" -port "$port" \
        -precision rfc3339 -username omdadmin -password omd)
-  if [ "$mode" = ssl ] ; then
+  if [ "$CONFIG_INFLUXDB_MODE" = ssl ] ; then
     cmd+=(-ssl -unsafeSsl)
   fi
   "${cmd[@]}" "$@"
