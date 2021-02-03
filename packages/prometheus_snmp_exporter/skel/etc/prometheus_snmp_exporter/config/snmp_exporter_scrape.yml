@@ -27,7 +27,22 @@
         replacement: ###CONFIG_PROMETHEUS_SNMP_ADDR###:###CONFIG_PROMETHEUS_SNMP_PORT###
       - source_labels: [snmpCommunity]
         target_label: __param_community
-      - separator: ;
-        regex: snmpCommunity
-        replacement: $1
+      - source_labels: [snmpVersion]
+        target_label: __param_version
+      - source_labels: [snmpSecurityLevel]
+        target_label: __param_security_level
+      - source_labels: [snmpUsername]
+        target_label: __param_username
+      - source_labels: [snmpPassword]
+        target_label: __param_password
+      - source_labels: [snmpAuthProtocol]
+        target_label: __param_auth_protocol
+      - source_labels: [snmpPrivProtocol]
+        target_label: __param_priv_protocol
+      - source_labels: [snmpPrivPassword]
+        target_label: __param_priv_password
+      - source_labels: [snmpContext]
+        target_label: __param_context_name
+      - regex: snmp.*
         action: labeldrop
+
