@@ -1,0 +1,41 @@
+From ad99755033f33a301abc1815d746644067bc297a Mon Sep 17 00:00:00 2001
+From: Rolf Eike Beer <eike@sf-mail.de>
+Date: Mon, 2 Nov 2020 20:05:56 +0100
+Subject: [PATCH] check_dns: split multiple IP addresses passed in one -a
+ argument
+
+---
+ plugins/check_dns.c | 20 +++++++++++++++++---
+ 1 file changed, 17 insertions(+), 3 deletions(-)
+
+diff --git a/plugins/check_dns.c b/plugins/check_dns.c
+index b90f50e6..0f2e6541 100644
+--- a/plugins/check_dns.c
++++ b/plugins/check_dns.c
+@@ -473,9 +473,23 @@ process_arguments (int argc, char **argv)
+     case 'a': /* expected address */
+       if (strlen (optarg) >= ADDRESS_LENGTH)
+         die (STATE_UNKNOWN, _("Input buffer overflow\n"));
+-      expected_address = (char **)realloc(expected_address, (expected_address_cnt+1) * sizeof(char**));
+-      expected_address[expected_address_cnt] = strdup(optarg);
+-      expected_address_cnt++;
++      if (strchr(optarg, ',') != NULL) {
++	char *comma = strchr(optarg, ',');
++	while (comma != NULL) {
++	  expected_address = (char **)realloc(expected_address, (expected_address_cnt+1) * sizeof(char**));
++	  expected_address[expected_address_cnt] = strndup(optarg, comma - optarg);
++	  expected_address_cnt++;
++	  optarg = comma + 1;
++	  comma = strchr(optarg, ',');
++	}
++	expected_address = (char **)realloc(expected_address, (expected_address_cnt+1) * sizeof(char**));
++	expected_address[expected_address_cnt] = strdup(optarg);
++	expected_address_cnt++;
++      } else {
++	expected_address = (char **)realloc(expected_address, (expected_address_cnt+1) * sizeof(char**));
++	expected_address[expected_address_cnt] = strdup(optarg);
++	expected_address_cnt++;
++      }
+       break;
+     case 'A': /* expect authority */
+       expect_authority = TRUE;
