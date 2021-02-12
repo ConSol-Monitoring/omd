@@ -100,16 +100,16 @@ ln -sfn /omd/versions/default/lib/omd/omd_bash_completion /etc/bash_completion.d
 if [ $ACTIVATE_INIT -eq 1 ]; then
     chkconfig --add omd >/dev/null 2>&1
     chkconfig omd on >/dev/null 2>&1
-fi
 
 %if 0%{?_unitdir:1}
-if test -e /omd/versions/default/share/omd/omd.service; then
-    cp /omd/versions/default/share/omd/omd.service %{_unitdir}/omd.service
-    %systemd_post omd.service
-    systemctl disable omd.service
-    systemctl enable omd.service
-fi
+    if test -e /omd/versions/default/share/omd/omd.service; then
+        cp /omd/versions/default/share/omd/omd.service %{_unitdir}/omd.service
+        %systemd_post omd.service
+        systemctl disable omd.service
+        systemctl enable omd.service
+    fi
 %endif
+fi
 
 
 
@@ -156,12 +156,14 @@ then
     touch /etc/apache2/sysconfig.d/include.conf
 fi
 
-# Make sure, global apache startscript is activated
-chkconfig --add @APACHE_NAME@ >/dev/null 2>&1
-chkconfig @APACHE_NAME@ on    >/dev/null 2>&1
+# Make sure, global apache startscript is activated on first installation
+if [ $ACTIVATE_INIT -eq 1 ]; then
+    chkconfig --add @APACHE_NAME@ >/dev/null 2>&1
+    chkconfig @APACHE_NAME@ on    >/dev/null 2>&1
 
-# ensure apache is running
-service @APACHE_NAME@ start >/dev/null 2>&1
+    # ensure apache is running
+    service @APACHE_NAME@ start >/dev/null 2>&1
+fi
 
 # enable required selinux booleans
 setsebool -P httpd_can_network_relay on   >/dev/null 2>&1
