@@ -15,6 +15,8 @@ export MANPATH="$OMD_ROOT/share/man:$MANPATH"
 export PYTHONPATH="$OMD_ROOT/lib/python:$OMD_ROOT/local/lib/python"
 export MAILRC="$OMD_ROOT/etc/mail.rc"
 export GF_PLUGIN_DIR="$OMD_ROOT/var/grafana/plugins"
+export MP_STATE_PATH="$OMD_ROOT/var/"
+export NAGIOS_PLUGIN_STATE_DIRECTORY="$MP_STATE_PATH"
 # uncomment to save core files
 #ulimit -c unlimited
 
