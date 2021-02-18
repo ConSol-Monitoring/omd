@@ -5,7 +5,9 @@ next:
           - Icinga2 update to 2.11.8
           - Grafana
             - Grafana update to 7.4.2
-          - Prometheus update to 2.25.0
+          - Prometheus:
+            - Prometheus update to 2.25.0
+            - node_exporter update to 1.1.1
 
 4.00     Dec 14 2020
           - OMD:
