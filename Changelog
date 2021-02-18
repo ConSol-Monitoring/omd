@@ -3,6 +3,8 @@ This file documents the revision history for the Open Monitoring Distribution (L
 next:
           - LMD: Update 1.9.5
           - Icinga2 update to 2.11.8
+          - Grafana
+            - Grafana update to 7.4.2
 
 4.00     Dec 14 2020
           - OMD:
