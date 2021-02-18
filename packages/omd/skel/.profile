@@ -50,3 +50,5 @@ for i in $OMD_ROOT/etc/profile.d/*.sh ; do
         fi
     fi
 done
+
+alias gearman_top="gearman_top -H 127.0.0.1:`omd config show |grep GEARMAND_PORT | cut -f 3 -d :`"
