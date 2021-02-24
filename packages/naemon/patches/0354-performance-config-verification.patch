@@ -1,0 +1,303 @@
+From ee26f4caef95e36ccf8af10e2d4ea9fd84315c51 Mon Sep 17 00:00:00 2001
+From: Sven Nierlein <sven@nierlein.de>
+Date: Tue, 23 Feb 2021 17:01:35 +0100
+Subject: [PATCH] speed up cleanup() when having servicegroups
+
+while clean up we iterate over all services and each service is removed from
+all its servicegroups by iterating over the servicegroup members over and over
+to remove each service one by one.
+Adding a new flag truncate_lists which can be set on teardown to simply iterate once
+over each list and remove/free all items.
+This reduces the duration of a config check for an example config with 100k services from
+30seconds to less than 3seconds.
+
+Signed-off-by: Sven Nierlein <sven@nierlein.de>
+---
+ src/naemon/naemon.c                  |  1 +
+ src/naemon/objects_service.c         | 19 ++++++++++++++-----
+ src/naemon/objects_service.h         |  4 ++--
+ src/naemon/objects_servicegroup.c    | 27 ++++++++++++++++++++++-----
+ src/naemon/objects_servicegroup.h    |  4 ++--
+ src/naemon/utils.c                   |  4 ++--
+ t-tap/test_checks.c                  |  2 +-
+ t-tap/test_downtime.c                |  2 +-
+ tests/test-check-dependencies.c      |  2 +-
+ tests/test-check-result-processing.c |  2 +-
+ tests/test-check-scheduling.c        |  2 +-
+ tests/test-neb-callbacks.c           |  2 +-
+ tests/test-retention.c               |  2 +-
+ tests/test-scheduled-downtimes.c     |  2 +-
+ 14 files changed, 51 insertions(+), 24 deletions(-)
+
+diff --git a/src/naemon/naemon.c b/src/naemon/naemon.c
+index 5d0f2bd5..4aa05b7e 100644
+--- a/src/naemon/naemon.c
++++ b/src/naemon/naemon.c
+@@ -408,6 +408,7 @@ int main(int argc, char **argv)
+ 		}
+ 
+ 		/* clean up after ourselves */
++		timing_point("Cleaning up\n");
+ 		cleanup();
+ 
+ 		/* exit */
+diff --git a/src/naemon/objects_service.c b/src/naemon/objects_service.c
+index 70754edc..5d719bac 100644
+--- a/src/naemon/objects_service.c
++++ b/src/naemon/objects_service.c
+@@ -24,12 +24,14 @@ int init_objects_service(int elems)
+ 	return OK;
+ }
+ 
+-void destroy_objects_service()
++/* destroy a single service object, set truncate_lists to TRUE when lists should be simply emtied instead of removing item by item.
++ * Enable truncate_list when removing all objects and disble when removing a specific one. */
++void destroy_objects_service(int truncate_lists)
+ {
+ 	unsigned int i;
+ 	for (i = 0; i < num_objects.services; i++) {
+ 		service *this_service = service_ary[i];
+-		destroy_service(this_service);
++		destroy_service(this_service, truncate_lists);
+ 	}
+ 	service_list = NULL;
+ 	if (service_hash_table)
+@@ -263,7 +265,9 @@ customvariablesmember *add_custom_variable_to_service(service *svc, char *varnam
+ 	return add_custom_variable_to_object(&svc->custom_variables, varname, varvalue);
+ }
+ 
+-void destroy_service(service *this_service)
++/* destroy a single service object, set truncate_lists to TRUE when lists should be simply emtied instead of removing item by item.
++ * Enable truncate_list when removing all objects and disble when removing a specific one. */
++void destroy_service(service *this_service, int truncate_lists)
+ {
+ 	struct contactgroupsmember *this_contactgroupsmember, *next_contactgroupsmember;
+ 	struct contactsmember *this_contactsmember, *next_contactsmember;
+@@ -298,8 +302,13 @@ void destroy_service(service *this_service)
+ 		nm_free(this_customvariablesmember);
+ 		this_customvariablesmember = next_customvariablesmember;
+ 	}
+-	while (this_service->servicegroups_ptr)
+-		remove_service_from_servicegroup(this_service->servicegroups_ptr->object_ptr, this_service);
++
++	/* free memory for service groups */
++	if(!truncate_lists) {
++		/* remove them one by one */
++		while (this_service->servicegroups_ptr)
++			remove_service_from_servicegroup(this_service->servicegroups_ptr->object_ptr, this_service);
++	}
+ 
+ 	for (slavelist = this_service->notify_deps; slavelist; slavelist = slavelist->next)
+ 		destroy_servicedependency(slavelist->object_ptr);
+diff --git a/src/naemon/objects_service.h b/src/naemon/objects_service.h
+index 7756565a..d8358ee0 100644
+--- a/src/naemon/objects_service.h
++++ b/src/naemon/objects_service.h
+@@ -145,12 +145,12 @@ static const struct flag_map service_flag_map[] = {
+ };
+ 
+ int init_objects_service(int elems);
+-void destroy_objects_service(void);
++void destroy_objects_service(int truncate_lists);
+ 
+ service *create_service(host *hst, const char *description);
+ int setup_service_variables(service *svc, const char *display_name, const char *check_period, const char *check_command, int initial_state, int max_attempts, int accept_passive_checks, double check_interval, double retry_interval, double notification_interval, double first_notification_delay, char *notification_period, int notification_options, int notifications_enabled, int is_volatile, const char *event_handler, int event_handler_enabled, int checks_enabled, int flap_detection_enabled, double low_flap_threshold, double high_flap_threshold, int flap_detection_options, int stalking_options, int process_perfdata, int check_freshness, int freshness_threshold, const char *notes, const char *notes_url, const char *action_url, const char *icon_image, const char *icon_image_alt, int retain_status_information, int retain_nonstatus_information, int obsess, unsigned int hourly_value);
+ int register_service(service *new_service);
+-void destroy_service(service *svc);
++void destroy_service(service *svc, int truncate_lists);
+ 
+ struct contactgroupsmember *add_contactgroup_to_service(service *, char *);					/* adds a contact group to a service definition */
+ struct contactsmember *add_contact_to_service(service *, char *);                                              /* adds a contact to a host definition */
+diff --git a/src/naemon/objects_servicegroup.c b/src/naemon/objects_servicegroup.c
+index 9f9745eb..1c1efed4 100644
+--- a/src/naemon/objects_servicegroup.c
++++ b/src/naemon/objects_servicegroup.c
+@@ -17,12 +17,14 @@ int init_objects_servicegroup(int elems)
+ 	return OK;
+ }
+ 
+-void destroy_objects_servicegroup()
++/* destroy a single servicegroup object, set truncate_lists to TRUE when lists should be simply emtied instead of removing item by item.
++ * Enable truncate_list when removing all objects and disble when removing a specific one. */
++void destroy_objects_servicegroup(int truncate_lists)
+ {
+ 	unsigned int i;
+ 	for (i = 0; i < num_objects.servicegroups; i++) {
+ 		servicegroup *this_servicegroup = servicegroup_ary[i];
+-		destroy_servicegroup(this_servicegroup);
++		destroy_servicegroup(this_servicegroup, truncate_lists);
+ 	}
+ 	servicegroup_list = NULL;
+ 	if (servicegroup_hash_table)
+@@ -81,13 +83,28 @@ int register_servicegroup(servicegroup *new_servicegroup)
+ 	return OK;
+ }
+ 
+-void destroy_servicegroup(servicegroup *this_servicegroup)
++/* destroy a single servicegroup object, set truncate_lists to TRUE when lists should be simply emtied instead of removing item by item.
++ * Enable truncate_list when removing all objects and disble when removing a specific one. */
++void destroy_servicegroup(servicegroup *this_servicegroup, int truncate_lists)
+ {
++	servicesmember *this_servicesmember, *next_servicesmember;
++
+ 	if (!this_servicegroup)
+ 		return;
+ 
+-	while (this_servicegroup->members != NULL) {
+-		remove_service_from_servicegroup(this_servicegroup, this_servicegroup->members->service_ptr);
++	if(truncate_lists) {
++		/* remove all in one go */
++		next_servicesmember = this_servicegroup->members;
++		while (next_servicesmember) {
++			this_servicesmember = next_servicesmember;
++			next_servicesmember = this_servicesmember->next;
++			nm_free(this_servicesmember);
++		}
++	} else {
++		/* remove them one by one */
++		while (this_servicegroup->members != NULL) {
++			remove_service_from_servicegroup(this_servicegroup, this_servicegroup->members->service_ptr);
++		}
+ 	}
+ 
+ 	if (this_servicegroup->alias != this_servicegroup->group_name)
+diff --git a/src/naemon/objects_servicegroup.h b/src/naemon/objects_servicegroup.h
+index 6113f7de..964b8e07 100644
+--- a/src/naemon/objects_servicegroup.h
++++ b/src/naemon/objects_servicegroup.h
+@@ -32,11 +32,11 @@ struct servicegroup {
+ };
+ 
+ int init_objects_servicegroup(int elems);
+-void destroy_objects_servicegroup(void);
++void destroy_objects_servicegroup(int truncate_lists);
+ 
+ servicegroup *create_servicegroup(const char *name, const char *alias, const char *notes, const char *notes_url, const char *action_url);
+ int register_servicegroup(servicegroup *this_servicegroup);
+-void destroy_servicegroup(servicegroup *this_servicegroup);
++void destroy_servicegroup(servicegroup *this_servicegroup, int truncate_lists);
+ struct servicesmember *add_service_to_servicegroup(servicegroup *, service *);
+ void remove_service_from_servicegroup(servicegroup *temp_servicegroup, service *svc);
+ 
+diff --git a/src/naemon/utils.c b/src/naemon/utils.c
+index a7c2bafa..b36393f8 100644
+--- a/src/naemon/utils.c
++++ b/src/naemon/utils.c
+@@ -967,11 +967,11 @@ void free_memory(nagios_macros *mac)
+ 	destroy_objects_command();
+ 	destroy_objects_timeperiod();
+ 	destroy_objects_host();
+-	destroy_objects_service();
++	destroy_objects_service(TRUE);
+ 	destroy_objects_contact();
+ 	destroy_objects_contactgroup();
+ 	destroy_objects_hostgroup();
+-	destroy_objects_servicegroup();
++	destroy_objects_servicegroup(TRUE);
+ 
+ 	free_comment_data();
+ 
+diff --git a/t-tap/test_checks.c b/t-tap/test_checks.c
+index c2c7dbea..2035ff18 100644
+--- a/t-tap/test_checks.c
++++ b/t-tap/test_checks.c
+@@ -46,7 +46,7 @@ void setup_check_result(void)
+ void destroy_objects(void)
+ {
+ 	destroy_objects_host();
+-	destroy_objects_service();
++	destroy_objects_service(TRUE);
+ }
+ 
+ void setup_objects(time_t when)
+diff --git a/t-tap/test_downtime.c b/t-tap/test_downtime.c
+index b771e798..6b3b52e2 100644
+--- a/t-tap/test_downtime.c
++++ b/t-tap/test_downtime.c
+@@ -182,7 +182,7 @@ int main(int argc, char **argv)
+ 	ok(i == 0, "No downtimes left, Left: %d", i);
+ 
+ 	destroy_objects_host();
+-	destroy_objects_service();
++	destroy_objects_service(TRUE);
+ 	destroy_event_queue();
+ 	cleanup_downtime_data();
+ 	free_comment_data();
+diff --git a/tests/test-check-dependencies.c b/tests/test-check-dependencies.c
+index 3a57213d..0d990a0d 100644
+--- a/tests/test-check-dependencies.c
++++ b/tests/test-check-dependencies.c
+@@ -53,7 +53,7 @@ void teardown(void)
+ {
+ 	destroy_event_queue();
+ 	destroy_objects_command();
+-	destroy_objects_service();
++	destroy_objects_service(TRUE);
+ 	destroy_objects_host();
+ }
+ 
+diff --git a/tests/test-check-result-processing.c b/tests/test-check-result-processing.c
+index 25b2abb2..1e127718 100644
+--- a/tests/test-check-result-processing.c
++++ b/tests/test-check-result-processing.c
+@@ -42,7 +42,7 @@ void teardown(void)
+ {
+ 	destroy_event_queue();
+ 	destroy_objects_command();
+-	destroy_objects_service();
++	destroy_objects_service(TRUE);
+ 	destroy_objects_host();
+ }
+ 
+diff --git a/tests/test-check-scheduling.c b/tests/test-check-scheduling.c
+index 77b638b9..a3d3632f 100644
+--- a/tests/test-check-scheduling.c
++++ b/tests/test-check-scheduling.c
+@@ -76,7 +76,7 @@ void teardown(void)
+ {
+ 	destroy_event_queue();
+ 	destroy_objects_command();
+-	destroy_objects_service();
++	destroy_objects_service(TRUE);
+ 	destroy_objects_host();
+ }
+ 
+diff --git a/tests/test-neb-callbacks.c b/tests/test-neb-callbacks.c
+index 6ec24b48..bc8ad118 100644
+--- a/tests/test-neb-callbacks.c
++++ b/tests/test-neb-callbacks.c
+@@ -130,7 +130,7 @@ void setup_v2(void)
+ void teardown_v1(void)
+ {
+ 	common_teardown();
+-	destroy_service(svc);
++	destroy_service(svc, FALSE);
+ 	destroy_host(hst);
+ 	free_check_result(cr);
+ 	nm_free(cr);
+diff --git a/tests/test-retention.c b/tests/test-retention.c
+index d1c0c3bd..7409d380 100644
+--- a/tests/test-retention.c
++++ b/tests/test-retention.c
+@@ -45,7 +45,7 @@ void teardown_objects(void)
+ 
+ 	destroy_objects_command();
+ 	destroy_objects_host();
+-	destroy_objects_service();
++	destroy_objects_service(TRUE);
+ 
+ }
+ 
+diff --git a/tests/test-scheduled-downtimes.c b/tests/test-scheduled-downtimes.c
+index 94b6eb30..7bde2019 100644
+--- a/tests/test-scheduled-downtimes.c
++++ b/tests/test-scheduled-downtimes.c
+@@ -94,7 +94,7 @@ void teardown(void)
+ {
+ 
+ 	destroy_objects_command();
+-	destroy_objects_service();
++	destroy_objects_service(TRUE);
+ 	destroy_objects_host();
+ 	cleanup_retention_data();
+ 	cleanup_downtime_data();
