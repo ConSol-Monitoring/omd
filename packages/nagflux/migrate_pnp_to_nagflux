@@ -115,7 +115,7 @@ for my $xml_file (@xml_files) {
     my $service = $xml->{'NAGIOS_DISP_SERVICEDESC'};
     my $cmd     = $xml->{'NAGIOS_CHECK_COMMAND'};
     my $type    = 'SERVICEPERFDATA';
-    if($service eq '_HOST_') {
+    if($service eq '_HOST_' || $xml->{'NAGIOS_SERVICEDESC'} eq '_HOST_' || $xml->{'NAGIOS_AUTH_SERVICEDESC'} eq '_HOST_') {
         $service = '';
         $type    = 'HOSTPERFDATA';
     }
