@@ -68,6 +68,10 @@ unset LANG
 export LC_ALL=C
 
 OPTIONS="--config.file $CFG_FILE --web.listen-address=$CONFIG_PROMETHEUS_TCP_ADDR:$CONFIG_PROMETHEUS_TCP_PORT --web.external-url=http://desjucktkoasauwosdosteht/###SITE###/prometheus --storage.tsdb.path $DATA_DIR --web.console.libraries=###ROOT###/etc/prometheus/console_libraries --web.console.templates=###ROOT###/etc/prometheus/consoles --storage.tsdb.retention=${CONFIG_PROMETHEUS_RETENTION}d"
+if [ -r ###ROOT###/etc/prometheus/webconfig.yml ]; then
+    # https://prometheus.io/docs/prometheus/latest/configuration/https/
+    OPTIONS="$OPTIONS --web.config.file=###ROOT###/etc/prometheus/webconfig.yml"
+fi
 
 # Put together fragments and build a new prometheus.yml
 #
