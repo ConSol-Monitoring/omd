@@ -1,6 +1,9 @@
 This file documents the revision history for the Open Monitoring Distribution (Labs Edition)
 
 next:
+          - Naemon:
+            - update core to 1.2.4
+            - update livestatus to 1.2.4
           - LMD: Update 1.9.5
           - Icinga2 update to 2.11.8
           - Grafana
