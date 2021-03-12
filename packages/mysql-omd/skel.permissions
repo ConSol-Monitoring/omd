@@ -1,1 +1,2 @@
 etc/init.d/mysql 755
+etc/mysql/conf.d 755
