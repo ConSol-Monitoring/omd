@@ -729,7 +729,7 @@ def create_skeleton_file(skelbase, userbase, relpath, replacements):
     user_path = userbase + "/" + relpath
 
     # Remove old version, if existing (needed during update)
-    if os.path.islink(user_path) and os.path.lexists(user_path) or os.path.exists(user_path):
+    if (os.path.islink(user_path) and os.path.lexists(user_path)) or os.path.exists(user_path):
         if relpath in [ './bin', './include', './lib', './share', './version' ]:
             bail_out(tty_error + " %s would overwrite base symlink %s, check your skeleton folder." % (skel_path, user_path))
         delete_user_file(user_path)
@@ -3099,14 +3099,21 @@ def main_reset(args, options={}):
         if not os.path.exists(skelroot + '/' + arg):
             bail_out(tty_error + ": file %s does not exist in skeleton"  % (arg))
         if os.path.isdir(skelroot + '/' +arg) and not os.path.islink(skelroot + '/' + arg):
-            for dirpath, dirnames, filenames in os.walk(arg):
-                for entry in filenames:
-                    if os.path.exists(skelroot + '/' + dirpath + '/' + entry):
+            for dirpath, dirnames, filenames in os.walk(skelroot + '/' +arg):
+                localpath = dirpath.replace(skelroot, sitedir).replace(sitedir+"/", "")
+                for entry in dirnames:
+                    if os.path.exists(localpath + '/' + entry) and not os.path.isdir(localpath + '/' + entry):
                         try:
-                            os.remove(arg)
+                            os.remove(localpath + '/' + entry)
                         except Exception:
                             pass
-            create_skeleton_files(g_sitename, arg)
+                for entry in filenames:
+                    try:
+                        os.remove(localpath + '/' + entry)
+                    except Exception:
+                        pass
+                    os.makedirs(localpath, exist_ok=True)
+                    create_skeleton_file(skelroot, sitedir, localpath + '/' + entry, replacements)
         else:
             try:
                 os.remove(arg)
