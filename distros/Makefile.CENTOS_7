@@ -73,6 +73,7 @@ OS_PACKAGES          += dialog
 OS_PACKAGES          += diffutils
 OS_PACKAGES          += expat
 OS_PACKAGES          += fping
+OS_PACKAGES          += gd
 OS_PACKAGES          += httpd
 OS_PACKAGES          += libdbi
 OS_PACKAGES          += libevent
