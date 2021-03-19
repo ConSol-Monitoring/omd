@@ -1,0 +1,25 @@
+#!/bin/bash
+
+# Alias: Auto restart OMD services
+# Menu: Basic
+# Description:
+#  If option is enabled, a cronjob will check if OMD is partially down and restart the affected services
+
+case "$1" in
+   default)
+       echo "off"
+   ;;
+   choices)
+       echo "on: enable auto restart of OMD services"
+       echo "off: disable auto restart of OMD services"
+   ;;
+   set)
+       OMD_RESTART_CRON=${OMD_ROOT}/etc/cron.d/service_autorestart.cron
+       if [ "$2" == "on" ]; then
+           rm -f $OMD_RESTART_CRON
+           ln -s ../omd/service_autorestart.cron $OMD_RESTART_CRON
+       else
+            rm -f $OMD_RESTART_CRON
+       fi
+   ;;
+esac
