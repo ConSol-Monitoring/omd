@@ -44,7 +44,7 @@ skel:
 	# Download from https://grafana.com/grafana/plugins
 	mkdir -p $(SKEL)/var/grafana/plugins
 	tar zxf clock-panel-plugin-1.1.1.tar.gz -C $(SKEL)/var/grafana/plugins
-	tar zxf piechart-panel-plugin-1.4.0.tar.gz -C $(SKEL)/var/grafana/plugins
+	tar zxf piechart-panel-plugin-1.6.1.tar.gz -C $(SKEL)/var/grafana/plugins
 	tar zxf snuids-trafficlights-panel-1.4.5.tar.gz -C $(SKEL)/var/grafana/plugins
 
 
