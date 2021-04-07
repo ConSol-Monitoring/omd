@@ -1,5 +1,10 @@
 This file documents the revision history for the Open Monitoring Distribution (Labs Edition)
 
+next:
+          - Naemon:
+            - update core to 1.2.4
+            - update livestatus to 1.2.4.1
+
 3.40     Dec 15 2020
           - Thruk: update to 2.40-2
           - Naemon:
