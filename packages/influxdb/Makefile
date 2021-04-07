@@ -1,24 +1,24 @@
 include ../../Makefile.omd
 
 NAME       = influxdb
-VERSION    = 1.8.2
+VERSION    = 1.8.4
 SRC        = $(NAME)-$(VERSION).tar.gz
 GOPATH     = go
 GOPKG      = 1.16
 GOVERSION  = $(shell grep ^VERSION ../go-${GOPKG}/Makefile | awk '{ print $$3 }')
+GOROOT     = $(PWD)/../go-$(GOPKG)/go-$(GOVERSION)
 PWD        = $(shell pwd)
 DATE       = $(shell date -u '+%Y-%m-%d_%I:%M:%S%p')
 
 build:
 	tar zxf $(SRC)
-	set -e ; for p in patches/*.patch ; do \
+	set -e ; cd influxdb-$(VERSION); for p in ../patches/*.patch ; do \
 	    echo "applying $$p..." ; \
 	    patch -p1 < $$p ; \
 	done
-	export GOROOT=$(PWD)/../go-$(GOPKG)/go-$(GOVERSION) && export GOPATH=$(PWD)/$(GOPATH)/ && PATH=$$GOROOT/bin:$$PATH && \
-		cd $(GOPATH)/src/github.com/influxdata && \
-		go build -ldflags "-s -w" ./... && \
-		go install -ldflags "-X main.version=$(VERSION) -X main.buildTime=$(DATE) -s -w" ./...
+	cd influxdb-$(VERSION) && \
+		env GOPATH=$(PWD)/$(GOPATH)/ PATH=$(GOROOT)/bin:$(PATH) \
+		go install -mod vendor -ldflags "-X main.version=$(VERSION) -X main.buildTime=$(DATE) -s -w" ./...
 
 install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/bin
@@ -33,20 +33,11 @@ install:
 skel:
 
 clean:
-	-test -d $(GOPATH) && find $(GOPATH)/. -type d -exec chmod 755 {} \;
-	rm -rf $(GOPATH)
+	rm -rf influxdb-$(VERSION) $(PWD)/$(GOPATH)
 
 package: clean
-	mkdir -p $(GOPATH)
-	export GOROOT=$(PWD)/../go-$(GOPKG)/go-$(GOVERSION) && export GOPATH=$(PWD)/$(GOPATH)/ && PATH=$$GOROOT/bin:$$PATH && \
-		go get -d -u github.com/golang/dep && \
-		mkdir -p $(GOPATH)/src/github.com/influxdata/ && \
-		cd $(GOPATH)/src/github.com/influxdata && \
-		git clone --depth=1 --branch "v$(VERSION)" https://github.com/influxdata/influxdb.git && \
-		cd influxdb && \
-		go mod vendor && \
-		cd $(PWD) && \
-		find $(GOPATH)/src/ -type d -name ".git*" -exec chmod -R u+w {} \; && \
-		find $(GOPATH)/src/ -name ".git*" -exec rm -R {} \; ; \
-		tar zcf $(SRC) --exclude=.git $(GOPATH)/src/
-
+	curl -fLo influxdb-$(VERSION).tar.gz https://github.com/influxdata/influxdb/archive/v$(VERSION).tar.gz
+	tar xf influxdb-$(VERSION).tar.gz
+	cd influxdb-$(VERSION) && env PATH=$(GOROOT)/bin:$(PATH) go mod vendor
+	tar czf influxdb-$(VERSION).tar.gz influxdb-$(VERSION)
+	rm -rf influxdb-$(VERSION)

@@ -1,32 +1,32 @@
-diff -Naur go/src/github.com/influxdata/influxdb/cmd/influx_inspect/export/export.go goneu/src/github.com/influxdata/influxdb/cmd/influx_inspect/export/export.go
---- a/go/src/github.com/influxdata/influxdb/cmd/influx_inspect/export/export.go	2017-09-01 08:05:38.000000000 +0000
-+++ b/go/src/github.com/influxdata/influxdb/cmd/influx_inspect/export/export.go	2017-11-10 16:20:40.957000000 +0000
-@@ -15,6 +15,7 @@
- 	"strings"
- 	"sync"
- 	"time"
+diff -Naur cmd/influx_inspect/export/export.go cmd/influx_inspect/export/export.go
+--- a/cmd/influx_inspect/export/export.go	2017-09-01 08:05:38.000000000 +0000
++++ b/cmd/influx_inspect/export/export.go	2017-11-10 16:20:40.957000000 +0000
+@@ -11,6 +11,7 @@
+ 	"math"
+ 	"os"
+ 	"path/filepath"
 +	"regexp"
- 
- 	"github.com/influxdata/influxdb/influxql"
- 	"github.com/influxdata/influxdb/models"
-@@ -36,6 +37,8 @@
+ 	"sort"
+ 	"strconv"
+ 	"strings"
+@@ -37,6 +38,8 @@
  	startTime       int64
  	endTime         int64
  	compress        bool
-+	pattern		string
-+	cpattern	*regexp.Regexp
++	pattern         string
++	cpattern        *regexp.Regexp
+ 	lponly          bool
  
  	manifest map[string]struct{}
- 	tsmFiles map[string][]string
-@@ -66,6 +69,7 @@
- 	fs.StringVar(&start, "start", "", "Optional: the start time to export (RFC3339 format)")
+@@ -69,6 +72,7 @@
  	fs.StringVar(&end, "end", "", "Optional: the end time to export (RFC3339 format)")
+ 	fs.BoolVar(&cmd.lponly, "lponly", false, "Only export line protocol")
  	fs.BoolVar(&cmd.compress, "compress", false, "Compress the output")
 +	fs.StringVar(&cmd.pattern, "pattern", "", "Optional: a regexp filter for the output lines")
  
  	fs.SetOutput(cmd.Stdout)
  	fs.Usage = func() {
-@@ -113,6 +117,13 @@
+@@ -116,6 +120,13 @@
  	if cmd.startTime != 0 && cmd.endTime != 0 && cmd.endTime < cmd.startTime {
  		return fmt.Errorf("end time before start time")
  	}
@@ -40,13 +40,14 @@ diff -Naur go/src/github.com/influxdata/influxdb/cmd/influx_inspect/export/expor
  	return nil
  }
  
-@@ -398,6 +409,9 @@
+@@ -458,6 +469,10 @@
  		buf = append(buf, ' ')
  		buf = strconv.AppendInt(buf, ts, 10)
  		buf = append(buf, '\n')
-+		if cmd.cpattern != nil && ! cmd.cpattern.Match(buf) {
++		if cmd.cpattern != nil && !cmd.cpattern.Match(buf) {
 +			continue
 +		}
++
  		if _, err := w.Write(buf); err != nil {
  			// Underlying IO error needs to be returned.
  			return err
