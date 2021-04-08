@@ -54,7 +54,8 @@ class MIB(coshsh.item.Item):
         return self.mib
 
     def add_agent(self, agent):
-        self.agents["%03d%03d%03d%03d" % tuple([int(n) for n in agent[0].split(".")])] = [agent[1], agent[2], agent[3]]
+        if "." in agent[0]:
+            self.agents["%03d%03d%03d%03d" % tuple([int(n) for n in agent[0].split(".")])] = [agent[1], agent[2], agent[3]]
 
     def sort_agents(self):
         self.agent_ips = []
@@ -91,7 +92,8 @@ class RagpickerMIB(MIB):
         self.ip_oid_combinations.sort()
 
     def add_agent(self, agent):
-        self.agents["%03d%03d%03d%03d" % tuple([int(n) for n in agent[0].split(".")])] = [agent[1], agent[2], agent[3]]
+        if "." in agent[0]:
+            self.agents["%03d%03d%03d%03d" % tuple([int(n) for n in agent[0].split(".")])] = [agent[1], agent[2], agent[3]]
 
     def sort_agents(self):
         self.agent_ips = []
