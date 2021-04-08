@@ -21,8 +21,11 @@ GIT_TAG     = v1.9.5
 build:
 	tar zxf $(DEPS_SRC)
 	tar zxf $(SRC)
-	export GOROOT=$(PWD)/../go-$(GOPKG)/go-$(GOVERSION)/ && export GOPATH=$(PWD)/$(GOPATH)/ && PATH=$$GOROOT/bin:$$PATH && \
-	go install -ldflags "-s -w -X main.Build=$(OMD_VERSION)-$(GIT_TAG)" $(GITURL)/$(NAME)
+	export GO111MODULE=auto && \
+		export GOROOT=$(PWD)/../go-$(GOPKG)/go-$(GOVERSION)/ && \
+		export GOPATH=$(PWD)/$(GOPATH)/ && \
+		export PATH=$$GOROOT/bin:$$PATH && \
+		go install -ldflags "-s -w -X main.Build=$(OMD_VERSION)-$(GIT_TAG)" $(GITURL)/$(NAME)
 
 install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/bin
