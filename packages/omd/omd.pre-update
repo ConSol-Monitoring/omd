@@ -91,6 +91,8 @@ if [ $OLD_VERSION -le 400 ]; then
     echo "migration for victoriametrics"
     # renaming of CONFIG VARS
     sed -e 's%VICTORIAMETRICS_BASE_PORT%VICTORIAMETRICS_PORT%' -i etc/omd/site.conf
+    # reset variable from old 3x site.conf (otherwise port is changed)
+    export VICTORIAMETRICS_BASE_PORT=
 
     # create new config file
     cp etc/victoriametrics/db.secrets etc/victoriametrics/victoriametrics.conf
