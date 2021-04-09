@@ -345,7 +345,13 @@ case "$1" in
     ;;
     
     reload|force-reload)
-        $0 restart
+       PID=$(pidof_alertmanager 2>&1) || true
+        if kill -0 "${PID:-}" >/dev/null 2>&1; then
+            kill -HUP $PID
+            exit 0
+        else
+            exit 1
+        fi
     ;;
     check)
     ;;

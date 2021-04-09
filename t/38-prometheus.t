@@ -13,7 +13,8 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 79 );
+plan( tests => 99 );
+
 
 ##################################################
 # create our test site
@@ -45,7 +46,16 @@ unless($blackbox_icmp) {
 };
 TestUtils::test_command({ cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_http -t 60 -H 127.0.0.1 --onredirect=follow -a omdadmin:omd -u \"/$site/grafana/api/datasources/proxy/2/api/v1/query_range?query=go_goroutines&start=1535520675&end=1535542290&step=15\" -s \"success\"'", like => '/HTTP OK:/', waitfor => 'OK:' });
 
-# test removed datasource for grafana: 
+# test reload
+TestUtils::test_command({ cmd => "/bin/su - $site -c 'omd reload prometheus'" });
+TestUtils::test_command({ cmd => "/bin/su - $site -c 'tail -10 var/prometheus/prometheus.log| grep loading'", like => '/Completed loading of configuration file/', errlike => '/^$/' });
+TestUtils::test_command({ cmd => "/bin/su - $site -c 'tail -100 var/prometheus/prometheus.log| grep -v -q SIGTERM'"  });
+
+TestUtils::test_command({ cmd => "/bin/su - $site -c 'omd reload alertmanager'" });
+TestUtils::test_command({ cmd => "/bin/su - $site -c 'tail -5 var/alertmanager/alertmanager.log| grep loading'", like => '/Completed loading of configuration file/', errlike => '/^$/' });
+TestUtils::test_command({ cmd => "/bin/su - $site -c 'tail -5 var/alertmanager/alertmanager.log| grep -v -q SIGTERM'"  });
+
+# test removed datasource for grafana:
 TestUtils::test_command({ cmd => $omd_bin." stop $site" });
 TestUtils::test_command({ cmd => "/bin/su - $site -c 'mv etc/prometheus/grafana_datasources.yml etc/prometheus/grafana_datasources_ignore.yml'", errlike => '/^$/' });
 TestUtils::test_command({ cmd => "/bin/su - $site -c 'ls -l etc/grafana/provisioning/datasources/'", like => ['/prometheus.yml/']});
@@ -56,4 +66,3 @@ TestUtils::test_command({ cmd => "/bin/su - $site -c 'ls -l etc/grafana/provisio
 
 # cleanup
 TestUtils::remove_test_site($site);
-
