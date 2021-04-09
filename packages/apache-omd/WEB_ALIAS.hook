@@ -23,7 +23,8 @@ case "$1" in
         if [ $CONFIG_APACHE_MODE = "ssl" ]; then
             PROTO="https"
         fi
-        sed -i $OMD_ROOT/etc/grafana/grafana.ini -e 's/^root_url.*/root_url = %(protocol)s:\/\/%(domain)s\/'$OMD_SITE'\/grafana\//g'
+        # note: allow manual overwriting of protocol in root_url (needed eg. for okta auth)
+        sed -i $OMD_ROOT/etc/grafana/grafana.ini -re 's/^root_url(.*):\/\/.*/root_url\1:\/\/%(domain)s\/'$OMD_SITE'\/grafana\//'
         rm -f $OMD_ROOT/etc/thruk/thruk_local.d/omd_web_alias.conf
         mkdir -p $OMD_ROOT/etc/apache/system.d
         cat <<EOF > $OMD_ROOT/etc/apache/system.d/alias.conf
@@ -50,7 +51,8 @@ EOF
             cat <<EOF > $OMD_ROOT/etc/thruk/thruk_local.d/omd_web_alias.conf
 cookie_path = /$ALIAS
 EOF
-            sed -i $OMD_ROOT/etc/grafana/grafana.ini -e 's/^root_url.*/root_url = %(protocol)s:\/\/%(domain)s\/'$ALIAS'\/grafana\//g'
+            # note: allow manual overwriting of protocol in root_url (needed eg. for okta auth)
+            sed -i $OMD_ROOT/etc/grafana/grafana.ini -re 's/^root_url(.*):\/\/.*/root_url\1:\/\/%(domain)s\/'$ALIAS'\/grafana\//'
         fi
     ;;
     depends)
