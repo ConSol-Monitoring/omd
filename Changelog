@@ -6,6 +6,7 @@ next:
             - update livestatus to 1.2.4.1
           - LMD: Update 1.9.5
           - Icinga2 update to 2.11.8
+          - Monitoring-Plugins: update to 2.3.1
           - Grafana
             - Grafana update to 7.4.2
           - Prometheus:

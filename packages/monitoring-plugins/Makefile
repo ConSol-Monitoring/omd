@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 NAME = monitoring-plugins
-VERSION = 2.3
+VERSION = 2.3.1
 master  = feature_check_curl
 DIR = $(NAME)-$(VERSION)
 URIPARSER=0.8.6
