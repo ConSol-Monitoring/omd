@@ -14,6 +14,7 @@ build:
 	#    echo "applying $$p..." ; \
 	#    ( cd $(DIR) ; patch -p1 -b ) < $$p ; \
 	#done
+	touch $(DIR)/.naemon.official
 	cd $(DIR); \
 		autoreconf -s; \
 		automake --add-missing; \

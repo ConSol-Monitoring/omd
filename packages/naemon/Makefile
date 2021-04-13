@@ -29,7 +29,6 @@ build:
 	    echo "applying $$p..." ; \
 	    ( cd $(DIR) && patch -p1 -b -F 5 ) < $$p ; \
 	done
-	sed -i $(DIR)/configure -e 's/$(VERSION)\-source/$(VERSION)-omd/g'
 	cd $(DIR) && CFLAGS="$(CFLAGS) -g3" ./configure $(CONFIGUREOPTS)
 	$(MAKE) -C $(DIR) all
 
