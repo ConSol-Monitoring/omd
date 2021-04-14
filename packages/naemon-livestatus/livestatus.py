@@ -479,7 +479,7 @@ class SingleSiteConnection(Helpers):
             query += "\n"
         query += self.auth_header + self.add_headers
         query += "Localtime: %d\n" % int(time.time())
-        query += "OutputFormat: %s\n" % ("python3" if sys.version_info[0] >= 3 else "python")
+        query += "OutputFormat: python\n"
         query += "KeepAlive: on\n"
         query += "ResponseHeader: fixed16\n"
         query += add_headers
