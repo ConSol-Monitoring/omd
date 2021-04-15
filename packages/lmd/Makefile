@@ -38,6 +38,7 @@ clean:
 
 deps: clean
 	mkdir -p $(GOPATH)
+	export GO111MODULE=auto && \
 	export GOROOT=$(PWD)/../go-$(GOPKG)/go-$(GOVERSION)/ && export GOPATH=$(PWD)/$(GOPATH)/ && PATH=$$GOROOT/bin:$$PATH && \
 		mkdir -p $(GOPATH)/src/$(GITBASE) && \
 		cd $(GOPATH)/src/$(GITBASE) && \
@@ -49,6 +50,7 @@ deps: clean
 
 package: clean
 	mkdir -p $(GOPATH)
+	export GO111MODULE=auto && \
 	export GOROOT=$(PWD)/../go-$(GOPKG)/go-$(GOVERSION)/ && export GOPATH=$(PWD)/$(GOPATH)/ && PATH=$$GOROOT/bin:$$PATH && \
 		mkdir -p $(GOPATH)/src/$(GITBASE) && \
 		cd $(GOPATH)/src/$(GITBASE) && \
