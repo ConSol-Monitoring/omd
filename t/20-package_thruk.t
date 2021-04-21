@@ -13,7 +13,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 1001 );
+plan( tests => 1011 );
 
 ##################################################
 # create our test site
@@ -290,8 +290,10 @@ TestUtils::test_command({ cmd => $omd_bin." start $site", like => '/OK/' });
 TestUtils::wait_for_file("/omd/sites/$site/tmp/run/live")   or TestUtils::bail_out_clean("No need to test Thruk without livestatus connection");
 TestUtils::restart_system_apache();
 TestUtils::test_command({ cmd => $omd_bin." start $site thruk", like => '/OK/' });
-sleep(3);
 TestUtils::test_command({ cmd => $omd_bin." status $site apache", like => '/running/' });
+TestUtils::test_command({ cmd => $omd_bin." status $site", like => '/running/', unlike => '/stopped/' });
+TestUtils::test_command({ cmd => "/bin/su - $site -c './bin/thruk -l'", like => '/OK/', waitfor => 'OK' });
+
 for my $url ( @{$cookie_urls} ) {
     delete $url->{'auth'};
     TestUtils::test_url($url);
