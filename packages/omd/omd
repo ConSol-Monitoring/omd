@@ -3544,9 +3544,10 @@ def main_su(args, options={}):
 
 def backup_site_files_to_taropen(tar, options):
     exclude = get_exclude_patterns(options)
+    hot_backup = not site_is_stopped(g_sitename)
 
     # exclude tmp/* from hot backups
-    if not site_is_stopped(g_sitename):
+    if hot_backup:
         exclude.append("tmp/*")
 
     def filter_files(tarinfo):
@@ -3556,6 +3557,9 @@ def backup_site_files_to_taropen(tar, options):
             # strip of the g_sitename/ prefix from filename
             if fnmatch.fnmatch(filename[len(g_sitename)+1:], glob_pattern):
                 return None # exclude this file
+            if hot_backup and not os.path.lexists(os.path.join(g_sitedir, filename[len(g_sitename)+1:])):
+                sys.stdout.write("Warning: %s vanished during hot backup, skipping\n" % (filename))
+                return None
         return tarinfo
 
     # add skel, it doesn't take much space and we can restore to any version with that information
