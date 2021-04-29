@@ -105,7 +105,7 @@ MODULES = \
           Text-Template-1.55.tar.gz \
           Text-ParseWords-3.30.tar.gz \
           Text-Tabs+Wrap-2013.0523.tar.gz \
-          Thread-Queue-3.12.tar.gz \
+          Thread-Queue-3.13.tar.gz \
           Thread-Semaphore-2.13.tar.gz \
           Tie-RefHash-1.39.tar.gz \
           Time-Duration-1.20.tar.gz \
