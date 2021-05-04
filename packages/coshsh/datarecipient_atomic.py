@@ -170,10 +170,10 @@ class RemoteAtomicRecipient(AtomicRecipient):
             status, stdout, stderr = self.process("rsync --stats -ac %s/ %s:%s" % (local_tempdir, self.remote, self.objects_dir))
             shutil.rmtree(local_tempdir)
             written = True
-            if [out for out in stdout.split("\n") if "Number of regular files transferred: 0" in out]:
+            if [out for out in str(stdout).split("\n") if "Number of regular files transferred: 0" in out]:
                 written = False
             else:
-                for transferred in [out for out in stdout.split("\n") if "Number of regular files transferred:" in out]:
+                for transferred in [out for out in str(stdout).split("\n") if "Number of regular files transferred:" in out]:
                     logger.debug(transferred.strip("\n"))
             if not status:
                 raise DatarecipientNotAvailable
