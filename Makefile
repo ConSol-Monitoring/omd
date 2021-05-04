@@ -58,7 +58,8 @@ PACKAGES=freetds \
          grafana-pnp-datasource \
          grafana-thruk-datasource \
          sakuli\
-         victoriametrics
+         victoriametrics \
+	 xinetd
 
 include Makefile.omd
 

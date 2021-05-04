@@ -6,7 +6,11 @@
 test "$(ls -A ###ROOT###/etc/xinetd.d/)" || exit 5
 
 PIDFILE=###ROOT###/tmp/run/xinetd.pid
-DAEMON=/usr/sbin/xinetd
+if [ -x ###ROOT###/bin/xinetd ]; then
+    DAEMON=###ROOT###/bin/xinetd
+else
+    DAEMON=/usr/sbin/xinetd
+fi
 OPTS="-pidfile ###ROOT###/tmp/run/xinetd.pid -filelog ###ROOT###/var/log/xinetd.log -f ###ROOT###/etc/xinetd.conf"
 
 case "$1" in

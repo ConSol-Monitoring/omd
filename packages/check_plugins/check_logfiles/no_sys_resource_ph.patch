@@ -1,0 +1,13 @@
+diff -Naur a/plugins-scripts/Nagios/CheckLogfiles.pm b/plugins-scripts/Nagios/CheckLogfiles.pm
+--- a/plugins-scripts/Nagios/CheckLogfiles.pm	2021-01-10 23:42:18.000000000 +0100
++++ b/plugins-scripts/Nagios/CheckLogfiles.pm	2021-05-04 21:32:52.100000000 +0200
+@@ -36,7 +36,8 @@
+ {
+   local $^W = 0; # shut up!
+   eval "require 'syscall.ph'";
+-  eval "require 'sys/resource.ph'";
++  # sles 15 sp2 throws an error with this
++  # eval "require 'sys/resource.ph'";
+ }
+ 
+ sub new {

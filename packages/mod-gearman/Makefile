@@ -22,7 +22,7 @@ build:
 	  ./configure --prefix=$(OMD_ROOT) --enable-debug --enable-embedded-perl --with-gearman=$(shell pwd)/../gearmand/gearmand-${GEARMAND} && \
 	  $(MAKE) -j 1
 	tar zxf $(PROXYDIR).tar.gz
-	cd $(PROXYDIR) && perl Makefile.PL
+	cd $(PROXYDIR) && PERL5LIB=$$(pwd) perl Makefile.PL
 	make -C $(PROXYDIR) gearman_proxy.pl
 
 install:

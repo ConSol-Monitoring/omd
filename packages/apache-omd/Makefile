@@ -28,6 +28,9 @@ ifeq ($(DISTRO_NAME),SLES)
   ifneq (,$(findstring 12SP,$(DISTRO_VERSION)))
     INSTALL_FCGID=1
   endif
+  ifneq (,$(findstring 15SP,$(DISTRO_VERSION)))
+    INSTALL_FCGID=1
+  endif
 endif
 
 ifeq ($(INSTALL_FCGID), 1)

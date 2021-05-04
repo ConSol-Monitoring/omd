@@ -3,6 +3,7 @@ include ../../../Makefile.omd
 NAME = check_logfiles
 VERSION = 4.0.1
 DIR = $(NAME)-$(VERSION)
+SLES15 = $(shell echo $(DISTRO_INFO) | grep -c 'SLES 15' )
 
 .PHONY: skel
 
@@ -13,6 +14,9 @@ CONFIGUREOPTS = ""
 
 build:
 	tar xzf $(DIR).tar.gz
+ifeq ($(SLES15), 1)
+	patch -d $(DIR) -p 1 < no_sys_resource_ph.patch
+endif
 	for i in configure.ac aclocal.m4 configure Makefile.am Makefile.in ; do \
 	  test -f $(DIR)/$$i && touch $(DIR)/$$i ; \
 	done
