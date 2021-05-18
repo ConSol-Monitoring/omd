@@ -764,6 +764,7 @@ sub _diag_lint_errors_and_remove_some_exceptions {
             "Unknown\ attribute\ \"autocomplete\"\ for\ tag\ <form>",
             "Unknown\ attribute\ \"autocomplete\"\ for\ tag\ <input>",
             "Unknown\ attribute\ \"sizes\"\ for\ tag\ <link>",
+            "Unknown\ attribute\ \"required\"\ for\ tag\ <input>",
             "Entity\ .*\ is\ unknown",
         ) {
             next LINT_ERROR if($err_str =~ m/$exclude_pattern/i);
