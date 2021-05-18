@@ -3,7 +3,7 @@ include ../../Makefile.omd
 .PHONY: skel
 
 NAME       = prometheus
-VERSION    = 2.25.0
+VERSION    = 2.27.0
 BRANCH     = master
 SRC        = $(NAME)-$(VERSION).tar.gz
 GOPKG      = 1.16
@@ -57,7 +57,7 @@ clean:
 package: clean
 	curl -fLo prometheus-$(VERSION).tar.gz https://github.com/prometheus/prometheus/archive/v$(VERSION).tar.gz
 	tar xf prometheus-$(VERSION).tar.gz
-	cd prometheus-$(VERSION) && PATH=$(GOROOT)/bin:$(PATH) make assets && rm -rf web/ui/static/react/ web/ui/react-app/node_modules/
+	cd prometheus-$(VERSION) && PATH=/opt/node14/bin:$(GOROOT)/bin:$(PATH) make assets && rm -rf web/ui/static/react/ web/ui/react-app/node_modules/
 	cd prometheus-$(VERSION) && env PATH=$(GOROOT)/bin:$(PATH) go mod vendor
 	tar czf prometheus-$(VERSION).tar.gz prometheus-$(VERSION)
 	rm -rf prometheus-$(VERSION)
