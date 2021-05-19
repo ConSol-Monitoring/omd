@@ -2,11 +2,10 @@
 # -*- coding: utf-8 -*-
 
 """
-check_omd.py - a script for checking a particular
-OMD site status
-2018 By Christian Stankowic
-<info at cstan dot io>
+check_omd.py - a script for checking a particular OMD site status
+2018 By Christian Stankowic <info at cstan dot io>
 https://github.com/stdevel/check_omd
+Last modified by Lorenz Gruenwald 05/2021
 """
 
 import argparse
@@ -14,8 +13,9 @@ import subprocess
 import io
 import sys
 import logging
+import os.path
 
-__version__ = "1.3.0"
+__version__ = "1.4.0"
 """
 str: Program version
 """
@@ -23,7 +23,6 @@ LOGGER = logging.getLogger('check_omd')
 """
 logging: Logger instance
 """
-
 
 def get_site_status():
     """
@@ -54,7 +53,7 @@ def get_site_status():
             )
         else:
             print("UNKNOWN: unable to check site: '{0}'".format(err.rstrip()))
-        sys.exit(3)
+        return 3
     if res:
         # try to find out whether omd was executed as root
         if res.count(bytes("OVERALL", "utf-8")) > 1:
@@ -62,7 +61,7 @@ def get_site_status():
                 "UNKOWN: unable to check site, it seems this plugin is "
                 "executed as root (use OMD site context!)"
             )
-            sys.exit(3)
+            return 3
 
         # check all services
         fail_srvs = []
@@ -112,24 +111,24 @@ def get_site_status():
                         site, ' '.join(restarted_srvs)
                     )
                 )
-                sys.exit(1)
+                return 1
             else:
-                sys.exit(0)
+                return 0
         if len(fail_srvs) == 0 and len(warn_srvs) == 0:
             print("OK: OMD site '{0}' services are running.".format(site))
-            sys.exit(0)
+            return 0
         elif len(fail_srvs) > 0:
             print(
                 "CRITICAL: OMD site '{0}' has failed service(s): "
                 "'{1}'".format(site, ' '.join(fail_srvs))
             )
-            sys.exit(2)
+            return 2
         else:
             print(
                 "WARNING: OMD site '{0}' has service(s) in warning state: "
                 "'{1}'".format(site, ' '.join(warn_srvs))
             )
-            sys.exit(1)
+            return 1
 
 
 if __name__ == "__main__":
@@ -185,5 +184,19 @@ if __name__ == "__main__":
 
     LOGGER.debug("OPTIONS: %s", OPTIONS)
 
-    # check site status
-    get_site_status()
+    lockfile = '/tmp/check_omd.lock'
+
+    if OPTIONS.heal:
+        if (os.path.isfile(lockfile)):
+            print ("CRITICAL - Lockfile exists, exit program")
+            sys.exit(2)
+        else:
+            f = open(lockfile, 'x')
+            f.close()
+            # check site status
+            exitcode = get_site_status()
+            os.remove(lockfile)
+            sys.exit(exitcode)
+    else:
+        exitcode = get_site_status()
+        sys.exit(exitcode)
