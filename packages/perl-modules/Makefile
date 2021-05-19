@@ -177,7 +177,7 @@ MODULES = \
           XML-Parser-2.44.tar.gz \
           XML-Twig-3.52.tar.gz \
           CPAN-2.16.tar.gz \
-          Cookie-Baker-0.08.tar.gz \
+          Cookie-Baker-0.11.tar.gz \
           Dist-CheckConflicts-0.11.tar.gz \
           Email-MIME-1.946.tar.gz \
           Error-0.17025.tar.gz \
