@@ -1,0 +1,310 @@
+From 6d8c483959abfed793e9299ba7478412fd3cd621 Mon Sep 17 00:00:00 2001
+From: Sven Nierlein <sven@nierlein.de>
+Date: Thu, 20 May 2021 15:47:42 +0200
+Subject: [PATCH 1/2] cleanup whitespace
+
+---
+ scripts/process_perfdata.pl.in | 57 +++++++++++++++++-----------------
+ 1 file changed, 28 insertions(+), 29 deletions(-)
+
+diff --git a/scripts/process_perfdata.pl.in b/scripts/process_perfdata.pl.in
+index abb4f81..3627842 100644
+--- a/scripts/process_perfdata.pl.in
++++ b/scripts/process_perfdata.pl.in
+@@ -48,8 +48,8 @@ my %conf = (
+     XML_ENC            => "UTF-8",
+     XML_UPDATE_DELAY   => 0,                        # Write XML only if file is older then XML_UPDATE_DELAY seconds
+     RRD_DAEMON_OPTS    => "",
+-    GEARMAN_HOST       => "localhost:4730",                        # How many gearman worker childs to start 
+-    PREFORK            => 2,                        # How many gearman worker childs to start 
++    GEARMAN_HOST       => "localhost:4730",                        # How many gearman worker childs to start
++    PREFORK            => 2,                        # How many gearman worker childs to start
+     REQUESTS_PER_CHILD => 20000,                   # Restart after a given count of requests
+     ENCRYPTION         => 1,                       # Decrypt mod_gearman packets
+     KEY                => 'should_be_changed',
+@@ -117,7 +117,7 @@ if ( $conf{USE_RRDs} == 1 ) {
+ }
+ 
+ #
+-# Include Gearman modules if needed 
++# Include Gearman modules if needed
+ #
+ if ( defined($opt_gm) ) {
+     unless ( eval "use Gearman::Worker;1" ) {
+@@ -163,7 +163,7 @@ if( ! defined($opt_gm) ){
+     if($conf{ENCRYPTION} == 1){
+         print_log( "Encryptions is enabled", 0 );
+         read_keyfile($conf{'KEY_FILE'});
+-        # fill key up to 32 bytes 
++        # fill key up to 32 bytes
+         $conf{'KEY'} = substr($conf{'KEY'},0,32) . chr(0) x ( 32 - length( $conf{'KEY'} ) );
+         $cypher = Crypt::Rijndael->new( $conf{'KEY'}, Crypt::Rijndael::MODE_ECB() );
+     }
+@@ -491,7 +491,7 @@ sub data2rrd {
+             $DS = 1;
+             # PNP 0.4.x Template compatibility
+             $NAGIOS{RRDFILE} = "";
+-            
++
+             #
+             $rrd_storage_type = "MULTIPLE";
+             $rrdfile          = $conf{RRDPATH} . "/" . $data[$i]{hostname} . "/" . $data[$i]{servicedesc} . "_" . $data[$i]{name} . ".rrd";
+@@ -722,7 +722,7 @@ sub write_env_to_template {
+ }
+ 
+ #
+-# Recursive Template search 
++# Recursive Template search
+ #
+ sub adjust_template {
+     my $command           = shift;
+@@ -737,14 +737,14 @@ sub adjust_template {
+         COMMAND           => $command,
+         TEMPLATE          => $template,
+         DSTYPE            => $dstype,
+-        RRD_STORAGE_TYPE  => $conf{'RRD_STORAGE_TYPE'}, 
++        RRD_STORAGE_TYPE  => $conf{'RRD_STORAGE_TYPE'},
+         RRD_HEARTBEAT     => $conf{'RRD_HEARTBEAT'},
+         USE_MIN_ON_CREATE => 0,
+         USE_MAX_ON_CREATE => 0,
+     );
+ 
+     read_custom_template ( );
+-    # 
++    #
+     if ( $CTPL{'TEMPLATE'} ne $initial_template ){
+         read_custom_template ( );
+     }
+@@ -769,7 +769,7 @@ sub read_custom_template {
+         $dstype = $conf{'UOM2TYPE'}{$uom};
+         print_log( "DEBUG: DSTYPE adjusted to $dstype by UOM", 3 );
+     }else {
+-        $dstype = 'GAUGE'; 
++        $dstype = 'GAUGE';
+     }
+ 
+     print_log( "DEBUG: RAW Command -> $command", 3 );
+@@ -955,7 +955,7 @@ sub _parse {
+         "min"      => $6,
+         "max"      => $7
+     );
+-    
++
+     $p{label}  =~ s/[&"']//g;        # cleanup
+     $p{name}   =~ s/["']//g;        # cleanup
+     $p{name}   =~ s/[\/\\]/_/g;    # cleanup
+@@ -1014,7 +1014,7 @@ sub cleanup {
+ }
+ 
+ #
+-# Urlencode 
++# Urlencode
+ #
+ sub urlencode {
+     my $string = shift;
+@@ -1355,7 +1355,7 @@ sub init_stats {
+ 
+ #
+ # Store some internal runtime infos
+-# 
++#
+ sub store_internals {
+     if( ! -w $conf{'STATS_DIR'}){
+         print_log("*** ERROR: ".$conf{'STATS_DIR'}." is not writable or does not exist",0);
+@@ -1363,7 +1363,7 @@ sub store_internals {
+     }
+     my $statsfile = $conf{'STATS_DIR'}."/".(int $stats{timet} / 60);
+     open( STAT, ">> $statsfile" ) or die "Cant create statistic file ", $!;
+-    printf(STAT "%d %f %d %d %d %d %d %d\n", $stats{timet},$stats{runtime},$stats{rows},$stats{update},$stats{create},$stats{error},$stats{invalid},$stats{skipped}); 
++    printf(STAT "%d %f %d %d %d %d %d %d\n", $stats{timet},$stats{runtime},$stats{rows},$stats{update},$stats{create},$stats{error},$stats{invalid},$stats{skipped});
+     close(STAT);
+     check_internals();
+ }
+@@ -1377,7 +1377,7 @@ sub check_internals {
+     opendir(STATS, $conf{'STATS_DIR'});
+     while ( defined ( my $file = readdir STATS) ){
+         next if $file =~ /^\.\.?$/; # skip . and ..
+-        next if $file =~ /-PID-/;   # skip temporary files 
++        next if $file =~ /-PID-/;   # skip temporary files
+         next if $file == (int $stats{timet} / 60); # skip our current file
+         push @files, $file;
+     }
+@@ -1385,7 +1385,7 @@ sub check_internals {
+ }
+ 
+ #
+-# Read and aggregate files found by check_internals() 
++# Read and aggregate files found by check_internals()
+ #
+ sub read_internals {
+     my @files = @_;
+@@ -1410,7 +1410,7 @@ sub read_internals {
+             @chunks = split();
+             $stats{timet}    = $chunks[0];
+             $stats{runtime} += $chunks[1];
+-            $stats{rows}    += $chunks[2]; 
++            $stats{rows}    += $chunks[2];
+             $stats{update}  += $chunks[3];
+             $stats{create}  += $chunks[4];
+             $stats{error}   += $chunks[5];
+@@ -1423,12 +1423,12 @@ sub read_internals {
+     }
+ }
+ #
+-# 
++#
+ #
+ sub process_internals {
+     my $last_rrd_dtorage_type = $conf{'RRD_STORAGE_TYPE'};
+     $conf{'RRD_STORAGE_TYPE'} = "MULTIPLE";
+-    %NAGIOS = ( 
++    %NAGIOS = (
+         HOSTNAME => '.pnp-internal',
+         DISP_HOSTNAME => 'pnp-internal',
+         SERVICEDESC => 'runtime',
+@@ -1436,7 +1436,7 @@ sub process_internals {
+         TIMET => $stats{timet},
+         DATATYPE => 'SERVICEPERFDATA',
+         CHECK_COMMAND => 'pnp-runtime',
+-        PERFDATA => "runtime=".$stats{runtime}."s rows=".$stats{rows}." errors=".$stats{error}." invalid=".$stats{invalid}." skipped=".$stats{skipped} ." update=".$stats{update}. " create=".$stats{create} 
++        PERFDATA => "runtime=".$stats{runtime}."s rows=".$stats{rows}." errors=".$stats{error}." invalid=".$stats{invalid}." skipped=".$stats{skipped} ." update=".$stats{update}. " create=".$stats{create}
+     );
+     parse_perfstring(  $NAGIOS{PERFDATA} );
+     $conf{'RRD_STORAGE_TYPE'} = $last_rrd_dtorage_type;
+@@ -1485,9 +1485,9 @@ sub new_child {
+     $sigset = POSIX::SigSet->new(SIGINT);
+     sigprocmask(SIG_BLOCK, $sigset)
+         or die "Can't block SIGINT for fork: $!\n";
+-    
++
+     die "fork: $!" unless defined ($pid = fork);
+-    
++
+     if ($pid) {
+         # Parent records the child's birth and returns.
+         sigprocmask(SIG_UNBLOCK, $sigset)
+@@ -1498,18 +1498,18 @@ sub new_child {
+     } else {
+         # Child can *not* return from this subroutine.
+         $SIG{INT} = 'DEFAULT';      # make SIGINT kill us as it did before
+-    
++
+         # unblock signals
+         sigprocmask(SIG_UNBLOCK, $sigset)
+             or die "Can't unblock SIGINT for fork: $!\n";
+-    
++
+         my $worker = Gearman::Worker->new();
+-        my @job_servers = split(/,/, $conf{'GEARMAN_HOST'}); # allow multiple gearman job servers 
++        my @job_servers = split(/,/, $conf{'GEARMAN_HOST'}); # allow multiple gearman job servers
+         $worker->job_servers(@job_servers);
+         $worker->register_function("perfdata", 2, sub { return main(@_); });
+-        my %opt = ( 
+-                    on_complete => sub { $req++; }, 
+-                    stop_if => sub { if ( $req > $conf{'REQUESTS_PER_CHILD'} ) { return 1;}; } 
++        my %opt = (
++                    on_complete => sub { $req++; },
++                    stop_if => sub { if ( $req > $conf{'REQUESTS_PER_CHILD'} ) { return 1;}; }
+                   );
+         print_log("connecting to gearmand '".$conf{'GEARMAN_HOST'}."'",0);
+         $worker->work( %opt );
+@@ -1612,7 +1612,7 @@ sub print_help {
+     Default: @sysconfdir@/process_perfdata.cfg
+ 
+   Gearman Worker Options:
+-    --gearman 
++    --gearman
+     Start in Gearman worker mode
+     --daemon
+     Run as daemon
+@@ -1631,4 +1631,3 @@ sub print_version {
+     print "Copyright (c) 2005-2010 Joerg Linge <pitchfork\@pnp4nagios.org>\n";
+     exit 0;
+ }
+-
+
+From 8c272a7311aedfdc6b00b6de1befccac083a6b7d Mon Sep 17 00:00:00 2001
+From: Sven Nierlein <sven@nierlein.de>
+Date: Thu, 20 May 2021 15:52:40 +0200
+Subject: [PATCH 2/2] improve process_perfdata.pl in gearman mode
+
+this patch addresses some issues in gearman worker mode:
+
+    - when forking a child, the forked %children contains all created childs so far, so if that child receives a sigint, it will kill its siblings.
+    - check for exited childs in a loop in case multiple childs exited at once
+    - do not remove the pidfile when a children receives a sigint
+    - fix issue with gearman jobs having a timeout, for details see
+        - https://github.com/gearman/gearmand/issues/301
+        - https://github.com/ConSol/omd/issues/107
+---
+ scripts/process_perfdata.pl.in | 35 ++++++++++++++++++++++------------
+ 1 file changed, 23 insertions(+), 12 deletions(-)
+
+diff --git a/scripts/process_perfdata.pl.in b/scripts/process_perfdata.pl.in
+index 3627842..19f8c2a 100644
+--- a/scripts/process_perfdata.pl.in
++++ b/scripts/process_perfdata.pl.in
+@@ -648,7 +648,7 @@ sub open_template {
+     my $xmlfile = shift;
+     $delayed_write = 0;
+     if( -e $xmlfile ){
+-        my $mtime = (stat($xmlfile))[9];
++        my $mtime = (stat(_))[9];
+         my $t = time();
+         my $age = ($t - $mtime);
+         if ( $age < $conf{'XML_UPDATE_DELAY'} ){
+@@ -1285,17 +1285,22 @@ sub handle_signal {
+     #
+     if ( defined ( $opt_gm ) ){
+         if($signal eq "CHLD" && defined($opt_gm) ){
+-            my $pid = waitpid(-1, &WNOHANG);
+-            if($pid == -1){
+-                print_log( "### no hanging child ###", 1 );
+-            } elsif ( WIFEXITED($?)) {
+-                print_log( "### child $pid exited ###", 1 );
+-                $children--;
+-            } else {
+-                print_log( "### wrong signal ###", 1 );
+-                $children--;
++            while(my $pid = waitpid(-1, &WNOHANG)) {
++                if($pid == -1){
++                    print_log( "### no hanging child ###", 1 );
++                    last;
++                } elsif ( WIFEXITED($?)) {
++                    print_log( "### child $pid exited ###", 1 );
++                    delete $children{$pid};
++                    $children--;
++                } else {
++                    print_log( "### wrong signal ###", 1 );
++                    delete $children{$pid};
++                    $children--;
++                }
++                $SIG{'CHLD'} = \&handle_signal;
+             }
+-            $SIG{'CHLD'} = \&handle_signal;
++            return;
+         }
+         if($signal eq "INT" || $signal eq "TERM"){
+             local($SIG{CHLD}) = 'IGNORE';   # we're going to kill our children
+@@ -1499,6 +1504,12 @@ sub new_child {
+         # Child can *not* return from this subroutine.
+         $SIG{INT} = 'DEFAULT';      # make SIGINT kill us as it did before
+ 
++        # empty children list so we won't kill siblings if one children dies
++        %children = ();
++
++        # do not delete pidfile if child exits
++        undef $opt_pidfile;
++
+         # unblock signals
+         sigprocmask(SIG_UNBLOCK, $sigset)
+             or die "Can't unblock SIGINT for fork: $!\n";
+@@ -1506,7 +1517,7 @@ sub new_child {
+         my $worker = Gearman::Worker->new();
+         my @job_servers = split(/,/, $conf{'GEARMAN_HOST'}); # allow multiple gearman job servers
+         $worker->job_servers(@job_servers);
+-        $worker->register_function("perfdata", 2, sub { return main(@_); });
++        $worker->register_function("perfdata", undef, sub { return main(@_); });
+         my %opt = (
+                     on_complete => sub { $req++; },
+                     stop_if => sub { if ( $req > $conf{'REQUESTS_PER_CHILD'} ) { return 1;}; }
