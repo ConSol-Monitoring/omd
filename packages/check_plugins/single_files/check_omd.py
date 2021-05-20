@@ -15,7 +15,7 @@ import sys
 import logging
 import os.path
 
-__version__ = "1.4.0"
+__version__ = "1.5.0"
 """
 str: Program version
 """
@@ -130,6 +130,52 @@ def get_site_status():
             )
             return 1
 
+def heal():
+    lockfile = os.environ['OMD_ROOT'] + "/tmp/check_omd.lock"
+
+    if (os.path.isfile(lockfile)):
+        try:
+            f = open(lockfile, 'r')
+            pid = int(f.read())
+            LOGGER.debug("found pid %s in lockfile %s", str(pid), lockfile)
+        except Exception as e:
+            print ("CRITICAL - Lockfile exists, but cant read it")
+            sys.exit(2)
+
+        try:
+            os.kill(pid, 0)
+            print ("CRITICAL - Lockfile exists, exit program")
+            sys.exit(2)
+        except Exception as e:
+            LOGGER.debug("no process with PID %s running", str(pid))
+            pass
+
+        try:
+            os.remove(lockfile)
+            print ("WARNING - deleted lockfile because pid was not running, continue...")
+        except Exception as e:
+            print ("CRITICAL - Cant delete lockfile and pid is not running")
+            sys.exit(2)
+
+    try:
+        f = open(lockfile, 'x')
+        cur_pid = str(os.getpid())
+        f.write(cur_pid)
+        f.close()
+        LOGGER.debug("wrote current pid %s in lockfile", cur_pid)
+    except Exception as e:
+        print ("CRITICAL - Cant create lockfile")
+        sys.exit(2)
+
+    # check site status
+    exitcode = get_site_status()
+    try:
+        os.remove(lockfile)
+        LOGGER.debug("removed lockfile %s", lockfile)
+    except Exception as e:
+        print ("CRITICAL - Cant delete lockfile")
+        sys.exit(2)
+    sys.exit(exitcode)
 
 if __name__ == "__main__":
     # define description, version and load parser
@@ -184,19 +230,9 @@ if __name__ == "__main__":
 
     LOGGER.debug("OPTIONS: %s", OPTIONS)
 
-    lockfile = '/tmp/check_omd.lock'
-
     if OPTIONS.heal:
-        if (os.path.isfile(lockfile)):
-            print ("CRITICAL - Lockfile exists, exit program")
-            sys.exit(2)
-        else:
-            f = open(lockfile, 'x')
-            f.close()
-            # check site status
-            exitcode = get_site_status()
-            os.remove(lockfile)
-            sys.exit(exitcode)
-    else:
-        exitcode = get_site_status()
-        sys.exit(exitcode)
+        heal()
+        sys.exit(3)
+
+    exitcode = get_site_status()
+    sys.exit(exitcode)
