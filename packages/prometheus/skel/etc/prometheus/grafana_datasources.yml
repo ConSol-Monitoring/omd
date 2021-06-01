@@ -14,3 +14,5 @@ datasources:
     url: http://127.0.0.1:###CONFIG_PROMETHEUS_TCP_PORT###/###SITE###/prometheus
     isDefault: false
     editable: false
+    jsonData:
+      httpMethod: POST
