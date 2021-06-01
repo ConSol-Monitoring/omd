@@ -78,9 +78,22 @@ function release_lock {
   rm -f $lockfile
 }
 
+function try_to_repair() {
+  dir=$1
+  pushd $dir
+  output=$(git status 2>&1)
+  index_smaller="fatal: index file smaller than expected"
+  if [[ "$output" =~ $index_smaller ]]; then
+    logger_error "try to repair small index in $dir"
+    rm -f .git/index
+    git reset HEAD .
+  fi
+  popd
+}
+
 function remove_git_index_lock() {
   dir=$1
-  cd $dir
+  pushd $dir
   if [ -f .git/index.lock ]; then
     if git pull 2>&1 | egrep -iq "fatal: unable to create .*.git/index.lock': File exists"; then
       if lsof -V .git/index.lock | grep -q "no file use located"; then
@@ -89,6 +102,7 @@ function remove_git_index_lock() {
       fi
     fi
   fi
+  popd
 }
 
 LOCKFILE="${OMD_ROOT}/tmp/run/check_git_updates.lock"
@@ -120,6 +134,9 @@ if [ -d ${OMD_ROOT}/etc/${CORE}/conf.d/${OMD_LANDSCAPE}/${OMD_SITE}/static ]; th
   git pull
   gitexit=$?
   NEWSTATICREV=$(git rev-list --max-count=1 master)
+  if [ $gitexit -ne 0 ]; then
+    try_to_repair $(pwd)
+  fi
   remove_git_index_lock $(pwd)
   popd
 else
@@ -147,6 +164,9 @@ if [ -d ${OMD_ROOT}/etc/${CORE}/conf.d/${OMD_LANDSCAPE}/${OMD_SITE}/dynamic ]; t
   git pull
   gitexit=$?
   NEWDYNAMICREV=$(git rev-list --max-count=1 master)
+  if [ $gitexit -ne 0 ]; then
+    try_to_repair $(pwd)
+  fi
   remove_git_index_lock $(pwd)
   popd
 else
