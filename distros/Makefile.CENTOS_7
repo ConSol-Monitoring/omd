@@ -102,6 +102,7 @@ OS_PACKAGES          += php-gd
 OS_PACKAGES          += php-json
 OS_PACKAGES          += php-mbstring
 OS_PACKAGES          += php-pdo
+OS_PACKAGES          += procps-ng
 OS_PACKAGES          += radcli
 OS_PACKAGES          += readline
 OS_PACKAGES          += rsync
