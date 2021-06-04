@@ -98,6 +98,7 @@ __init_hook $0 $1 pre
 case $1 in
     start)
         echo -n "Starting MySQL... "
+        mkdir -p $OMD_ROOT/etc/mysql/conf.d
         check_install_db;
         if mysql_wait_start; then
             echo 'OK.'
