@@ -14,6 +14,7 @@ next:
             - Prometheus update to 2.27.1
             - node_exporter update to 1.1.1
             - snmp_exporter update to 0.20.0
+          - VictoriaMetrics 1.61.0
 
 4.00     Dec 14 2020
           - OMD:
