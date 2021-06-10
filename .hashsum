@@ -1,0 +1,30 @@
+#!/bin/bash
+
+DIR="$1"
+if [ "$DIR" = "" ]; then
+    echo "usage: $0 <folder>"
+    echo "returns md5 hashsum for folder including dependencies"
+    exit 3
+fi
+if ! test -x ../build_cached; then
+    echo "ERROR: must be run from packages folder"
+    exit 3
+fi
+
+MD5=$(cd "$DIR" && find . -type f -exec md5sum {} \; 2>&1 | sort | md5sum | awk '{ print $1 }')
+
+# add dependencies and rebuild if any of the dependency has changed
+DEPS=$(grep -P 'DEPENDS\ *=' $DIR/Makefile 2>/dev/null | awk -F = '{ print $2 }' | sort -u)
+# add go dependencies
+GOVERSION=$(grep -P 'GOPKG\ *=' $DIR/Makefile $DIR/*/Makefile 2>/dev/null | awk -F = '{ print $2 }' | tr -d ' ' | sort -u)
+if [ -n "$GOVERSION" ]; then
+    for GO in $GOVERSION; do
+        DEPS="$DEPS go-$GO"
+    done
+fi
+if [ -n "$DEPS" ]; then
+    for DEP in $DEPS; do
+        MD5=$(echo $(md5sum $DEP/*.gz $DEP/Makefile $DEP/patches/* 2>/dev/null) $MD5 | md5sum | awk '{ print $1 }')
+    done
+fi
+echo "$MD5"

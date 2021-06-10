@@ -60,32 +60,15 @@ replace_strings_in_ascii_file() {
     mv ${FILE}.tmp ${FILE}
 }
 
-calc_hashsum() {
-    DIR="$1"
-    MD5=$(cd "$DIR" && find . -type f -exec md5sum {} \; 2>&1 | sort | md5sum | awk '{ print $1 }')
-
-    # add dependencies and rebuild if any of the dependency has changed
-    DEPS=$(grep -P 'DEPENDS\ *=' $DIR/Makefile 2>/dev/null | awk -F = '{ print $2 }' | sort -u)
-    # add go dependencies
-    GOVERSION=$(grep -P 'GOPKG\ *=' $DIR/Makefile $DIR/*/Makefile 2>/dev/null | awk -F = '{ print $2 }' | tr -d ' ' | sort -u)
-    if [ -n "$GOVERSION" ]; then
-        for GO in $GOVERSION; do
-            DEPS="$DEPS go-$GO"
-        done
-    fi
-    if [ -n "$DEPS" ]; then
-        for DEP in $DEPS; do
-            MD5=$(echo $(md5sum packages/$DEP/*.gz packages/$DEP/Makefile packages/$DEP/patches/* 2>/dev/null) $MD5 | md5sum | awk '{ print $1 }')
-        done
-    fi
-    echo "$MD5"
-}
-
 BUILD_CACHE=$BUILD_CACHE/$CACHESUBDIR
 mkdir -p $BUILD_CACHE
 
 $MAKE -C "$SRC" clean >/dev/null
-MD5=$(calc_hashsum $SRC)
+MD5=$(../.hashsum $SRC)
+if [ "$MD5" = "" ]; then
+    echo "ERROR: failed to calculate package hashsum for $SRC"
+    exit 1
+fi
 CACHE_FILE="$BUILD_CACHE/${SRC}_${MD5}_v${OMD_VERSION}.tgz"
 CACHE_PATTERN="$BUILD_CACHE/${SRC}_${MD5}_v*.tgz"
 
@@ -167,7 +150,7 @@ rm $EXCLUDES_FILE
 
 # check md5 sum
 $MAKE -C "$SRC" clean >/dev/null
-MD5_CHECK=$(calc_hashsum $SRC)
+MD5_CHECK=$(../.hashsum $SRC)
 if [ "$MD5" != "$MD5_CHECK" ]; then
   echo "ERROR: make clean is broken and did not clean everything"
   exit 1
