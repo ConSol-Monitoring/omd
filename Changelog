@@ -18,6 +18,7 @@ next:
             - snmp_exporter update to 0.20.0
           - VictoriaMetrics 1.61.0
           - Ansible 2.9.7
+          - Go builds updated to 1.16
 
 4.00     Dec 14 2020
           - OMD:
