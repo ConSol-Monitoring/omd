@@ -5,7 +5,7 @@ next:
             - update core to 1.2.4
             - update livestatus to 1.2.4.1
           - Thruk: update to 2.44.3
-          - LMD: Update 2.0.0
+          - LMD: Update 2.0.1
           - Icinga2 update to 2.11.8
           - Monitoring-Plugins: update to 2.3.1
           - Grafana
