@@ -1,6 +1,6 @@
 This file documents the revision history for the Open Monitoring Distribution (Labs Edition)
 
-next:
+4.20     Jun 10 2021
           - Naemon:
             - update core to 1.2.4
             - update livestatus to 1.2.4.1
@@ -11,7 +11,7 @@ next:
           - Icinga2 update to 2.11.8
           - Monitoring-Plugins: update to 2.3.1
           - Grafana
-            - Grafana update to 7.5.2
+            - Grafana update to 7.5.7
           - Prometheus:
             - Prometheus update to 2.27.1
             - node_exporter update to 1.1.1
