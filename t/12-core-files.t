@@ -30,8 +30,8 @@ if($core_pattern =~ m/\|.*systemd\-coredump/mx) {
   TestUtils::test_command({ cmd => "/bin/rm -f /var/lib/systemd/coredump/*" });
 }
 elsif($core_pattern =~ m/\|.*apport/mx) {
-  TestUtils::test_command({ cmd => "/bin/su - $site -c 'ls /var/crash/*.crash'", like => '/bash/' });
-  TestUtils::test_command({ cmd => "/bin/su - $site -c 'rm -f /var/crash/*.crash'" });
+  TestUtils::test_command({ cmd => "/bin/su - $site -c 'ls /var/crash/*bash*.crash'", like => '/bash/' });
+  TestUtils::test_command({ cmd => "/bin/su - $site -c 'rm -f /var/crash/*bash*.crash'" });
 }
 elsif($core_pattern =~ m/\|/mx) {
     fail("unsupported core pattern: ".$core_pattern);
