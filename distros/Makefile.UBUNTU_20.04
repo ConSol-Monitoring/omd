@@ -77,6 +77,7 @@ OS_PACKAGES          += libevent-pthreads-2.1-7
 OS_PACKAGES          += libicu66
 OS_PACKAGES          += libio-socket-ssl-perl
 OS_PACKAGES          += libltdl7
+OS_PACKAGES          += libmariadb3
 OS_PACKAGES          += libmcrypt4
 OS_PACKAGES          += libnet-snmp-perl
 OS_PACKAGES          += libpango-1.0-0
