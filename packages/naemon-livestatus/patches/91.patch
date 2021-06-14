@@ -1,0 +1,71 @@
+From 7481130e0bb3959f90b0e3a671e752fe5e991024 Mon Sep 17 00:00:00 2001
+From: Sven Nierlein <sven@nierlein.de>
+Date: Mon, 14 Jun 2021 13:52:49 +0200
+Subject: [PATCH] fix listing contacts twice (fixes #90)
+
+std::list->unique fails to compare contact_members properly, because each
+contact member instance has its own pointer. To fix this, we add a unique
+callback which compares the underlying contact pointer.
+
+Signed-off-by: Sven Nierlein <sven@nierlein.de>
+---
+ src/ContactsColumn.cc        | 5 +++++
+ src/ContactsColumn.h         | 1 +
+ src/HostContactsColumn.cc    | 2 +-
+ src/ServiceContactsColumn.cc | 2 +-
+ 4 files changed, 8 insertions(+), 2 deletions(-)
+
+diff --git a/src/ContactsColumn.cc b/src/ContactsColumn.cc
+index c4179a2..0f3d26c 100644
+--- a/src/ContactsColumn.cc
++++ b/src/ContactsColumn.cc
+@@ -35,6 +35,11 @@ bool compare_contactsmember(const contactsmember *m1, const contactsmember *m2)
+     return(m1->contact_name < m2->contact_name);
+ }
+ 
++bool equals_contactsmember(const contactsmember *m1, const contactsmember *m2)
++{
++    return(m1->contact_ptr == m2->contact_ptr);
++}
++
+ void *ContactsColumn::getNagiosObject(char *name)
+ {
+     return (void *)find_contact(name);
+diff --git a/src/ContactsColumn.h b/src/ContactsColumn.h
+index d6f2cc0..72921a4 100644
+--- a/src/ContactsColumn.h
++++ b/src/ContactsColumn.h
+@@ -29,6 +29,7 @@
+ #include "nagios.h"
+ 
+ bool compare_contactsmember(const contactsmember *m1, const contactsmember *m2);
++bool equals_contactsmember(const contactsmember *m1, const contactsmember *m2);
+ 
+ #include "ListColumn.h"
+ class TableContacts;
+diff --git a/src/HostContactsColumn.cc b/src/HostContactsColumn.cc
+index ce41d7f..3f95cfe 100644
+--- a/src/HostContactsColumn.cc
++++ b/src/HostContactsColumn.cc
+@@ -57,7 +57,7 @@ void HostContactsColumn::output(void *data, Query *query)
+             cgm = cgm->next;
+         }
+         result.sort(compare_contactsmember);
+-        result.unique();
++        result.unique(equals_contactsmember);
+     }
+ 
+     query->outputBeginList();
+diff --git a/src/ServiceContactsColumn.cc b/src/ServiceContactsColumn.cc
+index 56ed5f2..061236d 100644
+--- a/src/ServiceContactsColumn.cc
++++ b/src/ServiceContactsColumn.cc
+@@ -58,7 +58,7 @@ void ServiceContactsColumn::output(void *data, Query *query)
+             cgm = cgm->next;
+         }
+         result.sort(compare_contactsmember);
+-        result.unique();
++        result.unique(equals_contactsmember);
+     }
+ 
+     query->outputBeginList();
