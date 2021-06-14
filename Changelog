@@ -1,5 +1,8 @@
 This file documents the revision history for the Open Monitoring Distribution (Labs Edition)
 
+next
+          - VictoriaMetrics 1.61.1
+
 4.20     Jun 10 2021
           - Naemon:
             - update core to 1.2.4
