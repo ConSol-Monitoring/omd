@@ -72,7 +72,7 @@ class ThrukCli(object):
     def set_thruk_timezone(self):
         try:
             thruk_config = self.get('/thruk/config')
-            tz = thruk_config["server_timezone"]
+            tz = thruk_config["_server_timezone"]
             logger.debug("thruk timezone is " + tz)
             os.environ["TZ"] = tz.strip()
             time.tzset()
