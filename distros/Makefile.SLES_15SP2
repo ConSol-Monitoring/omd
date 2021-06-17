@@ -86,6 +86,7 @@ OS_PACKAGES          += libevent
 OS_PACKAGES          += libicu60_2
 OS_PACKAGES          += libjpeg62
 OS_PACKAGES          += libltdl7
+OS_PACKAGES          += libmysqlclient18
 OS_PACKAGES          += libpng16-16
 OS_PACKAGES          += libreadline7
 OS_PACKAGES          += libsmbclient0
