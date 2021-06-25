@@ -2,6 +2,7 @@ This file documents the revision history for the Open Monitoring Distribution (L
 
 next
           - VictoriaMetrics 1.61.1
+          - Grafana 7.5.9
 
 4.20     Jun 10 2021
           - Naemon:
