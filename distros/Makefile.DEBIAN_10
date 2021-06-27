@@ -98,6 +98,7 @@ OS_PACKAGES          += php-mbstring
 OS_PACKAGES          += php-pear
 OS_PACKAGES          += php-sqlite3
 OS_PACKAGES          += python3
+OS_PACKAGES          += python3-setuptools
 OS_PACKAGES          += rsync
 OS_PACKAGES          += snmp
 OS_PACKAGES          += unzip
