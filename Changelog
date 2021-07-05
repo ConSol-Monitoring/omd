@@ -8,6 +8,7 @@ next
             - node_exporter 1.1.2
             - blackbox_exporter 0.19.0
             - pushgateway 1.4.1
+            - alertmanager 0.22.2
 
 4.20     Jun 10 2021
           - Naemon:
