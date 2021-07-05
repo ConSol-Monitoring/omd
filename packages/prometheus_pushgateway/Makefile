@@ -3,7 +3,7 @@ include ../../Makefile.omd
 .PHONY: skel
 
 NAME       = pushgateway
-VERSION    = 1.3.1
+VERSION    = 1.4.1
 BRANCH     = master
 SRC        = $(NAME)-$(VERSION).tar.gz
 GOPKG      = 1.16
@@ -39,3 +39,7 @@ clean:
 
 package: clean
 	curl -fLo $(NAME)-$(VERSION).tar.gz https://github.com/prometheus/$(NAME)/archive/v$(VERSION).tar.gz
+	tar xf $(NAME)-$(VERSION).tar.gz
+	cd $(NAME)-$(VERSION) && env PATH=$(GOROOT)/bin:$(PATH) go mod vendor
+	tar czf $(NAME)-$(VERSION).tar.gz $(NAME)-$(VERSION)
+	rm -r $(NAME)-$(VERSION)
