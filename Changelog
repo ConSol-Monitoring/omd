@@ -3,6 +3,7 @@ This file documents the revision history for the Open Monitoring Distribution (L
 next
           - VictoriaMetrics 1.61.1
           - Grafana 7.5.9
+          - InfluxDB 1.8.5
           - Prometheus:
             - Prometheus 2.28.1
             - node_exporter 1.1.2
