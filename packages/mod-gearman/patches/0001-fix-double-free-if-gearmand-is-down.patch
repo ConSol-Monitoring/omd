@@ -1,0 +1,51 @@
+From 412d8776dfaf76b204428eb31613538cc20b89f0 Mon Sep 17 00:00:00 2001
+From: Sven Nierlein <sven@nierlein.de>
+Date: Mon, 1 Mar 2021 12:02:18 +0100
+Subject: [PATCH] fix double free of result worker if gearmand was down
+
+---
+ neb_module/result_thread.c | 14 +++++++++++---
+ 1 file changed, 11 insertions(+), 3 deletions(-)
+
+diff --git a/neb_module/result_thread.c b/neb_module/result_thread.c
+index 05b4624..0af13e5 100644
+--- a/neb_module/result_thread.c
++++ b/neb_module/result_thread.c
+@@ -50,11 +50,19 @@ static struct check_engine mod_gearman_check_engine = {
+ /* cleanup and exit this thread */
+ static void cancel_worker_thread (void * data) {
+ 
++    if(data == NULL)
++        return;
++
+     gearman_worker_st *worker = (gearman_worker_st*) data;
+ 
++    if(worker == NULL)
++        return;
++
+     gearman_worker_unregister_all(worker);
+     gearman_worker_remove_servers(worker);
+-    gearman_worker_free(worker);
++    if(worker->options.is_allocated) {
++        gearman_worker_free(worker);
++    }
+ 
+     gm_log( GM_LOG_DEBUG, "worker thread finished\n" );
+ 
+@@ -73,14 +81,14 @@ void *result_worker( void * data ) {
+     pthread_setcanceltype (PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
+ 
+     set_worker(&worker);
+-
+-    pthread_cleanup_push ( cancel_worker_thread, (void*) &worker);
++    pthread_cleanup_push(cancel_worker_thread, (void*) &worker);
+ 
+     while ( 1 ) {
+         ret = gearman_worker_work( &worker );
+         if ( ret != GEARMAN_SUCCESS && ret != GEARMAN_WORK_FAIL ) {
+             if ( ret != GEARMAN_TIMEOUT)
+                 gm_log( GM_LOG_ERROR, "worker error: %s\n", gearman_worker_error( &worker ) );
++
+             gearman_job_free_all( &worker );
+             if ( ret == GEARMAN_TIMEOUT) {
+                 gearman_worker_unregister_all(&worker);

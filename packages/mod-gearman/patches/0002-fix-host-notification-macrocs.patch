@@ -1,0 +1,49 @@
+diff --git a/neb_module/mod_gearman.c b/neb_module/mod_gearman.c
+index 303a4a4..c634ebd 100644
+--- a/neb_module/mod_gearman.c
++++ b/neb_module/mod_gearman.c
+@@ -671,7 +671,7 @@ static int handle_notifications( int event_type, void *data ) {
+     temp_command = find_command(ds->command_name);
+     get_raw_command_line_r(&mac, temp_command, ds->command_name, &raw_command, macro_options);
+     if(raw_command==NULL){
+-        gm_log( GM_LOG_ERROR, "Raw check command for host '%s' was NULL - aborting.\n",hst->name );
++        gm_log( GM_LOG_ERROR, "Raw notification command for host '%s' was NULL - aborting.\n",hst->name );
+         return NEBERROR_CALLBACKCANCEL;
+     }
+ 
+@@ -693,15 +693,28 @@ static int handle_notifications( int event_type, void *data ) {
+     /* NOTE: these macros are deprecated and will likely disappear in Nagios 4.x */
+     /* if this is an acknowledgement, get author and comment macros */
+     if(ds->reason_type == NOTIFICATION_ACKNOWLEDGEMENT) {
+-        if(ds->ack_author)
+-            mac.x[MACRO_SERVICEACKAUTHOR] = gm_strdup(ds->ack_author);
++        if(svc != NULL) {
++            if(ds->ack_author)
++                mac.x[MACRO_SERVICEACKAUTHOR] = gm_strdup(ds->ack_author);
+ 
+-        if (ds->ack_data)
+-            mac.x[MACRO_SERVICEACKCOMMENT] = gm_strdup(ds->ack_data);
++            if (ds->ack_data)
++                mac.x[MACRO_SERVICEACKCOMMENT] = gm_strdup(ds->ack_data);
+ 
+-        if (temp_contact != NULL) {
+-            mac.x[MACRO_SERVICEACKAUTHORNAME] = gm_strdup(temp_contact->name);
+-            mac.x[MACRO_SERVICEACKAUTHORALIAS] = gm_strdup(temp_contact->alias);
++            if (temp_contact != NULL) {
++                mac.x[MACRO_SERVICEACKAUTHORNAME] = gm_strdup(temp_contact->name);
++                mac.x[MACRO_SERVICEACKAUTHORALIAS] = gm_strdup(temp_contact->alias);
++            }
++        } else {
++            if(ds->ack_author)
++                mac.x[MACRO_HOSTACKAUTHOR] = gm_strdup(ds->ack_author);
++
++            if (ds->ack_data)
++                mac.x[MACRO_HOSTACKCOMMENT] = gm_strdup(ds->ack_data);
++
++            if (temp_contact != NULL) {
++                mac.x[MACRO_HOSTACKAUTHORNAME] = gm_strdup(temp_contact->name);
++                mac.x[MACRO_HOSTACKAUTHORALIAS] = gm_strdup(temp_contact->alias);
++            }
+         }
+     }
+ 
