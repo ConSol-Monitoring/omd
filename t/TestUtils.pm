@@ -126,12 +126,13 @@ sub test_command {
         my $start   = time();
         my $now     = time();
         my $waitfor = $test->{'waitfor'};
+        my $maxwait = defined $test->{'maxwait'} ? $test->{'maxwait'} : 30;
         my $found   = 0;
         local $test->{'exit'}    = undef;
         local $test->{'like'}    = '/.*/';
         local $test->{'errlike'} = '/.*/';
         my $expr = '';
-        while($now < $start + 30) {
+        while($now < $start + $maxwait) {
             alarm(15);
             $expr = $waitfor;
             eval {
