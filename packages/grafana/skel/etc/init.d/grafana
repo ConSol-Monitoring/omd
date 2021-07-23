@@ -2,6 +2,9 @@
 
 # description: Grafana web server & backend
 
+# allow the setting of enviroment variable for customization
+# e.g. for AWS sigv4 auth see https://docs.aws.amazon.com/prometheus/latest/userguide/AMP-onboard-query-standalone-grafana.html
+. .profile
 # Check if grafana is enabled in OMD. If not terminate.
 . lib/omd/init_profile
 . etc/omd/site.conf
