@@ -17,6 +17,9 @@ case "$1" in
             [ -e $OMD_ROOT/share/thruk ]                && echo "thruk: Thruk Monitoring Webinterface"
             [ -e $OMD_ROOT/share/pnp4nagios/htdocs ]    && echo "pnp4nagios: RRD based performance data analyzer"
             [ -e $OMD_ROOT/share/grafana/public/views ] && echo "grafana: Visualize timeseries based metrics"
+            [ -e $OMD_ROOT/etc/prometheus ]             && echo "prometheus: Prometheus timeseries database Webinterface"
+            [ -e $OMD_ROOT/etc/alertmanager ]           && echo "alertmanager: Prometheus Alertmanager Webinterface"
+
             echo "none: No default webinterface"
     ;;
     depends)
