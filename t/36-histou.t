@@ -17,13 +17,13 @@ my $php_version = `php -v`;
 $php_version =~ s%^PHP\ (\d\.\d).*%$1%gmsx;
 plan skip_all => "icinga2 not included, cannot test" unless -x '/omd/versions/default/bin/icinga2';
 plan( skip_all => 'histou requires at least php 5.3') if $php_version < 5.3;
-plan( tests => 50 );
+plan( tests => 55 );
 
 ##################################################
 # create our test site
 my $omd_bin = TestUtils::get_omd_bin();
 my $site    = TestUtils::create_test_site() or TestUtils::bail_out_clean("no further testing without site");
-my $host    = `hostname`;
+my $host    = `hostname --fqdn`;
 chomp($host);
 my $service = 'load';
 
@@ -51,6 +51,7 @@ if($page->{'content'} !~ m/$host-$service/mx) {
     TestUtils::bail_out_clean("histou did not work");
 }
 
+TestUtils::test_command({ cmd => "/bin/su - $site -c 'cat var/log/grafana/grafana.log'", like => '/HTTP Server Listen/', waitfor => 'HTTP\ Server\ Listen', maxwait => 180 });
 TestUtils::test_url({
     url            => "http://localhost/$site/grafana/public/dashboards/histou.js",
     auth           => "OMD Monitoring Site $site:omdadmin:omd",
