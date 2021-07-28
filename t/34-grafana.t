@@ -13,7 +13,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 109 );
+plan( tests => 129 );
 
 ##################################################
 # create our test site
@@ -35,6 +35,7 @@ TestUtils::test_command({ cmd => "/bin/su - $site -c './lib/monitoring-plugins/c
 TestUtils::wait_for_file("/omd/sites/$site/var/pnp4nagios/perfdata/omd-$site/_HOST_.xml");
 
 #grafana interface
+TestUtils::test_command({ cmd => "/bin/su - $site -c 'cat var/log/grafana/grafana.log'", like => '/HTTP Server Listen/', waitfor => 'HTTP\ Server\ Listen', maxwait => 180 });
 TestUtils::test_url({ url => 'http://localhost/'.$site.'/grafana/', waitfor => '<title>Grafana<\/title>', auth => $auth });
 TestUtils::test_command({ cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_http -t 60 -H 127.0.0.1 -p 8003 -k \"X-WEBAUTH-USER: omdadmin\" -s \"<title>Grafana</title>\"'", like => '/HTTP OK:/', waitfor => 'HTTP\ OK:' });
 TestUtils::test_command({ cmd => "/omd/sites/$site/lib/monitoring-plugins/check_http -t 60 -H localhost -a omdadmin:omd -u '/$site/grafana/' -s '\"login\":\"omdadmin\"'", like => '/HTTP OK:/', waitfor => 'HTTP\ OK:' });
@@ -44,6 +45,7 @@ TestUtils::test_command({ cmd => $omd_bin." stop $site", like => '/Stopping Graf
 TestUtils::test_command({ cmd => $omd_bin." config $site set APACHE_MODE ssl", like => '/^$/' });
 TestUtils::test_command({ cmd => $omd_bin." start $site", like => '/Starting Grafana/' });
 TestUtils::restart_system_apache();
+TestUtils::test_command({ cmd => "/bin/su - $site -c 'cat var/log/grafana/grafana.log'", like => '/HTTP Server Listen/', waitfor => 'HTTP\ Server\ Listen', maxwait => 180 });
 TestUtils::test_command({ cmd => "/omd/sites/$site/lib/monitoring-plugins/check_http -t 60 -H localhost -S -a omdadmin:omd -u '/$site/grafana/' -s '\"login\":\"omdadmin\"'", like => '/HTTP OK:/', waitfor => 'HTTP\ OK:' });
 
 TestUtils::test_command({ cmd => $omd_bin." stop $site" });
@@ -52,6 +54,7 @@ TestUtils::test_command({ cmd => $omd_bin." stop $site" });
 my $sessionid = TestUtils::create_fake_cookie_login($site);
 TestUtils::test_command({ cmd => $omd_bin." config $site set THRUK_COOKIE_AUTH on", like => '/^$/' });
 TestUtils::test_command({ cmd => $omd_bin." start $site", like => '/Starting Grafana/' });
+TestUtils::test_command({ cmd => "/bin/su - $site -c 'cat var/log/grafana/grafana.log'", like => '/HTTP Server Listen/', waitfor => 'HTTP\ Server\ Listen', maxwait => 180 });
 TestUtils::test_command({ cmd => "/omd/sites/$site/lib/monitoring-plugins/check_http -t 60 -H localhost -S -k 'Cookie: thruk_auth=$sessionid' -u '/$site/grafana/' -s '\"login\":\"omdadmin\"'", like => '/HTTP OK:/', waitfor => 'HTTP\ OK:' });
 TestUtils::test_command({ cmd => "/omd/sites/$site/lib/monitoring-plugins/check_http -t 60 -H localhost -S -k 'Cookie: thruk_auth=$sessionid' -u '/$site/grafana/api/datasources/proxy/1/index.php/api/hosts' -vv -s '[{\"name\":\"omd-testsite\"}]'", like => '/HTTP OK:/' });
 
@@ -60,6 +63,7 @@ TestUtils::test_command({ cmd => $omd_bin." stop $site" });
 TestUtils::test_command({ cmd => $omd_bin." config $site set APACHE_MODE own", like => '/^$/' });
 TestUtils::restart_system_apache();
 TestUtils::test_command({ cmd => $omd_bin." start $site", like => '/Starting Grafana/' });
+TestUtils::test_command({ cmd => "/bin/su - $site -c 'cat var/log/grafana/grafana.log'", like => '/HTTP Server Listen/', waitfor => 'HTTP\ Server\ Listen', maxwait => 180 });
 TestUtils::test_command({ cmd => "/omd/sites/$site/lib/monitoring-plugins/check_http -t 60 -H localhost -k 'Cookie: thruk_auth=$sessionid' -u '/$site/grafana/' -s '\"login\":\"omdadmin\"'", like => '/HTTP OK:/', waitfor => 'HTTP\ OK:'  });
 
 
