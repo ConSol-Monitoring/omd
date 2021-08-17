@@ -1259,8 +1259,13 @@ def update_file(relpath, old_version, new_version, userdir, old_perms, old_skel 
 
     # 1) New version ships new skeleton file -> simply install
     if not old_type and not user_type:
-        create_skeleton_file(new_skel, userdir, relpath, replacements)
-        sys.stdout.write(good + " Installed %-4s %s\n" % (new_type, fn))
+        if not os.path.isdir(os.path.dirname(user_path)):
+            # 1a) parent folder does not exist, skip installing new files for removed folders
+            sys.stdout.write(good + " Unwanted       %s (new but deleted parent folder in local site)\n" % fn)
+        else:
+            # 1b) install new file
+            create_skeleton_file(new_skel, userdir, relpath, replacements)
+            sys.stdout.write(good + " Installed %-4s %s\n" % (new_type, fn))
 
     # 2) new version ships new skeleton file, but user's own file/dir/link
     #    is in the way.
@@ -1351,11 +1356,11 @@ def update_file(relpath, old_version, new_version, userdir, old_perms, old_skel 
     #    file. We simply do nothing in that case. The user surely has
     #    a good reason why he deleted the file.
     elif not user_type and not we_changed:
-        sys.stdout.write(good + " Unwanted       %s (unchanged, deleted by you)\n" % fn)
+        sys.stdout.write(good + " Unwanted       %s (unchanged, deleted in local site)\n" % fn)
 
-    # 4b) File changed in new version. Simply warn if user has deleted it.
+    # 4b) File changed in new version.
     elif not user_type:
-        sys.stdout.write(warn + " Missing        %s\n" % fn)
+        sys.stdout.write(good + " Unwanted       %s (changed but deleted in local site)\n" % fn)
 
     # B ---> UNCHANGED, EASY CASES
 
