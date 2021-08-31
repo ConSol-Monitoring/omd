@@ -1,6 +1,7 @@
 This file documents the revision history for the Open Monitoring Distribution (Labs Edition)
 
 next
+          - LMD: Update 2.0.2
           - VictoriaMetrics 1.61.1
           - Grafana 7.5.9
           - InfluxDB 1.8.5
