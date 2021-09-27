@@ -11,6 +11,8 @@ next
             - blackbox_exporter 0.19.0
             - pushgateway 1.4.1
             - alertmanager 0.22.2
+          - Gearman:
+            - Gearman-Proxy update 2.08
 
 4.20     Jun 10 2021
           - Naemon:
