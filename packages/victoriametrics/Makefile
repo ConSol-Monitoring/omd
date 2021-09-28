@@ -4,7 +4,7 @@ NAME       = victoriametrics
 PWD        = $(shell pwd)
 
 #for binary downloads
-VERSION    = 1.61.1
+VERSION    = 1.66.2
 VVERSION=v$(VERSION)
 
 # for vmctl build
