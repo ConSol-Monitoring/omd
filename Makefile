@@ -304,6 +304,11 @@ deb: deb-changelog
 	    -e '/Depends:/s/\> /, /g' \
 	    -e '/Depends:/s/@/ /g' \
 	   `pwd`/debian/control.in > `pwd`/debian/control
+	# used when putting debug binaries in separate file
+	#echo "/opt/omd/versions/$(OMD_VERSION)/bin/*.dbg" > `pwd`/debian/omd-$(OMD_VERSION)-debug.install
+	#echo "/opt/omd/versions/$(OMD_VERSION)/lib/*.dbg" > `pwd`/debian/omd-$(OMD_VERSION)-debug.install
+	#echo "/opt/omd/versions/$(OMD_VERSION)/lib/mod_gearman/*.dbg" > `pwd`/debian/omd-$(OMD_VERSION)-debug.install
+	#echo "/opt/omd/versions/$(OMD_VERSION)/lib/naemon/*.dbg" > `pwd`/debian/omd-$(OMD_VERSION)-debug.install
 	fakeroot debian/rules clean
 	debuild --no-lintian -i\.git -I\.git \
 			-iomd-bin-$(OMD_VERSION).tar.gz \

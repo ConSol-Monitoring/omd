@@ -14,3 +14,7 @@ Description: OMD Labs Edition - Open Source Monitoring Distribution (Labs Editio
  Thruk, Mod-Gearman, Nagvis, PNP4Nagios and many more...
  Maintained by http://labs.consol.de/omd/.
 
+#Package: omd-###OMD_VERSION###-debug
+#Architecture: any
+#Depends:omd-###OMD_VERSION###
+#Description: OMD Labs Edition debug binaries

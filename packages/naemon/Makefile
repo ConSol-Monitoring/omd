@@ -34,11 +34,11 @@ build:
 
 install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/bin
-	#install -m 755 $(DIR)/src/naemon/.libs/naemon             $(DESTDIR)$(OMD_ROOT)/bin/naemon.dbg
+	install -m 755 $(DIR)/src/naemon/.libs/naemon             $(DESTDIR)$(OMD_ROOT)/bin/naemon.dbg
 	install -sm 755 $(DIR)/src/naemon/.libs/naemon             $(DESTDIR)$(OMD_ROOT)/bin
 	install -sm 755 $(DIR)/src/naemonstats/.libs/naemonstats   $(DESTDIR)$(OMD_ROOT)/bin
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib
-	#install -m 755 $(DIR)/.libs/libnaemon.so.0.0.0            $(DESTDIR)$(OMD_ROOT)/lib/libnaemon.so.0.0.0.dbg
+	install -m 755 $(DIR)/.libs/libnaemon.so.0.0.0            $(DESTDIR)$(OMD_ROOT)/lib/libnaemon.so.0.0.0.dbg
 	install -sm 755 $(DIR)/.libs/libnaemon.so.0.0.0            $(DESTDIR)$(OMD_ROOT)/lib
 	ln -s libnaemon.so.0.0.0                                   $(DESTDIR)$(OMD_ROOT)/lib/libnaemon.so
 	ln -s libnaemon.so.0.0.0                                   $(DESTDIR)$(OMD_ROOT)/lib/libnaemon.so.0

@@ -30,6 +30,15 @@ containing Nagios3 and Naemon, Icinga1 and Icinga 2, Shinken,
 Thruk, Mod-Gearman, Nagvis, PNP4Nagios and many more...
 Maintained by http://labs.consol.de/omd/.
 
+%package debug
+Summary:        OMD Labs Edition debug binaries
+Group:          Application/System
+Requires:       %{name}
+
+
+%description debug
+Open Source Monitoring Distribution (Labs Edition) debug binaries.
+
 %prep
 # make builds reproducable and cacheable by not changing build root every day
 rm -rf omd-%{version} omd
@@ -66,6 +75,17 @@ find $RPM_BUILD_ROOT/opt/omd/versions/%{version}/lib/ -type f | grep -v waitmax 
 %caps(cap_net_raw,cap_net_bind_service+ep) /opt/omd/versions/%{version}/lib/monitoring-plugins/check_dhcp
 %caps(cap_net_raw+ep) /opt/omd/versions/%{version}/lib/monitoring-plugins/check_icmp
 %caps(cap_net_raw+ep) /opt/omd/versions/%{version}/bin/blackbox_exporter
+#%exclude /opt/omd/versions/%{version}/bin/*.dbg
+#%exclude /opt/omd/versions/%{version}/lib/*.dbg
+#%exclude /opt/omd/versions/%{version}/lib/mod_gearman/*.dbg
+#%exclude /opt/omd/versions/%{version}/lib/naemon/*.dbg
+
+#%files debug
+#%defattr(-,root,root)
+#/opt/omd/versions/%{version}/bin/*.dbg
+#/opt/omd/versions/%{version}/lib/*.dbg
+#/opt/omd/versions/%{version}/lib/mod_gearman/*.dbg
+#/opt/omd/versions/%{version}/lib/naemon/*.dbg
 
 %pre
 groupadd -r omd 2>/dev/null || true
