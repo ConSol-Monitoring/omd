@@ -75,7 +75,7 @@ MODULES = \
           Math-Complex-1.59.tar.gz \
           Module-Find-0.13.tar.gz \
           Module-Load-0.32.tar.gz \
-          Mozilla-CA-20200520.tar.gz \
+          Mozilla-CA-20211001.tar.gz \
           OLE-Storage_Lite-0.19.tar.gz \
           Package-Stash-XS-0.28.tar.gz \
           Params-Check-0.38.tar.gz \
