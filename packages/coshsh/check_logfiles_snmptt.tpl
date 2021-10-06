@@ -119,7 +119,7 @@ sub snmptt_resolve {
   #my @subtraps = map { /^[\d\.]+\s+"*(.*?)"*$/; $1; } split(/____/, $subtraps);
   my @subtraps = map { /^[\d\.]+\s+(.*)$/; $1; } split(/____/, $subtraps);
   my $subtraps = join(", ", @subtraps);
-  foreach my $index (1..scalar(@subtraps)) {
+  foreach my $index (reverse 1..scalar(@subtraps)) {
     $text =~ s/\$$index/$subtraps[$index-1]/g;
   }
   $text =~ s/\$\*/$subtraps/g;
