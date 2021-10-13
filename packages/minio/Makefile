@@ -5,7 +5,7 @@ include ../../Makefile.omd
 NAME       = minio
 VERSION    = RELEASE.2019-01-10T00-21-20Z
 SRC        = $(NAME)-$(VERSION).tar.gz
-GOPKG      = 1.15
+GOPKG      = 1.17
 GOVERSION  = $(shell grep ^VERSION ../go-${GOPKG}/Makefile | awk '{ print $$3 }')
 PWD        = $(shell pwd)
 GOPATH     = go

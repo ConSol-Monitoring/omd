@@ -4,7 +4,7 @@ NAME       = grafana
 VERSION    = 7.5.9
 SRC        = $(NAME)-$(VERSION).tar.gz
 GOPATH     = go
-GOPKG      = 1.15
+GOPKG      = 1.17
 GOVERSION  = $(shell grep ^VERSION ../go-${GOPKG}/Makefile | awk '{ print $$3 }')
 PWD        = $(shell pwd)
 GO         = export GOROOT=$(PWD)/../go-$(GOPKG)/go-$(GOVERSION) && export GOPATH=$(PWD)/$(GOPATH)/ && PATH=$$GOROOT/bin:$$PATH && go
