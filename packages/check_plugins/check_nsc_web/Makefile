@@ -18,6 +18,7 @@ GOROOT      = $(PWD)/../../go-$(GOPKG)/go-$(GOVERSION)
 
 build:
 	tar zxf $(SRC)
+	export GO111MODULE=auto && \
 	export GOROOT=$(GOROOT) && export GOPATH=$(GOPATH) && PATH=$$GOROOT/bin:$$PATH && \
 		cd $(GOPATH)/src/${GITURL}/${NAME} && \
 		CGO_ENABLED=0 go build -ldflags "-s -w" $(NAME).go
