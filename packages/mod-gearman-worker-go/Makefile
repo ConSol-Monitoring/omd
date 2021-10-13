@@ -21,8 +21,11 @@ GIT_TAG     = v1.1.5
 build:
 	tar zxf $(DEPS_SRC)
 	tar zxf $(SRC)
-	export GOROOT=$(PWD)/../go-$(GOPKG)/go-$(GOVERSION)/ && export GOPATH=$(PWD)/$(GOPATH)/ && PATH=$$GOROOT/bin:$$PATH && \
-	go install -ldflags "-s -w -X main.Build=$(OMD_VERSION)-$(GIT_TAG)" $(GITURL)/cmd/mod_gearman_worker
+	export GO111MODULE=auto && \
+		export GOROOT=$(PWD)/../go-$(GOPKG)/go-$(GOVERSION)/ && \
+		export GOPATH=$(PWD)/$(GOPATH)/ && \
+		export PATH=$$GOROOT/bin:$$PATH && \
+		go install -ldflags "-s -w -X main.Build=$(OMD_VERSION)-$(GIT_TAG)" $(GITURL)/cmd/mod_gearman_worker
 
 install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/bin
@@ -35,6 +38,7 @@ clean:
 
 deps: clean
 	mkdir -p $(GOPATH)
+	export GO111MODULE=auto && \
 	export GOROOT=$(PWD)/../go-$(GOPKG)/go-$(GOVERSION)/ && export GOPATH=$(PWD)/$(GOPATH)/ && PATH=$$GOROOT/bin:$$PATH && \
 		mkdir -p $(GOPATH)/src/$(GITBASE) && \
 		cd $(GOPATH)/src/$(GITBASE) && \
@@ -46,6 +50,7 @@ deps: clean
 
 package: clean
 	mkdir -p $(GOPATH)
+	export GO111MODULE=auto && \
 	export GOROOT=$(PWD)/../go-$(GOPKG)/go-$(GOVERSION)/ && export GOPATH=$(PWD)/$(GOPATH)/ && PATH=$$GOROOT/bin:$$PATH && \
 		mkdir -p $(GOPATH)/src/$(GITBASE) && \
 		cd $(GOPATH)/src/$(GITBASE) && \
