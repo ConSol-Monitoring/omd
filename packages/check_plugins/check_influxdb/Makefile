@@ -14,8 +14,11 @@ build:
 	    echo "applying $$p..." ; \
 	    ( cd $(PWD)/$(GOPATH)/src/github.com/griesbacher/check_influxdb; patch -p1 ) < $$p || exit 1; \
 	done
-	export GOROOT=$(PWD)/../../go-$(GOPKG)/go-$(GOVERSION)/ && export GOPATH=$(PWD)/$(GOPATH)/ && PATH=$$GOROOT/bin:$$PATH && \
-	go install -ldflags "-s -w" github.com/griesbacher/check_influxdb
+	export GO111MODULE=auto && \
+		export GOROOT=$(PWD)/../../go-$(GOPKG)/go-$(GOVERSION)/ && \
+		export GOPATH=$(PWD)/$(GOPATH)/ && \
+		export PATH=$$GOROOT/bin:$$PATH && \
+		go install -ldflags "-s -w" github.com/griesbacher/check_influxdb
 
 install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/monitoring-plugins
