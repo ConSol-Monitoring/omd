@@ -13,7 +13,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 1011 );
+plan( tests => 1035 );
 
 ##################################################
 # create our test site
@@ -75,6 +75,9 @@ my $tests = [
   { cmd => "/bin/su - $site -c './bin/thruk -l --local'", like => "/$site/" },
   { cmd => "/bin/su - $site -c './bin/thruk r -d \"\" /hosts/$host/cmd/schedule_forced_host_check'", like => ["/SCHEDULE_FORCED_HOST_CHECK/", "/Command successfully submitted/"] },
   { cmd => "/bin/su - $site -c './bin/naglint ./etc/naemon/conf.d/commands.cfg'", like => "/check_local_load/" },
+  { cmd => "/bin/su - $site -c './bin/thruk r /services/omd-$site/Dummy%20Service/config'", like => ["/obj.cfg:/"] },
+  { cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_http -t 20 -H localhost -a omdadmin:omd -u \"/$site/thruk/r/services/omd-$site/Dummy%20Service/config\" -e 200 -r \"obj.cfg:\"'", like => '/HTTP OK:/' },
+  { cmd => "/bin/su - $site -c 'curl -s -u omdadmin:omd \"http://localhost/$site/thruk/r/services/omd-$site/Dummy%20Service/config\"'", like => '/obj.cfg:/' },
 ];
 
 my $own_tests = [

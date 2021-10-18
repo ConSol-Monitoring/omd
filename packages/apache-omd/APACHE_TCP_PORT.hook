@@ -83,10 +83,12 @@ EOF
     # the site apache is down and someone tries to access the page.
     # "disablereuse=On" prevents the apache from keeping the connection which leads to
     # wrong devlivered pages sometimes
-    ProxyPass $PROTO://$CONFIG_APACHE_TCP_ADDR:$PORT/$OMD_SITE retry=0 disablereuse=On
+    ProxyPass $PROTO://$CONFIG_APACHE_TCP_ADDR:$PORT/$OMD_SITE retry=0 disablereuse=On nocanon
     ProxyPassReverse $PROTO://$CONFIG_APACHE_TCP_ADDR:$PORT/$OMD_SITE
   </Location>
 </IfModule>
+
+AllowEncodedSlashes NoDecode
 
 ###APACHE_INCLUDEOPT### $OMD_ROOT/etc/apache/system.d/*.conf
 EOF
