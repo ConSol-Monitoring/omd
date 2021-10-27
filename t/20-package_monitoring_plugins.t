@@ -12,7 +12,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 52 );
+plan( tests => 56 );
 
 ##################################################
 # create our test site
@@ -34,6 +34,7 @@ my $tests = [
   #{ cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_by_ssh -V'", exit => 3, like => '/\d{4}\-\d{2}\-\d{2}_\w+/' }, # plugins should contain the date and git hash the version information
   { cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_by_ssh -V'", exit => 3, like => '/monitoring\-plugins\ \d\.\d/' }, # plugins should contain release version when build without patches
   { cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_radius -h'", exit => 3, like => '/^check_radius.*/'}, 
+  { cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_procs -vvv'", exit => 0, like => '/CMD:.*\s+etime/'},
 ];
 for my $test (@{$tests}) {
     TestUtils::test_command($test);

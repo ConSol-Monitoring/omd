@@ -1,8 +1,7 @@
 include ../../Makefile.omd
 
 NAME = monitoring-plugins
-VERSION = 2.3.1
-master  = feature_check_curl
+VERSION = master
 DIR = $(NAME)-$(VERSION)
 URIPARSER=0.8.6
 # GIT TAG is set automatically by "make upstream"
