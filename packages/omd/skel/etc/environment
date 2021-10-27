@@ -16,4 +16,5 @@
 
 FREETDSCONF=$OMD_ROOT/etc/freetds/freetds.conf
 TNS_ADMIN=$OMD_ROOT/etc/oracle
-
+PIP_UPGRADE=1
+PIP_TARGET=$OMD_ROOT/local/lib/python
