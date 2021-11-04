@@ -5,6 +5,8 @@ use warnings;
 use Getopt::Long;
 use Cwd qw/abs_path/;
 
+$ENV{'LC_ALL'} = 'en_US.UTF-8';
+
 my $status;
 my $gitpath;
 my ($preout,$postout,$svcout);
@@ -72,6 +74,9 @@ sub git_status {
             exit 1;
         } elsif($status =~ m/Your branch is ahead of (.*)/ ){
             print "$name WARNING - Your branch is ahead of $1\n";
+            exit 1;
+        } elsif($status =~ m/but untracked files present/ ){
+            print "$name WARNING - untracked files present";
             exit 1;
         } else {
             $status = "$name OK - working tree clean\n$status\n"
