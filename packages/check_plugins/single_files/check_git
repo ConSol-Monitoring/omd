@@ -76,7 +76,10 @@ sub git_status {
             print "$name WARNING - Your branch is ahead of $1\n";
             exit 1;
         } elsif($status =~ m/but untracked files present/ ){
-            print "$name WARNING - untracked files present";
+            print "$name WARNING - untracked files present\n";
+            exit 1;
+        } elsif($status =~ m/Changes to be committed/ ){
+            print "$name WARNING - Changes to be committed\n$status\n";
             exit 1;
         } else {
             $status = "$name OK - working tree clean\n$status\n"
