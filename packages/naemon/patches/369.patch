@@ -1,0 +1,549 @@
+From 32fc01aaa22a1a9849238b732479c660b653275e Mon Sep 17 00:00:00 2001
+From: Sven Nierlein <sven@nierlein.de>
+Date: Sun, 31 Oct 2021 22:28:52 +0100
+Subject: [PATCH 1/3] extract environment from command_line and set it directly
+
+This PR removes exposing environment variables to the process list. The
+example command line: TEST=1 FOO=BAR /bin/true
+would be executed like: /bin/sh -c 'TEST=1 FOO=BAR /bin/true'
+and the environement variables would be visible in ps output.
+
+Instead we extend command line parsing and remove environment variable
+definitions and put them into the environment before forking and running
+the command.
+
+Signed-off-by: Sven Nierlein <sven@nierlein.de>
+---
+ lib/runcmd.c        | 127 +++++++++++++++++++++++++++++++++++++++++---
+ lib/runcmd.h        |   5 +-
+ lib/test-runcmd.c   |  43 +++++++++------
+ src/worker/worker.c |   2 +-
+ 4 files changed, 149 insertions(+), 28 deletions(-)
+
+diff --git a/lib/runcmd.c b/lib/runcmd.c
+index 909138e8..42587663 100644
+--- a/lib/runcmd.c
++++ b/lib/runcmd.c
+@@ -27,6 +27,7 @@
+ #include <sys/time.h>
+ #include <sys/resource.h>
+ #include <errno.h>
++#include <ctype.h>
+ #include "runcmd.h"
+ 
+ 
+@@ -115,6 +116,8 @@ pid_t runcmd_pid(int fd)
+ #define STATE_INDQ  (1 << 3)
+ #define STATE_SPECIAL (1 << 4)
+ #define STATE_BSLASH (1 << 5)
++#define STATE_INVAR (1 << 6)
++#define STATE_INVAL (1 << 7)
+ #define in_quotes (state & (STATE_INSQ | STATE_INDQ))
+ #define is_state(s) (state == s)
+ #define set_state(s) (state = s)
+@@ -122,20 +125,112 @@ pid_t runcmd_pid(int fd)
+ #define add_state(s) (state |= s)
+ #define del_state(s) (state &= ~s)
+ #define add_ret(r) (ret |= r)
+-int runcmd_cmd2strv(const char *str, int *out_argc, char **out_argv)
++int runcmd_cmd2strv(const char *str, int *out_argc, char **out_argv, int *out_envc, char **out_env)
+ {
+-	int arg = 0, a = 0;
++	int arg = 0, a = 0, env = 0, e = 0, argstart = 0;
+ 	unsigned int i;
+ 	int state, ret = 0;
+ 	int seen_space = 0;
+ 	size_t len;
+-	char *argz;
++	char *argz, *envz;
+ 
++	// extract leading environment variables
+ 	set_state(STATE_NONE);
+ 	len = strlen(str);
++	envz = malloc(len + 1);
++	for (i = 0; i < len; i++) {
++		const char *p = &str[i];
++
++		switch (*p) {
++		case 0:
++			return ret;
++
++		case ' ': case '\t': case '\r': case '\n':
++			if(in_quotes)
++				break;
++			if(is_state(STATE_INVAR)) {
++				/* abort checking for variables, this is something else */
++				env--;
++				i = len;
++				continue;
++			}
++			if(is_state(STATE_INVAL)) {
++				set_state(STATE_NONE);
++				/* variable definition ended */
++				envz[e++] = 0;
++				argstart = i;
++				continue;
++			}
++			/* skip leading whitespace */
++			continue;
++
++		case '=':
++			if(in_quotes)
++				break;
++			if(is_state(STATE_INVAR)) {
++				/* variable name ended, start parsing value */
++				set_state(STATE_INVAL);
++				envz[e++] = 0;
++				out_env[env++] = &envz[e];
++				continue;
++			}
++			break;
++
++		case '\'':
++			if (have_state(STATE_INDQ))
++				break;
++			if (have_state(STATE_INSQ)) {
++				del_state(STATE_INSQ);
++				continue;
++			}
++			add_state(STATE_INSQ);
++			continue;
+ 
++		case '"':
++			if (have_state(STATE_INSQ))
++				break;
++			if (have_state(STATE_INDQ)) {
++				del_state(STATE_INDQ);
++				continue;
++			}
++			add_state(STATE_INDQ);
++			continue;
++
++		default:
++			if(in_quotes)
++				break;
++			if(isalnum(*p) || *p == '_') {
++				if(have_state(STATE_INVAL))
++					break;
++				if(have_state(STATE_INVAR))
++					break;
++				if(isalpha(*p)) {
++					/* starting a new environment variable */
++					set_state(STATE_INVAR);
++					out_env[env++] = &envz[e];
++					break;
++				}
++			}
++			if(have_state(STATE_INVAL))
++				break;
++			/* abort checking for variables, this is something else */
++			if(have_state(STATE_INVAR))
++				env--;
++			i = len;
++			continue;
++		}
++
++		/* by default we simply copy the byte */
++		envz[e++] = str[i];
++	}
++
++	/* make sure we nul-terminate the last argument */
++	envz[e] = 0;
++	*out_envc = env;
++
++	set_state(STATE_NONE);
+ 	argz = malloc(len + 1);
+-	for (i = 0; i < len; i++) {
++	for (i = argstart; i < len; i++) {
+ 		const char *p = &str[i];
+ 
+ 		switch (*p) {
+@@ -324,10 +419,11 @@ void runcmd_init(void)
+ 
+ 
+ /* Start running a command */
+-int runcmd_open(const char *cmd, int *pfd, int *pfderr, char **env)
++int runcmd_open(const char *cmd, int *pfd, int *pfderr)
+ {
+ 	char **argv = NULL;
+-	int cmd2strv_errors, argc = 0;
++	char **env = NULL;
++	int cmd2strv_errors, argc, envc = 0;
+ 	size_t cmdlen;
+ 	pid_t pid;
+ 
+@@ -345,7 +441,13 @@ int runcmd_open(const char *cmd, int *pfd, int *pfderr, char **env)
+ 	if (!argv)
+ 		return RUNCMD_EALLOC;
+ 
+-	cmd2strv_errors = runcmd_cmd2strv(cmd, &argc, argv);
++	env = calloc((cmdlen/3), sizeof(char *)); // environment variables use at least 3 characters as in V=<space>, so there cannot be more than len/3
++	if (!env) {
++		free(argv);
++		return RUNCMD_EALLOC;
++	}
++
++	cmd2strv_errors = runcmd_cmd2strv(cmd, &argc, argv, &envc, env);
+ 	if (cmd2strv_errors) {
+ 		/*
+ 		 * if there are complications, we fall back to running
+@@ -368,6 +470,8 @@ int runcmd_open(const char *cmd, int *pfd, int *pfderr, char **env)
+ 		else
+ 			free(argv[2]);
+ 		free(argv);
++		free(env[0]);
++		free(env);
+ 		return RUNCMD_ECMD;
+ 	}
+ 	if (pipe(pfderr) < 0) {
+@@ -376,6 +480,8 @@ int runcmd_open(const char *cmd, int *pfd, int *pfderr, char **env)
+ 		else
+ 			free(argv[2]);
+ 		free(argv);
++		free(env[0]);
++		free(env);
+ 		close(pfd[0]);
+ 		close(pfd[1]);
+ 		return RUNCMD_EFD;
+@@ -387,6 +493,8 @@ int runcmd_open(const char *cmd, int *pfd, int *pfderr, char **env)
+ 		else
+ 			free(argv[2]);
+ 		free(argv);
++		free(env[0]);
++		free(env);
+ 		close(pfd[0]);
+ 		close(pfd[1]);
+ 		close(pfderr[0]);
+@@ -418,6 +526,10 @@ int runcmd_open(const char *cmd, int *pfd, int *pfderr, char **env)
+ 			if (pids[i] > 0)
+ 				close(i);
+ 
++		/* initialize environment */
++		for (i = 0; i < envc; i += 2)
++			setenv(env[i], env[i+1], 1);
++
+ 		i = execvp(argv[0], argv);
+ 		fprintf(stderr, "execvp(%s, ...) failed. errno is %d: %s\n", argv[0], errno, strerror(errno));
+ 		if (!cmd2strv_errors)
+@@ -440,6 +552,7 @@ int runcmd_open(const char *cmd, int *pfd, int *pfderr, char **env)
+ 	else
+ 		free(argv[2]);
+ 	free(argv);
++	free(env);
+ 
+ 	/* tag our file's entry in the pid-list and return it */
+ 	pids[pfd[0]] = pid;
+diff --git a/lib/runcmd.h b/lib/runcmd.h
+index fa2ef1d2..894aaf7e 100644
+--- a/lib/runcmd.h
++++ b/lib/runcmd.h
+@@ -66,9 +66,8 @@ extern const char *runcmd_strerror(int code);
+  * @param[in] cmdstring The command to launch
+  * @param[out] pfd Child's stdout filedescriptor
+  * @param[out] pfderr Child's stderr filedescriptor
+- * @param[in] env Currently ignored for portability
+  */
+-extern int runcmd_open(const char *cmdstring, int *pfd, int *pfderr, char **env)
++extern int runcmd_open(const char *cmdstring, int *pfd, int *pfderr)
+ 	__attribute__((__nonnull__(1, 2, 3)));
+ 
+ /**
+@@ -95,7 +94,7 @@ extern int runcmd_close(int fd);
+  * representing f.e. unclosed quotes, job control or output redirection.
+  * See the RUNCMD_HAS_* and their ilk to find out about the flag.
+  */
+-extern int runcmd_cmd2strv(const char *str, int *out_argc, char **out_argv);
++extern int runcmd_cmd2strv(const char *str, int *out_argc, char **out_argv, int *out_envc, char **out_env);
+ 
+ NAGIOS_END_DECL
+ 
+diff --git a/lib/test-runcmd.c b/lib/test-runcmd.c
+index d3e436a7..0777ac16 100644
+--- a/lib/test-runcmd.c
++++ b/lib/test-runcmd.c
+@@ -61,7 +61,7 @@ struct {
+ 	{ RUNCMD_HAS_WILDCARD, "ls -l /dev/tty?" },
+ 	{ 0, "ls -l /dev/tty\\?" },
+ 	{ RUNCMD_HAS_SHVAR, "echo $foo" },
+-	{ RUNCMD_HAS_SHVAR, "VAR='foo' echo bar" },
++	{ 0, "VAR='foo' echo bar" },
+ 	{ 0, "echo \\$foo" },
+ 	{ RUNCMD_HAS_PAREN, "\\$(hoopla booyaka" },
+ 	{ 0, "\\$\\(hoopla booyaka" },
+@@ -74,18 +74,21 @@ struct {
+ 	char *cmd;
+ 	int argc_exp;
+ 	char *argv_exp[10];
++	int envc_exp;
++	char *env_exp[20];
+ } parse_case[] = {
+-	{ 0, "foo bar nisse", 3, { "foo", "bar", "nisse", NULL }},
+-	{ 0, "foo\\ bar nisse", 2, { "foo bar", "nisse", NULL }},
+-	{ 0, "\"\\\\foo\"", 1, { "\\foo", NULL }},
+-	{ 0, "\"\\1bs in dq\"", 1, { "\\1bs in dq", NULL }},
+-	{ 0, "\"\\\\2bs in dq\"", 1, { "\\2bs in dq", NULL }},
+-	{ 0, "\"\\\\\\3bs in dq\"", 1, { "\\\\3bs in dq", NULL }},
+-	{ 0, "\"\\\\\\\\4bs in dq\"", 1, { "\\\\4bs in dq", NULL }},
+-	{ 0, "\\ \t \\\t  \\ ", 3, { " ", "\t", " ", NULL }},
+-	{ 0, "\\$foo walla wonga", 3, { "$foo", "walla", "wonga", NULL }},
+-	{ 0, "\"\\$bar is\" very wide open", 4, { "$bar is", "very", "wide", "open", NULL }},
+-	{ 0, NULL, 0, { NULL, NULL, NULL }},
++	{ 0, "foo bar nisse", 3, { "foo", "bar", "nisse", NULL }, 0, { NULL }},
++	{ 0, "foo\\ bar nisse", 2, { "foo bar", "nisse", NULL }, 0, { NULL }},
++	{ 0, "\"\\\\foo\"", 1, { "\\foo", NULL }, 0, { NULL }},
++	{ 0, "\"\\1bs in dq\"", 1, { "\\1bs in dq", NULL }, 0, { NULL }},
++	{ 0, "\"\\\\2bs in dq\"", 1, { "\\2bs in dq", NULL }, 0, { NULL }},
++	{ 0, "\"\\\\\\3bs in dq\"", 1, { "\\\\3bs in dq", NULL }, 0, { NULL }},
++	{ 0, "\"\\\\\\\\4bs in dq\"", 1, { "\\\\4bs in dq", NULL }, 0, { NULL }},
++	{ 0, "\\ \t \\\t  \\ ", 3, { " ", "\t", " ", NULL }, 0, { NULL }},
++	{ 0, "\\$foo walla wonga", 3, { "$foo", "walla", "wonga", NULL }, 0, { NULL }},
++	{ 0, "\"\\$bar is\" very wide open", 4, { "$bar is", "very", "wide", "open", NULL }, 0, { NULL }},
++	{ 0, "TEST=123 BL_AH='BLUB' foo=\"bar bar\" EMPTY= EMPTY2='' /bin/true arg1 arg2 arg3", 4, { "/bin/true", "arg1", "arg2","arg3", NULL }, 10, { "TEST", "123", "BL_AH", "BLUB", "foo", "bar bar", "EMPTY", "", "EMPTY2", "", NULL }},
++	{ 0, NULL, 0, { NULL, NULL, NULL }, 0, { NULL }},
+ };
+ 
+ int main(int argc, char **argv)
+@@ -107,7 +110,7 @@ int main(int argc, char **argv)
+ 				t_fail("asprintf returned failure: %s", strerror(errno));
+ 				continue;
+ 			}
+-			fd = runcmd_open(cmd, pfd, pfderr, NULL);
++			fd = runcmd_open(cmd, pfd, pfderr);
+ 			if (read(pfd[0], out, BUF_SIZE) < 0) {
+ 				t_fail("read returned failure: %s", strerror(errno));
+ 				continue;
+@@ -124,9 +127,10 @@ int main(int argc, char **argv)
+ 	{
+ 		int i;
+ 		for (i = 0; anomaly[i].cmd; i++) {
+-			int out_argc;
++			int out_argc, out_envc;
+ 			char *out_argv[256];
+-			int result = runcmd_cmd2strv(anomaly[i].cmd, &out_argc, out_argv);
++			char *out_env[256];
++			int result = runcmd_cmd2strv(anomaly[i].cmd, &out_argc, out_argv, &out_envc, out_env);
+ 			ok_int(result, anomaly[i].ret, anomaly[i].cmd);
+ 		}
+ 	}
+@@ -137,15 +141,20 @@ int main(int argc, char **argv)
+ 	{
+ 		int i;
+ 		for (i = 0; parse_case[i].cmd; i++) {
+-			int x, out_argc;
++			int x, out_argc, out_envc;
+ 			char *out_argv[256];
+-			int result = runcmd_cmd2strv(parse_case[i].cmd, &out_argc, out_argv);
++			char *out_env[256];
++			int result = runcmd_cmd2strv(parse_case[i].cmd, &out_argc, out_argv, &out_envc, out_env);
+ 			out_argv[out_argc] = NULL;
+ 			ok_int(result, 0, parse_case[i].cmd);
+ 			ok_int(out_argc, parse_case[i].argc_exp, parse_case[i].cmd);
+ 			for (x = 0; x < parse_case[x].argc_exp && out_argv[x]; x++) {
+ 				ok_str(parse_case[i].argv_exp[x], out_argv[x], "argv comparison test");
+ 			}
++			ok_int(out_envc, parse_case[i].envc_exp, parse_case[i].cmd);
++			for (x = 0; x < parse_case[x].envc_exp; x++) {
++				ok_str(parse_case[i].env_exp[x], out_env[x], "env comparison test");
++			}
+ 		}
+ 	}
+ 
+diff --git a/src/worker/worker.c b/src/worker/worker.c
+index acc34558..47ccbf79 100644
+--- a/src/worker/worker.c
++++ b/src/worker/worker.c
+@@ -472,7 +472,7 @@ static int start_cmd(child_process *cp)
+ {
+ 	int pfd[2] = { -1, -1}, pfderr[2] = { -1, -1};
+ 
+-	cp->outstd.fd = runcmd_open(cp->cmd, pfd, pfderr, NULL);
++	cp->outstd.fd = runcmd_open(cp->cmd, pfd, pfderr);
+ 	if (cp->outstd.fd < 0) {
+ 		return -1;
+ 	}
+
+From 77868ed19ccb6a382c67788a415f31e3a7508202 Mon Sep 17 00:00:00 2001
+From: Sven Nierlein <sven@nierlein.de>
+Date: Mon, 1 Nov 2021 12:04:08 +0100
+Subject: [PATCH 2/3] stop parsing environment variables if we hit on shell
+ variables
+
+fall back to executing a shell in this case.
+
+Signed-off-by: Sven Nierlein <sven@nierlein.de>
+---
+ lib/runcmd.c      | 12 ++++++++++++
+ lib/test-runcmd.c |  3 ++-
+ 2 files changed, 14 insertions(+), 1 deletion(-)
+
+diff --git a/lib/runcmd.c b/lib/runcmd.c
+index 42587663..536a2e71 100644
+--- a/lib/runcmd.c
++++ b/lib/runcmd.c
+@@ -176,6 +176,18 @@ int runcmd_cmd2strv(const char *str, int *out_argc, char **out_argv, int *out_en
+ 			}
+ 			break;
+ 
++		case '$':
++			if(have_state(STATE_INSQ)) {
++				break;
++			}
++			/* abort checking for variables, this is something else */
++			if(have_state(STATE_INVAR))
++				env--;
++			if(have_state(STATE_INVAL))
++				env = env - 2;
++			i = len;
++			continue;
++
+ 		case '\'':
+ 			if (have_state(STATE_INDQ))
+ 				break;
+diff --git a/lib/test-runcmd.c b/lib/test-runcmd.c
+index 0777ac16..e2609da9 100644
+--- a/lib/test-runcmd.c
++++ b/lib/test-runcmd.c
+@@ -88,6 +88,7 @@ struct {
+ 	{ 0, "\\$foo walla wonga", 3, { "$foo", "walla", "wonga", NULL }, 0, { NULL }},
+ 	{ 0, "\"\\$bar is\" very wide open", 4, { "$bar is", "very", "wide", "open", NULL }, 0, { NULL }},
+ 	{ 0, "TEST=123 BL_AH='BLUB' foo=\"bar bar\" EMPTY= EMPTY2='' /bin/true arg1 arg2 arg3", 4, { "/bin/true", "arg1", "arg2","arg3", NULL }, 10, { "TEST", "123", "BL_AH", "BLUB", "foo", "bar bar", "EMPTY", "", "EMPTY2", "", NULL }},
++	{ RUNCMD_HAS_SHVAR, "TEST=123 TEST2=$TEST:1 /bin/true arg1", 3, { "TEST2=$TEST:1", "/bin/true", "arg1", NULL }, 2, { "TEST", "123", NULL }},
+ 	{ 0, NULL, 0, { NULL, NULL, NULL }, 0, { NULL }},
+ };
+ 
+@@ -146,7 +147,7 @@ int main(int argc, char **argv)
+ 			char *out_env[256];
+ 			int result = runcmd_cmd2strv(parse_case[i].cmd, &out_argc, out_argv, &out_envc, out_env);
+ 			out_argv[out_argc] = NULL;
+-			ok_int(result, 0, parse_case[i].cmd);
++			ok_int(result, parse_case[i].ret, parse_case[i].cmd);
+ 			ok_int(out_argc, parse_case[i].argc_exp, parse_case[i].cmd);
+ 			for (x = 0; x < parse_case[x].argc_exp && out_argv[x]; x++) {
+ 				ok_str(parse_case[i].argv_exp[x], out_argv[x], "argv comparison test");
+
+From 7695ce2ea9e9889dcb63a58d85c70f02d8f74956 Mon Sep 17 00:00:00 2001
+From: Sven Nierlein <sven@nierlein.de>
+Date: Tue, 2 Nov 2021 20:36:27 +0100
+Subject: [PATCH 3/3] env variable code cleanup
+
+code cleanup and some more comments.
+---
+ lib/runcmd.c | 44 ++++++++++++++++++++------------------------
+ 1 file changed, 20 insertions(+), 24 deletions(-)
+
+diff --git a/lib/runcmd.c b/lib/runcmd.c
+index 536a2e71..25d61844 100644
+--- a/lib/runcmd.c
++++ b/lib/runcmd.c
+@@ -131,16 +131,20 @@ int runcmd_cmd2strv(const char *str, int *out_argc, char **out_argv, int *out_en
+ 	unsigned int i;
+ 	int state, ret = 0;
+ 	int seen_space = 0;
++	int continue_env_parsing = 1;
+ 	size_t len;
+ 	char *argz, *envz;
+ 
+-	// extract leading environment variables
++	/* extract leading environment variables */
+ 	set_state(STATE_NONE);
+ 	len = strlen(str);
+ 	envz = malloc(len + 1);
+-	for (i = 0; i < len; i++) {
++	*out_envc = env;
++	for (i = 0; i < len && continue_env_parsing; i++) {
+ 		const char *p = &str[i];
+ 
++		/* in this switch 'break' will add the current character to the
++		 * last env var/val and 'continue' goes on without adding the character. */
+ 		switch (*p) {
+ 		case 0:
+ 			return ret;
+@@ -150,15 +154,15 @@ int runcmd_cmd2strv(const char *str, int *out_argc, char **out_argv, int *out_en
+ 				break;
+ 			if(is_state(STATE_INVAR)) {
+ 				/* abort checking for variables, this is something else */
+-				env--;
+-				i = len;
++				continue_env_parsing = 0;
+ 				continue;
+ 			}
+ 			if(is_state(STATE_INVAL)) {
+ 				set_state(STATE_NONE);
+-				/* variable definition ended */
++				/* variable definition ended, nul terminate last value and increase start of command pointer */
+ 				envz[e++] = 0;
+ 				argstart = i;
++				*out_envc = env;
+ 				continue;
+ 			}
+ 			/* skip leading whitespace */
+@@ -168,7 +172,7 @@ int runcmd_cmd2strv(const char *str, int *out_argc, char **out_argv, int *out_en
+ 			if(in_quotes)
+ 				break;
+ 			if(is_state(STATE_INVAR)) {
+-				/* variable name ended, start parsing value */
++				/* variable name ended, nul terminate last var name and start parsing value */
+ 				set_state(STATE_INVAL);
+ 				envz[e++] = 0;
+ 				out_env[env++] = &envz[e];
+@@ -177,15 +181,10 @@ int runcmd_cmd2strv(const char *str, int *out_argc, char **out_argv, int *out_en
+ 			break;
+ 
+ 		case '$':
+-			if(have_state(STATE_INSQ)) {
++			if(have_state(STATE_INSQ))
+ 				break;
+-			}
+-			/* abort checking for variables, this is something else */
+-			if(have_state(STATE_INVAR))
+-				env--;
+-			if(have_state(STATE_INVAL))
+-				env = env - 2;
+-			i = len;
++			/* abort checking for variables, variable interpolation not supported */
++			continue_env_parsing = 0;
+ 			continue;
+ 
+ 		case '\'':
+@@ -211,24 +210,22 @@ int runcmd_cmd2strv(const char *str, int *out_argc, char **out_argv, int *out_en
+ 		default:
+ 			if(in_quotes)
+ 				break;
++			/* values may contain any character, except whitespace (which is catched earlier already) */
++			if(have_state(STATE_INVAL))
++				break;
++			/* variables must start with a letter/underline and contain only letters, numbers and underlines */
+ 			if(isalnum(*p) || *p == '_') {
+-				if(have_state(STATE_INVAL))
+-					break;
+ 				if(have_state(STATE_INVAR))
+ 					break;
+-				if(isalpha(*p)) {
++				if(isalpha(*p) || *p == '_') {
+ 					/* starting a new environment variable */
+ 					set_state(STATE_INVAR);
+ 					out_env[env++] = &envz[e];
+ 					break;
+ 				}
+ 			}
+-			if(have_state(STATE_INVAL))
+-				break;
+ 			/* abort checking for variables, this is something else */
+-			if(have_state(STATE_INVAR))
+-				env--;
+-			i = len;
++			continue_env_parsing = 0;
+ 			continue;
+ 		}
+ 
+@@ -236,9 +233,8 @@ int runcmd_cmd2strv(const char *str, int *out_argc, char **out_argv, int *out_en
+ 		envz[e++] = str[i];
+ 	}
+ 
+-	/* make sure we nul-terminate the last argument */
++	/* make sure we nul-terminate the last env var/val */
+ 	envz[e] = 0;
+-	*out_envc = env;
+ 
+ 	set_state(STATE_NONE);
+ 	argz = malloc(len + 1);

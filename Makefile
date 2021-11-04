@@ -17,6 +17,7 @@ PACKAGES=freetds \
          icinga2 \
          naemon \
          naemon-livestatus \
+         naemon-plugins \
          logos \
          nrpe \
          nsca \

@@ -12,7 +12,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 46 );
+plan( tests => 70 );
 
 ##################################################
 # create our test site
@@ -35,6 +35,15 @@ my $tests = [
   { cmd => "/bin/su - $site -c 'file lib/mod_gearman/mod_gearman_naemon.o.dbg'", like => '/not stripped/' },
 
   { cmd => $omd_bin." stop $site naemon", unlike => '/kill/i' },
+
+  # test vim vault
+  { cmd => "/bin/su - $site -c 'echo \"broker_module=/omd/sites/$site/lib/naemon/vimvault.o vault=etc/naemon/vault.cfg password=test\" > etc/naemon/naemon.d/vimvault.cfg'", like => '/^$/' },
+  { cmd => "/bin/cp t/data/naemon/testvault.cfg /omd/sites/$site/etc/naemon/vault.cfg", like => '/^$/' },
+  { cmd => "/bin/chown $site: /omd/sites/$site/etc/naemon/vault.cfg", like => '/^$/' },
+  { cmd => $omd_bin." start $site naemon", like => '/Starting/' },
+  { cmd => $omd_bin." status $site naemon", like => '/naemon:\s*running/' },
+  { cmd => "/bin/su - $site -c 'grep \"vault module loaded\" var/log/naemon.log'", like => '/vault module loaded/' },
+
   { cmd => $omd_bin." stop $site" },
 ];
 for my $test (@{$tests}) {
