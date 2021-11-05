@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
-NAME    = naemon_vimvault_neb
-VERSION = master
+NAME    = naemon-vimvault
+VERSION = 1.3.0
 DIR     = $(NAME)-$(VERSION)
 DEPENDS = naemon
 
@@ -24,8 +24,8 @@ build:
 
 install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/naemon
-	install -m 755 $(DIR)/.libs/naemon_vimcrypt.so $(DESTDIR)$(OMD_ROOT)/lib/naemon/vimvault.o.dbg
-	install -sm 755 $(DIR)/.libs/naemon_vimcrypt.so $(DESTDIR)$(OMD_ROOT)/lib/naemon/vimvault.o
+	install -m 755 $(DIR)/.libs/naemon_vimvault.so $(DESTDIR)$(OMD_ROOT)/lib/naemon/vimvault.o.dbg
+	install -sm 755 $(DIR)/.libs/naemon_vimvault.so $(DESTDIR)$(OMD_ROOT)/lib/naemon/vimvault.o
 
 skel:
 
