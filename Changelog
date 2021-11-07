@@ -1,6 +1,6 @@
 This file documents the revision history for the Open Monitoring Distribution (Labs Edition)
 
-next
+4.40     Nov 08 2021
           - Naemon:
             - update core to 1.3.0
             - update livestatus to 1.3.0
