@@ -4,6 +4,7 @@ next:
           - Naemon:
             - update core to 1.2.4
             - update livestatus to 1.2.4.1
+          - Thruk: update to 2.46
           - LMD: Update 2.0.3
 
 3.40     Dec 15 2020
