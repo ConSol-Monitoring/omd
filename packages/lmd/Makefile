@@ -1,10 +1,10 @@
 include ../../Makefile.omd
 
 NAME        = lmd
-#VERSION     = 1.2.0
-#BRANCH      = v$(VERSION)
-VERSION     = master
-BRANCH      = master
+VERSION     = 2.0.3
+BRANCH      = v$(VERSION)
+#VERSION     = master
+#BRANCH      = master
 SRC         = $(NAME)-$(VERSION).tar.gz
 GOPKG       = 1.15
 GOVERSION   = $(shell grep ^VERSION ../go-${GOPKG}/Makefile | awk '{ print $$3 }')
@@ -14,7 +14,7 @@ GITBASE     = github.com/sni
 GITURL      = $(GITBASE)/$(NAME)
 DEPS_SRC    = deps.tar.gz
 # GIT TAG is set automatically by "make upstream" or "make package"
-GIT_TAG     = v1.9.5
+GIT_TAG     = v2.0.3
 
 .PHONY: skel
 
