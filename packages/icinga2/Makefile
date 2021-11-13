@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 NAME = icinga2
-VERSION = 2.11.8
+VERSION = 2.13.2
 DIR = $(NAME)-$(VERSION)
 BOOSTDIR=boost_1_72_0
 BOOSTDEST=$(BOOSTDIR)-dest
@@ -97,6 +97,7 @@ skel:
 	cp -rp $(DIR)/etc/icinga2/* $(SKEL)/etc/icinga2/
 	chmod 644 $(SKEL)/etc/icinga2/scripts/*
 	rm -rf $(SKEL)/etc/icinga2/conf.d/win32
+	rm -f $(SKEL)/etc/icinga2/features-*/windowseventlog.conf
 	mv $(SKEL)/etc/icinga2/constants.conf.cmake $(SKEL)/etc/icinga2/constants.conf
 	mkdir -p $(SKEL)/etc/bash_completion.d
 	install -m 0644 $(DIR)/etc/bash_completion.d/icinga2 $(SKEL)/etc/bash_completion.d
