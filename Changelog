@@ -2,6 +2,7 @@ This file documents the revision history for the Open Monitoring Distribution (L
 
 next:
           - Icinga2 update to 2.13.2
+          - InfluxDB 1.8.10
 
 4.40     Nov 08 2021
           - Naemon:
