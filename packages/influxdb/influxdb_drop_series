@@ -1,0 +1,106 @@
+#!/usr/bin/perl
+
+use warnings;
+use strict;
+use Getopt::Long;
+use IPC::Open3 qw/open3/;
+use IO::Select qw//;
+
+$| = 1;
+
+my($database, $host, $service, $command, $label, $verbose) = ('nagflux');
+GetOptions (
+            "h|host=s"     => \$host,
+            "s|service=s"  => \$service,
+            "c|command=s"  => \$command,
+            "l|label=s"    => \$label,
+            "d|database=s" => \$label,
+            "verbose"      => \$verbose),
+or _usage("Error in command line arguments\n");
+
+my @filter;
+push @filter, sprintf("host = '%s'", $host) if $host;
+push @filter, sprintf("service = '%s'", $service) if $service;
+push @filter, sprintf("command = '%s'", $command) if $command;
+push @filter, sprintf("performanceLabel = '%s'", $label) if $label;
+
+if(scalar @filter == 0) {
+    _usage("no filter specified");
+}
+my $filter = join(" and ", @filter);
+
+my($rc, $res) = _run("bash", '-c', "source .bashrc; influx -database $database -execute \"show series where $filter\"");
+$res = [grep(!/^(key|\-+)$/, @{$res})];
+
+while(1) {
+    printf("Drop %d series? [s]how - [c]ontinue: ", scalar @{$res});
+    chomp(my $buf = <STDIN>);
+    if($buf =~ m/^s$/mxi) {
+        print join("", @{$res});
+        next;
+    }
+    if($buf !~ m/^(c|y|j)/mxi) {
+        printf "canceled\n";
+        exit(1);
+    }
+    last;
+}
+
+($rc, $res) = _run("bash", '-c', "source .bashrc; influx -database $database -execute \"drop series where $filter\"");
+print join("", @{$res});
+exit(0);
+
+sub _run {
+    my($cmd, @args) = @_;
+
+    my($pid, $wtr, $rdr, @lines);
+    $pid = open3($wtr, $rdr, $rdr, $cmd, @args);
+    while(<$rdr>) { push @lines, $_; }
+    waitpid($pid, 0);
+    while(<$rdr>) { push @lines, $_; }
+    my $rc = $?>>8;
+    return($rc, \@lines);
+}
+
+sub _usage {
+    my($msg) = @_;
+    require Pod::Usage;
+    Pod::Usage::pod2usage( { -verbose => 2, -exit => 3 } );
+    exit(3);
+}
+
+1;
+__END__
+
+=head1 NAME
+
+influxdb_drop_series - drop series by host/service
+
+=head1 SYNOPSIS
+
+  Usage: influxdb_drop_series [options]
+
+  Globaloptions:
+    -h, --host=<host>             Drop series for this host.
+    -s, --service=<service>       Drop series for this service.
+    -c, --command=<command>       Drop series for this command.
+    -l, --label=<label>           Drop series for this label.
+
+
+=head1 DESCRIPTION
+
+This script drops influxdb series by given filter. At least on filter must be used.
+All filter will be combined with logical AND.
+
+=head1 EXAMPLES
+
+Drop all series for Load service on host localhost.
+
+  %> influxdb_drop_series -h localhost -s Load
+
+=head1 AUTHOR
+
+Sven Nierlein, 2021, <sven@consol.de>
+
+=cut
+
