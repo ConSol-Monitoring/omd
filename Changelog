@@ -3,6 +3,8 @@ This file documents the revision history for the Open Monitoring Distribution (L
 next:
           - Icinga2 update to 2.13.2
           - InfluxDB 1.8.10
+          - Prometheus:
+            - node_exporter 1.3.0
 
 4.40     Nov 08 2021
           - Naemon:
