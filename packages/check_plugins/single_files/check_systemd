@@ -1,0 +1,167 @@
+#!/usr/bin/env python3
+"""
+check_systemd 
+20211119 mg@consol.de
+"""
+import os
+import re
+import sys
+import argparse
+from pprint import pprint as pp
+from subprocess import Popen,PIPE
+
+__version__ = "0.1"
+
+def arguments():
+    description = """
+    Check SYSTEMD Units
+    per default just 'service' units will be checked
+    """
+    parser = argparse.ArgumentParser(
+        description=description,
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
+    parser.add_argument("service",type=str,
+                       action='append', nargs='*',
+                       help="List of service names to check")
+    parser.add_argument("--type",
+                       action='store', default='service',
+                       help="select unit types")
+    parser.add_argument("--regex", 
+                       action='store_true',
+                       help="use service arguments as regexp")
+    parser.add_argument("--exclude", 
+                       action='store_true',
+                       help="use service arguments as regexp")
+    parser.add_argument("--loaded",
+                       action='store_true', 
+                       help="show just loaded service units")
+    parser.add_argument("-V","--version",action='version',version="%(prog)s {}".format(__version__))
+    return parser.parse_args()
+
+# Get detail status of a dedicated unit
+def getDetail(unit):
+    try:
+        _cmd=Popen(["systemctl", "status", "-n 3", unit], env=localEnv, universal_newlines=True, stdout=PIPE, stderr=PIPE, encoding='utf-8')
+        _stdout,_stderr = _cmd.communicate(timeout=3)
+    except TimeoutExpired:
+        _cmd.kill()
+        _stdout,_stderr = _cmd.communicate(timeout=3)
+        pp(_stderr)
+        sys.exit(3)
+    except OSError as err:
+        pp(err)
+        sys.exit(3)
+    return(_stdout)
+
+def trimServiceList(unit,arg,res):
+    trimList = {}
+    if len(arg.service) == 0:
+        return unit
+    else:
+        if arg.regex and not arg.exclude:
+            for regex in arg.service:
+                for service in unit.keys():
+                    if re.match(regex,service) and service not in trimList:
+                        trimList[service] = unit[service]
+        elif arg.regex and arg.exclude:
+            trimList = unit.copy()
+            for regex in arg.service:
+                for service in unit.keys():
+                    if re.match(regex,service):
+                        del trimList[service]
+
+        elif not arg.regex and arg.exclude:
+            trimList = unit.copy()
+            for service in arg.service:
+                if service in trimList:
+                    del trimList[service]
+        else:
+            for service in arg.service:
+                if service in unit:
+                    trimList[service] = unit[service]
+                else:
+                    res['notfound'].append(service)
+                    res['failed'].append(service)
+                    res['total'] += 1
+    return(trimList)
+
+# check for active an load
+def default_check(unit,arg,res):
+    for service in unit.keys():
+        if arg.loaded and unit[service]['load'] != 'loaded':
+            continue
+        res['total'] += 1
+        if unit[service]['load'] != 'loaded' or unit[service]['active'] != 'active':
+            res['detail'].append(getDetail(service))
+            res['failed'].append(service)
+    res['perf'].append("total={};;".format(res['total'])) 
+    return res
+
+#
+# MAIN
+#
+if __name__ == '__main__':
+    # load local environment and set LC_ALL for subprocess
+    localEnv = os.environ.copy()
+    localEnv["LC_ALL"] = "C"
+
+    arg = arguments()
+    if arg.service:
+        arg.service = arg.service[0]
+    unit = {}
+    res = {
+        'total': 0,
+        'failed': [],
+        'detail': [],
+        'notfound': [],
+        'perf': [],
+    }
+
+
+    # read list of units
+    if arg.type:
+        select = "--type=" + arg.type
+
+    try:
+        sysctl=Popen(["systemctl", "--no-pager", "--no-legend", select], universal_newlines=True, env=localEnv, stdout=PIPE, stderr=PIPE)
+        stdout,stderr = sysctl.communicate(timeout=3)
+    except TimeoutExpired:
+        sysctl.kill()
+        stdout,stderr = sysctl.communicate(timeout=3)
+        pp(stderr)
+        sys.exit(3)
+    except OSError as err:
+        pp(err)
+        sys.exit(3)
+    
+    for line in stdout.splitlines():
+        match = re.match( r'\W*(.*\.\w+)\s+(\w+)\s+(\w+)\s+(\w+)\s(.*)', line, re.M|re.I)
+        if match:
+            unit[match.group(1)] = {'load': match.group(2),
+                                   'active': match.group(3),
+                                   'sub': match.group(4),
+                                   'description': match.group(5).strip(),
+                                   'short': match.group(1).split(".",)
+                                   }
+    # trim unit list 
+    units = trimServiceList(unit,arg,res)
+
+    if not units:
+        print("UNKNONW - no matching unit found for {}".format(" ".join(arg.service)))
+        sys.exit(3)
+
+    res = default_check(units,arg,res)
+    #
+    # present result
+    #
+    res['perf'].append("failed={};;".format(len(res['failed']))) 
+    if len(res['notfound']) > 0:
+        print("UNKNOWN - {} units not found\n{}".format(len(res['notfound'])," ".join(res['notfound'])))
+        sys.exit(3)
+    if len(res['failed']) == 0:
+        print("OK - checked {} units ok | {}".format(res['total']," ".join(res['perf'])))
+        sys.exit(0)
+    else:
+        print("CRITICAL - failed units {}\n<pre>{}</pre>| {}\n".format(" ".join(res['failed']),"\n".join(res['detail'])," ".join(res['perf']),))
+        sys.exit(2) 
