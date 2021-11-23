@@ -61,7 +61,6 @@ GRP=###SITE###
 # check_icmp outputs performance data with german
 # comma instead of dot and makes it unparsable.
 unset LANG
-export LC_ALL=C
 
 # OMD: create configuration file out of fragments
 case "$1" in start|restart|reload|checkconfig|check)

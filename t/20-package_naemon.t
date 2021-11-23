@@ -12,23 +12,31 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 70 );
+plan( tests => 86 );
 
 ##################################################
 # create our test site
 my $omd_bin = TestUtils::get_omd_bin();
 my $site    = TestUtils::create_test_site() or TestUtils::bail_out_clean("no further testing without site");
 
+`install -m 755 t/lib/check_locale.py /omd/sites/$site/local/lib/monitoring-plugins/`;
+`install -m 644 t/data/naemon.cfg /omd/sites/$site/etc/naemon/conf.d/example-naemon.cfg`;
+
 ##################################################
 # execute some checks
 my $tests = [
   { cmd => $omd_bin." config $site set CORE naemon" },
 
+  { cmd => "/bin/su - $site -c 'cp share/doc/naemon/example.cfg etc/naemon/conf.d/'", like => '/^$/' },
   { cmd => $omd_bin." start $site" },
 
   { cmd => "/bin/su - $site -c 'test -S tmp/run/live'", like => '/^$/' },
   { cmd => "/bin/su - $site -c 'test -p tmp/run/naemon.cmd'", like => '/^$/' },
   { cmd => "/bin/su - $site -c 'test -f var/naemon/livestatus.log'", like => '/^$/' },
+
+  { cmd => "/bin/su - $site -c 'echo \"COMMAND [".time()."] SCHEDULE_FORCED_SVC_CHECK;localhost;locale;".time()."\" | lq'", like => '/^\s*$/' },
+  { cmd => "/bin/su - $site -c 'sleep 2'", like => '/^\s*$/' },
+  { cmd => "/bin/su - $site -c 'echo \"GET services\nFilter: host_name = localhost\nFilter: description = locale\nColumns: state plugin_output long_plugin_output\n\n\" | lq'", like => '/^0;LANG=/' },
 
   { cmd => "/bin/su - $site -c 'file bin/naemon.dbg'", like => '/not stripped/' },
   { cmd => "/bin/su - $site -c 'file lib/naemon/livestatus.o.dbg'", like => '/not stripped/' },
