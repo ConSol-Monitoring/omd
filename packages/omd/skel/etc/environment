@@ -14,6 +14,7 @@
 # FOO2="With some spaces"
 #
 
+LANG=en_US.UTF-8
 FREETDSCONF=$OMD_ROOT/etc/freetds/freetds.conf
 TNS_ADMIN=$OMD_ROOT/etc/oracle
 PIP_UPGRADE=1

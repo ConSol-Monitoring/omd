@@ -57,11 +57,6 @@ GRP=###SITE###
 # cmk -O.
 # export CORE_NOVERIFY=yes
 
-# Make sure that check plugins do not run localized.
-# check_icmp outputs performance data with german
-# comma instead of dot and makes it unparsable.
-unset LANG
-
 # OMD: create configuration file out of fragments
 case "$1" in start|restart|reload|checkconfig|check)
     ln -sfn $OMD_ROOT/tmp/${CONFIG_CORE} $OMD_ROOT/tmp/core

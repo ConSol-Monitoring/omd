@@ -58,9 +58,6 @@ GRP=###SITE###
 
 EXTERNAL_FQDN=${OMD_EXTERNAL_FQDN:-$(hostname --fqdn)}
 
-unset LANG
-export LC_ALL=C
-
 OPTIONS="--config.file $CFG_FILE --web.listen-address=$CONFIG_ALERTMANAGER_TCP_ADDR:$CONFIG_ALERTMANAGER_TCP_PORT --web.external-url=http://${EXTERNAL_FQDN}/###SITE###/alertmanager --storage.path=$DATA_DIR"
 
 if [ -n "$CLUSTER_LISTEN_ADDRESS" ] ; then

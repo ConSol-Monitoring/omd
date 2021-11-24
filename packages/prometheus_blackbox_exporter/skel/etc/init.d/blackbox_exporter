@@ -52,9 +52,6 @@ DATA_DIR=###ROOT###/var/blackbox_exporter/data
 USR=###SITE###
 GRP=###SITE###
 
-unset LANG
-export LC_ALL=C
-
 # OMD: create configuration file out of fragments
 case "$1" in start|restart|reload|checkconfig|check)
     #merge-blackbox_exporter-config \

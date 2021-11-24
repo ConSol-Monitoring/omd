@@ -52,9 +52,6 @@ GRP=###SITE###
 
 EXTERNAL_FQDN=${OMD_EXTERNAL_FQDN:-$(hostname --fqdn)}
 
-unset LANG
-export LC_ALL=C
-
 OPTIONS="--persistence.file=$DATA_DIR/persistence --web.listen-address=$CONFIG_PUSHGATEWAY_TCP_ADDR:$CONFIG_PUSHGATEWAY_TCP_PORT"
 
 # Fetches the pid of the currently running pushgateway process of the given

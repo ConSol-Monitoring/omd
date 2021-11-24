@@ -33,11 +33,6 @@ if [ "$USERID" -eq 0 ]; then
   chown $USER: $(dirname $PIDFILE)
 fi
 
-# Make sure that check plugins do not run localized.
-# check_icmp outputs performance data with german
-# comma instead of dot and makes it unparsable.
-unset LANG
-
 __init_hook $0 $1 pre
 case "$1" in
     start)

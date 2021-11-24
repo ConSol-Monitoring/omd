@@ -61,12 +61,6 @@ GRP=###SITE###
 # cmk -O.
 # export CORE_NOVERIFY=yes
 
-# Make sure that check plugins do not run localized.
-# check_icmp outputs performance data with german
-# comma instead of dot and makes it unparsable.
-unset LANG
-export LC_ALL=C
-
 EXTERNAL_FQDN=${OMD_EXTERNAL_FQDN:-$(hostname --fqdn)}
 
 OPTIONS="--config.file $CFG_FILE --web.listen-address=$CONFIG_PROMETHEUS_TCP_ADDR:$CONFIG_PROMETHEUS_TCP_PORT --web.external-url=http://${EXTERNAL_FQDN}/###SITE###/prometheus --storage.tsdb.path $DATA_DIR --web.console.libraries=###ROOT###/etc/prometheus/console_libraries --web.console.templates=###ROOT###/etc/prometheus/consoles --storage.tsdb.retention=${CONFIG_PROMETHEUS_RETENTION}d"
