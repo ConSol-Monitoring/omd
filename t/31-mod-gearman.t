@@ -14,7 +14,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 169 );
+plan( tests => 185 );
 
 ##################################################
 # get version strings
@@ -32,6 +32,9 @@ for my $core (qw/naemon/) {
     my $host     = "omd-".$site;
     my $service  = "Dummy Service";
     my $module   = 'mod_gearman_naemon.o';
+
+    `install -m 755 t/lib/check_locale.py /omd/sites/$site/local/lib/monitoring-plugins/`;
+    `install -m 644 t/data/naemon.cfg /omd/sites/$site/etc/naemon/conf.d/example-naemon.cfg`;
 
     # make tests more reliable
     TestUtils::test_command({ cmd => "/usr/bin/env sed -i -e 's/^idle-timeout=30/idle-timeout=300/g' /opt/omd/sites/$site/etc/mod-gearman/worker.cfg" });
@@ -57,6 +60,7 @@ for my $core (qw/naemon/) {
     $now     =~ s/:/%3A/gmx;
 
     my $preps = [
+      { cmd => "/bin/su - $site -c 'cp share/doc/naemon/example.cfg etc/naemon/conf.d/'", like => '/^$/' },
       { cmd => $omd_bin." config $site set CORE $core" },
       { cmd => $omd_bin." config $site set MOD_GEARMAN on" },
       { cmd => "/usr/bin/test -s /omd/sites/$site/etc/mod-gearman/secret.key", "exit" => 0 },
@@ -74,6 +78,9 @@ for my $core (qw/naemon/) {
                                                 '/Overall state:\s*running/',
                                                ]
       },
+      { cmd => "/bin/su - $site -c 'echo \"COMMAND [".time()."] SCHEDULE_FORCED_SVC_CHECK;localhost;locale;".time()."\" | lq'", like => '/^\s*$/' },
+      { cmd => "/bin/su - $site -c 'sleep 2'", like => '/^\s*$/' },
+      { cmd => "/bin/su - $site -c 'echo \"GET services\nFilter: host_name = localhost\nFilter: description = locale\nColumns: state plugin_output long_plugin_output\n\n\" | lq'", like => '/^0;LANG=/' },
     ];
     for my $test (@{$preps}) {
         TestUtils::test_command($test);
