@@ -6,6 +6,7 @@ next:
           - InfluxDB 1.8.10
           - Prometheus:
             - node_exporter 1.3.0
+          - LMD: Update 2.0.4
 
 4.40     Nov 08 2021
           - Naemon:
