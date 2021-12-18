@@ -319,12 +319,12 @@ sub create_test_site {
 =cut
 sub create_fake_cookie_login {
     my $site = $_[0] || "testsite";
-    my $sessionid   = '8e87a0aff175849ba1335f6383b85050';
+    my $sessionid   = 'f9249901f1962ed010c9f29b3bbe3f0cf1097b6fbb75d9638bedf1f5763ecc98_1';
     my $sessiondir  = '/omd/sites/'.$site.'/var/thruk/sessions/';
-    my $sessionfile = $sessiondir.'/'.$sessionid;
+    my $sessionfile = $sessiondir.'/8c8b7ae4f3d1d10f4dd8e91ea3d891f193f90f16660983408d5d16ce9e39a1ee.SHA-256';
     `mkdir -p $sessiondir`;
     open(my $fh, '>', $sessionfile) or die("cannot write $sessionfile: $!");
-    print $fh "b21kYWRtaW46b21k~~~127.0.0.1~~~omdadmin\n";
+    print $fh '{"address":"127.0.0.1","hash":"CBC,2LFXnRyqQy3I7Ie816osSyCK4xDEd2ia5HnqyXrlqvI=\n","username":"omdadmin"}';
     close($fh);
     `chown -R $site: $sessiondir`;
     return($sessionid);
