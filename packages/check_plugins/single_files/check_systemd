@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-check_systemd 
+check_systemd
 20211119 mg@consol.de
 """
 import os
@@ -10,7 +10,7 @@ import argparse
 from pprint import pprint as pp
 from subprocess import Popen,PIPE
 
-__version__ = "0.1"
+__version__ = "0.2"
 
 def arguments():
     description = """
@@ -27,16 +27,18 @@ def arguments():
     parser.add_argument("--type",
                        action='store', default='service',
                        help="select unit types")
-    parser.add_argument("--regex", 
+    parser.add_argument("--regex",
                        action='store_true',
                        help="use service arguments as regexp")
-    parser.add_argument("--exclude", 
+    parser.add_argument("--exclude",
                        action='store_true',
                        help="use service arguments as regexp")
     parser.add_argument("--loaded",
-                       action='store_true', 
+                       action='store_true',
                        help="show just loaded service units")
-    parser.add_argument("-V","--version",action='version',version="%(prog)s {}".format(__version__))
+    parser.add_argument("--debug",
+                       action='store_true',
+                       help="show debug output")
     return parser.parse_args()
 
 # Get detail status of a dedicated unit
@@ -95,7 +97,7 @@ def default_check(unit,arg,res):
         if unit[service]['load'] != 'loaded' or unit[service]['active'] != 'active':
             res['detail'].append(getDetail(service))
             res['failed'].append(service)
-    res['perf'].append("total={};;".format(res['total'])) 
+    res['perf'].append("total={};;".format(res['total']))
     return res
 
 #
@@ -124,7 +126,7 @@ if __name__ == '__main__':
         select = "--type=" + arg.type
 
     try:
-        sysctl=Popen(["systemctl", "--no-pager", "--no-legend", select], universal_newlines=True, env=localEnv, stdout=PIPE, stderr=PIPE)
+        sysctl=Popen(["systemctl", "--no-pager", "--no-legend", select], universal_newlines=True, env=localEnv, stdout=PIPE, stderr=PIPE, encoding='utf-8')
         stdout,stderr = sysctl.communicate(timeout=3)
     except TimeoutExpired:
         sysctl.kill()
@@ -134,7 +136,7 @@ if __name__ == '__main__':
     except OSError as err:
         pp(err)
         sys.exit(3)
-    
+
     for line in stdout.splitlines():
         match = re.match( r'\W*(.*\.\w+)\s+(\w+)\s+(\w+)\s+(\w+)\s(.*)', line, re.M|re.I)
         if match:
@@ -144,24 +146,38 @@ if __name__ == '__main__':
                                    'description': match.group(5).strip(),
                                    'short': match.group(1).split(".",)
                                    }
-    # trim unit list 
+    # trim unit list
     units = trimServiceList(unit,arg,res)
 
     if not units:
         print("UNKNONW - no matching unit found for {}".format(" ".join(arg.service)))
         sys.exit(3)
+    else:
+        htmlOut = ["<table><tr><th>UNIT</th><th>Load</th><th>Active</th><th>SUB</th></tr>"]
+        for u in units:
+            htmlOut.append("<tr><td>{}</td><td>{}</td><td>{}</td><td>{}</td></tr>".format(u,units[u]['load'],units[u]['active'],units[u]['sub']))
+        htmlOut.append("</table>")
 
     res = default_check(units,arg,res)
     #
+    # debug end exit
+    #
+    if arg.debug:
+        print("{:<50} {:<8} {:<8} {:<8}".format('UNIT','Load','Active','SUB'))
+        for u in units:
+            print("{:<50} {:<8} {:<8} {:<8}".format(u,units[u]['load'],units[u]['active'],units[u]['sub']))
+        sys.exit(0)
+
+    #
     # present result
     #
-    res['perf'].append("failed={};;".format(len(res['failed']))) 
+    res['perf'].append("failed={};;".format(len(res['failed'])))
     if len(res['notfound']) > 0:
         print("UNKNOWN - {} units not found\n{}".format(len(res['notfound'])," ".join(res['notfound'])))
         sys.exit(3)
     if len(res['failed']) == 0:
-        print("OK - checked {} units ok | {}".format(res['total']," ".join(res['perf'])))
+        print("OK - checked {} units ok | {}\n{}".format(res['total']," ".join(res['perf']),"".join(htmlOut)))
         sys.exit(0)
     else:
         print("CRITICAL - failed units {}\n<pre>{}</pre>| {}\n".format(" ".join(res['failed']),"\n".join(res['detail'])," ".join(res['perf']),))
-        sys.exit(2) 
+        sys.exit(2)
