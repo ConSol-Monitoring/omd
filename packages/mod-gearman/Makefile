@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 NAME         = mod_gearman
-VERSION      = 3.3.3
+VERSION      = 3.3.4.20220112
 GEARMAND     = $(shell grep "^VERSION " ../gearmand/Makefile | awk '{ print $$3 }')
 DIR          = mod_gearman-$(VERSION)
 PROXY        = GearmanProxy
@@ -13,10 +13,10 @@ DEPENDS      = naemon gearmand
 
 build:
 	tar xzf mod_gearman-$(VERSION).tar.gz
-	for p in patches/*.patch ; do \
-	    echo "applying $$p..." ; \
-	    ( cd $(DIR) ; patch -p1 ) < $$p || exit 1; \
-	done
+	#for p in patches/*.patch ; do \
+	#    echo "applying $$p..." ; \
+	#    ( cd $(DIR) ; patch -p1 ) < $$p || exit 1; \
+	#done
 	cd $(DIR) && \
 	  export PKG_CONFIG_PATH=$(shell ls -d1 $$(pwd)/../naemon/naemon-*/.) C_INCLUDE_PATH=$(shell pwd)/$(DIR)/include:$(shell ls -d1 $$(pwd)/../naemon/naemon-*/.)/src; \
 	  ./configure --prefix=$(OMD_ROOT) --enable-debug --enable-embedded-perl --with-gearman=$(shell pwd)/../gearmand/gearmand-${GEARMAND} && \
