@@ -218,6 +218,8 @@ install-global:
 	ln -sfn /omd/versions/default/share/man/man8/omd.8.gz $(DESTDIR)/usr/share/man/man8/omd.8.gz
 	mkdir -p $(DESTDIR)/etc/init.d
 	ln -sfn /omd/versions/default/share/omd/omd.init $(DESTDIR)/etc/init.d/omd
+	mkdir -p $(DESTDIR)/usr/lib/systemd/system/
+	ln -sfn /omd/versions/default/share/omd/omd.service $(DESTDIR)/usr/lib/systemd/system/omd.service
 	mkdir -p $(DESTDIR)$(APACHE_CONF_DIR)
 	ln -sfn /omd/versions/default/share/omd/apache.conf $(DESTDIR)$(APACHE_CONF_DIR)/zzz_omd.conf
 

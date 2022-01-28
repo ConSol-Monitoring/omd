@@ -74,8 +74,7 @@ case "$1" in
        omd "$OMD_ROOT" ###OMD_SERIAL### \
        --slave /usr/bin/omd omd.bin $OMD_ROOT/bin/omd \
        --slave /etc/bash_completion.d/omd omd.bash_completion "$OMD_ROOT/lib/omd/omd_bash_completion" \
-       --slave /usr/share/man/man8/omd.8.gz omd.man8 \
-               "$OMD_ROOT/share/man/man8/omd.8.gz"
+       --slave /usr/share/man/man8/omd.8.gz omd.man8 "$OMD_ROOT/share/man/man8/omd.8.gz"
 
     # -- looking for group omd, create it, if not exist
     if ! getent group omd > /dev/null ; then
@@ -143,15 +142,15 @@ case "$1" in
           sed -i -e 's|</VirtualHost>|\n    ###APACHE_INCLUDEOPT### /omd/apache/*.include\n</VirtualHost>|g' $file
         fi
       done
-    # -- default for init
-    DEFAULT=/etc/default/omd
-    if ! test -e $DEFAULT ; then
-        echo "Activating init script /etc/init.d/omd"
-        echo "AUTOSTART=1" > $DEFAULT
-    fi
 
     echo "New default version is ###OMD_VERSION###."
     update-alternatives --set omd "$OMD_ROOT"
+
+    if [ -d /usr/lib/systemd/system/. ]; then
+        ln -sfn /omd/versions/default/share/omd/omd.service /usr/lib/systemd/system/omd.service
+        systemctl disable omd.service
+        systemctl enable omd.service
+    fi
 
     ;;
 
