@@ -56,6 +56,11 @@ then
         [[ $VERSION =~ (Fedora release ([0-9]+)) ]] && REL=${BASH_REMATCH[2]} || exit 0
         echo "FEDORA$SEP$REL"
         exit 0
+    elif [ "${VERSION:0:5}" = "Rocky" ]
+    then
+        [[ $VERSION =~ (Rocky Linux release ([0-9]+)) ]] && REL=${BASH_REMATCH[2]} || exit 0
+        echo "ROCKY$SEP$REL"
+        exit 0
     fi
 fi
 
