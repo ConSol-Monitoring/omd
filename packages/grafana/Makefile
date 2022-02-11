@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 NAME       = grafana
-VERSION    = 7.5.13
+VERSION    = 8.3.6
 SRC        = $(NAME)-$(VERSION).tar.gz
 GOPATH     = go
 GOPKG      = 1.17
@@ -62,6 +62,12 @@ package: public clean
 	echo "Get everything"
 	cd $(GOPATH)/src/github.com/grafana/grafana && \
 		$(GO) mod vendor
+	echo "run make gen-go"
+	cd $(GOPATH)/src/github.com/grafana/grafana && \
+		export GOROOT=$(PWD)/../go-$(GOPKG)/go-$(GOVERSION); \
+		export GOPATH=$(PWD)/$(GOPATH)/; \
+		export PATH=$$GOROOT/bin:$$PATH; \
+		make gen-go
 	echo "build app"
 	cd $(GOPATH)/src/github.com/grafana/grafana && \
 		$(GO) run build.go setup
