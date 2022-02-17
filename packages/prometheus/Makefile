@@ -53,6 +53,8 @@ skel:
 
 clean:
 	rm -rf $(NAME)-$(VERSION)
+	[ ! -e $(GOFOLDER) ] || chmod -R 777 $(GOFOLDER)
+	rm -rf $(GOFOLDER)
 
 package: clean
 	curl -fLo prometheus-$(VERSION).tar.gz https://github.com/prometheus/prometheus/archive/v$(VERSION).tar.gz

@@ -49,7 +49,7 @@ skel:
 
 
 clean:
-	-test -d $(GOPATH) && find $(GOPATH)/. -type d -exec chmod 755 {} \;
+	[ ! -e $(GOPATH) ] || chmod -R 777 $(GOPATH)
 	rm -rf $(GOPATH)
 
 package: public clean
