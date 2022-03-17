@@ -1,0 +1,41 @@
+From 54e19be52ba0e96cc792eeb9379ac5c656714a40 Mon Sep 17 00:00:00 2001
+From: Sven Nierlein <sven@nierlein.de>
+Date: Mon, 29 Nov 2021 16:56:10 +0100
+Subject: [PATCH] pass commands containing tilde to shell
+
+Commands containing a tilde ~ should be passed to the shell. execvp does not expand it.
+
+Signed-off-by: Sven Nierlein <sven@nierlein.de>
+---
+ lib/runcmd.c      | 5 +++++
+ lib/test-runcmd.c | 1 +
+ 2 files changed, 6 insertions(+)
+
+diff --git a/lib/runcmd.c b/lib/runcmd.c
+index 25d61844..e83dc673 100644
+--- a/lib/runcmd.c
++++ b/lib/runcmd.c
+@@ -324,6 +324,11 @@ int runcmd_cmd2strv(const char *str, int *out_argc, char **out_argv, int *out_en
+ 				add_ret(RUNCMD_HAS_REDIR);
+ 			}
+ 			break;
++		case '~':
++			if (!have_state(STATE_INSQ)) {
++				add_ret(RUNCMD_HAS_SHVAR);
++			}
++			break;
+ 		case '&': case ';':
+ 			if (!in_quotes) {
+ 				set_state(STATE_SPECIAL);
+diff --git a/lib/test-runcmd.c b/lib/test-runcmd.c
+index e2609da9..12cd5c8c 100644
+--- a/lib/test-runcmd.c
++++ b/lib/test-runcmd.c
+@@ -61,6 +61,7 @@ struct {
+ 	{ RUNCMD_HAS_WILDCARD, "ls -l /dev/tty?" },
+ 	{ 0, "ls -l /dev/tty\\?" },
+ 	{ RUNCMD_HAS_SHVAR, "echo $foo" },
++	{ RUNCMD_HAS_SHVAR, "~/test" },
+ 	{ 0, "VAR='foo' echo bar" },
+ 	{ 0, "echo \\$foo" },
+ 	{ RUNCMD_HAS_PAREN, "\\$(hoopla booyaka" },

@@ -1,0 +1,144 @@
+From 7b48a5281075b407e03d20528821967ed39378b1 Mon Sep 17 00:00:00 2001
+From: Sven Nierlein <sven@nierlein.de>
+Date: Thu, 10 Mar 2022 15:00:46 +0100
+Subject: [PATCH] let all links point to https://www.naemon.io
+
+---
+ README.md                         | 2 +-
+ UPGRADING                         | 2 +-
+ daemon-systemd.in                 | 2 +-
+ debian/control                    | 4 ++--
+ debian/naemon-core.dsc            | 2 +-
+ debian/naemon-core.naemon.service | 2 +-
+ naemon-core.spec                  | 2 +-
+ src/naemon/naemon.c               | 4 ++--
+ src/naemonstats/naemonstats.c     | 2 +-
+ 9 files changed, 11 insertions(+), 11 deletions(-)
+
+diff --git a/README.md b/README.md
+index 42df1fbf..99e2cdfe 100644
+--- a/README.md
++++ b/README.md
+@@ -89,4 +89,4 @@ sudo make install
+ 
+ ### More info ###
+ 
+-Visit the Naemon homepage at http://naemon.org
++Visit the Naemon homepage at https://www.naemon.io
+diff --git a/UPGRADING b/UPGRADING
+index 7853eaff..19fa7739 100644
+--- a/UPGRADING
++++ b/UPGRADING
+@@ -1,4 +1,4 @@
+ Upgrading to Naemon
+ -------------------
+ 
+-See http://www.naemon.org for upgrading instructions.
++See https://www.naemon.io for upgrading instructions.
+diff --git a/daemon-systemd.in b/daemon-systemd.in
+index 61254dfd..174e8b00 100644
+--- a/daemon-systemd.in
++++ b/daemon-systemd.in
+@@ -1,6 +1,6 @@
+ [Unit]
+ Description=Naemon Monitoring Daemon
+-Documentation=http://naemon.org/documentation
++Documentation=https://www.naemon.io/documentation
+ After=network.target
+ 
+ [Service]
+diff --git a/debian/control b/debian/control
+index b5aefdee..54253f1d 100644
+--- a/debian/control
++++ b/debian/control
+@@ -15,7 +15,7 @@ Build-Depends:
+     automake,
+     libtool
+ Standards-Version: 3.7.3
+-Homepage: http://www.naemon.org
++Homepage: https://www.naemon.io
+ Bugs: https://github.com/naemon/naemon-core/issues
+ Vcs-Browser: https://github.com/naemon/naemon-core
+ Vcs-Git: git://github.com:naemon/naemon-core.git
+@@ -52,7 +52,7 @@ Description: host/service/network monitoring and management system
+  Naemon was written in C and is designed to be easy to understand and modify
+  to fit your own needs.
+  .
+- Upstream URL: http://www.naemon.org/
++ Upstream URL: https://www.naemon.io/
+ 
+ Package: naemon-core-dbg
+ Architecture: any
+diff --git a/debian/naemon-core.dsc b/debian/naemon-core.dsc
+index 1a9aff4e..4008f56b 100644
+--- a/debian/naemon-core.dsc
++++ b/debian/naemon-core.dsc
+@@ -4,7 +4,7 @@ Binary: naemon
+ Architecture: any
+ Version:
+ Maintainer: Naemon Core Development Team <naemon-dev@monitoring-lists.org>
+-Homepage: http://www.naemon.org
++Homepage: https://www.naemon.io
+ Bugs: https://github.com/naemon/naemon-core/issues
+ Vcs-Browser: https://github.com/naemon/naemon-core
+ Vcs-Git: git://github.com:naemon/naemon-core.git
+diff --git a/debian/naemon-core.naemon.service b/debian/naemon-core.naemon.service
+index f7ea1459..c84371d1 100644
+--- a/debian/naemon-core.naemon.service
++++ b/debian/naemon-core.naemon.service
+@@ -1,6 +1,6 @@
+ [Unit]
+ Description=Naemon Monitoring Daemon
+-Documentation=http://naemon.org/documentation
++Documentation=https://www.naemon.io/documentation
+ After=network.target
+ 
+ [Service]
+diff --git a/naemon-core.spec b/naemon-core.spec
+index 9f32d6c5..c649c42e 100644
+--- a/naemon-core.spec
++++ b/naemon-core.spec
+@@ -13,7 +13,7 @@ Version: 1.3.0
+ Release: 0
+ License: GPL-2.0-only
+ Group: Applications/System
+-URL: http://www.naemon.org/
++URL: https://www.naemon.io/
+ Packager: Naemon Core Development Team <naemon-dev@monitoring-lists.org>
+ Vendor: Naemon Core Development Team
+ Source0: naemon-%{version}.tar.gz
+diff --git a/src/naemon/naemon.c b/src/naemon/naemon.c
+index 04edc4a8..6479d22b 100644
+--- a/src/naemon/naemon.c
++++ b/src/naemon/naemon.c
+@@ -244,7 +244,7 @@ int main(int argc, char **argv)
+ 		printf("Copyright (c) 2009-2013 Nagios Core Development Team and Community Contributors\n");
+ 		printf("Copyright (c) 1999-2009 Ethan Galstad\n");
+ 		printf("License: GPL\n\n");
+-		printf("Website: http://www.naemon.org\n");
++		printf("Website: https://www.naemon.io\n");
+ 	}
+ 
+ 	/* just display the license */
+@@ -284,7 +284,7 @@ int main(int argc, char **argv)
+ 		printf("  -W, --worker /path/to/socket Act as a worker for an already running daemon\n");
+ 		printf("  --allow-root                 Let naemon run as root. THIS IS NOT RECOMMENDED AT ALL.\n");
+ 		printf("\n");
+-		printf("Visit the Naemon website at http://www.naemon.org/ for bug fixes, new\n");
++		printf("Visit the Naemon website at https://www.naemon.io/ for bug fixes, new\n");
+ 		printf("releases, online documentation, FAQs and more...\n");
+ 		printf("\n");
+ 
+diff --git a/src/naemonstats/naemonstats.c b/src/naemonstats/naemonstats.c
+index 9a92e0e9..ad8d7b8e 100644
+--- a/src/naemonstats/naemonstats.c
++++ b/src/naemonstats/naemonstats.c
+@@ -254,7 +254,7 @@ int main(int argc, char **argv)
+ 
+ 	if (mrtg_mode == FALSE) {
+ 		printf("\nNaemon Stats " VERSION "\n");
+-		printf("Copyright (c) 2013-present Naemon Development Team (www.naemon.org)\n");
++		printf("Copyright (c) 2013-present Naemon Development Team (www.naemon.io)\n");
+ 		printf("Copyright (c) 2003-2008 Ethan Galstad (www.nagios.org)\n");
+ 		printf("License: GPL\n\n");
+ 	}
