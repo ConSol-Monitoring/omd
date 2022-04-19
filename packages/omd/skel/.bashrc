@@ -16,7 +16,7 @@ alias cpan='cpan.wrapper'
 influx() {
   typeset host port cmd
   port=${CONFIG_INFLUXDB_HTTP_TCP_PORT##*:}
-  host=${val%:*}
+  host=${CONFIG_INFLUXDB_HTTP_TCP_PORT%:*}
   cmd=(command influx -host "$host" -port "$port" \
        -precision rfc3339 -username omdadmin -password omd)
   if [ "$CONFIG_INFLUXDB_MODE" = ssl ] ; then
