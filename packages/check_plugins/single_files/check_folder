@@ -12,7 +12,7 @@ my $mp = Monitoring::Plugin->new(
     usage     => "Usage: %s [options] <folder>\n\nThis plugin checks files in given folder for size, number of files and file age.",
     version   => "v0.01",
     extra     => "\n"
-                ."All thresholds use monitoring plugins format, ex.: -c @10:20 .\n"
+                ."All thresholds use monitoring plugins format, ex.: -c \@10:20 .\n"
                 ."See https://www.monitoring-plugins.org/doc/guidelines.html#THRESHOLDFORMAT for the threshold format.\n"
                 ."\n"
                 ."Example:\n"
