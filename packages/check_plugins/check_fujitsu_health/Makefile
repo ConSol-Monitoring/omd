@@ -1,7 +1,7 @@
 include ../../../Makefile.omd
 
 NAME = check_fujitsu_health
-VERSION = 1.5.0.1
+VERSION = 1.6
 DIR = $(NAME)-$(VERSION)
 
 .PHONY: skel
