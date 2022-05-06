@@ -62,7 +62,7 @@ install:
 	    $(DESTDIR)$(OMD_ROOT)/share/coshsh/contrib
 	cp backend-pnp4nagios.cfg \
 	    $(DESTDIR)$(OMD_ROOT)/share/coshsh/contrib
-	cp coshsh_snmp_exporter.yml
+	cp coshsh_snmp_exporter.yml \
 	    $(DESTDIR)$(OMD_ROOT)/share/coshsh/contrib
 
 
