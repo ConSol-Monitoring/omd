@@ -1,0 +1,65 @@
+  - job_name: coshsh_snmp_exporter
+    scrape_interval: 60s
+    scrape_timeout: 55s
+    file_sd_configs:
+    - files:
+      - ../../var/coshsh/data/###OMD_SITE###/prometheus/dynamic/snmp_exporter_*.yml
+    metrics_path: /snmp
+    params:
+      module:
+      - if_mib
+      community:
+      - public
+    relabel_configs:
+    - source_labels:
+      - __address__
+      target_label: address
+    - source_labels:
+      - __address__
+      target_label: __param_target
+    - source_labels:
+      - module
+      target_label: __param_module
+    - source_labels:
+      - snexip
+      - snexport
+      regex: (.*);(.*)
+      target_label: __address__
+      replacement: $1:$2
+    - source_labels:
+      - snmpCommunity
+      target_label: __param_community
+    - source_labels:
+      - snmpVersion
+      target_label: __param_version
+    - source_labels:
+      - snmpSecurityLevel
+      target_label: __param_security_level
+    - source_labels:
+      - snmpUsername
+      target_label: __param_username
+    - source_labels:
+      - snmpPassword
+      target_label: __param_password
+    - source_labels:
+      - snmpAuthProtocol
+      target_label: __param_auth_protocol
+    - source_labels:
+      - snmpPrivProtocol
+      target_label: __param_priv_protocol
+    - source_labels:
+      - snmpPrivPassword
+      target_label: __param_priv_password
+    - source_labels:
+      - snmpContext
+      target_label: __param_context_name
+    - regex: snmp.*
+      action: labeldrop
+    - regex: snexport
+      action: labeldrop
+    metric_relabel_configs:
+      - regex: cpmCPUTotalIndex
+        action: labeldrop
+      - regex: cpmCPUTotalPhysicalIndex
+        action: labeldrop
+

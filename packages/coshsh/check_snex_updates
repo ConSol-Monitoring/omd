@@ -1,0 +1,230 @@
+#! /bin/bash
+
+OMD_LANDSCAPE=${OMD_LANDSCAPE:=${OMD_SITE}}
+test -e $OMD_ROOT/.${OMD_LANDSCAPE}_profile && . $OMD_ROOT/.${OMD_LANDSCAPE}_profile
+OMD_GIT_BASE=${OMD_GIT_BASE:=${OMD_ROOT}/var/coshsh/configs}
+OMD_GIT_BASE_SNEX=${OMD_GIT_BASE_SNEX:=${OMD_GIT_BASE}/${OMD_SITE}}
+OMD_GIT_MAX_RUNTIME=${OMD_GIT_MAX_RUNTIME:=3600}
+
+# OMD_GIT_BASE ${OMD_ROOT}/var/coshsh/configs
+# OMD_GIT_BASE ${GIT_SERVER}:var/coshsh/configs
+# OMD_GIT_BASE ssh://${GIT_SERVER}/opt/omd/sites/xxxx/var/coshsh/configs
+# OMD_GIT_BASE https://${GIT_SERVER}/var/coshsh/configs
+
+SNEX=$(omd config show PROMETHEUS_SNMP_EXPORTER)
+if [ "$SNEX" == "off" ]; then
+  echo this script is not intended to run without snmp_exporter
+  exit 1
+fi
+
+function logger {
+  level=$1
+  shift
+  msg=$*
+  logfile=${LOGFILE:-/tmp/log.log}
+  printf "%s %s: %s\n" "$(date +"%Y-%m-%d %H:%M:%S")" "$level" "$msg" >> $logfile
+}
+
+function logger_info {
+  logger INFO "$@"
+}
+
+function logger_warning {
+  logger ERROR "$@"
+}
+
+function logger_error {
+  logger ERROR "$@"
+}
+
+
+
+function rotatelog {
+  maxmb=$1
+  filename=$2
+  if [ -f $filename ]; then
+    if [ $(stat --print "%s" $filename) -gt $(($maxmb * 1024 * 1024)) ]; then
+      mv $filename ${filename}.0
+      touch $filename
+    fi
+  fi
+}
+
+function set_lock {
+  lockfile=$1
+  mkdir -p $(dirname $lockfile)
+  if [ -f "$lockfile" ]; then
+    pid=$(<"$lockfile")
+    if kill -0 "$pid"; then
+      pcreated=$(stat -c%X /proc/${pid}/stat)
+      age=$(($(date +"%s") - $pcreated))
+      if [ $age -gt $((2 * $OMD_GIT_MAX_RUNTIME)) ]; then
+        logger_info "already running since $age seconds. killing it..."
+        # -$pid kills the whole process group, because killing
+        # check_snex_updates leaves hanging git-pull round
+        kill -KILL -$pid
+      elif [ $age -gt $OMD_GIT_MAX_RUNTIME ]; then
+        logger_info "already running since $age seconds. terminating it..."
+        kill -TERM -$pid
+      else
+        logger_info "already running"
+      fi
+      exit 0
+    else
+      : "terminated somehow"
+      rm -f "$lockfile"
+    fi
+  fi
+  echo $$ > $lockfile
+}
+
+function release_lock {
+  lockfile=$1
+  rm -f $lockfile
+}
+
+function fix_git_problems() {
+  dir=$1
+  cd $dir
+  if [ -f .git/index.lock ]; then
+    out=$(git pull 2>&1) 
+    if [ $? -gt 0 ] ; then
+     if [[ $out =~ ssh:\ connect.*(timed\ out|Connection\ refused) ]]; then
+      logger_info "git ssh connection error, retry should fix this"
+     else
+      logger_error "git pull failed: $out"
+     fi
+    fi
+    if echo -e $out | egrep -iq "fatal: unable to create .*.git/index.lock': File exists"; then
+      if lsof -V .git/index.lock | grep -q "no file use located"; then
+        rm -f .git/index.lock
+        logger_info "removed a leftover .git/index.lock in $dir"
+      fi
+    fi
+  fi
+  out=$(git status 2>&1)
+  if echo -e $out | egrep -iq "fatal: index file smaller than expected"; then
+    rm .git/index
+    git reset HEAD .
+    out=$(git status 2>&1)
+    if [ $? -gt 0 ] ; then
+      logger_error "git pull failed: $out"
+    else
+      logger_info "removed a corrupt index in $dir"
+    fi
+  fi
+}
+
+LOCKFILE="${OMD_ROOT}/tmp/run/check_snex_updates.lock"
+LOGFILE=${OMD_ROOT}/var/log/check_snex_updates.log
+
+rotatelog 20 $LOGFILE
+
+/usr/bin/tty -s
+if [ $? -eq 1 ]; then
+  # randomize, otherwise apache has peaks
+  sleep $((15 + $RANDOM / 3200))
+fi
+
+set_lock $LOCKFILE
+
+# use https, but allow self-signed certificates
+export GIT_SSL_NO_VERIFY=1
+
+if [ -d ${OMD_ROOT}/etc/snmp_exporter/config_repo ]; then
+  pushd ${OMD_ROOT}/etc/snmp_exporter/config_repo
+  out=$(git reset --hard 2>&1)
+  if [ $? -gt 0 ] ; then
+     logger_error "git reset failed: $out"
+  fi
+  current_branch=$(git rev-parse --abbrev-ref HEAD)
+  OLDSNEXREV=$(git rev-list --max-count=1 ${current_branch})
+  out=$(git pull 2>&1)
+  if [ $? -gt 0 ] ; then
+    if [[ $out =~ ssh:\ connect.*(timed\ out|Connection\ refused) ]]; then
+     logger_info "git ssh connection error, retry should fix this"
+    else
+     logger_error "git pull failed: $out"
+    fi
+  fi
+  gitexit=$?
+  NEWSNEXREV=$(git rev-list --max-count=1 ${current_branch})
+  fix_git_problems $(pwd)
+  popd
+else
+  pushd ${OMD_ROOT}/etc/snmp_exporter
+  OLDSNEXREV=""
+  if [[ ${OMD_GIT_BASE_SNEX} =~ ^http ]] && [[ ! $OMD_GIT_BASE_SNEX =~ ^http[s]*://([0-9a-zA-Z._-:]+)/([0-9a-zA-Z._-]+)/api/git/ ]]; then
+    out=$(git clone ${OMD_GIT_BASE_SNEX}_snmp_exporter config_repo 2>&1)
+  elif [[ ${OMD_GIT_BASE_SNEX} =~ ^git ]] && [[ ! $OMD_GIT_BASE_SNEX =~ ^git@([0-9a-zA-Z._-:]+)([0-9a-zA-Z._-/]+)/api/git/ ]]; then
+    out=$(git clone ${OMD_GIT_BASE_SNEX}_snmp_exporter config_repo 2>&1)
+  elif [[ ${OMD_GIT_BASE_SNEX} =~ ^[A-Za-z0-9_\-]+@ ]] && [[ ! $OMD_GIT_BASE_SNEX =~ ^git@([0-9a-zA-Z._-:]+)([0-9a-zA-Z._-/]+)/api/git/ ]]; then
+    out=$(git clone ${OMD_GIT_BASE_SNEX}/snmp_exporter config_repo 2>&1)
+  else
+    out=$(git clone ${OMD_GIT_BASE_SNEX}/snmp_exporter config_repo 2>&1)
+  fi
+  gitexit=$?
+  if [ $gitexit -gt 0 ] ; then
+    if [[ $out =~ ssh:\ connect.*(timed\ out|Connection\ refused) ]]; then
+     logger_info "git ssh connection error, retry should fix this"
+    else
+     logger_error "git clone failed: $out"
+    fi
+  fi
+ 
+  cd config_repo
+  current_branch=$(git rev-parse --abbrev-ref HEAD)
+  NEWSNEXREV=$(git rev-list --max-count=1 ${current_branch})
+  popd
+fi
+
+#
+# If changes in the static/dynamic repositories are detected, then run
+# a syntax check with nagios -v.
+# On success, reload nagios.
+# Otherwise discard the changes so we always run on the last valid config.
+#
+HASCHANGED=
+pushd ${OMD_ROOT}
+OLDCKSUM=$(cksum etc/snmp_exporter/config/snmp.yml | cut -d" " -f 1 2>/dev/null)
+NEWCKSUM=$(cksum etc/snmp_exporter/config_repo/snmp.yml | cut -d" " -f 1 2>/dev/null)
+logger_info checking for changes
+if [ "$NEWCKSUM" != "$OLDCKSUM" ]; then
+  # either invalid and not copied or an omd update installed the default
+  logger_info NEWCKSUM $NEWCKSUM
+  logger_info OLDCKSUM $OLDCKSUM
+  HASCHANGED=1
+elif [ "$NEWSNEXREV" != "$OLDSNEXREV" ]; then
+  logger_info NEWSNEXREV $NEWSNEXREV
+  logger_info OLDSNEXREV $OLDSNEXREV
+  HASCHANGED=1
+fi
+if [ -n "$HASCHANGED" -a -f etc/snmp_exporter/config_repo/snmp.yml ]; then
+  ${OMD_ROOT}/bin/snmp_exporter --dry-run \
+      --config.file ${OMD_ROOT}/etc/snmp_exporter/config_repo/snmp.yml \
+      >> $LOGFILE 2>&1
+  if [ $? -eq 0 ]; then
+    cp ${OMD_ROOT}/etc/snmp_exporter/config_repo/snmp.yml \
+        ${OMD_ROOT}/etc/snmp_exporter/config/snmp.yml
+    omd reload snmp_exporter
+    if [ $? -gt 0 ] ; then
+       logger_error snmp_exporter reload failed
+    else
+      logger_info snmp_exporter was reloaded
+    fi
+  else
+    logger_error snmp_exporter exitcode was $?
+    logger_error configuration did not pass the test
+    if [ -n "$OLDSNEXREV" ]; then
+      pushd ${OMD_ROOT}/etc/snmp_exporter/config_repo
+      git reset --hard $OLDSNEXREV >> $LOGFILE 2>&1
+      popd
+      logger_info snmp_exporter config was reset to $OLDSNEXREV
+    fi
+  fi
+elif [ ! -f etc/snmp_exporter/config_repo/snmp.yml ]; then
+  logger_error snmp.yml has disappeared from config_repo
+fi
+
+release_lock $LOCKFILE
+
