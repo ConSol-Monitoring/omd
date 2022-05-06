@@ -30,10 +30,10 @@ install:
 	    $(DESTDIR)$(OMD_ROOT)/share/coshsh/recipes/default/classes
 	cp datarecipient_prometheus_sd_files.py \
 	    $(DESTDIR)$(OMD_ROOT)/share/coshsh/recipes/default/classes
-        cp datasource_segen.py \
-            $(DESTDIR)$(OMD_ROOT)/share/coshsh/recipes/default/classes
-        cp datarecipient_segen.py \
-            $(DESTDIR)$(OMD_ROOT)/share/coshsh/recipes/default/classes
+	cp datasource_segen.py \
+	    $(DESTDIR)$(OMD_ROOT)/share/coshsh/recipes/default/classes
+	cp datarecipient_segen.py \
+	    $(DESTDIR)$(OMD_ROOT)/share/coshsh/recipes/default/classes
 	cp app_snmptrapdlog.py \
 	    $(DESTDIR)$(OMD_ROOT)/share/coshsh/recipes/default/classes
 	cp app_snmp_agent.py \
@@ -46,8 +46,8 @@ install:
 	    $(DESTDIR)$(OMD_ROOT)/share/coshsh/recipes/default/templates
 	cp app_snmp_agent_traps.tpl \
 	    $(DESTDIR)$(OMD_ROOT)/share/coshsh/recipes/default/templates
-        cp snmp_exporter.tpl \
-            $(DESTDIR)$(OMD_ROOT)/share/coshsh/recipes/default/templates
+	cp snmp_exporter.tpl \
+	    $(DESTDIR)$(OMD_ROOT)/share/coshsh/recipes/default/templates
 	cp check_git_updates \
 	    $(DESTDIR)$(OMD_ROOT)/bin
 	chmod 755 $(DESTDIR)$(OMD_ROOT)/bin/check_git_updates
