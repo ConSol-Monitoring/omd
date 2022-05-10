@@ -22,13 +22,13 @@
     snmpSecurityLevel: "authPriv"
 {% endif %}
 {% if list[1] %}
-    snmpAuthProtocol: "{{ list[1]|re_sub('\d*$', '') }}"
+    snmpAuthProtocol: "{{ list[1]|upper()|re_sub('-', '') }}"
 {% endif %}
 {% if list[2] %}
     snmpPassword: "{{ list[2] }}"
 {% endif %}
 {% if list[3] %}
-    snmpPrivProtocol: "{{ list[3] }}"
+    snmpPrivProtocol: "{{ list[3]|upper() }}"
 {% endif %}
 {% if list[4] %}
     snmpPrivPassword: "{{ list[4] }}"
