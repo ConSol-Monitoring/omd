@@ -52,7 +52,7 @@ else
 fi
 
 echo "install files"
-tar -zxf $TARBALL -C ${OMD_ROOT}/local/bin --strip-components=4 ./telegraf/usr/bin/telegraf
+tar -zxf $TARBALL -C ${OMD_ROOT}/local/bin --strip-components=4 ./telegraf-${RELEASE}/usr/bin/telegraf
 rm -f $TARBALL
 
 if [ ! -d ${OMD_ROOT}/etc/telegraf ]; then

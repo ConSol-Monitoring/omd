@@ -5,7 +5,7 @@ VERSION = 1.0
 DIR = $(NAME)-$(VERSION)
 FCGI_FILE="mod_fcgid-2.3.9"
 MOD_RPAF_VERSION="0.8"
-MOD_PROMETHEUS_STATUS_VERSION="0.1.0"
+MOD_PROMETHEUS_STATUS_VERSION="0.2.0"
 
 GOPKG       = 1.17
 GOVERSION   = $(shell grep ^VERSION ../go-${GOPKG}/Makefile | awk '{ print $$3 }')
