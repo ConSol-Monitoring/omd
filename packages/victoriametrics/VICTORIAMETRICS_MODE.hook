@@ -3,7 +3,7 @@
 # Alias: victoriametrics access mode to use
 # Menu: Addons
 # Description:
-#  Here you can choose wether the influxdb speaks http or https.
+#  Here you can choose wether victoriametrics speaks http or https.
 
 case "$1" in
     default)

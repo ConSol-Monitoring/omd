@@ -4,7 +4,7 @@
 # Menu: Addons
 # Description:
 #  If you enabled victoriametrics, this is the
-#  number of month after old metrics will be deleted.
+#  number of weeks after old metrics will be deleted.
 #  Set to 0 to disabled retention policy completly.
 
 case "$1" in
