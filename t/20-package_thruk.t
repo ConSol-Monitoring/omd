@@ -13,7 +13,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 1035 );
+plan( tests => 987 );
 
 ##################################################
 # create our test site
@@ -65,12 +65,12 @@ my $reports = [
 ##################################################
 # define some checks
 my $tests = [
-  { cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_http -t 60 -H localhost -a omdadmin:omd -u /$site/thruk/side.html -e 200'", like => '/HTTP OK:/' },
+  { cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_http -t 60 -H localhost -a omdadmin:omd -u /$site/thruk/index.html -e 200'", like => '/HTTP OK:/' },
   { cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_http -t 20 -H localhost -u /$site/thruk -e 401'",                    like => '/HTTP OK:/' },
   { cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_http -t 60 -H localhost -a omdadmin:omd -u /$site/thruk -e 301'",    like => '/HTTP OK:/' },
   { cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_http -t 60 -H localhost -a omdadmin:omd -u /$site/thruk/ -e 200'",   like => '/HTTP OK:/' },
   { cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_http -t 20 -H localhost -a omdadmin:omd -u \"/$site/thruk/cgi-bin/status.cgi?hostgroup=all&style=hostdetail\" -e 200 -r \"Host Status Details For All Host Groups\"'", like => '/HTTP OK:/' },
-  { cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_http -t 20 -H localhost -a omdadmin:omd -u \"/$site/thruk/cgi-bin/tac.cgi\" -e 200 -r \"Logged in as <i>omdadmin<\/i>\"'", like => '/HTTP OK:/' },
+  { cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_http -t 20 -H localhost -a omdadmin:omd -u \"/$site/thruk/cgi-bin/tac.cgi\" -e 200 -r \"omdadmin\"'", like => '/HTTP OK:/' },
   { cmd => "/bin/su - $site -c './bin/thruk -l'", like => "/$site/" },
   { cmd => "/bin/su - $site -c './bin/thruk -l --local'", like => "/$site/" },
   { cmd => "/bin/su - $site -c './bin/thruk r -d \"\" /hosts/$host/cmd/schedule_forced_host_check'", like => ["/SCHEDULE_FORCED_HOST_CHECK/", "/Command successfully submitted/"] },
@@ -107,10 +107,8 @@ for my $report (@{$reports}) {
 
 my $urls = [
 # static html pages
-  { url => "/thruk/side.html",       like => '/<title>Thruk<\/title>/' },
-  { url => "",                       like => '/<title>Thruk<\/title>/' },
-  { url => "/thruk/index.html",      like => '/<title>Thruk<\/title>/' },
-  { url => "/thruk/startup.html",    like => '/<title>Thruk Monitoring Webinterface<\/title>/' },
+  { url => "",                       like => '/<title>Thruk Monitoring Webinterface<\/title>/' },
+  { url => "/thruk/index.html",      like => '/<title>Thruk Monitoring Webinterface<\/title>/' },
   { url => "/thruk/docs/index.html", like => '/<title>Documentation<\/title>/' },
   { url => "/thruk/main.html",       like => '/<title>Thruk Monitoring Webinterface<\/title>/' },
 
@@ -156,16 +154,13 @@ my $urls = [
   { url => '/thruk/cgi-bin/trends.cgi?host='.$host.'&t1=1264820912&t2=1265425712&includesoftstates=no&assumestateretention=yes&assumeinitialstates=yes&assumestatesduringnotrunning=yes&initialassumedhoststate=0&backtrack=4', 'like'  => '/Host and Service State Trends/' },
   { url => '/thruk/cgi-bin/trends.cgi?host='.$host.'&service='.$service.'&t1=1264820912&t2=1265425712&includesoftstates=no&assumestateretention=yes&assumeinitialstates=yes&assumestatesduringnotrunning=yes&initialassumedservicestate=0&backtrack=4', 'like' => '/Host and Service State Trends/' },
 
-# statusmap
-  { url => '/thruk/cgi-bin/statusmap.cgi?host=all', like => '/Network Map/' },
-
 # minemap
   { url => '/thruk/cgi-bin/minemap.cgi', like => '/Mine Map/' },
 
 # conf tool
   { url => '/thruk/cgi-bin/conf.cgi', like => '/Config Tool/' },
   { url => '/thruk/cgi-bin/conf.cgi?sub=thruk', like => [ '/Config Tool/', '/title_prefix/', '/use_wait_feature/'] },
-  { url => '/thruk/cgi-bin/conf.cgi?sub=cgi', like => [ '/Config Tool/', '/show_context_help/', '/use_pending_states/' ] },
+  { url => '/thruk/cgi-bin/conf.cgi?sub=cgi', like => [ '/Config Tool/', '/navsectiontitle/', '/use_pending_states/' ] },
   { url => '/thruk/cgi-bin/conf.cgi?sub=users', like => [ '/Config Tool/', '/select user to change/' ] },
   { url => '/thruk/cgi-bin/conf.cgi?sub=users&action=change&data.username=omdadmin', like => [ '/Config Tool/', '/remove password/', '/authorized_for_all_services/' ] },
   { url => '/thruk/cgi-bin/conf.cgi?sub=objects', like => [ '/Config Tool/', '/select host to change/' ] },
@@ -225,7 +220,7 @@ for my $core (qw/naemon/) {
     unlink("/omd/sites/$site/tmp/thruk/thruk.cache");
     unlink("/omd/sites/$site/var/thruk/obj_retention.dat");
 
-    TestUtils::test_command({ cmd => "/bin/su - $site -c './bin/thruk -A omdadmin \"cmd.cgi?cmd_typ=7&cmd_mod=2&host=omd-$site&service=Dummy+Service&start_time=now&force_check=on&btnSubmit=Commit\" --local'", like => '/Command request successfully submitted/', errlike => '/cmd: COMMAND/' });
+    TestUtils::test_command({ cmd => "/bin/su - $site -c './bin/thruk -A omdadmin \"cmd.cgi?cmd_typ=7&cmd_mod=2&host=omd-$site&service=Dummy+Service&start_time=now&force_check=on&btnSubmit=Commit\" --local'", like => '/command request was successfully submitted/', errlike => '/cmd: COMMAND/' });
     TestUtils::wait_for_file("/omd/sites/$site/var/pnp4nagios/perfdata/omd-$site/Dummy_Service_omd-dummy.rrd", 240) or TestUtils::bail_out_clean("No need to test Thruk without working pnp");;
 
     for my $test (@{$tests}) {

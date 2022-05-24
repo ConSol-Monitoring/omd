@@ -45,7 +45,7 @@ for my $test (@{$tests}) {
 TestUtils::test_command({ cmd => "/bin/su - $site -c 'omd config set APACHE_MODE ssl'",  like => '/^$/' });
 TestUtils::restart_system_apache();
 TestUtils::test_command({ cmd => "/bin/su - $site -c 'omd start'",  like => '/Starting dedicated Apache.*?OK/' });
-TestUtils::test_command({ cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_http -H localhost -S -a omdadmin:omd -u /$site/thruk/startup.html -e 200 -vvv'", like => ['/HTTP OK:/', '/Please stand by, Thruks FastCGI Daemon is warming/'] });
+TestUtils::test_command({ cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_http -H localhost -S -a omdadmin:omd -u /$site/thruk/index.html -e 200 -vvv'", like => ['/HTTP OK:/', '/Thruk Monitoring Webinterface/'] });
 
 TestUtils::test_command({ cmd => "/bin/su - $site -c 'omd stop'",  like => '/Stopping dedicated Apache/' });
 TestUtils::test_command({ cmd => "/bin/su - $site -c 'omd config set THRUK_COOKIE_AUTH on'",  like => '/^$/' });

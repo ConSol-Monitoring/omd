@@ -41,7 +41,7 @@ TestUtils::wait_for_file("/omd/sites/$site/tmp/run/live") or TestUtils::bail_out
 
 my $urls = [
 	{
-		url => '/thruk/side.html', # startup fcgi daemon
+		url => '/thruk/index.html', # startup fcgi daemon
 	},
 	{
 		url => '/thruk/cgi-bin/status.cgi?host=all',
@@ -82,7 +82,7 @@ my $urls = [
 	{
 		url => "/thruk/cgi-bin/extinfo.cgi?type=2&host=$host&service=naemon",
 		like => [
-			'/Service.*naemon.*On Host/s',
+			'/Service.*naemon.*Host/s',
 			'/SITE.*testsite/',
 			'/ROOT.*\/omd\/sites\/testsite/',
 			'/check_naemon/',
@@ -130,7 +130,7 @@ for my $core (qw/naemon/) {
 		{ 
 			url	=> "http://localhost/$site/thruk/cgi-bin/status.cgi?host=$host&servicestatustypes=1&hoststatustypes=15", 
 			auth	=> "OMD Monitoring Site $site:omdadmin:omd",
-			like	=> [ "0 Matching Service Entries Displayed" ],
+			like	=> [ "0 Items Displayed" ],
 		}
 	);
 

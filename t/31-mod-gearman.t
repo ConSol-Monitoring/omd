@@ -104,9 +104,9 @@ for my $core (qw/naemon/) {
 
     #--- wait for all services being checked
     TestUtils::wait_for_content({
-        url => "http://localhost/$site/thruk/cgi-bin/status.cgi?host=$host&servicestatustypes=1&hoststatustypes=15",
-        auth    => "OMD Monitoring Site $site:omdadmin:omd",
-        like    => [ "0 Matching Service" ],
+        url  => "http://localhost/$site/thruk/cgi-bin/status.cgi?host=$host&servicestatustypes=1&hoststatustypes=15",
+        auth => "OMD Monitoring Site $site:omdadmin:omd",
+        like => [ "0 Items Displayed" ],
         }
     );
 

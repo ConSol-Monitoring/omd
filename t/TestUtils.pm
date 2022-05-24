@@ -761,6 +761,7 @@ sub _diag_lint_errors_and_remove_some_exceptions {
             "Unknown attribute \"end\" for tag <div>",
             qr(Unknown attribute \"data[\w\-]+\" for tag),
             "for tag <meta>",
+            "Unknown element <(header|main|footer|nav)>",
             "Unknown\ attribute\ \"placeholder\"\ for\ tag\ <input>",
             "Unknown\ attribute\ \"placeholder\"\ for\ tag\ <textarea>",
             "Unknown\ attribute\ \"autocomplete\"\ for\ tag\ <form>",

@@ -33,7 +33,7 @@ my $tests = [
   { cmd => $omd_bin." config $site set CORE naemon" },
   { cmd => $omd_bin." config $site set DACRETAIN on" },
   { cmd => $omd_bin." start $site", errlike => '/init_db/' },
-  { cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_http -t 60 -H localhost -a omdadmin:omd -u /$site/thruk/side.html -e 200'", like => '/HTTP OK:/' },
+  { cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_http -t 60 -H localhost -a omdadmin:omd -u /$site/thruk/index.html -e 200'", like => '/HTTP OK:/' },
 ];
 for my $test (@{$tests}) {
     TestUtils::test_command($test);
@@ -137,7 +137,7 @@ my $tests = [
   { cmd => $omd_bin." config $site set CORE naemon" },
   { cmd => $omd_bin." config $site set DOWNTIMEAPI on" },
   { cmd => $omd_bin." start $site" },
-  { cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_http -t 60 -H localhost -a omdadmin:omd -u /$site/thruk/side.html -e 200'", like => '/HTTP OK:/' },
+  { cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_http -t 60 -H localhost -a omdadmin:omd -u /$site/thruk/index.html -e 200'", like => '/HTTP OK:/' },
 ];
 for my $test (@{$tests}) {
     TestUtils::test_command($test);
