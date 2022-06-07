@@ -12,7 +12,7 @@ next:
           - Thruk: update to 2.48
           - LMD: Update 2.0.7
           - Gearman:
-            - Mod-Gearman module update 4.0.1
+            - Mod-Gearman module update 4.0.2
 
 4.40     Nov 08 2021
           - Naemon:
