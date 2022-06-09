@@ -1,7 +1,7 @@
 include ../../../Makefile.omd
 
 NAME = check_logfiles
-VERSION = 4.0.1.5
+VERSION = 4.0.1.7
 DIR = $(NAME)-$(VERSION)
 SLES15 = $(shell echo $(DISTRO_INFO) | grep -c 'SLES 15' )
 
