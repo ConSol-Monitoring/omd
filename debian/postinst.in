@@ -73,6 +73,7 @@ case "$1" in
     update-alternatives --install /omd/versions/default \
        omd "$OMD_ROOT" ###OMD_SERIAL### \
        --slave /usr/bin/omd omd.bin $OMD_ROOT/bin/omd \
+       --slave /etc/init.d/omd omd.init "$OMD_ROOT/share/omd/omd.init" \
        --slave /etc/bash_completion.d/omd omd.bash_completion "$OMD_ROOT/lib/omd/omd_bash_completion" \
        --slave /usr/share/man/man8/omd.8.gz omd.man8 "$OMD_ROOT/share/man/man8/omd.8.gz"
 
