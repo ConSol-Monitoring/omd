@@ -731,9 +731,9 @@ sub bail_out_clean {
     my $omd_bin = get_omd_bin();
     for my $site (qw/testsite testsite2 testsite3/) {
         next unless -d "/omd/sites/$site/.";
-        diag("%> ps -fu $site");
-        diag(`ps -fu $site 2>&1`);
-        test_command({ cmd => $omd_bin." rm $site", stdin => "yes\n", 'exit' => undef, errlike => undef });
+        #diag("%> ps -fu $site");
+        #diag(`ps -fu $site 2>&1`);
+        #test_command({ cmd => $omd_bin." rm $site", stdin => "yes\n", 'exit' => undef, errlike => undef });
     }
 
     BAIL_OUT($msg);
@@ -893,7 +893,7 @@ sub _get_url {
         }
     }
     else {
-        TestUtils::bail_out_clean("unknown url scheme in _get_url: '".$url."'");
+        bail_out_clean("unknown url scheme in _get_url: '".$url."'");
     }
 
     return $newurl;
