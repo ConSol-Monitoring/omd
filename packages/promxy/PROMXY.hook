@@ -1,0 +1,34 @@
+#!/bin/bash
+
+# Alias: Start site-local Promxy Daemon
+# Menu: Addons
+# Description:
+#  If you want to use Promxy as a companion to your
+#  monitoring core, then you can activate
+#  this option and a site specific Promxy daemon will be started.
+
+case "$1" in
+    default)
+        echo "off"
+    ;;
+    choices)
+        echo "on: enable"
+        echo "off: disable"
+    ;;
+    set)
+        mkdir -p $OMD_ROOT/etc/grafana/provisioning/datasources
+        rm -f $OMD_ROOT/etc/grafana/provisioning/datasources/promxy.yml
+        if [ "$2" == "off" ]; then
+            rm -f $OMD_ROOT/etc/apache/conf.d/promxy.conf
+            rm -f $OMD_ROOT/promxyportupdated
+        elif [ "$2" == "on" ]; then
+            rm -f $OMD_ROOT/etc/apache/conf.d/promxy.conf
+            ln -s $OMD_ROOT/etc/promxy/apache.conf \
+                $OMD_ROOT/etc/apache/conf.d/promxy.conf
+            if [ -f $OMD_ROOT/etc/promxy/grafana_datasource.yml ] ; then
+               ln -s $OMD_ROOT/etc/promxy/grafana_datasource.yml \
+                  $OMD_ROOT/etc/grafana/provisioning/datasources/promxy.yml
+            fi
+        fi
+    ;;
+esac

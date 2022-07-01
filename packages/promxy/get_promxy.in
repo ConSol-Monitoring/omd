@@ -1,0 +1,71 @@
+#!/bin/sh
+
+RELEASE="###VERSION###"
+
+usage() {
+    echo "Download of Promxy has failed"
+    echo "Please try by your self"
+    echo " "
+    echo "wget -P ${OMD_ROOT}/tmp/ https://github.com/jacksontj/promxy/releases/download/$1/promxy-$1-linux-$2"
+    echo " "
+    echo "Afterwards move : $0 ${OMD_ROOT}/tmp/promxy-$1-linux-$2 to ${OMD_ROOT}/local/bin"
+    echo " "
+    exit 3
+}
+
+if [ "x$OMD_ROOT" = "x" ]; then
+  echo "installer must be run as as site user."
+  exit 3;
+fi
+
+if [ $# -eq 0 ]; then
+    if [[ "$(uname -s)" == "Linux" ]]; then
+        if [[ "$(uname -m)" == "x86_64" ]]; then
+            echo "Downloading Promxy ${RELEASE} for x86_64 ..."
+            wget -q -t 1 -P ${OMD_ROOT}/tmp/ https://github.com/jacksontj/promxy/releases/download/${RELEASE}/promxy-${RELEASE}-linux-amd64
+            if [[ $? -ne 0 ]]; then
+              usage "${RELEASE}" "amd64"
+            fi
+            BINARY=${OMD_ROOT}/tmp/promxy-${RELEASE}-linux-amd64
+        else
+            echo "Promxy on OMD is only supported on x86_64 or arm64"
+            exit 3
+        fi
+    else
+        echo "Promxy on OMD is only supported on Linux."
+        exit 3
+    fi
+else
+    BINARY=$1
+    if ! test -e $BINARY; then
+        echo "$BINARY not found"
+        exit 3;
+    fi
+fi
+
+echo "install files"
+cp ${OMD_ROOT}/tmp/${BINARY} ${OMD_ROOT}/local/bin/
+rm -f ${BINARY}
+
+if [ ! -d ${OMD_ROOT}/etc/promxy ]; then
+    mkdir -p ${OMD_ROOT}/etc/promxy
+fi
+if [ ! -d ${OMD_ROOT}/var/log/promxy ]; then
+    mkdir -p ${OMD_ROOT}/var/log/promxy
+fi
+
+cat << EOF > ${OMD_ROOT}/etc/logrotate.d/promxy
+${OMD_ROOT}/var/log/promxy/promxy.log {
+        missingok
+        rotate 7
+        compress
+        delaycompress
+        notifempty
+        create 640 ${OMD_SITE} ${OMD_SITE}
+        postrotate
+            ${OMD_ROOT}/bin/omd restart promxy > /dev/null
+        endscript
+}
+EOF
+
+echo "---- done ----"

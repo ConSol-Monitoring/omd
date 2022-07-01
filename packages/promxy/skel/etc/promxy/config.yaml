@@ -1,0 +1,42 @@
+## https://github.com/jacksontj/promxy/blob/master/cmd/promxy/config.yaml
+
+global:
+  evaluation_interval: 5s
+  external_labels:
+    source: promxy
+
+rule_files:
+- "*rule"
+
+## Alerting specifies settings related to the Alertmanager.
+# alerting:
+#   alertmanagers:
+#   - scheme: http
+#     static_configs:
+#     - targets:
+#       - "127.0.0.1:12345"
+
+##
+## Promxy configuration
+##
+promxy:
+  server_groups:
+  - static_configs:
+    - targets:
+      - 127.0.0.1:9091
+    ignore_error: true
+    path_prefix: /###SITE###/prometheus
+    labels:
+      source: ###SITE###
+    scheme: http
+    query_params:
+      ## needed for victoria metrics
+      nocache: 1
+    http_client:
+    # dial_timeout controls how long promxy will wait for a connection to the downstream the default is 200ms.
+      dial_timeout: 1s
+      tls_config:
+        insecure_skip_verify: true
+#      basic_auth:
+#        username: omdadmin
+#        password: "omd"

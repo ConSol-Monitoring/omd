@@ -1,0 +1,25 @@
+#
+# ports will be overwritten by promxy omd config hook
+#
+
+# config file version
+apiVersion: 1
+
+# see http://docs.grafana.org/administration/provisioning/#datasources
+datasources:
+  - name: promxy
+    type: prometheus
+    access: proxy
+    orgId: 1
+    url: http://###CONFIG_PROMXY_TCP_ADDR###:###CONFIG_PROMXY_TCP_PORT###
+    basicAuth: true
+    basicAuthUser: promxy
+    basicAuthPassword: 
+    withCredentials: false
+    isDefault: false
+    jsonData:
+      httpMethod: POST
+      tlsSkipVerify: true
+    secureJsonFields:
+      basicAuthPassword: true
+    editable: false

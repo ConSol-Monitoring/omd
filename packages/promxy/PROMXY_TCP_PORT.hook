@@ -1,0 +1,33 @@
+#!/bin/bash
+
+# Alias: TCP port number for Promxy
+# Menu: Addons
+# Description:
+#  Configure the TCP port used for the Promxy
+#  process of this site.
+#
+
+case "$1" in
+    default)
+        echo "10101"
+    ;;
+    choices)
+        echo "[1-9][0-9]{0,4}"
+    ;;
+    set)
+        # Scan for a free port number by looking at the
+        # configuration of the other sites...
+        PORT=$($OMD_ROOT/lib/omd/port_is_used PROMXY_TCP_PORT $2)
+        if [ "$PORT" != "$2" ] ; then
+            [ "$CONFIG_PROMXY" = on ] && echo "Promxy port $2 is in use. I've choosen $PORT instead." >&2
+            echo "$PORT"
+            touch $OMD_ROOT/promxyportupdated
+        fi
+        if [ -f $OMD_ROOT/etc/promxy/grafana_datasource.yml ] ; then
+            sed -E 's%^(.*)url:.*$%\1url: http://'$CONFIG_PROMXY_TCP_ADDR:$PORT'%' -i $OMD_ROOT/etc/promxy/grafana_datasource.yml
+        fi
+    ;;
+    depends)
+        [ "$CONFIG_PROMXY" = on ]
+    ;;
+esac
