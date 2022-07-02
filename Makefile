@@ -51,7 +51,6 @@ PACKAGES=freetds \
          prometheus_pushgateway \
          promxy \
          telegraf \
-         thanos \
          snmptrapd \
          downtime-api \
          dacretain \
