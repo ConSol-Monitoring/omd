@@ -14,6 +14,7 @@ next:
           - Gearman:
             - Mod-Gearman module update 4.0.2
             - update mod-gearman-worker-go to 1.1.6
+          - Go builds updated to 1.18.3
 
 4.40     Nov 08 2021
           - Naemon:
