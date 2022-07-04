@@ -10,7 +10,7 @@ next:
             - alertmaanager 0.23.0
           - VictoriaMetrics 1.72.0
           - Thruk: update to 2.48.2
-          - LMD: Update 2.0.7
+          - LMD: Update 2.0.8
           - Gearman:
             - Mod-Gearman module update 4.0.2
 
