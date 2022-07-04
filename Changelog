@@ -13,6 +13,7 @@ next:
           - LMD: Update 2.0.8
           - Gearman:
             - Mod-Gearman module update 4.0.2
+            - update mod-gearman-worker-go to 1.1.6
 
 4.40     Nov 08 2021
           - Naemon:

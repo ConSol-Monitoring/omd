@@ -6,7 +6,7 @@ NAME        = mod-gearman-worker-go
 VERSION     = master
 BRANCH      = master
 SRC         = $(NAME)-$(VERSION).tar.gz
-GOPKG       = 1.17
+GOPKG       = 1.18
 GOVERSION   = $(shell grep ^VERSION ../go-${GOPKG}/Makefile | awk '{ print $$3 }')
 GOPATH      = go
 PWD         = $(shell pwd)
@@ -14,7 +14,7 @@ GITBASE     = github.com/ConSol
 GITURL      = $(GITBASE)/$(NAME)
 DEPS_SRC    = deps.tar.gz
 # GIT TAG is set automatically by "make upstream" or "make package"
-GIT_TAG     = v1.1.5
+GIT_TAG     = v1.1.6
 
 .PHONY: skel
 
