@@ -28,8 +28,8 @@ replace_strings_in_binary() {
         # newlines will not be printed from "strings --all" so try to replace null byte termined strings and newline + null byte
         for ENDING in 00 0A00; do
             # Create null terminated ASCII HEX representations of the strings
-            OLD_STRING_HEX="$(echo -n ${OLD_STRING} | $XXD | tr -d '\n')$ENDING"
-            NEW_STRING_HEX="$(echo -n ${NEW_STRING} | $XXD | tr -d '\n')$ENDING"
+            OLD_STRING_HEX=$(echo -n "${OLD_STRING}" | $XXD | tr -d '\n')$ENDING
+            NEW_STRING_HEX=$(echo -n "${NEW_STRING}" | $XXD | tr -d '\n')$ENDING
 
             if [ ${#NEW_STRING_HEX} -le ${#OLD_STRING_HEX} ] ; then
                 # Pad the replacement string with null terminations so the length matches the original string
@@ -42,6 +42,28 @@ replace_strings_in_binary() {
                 echo "ERROR: New string '${NEW_STRING}' is longer than old string '${OLD_STRING}'. Skipping."
             fi
         done
+
+        # as part of a multiline string we pad with spaces
+        for ENDING in 0A; do
+            # Create null terminated ASCII HEX representations of the strings
+            OLD_STRING_HEX=$(echo -n "${OLD_STRING}" | $XXD | tr -d '\n')
+            NEW_STRING_HEX=$(echo -n "${NEW_STRING}" | $XXD | tr -d '\n')
+
+            if [ ${#NEW_STRING_HEX} -le ${#OLD_STRING_HEX} ] ; then
+                # Pad the replacement string with spaces so the length matches the original string
+                while [ ${#NEW_STRING_HEX} -lt ${#OLD_STRING_HEX} ] ; do
+                    NEW_STRING_HEX="${NEW_STRING_HEX}20"
+                done
+
+                OLD_STRING_HEX="${OLD_STRING_HEX}$ENDING"
+                NEW_STRING_HEX="${NEW_STRING_HEX}$ENDING"
+
+                sed -e "s%${OLD_STRING_HEX}%${NEW_STRING_HEX}%g" -i ${FILE}.hex
+            else
+                echo "ERROR: New string '${NEW_STRING}' is longer than old string '${OLD_STRING}'. Skipping."
+            fi
+        done
+
     done
 
     $XXD -r ${FILE}.hex ${FILE}.bin
