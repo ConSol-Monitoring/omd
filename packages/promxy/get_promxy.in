@@ -44,9 +44,17 @@ else
 fi
 
 echo "install files"
-cp ${OMD_ROOT}/tmp/${BINARY} ${OMD_ROOT}/local/bin/
+cp ${BINARY} ${OMD_ROOT}/local/bin/promxy-${RELEASE}
+chmod 755 ${OMD_ROOT}/local/bin/promxy-${RELEASE}
 rm -f ${BINARY}
-
+if [ ! -f ${OMD_ROOT}/local/bin/promxy ]; then
+    pushd ${OMD_ROOT}/local/bin
+    ln -s promxy-${RELEASE} promxy
+else
+    rm -rf ${OMD_ROOT}/local/bin/promxy
+    pushd ${OMD_ROOT}/local/bin
+    ln -s promxy-${RELEASE} promxy
+fi
 if [ ! -d ${OMD_ROOT}/etc/promxy ]; then
     mkdir -p ${OMD_ROOT}/etc/promxy
 fi
