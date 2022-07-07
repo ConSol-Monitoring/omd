@@ -1,5 +1,4 @@
 - job_name: apache
-  entry_parser: raw
   static_configs:
   - targets:
       - localhost

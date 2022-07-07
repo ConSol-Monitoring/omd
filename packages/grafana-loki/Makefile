@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 NAME       = grafana-loki
-VERSION    = 1.6.1
+VERSION    = 2.5.0
 DIR        = loki-$(VERSION)
 SRC        = $(DIR).tar.gz
 GOPKG      = 1.18
@@ -22,10 +22,10 @@ build:
 
 install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/bin
-	install -m 755 $(DIR)/cmd/loki/loki         $(DESTDIR)$(OMD_ROOT)/bin/loki
-	install -m 755 $(DIR)/cmd/promtail/promtail $(DESTDIR)$(OMD_ROOT)/bin/promtail
-	install -m 755 $(DIR)/cmd/logcli/logcli     $(DESTDIR)$(OMD_ROOT)/bin/logcli
-	install -m 755 $(DIR)/cmd/chunks-inspect/chunks-inspect     $(DESTDIR)$(OMD_ROOT)/bin/chunks-inspect
+	install -m 755 $(DIR)/cmd/loki/loki                     $(DESTDIR)$(OMD_ROOT)/bin/loki
+	install -m 755 $(DIR)/clients/cmd/promtail/promtail     $(DESTDIR)$(OMD_ROOT)/bin/promtail
+	install -m 755 $(DIR)/cmd/logcli/logcli                 $(DESTDIR)$(OMD_ROOT)/bin/logcli
+	install -m 755 $(DIR)/cmd/chunks-inspect/chunks-inspect $(DESTDIR)$(OMD_ROOT)/bin/chunks-inspect
 
 skel:
 

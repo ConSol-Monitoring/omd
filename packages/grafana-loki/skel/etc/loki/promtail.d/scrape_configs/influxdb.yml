@@ -1,5 +1,4 @@
 - job_name: influxdb
-  entry_parser: raw
   static_configs:
   - targets:
       - localhost
@@ -8,7 +7,6 @@
         job: omd
 
 - job_name: nagflux
-  entry_parser: raw
   static_configs:
   - targets:
       - localhost

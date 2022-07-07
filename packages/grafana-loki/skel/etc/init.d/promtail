@@ -12,6 +12,7 @@ fi
 NAME="Promtail"
 CONF_DIR=$OMD_ROOT/etc/loki
 LOG_DIR=$OMD_ROOT/var/log
+DATA_DIR=$OMD_ROOT/var/loki
 CONF_SRC=$CONF_DIR/promtail.yaml
 PID_FILE=$OMD_ROOT/tmp/run/$NAME.pid
 LOGFILE=$LOG_DIR/promtail.log
@@ -91,9 +92,9 @@ case "$1" in
             exit 0;
         fi
 
-        mkdir -p "$LOG_DIR"
+        mkdir -p "$LOG_DIR" "$DATA_DIR"
         touch "$PID_FILE"
-        nohup $DAEMON $OPTIONS >>$LOGFILE 2>&1 &
+        ASSUME_NO_MOVING_GC_UNSAFE_RISK_IT_WITH=go1.18 nohup $DAEMON $OPTIONS >>$LOGFILE 2>&1 &
         if [ $? -eq 0 ]; then
             echo "OK"
             echo "$!" > $PID_FILE

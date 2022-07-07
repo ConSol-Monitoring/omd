@@ -1,5 +1,4 @@
 - job_name: thruk
-  entry_parser: raw
   static_configs:
   - targets:
       - localhost
@@ -8,7 +7,6 @@
         job: omd
 
 - job_name: thruk_cron
-  entry_parser: raw
   static_configs:
   - targets:
       - localhost
@@ -18,7 +16,6 @@
         job: omd
 
 - job_name: thruk_lmd
-  entry_parser: raw
   static_configs:
   - targets:
       - localhost

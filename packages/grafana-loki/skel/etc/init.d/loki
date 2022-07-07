@@ -68,7 +68,7 @@ case "$1" in
 
         mkdir -p "$LOG_DIR" "$DATA_DIR"
         touch "$PID_FILE"
-        nohup $DAEMON $OPTIONS >>$LOGFILE 2>&1 &
+        ASSUME_NO_MOVING_GC_UNSAFE_RISK_IT_WITH=go1.18 nohup $DAEMON $OPTIONS >>$LOGFILE 2>&1 &
         if [ $? -eq 0 ]; then
             echo "OK"
             echo "$!" > $PID_FILE

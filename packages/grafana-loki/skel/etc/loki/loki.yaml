@@ -2,44 +2,42 @@ auth_enabled: false
 
 server:
   http_listen_port: ###CONFIG_LOKI_HTTP_PORT###
+  grpc_listen_port: 9096
 
-ingester:
-  lifecycler:
-    address: 127.0.0.1
-    ring:
-      kvstore:
-        store: inmemory
-      replication_factor: 1
-    final_sleep: 0s
-  chunk_idle_period: 5m
-  chunk_retain_period: 30s
-  max_transfer_retries: 0
+common:
+  path_prefix: /tmp/loki
+  storage:
+    filesystem:
+      chunks_directory: var/loki/chunks
+      rules_directory: var/loki/rules
+  replication_factor: 1
+  ring:
+    instance_addr: 127.0.0.1
+    kvstore:
+      store: inmemory
 
 schema_config:
   configs:
-    - from: 2018-04-15
-      store: boltdb
+    - from: 2020-10-24
+      store: boltdb-shipper
       object_store: filesystem
       schema: v11
       index:
         prefix: index_
-        period: 168h
+        period: 24h
 
-storage_config:
-  boltdb:
-    directory: var/loki/index
+ruler:
+  alertmanager_url: http://localhost:9093
 
-  filesystem:
-    directory: var/loki/chunks
-
-limits_config:
-  enforce_metric_name: false
-  reject_old_samples: true
-  reject_old_samples_max_age: 168h
-
-chunk_store_config:
-  max_look_back_period: 0s
-
-table_manager:
-  retention_deletes_enabled: true
-  retention_period: 840h
+# By default, Loki will send anonymous, but uniquely-identifiable usage and configuration
+# analytics to Grafana Labs. These statistics are sent to https://stats.grafana.org/
+#
+# Statistics help us better understand how Loki is used, and they show us performance
+# levels for most users. This helps us prioritize features and documentation.
+# For more information on what's sent, look at
+# https://github.com/grafana/loki/blob/main/pkg/usagestats/stats.go
+# Refer to the buildReport method to see what goes into a report.
+#
+# If you would like to disable reporting, uncomment the following lines:
+#analytics:
+#  reporting_enabled: false
