@@ -757,6 +757,7 @@ sub _diag_lint_errors_and_remove_some_exceptions {
             "<IMG SRC=[^>]*>\ does\ not\ have\ ALT\ text\ defined",
             "<input>\ is\ not\ a\ container\ \-\-\ <\/input>\ is\ not\ allowed",
             "Unknown attribute \"start\" for tag <div>",
+            "Unknown attribute \"hidden\" for tag <option>",
             "Unknown attribute \"end\" for tag <div>",
             qr(Unknown attribute \"data[\w\-]+\" for tag),
             "for tag <meta>",
