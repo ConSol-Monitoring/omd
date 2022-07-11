@@ -6,13 +6,15 @@
 #  If you enabled victoriametrics, this is the
 #  number of weeks after old metrics will be deleted.
 #  Set to 0 to disabled retention policy completly.
+#  Suffix could be h (hour), d (day), w (week), y (year). 
+#  If suffix isn't set, then the duration is counted in months
 
 case "$1" in
     default)
-        echo 104
+        echo 104w
     ;;
     choices)
-        echo "[0-9]*"
+        echo "[0-9]+[hdwy]{0,1}"
     ;;
     set)
         :
