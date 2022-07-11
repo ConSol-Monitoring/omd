@@ -1,0 +1,44 @@
+/* Schwarz.css */
+@import '../base.css';
+
+/*
+  Feedback/Bugs List: https://itdoc.schwarz/pages/viewpage.action?spaceKey=SITMON&title=Thruk+Redesign
+*/
+
+/*******************************************************************************
+ * override colors from base theme (Light)
+ */
+:root {
+  --navbar-item-hover-fg:     #2e2d2c;
+  --navbar-item-hover-bg:     #ffcc00;
+}
+
+DIV.main-header-button {
+  --button-fg:                #2e2d2c;
+  --button-bg:                #ffcc00;
+  --button-hover-fg:          #2e2d2c;
+  --button-hover-bg:          #f1c100;
+}
+
+/*******************************************************************************
+* login page
+*/
+BODY.loginpage {
+  @apply bg-gradient-to-t from-[#fff] via-[#d2d2d2] to-[#a9a9a9];
+  background-image: url("../images/login-page-background.png");
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: center;
+  width: 100%;
+  height: 100%;
+
+  DIV.loginmask {
+    BUTTON, A.button {
+      @apply bg-[#ffcc00] text-[#2e2d2c] hover:bg-[#f1c100] hover:text-[#2e2d2c];
+    }
+    IMG {
+      @apply w-0 h-0 pl-[236px] pb-[100px];
+      background: url("../images/original_logo.png");
+    }
+  }
+}
