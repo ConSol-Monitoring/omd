@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 NAME    = naemon-livestatus
-VERSION = 1.3.0
+VERSION = 1.3.1
 DIR     = $(NAME)-$(VERSION)
 DEPENDS = naemon
 
