@@ -35,6 +35,7 @@ BUILD_PACKAGES       += ncurses-devel
 BUILD_PACKAGES       += net-snmp
 BUILD_PACKAGES       += net-snmp-devel
 BUILD_PACKAGES       += net-snmp-utils
+BUILD_PACKAGES       += npm                            # thruk theme
 BUILD_PACKAGES       += openssl-devel
 BUILD_PACKAGES       += pango-devel
 BUILD_PACKAGES       += patch

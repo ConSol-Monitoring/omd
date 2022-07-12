@@ -19,6 +19,10 @@ trim() {
 }
 
 for FILE in $FILES; do
+  if test -h $FILE; then
+    echo "skipping symlinked $FILE"
+    continue
+  fi
   echo -n "patching $FILE..."
   for PREFIX in BUILD_PACKAGES OS_PACKAGES; do
     printf "%-20s  =\n" "$PREFIX" > $TMPFILE

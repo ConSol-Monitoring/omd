@@ -42,6 +42,7 @@ BUILD_PACKAGES       += libsqlite3-dev                 # gearmand
 BUILD_PACKAGES       += libssl-dev
 BUILD_PACKAGES       += libsystemd-dev                 # grafana-loki
 BUILD_PACKAGES       += libxml2-dev
+BUILD_PACKAGES       += npm                            # thruk theme
 BUILD_PACKAGES       += patch
 BUILD_PACKAGES       += python2-dev
 BUILD_PACKAGES       += python3-dev
