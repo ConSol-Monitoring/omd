@@ -3,6 +3,7 @@ include ../../Makefile.omd
 SHELL   = /bin/bash
 SRC     = consol-theme
 NAME    = Consol
+DEPENDS = thruk
 
 
 build:
