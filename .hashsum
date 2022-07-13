@@ -24,7 +24,7 @@ if [ -n "$GOVERSION" ]; then
 fi
 if [ -n "$DEPS" ]; then
     for DEP in $DEPS; do
-        MD5=$(echo $(md5sum $DEP/*.gz $DEP/Makefile $DEP/patches/* 2>/dev/null) $MD5 | md5sum | awk '{ print $1 }')
+        MD5=$(echo $(md5sum $DEP/*.gz $DEP/Makefile $DEP/patches/* $DEP 2>/dev/null | awk '{ print $1 }') $MD5 | md5sum | awk '{ print $1 }')
     done
 fi
 echo "$MD5"
