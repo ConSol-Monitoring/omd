@@ -111,6 +111,7 @@ OS_PACKAGES          += perl-IO-Zlib
 OS_PACKAGES          += perl-Locale-Maketext-Simple
 OS_PACKAGES          += perl-Module-Load
 OS_PACKAGES          += perl-Net-Ping
+OS_PACKAGES          += perl-Net-SNMP
 OS_PACKAGES          += perl-Text-Balanced
 OS_PACKAGES          += perl-Thread-Queue
 OS_PACKAGES          += php
