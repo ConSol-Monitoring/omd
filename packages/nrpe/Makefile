@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 NAME = nrpe
-VERSION = 4.0.3
+VERSION = 4.1.0
 DIR = $(NAME)-$(VERSION)
 
 .PHONY: skel
