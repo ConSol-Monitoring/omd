@@ -5,3 +5,4 @@
     labels:
         __path__: var/log/gearman/*.log
         job: omd
+        app: gearman

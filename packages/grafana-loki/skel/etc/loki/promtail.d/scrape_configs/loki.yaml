@@ -5,3 +5,4 @@
     labels:
         __path__: var/log/{loki,promtail}.log
         job: omd
+        app: loki

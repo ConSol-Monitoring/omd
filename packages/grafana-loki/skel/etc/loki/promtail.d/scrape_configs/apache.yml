@@ -1,7 +1,0 @@
-- job_name: apache
-  static_configs:
-  - targets:
-      - localhost
-    labels:
-        __path__: var/log/apache/*_log
-        job: omd

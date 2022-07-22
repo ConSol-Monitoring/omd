@@ -9,7 +9,7 @@ datasources:
     isDefault: false
     editable: false
     jsonData:
-      maxLines: 10000
+      maxLines: 5000
   - name: loki-prom
     type: prometheus
     access: proxy

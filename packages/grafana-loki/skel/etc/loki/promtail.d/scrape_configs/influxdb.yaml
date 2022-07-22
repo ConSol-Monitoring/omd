@@ -5,6 +5,7 @@
     labels:
         __path__: var/log/influxdb.log
         job: omd
+        app: influxdb
 
 - job_name: nagflux
   static_configs:
@@ -13,3 +14,4 @@
     labels:
         __path__: var/log/nagflux/nagflux.log
         job: omd
+        app: nagflux

@@ -1,0 +1,35 @@
+- job_name: apache
+  pipeline_stages:
+    - match:
+        selector: '{app="apache"}'
+        stages:
+        - regex:
+            source: filename
+            expression: '^.*/apache/(?P<apache_log>\\w+)_log'
+        - labels:
+            apache_log:
+    - match:
+        selector: '{apache_log="error"}'
+        stages:
+        - regex:
+            expression: '^(?P<time>\\[\\w+ \\w+\\s+\\d{1,2} \\d{2}:\\d{2}:\\d{2}.\\d+ \\d{4}\\]) \\[(?P<apache_module>\\w+):(?P<severity>\\w+)\\] (?P<message>(?s:.*))$'
+        - labels:
+            severity:
+            apache_module:
+        - template:
+            source: severity
+            template: '{{ .severity | ToLower }}'
+    - match:
+        selector: '{apache_log="access"}'
+        stages:
+        - regex:
+            expression: '^(?P<ip>\\S+) (?P<identd>\\S+) (?P<user>\\S+) \\[(?P<timestamp>[\\w:/]+\\s[+\\-]\\d{4})\\] \\"(?P<action>\\S+)\\s?(?P<path>\\S+)?\\s?(?P<protocol>\\S+)?\\" (?P<status>\\d{3}|-) (?P<size>\\d+|-)\\s?\\"?(?P<referer>[^\\"]*)\\"?\\s?\\"?(?P<useragent>[^\\"]*)?\\"?$'
+        - labels:
+            status:
+  static_configs:
+    - targets:
+        - localhost
+      labels:
+        job: omd
+        app: apache
+        __path__: var/log/apache/*_log

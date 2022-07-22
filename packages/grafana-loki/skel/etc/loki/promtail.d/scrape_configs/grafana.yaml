@@ -5,3 +5,4 @@
     labels:
         __path__: var/log/grafana/grafana.log
         job: omd
+        app: grafana

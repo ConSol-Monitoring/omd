@@ -19,7 +19,7 @@ LOGFILE=$LOG_DIR/promtail.log
 DAEMON=$OMD_ROOT/bin/promtail
 CFG_FILE=$OMD_ROOT/tmp/promtail.yaml
 
-OPTIONS="-config.file=${CFG_FILE}"
+OPTIONS="-config.expand-env=true -client.external-labels=instance=$(hostname) -config.file=${CFG_FILE}"
 
 # Put together fragments and build a new promtail.yaml
 #
@@ -28,7 +28,7 @@ rebuild_config() {
     # 
     cat $CONF_SRC |\
         sed -n '1,/# - start of scrape configs/p' > $CFG_FILE
-    for scrapes in $CONF_DIR/promtail.d/scrape_configs/*
+    for scrapes in $CONF_DIR/promtail.d/scrape_configs/*.yaml
     do
         echo >> $CFG_FILE
         [ -f $scrapes ] && cat $scrapes >> $CFG_FILE

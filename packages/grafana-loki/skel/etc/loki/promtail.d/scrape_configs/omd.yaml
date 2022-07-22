@@ -7,3 +7,4 @@
         #__path__: var/log/*log
         __path__: var/log/{rrdcached,logrotate,update,notify}.log
         job: omd
+        app: omd_core
