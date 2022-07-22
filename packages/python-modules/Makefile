@@ -6,6 +6,14 @@ SLES12   = $(shell echo $(DISTRO_INFO) | grep -c 'SLES 12' )
 FREETDS  = $(shell readlink -m ../freetds/tmpinstall$(OMD_ROOT))
 HAS_CYTHON   = $(shell python3 has_cython.py)
 
+ifeq ($(shell command -v python2),)
+  BUILD_DEP=
+  INSTALL_DEP=
+else
+  BUILD_DEP=build_p2
+  INSTALL_DEP=install_p2
+endif
+
 # This is where the python modules are going to be installed to
 LOCALPYTHONDIR=$(DESTDIR)$(OMD_ROOT)/lib/python
 LOCALPYTHONDIR2=$(DESTDIR)$(OMD_ROOT)/lib/python2
@@ -81,8 +89,7 @@ MODULES += jsonpath-ng-1.4.3.tar.gz
 #MODULES += vcversioner-2.16.0.0.tar.gz
 #MODULES += jsonschema-2.5.1.tar.gz
 
-
-build:
+build: $(BUILD_DEP)
 	mkdir -p dest
 	set -e ; cd dest && \
 	    export PYTHONPATH=$$PYTHONPATH:$(LOCALPYTHONDIR); \
@@ -119,6 +126,7 @@ build:
 	        cd .. ; \
 	    done
 	
+build_p2:
 	mkdir -p dest2
 	set -e ; cd dest2 && \
 	    export PYTHONPATH=$(LOCALPYTHONDIR2); \
@@ -152,7 +160,7 @@ build:
 	        cd .. ; \
 	    done
 
-install:
+install: $(INSTALL_DEP)
 	mkdir -p $(LOCALPYTHONDIR)
 	set -e ; cd dest && \
 	    export PYTHONPATH=$$PYTHONPATH:$(LOCALPYTHONDIR); \
@@ -170,6 +178,7 @@ install:
 	        cd .. ; \
 	    done
 	
+install_p2:
 	mkdir -p $(LOCALPYTHONDIR2)
 	set -e ; cd dest2 && \
 	    export PYTHONPATH=$(LOCALPYTHONDIR2); \

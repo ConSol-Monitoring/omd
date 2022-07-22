@@ -1,6 +1,8 @@
 This file documents the revision history for the Open Monitoring Distribution (Labs Edition)
 
 next 5.x:
+          - OMD:
+            - add build support for rhel9
           - Thruk: update to 3.00
           - rrdtool: Update to 1.8.0
 

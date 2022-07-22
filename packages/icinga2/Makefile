@@ -32,7 +32,7 @@ BUILD_BOOST=0
 ifeq ($(shell test $(BOOST_MINOR_VERSION) -lt 66; echo $$?),0)
   BUILD_BOOST=1
 endif
-ifeq ($(shell test $(BOOST_MINOR_VERSION) -ge 74; echo $$?),0)
+ifeq ($(shell test $(BOOST_MINOR_VERSION) -eq 74; echo $$?),0)
   BUILD_BOOST=1
 endif
 
