@@ -7,6 +7,7 @@ VERSION = 0.6.25
 DIR = $(NAME)-$(VERSION)
 # Unset CONFIG_SITE
 CONFIG_SITE = ''
+DEPENDS = rrdtool
 
 # Configure options for PNP4Nagios. Since we want to compile
 # as non-root, we use our own user and group for compiling.
