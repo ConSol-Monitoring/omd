@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 NAME = rrdtool
-VERSION = 1.5.4
+VERSION = 1.8.0
 DIR = $(NAME)-$(VERSION)
 
 CONFIGUREOPTS = \
@@ -17,11 +17,7 @@ CONFIGUREOPTS = \
 build:
 	if [ -d $(DIR) ]; then rm -rf $(DIR); fi
 	tar xzf $(DIR).tar.gz
-	for p in patches/*.diff ; do \
-          echo "applying $$p..." ; \
-          ( cd $(DIR) ; patch -p1 -b ) < $$p ; \
-        done
-	
+	#
 	# set perl environment to match the other perl modules
 	echo "install  --install_base  $(DESTDIR)$(OMD_ROOT)/lib/perl5" > .modulebuildrc
 	export PERL5LIB=$(P5TMPDIST)/dest/lib/perl5; \

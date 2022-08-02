@@ -2,6 +2,7 @@ This file documents the revision history for the Open Monitoring Distribution (L
 
 next 5.x:
           - Thruk: update to 3.00
+          - rrdtool: Update to 1.8.0
 
 next:
           - Thruk: update to 2.50
