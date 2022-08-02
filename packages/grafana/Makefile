@@ -7,15 +7,13 @@ GOPATH     = go
 GOPKG      = 1.18
 GOVERSION  = $(shell grep ^VERSION ../go-${GOPKG}/Makefile | awk '{ print $$3 }')
 PWD        = $(shell pwd)
-GO         = export GOROOT=$(PWD)/../go-$(GOPKG)/go-$(GOVERSION) && export GOPATH=$(PWD)/$(GOPATH)/ && PATH=$$GOROOT/bin:$$PATH && go
+GO         = export GOROOT=$(PWD)/../go-$(GOPKG)/go-$(GOVERSION) && export GOPATH=$(PWD)/$(GOPATH)/ && export PATH=$(PWD)/build_bin:$$GOROOT/bin:$$PATH && export GOFLAGS=-buildvcs=false && go
 
 .PHONY: skel
 
 build:
 	tar zxf $(SRC)
-	export GOROOT=$(PWD)/../go-$(GOPKG)/go-$(GOVERSION) && export GOPATH=$(PWD)/$(GOPATH)/ && PATH=$$GOROOT/bin:$$PATH && \
-		cd $(GOPATH)/src/github.com/grafana/grafana && \
-		PATH=$(PWD)/build_bin:$$PATH go run build.go build
+	cd $(GOPATH)/src/github.com/grafana/grafana && $(GO) run build.go build
 
 install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/bin
