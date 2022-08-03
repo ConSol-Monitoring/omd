@@ -1,5 +1,5 @@
---- a/etc/mod-gearman/worker.cfg	2017-03-24 01:36:02.000000000 +0100
-+++ a/etc/mod-gearman/worker.cfg	2018-10-14 11:43:18.834555496 +0200
+--- a/etc/mod_gearman_worker.cfg	2018-10-02 01:36:04.000000000 +0200
++++ b/etc/mod-gearman/worker.cfg	2022-08-03 09:58:02.145223308 +0200
 @@ -21,12 +21,11 @@
  debug=0
  
@@ -33,7 +33,39 @@
  
  # Path to the pidfile. Usually set by the init script
  #pidfile=%PIDFILE%
-@@ -166,7 +165,7 @@
+@@ -121,11 +120,19 @@
+ 
+ # defines the rate of spawned worker per second as long
+ # as there are jobs waiting
+-spawn-rate=1
++spawn-rate=3
++
++# defines the rate at which idle worker will be reduced (only available in the go-worker)
++sink-rate=1
++
++# Continue long running checks in background after this amount of seconds and work on next check.
++# Set to 0 to disable. This setting controls how long a plugin may block a worker while waiting
++# ex. on network timeouts. (only available in the go-worker)
++backgrounding-threshold=10
+ 
+ # Use this option to disable an extra fork for each plugin execution. Disabling
+ # this option will reduce the load on the worker host but can lead to problems with
+-# unclean plugin. Default: yes
++# unclean plugin. Default: yes (unused in the go-worker)
+ fork_on_exec=no
+ 
+ # Set a limit based on the 1min load average. When exceding the load limit,
+@@ -139,6 +146,9 @@
+ # Same as load_limit1 but for the 15min load average.
+ load_limit15=0
+ 
++# Total used memory must not exceed limit before starting new worker (in percent). (only available in the go-worker)
++mem_limit=80
++
+ # Use this option to show stderr output of plugins too.
+ # Default: yes
+ show_error_output=yes
+@@ -171,7 +181,7 @@
  
  # path to p1 file which is used to execute and cache the
  # perl scripts run by the embedded perl interpreter
@@ -42,7 +74,7 @@
  
  # Gearman connection timeout(in milliseconds) while submitting jobs to
  # gearmand server
-@@ -193,3 +192,7 @@
+@@ -198,3 +208,7 @@
  # Sending results (when exit code is 25 ) will be skipped with this
  # enabled.
  workaround_rc_25=off
