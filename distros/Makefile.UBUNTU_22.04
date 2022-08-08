@@ -46,7 +46,6 @@ BUILD_PACKAGES       += npm                            # thruk theme
 BUILD_PACKAGES       += patch
 BUILD_PACKAGES       += python3-dev
 BUILD_PACKAGES       += python3-setuptools
-BUILD_PACKAGES       += python-setuptools
 BUILD_PACKAGES       += rsync
 BUILD_PACKAGES       += smbclient                      # otherwise missing path in util.pm
 BUILD_PACKAGES       += snmp
