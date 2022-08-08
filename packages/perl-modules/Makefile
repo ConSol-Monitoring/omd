@@ -3,8 +3,26 @@ include ../../Makefile.omd
 NAME     = perl-modules
 VERSION  = $(OMD_VERSION)
 DISTRO   = $(shell ../../distro)
+DEPENDS  = freetds
 
 SYBASE   = $(shell readlink -m ../freetds/tmpinstall$(OMD_ROOT))
+
+# ubuntu (=> 22.04 breaks with archdir perl-base)
+EXTUTILSPATCHED=$(shell perl -V 2>&1 | grep extutils_set_libperl_path)
+ifeq ($(EXTUTILSPATCHED),)
+  BASE_MODULES = ExtUtils-MakeMaker-*.tar.gz
+else
+  BASE_MODULES =
+endif
+
+BASE_MODULES += \
+	      parent-*.tar.gz \
+	      version-*.tar.gz \
+	      Module-CoreList-*.tar.gz \
+	      common-sense-*.tar.gz \
+	      Types-Serialiser-*.tar.gz \
+	      JSON-*.tar.gz \
+	      Cpanel-JSON-*.tar.gz
 
 MODULES = \
           App-cpanminus-1.7043.tar.gz \
@@ -134,7 +152,7 @@ MODULES = \
           Date-Calc-6.4.tar.gz \
           Date-Calc-XS-6.4.tar.gz \
           Devel-GlobalDestruction-0.14.tar.gz \
-          Encode-2.94.tar.gz \
+          Encode-3.19.tar.gz \
           File-Listing-6.04.tar.gz \
           HTML-Parser-3.72.tar.gz \
           Module-Metadata-1.000033.tar.gz \
@@ -235,15 +253,7 @@ build:
 	    export PERL5LIB=$(P5TMPDIST)/dest/lib/perl5:$(P5TMPDIST)/src/lib; \
 	    export SYBASE=$(SYBASE); \
 	    cd $(P5TMPDIST)/src && \
-	        FORCE=1 ./build_module.pl -d "$(DISTRO)" -p $(P5TMPDIST)/dest \
-	            ExtUtils-MakeMaker-*.tar.gz \
-	            parent-*.tar.gz \
-	            version-*.tar.gz \
-	            Module-CoreList-*.tar.gz \
-	            common-sense-*.tar.gz \
-	            Types-Serialiser-*.tar.gz \
-	            JSON-*.tar.gz \
-	            Cpanel-JSON-*.tar.gz; \
+	        FORCE=1 ./build_module.pl -d "$(DISTRO)" -p $(P5TMPDIST)/dest $(BASE_MODULES); \
 	    export PERL_JSON_BACKEND='Cpanel::JSON::XS'; \
 	    cd $(P5TMPDIST)/src && \
 	        ./build_module.pl -d "$(DISTRO)" -p $(P5TMPDIST)/dest $(MODULES)

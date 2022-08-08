@@ -462,6 +462,8 @@ sub install_module {
         }
         `grep '^==> Auto-install the' $LOG >/dev/null 2>&1 | grep -v optional`;
         if($? == 0 ) { die("dependency error: rc $?\n".`cat $LOG`."\n"); }
+        `grep 'Your perl and your Config.pm seem to have different ideas' $LOG >/dev/null 2>&1`;
+        if($? == 0 ) { die("module install error: rc $?\n".`cat $LOG`."\n"); }
         alarm(0);
     };
     if($@) {
