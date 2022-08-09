@@ -1,9 +1,9 @@
 include ../../Makefile.omd
 
 NAME = icinga2
-VERSION = 2.13.2
+VERSION = 2.13.4
 DIR = $(NAME)-$(VERSION)
-BOOSTDIR=boost_1_72_0
+BOOSTDIR=boost_1_79_0
 BOOSTDEST=$(BOOSTDIR)-dest
 CMAKE=cmake
 CMAKEDIR=cmake-3.16.5
@@ -29,10 +29,7 @@ CONFIGUREOPTS = \
 EXTRA_BUILD_DEPS=
 BOOST_MINOR_VERSION=$(shell grep BOOST_LIB_VERSION /usr/include/boost/version.hpp | grep ^\# | awk -F _ '{ print $$4 }' | tr -d '"')
 BUILD_BOOST=0
-ifeq ($(shell test $(BOOST_MINOR_VERSION) -lt 66; echo $$?),0)
-  BUILD_BOOST=1
-endif
-ifeq ($(shell test $(BOOST_MINOR_VERSION) -eq 74; echo $$?),0)
+ifeq ($(shell test $(BOOST_MINOR_VERSION) -lt 79; echo $$?),0)
   BUILD_BOOST=1
 endif
 
@@ -71,7 +68,6 @@ $(CMAKEDEST):
 
 $(BOOSTDEST): $(CMAKEDEST)
 	tar xJf $(BOOSTDIR).tar.xz
-	cd $(BOOSTDIR) && patch -p1 < ../boost_1_72_0-0001-revert-cease-dependence-on-range.patch
 	cd $(BOOSTDIR) && \
 		./bootstrap.sh --with-libraries=thread,system,program_options,regex,chrono,date_time,atomic,coroutine,filesystem,context --prefix=$(shell pwd)/$(BOOSTDEST) && \
 		./b2 cxxflags=-fPIC cflags=-fPIC install
