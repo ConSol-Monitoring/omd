@@ -37,11 +37,19 @@ get_status() {
     return 1;
 }
 
+kill_session() {
+    local sess=$1
+    ps -ax -o sess= -o pid= | awk '$1 == v {print $2}' v=$sess | xargs kill
+}
+
 stop_grafana() {
     pid=$( cat $PID_FILE 2>/dev/null )
     if [ -z "$pid" ]; then
         echo ". Not running."
     else
+        # get session id
+        sess=( ps -o sess= -p $pid )
+        kill_session $sess
         ps -p $pid > /dev/null 2>&1 && kill $pid
         for x in $(seq 15); do
             printf "."
@@ -73,7 +81,9 @@ case "$1" in
 
         mkdir -p "$LOG_DIR" "$DATA_DIR"
         touch "$PID_FILE"
-        nohup $DAEMON $OPTIONS >>$LOGFILE 2>&1 &
+        # make sure to start them it in a separate session
+        # so we can easier kill the crap
+        nohup setsid -w $DAEMON $OPTIONS >>$LOGFILE 2>&1 &
         if [ $? -eq 0 ]; then
             echo "OK"
 	    __init_hook $0 $1 post 0
