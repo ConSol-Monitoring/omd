@@ -14,7 +14,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 185 );
+plan( tests => 193 );
 
 ##################################################
 # get version strings
@@ -161,6 +161,11 @@ for my $core (qw/naemon/) {
     # test sqlite retention
     TestUtils::test_command({ cmd => "/bin/su - $site -c '$omd_bin stop gearmand'", like => '/OK/' });
     TestUtils::test_command({ cmd => "/bin/su - $site -c 'test -f var/gearmand.db'", like => '/^$/' });
+
+    ##################################################
+    # starting without gearmand
+    TestUtils::test_command({ cmd => "/bin/su - $site -c '$omd_bin restart gearman_worker'", like => '/OK/' });
+    TestUtils::test_command({ cmd => $omd_bin." status $site", like => [ '/gearman_worker:\s*running/' ], exit => 2 });
 
     ##################################################
     # cleanup test site
