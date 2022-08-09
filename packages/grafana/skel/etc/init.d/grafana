@@ -48,7 +48,7 @@ stop_grafana() {
         echo ". Not running."
     else
         # get session id
-        sess=( ps -o sess= -p $pid )
+        sess=$( ps -o sess= -p $pid )
         kill_session $sess
         ps -p $pid > /dev/null 2>&1 && kill $pid
         for x in $(seq 15); do
