@@ -4,6 +4,7 @@ NAME     = thruk-plugins
 PLUGINS  = editor \
            omd \
            woshsh \
+           node-control \
 
 CONSOLPLUGINS  = pansnaps \
 
