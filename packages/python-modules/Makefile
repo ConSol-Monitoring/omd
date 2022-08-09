@@ -27,6 +27,7 @@ else
 MODULES += setuptools-46.1.3.zip
 endif
 MODULES += six-1.14.0.tar.gz
+MODULES += funcsigs-1.0.2.tar.gz
 MODULES += mock-3.0.5.tar.gz
 MODULES += defusedxml-0.6.0.tar.gz
 MODULES += simplejson-3.8.2.tar.gz
