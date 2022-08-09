@@ -49,7 +49,9 @@ stop_grafana() {
     else
         # get session id
         sess=$( ps -o sess= -p $pid )
-        kill_session $sess
+        if [ "$sess" != "" ]; then
+          kill_session $sess
+        fi
         ps -p $pid > /dev/null 2>&1 && kill $pid
         for x in $(seq 15); do
             printf "."
