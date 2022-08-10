@@ -85,8 +85,21 @@ case "$1" in
         # make sure to start them it in a separate session
         # so we can easier kill the crap
         nohup setsid -w $DAEMON $OPTIONS >>$LOGFILE 2>&1 &
-        if [ $? -eq 0 ]; then
-            echo "OK"
+        # start in new session
+        nohup setsid $DAEMON $OPTIONS >>$LOGFILE 2>&1 &
+
+        # wait for grafana to write pidfile
+        counter=20
+        up=0
+        while (( counter-- )) ; do
+            if get_status > /dev/null 2>&1 ; then
+                up=1
+                break
+            fi
+            sleep 1
+        done
+        if [ $up = 1 ]; then
+             echo "OK"
 	    __init_hook $0 $1 post 0
             exit 0;
         else
