@@ -52,7 +52,6 @@ stop_grafana() {
         if [ "$sess" != "" ]; then
           kill_session $sess
         fi
-        ps -p $pid > /dev/null 2>&1 && kill $pid
         for x in $(seq 15); do
             printf "."
             ps -p $pid > /dev/null 2>&1 || break
