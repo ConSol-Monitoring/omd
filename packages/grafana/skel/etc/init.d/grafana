@@ -84,8 +84,6 @@ case "$1" in
         touch "$PID_FILE"
         # make sure to start them it in a separate session
         # so we can easier kill the crap
-        nohup setsid -w $DAEMON $OPTIONS >>$LOGFILE 2>&1 &
-        # start in new session
         nohup setsid $DAEMON $OPTIONS >>$LOGFILE 2>&1 &
 
         # wait for grafana to write pidfile
