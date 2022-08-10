@@ -15,6 +15,8 @@ BEGIN {
 my $php_version = `php -v`;
 $php_version =~ s%^PHP\ (\d\.\d).*%$1%gmsx;
 
+plan( skip_all => "dokowiki requires at least php 7.4" ) if $php_version < 7.4;
+
 ##################################################
 # create our test site
 my $omd_bin = TestUtils::get_omd_bin();
