@@ -10,10 +10,10 @@ DIR         = $(NAME)
 
 build:
 	tar zxf $(SRC) --exclude=histou.js --exclude=.git
-#	set -e ; for p in patches/*.patch ; do \
-#	    echo "applying $$p..." ; \
-#	    ( cd $(DIR) && patch -p1 -b -F 5 ) < $$p ; \
-#	done
+	set -e ; for p in patches/*.patch ; do \
+	    echo "applying $$p..." ; \
+	    ( cd $(DIR) && patch -p1 -b -F 5 ) < $$p ; \
+	done
 
 install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/$(DIR)
