@@ -1,11 +1,11 @@
---- a/etc/dokuwiki/dokuwiki.php	2019-09-24 11:00:06.195234788 +0200
-+++ b/etc/dokuwiki/dokuwiki.php	2019-09-24 11:00:14.779557814 +0200
+--- a/etc/dokuwiki/dokuwiki.php	2022-08-09 22:41:46.306995050 +0200
++++ b/etc/dokuwiki/dokuwiki.php	2022-08-09 22:42:28.416579281 +0200
 @@ -54,7 +54,7 @@
  /* Authentication Settings */
  $conf['useacl']      = 0;                //Use Access Control Lists to restrict access?
  $conf['autopasswd']  = 1;                //autogenerate passwords and email them to user
 -$conf['authtype']    = 'authplain';      //which authentication backend should be used
 +$conf['authtype']    = 'auththruk';      //which authentication backend should be used
- $conf['passcrypt']   = 'smd5';           //Used crypt method (smd5,md5,sha1,ssha,crypt,mysql,my411)
+ $conf['passcrypt']   = 'bcrypt';           //Used crypt method (smd5,md5,sha1,ssha,crypt,mysql,my411,bcrypt)
  $conf['defaultgroup']= 'user';           //Default groups new Users are added to
  $conf['superuser']   = '!!not set!!';    //The admin can be user or @group or comma separated list user1,@group1,user2
