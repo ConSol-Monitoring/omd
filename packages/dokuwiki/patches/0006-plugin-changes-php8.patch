@@ -1,0 +1,11 @@
+--- a/lib/plugins/changes/syntax.php	2022-08-10 14:18:07.804814211 +0200
++++ b/lib/plugins/changes/syntax.php	2022-08-10 14:18:29.737669415 +0200
+@@ -145,7 +145,7 @@
+      * Clean-up the namespace name and add it (if valid) into the $data array
+      */
+     protected function addNamespace(&$data, $namespace) {
+-        $action = ($namespace{0} == '-') ? 'exclude' : 'include';
++        $action = ($namespace[0] == '-') ? 'exclude' : 'include';
+         $namespace = cleanID(preg_replace('/^[+-]/', '', $namespace));
+         if(!empty($namespace)) {
+             $data['ns'][$action][] = $namespace;
