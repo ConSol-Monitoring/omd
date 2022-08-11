@@ -27,7 +27,7 @@ my $tests = [
   { cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_fping'",    exit => 3, like => '/check_fping: Could not parse arguments/' },
   { cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_ping -H 127.0.0.1 -w 10000,90% -c 10000,90%'", exit => 0, like => '/PING OK - Packet loss =/' },
   { cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_snmp'",     exit => 3, like => '/check_snmp: Could not parse arguments/' },
-  { cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_mysql'",exit => undef, like => '/Can\'t connect to local MySQL server through socket|Access denied for user|Open_tables/' },
+  { cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_mysql'",exit => undef, like => '/Can\'t connect to local|Access denied for user|Open_tables/' },
   { cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_logfiles'", exit => 3, like => '/Usage: check_logfiles/' },
   { cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_http -S -H 127.0.0.1 -p 9999'", exit => 2, like => '/HTTP CRITICAL - Unable to open TCP socket/' },
   { cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_curl -S -H 127.0.0.1 -p 9999'", exit => 2, like => '/HTTP CRITICAL - Invalid HTTP response received/' },
