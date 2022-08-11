@@ -1,0 +1,11 @@
+--- a/lib/plugins/dw2pdf/renderer.php.orig	2022-08-11 16:55:49.912625792 +0200
++++ b/lib/plugins/dw2pdf/renderer.php	2022-08-11 16:55:35.676105219 +0200
+@@ -63,7 +63,7 @@
+      * @param int $level from 1 (highest) to 6 (lowest)
+      * @param int $pos
+      */
+-    public function header($text, $level, $pos) {
++    public function header($text, $level, $pos, $returnonly = false) {
+         if(!$text) return; //skip empty headlines
+         global $ID;
+ 
