@@ -3,15 +3,15 @@
 # Start only if at least on xinetd based service
 # is activated
 
-test "$(ls -A ###ROOT###/etc/xinetd.d/)" || exit 5
+test "$(ls -A $OMD_ROOT/etc/xinetd.d/)" || exit 5
 
-PIDFILE=###ROOT###/tmp/run/xinetd.pid
-if [ -x ###ROOT###/bin/xinetd ]; then
-    DAEMON=###ROOT###/bin/xinetd
+PIDFILE=$OMD_ROOT/tmp/run/xinetd.pid
+if [ -x $OMD_ROOT/bin/xinetd ]; then
+    DAEMON=$OMD_ROOT/bin/xinetd
 else
     DAEMON=/usr/sbin/xinetd
 fi
-OPTS="-pidfile ###ROOT###/tmp/run/xinetd.pid -filelog ###ROOT###/var/log/xinetd.log -f ###ROOT###/etc/xinetd.conf"
+OPTS="-pidfile $OMD_ROOT/tmp/run/xinetd.pid -filelog $OMD_ROOT/var/log/xinetd.log -f $OMD_ROOT/etc/xinetd.conf"
 
 case "$1" in
     start)

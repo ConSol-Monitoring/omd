@@ -12,7 +12,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 86 );
+plan( tests => 107 );
 
 ##################################################
 # create our test site
@@ -53,6 +53,16 @@ my $tests = [
   { cmd => "/bin/su - $site -c 'grep \"vault module loaded\" var/log/naemon.log'", like => '/vault module loaded/' },
 
   { cmd => $omd_bin." stop $site" },
+
+  # test tcp/xinetd
+  { cmd => $omd_bin." config $site set LIVESTATUS_TCP on" },
+  { cmd => $omd_bin." config $site set LIVESTATUS_TCP_PORT 9999" },
+  { cmd => $omd_bin." start $site", like => '/Starting xinetd\.+\s*OK/' },
+  { cmd => $omd_bin." status $site", like => '/xinetd:\s+running/' },
+  { cmd => "/bin/su - $site -c './lib/monitoring-plugins/check_tcp -H 127.0.0.1 -p 9999 -E -s \"GET status\n\n\" -e \";program_version;\"'", like => '/TCP OK/' },
+
+  { cmd => $omd_bin." stop $site" },
+
 ];
 for my $test (@{$tests}) {
     TestUtils::test_command($test);

@@ -29,8 +29,6 @@ for my $file (glob("distros/Makefile.*")) {
 for my $file (keys %{$all_confs}) {
     for my $key (keys %{$all_keys}) {
         next if $key eq 'ARCH'; # arch is debian specific
-        next if $key eq 'CONFIG_SITE'; # CONFIG_SITE is OpenSuSE specific
-        next if $key eq 'SKIP_PACKAGES'; # SKIP_PACKAGES is optional
         ok(exists($all_confs->{$file}->{$key}), "$file: $key");
     }
 }

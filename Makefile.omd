@@ -24,7 +24,8 @@ DISTRO_VERSION     = $(word 2, $(DISTRO_INFO))
 # specific variables. Here the same problem appears again.
 # Maybe anyone has a simpler solution?
 
-include $(ROOT_DIR)/distros/Makefile.$(DISTRO_NAME)_$(DISTRO_VERSION)
+DISTRO_FILE        = $(ROOT_DIR)/distros/Makefile.$(DISTRO_NAME)_$(DISTRO_VERSION)
+include $(DISTRO_FILE)
 
 # Net result -> all Makefiles have now access to the linux distribution
 # specific settings
