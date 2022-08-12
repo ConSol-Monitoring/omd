@@ -26,7 +26,7 @@ my $tests = [
   { cmd => "/bin/su - $site -c '/usr/bin/env cpan'",         stdin => "yes\n", like => '/cpan\[1\]>/', errlike => $network_exceptions },
 ];
 for my $test (@{$tests}) {
-    TestUtils::test_command($test);
+    TestUtils::test_command($test) || diag(`/usr/bin/env; /bin/su - $site -c '/usr/bin/env'`);
 }
 
 ##################################################
@@ -65,7 +65,7 @@ for my $tarball (glob("packages/perl-modules/src/*.gz packages/perl-modules/src/
 SKIP: {
     skip('Author test. Set $ENV{TEST_AUTHOR} to a true value to run.', 4) unless $ENV{TEST_AUTHOR};
     my $author_tests = [
-      { cmd => "/bin/su - $site -c '/usr/bin/env cpan'", stdin => "notest install Traceroute::Similar\n", like => '/install\s+\-\-\s+OK/', errlike => $network_exceptions },
+      { cmd => "/bin/su - $site -c '/usr/bin/env cpan'", stdin => "notest install Traceroute::Similar\n", like => '/(install\s+\-\-\s+OK|Name or service not known)/', errlike => $network_exceptions },
     ];
     for my $author_test (@{$author_tests}) {
         TestUtils::test_command($author_test);
