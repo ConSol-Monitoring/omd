@@ -1032,7 +1032,7 @@ sub _tail_apache_logs {
 =cut
 sub restart_system_apache {
     my($action) = @_;
-    $action = "reload" unless $action;
+    $action = "restart" unless $action;
     my $name = TestUtils::config('APACHE_INIT_NAME');
     my $init = TestUtils::config('INIT_CMD');
     my $cmd  = $init;
