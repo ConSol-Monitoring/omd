@@ -58,18 +58,18 @@ rm -f $TARBALL
 if [ ! -d ${OMD_ROOT}/etc/telegraf ]; then
     mkdir -p ${OMD_ROOT}/etc/telegraf
 fi
-if [ ! -d §{OMD_ROOT}/etc/telegraf/telegraf.d ]; then
-    mkdir -p ${OMD_ROOT}/etc/telegraf/telegraf.d
+if [ ! -d §{OMD_ROOT}/etc/telegraf/telegraf-default.d ]; then
+    mkdir -p ${OMD_ROOT}/etc/telegraf/telegraf-default.d
 fi
 if [ ! -d ${OMD_ROOT}/var/log/telegraf ]; then
     mkdir -p ${OMD_ROOT}/var/log/telegraf
 fi
-if [ ! -f ${OMD_ROOT}/etc/telegraf/telegraf.conf ]; then
-    ${OMD_ROOT}/local/bin/telegraf config > ${OMD_ROOT}/etc/telegraf/telegraf.conf
+if [ ! -f ${OMD_ROOT}/etc/telegraf/telegraf-default.conf ]; then
+    ${OMD_ROOT}/local/bin/telegraf config > ${OMD_ROOT}/etc/telegraf/telegraf-default.conf
 fi
 
 cat << EOF > ${OMD_ROOT}/etc/logrotate.d/telegraf
-${OMD_ROOT}/var/log/telegraf/telegraf.log
+${OMD_ROOT}/var/log/telegraf/telegraf*.log
 {
     rotate 6
     daily
