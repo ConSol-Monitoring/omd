@@ -1,6 +1,8 @@
 This file documents the revision history for the Open Monitoring Distribution (Labs Edition)
 
 next 5.x:
+          - DEPRECATION WARNING: the following components got removed
+            - python 2 modules
           - OMD:
             - add build support for rhel9
             - add build support for ubuntu 22.04

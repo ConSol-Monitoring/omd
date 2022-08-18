@@ -6,20 +6,11 @@ SLES12   = $(shell echo $(DISTRO_INFO) | grep -c 'SLES 12' )
 FREETDS  = $(shell readlink -m ../freetds/tmpinstall$(OMD_ROOT))
 HAS_CYTHON   = $(shell python3 has_cython.py)
 
-ifeq ($(shell command -v python2),)
-  BUILD_DEP=
-  INSTALL_DEP=
-else
-  BUILD_DEP=build_p2
-  INSTALL_DEP=install_p2
-endif
+DEPENDS  = freetds
 
 # This is where the python modules are going to be installed to
 LOCALPYTHONDIR=$(DESTDIR)$(OMD_ROOT)/lib/python
-LOCALPYTHONDIR2=$(DESTDIR)$(OMD_ROOT)/lib/python2
 
-MODULES2 =
-include modules2.mk
 MODULES =
 ifeq ($(SLES12),1)
 MODULES += setuptools-24.2.0.tar.gz
@@ -85,12 +76,7 @@ endif
 MODULES += decorator-4.4.0.tar.gz
 MODULES += jsonpath-ng-1.4.3.tar.gz
 
-# DataScryer:
-#MODULES += functools32-3.2.3-2.tar.gz
-#MODULES += vcversioner-2.16.0.0.tar.gz
-#MODULES += jsonschema-2.5.1.tar.gz
-
-build: $(BUILD_DEP)
+build:
 	mkdir -p dest
 	set -e ; cd dest && \
 	    export PYTHONPATH=$$PYTHONPATH:$(LOCALPYTHONDIR); \
@@ -127,41 +113,7 @@ build: $(BUILD_DEP)
 	        cd .. ; \
 	    done
 	
-build_p2:
-	mkdir -p dest2
-	set -e ; cd dest2 && \
-	    export PYTHONPATH=$(LOCALPYTHONDIR2); \
-	    if [ `uname -m` = 'armv7l' ]; then \
-		export PYMSSQL_DONT_BUILD_WITH_BUNDLED_FREETDS=1; \
-	    else \
-		export PYMSSQL_BUILD_WITH_BUNDLED_FREETDS=1; \
-	    fi; \
-	    export http_proxy=http://external_dependencies_must_be_included_in_omd; \
-	    export https_proxy=http://external_dependencies_must_be_included_in_omd; \
-	    export ftp_proxy=http://external_dependencies_must_be_included_in_omd; \
-	    for M in $(MODULES2); do \
-	        if echo $$M | grep .tar.gz; then \
-	            tar xzf ../src/$$M ; \
-	        else \
-	            unzip -o ../src/$$M ; \
-	        fi; \
-	        MDIR=$$(echo $$M | sed -e 's/.tar.gz//g' -e 's/.zip//g') ; \
-	        cd $$MDIR; \
-	        echo PYTHON2BUILD $$M ; \
-	        [[ "$$M" =~ .*pymssql.* ]] && ln -sf freetds0.95 freetds ; \
-			if [ `uname -m` = 'armv7l' ] && [[ "$$M" =~ .*pymssql.* ]]; then \
-				sed -ri "/setuptools_git/d" setup.py; \
-				sed -ri "s#include_dirs = \[\]#include_dirs = \['$(FREETDS)/include'\]#" setup.py; \
-				sed -ri "s#library_dirs = \[\]#library_dirs = \['$(FREETDS)/lib'\]#" setup.py; \
-					python2 setup.py build_ext -I $(FREETDS)/include -L $(FREETDS)/lib ; \
-			else \
-				sed -ri "/setuptools_git/d" setup.py; \
-					python2 setup.py build ; \
-			fi ; \
-	        cd .. ; \
-	    done
-
-install: $(INSTALL_DEP)
+install:
 	mkdir -p $(LOCALPYTHONDIR)
 	set -e ; cd dest && \
 	    export PYTHONPATH=$$PYTHONPATH:$(LOCALPYTHONDIR); \
@@ -179,30 +131,7 @@ install: $(INSTALL_DEP)
 	        cd .. ; \
 	    done
 	
-install_p2:
-	mkdir -p $(LOCALPYTHONDIR2)
-	set -e ; cd dest2 && \
-	    export PYTHONPATH=$(LOCALPYTHONDIR2); \
-	    export http_proxy=http://external_dependencies_must_be_included_in_omd; \
-	    export https_proxy=http://external_dependencies_must_be_included_in_omd; \
-	    export ftp_proxy=http://external_dependencies_must_be_included_in_omd; \
-	    for M in $(MODULES2); do \
-	        MDIR=$$(echo $$M | sed -e 's/.tar.gz//g' -e 's/.zip//g') ; \
-	        cd $$MDIR ; \
-	        echo PYTHON2INSTALL $$M ; \
-	        python2 setup.py install --home=$(DESTDIR)$(OMD_ROOT) \
-	            --prefix='' \
-	            --install-scripts=$(DESTDIR)$(OMD_ROOT)/bin/py2 \
-	            --install-headers=$(DESTDIR)$(OMD_ROOT)/include/python2 \
-	            --install-data=$(DESTDIR)$(OMD_ROOT)/share/python2 \
-	            --install-platlib=$(LOCALPYTHONDIR2) \
-	            --install-purelib=$(LOCALPYTHONDIR2) ; \
-	        cd .. ; \
-	    done
-
-
 skel:
 
 clean:
 	rm -rf dest
-	rm -rf dest2
