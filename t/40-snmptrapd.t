@@ -41,7 +41,7 @@ TestUtils::test_command({ cmd => "$systemctl enable samplicate", errlike => $os 
 TestUtils::test_command({ cmd => "$systemctl status samplicate_watch", like => '/inactive/', exit => 3 });
 
 # start the watchdog service
-TestUtils::test_command({ cmd => "$systemctl stop snmptrapd.service", exit => undef });
+TestUtils::test_command({ cmd => "$systemctl stop snmptrapd", exit => undef });
 TestUtils::test_command({ cmd => "$systemctl start samplicate_watch" });
 TestUtils::test_command({ cmd => "$systemctl status samplicate_watch", like => '/running/' });
 TestUtils::test_command({ cmd => '/bin/ps -ef | grep samplicate', like => '/samplicate_watch/' });
