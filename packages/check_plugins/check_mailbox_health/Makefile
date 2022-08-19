@@ -1,7 +1,7 @@
 include ../../../Makefile.omd
 
 NAME = check_mailbox_health
-VERSION = 2.0
+VERSION = 2.0.0.1
 DIR = $(NAME)-$(VERSION)
 
 .PHONY: skel
