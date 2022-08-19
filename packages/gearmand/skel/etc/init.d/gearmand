@@ -109,12 +109,13 @@ case "$1" in
         fi
         if [ $? -eq 0 ]; then
             echo "OK"
-            __init_hook $0 $1 post
+            __init_hook $0 $1 post 0
             exit 0;
-        else
-            echo "failed"
-            exit 1;
         fi
+
+        echo "failed"
+        __init_hook $0 $1 post 1
+        exit 1;
         ;;
     stop)
         printf '%s' "Stopping $NAME..."
@@ -132,7 +133,7 @@ case "$1" in
             done
 
             if ! ps -p $pid > /dev/null 2>&1 ; then
-                __init_hook $0 $1 post
+                __init_hook $0 $1 post 0
                 echo "OK"
                 exit 0;
             else
@@ -141,7 +142,32 @@ case "$1" in
 
             # kill if still running
             ps -p $pid > /dev/null 2>&1 && kill_gearmand;
-            __init_hook $0 $1 post
+            __init_hook $0 $1 post 1
+        fi
+        ;;
+    stop-gracefully)
+        printf '%s' "Stopping $NAME (10min gracefully)..."
+        pid=$( cat $PIDFILE 2>/dev/null )
+        if [ -z "$pid" ]; then
+            echo ". Not running."
+        else
+            kill -TERM $pid >/dev/null 2>&1
+            # do a shutdown
+            x=60000
+            while [ $x -gt 0 ]; do
+                [ $((x%10)) -eq 0 ] && printf "."
+                ps -p $pid > /dev/null 2>&1 && sleep 0.1 || x=0;
+                x=$( expr $x - 1 )
+            done
+
+            if ! ps -p $pid > /dev/null 2>&1 ; then
+                __init_hook $0 stop post 0
+                echo "OK"
+                exit 0;
+            else
+                echo "failed"
+            fi
+            __init_hook $0 stop post 1
         fi
         ;;
     kill)
@@ -169,7 +195,7 @@ case "$1" in
     check)
     ;;
     *)
-        echo "Usage: $NAME {start|stop|kill|status|restart}"
+        echo "Usage: $NAME {start|stop|stop-gracefully|kill|status|restart}"
         exit 1
         ;;
 esac
