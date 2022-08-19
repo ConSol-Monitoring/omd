@@ -1,0 +1,9 @@
+_sysvdirs () 
+{
+    sysvdirs+=($OMD_ROOT/etc/init.d);
+}
+
+complete -F _service $OMD_ROOT/etc/init.d/*
+complete -F _service ./etc/init.d/*
+complete -F _service etc/init.d/*
+
