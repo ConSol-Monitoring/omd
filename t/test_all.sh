@@ -29,8 +29,13 @@ if [ ! -z "$OMD_PACKAGE" ]; then
 
     echo "installing " `basename $OMD_PACKAGE`
 
+    # Suse (needs to be first, there is a apt-get on opensuse as well)
+    if [ -x /usr/bin/zypper  ]; then
+        # remove version if alread installed
+        /usr/bin/zypper --quiet --non-interactive --no-gpg-checks install $OMD_PACKAGE
+
     # Debian / Ubuntu
-    if [ -x /usr/bin/apt-get  ]; then
+    elif [ -x /usr/bin/apt-get  ]; then
         apt-get -qq update
         DEBIAN_FRONTEND=noninteractive apt-get -q -y --no-install-recommends install $OMD_PACKAGE
 
@@ -38,11 +43,6 @@ if [ ! -z "$OMD_PACKAGE" ]; then
     elif [ -x /usr/bin/yum  ]; then
         # remove version if alread installed
         /usr/bin/yum install -y --nogpgcheck $OMD_PACKAGE
-
-    # Suse
-    elif [ -x /usr/bin/zypper  ]; then
-        # remove version if alread installed
-        /usr/bin/zypper --quiet --non-interactive --no-gpg-checks install $OMD_PACKAGE
     fi
 
     rc=$?
