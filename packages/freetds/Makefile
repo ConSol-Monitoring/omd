@@ -10,7 +10,7 @@ build:
 	tar xf freetds-$(FREETDS_VERSION).tar.gz
 	#cd $(FREETDS_DIR) && patch -p1 < ../0001-ct_connect-allow-host.patch
 	cd $(FREETDS_DIR) && \
-	./configure --prefix=$(OMD_ROOT) --with-openssl && \
+	./configure --prefix=$(OMD_ROOT) --libdir=$(OMD_ROOT)/lib --with-openssl && \
 	$(MAKE) && $(MAKE) DESTDIR=$(shell pwd)/tmpinstall install
 	$(MAKE) DESTDIR=$(DESTDIR) -C $(FREETDS_DIR)
 

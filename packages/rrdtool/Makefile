@@ -6,6 +6,7 @@ DIR = $(NAME)-$(VERSION)
 
 CONFIGUREOPTS = \
 	--prefix=$(OMD_ROOT) \
+	--libdir=$(OMD_ROOT)/lib \
 	--disable-ruby \
 	--disable-libwrap \
 	--enable-perl-site-install \

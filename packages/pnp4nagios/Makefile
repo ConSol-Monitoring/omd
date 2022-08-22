@@ -14,6 +14,7 @@ DEPENDS = rrdtool
 # All files will be packaged as user 'root' later anyway.
 CONFIGUREOPTS = \
     --prefix=$(OMD_ROOT) \
+    --libdir=$(OMD_ROOT)/lib \
     --sysconfdir=$(OMD_ROOT)/etc/pnp4nagios \
     --libexecdir=$(OMD_ROOT)/lib/pnp4nagios \
     --docdir=$(OMD_ROOT)/share/doc/pnp4nagios \

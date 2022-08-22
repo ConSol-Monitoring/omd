@@ -13,6 +13,7 @@ CONFIGUREOPTS = \
     --disable-libtokyocabinet \
     --without-mysql \
     --sbindir=$(OMD_ROOT)/bin \
+    --libdir=$(OMD_ROOT)/lib \
     --prefix=$(OMD_ROOT)
 
 .PHONY: skel

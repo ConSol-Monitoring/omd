@@ -19,7 +19,7 @@ build:
 	#done
 	cd $(DIR) && \
 	  export PKG_CONFIG_PATH=$(shell ls -d1 $$(pwd)/../naemon/naemon-*/.) C_INCLUDE_PATH=$(shell pwd)/$(DIR)/include:$(shell ls -d1 $$(pwd)/../naemon/naemon-*/.)/src; \
-	  ./configure --prefix=$(OMD_ROOT) --enable-debug --enable-embedded-perl --with-gearman=$(shell pwd)/../gearmand/gearmand-${GEARMAND} && \
+	  ./configure --prefix=$(OMD_ROOT) --libdir=$(OMD_ROOT)/lib --enable-debug --enable-embedded-perl --with-gearman=$(shell pwd)/../gearmand/gearmand-${GEARMAND} && \
 	  $(MAKE) -j 1
 	tar zxf $(PROXYDIR).tar.gz
 	cd $(PROXYDIR) && PERL5LIB=$$(pwd) perl Makefile.PL

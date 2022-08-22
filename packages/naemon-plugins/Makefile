@@ -6,6 +6,7 @@ DIR     = $(NAME)-$(VERSION)
 DEPENDS = naemon
 
 CONFIGUREOPTS = \
+    --libdir=$(OMD_ROOT)/lib \
     --prefix=$(OMD_ROOT)
 
 build:

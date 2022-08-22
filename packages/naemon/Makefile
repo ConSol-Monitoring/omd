@@ -9,6 +9,7 @@ DIR = $(NAME)-$(VERSION)
 # All files will be packaged as user 'root' later anyway.
 CONFIGUREOPTS = \
     --bindir=$(OMD_ROOT)/bin \
+    --libdir=$(OMD_ROOT)/lib \
     --with-naemon-user=$$(id -un) \
     --with-naemon-group=$$(id -gn) \
     --without-tests
