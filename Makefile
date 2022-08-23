@@ -124,7 +124,7 @@ pack:
             MB1=$$MB2; \
         done
 
-	sed -i -e 's|###APACHE_MODULE_DIR###|$(MODULE_DIR)|g' $(DESTDIR)$(OMD_ROOT)/lib/omd/hooks/*
+	sed -i -e 's|###APACHE_MODULE_DIR###|$(APACHE_MODULE_DIR)|g' $(DESTDIR)$(OMD_ROOT)/lib/omd/hooks/*
 	sed -i -e 's|###APACHE_INCLUDEOPT###|$(APACHE_INCLUDEOPT)|g' $(DESTDIR)$(OMD_ROOT)/lib/omd/hooks/*
 
 	# Repair packages that install with silly modes (such as Nagios)

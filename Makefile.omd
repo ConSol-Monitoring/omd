@@ -30,11 +30,6 @@ include $(DISTRO_FILE)
 # Net result -> all Makefiles have now access to the linux distribution
 # specific settings
 
-MODULE_DIR=$(APACHE_MODULE_DIR)
-ifeq ($(shell uname -m),x86_64)
-  MODULE_DIR=$(APACHE_MODULE_DIR_64)
-endif
-
 # skip some packages on some distros
 ifdef SKIP_PACKAGES
   PACKAGES:=$(shell for p in $(PACKAGES); do skip=0; for s in $(SKIP_PACKAGES); do if [ "$$s" = "$$p" ]; then skip=1; fi; done; if [ $$skip -eq 0 ]; then echo $$p; fi; done)

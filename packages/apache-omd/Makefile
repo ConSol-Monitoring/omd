@@ -12,7 +12,6 @@ GOVERSION   = $(shell grep ^VERSION ../go-${GOPKG}/Makefile | awk '{ print $$3 }
 
 APACHE_MODULES=modrpaf modprometheus_status
 APACHE_MODULES_INSTALL=modrpaf_install modprometheus_status_install
-APACHE_FCGID_PATH=$(MODULE_DIR)/$(APACHE_FCGID_MODULE)
 INSTALL_FCGID=0
 
 # Try to find the apxs binary
@@ -36,7 +35,7 @@ endif
 ifeq ($(INSTALL_FCGID), 1)
   APACHE_MODULES+=modfcgid
   APACHE_MODULES_INSTALL+=modfcgid_install
-  APACHE_FCGID_PATH=$(OMD_ROOT)/lib/apache/mod_fcgid.so
+  APACHE_FCGID_MODULE=$(OMD_ROOT)/lib/apache/mod_fcgid.so
 endif
 
 .PHONY: skel
@@ -61,18 +60,18 @@ skel:
 	fi
 
 	# Replace macros
-	sed -i -e 's|###APACHE_MODULE_DIR###|$(MODULE_DIR)|g' \
+	sed -i -e 's|###APACHE_MODULE_DIR###|$(APACHE_MODULE_DIR)|g' \
 	       $(SKEL)/etc/apache/conf.d/01_rpaf.conf \
 	       $(SKEL)/etc/apache/apache.conf \
 	       $(SKEL)/etc/apache/apache-ssl.conf
 
-	# SLES12 has apache 2.4 but does not have the prefork module to be loaded,
+	# SLES12 and later has apache 2.4 but does not have the prefork module to be loaded,
 	# so remove this load line for this distro from the apache config
-	if [ ! -e $(MODULE_DIR)/mod_mpm_prefork.so ]; then \
+	if [ ! -e $(APACHE_MODULE_DIR)/mod_mpm_prefork.so ]; then \
 	    sed -i '/^LoadModule mpm_prefork_module/d' $(SKEL)/etc/apache/apache.conf ; \
 	fi
 
-	sed -i -e 's|###APACHE_FCGID_MODULE###|$(APACHE_FCGID_PATH)|g' \
+	sed -i -e 's|###APACHE_FCGID_MODULE###|$(APACHE_FCGID_MODULE)|g' \
 	       $(SKEL)/etc/apache/conf.d/02_fcgid.conf
 
 	sed -i 's|###APACHE_BIN###|$(APACHE_BIN)|g' $(SKEL)/etc/init.d/apache

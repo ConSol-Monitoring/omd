@@ -36,7 +36,7 @@ install:
 	rm -rf $(DESTDIR)$(OMD_ROOT)/share/grafana/public/build/*.map
 
 skel:
-	sed -i -e 's|###APACHE_MODULE_DIR###|$(MODULE_DIR)|g' \
+	sed -i -e 's|###APACHE_MODULE_DIR###|$(APACHE_MODULE_DIR)|g' \
 	       $(SKEL)/etc/apache/conf.d/grafana.conf
 	# Take care of path and format of plugin zip/tgz files
 	# Download from https://grafana.com/grafana/plugins
