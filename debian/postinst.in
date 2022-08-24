@@ -135,6 +135,9 @@ case "$1" in
     if ! test -e /etc/apache2/mods-enabled/ssl.load; then
         a2enmod ssl
         a2ensite default-ssl
+        if [ -d /usr/lib/systemd/system/. ]; then
+            systemctl restart apache2 || :
+        fi
     fi
 
     ls -1 /etc/apache2/sites-available/*default*.conf 2>/dev/null | \
