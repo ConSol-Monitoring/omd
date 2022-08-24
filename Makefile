@@ -165,6 +165,12 @@ pack:
             chmod -c 644 $$failed ; \
         fi
 
+	@failed=$$(find $(DESTDIR)$(OMD_ROOT)/lib64 2>/dev/null) ; \
+	if [ -n "$$failed" ] ; then \
+	    echo "ERROR: Invalid lib installpath. Library files must be installed in prefix/lib" ; \
+            echo "$$failed" ; \
+        fi
+
 	# Fix packages which did not add ###ROOT###
 	find $(DESTDIR)$(OMD_ROOT)/skel -type f | xargs -n1 sed -i -e 's+$(OMD_ROOT)+###ROOT###+g'
 
