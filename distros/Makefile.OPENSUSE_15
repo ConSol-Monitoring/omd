@@ -58,6 +58,7 @@ BUILD_PACKAGES       += pango-devel
 BUILD_PACKAGES       += patch
 BUILD_PACKAGES       += perl-base
 BUILD_PACKAGES       += php
+BUILD_PACKAGES       += php-pear
 BUILD_PACKAGES       += postgresql-devel               # icinga 2
 BUILD_PACKAGES       += python3
 BUILD_PACKAGES       += python3-devel
