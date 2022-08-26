@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 NAME         = mod_gearman
-VERSION      = 4.0.2
+VERSION      = 4.0.3
 GEARMAND     = $(shell grep "^VERSION " ../gearmand/Makefile | awk '{ print $$3 }')
 DIR          = mod_gearman-$(VERSION)
 PROXY        = GearmanProxy
