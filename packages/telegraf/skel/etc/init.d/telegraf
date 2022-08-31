@@ -157,7 +157,9 @@ case "$1" in
     reload|force-reload)
         printf '%s' "Reloading $NAME configuration files..."
         if [ pidof_telegraf ]; then
-            kill -HUP $PID
+            PID=$(pidof_telegraf)
+            kill -HUP ${PID:-}
+            echo "done"
             exit 0
         else
             echo "$NAME is not running"
