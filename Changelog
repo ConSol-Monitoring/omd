@@ -4,6 +4,7 @@ next:
           - Gearman:
             - Mod-Gearman module update 4.0.3
             - update mod-gearman-worker-go to 1.2.2
+          - Grafana 7.5.16
 
 4.60     Aug 12 2022
           - Naemon:
