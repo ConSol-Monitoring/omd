@@ -1,0 +1,23 @@
+From 804a206e12741f9e3749cd6ad8e431158f63a5dd Mon Sep 17 00:00:00 2001
+From: Roel van Meer <roel@1afa.com>
+Date: Tue, 13 Sep 2022 22:51:22 +0200
+Subject: [PATCH] Use correct handler for CHANGE_HOST_NOTIFICATION_TIMEPERIOD
+
+Signed-off-by: Roel van Meer <roel@1afa.com>
+---
+ src/naemon/commands.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/naemon/commands.c b/src/naemon/commands.c
+index 9e0499ffb..88dbe47f1 100644
+--- a/src/naemon/commands.c
++++ b/src/naemon/commands.c
+@@ -2764,7 +2764,7 @@ void register_core_commands(void)
+ 	                              "Allows you to send a custom service notification. Very useful in dire situations, emergencies or to communicate with all admins that are responsible for a particular service. When the service notification is sent out, the $NOTIFICATIONTYPE$ macro will be set to 'CUSTOM'. The <options> field is a logical OR of the following integer values that affect aspects of the notification that are sent out: 0 = No option (default), 1 = Broadcast (send notification to all normal and all escalated contacts for the service), 2 = Forced (notification is sent out regardless of current time, whether or not notifications are enabled, etc.), 4 = Increment current notification # for the service(this is not done by default for custom notifications)", "service=service;int=options;str=author;str=comment");
+ 	command_register(core_command, CMD_SEND_CUSTOM_SVC_NOTIFICATION);
+ 
+-	core_command = command_create("CHANGE_HOST_NOTIFICATION_TIMEPERIOD", service_command_handler,
++	core_command = command_create("CHANGE_HOST_NOTIFICATION_TIMEPERIOD", host_command_handler,
+ 	                              "Changes the host notification timeperiod to what is specified by the 'notification_timeperiod' option. The 'notification_timeperiod' option should be the short name of the timeperiod that is to be used as the service notification timeperiod. The timeperiod must have been configured in Naemon before it was last (re)started.", "host=host_name;timeperiod=notification_timeperiod");
+ 	command_register(core_command, CMD_CHANGE_HOST_NOTIFICATION_TIMEPERIOD);
+ 

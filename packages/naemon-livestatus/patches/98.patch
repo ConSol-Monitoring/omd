@@ -1,0 +1,90 @@
+From 2298aa40ddfc38fca72911b474b54175f951712f Mon Sep 17 00:00:00 2001
+From: Ludovic LANGE <llange@users.noreply.github.com>
+Date: Fri, 1 Jul 2022 00:55:33 +0200
+Subject: [PATCH 2/2] fix multiline output in livestatus
+ `PROCESS_xxx_CHECK_RESULTS` commands
+
+Unescaping linefeeds (`\\n` to `\n`) in livestatus commands allows Naemon to
+properly handle the multiline output, and to parse it in `plugin_output` and
+`long_plugin_output`.
+
+(Previously all was sent to `plugin_output` and `long_plugin_output` was
+empty).
+
+This mainly concerns `PROCESS_xxx_CHECK_RESULT` kind of commands, but
+all commands going through livestatus `COMMAND` syntax will have this
+unescaping applied.
+
+It should fix #387
+
+The `unescape_newlines` function comes from [a GPL-2 Nagios file](https://github.com/NagiosEnterprises/nagioscore/blob/master/cgi/cgiutils.c),
+and will convert \\n (or any \\X control characters) to their proper value.
+
+Signed-off-by: Ludovic LANGE <llange@users.noreply.github.com>
+---
+ src/Store.cc   |  2 +-
+ src/strutil.cc | 28 ++++++++++++++++++++++++++++
+ src/strutil.h  |  1 +
+ 3 files changed, 30 insertions(+), 1 deletion(-)
+
+diff --git a/src/Store.cc b/src/Store.cc
+index ac998bd..9513dda 100644
+--- a/src/Store.cc
++++ b/src/Store.cc
+@@ -134,7 +134,7 @@ bool Store::answerRequest(InputBuffer *input, OutputBuffer *output)
+     else if (!strcmp(line, "GET"))
+         answerGetRequest(input, output, ""); // only to get error message
+     else if (!strncmp(line, "COMMAND ", 8)) {
+-        answerCommandRequest(lstrip((char *)line + 8), output);
++        answerCommandRequest(unescape_newlines(lstrip((char *)line + 8)), output);
+         output->setDoKeepalive(true);
+     }
+     else if (!strncmp(line, "LOGROTATE", 9)) {
+diff --git a/src/strutil.cc b/src/strutil.cc
+index 956cda9..aeb99f8 100644
+--- a/src/strutil.cc
++++ b/src/strutil.cc
+@@ -105,3 +105,31 @@ int ends_with(const char *a, const char *b)
+ }
+ 
+ 
++/* unescapes newlines in a string */
++char *unescape_newlines(char *rawbuf) {
++  register int x, y;
++
++  for(x = 0, y = 0; rawbuf[x] != (char)'\x0'; x++) {
++
++    if(rawbuf[x] == '\\') {
++
++      /* unescape newlines */
++      if(rawbuf[x + 1] == 'n') {
++        rawbuf[y++] = '\n';
++        x++;
++        }
++
++      /* unescape backslashes and other stuff */
++      else if(rawbuf[x + 1] != '\x0') {
++        rawbuf[y++] = rawbuf[x + 1];
++        x++;
++        }
++
++      }
++    else
++      rawbuf[y++] = rawbuf[x];
++    }
++  rawbuf[y] = '\x0';
++
++  return rawbuf;
++  }
+diff --git a/src/strutil.h b/src/strutil.h
+index 2988913..fc5a741 100644
+--- a/src/strutil.h
++++ b/src/strutil.h
+@@ -41,6 +41,7 @@ extern "C" {
+     char *save_next_token(char **c, char delim);
+ #endif
+     char *next_field(char **line);
++    char *unescape_newlines(char *);
+ #ifdef __cplusplus
+ }
+ #endif

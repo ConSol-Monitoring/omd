@@ -1,0 +1,89 @@
+From 1d363be58e3e9b4811f4a248b1a7432c77adb46e Mon Sep 17 00:00:00 2001
+From: Sven Nierlein <sven@nierlein.de>
+Date: Thu, 15 Sep 2022 15:41:33 +0200
+Subject: [PATCH] improve log entry tagging
+
+- add host/service for NOTIFICATION SUPPRESSED and INFO entries.
+- add host/service for external commands
+---
+ src/LogEntry.cc | 49 +++++++++++++++++++++++++++++++++++++++++++------
+ 1 file changed, 43 insertions(+), 6 deletions(-)
+
+diff --git a/src/LogEntry.cc b/src/LogEntry.cc
+index fa4320e..dc4c5d1 100644
+--- a/src/LogEntry.cc
++++ b/src/LogEntry.cc
+@@ -163,6 +163,20 @@ inline bool LogEntry::handleStatusEntry()
+         return true;
+     }
+ 
++    else if (!strncmp(_text, "HOST NOTIFICATION SUPPRESSED: ", 30)
++          || !strncmp(_text, "HOST INFO: ", 11))
++    {
++        _logclass = LOGCLASS_INFO;
++        _type     = NONE;
++        char *scan = _text;
++        _text = next_token(&scan, ':');
++        scan++;
++
++        _host_name    = next_token(&scan, ';');
++        _comment      = next_token(&scan, ';');
++        return true;
++    }
++
+     // SERVICE states
+     else if (!strncmp(_text, "INITIAL SERVICE STATE: ", 23)
+           || !strncmp(_text, "CURRENT SERVICE STATE: ", 23)
+@@ -239,6 +253,21 @@ inline bool LogEntry::handleStatusEntry()
+         return true;
+     }
+ 
++    else if (!strncmp(_text, "SERVICE NOTIFICATION SUPPRESSED: ", 33)
++          || !strncmp(_text, "SERVICE INFO: ", 14))
++    {
++        _logclass = LOGCLASS_INFO;
++        _type     = NONE;
++        char *scan = _text;
++        _text = next_token(&scan, ':');
++        scan++;
++
++        _host_name    = next_token(&scan, ';');
++        _svc_desc     = next_token(&scan, ';');
++        _comment      = next_token(&scan, ';');
++        return true;
++    }
++
+     else if (!strncmp(_text, "TIMEPERIOD TRANSITION: ", 23))
+     {
+         _logclass = LOGCLASS_STATE;
+@@ -324,16 +353,24 @@ inline bool LogEntry::handlePassiveCheckEntry()
+ 
+ inline bool LogEntry::handleExternalCommandEntry()
+ {
+-    if (!strncmp(_text, "EXTERNAL COMMAND:", 17))
++    if (!strncmp(_text, "EXTERNAL COMMAND: ", 18))
+     {
+         _logclass = LOGCLASS_COMMAND;
+         char *scan = _text;
+         _text = next_token(&scan, ':');
+-        return true; // TODO: join with host/service information?
+-        /* Damit wir die restlichen Spalten ordentlich befuellen, braeuchten
+-           wir eine komplette Liste von allen external commands und
+-           deren Parameteraufbau. Oder gibt es hier auch eine bessere
+-           Loesung? */
++
++        scan++;
++
++        char * cmd = next_token(&scan, ';');
++        if(strstr(cmd, "_HOST")) {
++            _host_name    = next_token(&scan, ';');
++        }
++        else if(strstr(cmd, "_SVC")) {
++            _host_name    = next_token(&scan, ';');
++            _svc_desc     = next_token(&scan, ';');
++        }
++
++        return true;
+     }
+     return false;
+ }
