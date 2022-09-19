@@ -1,0 +1,136 @@
+From 69428d3aa8db25280e463da8d8646a22fbb86626 Mon Sep 17 00:00:00 2001
+From: Sven Nierlein <sven@nierlein.de>
+Date: Mon, 19 Sep 2022 16:21:27 +0200
+Subject: [PATCH] fix CHANGE_HOST_CHECK_TIMEPERIOD command
+
+command crashes because timeperiod is stored with different name.
+---
+ src/naemon/commands.c        |  2 +-
+ src/naemon/objects_host.c    |  6 ++++--
+ src/naemon/objects_service.c |  6 ++++--
+ src/naemon/xrddefault.c      | 14 ++++++++++----
+ 4 files changed, 19 insertions(+), 9 deletions(-)
+
+diff --git a/src/naemon/commands.c b/src/naemon/commands.c
+index 9cd589ba..8416d32e 100644
+--- a/src/naemon/commands.c
++++ b/src/naemon/commands.c
+@@ -3214,7 +3214,7 @@ void register_core_commands(void)
+ 	command_register(core_command, CMD_SET_SVC_NOTIFICATION_NUMBER);
+ 
+ 	core_command = command_create("CHANGE_HOST_CHECK_TIMEPERIOD", host_command_handler,
+-	                              "Changes the valid check period for the specified host.", "host=host_name;timeperiod=timeperiod");
++	                              "Changes the valid check period for the specified host.", "host=host_name;timeperiod=check_timeperiod");
+ 	command_register(core_command, CMD_CHANGE_HOST_CHECK_TIMEPERIOD);
+ 
+ 	core_command = command_create("CHANGE_SVC_CHECK_TIMEPERIOD", service_command_handler,
+diff --git a/src/naemon/objects_host.c b/src/naemon/objects_host.c
+index ca18d567..445bc82c 100644
+--- a/src/naemon/objects_host.c
++++ b/src/naemon/objects_host.c
+@@ -125,10 +125,10 @@ int setup_host_variables(host *new_host, const char *display_name, const char *a
+ 	if (address)
+ 		new_host->address = nm_strdup(address);
+ 	if (check_tp) {
+-		new_host->check_period = check_tp->name;
++		new_host->check_period = nm_strdup(check_tp->name);
+ 		new_host->check_period_ptr = check_tp;
+ 	}
+-	new_host->notification_period = notify_tp ? notify_tp->name : NULL;
++	new_host->notification_period = notify_tp ? nm_strdup(notify_tp->name) : NULL;
+ 	new_host->notification_period_ptr = notify_tp;
+ 	if (check_command) {
+ 		new_host->check_command = nm_strdup(check_command);
+@@ -316,6 +316,8 @@ void destroy_host(host *this_host)
+ 	free_objectlist(&this_host->escalation_list);
+ 	nm_free(this_host->check_command);
+ 	nm_free(this_host->event_handler);
++	nm_free(this_host->check_period);
++	nm_free(this_host->notification_period);
+ 	nm_free(this_host->notes);
+ 	nm_free(this_host->notes_url);
+ 	nm_free(this_host->action_url);
+diff --git a/src/naemon/objects_service.c b/src/naemon/objects_service.c
+index 020a61ab..04cf4746 100644
+--- a/src/naemon/objects_service.c
++++ b/src/naemon/objects_service.c
+@@ -139,8 +139,8 @@ int setup_service_variables(service *new_service, const char *display_name, cons
+ 	/* duplicate vars, but assign what we can */
+ 	new_service->notification_period_ptr = np;
+ 	new_service->check_period_ptr = cp;
+-	new_service->check_period = cp ? cp->name : NULL;
+-	new_service->notification_period = np ? np->name : NULL;
++	new_service->check_period = cp ? nm_strdup(cp->name) : NULL;
++	new_service->notification_period = np ? nm_strdup(np->name) : NULL;
+ 	new_service->check_command = nm_strdup(check_command);
+ 	new_service->check_command_ptr = cmd;
+ 	if (display_name) {
+@@ -331,6 +331,8 @@ void destroy_service(service *this_service, int truncate_lists)
+ 	free_objectlist(&this_service->exec_deps);
+ 	free_objectlist(&this_service->escalation_list);
+ 	nm_free(this_service->event_handler);
++	nm_free(this_service->check_period);
++	nm_free(this_service->notification_period);
+ 	nm_free(this_service->notes);
+ 	nm_free(this_service->notes_url);
+ 	nm_free(this_service->action_url);
+diff --git a/src/naemon/xrddefault.c b/src/naemon/xrddefault.c
+index 4700597e..4f80980a 100644
+--- a/src/naemon/xrddefault.c
++++ b/src/naemon/xrddefault.c
+@@ -1164,7 +1164,8 @@ int xrddefault_read_state_information(void)
+ 								/* make sure the timeperiod still exists... */
+ 								temp_timeperiod = find_timeperiod(val);
+ 								if (temp_timeperiod) {
+-									temp_host->check_period = temp_timeperiod->name;
++									nm_free(temp_host->check_period);
++									temp_host->check_period = nm_strdup(temp_timeperiod->name);
+ 									temp_host->check_period_ptr = temp_timeperiod;
+ 								} else {
+ 									temp_host->modified_attributes &= ~MODATTR_CHECK_TIMEPERIOD;
+@@ -1176,7 +1177,8 @@ int xrddefault_read_state_information(void)
+ 								/* make sure the timeperiod still exists... */
+ 								temp_timeperiod = find_timeperiod(val);
+ 								if (temp_timeperiod) {
+-									temp_host->notification_period = temp_timeperiod->name;
++									nm_free(temp_host->notification_period);
++									temp_host->notification_period = nm_strdup(temp_timeperiod->name);
+ 									temp_host->notification_period_ptr = temp_timeperiod;
+ 								} else {
+ 									temp_host->modified_attributes &= ~MODATTR_NOTIFICATION_TIMEPERIOD;
+@@ -1430,7 +1432,8 @@ int xrddefault_read_state_information(void)
+ 								/* make sure the timeperiod still exists... */
+ 								temp_timeperiod = find_timeperiod(val);
+ 								if (temp_timeperiod) {
+-									temp_service->check_period = temp_timeperiod->name;
++									nm_free(temp_service->check_period);
++									temp_service->check_period = nm_strdup(temp_timeperiod->name);
+ 									temp_service->check_period_ptr = temp_timeperiod;
+ 								} else {
+ 									temp_service->modified_attributes &= ~MODATTR_CHECK_TIMEPERIOD;
+@@ -1442,7 +1445,8 @@ int xrddefault_read_state_information(void)
+ 								/* make sure the timeperiod still exists... */
+ 								temp_timeperiod = find_timeperiod(val);
+ 								if (temp_timeperiod) {
+-									temp_service->notification_period = temp_timeperiod->name;
++									nm_free(temp_service->notification_period);
++									temp_service->notification_period = nm_strdup(temp_timeperiod->name);
+ 									temp_service->notification_period_ptr = temp_timeperiod;
+ 								} else {
+ 									temp_service->modified_attributes &= ~MODATTR_NOTIFICATION_TIMEPERIOD;
+@@ -1546,6 +1550,7 @@ int xrddefault_read_state_information(void)
+ 								/* make sure the timeperiod still exists... */
+ 								temp_timeperiod = find_timeperiod(val);
+ 								if (temp_timeperiod) {
++									nm_free(temp_contact->host_notification_period);
+ 									temp_contact->host_notification_period = nm_strdup(temp_timeperiod->name);
+ 									temp_contact->host_notification_period_ptr = temp_timeperiod;
+ 								} else {
+@@ -1558,6 +1563,7 @@ int xrddefault_read_state_information(void)
+ 								/* make sure the timeperiod still exists... */
+ 								temp_timeperiod = find_timeperiod(val);
+ 								if (temp_timeperiod) {
++									nm_free(temp_contact->service_notification_period);
+ 									temp_contact->service_notification_period = nm_strdup(temp_timeperiod->name);
+ 									temp_contact->service_notification_period_ptr = temp_timeperiod;
+ 								} else {
