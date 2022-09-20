@@ -2,12 +2,17 @@
 
 DIR="$1"
 if [ "$DIR" = "" ]; then
-    echo "usage: $0 <folder>"
-    echo "returns md5 hashsum for folder including dependencies"
+    echo "usage: $0 <folder>" >&2
+    echo "returns md5 hashsum for folder including dependencies" >&2
     exit 3
 fi
 if ! test -x ../build_cached; then
-    echo "ERROR: must be run from packages folder"
+    echo "ERROR: must be run from packages folder" >&2
+    exit 3
+fi
+
+if [ "x$OMD_ROOT" = "x" ]; then
+    echo "ERROR: OMD_ROOT not set!" >&2
     exit 3
 fi
 

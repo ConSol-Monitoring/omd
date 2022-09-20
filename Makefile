@@ -90,7 +90,7 @@ omd: $(DEFAULT_BUILD)
 build-cached:
 	@set -e ; cd packages ; for p in $(PACKAGES) ; do \
         NOW=$$(date +%s); \
-		OMD_VERSION="$(OMD_VERSION)" BUILD_CACHE="$(BUILD_CACHE)" ../build_cached "$(MAKE)" "$$p" "$(DISTRO_NAME)/$(DISTRO_VERSION)/$(shell uname -m)"; \
+        OMD_ROOT="$(OMD_ROOT)" OMD_VERSION="$(OMD_VERSION)" BUILD_CACHE="$(BUILD_CACHE)" ../build_cached "$(MAKE)" "$$p" "$(DISTRO_NAME)/$(DISTRO_VERSION)/$(shell uname -m)"; \
         echo "build-cached: $$p (took $$(( $$(date +%s) - NOW ))s)"; \
         done
 
