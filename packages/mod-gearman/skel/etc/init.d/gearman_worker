@@ -1,55 +1,31 @@
 #!/bin/bash
 
-### BEGIN INIT INFO
-# Provides:          mod_gearman_worker
-# Required-Start:    $local_fs
-# Required-Stop:     $local_fs
-# Should-Start:
-# Should-Stop:
-# Default-Start:     2 3 4 5
-# Default-Stop:      0 1 6
-# Short-Description: Start/Stop the mod_gearman worker daemon
-### END INIT INFO
-
 # Check if Mod-Gearman is enabled in OMD. If not terminate.
-cd ###ROOT###
-. ###ROOT###/lib/omd/init_profile
-. ###ROOT###/.profile
-. ###ROOT###/etc/omd/site.conf
+cd $OMD_ROOT
+. $OMD_ROOT/lib/omd/init_profile
+. $OMD_ROOT/.profile
+. $OMD_ROOT/etc/omd/site.conf
 if [ "$CONFIG_MOD_GEARMAN" != "on" -o "$CONFIG_GEARMAN_WORKER" != "on" ] ; then
     exit 5
 fi
 
-DAEMON=###ROOT###/bin/mod_gearman_worker-go
+DAEMON=$OMD_ROOT/bin/mod_gearman_worker-go
 NAME=gearman_worker
-CONFIG=###ROOT###/etc/mod-gearman/worker.cfg
-PIDFILE=###ROOT###/tmp/run/gearman_worker.pid
-USER=###SITE###
-USERID=`id -u`
-
-# create state dir
-if [ "$USERID" -eq 0 ]; then
-  mkdir -p $(dirname $PIDFILE)
-  chown $USER: $(dirname $PIDFILE)
-fi
+PIDFILE=$OMD_ROOT/tmp/run/gearman_worker.pid
 
 __init_hook $0 $1 pre
 case "$1" in
     start)
         echo -n "Starting $NAME..."
-        mkdir -p ###ROOT###/tmp/run
-        mkdir -p ###ROOT###/var/log/gearman
-        rm -f ###ROOT###/var/log/mod-gearman/gearman
-        CMD="$DAEMON -d --config=$CONFIG --pidfile=$PIDFILE"
+        mkdir -p $OMD_ROOT/tmp/run
+        mkdir -p $OMD_ROOT/var/log/gearman
+        rm -f $OMD_ROOT/var/log/mod-gearman/gearman
+        CMD="$DAEMON -d --config=$OMD_ROOT/etc/mod-gearman/worker.cfg --config=$OMD_ROOT/etc/mod-gearman/worker.cfg.d/ --pidfile=$PIDFILE"
 
         # worker opens lot of connections, so increase default ulimit to our hard limit
         ulimit -n $(ulimit -Hn) >/dev/null 2>&1
 
-        if [ "$USERID" -eq 0 ]; then
-            su -s $SHELL - $USER -c  "$CMD"
-        else
-            $CMD
-        fi
+        $CMD
         if [ $? -eq 0 ]; then
             echo "OK"
             __init_hook $0 $1 post 0
