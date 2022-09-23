@@ -8,6 +8,8 @@ next 5.x:
             - add build support for ubuntu 22.04
             - add build support for opensuse 15.4
           - Thruk: update to 3.00
+          - Naemon:
+            - disable writing status.dat
           - rrdtool: Update to 1.8.0
           - Icinga2 update to 2.13.4
           - Dokuwiki
