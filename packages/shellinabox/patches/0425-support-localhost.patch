@@ -1,0 +1,24 @@
+From c5be50e7a2afe3737ff39ab59b5e4a28374919bb Mon Sep 17 00:00:00 2001
+From: Dmitriy Stepanov <dstepanov@axcient.com>
+Date: Wed, 14 Feb 2018 10:11:13 +0300
+Subject: [PATCH] support localhost as a hostname
+
+---
+ shellinabox/launcher.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/shellinabox/launcher.c b/shellinabox/launcher.c
+index ba54b36..0eebe53 100644
+--- a/shellinabox/launcher.c
++++ b/shellinabox/launcher.c
+@@ -993,8 +993,8 @@ static pam_handle_t *internalLogin(struct Service *service, struct Utmp *utmp,
+   if (service->authUser == 2 /* SSH */) {
+     // If connecting to a remote host, include that hostname
+     hostname                   = strrchr(service->cmdline, '@');
+-    if (!hostname || !strcmp(++hostname, "localhost")) {
+-      hostname                 = NULL;
++    if (hostname) {
++      hostname++;
+     }
+   }
+   struct utsname uts;

@@ -58,7 +58,8 @@ PACKAGES=freetds \
          grafana-thruk-datasource \
          sakuli\
          victoriametrics \
-         xinetd
+         xinetd \
+		 shellinabox
 
 include Makefile.omd
 

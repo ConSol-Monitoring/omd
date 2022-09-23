@@ -1,0 +1,50 @@
+From dc508dd904c916baa0e2a5faa770596219fd744a Mon Sep 17 00:00:00 2001
+From: Thomas Freitag <git@thomas.freit.ag>
+Date: Mon, 2 May 2022 15:56:59 +0200
+Subject: [PATCH 1/2] Removed -oChallengeResponseAuthentication=no, which is a
+ deprecated alias for KbdInteractiveAuthentication and breaks SSH
+ keyboard-interactive authentication (necessary for 2FA with Google
+ Authenticator PAM module)
+
+---
+ shellinabox/service.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/shellinabox/service.c b/shellinabox/service.c
+index cdf946e..9a1d648 100644
+--- a/shellinabox/service.c
++++ b/shellinabox/service.c
+@@ -169,7 +169,7 @@ void initService(struct Service *service, const char *arg) {
+     }
+ 
+     service->cmdline                        = stringPrintf(NULL,
+-      "ssh -a -e none -i /dev/null -x -oChallengeResponseAuthentication=no "
++      "ssh -a -e none -i /dev/null -x "
+           "-oCheckHostIP=no -oClearAllForwardings=yes -oCompression=no "
+           "-oControlMaster=no -oGSSAPIAuthentication=no "
+           "-oHostbasedAuthentication=no -oIdentitiesOnly=yes "
+
+From 5f333bd0bc79aff8f9f1ac8ad32bea1772533a8c Mon Sep 17 00:00:00 2001
+From: Thomas Freitag <git@thomas.freit.ag>
+Date: Mon, 2 May 2022 16:30:33 +0200
+Subject: [PATCH 2/2] removed unsupported options from ssh command line
+
+---
+ shellinabox/service.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/shellinabox/service.c b/shellinabox/service.c
+index 9a1d648..3b506cc 100644
+--- a/shellinabox/service.c
++++ b/shellinabox/service.c
+@@ -175,8 +175,8 @@ void initService(struct Service *service, const char *arg) {
+           "-oHostbasedAuthentication=no -oIdentitiesOnly=yes "
+           "-oKbdInteractiveAuthentication=yes -oPasswordAuthentication=yes "
+           "-oPreferredAuthentications=keyboard-interactive,password "
+-          "-oPubkeyAuthentication=no -oRhostsRSAAuthentication=no "
+-          "-oRSAAuthentication=no -oStrictHostKeyChecking=no -oTunnel=no "
++          "-oPubkeyAuthentication=no "
++          "-oStrictHostKeyChecking=no -oTunnel=no "
+           "-oUserKnownHostsFile=/dev/null -oVerifyHostKeyDNS=no "
+ // beewoolie-2012.03.30: while it would be nice to disable this
+ //          feature, we cannot be sure that it is available on the

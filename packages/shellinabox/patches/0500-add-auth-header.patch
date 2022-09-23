@@ -1,0 +1,161 @@
+From c8227eb788991f5f739cb6f26d48b09e0932806d Mon Sep 17 00:00:00 2001
+From: Joji Mekkattuparamban <jojim@nvidia.com>
+Date: Wed, 18 Aug 2021 10:15:47 -0700
+Subject: [PATCH] Export auth-proxy header fields
+
+---
+ shellinabox/launcher.c | 33 ++++++++++++++++++++++++++++-----
+ shellinabox/launcher.h |  2 ++
+ shellinabox/session.c  | 15 +++++++++++++++
+ shellinabox/session.h  |  1 +
+ 4 files changed, 46 insertions(+), 5 deletions(-)
+
+diff --git a/shellinabox/launcher.c b/shellinabox/launcher.c
+index ba54b36..27734d1 100644
+--- a/shellinabox/launcher.c
++++ b/shellinabox/launcher.c
+@@ -118,6 +118,7 @@ typedef struct pam_handle pam_handle_t;
+ #include "shellinabox/launcher.h"
+ #include "shellinabox/privileges.h"
+ #include "shellinabox/service.h"
++#include "shellinabox/session.h"
+ #include "libhttp/hashmap.h"
+ #include "logging/logging.h"
+ 
+@@ -535,6 +536,14 @@ int launchChild(int service, struct Session *session, const char *url) {
+   if (realIP && *realIP) {
+     strncat(request->realIP, realIP, sizeof(request->realIP) - 1);
+   }
++  const char *webAuthUser = getHeaderValue(session, "x-webauth-user");
++  if (webAuthUser && *webAuthUser) {
++    strncat(request->webAuthUser, webAuthUser, sizeof(request->webAuthUser) - 1);
++  }
++  const char *webAuthRoles = getHeaderValue(session, "x-webauth-roles");
++  if (webAuthRoles && *webAuthRoles) {
++    strncat(request->webAuthRoles, webAuthRoles, sizeof(request->webAuthRoles) - 1);
++  }
+   request->urlLength   = strlen(u);
+   memcpy(&request->url, u, request->urlLength);
+   free(u);
+@@ -1268,7 +1277,8 @@ static void destroyVariableHashEntry(void *arg ATTR_UNUSED, char *key,
+ static void execService(int width ATTR_UNUSED, int height ATTR_UNUSED,
+                         struct Service *service, const char *peerName,
+                         const char *realIP, char **environment,
+-                        const char *url) {
++                        const char *url, const char *webAuthUser,
++			const char *webAuthRoles) {
+   UNUSED(width);
+   UNUSED(height);
+ 
+@@ -1308,6 +1318,12 @@ static void execService(int width ATTR_UNUSED, int height ATTR_UNUSED,
+   check(key                   = strdup("realip"));
+   check(value                 = strdup(realIP));
+   addToHashMap(vars, key, value);
++  check(key                   = strdup("webauthuser"));
++  check(value                 = strdup(webAuthUser));
++  addToHashMap(vars, key, value);
++  check(key                   = strdup("webauthroles"));
++  check(value                 = strdup(webAuthRoles));
++  addToHashMap(vars, key, value);
+   check(key                   = strdup("uid"));
+   addToHashMap(vars, key, stringPrintf(NULL, "%d", service->uid));
+   check(key                   = strdup("url"));
+@@ -1513,7 +1529,8 @@ static void pamSessionSighupHandler(int sig ATTR_UNUSED,
+ 
+ static void childProcess(struct Service *service, int width, int height,
+                          struct Utmp *utmp, const char *peerName, const char *realIP,
+-                         const char *url) {
++                         const char *url, const char *webAuthUser,
++                         const char *webAuthRoles) {
+   // Set initial window size
+   setWindowSize(0, width, height);
+ 
+@@ -1543,9 +1560,13 @@ static void childProcess(struct Service *service, int width, int height,
+ 
+   // Add useful environment variables that can be used in custom client scripts
+   // or programs.
+-  numEnvVars                   += 3;
++  numEnvVars                   += 5;
+   check(environment             = realloc(environment,
+                                           (numEnvVars + 1)*sizeof(char *)));
++  environment[numEnvVars-5]     = stringPrintf(NULL, "SHELLINABOX_WEBAUTHUSER=%s",
++                                               webAuthUser);
++  environment[numEnvVars-4]     = stringPrintf(NULL, "SHELLINABOX_WEBAUTHROLES=%s",
++                                               webAuthRoles);
+   environment[numEnvVars-3]     = stringPrintf(NULL, "SHELLINABOX_URL=%s",
+                                                url);
+   environment[numEnvVars-2]     = stringPrintf(NULL, "SHELLINABOX_PEERNAME=%s",
+@@ -1688,7 +1709,8 @@ static void childProcess(struct Service *service, int width, int height,
+            (void *)0, environment);
+   } else {
+     // Launch user provied service
+-    execService(width, height, service, peerName, realIP, environment, url);
++    execService(width, height, service, peerName, realIP, environment, url,
++		webAuthUser, webAuthRoles);
+   }
+   _exit(1);
+ }
+@@ -1810,7 +1832,8 @@ static void launcherDaemon(int fd) {
+                                         request.peerName,
+                                         request.realIP)) == 0) {
+       childProcess(services[request.service], request.width, request.height,
+-                   utmp, request.peerName, request.realIP, url);
++                   utmp, request.peerName, request.realIP, url, request.webAuthUser,
++		   request.webAuthRoles);
+       free(url);
+       _exit(1);
+     } else {
+diff --git a/shellinabox/launcher.h b/shellinabox/launcher.h
+index 64b7519..66c7e01 100644
+--- a/shellinabox/launcher.h
++++ b/shellinabox/launcher.h
+@@ -57,6 +57,8 @@ struct LaunchRequest {
+   pid_t terminate;
+   char  peerName[128];
+   char  realIP[128];
++  char  webAuthUser[128];
++  char  webAuthRoles[128];
+   int   urlLength;
+   char  url[0];
+ };
+diff --git a/shellinabox/session.c b/shellinabox/session.c
+index 2f72dff..7db5792 100644
+--- a/shellinabox/session.c
++++ b/shellinabox/session.c
+@@ -53,6 +53,7 @@
+ 
+ #include "shellinabox/session.h"
+ #include "logging/logging.h"
++#include "libhttp/hashmap.h"
+ 
+ #ifdef HAVE_UNUSED
+ #defined ATTR_UNUSED __attribute__((unused))
+@@ -247,3 +248,17 @@ void iterateOverSessions(int (*fnc)(void *, const char *, char **), void *arg){
+ int numSessions(void) {
+   return getHashmapSize(sessions);
+ }
++
++const char *getHeaderValue(struct Session *session, const char *key) {
++  if (!session) {
++	  return NULL;
++  }
++
++  const struct HashMap *hm = httpGetHeaders(session->http);
++  if (!hm) {
++    return NULL;
++  }
++
++  const char *val = getFromHashMap(hm, key);
++  return val;
++}
+diff --git a/shellinabox/session.h b/shellinabox/session.h
+index b6b3747..c8a04d6 100644
+--- a/shellinabox/session.h
++++ b/shellinabox/session.h
+@@ -84,5 +84,6 @@ struct Session *findSession(const char *sessionKey, const char *cgiSessionKey,
+                             int *sessionIsNew, HttpConnection *http);
+ void iterateOverSessions(int (*fnc)(void *, const char *, char **), void *arg);
+ int  numSessions(void);
++const char *getHeaderValue(struct Session *session, const char *key);
+ 
+ #endif /* SESSION_H__ */
