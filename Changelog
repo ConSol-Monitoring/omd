@@ -12,6 +12,8 @@ next 5.x:
             - disable writing status.dat
           - rrdtool: Update to 1.8.0
           - Icinga2 update to 2.13.4
+          - Grafana:
+            - update pnp datasource
           - Dokuwiki
             - Updated to Version 2022-07-31
 

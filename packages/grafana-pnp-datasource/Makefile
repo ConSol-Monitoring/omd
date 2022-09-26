@@ -1,8 +1,8 @@
 include ../../Makefile.omd
 
-NAME       = grafana-pnp-datasource
-VERSION    = 1.0.6
-SRC        = $(NAME)-$(VERSION).tar.gz
+NAME       = sni-pnp-datasource
+VERSION    = 2.0.0
+SRC        = $(NAME)-$(VERSION).zip
 APINAME    = pnp-metrics-api
 APIVERSION = master
 APISRC     = $(APINAME)-$(APIVERSION).tar.gz
@@ -18,14 +18,14 @@ install:
 
 skel:
 	mkdir -p $(SKEL)/var/grafana/plugins
-	tar zxf $(SRC) -C $(SKEL)/var/grafana/plugins
-	mv $(SKEL)/var/grafana/plugins/$(NAME)-$(VERSION) $(SKEL)/var/grafana/plugins/pnp-rrd-datasource
+	unzip $(SRC) -d $(SKEL)/var/grafana/plugins
+	mv $(SKEL)/var/grafana/plugins/$(NAME) $(SKEL)/var/grafana/plugins/pnp-rrd-datasource
 
 clean:
 	rm -rf $(APINAME)-$(APIVERSION)
 
 upstream:
 	rm -f $(SRC)
-	wget https://github.com/sni/grafana-pnp-datasource/archive/v$(VERSION).tar.gz -O $(SRC)
+	wget https://github.com/sni/grafana-pnp-datasource/releases/download/v$(VERSION)/$(NAME)-$(VERSION).zip -O $(SRC)
 	rm -f $(APISRC)
 	wget https://github.com/sni/pnp-metrics-api/archive/master.tar.gz -O $(APISRC)
