@@ -19,6 +19,8 @@ datasources:
     editable: false
     jsonData:
      tlsSkipVerify: true
+    secureJsonData:
+     password: grafana
 
   - name: _internal
     type: influxdb
@@ -26,12 +28,13 @@ datasources:
     orgId: 1
     url: http://###CONFIG_INFLUXDB_HTTP_TCP_PORT###
     user: grafana
-    password: grafana
     database: _internal
     isDefault: false
     editable: false
     jsonData:
      tlsSkipVerify: true
+    secureJsonData:
+     password: grafana
 
   - name: sakuli
     type: influxdb
@@ -39,9 +42,10 @@ datasources:
     orgId: 1
     url: http://###CONFIG_INFLUXDB_HTTP_TCP_PORT###
     user: grafana
-    password: grafana
     database: sakuli
     isDefault: false
     editable: false
     jsonData:
      tlsSkipVerify: true
+    secureJsonData:
+     password: grafana
