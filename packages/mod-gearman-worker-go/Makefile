@@ -32,6 +32,11 @@ install:
 	install -m 755 $(PWD)/$(GOPATH)/bin/mod_gearman_worker  $(DESTDIR)$(OMD_ROOT)/bin/mod_gearman_worker-go
 
 skel:
+	cp $(GOPATH)/src/$(GITURL)/worker.cfg $(SKEL)/etc/mod-gearman/worker.cfg
+	for p in patches/*.skel_patch ; do \
+	    echo "applying $$p..." ; \
+	    ( cd $(SKEL) ; patch -p1 ) < $$p || exit 1; \
+	done
 
 clean:
 	rm -rf $(GOPATH)

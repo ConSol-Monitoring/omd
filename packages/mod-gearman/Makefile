@@ -34,7 +34,6 @@ install:
 	rm -f $(DESTDIR)$(OMD_ROOT)/lib/mod_gearman/mod_gearman.so
 	cp $(DESTDIR)$(OMD_ROOT)/lib/mod_gearman/mod_gearman_naemon.o $(DESTDIR)$(OMD_ROOT)/lib/mod_gearman/mod_gearman_naemon.o.dbg
 	rm -rf $(DESTDIR)$(OMD_ROOT)/lib/mod_gearman/mod_gearman_nagios*
-	#cp $(DESTDIR)$(OMD_ROOT)/bin/mod_gearman_worker $(DESTDIR)$(OMD_ROOT)/bin/mod_gearman_worker.dbg
 	rm -rf $(DESTDIR)$(OMD_ROOT)/etc
 	rm -rf $(DESTDIR)$(OMD_ROOT)/var
 	install -m 0755 $(PROXYDIR)/gearman_proxy.pl $(DESTDIR)$(OMD_ROOT)/share/mod_gearman/gearman_proxy.pl
@@ -44,7 +43,6 @@ skel:
 	mkdir -p $(SKEL)/etc/mod-gearman
 	mkdir -p $(SKEL)/tmp/run
 	cp $(DIR)/etc/mod_gearman_neb.conf.in    $(SKEL)/etc/mod-gearman/server.cfg
-	cp $(DIR)/etc/mod_gearman_worker.conf.in $(SKEL)/etc/mod-gearman/worker.cfg
 	cp $(PROXYDIR)/gearman_proxy.cfg         $(SKEL)/etc/mod-gearman/gearman_proxy.cfg
 	for p in patches/*.skel_patch ; do \
 	    echo "applying $$p..." ; \
