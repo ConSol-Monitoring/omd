@@ -5,6 +5,7 @@ next:
             - Mod-Gearman module update 4.0.3
             - update mod-gearman-worker-go to 1.2.3
           - Grafana 7.5.16
+          - LMD: Update 2.1.1
 
 4.60     Aug 12 2022
           - Naemon:
