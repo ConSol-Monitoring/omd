@@ -2,12 +2,12 @@
   pipeline_stages:
   - regex:
       expression: '^\\[(?P<timestamp>\\d{4}/\\d{2}/\\d{2} ..:..:..)\\]\\[(?P<instance>[a-zA-Z0-9_-]+)\\]\\[(?P<severity>\\w+)\\] (?P<message>(?s:.*))$'
+  - template:
+      source: severity
+      template: '{{ ToLower .Value }}'
   - labels:
       instance:
       severity:
-  - template:
-      source: severity
-      template: '{{ .severity | ToLower }}'
   static_configs:
   - targets:
       - localhost
@@ -38,12 +38,12 @@
   pipeline_stages:
   - regex:
       expression: '^\\[(?P<time>\\d{2}:\\d{2}:\\d{2},\\d+)\\]\\[(?P<severity>\\w+)\\](?P<message>(?s:.*))$'
+  - template:
+      source: severity
+      template: '{{ ToLower .Value }}'
   - labels:
       instance:
       severity:
-  - template:
-      source: severity
-      template: '{{ .severity | ToLower }}'
   static_configs:
   - targets:
       - localhost

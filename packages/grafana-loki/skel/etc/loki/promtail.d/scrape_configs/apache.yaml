@@ -13,12 +13,12 @@
         stages:
         - regex:
             expression: '^(?P<time>\\[\\w+ \\w+\\s+\\d{1,2} \\d{2}:\\d{2}:\\d{2}.\\d+ \\d{4}\\]) \\[(?P<apache_module>\\w+):(?P<severity>\\w+)\\] (?P<message>(?s:.*))$'
+        - template:
+            source: severity
+            template: '{{ ToLower .Value }}'
         - labels:
             severity:
             apache_module:
-        - template:
-            source: severity
-            template: '{{ .severity | ToLower }}'
     - match:
         selector: '{apache_log="access"}'
         stages:
