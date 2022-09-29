@@ -151,6 +151,7 @@ case "$1" in
         ln -sfn /omd/versions/default/share/omd/omd.service /usr/lib/systemd/system/omd.service
         systemctl disable omd.service
         systemctl enable omd.service
+        systemctl daemon-reload
     fi
 
     ;;
