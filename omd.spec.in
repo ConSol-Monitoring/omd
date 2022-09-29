@@ -127,6 +127,7 @@ if [ $ACTIVATE_INIT -eq 1 ]; then
         %systemd_post omd.service
         systemctl disable omd.service
         systemctl enable omd.service
+        systemctl daemon-reload
     fi
 %endif
 fi
@@ -223,17 +224,18 @@ rm -rf /omd/versions/%{version}
 rm -f /omd/versions/default
 %if 0%{?_unitdir:1}
 %systemd_postun omd.service
+systemctl daemon-reload
 %endif
 v=$(ls -A /omd/versions 2>/dev/null| sort -n | tail -n 1)
-if [ -n "$v" ]
-then
+if [ -n "$v" ]; then
     echo "New default version is $v"
     ln -sfn "$v" /omd/versions/default
 %if 0%{?_unitdir:1}
 if test -e /omd/versions/default/share/omd/omd.service; then
-cp /omd/versions/default/share/omd/omd.service %{_unitdir}/omd.service
-%systemd_post omd.service
-systemctl enable omd.service
+    ln -sfn /omd/versions/default/share/omd/omd.service %{_unitdir}/omd.service
+    %systemd_post omd.service
+    systemctl enable omd.service
+    systemctl daemon-reload
 fi
 %endif
 else
