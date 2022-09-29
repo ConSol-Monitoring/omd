@@ -23,9 +23,6 @@ case "$1" in
             echo "$PORT"
             touch $OMD_ROOT/promxyportupdated
         fi
-        if [ -f $OMD_ROOT/etc/promxy/grafana_datasource.yml ] ; then
-            sed -E 's%^(.*)url:.*$%\1url: http://'$CONFIG_PROMXY_TCP_ADDR:$PORT'%' -i $OMD_ROOT/etc/promxy/grafana_datasource.yml
-        fi
     ;;
     depends)
         [ "$CONFIG_PROMXY" = on ]

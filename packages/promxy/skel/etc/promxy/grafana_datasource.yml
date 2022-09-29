@@ -5,21 +5,27 @@
 # config file version
 apiVersion: 1
 
+# delete ds
+deleteDatasources:
+  - name: promxy
+    orgId: 1
+
 # see http://docs.grafana.org/administration/provisioning/#datasources
 datasources:
   - name: promxy
     type: prometheus
     access: proxy
     orgId: 1
-    url: http://###CONFIG_PROMXY_TCP_ADDR###:###CONFIG_PROMXY_TCP_PORT###
+    url: http://${CONFIG_PROMXY_TCP_ADDR}:${CONFIG_PROMXY_TCP_PORT}/${OMD_SITE}/promxy
     basicAuth: true
     basicAuthUser: promxy
-    basicAuthPassword: 
     withCredentials: false
     isDefault: false
+    editable: false
     jsonData:
       httpMethod: POST
       tlsSkipVerify: true
     secureJsonFields:
       basicAuthPassword: true
-    editable: false
+    secureJsonData:
+      basicAuthPassword:

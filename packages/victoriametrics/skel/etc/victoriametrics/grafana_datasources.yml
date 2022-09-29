@@ -1,9 +1,14 @@
 #
-# ports will be overwritten by the influxdb omd config hook
+# ports will be overwritten by the victoriametrics omd config hook
 #
 
 # config file version
 apiVersion: 1
+
+# delete ds
+deleteDatasources:
+  - name: victoriametrics
+    orgId: 1
 
 # see http://docs.grafana.org/administration/provisioning/#datasources
 datasources:
@@ -11,12 +16,13 @@ datasources:
     type: prometheus
     access: proxy
     orgId: 1
-    url: http://localhost:###CONFIG_VICTORIAMETRICS_PORT###
+    url: http://${CONFIG_VICTORIAMETRICS_TCP_ADDR}:${CONFIG_VICTORIAMETRICS_PORT}
     basicAuth: true
     basicAuthUser: TODOgenerated
-    basicAuthPassword: TODOgenerated
     isDefault: false
     editable: false
     jsonData:
-     tlsSkipVerify: true
-
+      httpMethod: POST
+      tlsSkipVerify: true
+    secureJsonData:
+      basicAuthPassword: TODOgenerated

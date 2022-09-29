@@ -5,13 +5,18 @@
 # config file version
 apiVersion: 1
 
+# delete ds
+deleteDatasources:
+  - name: prometheus
+    orgId: 1
+
 # see http://docs.grafana.org/administration/provisioning/#datasources
 datasources:
   - name: prometheus
     type: prometheus
     access: proxy
     orgId: 1
-    url: http://127.0.0.1:###CONFIG_PROMETHEUS_TCP_PORT###/###SITE###/prometheus
+    url: http://${CONFIG_PROMETHEUS_TCP_ADDR}:${CONFIG_PROMETHEUS_TCP_PORT}/${OMD_SITE}/prometheus
     isDefault: false
     editable: false
     jsonData:
