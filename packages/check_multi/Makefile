@@ -3,11 +3,12 @@ include ../../Makefile.omd
 .PHONY: skel
 
 NAME     = check_multi
-VERSION  = 83346b6
-SRCDIR   = $(NAME)-$(VERSION)
+BRANCH   = main
+SRCDIR   = $(NAME)-$(BRANCH)
 ROOTDIR  = \\\$$ENV{OMD_ROOT}
 SITE     = \\\$$ENV{OMD_SITE}
 TESTDIR  = ../../t/packages/check_multi/t
+SHELL    = /bin/bash
 
 # TODO
 #--with-nagios-name=<nagios|icinga>       set nagios name (there might be some clones ;)) (default:nagios)
@@ -75,11 +76,7 @@ CONFIGUREOPTS = \
 	--with-tmp_etc="$(ROOTDIR)/tmp/check_multi/etc" \
 
 build:
-	tar xzf $(NAME)-latest-$(VERSION).tar.gz
-	for p in patches/*.patch ; do \
-	    echo "applying $$p..." ; \
-	    ( cd $(SRCDIR) ; patch -p1 ) < $$p || exit 1; \
-	done
+	tar zxf $(NAME)-$(BRANCH).tar.gz
 	cd $(SRCDIR) ; ./configure $(CONFIGUREOPTS)
 	$(MAKE) -C $(SRCDIR) all
 
@@ -87,11 +84,6 @@ install:
 	#--- plugin
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/monitoring-plugins
 	install -m 755 $(SRCDIR)/plugins/check_multi $(DESTDIR)$(OMD_ROOT)/lib/monitoring-plugins
-
-	#--- readme
-	test -d $(DESTDIR)$(OMD_ROOT)/share/doc/check_multi || \
-		mkdir -p $(DESTDIR)$(OMD_ROOT)/share/doc/check_multi
-	install -m 644 $(SRCDIR)/README $(DESTDIR)$(OMD_ROOT)/share/doc/check_multi
 
 	#--- allow to find testdir in plugin directory
 	test -L check_multi || ln -s $(SRCDIR) check_multi
@@ -105,12 +97,12 @@ clean:
 test:
 	$(MAKE) build && $(MAKE) install
 
-get:
-	#wget --no-clobber my-plugin.de/check_multi/check_multi-stable-$(VERSION).tar.gz
-	wget --no-clobber my-plugin.de/check_multi/check_multi-latest.tar.gz
-
-get-force:
-	#rm check_multi-stable-$(VERSION).tar.gz
-	#wget --no-clobber my-plugin.de/check_multi/check_multi-stable-$(VERSION).tar.gz
-	rm check_multi-latest-$(VERSION).tar.gz
-	wget --no-clobber my-plugin.de/check_multi/check_multi-latest.tar.gz
+package: clean
+	rm -f $(NAME)-$(BRANCH).tar.gz
+	wget "https://github.com/ConSol/check_multi/archive/refs/heads/$(BRANCH).tar.gz" -O $(NAME)-$(BRANCH).tar.gz
+	tar zxf $(NAME)-$(BRANCH).tar.gz
+	rm $(NAME)-$(BRANCH).tar.gz
+	rm -rf $(NAME)-$(BRANCH)/doc
+	tar cf $(NAME)-$(BRANCH).tar $(NAME)-$(BRANCH)
+	gzip -9 $(NAME)-$(BRANCH).tar
+	rm -rf $(NAME)-$(BRANCH)
