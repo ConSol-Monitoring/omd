@@ -5,7 +5,7 @@
 check_omd.py - a script for checking a particular OMD site status
 2018 By Christian Stankowic <info at cstan dot io>
 https://github.com/stdevel/check_omd
-Last modified by Lorenz Gruenwald 09.02.2022 (requires python 3.6)
+Last modified by Lorenz Gruenwald 07.10.2022 (requires python 3.6)
 """
 
 import argparse
@@ -16,8 +16,10 @@ import logging
 import stat
 import os.path
 import time
+import psutil
+import re
 
-__version__ = "1.5.1"
+__version__ = "1.6.0"
 """
 str: Program version
 """
@@ -32,6 +34,19 @@ def raise_timeout(cmd, timeout):
         os.remove(lockfile)
         LOGGER.debug("removing lockfile %s", lockfile)
     sys.exit(2)
+
+def proc_running(service):
+    for proc in psutil.process_iter():
+        try:
+            # Check if process name contains service
+            if service.lower() in proc.name().lower():
+                if proc.cmdline():
+                    if re.search(r"{}".format("start|stop|restart|reload")," ".join(proc.cmdline()),re.I):
+                        LOGGER.debug("Found start/stop/restart/reload process related to '%s'", service)
+                        return True
+        except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+            pass
+    return False
 
 def get_site_status():
     """
@@ -91,6 +106,10 @@ def get_site_status():
                         warn_srvs.append(service)
                     else:
                         if OPTIONS.heal:
+                            # check if another process related to this is already in progress
+                            if proc_running(service):
+                                print("WARNING - {} was not running, but another process is starting/stopping/restarting it".format(service))
+                                return 1
                             cmd = ['omd', 'restart', service]
                             LOGGER.debug("running command '%s'", cmd)
                             try:
@@ -155,10 +174,10 @@ if __name__ == "__main__":
         print ("Unsupported python version, 3.6 required, you have {}".format(sys.version))
         sys.exit(2)
     # define description, version and load parser
-    DESC = '''%prog is used to check a particular OMD site status. By default,
+    DESC = """%(prog)s is used to check a particular OMD site status. By default,
  the script only checks a site's overall status. It is also possible to exclude
  particular services and only check the remaining services (e.g. rrdcached,
- npcd, icinga, apache, crontab).'''
+ npcd, icinga, apache, crontab)."""
     EPILOG = 'See also: https://github.com/stdevel/check_omd'
     PARSER = argparse.ArgumentParser(description=DESC, epilog=EPILOG)
     PARSER.add_argument('--version', action='version', version=__version__)
