@@ -130,7 +130,7 @@ binary-arch: build install
 	dh_link
 	dh_strip --exclude=waitmax --exclude=agent_modbus --exclude=.dbg
 	dh_compress
-	dh_fixperms
+	dh_fixperms --exclude=node_modules
 #	dh_perl
 #	dh_makeshlibs
 	dh_installdeb
