@@ -6,6 +6,7 @@ PACKAGES=freetds \
          go-1.4 \
          go-1.18 \
          node \
+         node-modules \
          influxdb \
          nagflux \
          python-modules \
