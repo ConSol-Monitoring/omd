@@ -65,9 +65,9 @@ rm -f $RPM_BUILD_ROOT/usr/bin/omd
 rm -f $RPM_BUILD_ROOT/usr/share/man/man8/omd.8.gz
 rm -f $RPM_BUILD_ROOT/@APACHE_CONFDIR@/*
 rm -f $RPM_BUILD_ROOT/etc/init.d/omd
-find $RPM_BUILD_ROOT/opt/omd/versions/%{version}/bin/ -type f | grep -v waitmax | grep -v agent_modbus | grep -v \.dbg | xargs strip 2>&1 | grep -iv 'File format not recognized' ||:
+find $RPM_BUILD_ROOT/opt/omd/versions/%{version}/bin/ -type f | grep -v waitmax | grep -v agent_modbus | grep -v \.dbg | grep -v .local-chromium | xargs strip 2>&1 | grep -iv 'File format not recognized' ||:
 find $RPM_BUILD_ROOT/opt/omd/versions/%{version}/lib/nagios/plugins/ -type f | grep -v \.dbg | xargs strip 2>&1 | grep -iv 'File format not recognized' ||:
-find $RPM_BUILD_ROOT/opt/omd/versions/%{version}/lib/ -type f | grep -v waitmax | grep -v agent_modbus | grep -v \.dbg | xargs strip 2>&1 | grep -iv 'File format not recognized' ||:
+find $RPM_BUILD_ROOT/opt/omd/versions/%{version}/lib/ -type f | grep -v waitmax | grep -v agent_modbus | grep -v \.dbg | grep -v .local-chromium | xargs strip 2>&1 | grep -iv 'File format not recognized' ||:
 
 %files
 %defattr(-,root,root)
