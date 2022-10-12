@@ -1,0 +1,88 @@
+#!/bin/bash
+
+. lib/omd/init_profile
+. etc/omd/site.conf
+
+# Start only if at least on configuration is actived
+
+test "$(ls -A $OMD_ROOT/etc/shellinabox/conf.d/)" || exit 5
+
+PIDFILE=$OMD_ROOT/tmp/run/shellinaboxd.pid
+DAEMON=$OMD_ROOT/bin/shellinaboxd
+OPTS="-t --background=$PIDFILE"
+
+CONF_FILE=$OMD_ROOT/etc/shellinabox/shellinabox.conf
+CONF_DIR=$OMD_ROOT/etc/shellinabox/conf.d/*.conf
+
+MAIN_CFG=$(grep ^- ${CONF_FILE})
+SERVICES=$(grep -h ^- ${CONF_DIR} | tr '\n' ' ')
+
+
+__init_hook $0 $1 pre
+
+case "$1" in
+    start)
+ 	echo -n 'Starting diagnostic... '
+	if [ -e "$PIDFILE" ] ; then
+	    PID=$(cat $PIDFILE)
+	    if [ -n "$PID" ] && ps $PID > /dev/null 2>&1 ; then
+		echo "still running with pid $PID! Aborting!"
+		exit 1
+	    fi
+	    echo "removing stale pid file..."
+	    rm -f $PIDFILE
+	fi
+
+        # Do not use usual system daedemo path. Some start script
+        # (e.g. SLES) will think that the system xinetd is already
+        # running and do not start it if the OMD xinetd is running.
+        $DAEMON $OPTS $MAIN_CFG $SERVICES
+        echo OK
+    ;;
+    stop)
+	echo -n 'Stopping diagnostic... '
+        PID=$(cat $PIDFILE 2>/dev/null)
+        if [ -z "$PID" ] ; then
+	    echo "not running."
+        elif kill "$PID" ; then
+	    echo "OK"
+        else
+	    echo "Failed"
+        fi
+    ;;
+    restart)
+	$0 stop
+	$0 start
+    ;;
+    reload)
+	echo -n 'Reloading diagnostic '
+	if [ -e "$PIDFILE" ] ; then
+	    PID=$(cat $PIDFILE)
+	    if kill -HUP $PID
+	    then
+		echo OK
+	    else
+		echo ERROR
+		exit 1
+	    fi
+	else
+	    echo "not running"
+	    exit 1
+        fi
+    ;;
+    status)
+	echo -n 'Checking status of diagnostic '
+	if [ -e "$PIDFILE" ] ; then
+	    PID=$(cat $PIDFILE)
+	    if [ -n "$PID" ] && ps $PID > /dev/null 2>&1 ; then
+		echo "running"
+		exit 0
+	    fi
+	fi
+	echo "stopped"
+	exit 1
+    ;;
+    *)
+	echo "Usage: $0 {start|stop|restart|reload|status}"
+    ;;
+esac
