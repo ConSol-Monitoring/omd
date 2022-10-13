@@ -1,5 +1,6 @@
 #!/bin/bash
 
+. .profile
 . lib/omd/init_profile
 . etc/omd/site.conf
 
@@ -11,12 +12,16 @@ PIDFILE=$OMD_ROOT/tmp/run/shellinaboxd.pid
 DAEMON=$OMD_ROOT/bin/shellinaboxd
 OPTS="-t --background=$PIDFILE"
 
-CONF_FILE=$OMD_ROOT/etc/shellinabox/shellinabox.conf
+CONF_FILE=$OMD_ROOT/etc/shellinabox/webshell.conf
 CONF_DIR=$OMD_ROOT/etc/shellinabox/conf.d/*.conf
 
 MAIN_CFG=$(grep ^- ${CONF_FILE})
 SERVICES=$(grep -h ^- ${CONF_DIR} | tr '\n' ' ')
 
+MAIN_CFG=${MAIN_CFG//###OMD_SITE###/$OMD_SITE}
+MAIN_CFG=${MAIN_CFG//###OMD_ROOT###/$OMD_ROOT}
+SERVICES=${SERVICES//###OMD_SITE###/$OMD_SITE}
+SERVICES=${SERVICES//###OMD_ROOT###/$OMD_ROOT}
 
 __init_hook $0 $1 pre
 

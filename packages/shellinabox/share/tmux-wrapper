@@ -1,0 +1,33 @@
+#!/bin/sh
+
+. $HOME/.profile
+# check if TMUX is installed
+if [ -x "$(tmux -V  2&>1 > /dev/null)" ]; then
+    echo "TMUX not found"
+    exit 1
+fi
+
+# Set Session Name
+SESSION=OMD_${OMD_SITE}
+SESSIONEXISTS=$(tmux list-sessions | grep $SESSION)
+
+# Only create tmux session if it doesn't already exist
+if [ "$SESSIONEXISTS" = "" ]
+then
+    # Start New Session with our name
+    tmux new-session -d -s ${SESSION}
+    #tmux source-file ~/share/shellinabox/tmux-settings.conf; tmux display "drin"
+
+    # Name first Pane and start zsh
+    tmux rename-window -t 0 -n ${OMD_SITE}
+    ## Create and setup pane for OMD
+    tmux split-window -v
+    tmux send-keys -t 1 'top' C-j
+    tmux select-pane -t 0
+    # TMUX Settings
+    tmux set status On
+    tmux set status-interval 1
+fi
+
+# Attach Session, on the Main window
+tmux attach-session -t $SESSION:0

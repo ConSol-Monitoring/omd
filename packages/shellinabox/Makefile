@@ -23,7 +23,7 @@ install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/bin
 	install -m 755 $(NAME)/shellinaboxd  $(DESTDIR)$(OMD_ROOT)/bin
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/shellinabox
-	rsync -a $(NAME)/demo/* $(DESTDIR)$(OMD_ROOT)/share/shellinabox/
+	rsync -a share/ $(DESTDIR)$(OMD_ROOT)/share/shellinabox/
 
 package:
 	git clone --depth=1 --branch "master" https://github.com/shellinabox/shellinabox.git
