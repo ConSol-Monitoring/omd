@@ -12,7 +12,7 @@ PIDFILE=$OMD_ROOT/tmp/run/shellinaboxd.pid
 DAEMON=$OMD_ROOT/bin/shellinaboxd
 OPTS="-t --background=$PIDFILE"
 
-CONF_FILE=$OMD_ROOT/etc/shellinabox/webshell.conf
+CONF_FILE=$OMD_ROOT/etc/shellinabox/main.conf
 CONF_DIR=$OMD_ROOT/etc/shellinabox/conf.d/*.conf
 
 MAIN_CFG=$(grep ^- ${CONF_FILE})
