@@ -13,6 +13,7 @@ next 5.x:
           - rrdtool: Update to 1.8.0
           - Icinga2 update to 2.13.4
           - Grafana:
+            - update to 9.2.4
             - update pnp datasource
           - Dokuwiki
             - Updated to Version 2022-07-31
