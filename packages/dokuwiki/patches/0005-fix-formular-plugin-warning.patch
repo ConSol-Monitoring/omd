@@ -1,0 +1,20 @@
+--- a/lib/plugins/formular/syntax.php	2022-10-20 09:35:57.400000000 +0200
++++ b/lib/plugins/formular/syntax.php	2022-10-20 09:37:29.188000000 +0200
+@@ -677,7 +677,7 @@
+ 	/**
+ 	* Handle the match
+ 	*/
+-	function handle($match, $state, $pos, &$handler) {
++	function handle($match, $state, $pos, $handler) {
+ 		global $ID;
+ 		
+ 		switch ($state) {
+@@ -1084,7 +1084,7 @@
+ 	/**
+ 	 * Create output
+ 	 */
+-	function render($mode, &$renderer, $data) {
++	function render($mode, $renderer, $data) {
+ 		if ($mode == 'xhtml') {
+             $renderer->info['cache'] = false;
+ 			$renderer->doc .= $data;

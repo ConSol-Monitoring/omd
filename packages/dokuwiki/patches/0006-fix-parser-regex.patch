@@ -1,0 +1,11 @@
+--- a/inc/parser/parser.php	2022-10-20 10:06:54.132000000 +0200
++++ b/inc/parser/parser.php	2022-10-20 10:07:17.656000000 +0200
+@@ -996,7 +996,7 @@
+     var $pattern;
+ 
+     function preConnect() {
+-        $this->pattern = "\\\\\\\\\w+?(?:\\\\[\w-$]+)+";
++        $this->pattern = "\\\\\\\\\w+?(?:\\\\[\w\-$]+)+";
+     }
+ 
+     function connectTo($mode) {
