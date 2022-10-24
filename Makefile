@@ -171,6 +171,14 @@ pack:
 	# Remove site-specific directories that went under /omd/version
 	rm -rf $(DESTDIR)/{var,tmp}
 
+	# bail out if some patches did not apply
+	@rejected=$$(find $(DESTDIR)$(OMD_ROOT)/skel -type f -name \*.rej) ; \
+	if [ -n "$$rejected" ] ; then \
+	    echo "Found patch reject files, bailing out:" ; \
+	    echo "$$rejected" ; \
+	    exit 1; \
+	fi
+
 	# Pack the whole stuff into a tarball
 	tar czf $(BIN_TGZ) --owner=root --group=root -C $(DESTDIR) .
 
