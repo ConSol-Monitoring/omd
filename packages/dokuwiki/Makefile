@@ -19,10 +19,8 @@ build:
 
 	for p in patches/*.patch ; do \
 		echo "applying $$p..." ; \
-		( cd $(DIR) ; patch -p1 -b ) < $$p ; \
+		( cd $(DIR) ; patch -p1 ) < $$p || exit 1; \
 	done
-	find $(DIR)/ -name \*.orig -exec rm {} \;
-	find $(DIR)/ -name ._\* -exec rm {} \;
 
 install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/dokuwiki
