@@ -34,6 +34,7 @@ install:
 skel:
 
 clean:
+	[ ! -e $(GOPATH) ] || chmod -R 777 $(GOPATH)
 	rm -rf $(GOPATH)
 
 deps: clean
@@ -43,10 +44,10 @@ deps: clean
 		mkdir -p $(GOPATH)/src/$(GITBASE) && \
 		cd $(GOPATH)/src/$(GITBASE) && \
 		git clone --depth=1 --branch "$(BRANCH)" https://$(GITURL) && \
-		go get ./... && \
+		cd $(NAME) && \
+		make vendor
 		cd $(PWD) && \
-		rm -rf  $(GOPATH)/src/$(GITBASE)
-		tar zcf $(DEPS_SRC) --exclude=.git --exclude=*_test.go $(GOPATH)/src/
+		tar zcf $(DEPS_SRC) --exclude=.git --exclude=*_test.go $(GOPATH)/src/$(GITURL)/vendor
 
 package: clean
 	mkdir -p $(GOPATH)
