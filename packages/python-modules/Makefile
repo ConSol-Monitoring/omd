@@ -61,7 +61,7 @@ endif
 MODULES += requests-2.10.0.tar.gz
 MODULES += prometheus_client-0.11.0.tar.gz
 MODULES += nagiosplugin-1.3.2.tar.gz
-MODULES += pyvmomi-6.7.1.2018.12.tar.gz
+MODULES += pyvmomi-7.0.3.tar.gz
 MODULES += pycryptodomex-3.8.1.tar.gz
 MODULES += pysnmp-4.4.12.tar.gz
 
