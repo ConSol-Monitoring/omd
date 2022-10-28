@@ -15,6 +15,7 @@ next 5.x:
           - Grafana:
             - update to 9.2.4
             - update pnp datasource
+            - update thruk datasource
           - Dokuwiki
             - Updated to Version 2022-07-31
 

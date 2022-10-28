@@ -1,8 +1,8 @@
 include ../../Makefile.omd
 
-NAME       = grafana-thruk-datasource
-VERSION    = 1.0.4
-SRC        = $(NAME)-$(VERSION).tar.gz
+NAME       = sni-thruk-datasource
+VERSION    = 2.0.0
+SRC        = $(NAME)-$(VERSION).zip
 
 .PHONY: skel
 
@@ -12,11 +12,10 @@ install:
 
 skel:
 	mkdir -p $(SKEL)/var/grafana/plugins
-	tar zxf $(SRC) -C $(SKEL)/var/grafana/plugins
-	mv $(SKEL)/var/grafana/plugins/$(NAME)-$(VERSION) $(SKEL)/var/grafana/plugins/sni-thruk-datasource
+	unzip $(SRC) -d $(SKEL)/var/grafana/plugins
 
 clean:
 
 upstream:
 	rm -f $(SRC)
-	wget https://github.com/sni/grafana-thruk-datasource/archive/v$(VERSION).tar.gz -O $(SRC)
+	wget https://github.com/sni/grafana-thruk-datasource/releases/download/v$(VERSION)/$(NAME)-$(VERSION).zip -O $(SRC)
