@@ -3,7 +3,7 @@ include ../../Makefile.omd
 .PHONY: skel
 
 NAME       = snmp_exporter
-VERSION    = 0.20.0
+VERSION    = consol
 BRANCH     = master
 SRC        = $(NAME)-$(VERSION).tar.gz
 GOPKG      = 1.18
