@@ -23,6 +23,13 @@ case "$1" in
             rm -f $OMD_ROOT/etc/prometheus/apache.conf
             rm -f $OMD_ROOT/etc/apache/conf.d/prometheus.conf
             rm -f $OMD_ROOT/prometheusportupdated
+        cat <<EOF > $OMD_ROOT/etc/apache/conf.d/prometheus.conf
+# Better do not edit manually
+<Location "/$OMD_SITE/prometheus">
+    ErrorDocument 404 /503.html?PROMETHEUS=on
+</Location>
+EOF
+
         elif [ "$2" == "on" ]; then
             rm -f $OMD_ROOT/etc/apache/conf.d/prometheus.conf
             ln -s $OMD_ROOT/etc/prometheus/apache.conf \
