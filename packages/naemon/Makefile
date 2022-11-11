@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 NAME = naemon
-VERSION = 1.3.1
+VERSION = 1.4.0
 DIR = $(NAME)-$(VERSION)
 
 # Configure options for Naemon. Since we want to compile
