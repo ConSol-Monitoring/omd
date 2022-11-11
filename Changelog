@@ -11,6 +11,7 @@ next 5.x:
           - Naemon:
             - update core to 1.4.0
             - update livestatus to 1.4.0
+            - update vimvault to 1.4.0
             - disable writing status.dat
           - rrdtool: Update to 1.8.0
           - Icinga2 update to 2.13.4
