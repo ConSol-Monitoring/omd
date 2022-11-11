@@ -12,6 +12,8 @@ next 5.x:
             - disable writing status.dat
           - rrdtool: Update to 1.8.0
           - Icinga2 update to 2.13.4
+	  - Prometheus
+	    - node_exporter 1.4.0
           - Grafana:
             - update to 9.2.4
             - update pnp datasource
