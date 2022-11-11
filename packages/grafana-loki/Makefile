@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 NAME       = grafana-loki
-VERSION    = 2.6.0
+VERSION    = 2.7.0
 DIR        = loki-$(VERSION)
 SRC        = $(DIR).tar.gz
 GOPKG      = 1.18
