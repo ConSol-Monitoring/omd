@@ -19,6 +19,7 @@ next 5.x:
             - Loki update to 2.7.0
           - Dokuwiki
             - Updated to Version 2022-07-31
+	  - VictoriaMetrics 1.79.5
 
 next:
           - Thruk: update to 2.50
