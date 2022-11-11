@@ -26,7 +26,7 @@ next:
             - Mod-Gearman module update 4.0.3
             - update mod-gearman-worker-go to 1.2.3
           - Grafana 7.5.17
-          - LMD: Update 2.1.1
+          - LMD: Update 2.1.2
           - Monitoring-Plugins: update to 2.3.2
 
 4.60     Aug 12 2022
