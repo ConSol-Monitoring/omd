@@ -12,10 +12,11 @@ next 5.x:
             - disable writing status.dat
           - rrdtool: Update to 1.8.0
           - Icinga2 update to 2.13.4
-	  - Prometheus
-	    - node_exporter 1.4.0
-	    - pushgateway 1.4.3
-	    - alertmanager 0.24.0
+          - Prometheus
+            - node_exporter 1.4.0
+            - pushgateway 1.4.3
+            - alertmanager 0.24.0
+            - blackbox_exporter 0.22.0
           - Grafana:
             - update to 9.2.4
             - update pnp datasource
@@ -23,7 +24,7 @@ next 5.x:
             - Loki update to 2.7.0
           - Dokuwiki
             - Updated to Version 2022-07-31
-	  - VictoriaMetrics 1.79.5
+          - VictoriaMetrics 1.79.5
 
 next:
           - Thruk: update to 2.50
