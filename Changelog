@@ -15,6 +15,7 @@ next 5.x:
 	  - Prometheus
 	    - node_exporter 1.4.0
 	    - pushgateway 1.4.3
+	    - alertmanager 0.24.0
           - Grafana:
             - update to 9.2.4
             - update pnp datasource
