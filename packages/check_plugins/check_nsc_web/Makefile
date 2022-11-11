@@ -3,7 +3,7 @@ include ../../../Makefile.omd
 NAME        = check_nsc_web
 VERSION     = 0.5.3-consol
 SRC         = $(NAME)-$(VERSION).tar.gz
-GOPKG       = 1.18
+GOPKG       = 1.19
 GOVERSION   = $(shell grep ^VERSION ../../go-${GOPKG}/Makefile | awk '{ print $$3 }')
 PWD         = $(shell pwd)
 #BRANCH      = v$(VERSION)

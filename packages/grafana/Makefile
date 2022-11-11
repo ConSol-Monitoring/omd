@@ -4,7 +4,7 @@ NAME       = grafana
 VERSION    = 9.2.4
 SRC        = $(NAME)-$(VERSION).tar.gz
 GOPATH     = go
-GOPKG      = 1.18
+GOPKG      = 1.19
 GOVERSION  = $(shell grep ^VERSION ../go-${GOPKG}/Makefile | awk '{ print $$3 }')
 PWD        = $(shell pwd)
 GO         = export GOROOT=$(PWD)/../go-$(GOPKG)/go-$(GOVERSION) && export GOPATH=$(PWD)/$(GOPATH)/ && export PATH=$(PWD)/build_bin:$$GOROOT/bin:$$PATH && export GOFLAGS=-buildvcs=false && go
