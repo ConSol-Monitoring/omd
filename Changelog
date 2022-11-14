@@ -1,6 +1,6 @@
 This file documents the revision history for the Open Monitoring Distribution (Labs Edition)
 
-next 5.x:
+5.00     Nov 14 2022
           - DEPRECATION WARNING: the following components got removed
             - python 2 modules
           - OMD:
@@ -28,13 +28,9 @@ next 5.x:
           - Dokuwiki
             - Updated to Version 2022-07-31
           - VictoriaMetrics 1.79.5
-
-next:
-          - Thruk: update to 2.50
           - Gearman:
             - Mod-Gearman module update 4.0.4
             - update mod-gearman-worker-go to 1.2.3
-          - Grafana 7.5.17
           - LMD: Update 2.1.2
           - Monitoring-Plugins: update to 2.3.2
 
