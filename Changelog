@@ -32,7 +32,7 @@ next 5.x:
 next:
           - Thruk: update to 2.50
           - Gearman:
-            - Mod-Gearman module update 4.0.3
+            - Mod-Gearman module update 4.0.4
             - update mod-gearman-worker-go to 1.2.3
           - Grafana 7.5.17
           - LMD: Update 2.1.2
