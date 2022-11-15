@@ -196,7 +196,7 @@
 +            peer = ###ROOT###/tmp/run/live
 +       </options>
 +       <configtool>
-+            core_conf      = ###ROOT###/tmp/core/core.cfg
++            core_conf      = ###ROOT###/tmp/core/naemon.cfg
 +            obj_check_cmd  = ###ROOT###/etc/init.d/core check
 +            obj_reload_cmd = ###ROOT###/etc/init.d/core reload
 +            obj_readonly   = check_mk_objects\.cfg
