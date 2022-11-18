@@ -1,5 +1,9 @@
 This file documents the revision history for the Open Monitoring Distribution (Labs Edition)
 
+next:
+          - Grafana:
+            - update pnp datasource
+ 
 5.00     Nov 14 2022
           - DEPRECATION WARNING: the following components got removed
             - python 2 modules
