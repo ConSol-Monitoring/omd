@@ -1,0 +1,29 @@
+#!/bin/bash
+
+# Alias: TCP port the promlens listens on
+# Menu: Addons
+# Description:
+#  If you enabled promlens, this is the
+#  listening port of the daemon.
+
+case "$1" in
+    default)
+        # Scan for a free port number by looking at the
+        # configuration of the other sites...
+        PORT=$($OMD_ROOT/lib/omd/port_is_used PROMLENS_TCP_PORT 9401)
+        echo "$PORT"
+    ;;
+    choices)
+        echo "[0-9]{1,4}"
+    ;;
+    set)
+        PORT=$($OMD_ROOT/lib/omd/port_is_used PROMLENS_TCP_PORT $2)
+        sed -e 's/127.0.0.1:[^ \/]*/127.0.0.1:'$PORT'/g'  -i $OMD_ROOT/etc/apache/conf.d/promlens.conf
+        if [ "$PORT" != "$2" ] ; then
+            echo "$PORT"
+        fi
+    ;;
+    depends)
+    [ "$CONFIG_PROMLENS" = "on" ]
+    ;;
+esac

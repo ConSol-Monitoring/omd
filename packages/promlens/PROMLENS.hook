@@ -1,0 +1,23 @@
+#!/bin/bash
+
+# Alias: Promlens Daemon
+# Menu: Addons
+# Description:
+#  Promlens is a PromQL query inspector
+
+case "$1" in
+    default)
+        echo "off"
+    ;;
+    choices)
+        echo "on: enable promlens"
+        echo "off: disable promlens"
+    ;;
+    set)
+        rm -f $OMD_ROOT/etc/prometheus/prometheus.d/scrape_configs/static/01-grafana.yml
+        if [ "$2" == "on" ]; then
+            ln -s $OMD_ROOT/share/grafana/01-grafana.yml \
+              $OMD_ROOT/etc/prometheus/prometheus.d/scrape_configs/static/01-grafana.yml
+        fi
+    ;;
+esac

@@ -51,6 +51,7 @@ PACKAGES=freetds \
          prometheus_alertmanager \
          prometheus_blackbox_exporter \
          prometheus_pushgateway \
+         promlens \
          promxy \
          telegraf \
          snmptrapd \
