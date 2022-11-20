@@ -4,4 +4,7 @@
         compress
         delaycompress
         create 640 ###SITE### ###SITE### 
+        postrotate
+                ###ROOT###/etc/init.d/rrdcached reload
+        endscript
 }
