@@ -1,0 +1,115 @@
+From b78dba8312a028b329bf4ab2f890c2361f96bd32 Mon Sep 17 00:00:00 2001
+From: Sven Nierlein <sven@nierlein.de>
+Date: Fri, 18 Nov 2022 17:40:13 +0100
+Subject: [PATCH] close worker standard filehandles (fixes #401)
+
+---
+ lib/nsutils.c       | 19 +++++++++++++++++++
+ lib/nsutils.h       |  6 ++++++
+ lib/worker.c        |  2 ++
+ lib/worker.h        |  1 +
+ src/naemon/naemon.c | 14 ++------------
+ 5 files changed, 30 insertions(+), 12 deletions(-)
+
+diff --git a/lib/nsutils.c b/lib/nsutils.c
+index 3858a7de4..cf01ad89d 100644
+--- a/lib/nsutils.c
++++ b/lib/nsutils.c
+@@ -81,3 +81,22 @@ const char *mkstr(const char *fmt, ...)
+ 	va_end(ap);
+ 	return ret;
+ }
++
++
++
++/* close and reopen stdin, stdout and stderr to /dev/null */
++void close_standard_fds(void)
++{
++	/* close existing stdin, stdout, stderr */
++	close(0);
++	close(1);
++	close(2);
++
++	/* THIS HAS TO BE DONE TO AVOID PROBLEMS WITH STDERR BEING REDIRECTED TO SERVICE MESSAGE PIPE! */
++	/* re-open stdin, stdout, stderr with known values */
++	open("/dev/null", O_RDONLY);
++	open("/dev/null", O_WRONLY);
++	open("/dev/null", O_WRONLY);
++
++	return;
++}
+\ No newline at end of file
+diff --git a/lib/nsutils.h b/lib/nsutils.h
+index 7b610b249..005460dfb 100644
+--- a/lib/nsutils.h
++++ b/lib/nsutils.h
+@@ -6,6 +6,7 @@
+ #endif
+ 
+ #include <sys/types.h>
++#include <fcntl.h>
+ 
+ NAGIOS_BEGIN_DECL
+ 
+@@ -114,6 +115,11 @@ extern int tv_delta_msec(const struct timeval *start, const struct timeval *stop
+  */
+ extern float tv_delta_f(const struct timeval *start, const struct timeval *stop);
+ 
++/**
++ * close and reopen stdin, stdout and stderr to /dev/null
++ */
++void close_standard_fds(void);
++
+ NAGIOS_END_DECL
+ 
+ /** @} */
+diff --git a/lib/worker.c b/lib/worker.c
+index 337cb62cb..21edd0497 100644
+--- a/lib/worker.c
++++ b/lib/worker.c
+@@ -57,6 +57,8 @@ int spawn_named_helper(char *path, char **argv)
+ 	if (pid)
+ 		return pid;
+ 
++	close_standard_fds();
++
+ 	ret = execvp(path, argv);
+ 	/* if execvp() fails, there's really nothing we can do */
+ 	exit(ret);
+diff --git a/lib/worker.h b/lib/worker.h
+index 16eba692b..6c3a9d8be 100644
+--- a/lib/worker.h
++++ b/lib/worker.h
+@@ -8,6 +8,7 @@
+ #include "lnae-utils.h"
+ #include "kvvec.h"
+ #include "bufferqueue.h"
++#include "nsutils.h"
+ 
+ /**
+  * @file worker.h
+diff --git a/src/naemon/naemon.c b/src/naemon/naemon.c
+index f2ad47737..9e0126139 100644
+--- a/src/naemon/naemon.c
++++ b/src/naemon/naemon.c
+@@ -587,18 +587,8 @@ int main(int argc, char **argv)
+ 		timing_point("Loaded modules\n");
+ 
+ 		/* close stdin after the neb modules loaded so they can still ask for passwords */
+-		if (daemon_mode == TRUE && sigrestart == FALSE) {
+-			/* close existing stdin, stdout, stderr */
+-			close(0);
+-			close(1);
+-			close(2);
+-
+-			/* THIS HAS TO BE DONE TO AVOID PROBLEMS WITH STDERR BEING REDIRECTED TO SERVICE MESSAGE PIPE! */
+-			/* re-open stdin, stdout, stderr with known values */
+-			open("/dev/null", O_RDONLY);
+-			open("/dev/null", O_WRONLY);
+-			open("/dev/null", O_WRONLY);
+-		}
++		if (daemon_mode == TRUE && sigrestart == FALSE)
++			close_standard_fds();
+ 
+ 		timing_point("Making first callback\n");
+ 		broker_program_state(NEBTYPE_PROCESS_PRELAUNCH, NEBFLAG_NONE, NEBATTR_NONE);
