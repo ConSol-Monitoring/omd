@@ -86,8 +86,8 @@ case "$1" in
         # so we can easier kill the crap
         nohup setsid $DAEMON $OPTIONS >>$LOGFILE 2>&1 &
 
-        # wait for grafana to write pidfile
-        counter=20
+        # wait for grafana to write pidfile (first startup might take a while due to db migrations)
+        counter=60
         up=0
         while (( counter-- )) ; do
             if get_status > /dev/null 2>&1 ; then
