@@ -20,7 +20,6 @@ case "$1" in
             [ "$CONFIG_VICTORIAMETRICS" = on ] && echo "Victoriametrics port $2 is in use. I've choosen $PORT instead." >&2
             echo "$PORT"
         fi
-        LOCAL_ADDRESS='localhost:'
 
         # adapt configs:
         if [ -f  $OMD_ROOT/etc/victoriametrics/victoriametrics.conf ] ; then
@@ -32,15 +31,15 @@ case "$1" in
            auth="$vm_httpAuth_username:$vm_httpAuth_password"'@'
         fi
         if [ -f $OMD_ROOT/etc/nagflux/config.gcfg ] ; then
-            sed -e '/^\[InfluxDB \"victoriametrics\"\]/,/^\[/{s%^\s*Address = \("https\{0,1\}:\).*%\tAddress = \1//'$auth$LOCAL_ADDRESS$PORT'"%}' -i $OMD_ROOT/etc/nagflux/config.gcfg
+            sed -e '/^\[InfluxDB \"victoriametrics\"\]/,/^\[/{s%^\s*Address = \("https\{0,1\}:\).*%\tAddress = \1//'$auth$CONFIG_VICTORIAMETRICS_TCP_ADDR':'$PORT'"%}' -i $OMD_ROOT/etc/nagflux/config.gcfg
         fi
 
         if [ -f $OMD_ROOT/etc/histou/histou.ini ] ; then
-            sed -e '/^\[promql\]/,/^\[/{s%^url = "\(http.?\)://.*/query?\(.*$\)%url = "\1://'$auth$LOCAL_ADDRESS$PORT'/query?\2%}' -i $OMD_ROOT/etc/histou/histou.ini
+            sed -e '/^\[promql\]/,/^\[/{s%^url = "\(http.?\)://.*/query?\(.*$\)%url = "\1://'$auth$CONFIG_VICTORIAMETRICS_TCP_ADDR':'$PORT'/query?\2%}' -i $OMD_ROOT/etc/histou/histou.ini
         fi
 
         if [ -f $OMD_ROOT/etc/victoriametrics/remote_write.yml_template ] ; then
-            sed -e 's%- url: ".*/api\(.*\)$%- url: "http://'$LOCAL_ADDRESS$PORT'/api\1%' -i $OMD_ROOT/etc/victoriametrics/remote_write.yml_template
+            sed -e 's%- url: ".*/api\(.*\)$%- url: "http://'$CONFIG_VICTORIAMETRICS_TCP_ADDR':'$PORT'/api\1%' -i $OMD_ROOT/etc/victoriametrics/remote_write.yml_template
         fi
 
     ;;
