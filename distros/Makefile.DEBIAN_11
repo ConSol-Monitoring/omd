@@ -57,6 +57,7 @@ BUILD_PACKAGES       += uuid-dev
 BUILD_PACKAGES       += zlib1g-dev
 OS_PACKAGES           =
 OS_PACKAGES          += apache2
+OS_PACKAGES          += cron
 OS_PACKAGES          += curl
 OS_PACKAGES          += debianutils                    # contains which, required by init scripts
 OS_PACKAGES          += dialog
