@@ -81,6 +81,7 @@ OS_PACKAGES          += boost-regex                    # icinga 2
 OS_PACKAGES          += boost-system                   # mod-gearman
 OS_PACKAGES          += boost-thread                   # icinga 2
 OS_PACKAGES          += cronie
+OS_PACKAGES          += cups-libs                      # chrome
 OS_PACKAGES          += curl
 OS_PACKAGES          += dialog
 OS_PACKAGES          += diffutils
