@@ -43,6 +43,10 @@ def proc_running(service):
                 if proc.cmdline():
                     if re.search(r"{}".format("start|stop|restart|reload")," ".join(proc.cmdline()),re.I):
                         LOGGER.debug("Found start/stop/restart/reload process related to '%s'", service)
+                        try:
+                            print(subprocess.check_output(('pstree -uAlsap %d' % proc.pid), shell=True).decode(('utf-8')))
+                        except:
+                            pass
                         return True
         except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
             pass
