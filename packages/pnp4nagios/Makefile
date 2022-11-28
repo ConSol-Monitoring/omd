@@ -29,14 +29,19 @@ CONFIGUREOPTS = \
     --with-perl_lib_path=$(OMD_ROOT)/lib/perl5/lib/perl5 \
     --with-base-url='/\#\#\#SITE\#\#\#/pnp4nagios'
 
+RUN_AUTOMAKE=0
+ifeq ($(shell uname -m),aarch64)
+RUN_AUTOMAKE=1
+endif
+
 build:
 	tar xzf $(DIR).tar.gz
 	for p in patches/*.diff ; do \
 		echo "applying $$p..." ; \
 		( cd $(DIR) ; patch -p1 -b ) < $$p ; \
        done
-
-	cd $(DIR) ; ./configure $(CONFIGUREOPTS)
+	-if [ "x$(RUN_AUTOMAKE)" = "x1" ]; then cd $(DIR) && automake -af; fi
+	cd $(DIR) && ./configure $(CONFIGUREOPTS)
 	$(MAKE) -C $(DIR) all
 
 install:
