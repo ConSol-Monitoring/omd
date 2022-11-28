@@ -9,10 +9,12 @@ SRC        = $(NAME)-$(VERSION).zip
 build:
 
 install:
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/grafana/plugins-available
+	unzip $(SRC) -d $(DESTDIR)$(OMD_ROOT)/share/grafana/plugins-available
 
 skel:
 	mkdir -p $(SKEL)/var/grafana/plugins
-	unzip $(SRC) -d $(SKEL)/var/grafana/plugins
+	ln -sfn ../../../share/grafana/plugins-available/$(NAME) $(SKEL)/var/grafana/plugins/$(NAME)
 
 clean:
 

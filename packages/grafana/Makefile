@@ -32,17 +32,20 @@ install:
 	rm -rf $(DESTDIR)$(OMD_ROOT)/share/grafana/public/test
 	rm -rf $(DESTDIR)$(OMD_ROOT)/share/grafana/public/sass
 	rm -rf $(DESTDIR)$(OMD_ROOT)/share/grafana/public/build/*.map
+	# Take care of path and format of plugin zip/tgz files
+	# Download from https://grafana.com/grafana/plugins
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/grafana/plugins-available
+	tar zxf clock-panel-plugin-2.1.0.tar.gz -C $(DESTDIR)$(OMD_ROOT)/share/grafana/plugins-available
+	tar zxf piechart-panel-plugin-1.6.2.tar.gz -C $(DESTDIR)$(OMD_ROOT)/share/grafana/plugins-available
+	tar zxf snuids-trafficlights-panel-1.5.1.tar.gz -C $(DESTDIR)$(OMD_ROOT)/share/grafana/plugins-available
 
 skel:
 	sed -i -e 's|###APACHE_MODULE_DIR###|$(APACHE_MODULE_DIR)|g' \
 	       $(SKEL)/etc/apache/conf.d/grafana.conf
-	# Take care of path and format of plugin zip/tgz files
-	# Download from https://grafana.com/grafana/plugins
 	mkdir -p $(SKEL)/var/grafana/plugins
-	tar zxf clock-panel-plugin-2.1.0.tar.gz -C $(SKEL)/var/grafana/plugins
-	tar zxf piechart-panel-plugin-1.6.2.tar.gz -C $(SKEL)/var/grafana/plugins
-	tar zxf snuids-trafficlights-panel-1.5.1.tar.gz -C $(SKEL)/var/grafana/plugins
-
+	for PLUGIN in $$(cd $(DESTDIR)$(OMD_ROOT)/share/grafana/plugins-available && ls -1); do \
+		ln -sfn ../../../share/grafana/plugins-available/$$PLUGIN $(SKEL)/var/grafana/plugins/$$PLUGIN; \
+	done
 
 clean:
 	[ ! -e $(GOPATH) ] || chmod -R 777 $(GOPATH)
