@@ -13,7 +13,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 129 );
+plan( tests => 147 );
 
 ##################################################
 # create our test site
@@ -27,6 +27,11 @@ my $ip      = TestUtils::get_external_ip();
 TestUtils::prepare_obj_config('t/data/omd/testconf1', '/omd/sites/'.$site.'/etc/naemon/conf.d', $site);
 TestUtils::test_command({ cmd => "/usr/bin/env sed -i -e 's/^perfdata_file_processing_interval = 15/perfdata_file_processing_interval = 2/g' -e 's/^sleep_time = 15/sleep_time = 2/g' /opt/omd/sites/$site/etc/pnp4nagios/npcd.cfg" });
 
+# test 503 page with grafana disabled
+TestUtils::test_command({ cmd => $omd_bin." start $site apache", like => '/Starting.*Apache.*OK/' });
+TestUtils::test_url({ url => 'http://localhost/'.$site.'/grafana/', like => '/OMD: GRAFANA not enabled/', auth => $auth, code => 503, skip_html_lint => 1 });
+TestUtils::test_command({ cmd => $omd_bin." stop $site apache", like => '/Stopping.*Apache.*OK/' });
+
 TestUtils::test_command({ cmd => $omd_bin." config $site set GRAFANA on" });
 TestUtils::test_command({ cmd => $omd_bin." start $site", like => '/Starting Grafana...OK/' });
 
@@ -39,6 +44,10 @@ TestUtils::test_command({ cmd => "/bin/su - $site -c 'cat var/log/grafana/grafan
 TestUtils::test_url({ url => 'http://localhost/'.$site.'/grafana/', waitfor => '<title>Grafana<\/title>', auth => $auth });
 TestUtils::test_command({ cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_http -t 60 -H 127.0.0.1 -p 8003 -k \"X-WEBAUTH-USER: omdadmin\" -s \"<title>Grafana</title>\"'", like => '/HTTP OK:/', waitfor => 'HTTP\ OK:' });
 TestUtils::test_command({ cmd => "/omd/sites/$site/lib/monitoring-plugins/check_http -t 60 -H localhost -a omdadmin:omd -u '/$site/grafana/' -s '\"login\":\"omdadmin\"'", like => '/HTTP OK:/', waitfor => 'HTTP\ OK:' });
+
+# test 503 page with grafana stopped
+TestUtils::test_command({ cmd => $omd_bin." stop $site grafana", like => '/Stopping Grafana/' });
+TestUtils::test_url({ url => 'http://localhost/'.$site.'/grafana/', like => '/OMD: GRAFANA not available/', auth => $auth, code => 503, skip_html_lint => 1 });
 
 #grafana interface with ssl
 TestUtils::test_command({ cmd => $omd_bin." stop $site", like => '/Stopping Grafana/' });
