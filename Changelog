@@ -5,6 +5,8 @@ next:
             - update pnp datasource
           - Gearman:
             - Gearmand update 1.1.20
+          - Mysql:
+            - change tmpdir to ~/var/tmp
  
 5.00     Nov 14 2022
           - DEPRECATION WARNING: the following components got removed
