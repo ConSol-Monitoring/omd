@@ -8,6 +8,14 @@ GOPKG      = 1.19
 GOVERSION  = $(shell grep ^VERSION ../go-${GOPKG}/Makefile | awk '{ print $$3 }')
 PWD        = $(shell pwd)
 GO         = export GOROOT=$(PWD)/../go-$(GOPKG)/go-$(GOVERSION) && export GOPATH=$(PWD)/$(GOPATH)/ && export PATH=$(PWD)/build_bin:$$GOROOT/bin:$$PATH && export GOFLAGS=-buildvcs=false && go
+ifeq ($(shell uname -m),x86_64)
+MACHINE=amd64
+else ifeq ($(shell uname -m),aarch64)
+MACHINE=arm64
+else
+$(error arch $(shell uname -m ) not supported)
+endif
+
 
 .PHONY: skel
 
@@ -17,8 +25,8 @@ build:
 
 install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/bin
-	install -m 755 $(GOPATH)/src/github.com/grafana/grafana/bin/linux-amd64/grafana-server  $(DESTDIR)$(OMD_ROOT)/bin/grafana
-	install -m 755 $(GOPATH)/src/github.com/grafana/grafana/bin/linux-amd64/grafana-cli  $(DESTDIR)$(OMD_ROOT)/bin/grafana-cli
+	install -m 755 $(GOPATH)/src/github.com/grafana/grafana/bin/linux-$(MACHINE)/grafana-server  $(DESTDIR)$(OMD_ROOT)/bin/grafana
+	install -m 755 $(GOPATH)/src/github.com/grafana/grafana/bin/linux-$(MACHINE)/grafana-cli  $(DESTDIR)$(OMD_ROOT)/bin/grafana-cli
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/grafana
 	tar zxf public.tar.gz -C $(DESTDIR)$(OMD_ROOT)/share/grafana
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/grafana/conf
