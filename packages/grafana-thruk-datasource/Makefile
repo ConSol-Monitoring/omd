@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 NAME       = sni-thruk-datasource
-VERSION    = 2.0.0
+VERSION    = 2.0.1
 SRC        = $(NAME)-$(VERSION).zip
 
 .PHONY: skel
