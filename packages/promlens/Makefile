@@ -15,7 +15,7 @@ build:
 	export GOROOT=$(shell pwd)/../go-$(GOPKG)/go-$(GOVERSION)/ && \
 	export PATH=$$GOROOT/bin:$(shell realpath $$(ls -d1 ../node/node-v*/bin)):$$PATH && \
 	export NODE_PATH=$(NODE_PATH) && \
-		make -C $(SRC)
+		make SKIP_GOLANGCI_LINT=1 -C $(SRC) build
 
 install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/bin
