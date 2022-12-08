@@ -2,3 +2,5 @@ node_modules/
 package.json
 package-lock.json
 skel/etc/profile.d/puppeteer.sh
+.local-chromium
+.puppeteerrc.cjs
