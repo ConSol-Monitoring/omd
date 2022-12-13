@@ -93,6 +93,7 @@ OS_PACKAGES          += libdrm                         # chrome
 OS_PACKAGES          += libevent
 OS_PACKAGES          += libicu
 OS_PACKAGES          += libmcrypt
+OS_PACKAGES          += libpq                          # icinga 2
 OS_PACKAGES          += libsmbclient
 OS_PACKAGES          += libsqlite3x
 OS_PACKAGES          += libtirpc                       # xinetd
