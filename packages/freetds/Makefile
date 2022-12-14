@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 NAME = freetds
-FREETDS_VERSION = 1.00.109
+FREETDS_VERSION = 1.3.16
 FREETDS_DIR = freetds-$(FREETDS_VERSION)
 SHELL = /bin/bash
 
@@ -25,3 +25,7 @@ skel:
 clean:
 	rm -rf $(FREETDS_DIR)
 	rm -rf tmpinstall
+
+upstream:
+	rm -rf freetds-$(FREETDS_VERSION).tar.gz
+	wget ftp://ftp.freetds.org/pub/freetds/stable/freetds-$(FREETDS_VERSION).tar.gz
