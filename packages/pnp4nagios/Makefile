@@ -38,7 +38,7 @@ build:
 	tar xzf $(DIR).tar.gz
 	for p in patches/*.patch ; do \
 		echo "applying $$p..." ; \
-		( cd $(DIR) ; patch -p1 -b ) < $$p ; \
+		( cd $(DIR) ; patch -p1 ) < $$p ; \
        done
 	-if [ "x$(RUN_AUTOMAKE)" = "x1" ]; then cd $(DIR) && automake -af; fi
 	cd $(DIR) && ./configure $(CONFIGUREOPTS)
