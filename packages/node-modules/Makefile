@@ -25,7 +25,8 @@ build:
 	$(NPM) i progress
 	$(NPM) i puppeteer
 	if [ "x$(PUPPETEER_DOWNLOAD_PATH)" != "x" ]; then \
-		mv $(PUPPETEER_DOWNLOAD_PATH) node_modules/puppeteer/.local-chromium; \
+		rm -rf node_modules/puppeteer/.local-chromium; \
+		cp -rp $(PUPPETEER_DOWNLOAD_PATH) node_modules/puppeteer/.local-chromium; \
 	fi
 
 install:
@@ -45,6 +46,6 @@ clean:
 	rm -f package.json
 	rm -f package-lock.json
 	rm -f skel/etc/profile.d/puppeteer.sh
-	rm -f .local-chromium
+	rm -rf .local-chromium
 	rm -f .puppeteerrc.cjs
 
