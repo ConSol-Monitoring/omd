@@ -1,6 +1,7 @@
 This file documents the revision history for the Open Monitoring Distribution (Labs Edition)
 
 next:
+          - Thruk: update to 3.02
           - Grafana:
             - update pnp datasource
           - Gearman:
