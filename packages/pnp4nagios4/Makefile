@@ -1,5 +1,6 @@
 include ../../Makefile.omd
 include ../pnp4nagios/Makefile
+DEPENDS = pnp4nagios
 
 .PHONY: skel
 
