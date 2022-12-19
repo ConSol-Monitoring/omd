@@ -12,7 +12,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 431 );
+plan( tests => 465 );
 
 my $omd_bin = TestUtils::get_omd_bin();
 
@@ -20,6 +20,10 @@ my $omd_bin = TestUtils::get_omd_bin();
 my $vtest = { cmd => $omd_bin." version", "exit" => undef };
 TestUtils::test_command($vtest) or TestUtils::bail_out_clean("no further testing without working omd");
 diag($vtest->{'stdout'});
+
+# extract omd version
+$vtest = { cmd => $omd_bin." version -b", "exit" => undef };
+TestUtils::test_command($vtest) or TestUtils::bail_out_clean("no further testing without working omd");
 
 # print apache version
 my $atest = { cmd => "/bin/sh -c '".TestUtils::config('APACHE_INIT_NAME')." -V | grep \"Server version\"'", "exit" => undef, errlike => undef };
@@ -39,6 +43,14 @@ my $site  = 'testsite';
 my $site2 = 'testsite2';
 my $site3 = 'testsite3';
 my $tests = [
+  { cmd => $omd_bin." doesnotexit",  errlike => '/no such command/', exit => 1  },
+  { cmd => $omd_bin." -V",           like => '/^OMD - Open Monitoring Distribution Version/'  },
+  { cmd => $omd_bin." -V -b",        like => '/^\d+\.\d+/'  },
+  { cmd => $omd_bin." -b -V",        like => '/^\d+\.\d+/'  },
+  { cmd => $omd_bin." -V=".$omd_version." version -b", like => '/^\d+\.\d+/'  },
+  { cmd => $omd_bin." help",         like => '/General Options/', exit => 1  },
+  { cmd => $omd_bin." -h",           like => '/General Options/', exit => 1  },
+  { cmd => $omd_bin." help version", like => ['/Options for.*version.*command/', '/output plain text/'], exit => 1  },
   { cmd => $omd_bin." versions",     like => '/^\d+\.\d+( \(default\))?/'  },
   { cmd => $omd_bin." rm $site",     stdin => "yes\n", 'exit' => undef, errlike => undef },
   { cmd => $omd_bin." rm $site2",    stdin => "yes\n", 'exit' => undef, errlike => undef },
