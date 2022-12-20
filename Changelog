@@ -10,6 +10,7 @@ next:
             - change tmpdir to ~/var/tmp
           - Prometheus
             - promlens 0.3.0
+          - Ansible 2.14.1
  
 5.00     Nov 14 2022
           - DEPRECATION WARNING: the following components got removed
