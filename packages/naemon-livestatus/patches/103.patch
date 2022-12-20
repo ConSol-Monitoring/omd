@@ -1,0 +1,47 @@
+From 2d77409baa2dc2838e635ead3e85b09412c4552f Mon Sep 17 00:00:00 2001
+From: Sven Nierlein <sven@nierlein.de>
+Date: Tue, 20 Dec 2022 15:50:30 +0100
+Subject: [PATCH] fix g_tree_foreach: assertion `tree != NULL' failed
+
+When requesting logs without specifing columns, the result contains hostlists. But since not all log entries
+do have hosts, this leads to a g_tree_foreach for a null tree.
+Checking the tree before calling g_tree_foreach fixes this issue.
+---
+ src/HostlistColumn.cc      | 5 ++++-
+ src/HostlistStateColumn.cc | 3 ++-
+ 2 files changed, 6 insertions(+), 2 deletions(-)
+
+diff --git a/src/HostlistColumn.cc b/src/HostlistColumn.cc
+index 04c6ca3..f931cad 100644
+--- a/src/HostlistColumn.cc
++++ b/src/HostlistColumn.cc
+@@ -75,6 +75,10 @@ void HostlistColumn::output(void *data, Query *query)
+ {
+     query->outputBeginList();
+     GTree *mem = getMembers(data);
++    if(mem == NULL) {
++        query->outputEndList();
++        return;
++    }
+     output_parameters params;
+     params.query = query;
+     params.first = true;
+@@ -87,4 +91,3 @@ Filter *HostlistColumn::createFilter(int opid, char *value)
+ {
+     return new HostlistColumnFilter(this, opid, value);
+ }
+-
+diff --git a/src/HostlistStateColumn.cc b/src/HostlistStateColumn.cc
+index 333d694..a947857 100644
+--- a/src/HostlistStateColumn.cc
++++ b/src/HostlistStateColumn.cc
+@@ -111,7 +111,8 @@ int32_t HostlistStateColumn::getValue(void *data, Query *query)
+     params.query = query;
+     params.logictype = _logictype;
+     params.result = 0;
++    if(mem == NULL)
++        return params.result;
+     g_tree_foreach(mem, get_subvalue, &params);
+     return params.result;
+ }
+-
