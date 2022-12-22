@@ -1,0 +1,29 @@
+From 4bbf34df0d280a5f5051ee6294409072f06c7586 Mon Sep 17 00:00:00 2001
+From: Sven Nierlein <sven@nierlein.de>
+Date: Thu, 22 Dec 2022 23:47:55 +0100
+Subject: [PATCH] add service parents host_name
+
+according to our docs, the service parents can be:
+
+```
+ Valid option is either a single service description from the same host or a comma separated list of host_name,servicedescription tupel.
+```
+which means you could also define service parent links to different hosts which then means we have to list hostname and description in the
+parent list. Otherwise we cannot know which host the service is on and assuming it is the same host could be wrong.
+---
+ src/TableServices.cc | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/TableServices.cc b/src/TableServices.cc
+index d233a13..e4205ce 100644
+--- a/src/TableServices.cc
++++ b/src/TableServices.cc
+@@ -391,7 +391,7 @@ void TableServices::addColumns(Table *table, string prefix, int indirect_offset,
+     table->addColumn(new ServicelistDependencyColumn(prefix + "depends_notify_with_info",
+                 "A list of all services this service depends on to notify including information: host_name, service_description, failure_options, dependency_period and inherits_parent", (char *)(&svc.notify_deps) - ref, indirect_offset, true));
+     table->addColumn(new ServicelistColumn(prefix + "parents",
+-                "A list of all parent services (descriptions only, because they are all same-host)", (char *)(&svc.parents) - ref, indirect_offset, false, 0));
++                "A list of all parent services", (char *)(&svc.parents) - ref, indirect_offset, true, 0));
+ 
+ 
+     table->addColumn(new ServiceContactsColumn(prefix + "contacts",
