@@ -27,6 +27,7 @@ install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/naemon
 	install -m 755 $(DIR)/.libs/naemon_vimvault.so $(DESTDIR)$(OMD_ROOT)/lib/naemon/vimvault.o.dbg
 	install -sm 755 $(DIR)/.libs/naemon_vimvault.so $(DESTDIR)$(OMD_ROOT)/lib/naemon/vimvault.o
+	install -m 755 cat_naemonvault $(DESTDIR)$(OMD_ROOT)/bin
 
 skel:
 
