@@ -237,7 +237,7 @@ def dialog_regex(title, text, regex, value, oktext, canceltext):
 
 
 def dialog_yesno(text, yeslabel = "yes", nolabel = "no"):
-    state, response = run_dialog(["--yes-label", yeslabel, "--no-label", nolabel, "--yesno", text, "0", "0"])
+    state, response = run_dialog(["--colors", "--no-collapse", "--yes-label", yeslabel, "--no-label", nolabel, "--yesno", text, "0", "0"])
     return state
 
 
@@ -3286,15 +3286,8 @@ def print_diff(rel_path, source_path, target_path, source_version, source_perms,
 def main_update(args, options={}):
     set_conflict_option(options)
 
-    if not site_is_stopped(g_sitename):
-        bail_out(tty_error + ": Please completely stop '%s' before updating it." % g_sitename)
-
     if int(os.popen("df -Pm /omd/sites/%s/. | tail -n 1 | awk '{ print $4 }'" % g_sitename).read()) < 100:
         bail_out(tty_error + ": Not enough free disk space. Pleace free at least 100MB!")
-
-    # Unmount tmp. We need to recreate the files and directories
-    # from the new version after updating.
-    unmount_tmpfs(g_sitename)
 
     # Source version: the version of the site we deal with
     from_version = site_version(g_sitename)
@@ -3329,21 +3322,35 @@ def main_update(args, options={}):
     # This line is reached, if the version of the OMD binary (the target)
     # is different from the current version of the site.
     if not opt_force and not dialog_yesno(
-            "You are going to update the site %s from version %s to version %s. "
+            "You are going to update.\nsite: \Z1%s\Z0\nfrom: \Z1%s\Z0\nto:   \Z1%s\Z0\n"
             "This will include updating all of you configuration files and merging "
             "changes in the default files with changes made by you. In case of conflicts "
             "your help will be needed." % (g_sitename, from_version, to_version),
             "Update!", "Abort"):
         bail_out("Aborted.")
 
+    hot_update = False
+    if not site_is_stopped(g_sitename):
+        hot_update = True
+        if not options.force:
+            bail_out(tty_error + ": Please completely stop '%s' before updating it." % g_sitename)
+
     # show one extra confirmation dialog when updating from 1.x/2.x to 3.x
-    if int(version_numeric(from_version)) != int(version_numeric(to_version)) and not opt_force and dialog_yesno(
+    if int(version_numeric(from_version)) != int(version_numeric(to_version)):
+        if not opt_force and dialog_yesno(
             "*******        MAJOR UPDATE TO %s        ******\n"
-            "You are going to update the site %s from version %s to version %s. "
+            "You are going to update.\nsite: \Z1%s\Z0\nfrom: \Z1%s\Z0\nto:   \Z1%s\Z0\n"
             "Please read the migration guide at: https://labs.consol.de/omd/migration_%s.html "
             "and ensure you have a backup. You have been warned." % (to_version, g_sitename, from_version, to_version, to_version[:1]),
             "Abort", "Continue"):
-        bail_out("Aborted.")
+            bail_out("Aborted.")
+        if hot_update:
+            bail_out("Hot updates not possible on major version updates.")
+
+    # Unmount tmp. We need to recreate the files and directories
+    # from the new version after updating.
+    if not hot_update:
+        unmount_tmpfs(g_sitename)
 
     start_logging(g_sitedir + '/var/log/update.log')
 
@@ -3394,6 +3401,11 @@ def main_update(args, options={}):
     call_scripts('post-update')
 
     sys.stdout.write('Finished update.\n\n')
+
+    if hot_update:
+        sys.stdout.write('restarting all services after update.\n')
+        main_init_action("restart", [], options)
+
     stop_logging()
 
 
