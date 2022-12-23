@@ -2713,14 +2713,14 @@ def main_create(args, options={}):
 
 def welcome_message(admin_password):
     sys.stdout.write("Created new site %s with version %s.\n\n" % (g_sitename, OMD_VERSION))
-    sys.stdout.write("  The site can be started with %somd start %s%s.\n" %
+    sys.stdout.write("  The site can be started with %somd start%s%s.\n" %
             (tty_bold, g_sitename, tty_normal))
     sys.stdout.write("  The default web UI is available at %shttps://%s/%s/%s\n" %
             (tty_bold, hostname(), g_sitename, tty_normal))
     sys.stdout.write("\n")
     sys.stdout.write("  The admin user for the web applications is %somdadmin%s with password: %s%s%s\n" %
             (tty_bold, tty_normal, tty_bold, admin_password, tty_normal))
-    sys.stdout.write("  (It can be changed with the 'set_admin_password' command as site user.)\n")
+    sys.stdout.write("  (It can be changed with the 'set_admin_password' command as site user)\n")
     sys.stdout.write("\n")
     sys.stdout.write("  Please do a %ssu - %s%s for administration of this site.\n" %
             (tty_bold, g_sitename, tty_normal))
@@ -3589,6 +3589,10 @@ def backup_site_files_to_taropen(tar, options):
     if not site_is_stopped(g_sitename):
         exclude.append("tmp/*")
 
+    # add user supplied excludes
+    if options.exclude != None:
+        exclude.extend(options.exclude)
+
     def filter_files(tarinfo):
         filename = tarinfo.name
         for glob_pattern in exclude:
@@ -3596,20 +3600,23 @@ def backup_site_files_to_taropen(tar, options):
             # strip of the g_sitename/ prefix from filename
             if fnmatch.fnmatch(filename[len(g_sitename)+1:], glob_pattern):
                 return None # exclude this file
+        if options.verbose:
+            sys.stderr.write("adding %s\n" % filename[len(g_sitename)+1:])
+        return tarinfo
+
+    def print_files(tarinfo):
+        filename = tarinfo.name
+        if options.verbose:
+            sys.stderr.write("adding %s\n" % filename[len(g_sitename)+1:])
         return tarinfo
 
     # add skel, it doesn't take much space and we can restore to any version with that information
-    tar.add(os.path.join(g_sitedir, 'version', 'skel'), g_sitename+"/.backup_meta/skel")
-    tar.add(os.path.join(g_sitedir, 'share', 'omd', 'skel.permissions'), g_sitename+"/.backup_meta/skel.permissions")
+    tar.add(os.path.join(g_sitedir, 'version', 'skel'), g_sitename+"/.backup_meta/skel", filter=print_files)
+    tar.add(os.path.join(g_sitedir, 'share', 'omd', 'skel.permissions'), g_sitename+"/.backup_meta/skel.permissions", filter=print_files)
     if not exclude:
-        tar.add(g_sitedir, g_sitename)
+        tar.add(g_sitedir, g_sitename, filter=print_files)
     else:
-        try:
-            tar.add(g_sitedir, g_sitename, filter=filter_files)
-        except TypeError:
-            bail_out(tty_error + ": You can not exclude files from your backup using your "
-                     "Python version %s. You may need to update." %
-                                     ".".join(map(str, sys.version_info[:3])))
+        tar.add(g_sitedir, g_sitename, filter=filter_files)
 
 
 def backup_site_to_taropen(fh, options):
@@ -3641,7 +3648,6 @@ def main_backup(args, options={}):
         unmount_tmpfs(g_sitename, kill = options.kill)
 
     dest = args[0]
-
     if dest == '-':
         bail_out(tty_error + ": backup to stdout not supported anymore")
     else:
@@ -3650,6 +3656,8 @@ def main_backup(args, options={}):
         fh = open(dest, 'wb')
 
     backup_site_to_taropen(fh, options)
+    if options.verbose:
+        sys.stderr.write("backup %s written\n" % dest)
 
 
 def main_restore(args, options={}):
@@ -4409,6 +4417,7 @@ commands = [
     args        = "[-|ARCHIVE_PATH]",
     option_spec = [
         ( "--kill",      None, { "help":"kill processes using the tmpfs before unmounting it", "action":"count", "default":0 }),
+        ( "--exclude",   None, { "help":"exclude path from backup. Can be used multiple times", "action":"append" }),
     ] + exclude_options,
   ),
 
