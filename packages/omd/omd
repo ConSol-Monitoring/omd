@@ -853,18 +853,26 @@ def walk_skel(root, handler, args, depth_first, exclude_if_in = None, relbase = 
                         options = [
                             ("retry",    "Retry the operation"),
                             ("continue", "Continue with next files"),
+                            ("shell",    "Open a shell for looking around"),
                             ("abort",    "Stop here and abort update!")
                         ]
-                        choice = ask_user_choices(
-                            'Problem occured',
-                            'We detected an exception (printed above). You have the '
-                            'chance to fix things and retry the operation now.',
-                            options
-                        )
-                        if choice == 'abort':
-                            bail_out("Update aborted.")
-                        elif choice == 'retry':
-                            todo = True # Try again
+                        ask_again = True
+                        while ask_again:
+                            ask_again = False
+                            choice = ask_user_choices(
+                                'Problem occured',
+                                'We detected an exception (printed above). You have the '
+                                'chance to fix things and retry the operation now.',
+                                options
+                            )
+                            if choice == 'abort':
+                                bail_out("Update aborted.")
+                            elif choice == "shell":
+                                sys.stdout.write("\n Starting BASH. Type CTRL-D to continue.\n\n")
+                                os.system("cd '%s' ; bash -i" % g_sitedir)
+                                ask_again = True # Try again
+                            elif choice == 'retry':
+                                todo = True # Try again
 
 
 #.
@@ -4409,7 +4417,7 @@ commands = [
 
   Command(
     command     = "backup",
-    description = "Create a backup tarball of a site, writing it to a file or stdout",
+    description = "Create a backup tarball of a site, writing it to a file",
     fn          = main_backup,
     no_suid     = True,
     needs_site  = 1,
