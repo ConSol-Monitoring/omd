@@ -83,6 +83,7 @@ apache_wait_start() {
   fi
 
   mkdir -p ###ROOT###/tmp/apache/run
+  mkdir -p ###ROOT###/var/log/apache
 
   # (nearly) reproducible problems with apache at boot-time. (alloc_listener: failed to set up sockaddr for 127.0.0.1)
   # With this ping the problem disappears.

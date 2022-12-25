@@ -49,6 +49,8 @@ LOGFILE="$OMD_ROOT/var/log/rrdcached.log"
 OPTS="-t $WRITE_THREADS -w $TIMEOUT -z $RANDOM_DELAY -f $FLUSH_TIMEOUT -s $OMD_SITE -m 660 -l unix:$SOCKET -p $PIDFILE -j $JOURNAL_DIR -o $LOGFILE"
 DAEMON="$OMD_ROOT/bin/rrdcached"
 
+mkdir -p $JOURNAL_DIR
+
 case "$1" in
     start)
  	echo -n 'Starting rrdcached...'
