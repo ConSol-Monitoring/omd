@@ -5,14 +5,18 @@
 # This script prepares the site to fix some known issues which causes update conflicts.
 # It will be run prior the update process with the new OMD.
 
-cd $OMD_ROOT
+cd $OMD_UPDATE_BASE
 umask 0022
 
-NEW_VERSION=$(grep ^OMD_VERSION $(dirname $0)/../../../../bin/omd | awk '{ print $3 }' | tr -d '"')
-OLD_VERSION=$(readlink version | sed 's%.*versions/\([0-9]*\.*[0-9]*\)[-\.].*$%\1%')
+NEW_VERSION=$OMD_UPDATE_TO_VERSION
+OLD_VERSION=$OMD_UPDATE_FROM_VERSION
 # convert version to int so we can compare it in bash
 # version 2.20 becomes 220
-OLD_VERSION=$(( $(( ${OLD_VERSION%.*} * 100 )) + ${OLD_VERSION#*.} ))
+MAJOR=${OLD_VERSION%%.*}
+MINOR=${OLD_VERSION#*.}
+MINOR=${MINOR%%.*}
+OLD_VERSION=$(( $(( $MAJOR * 100 )) + $MINOR ))
+
 OLD_SKEL=version/skel
 if [ -e ".backup_meta/skel" ]; then
     # when restoring from an non-installed version, skel folder is here
@@ -140,10 +144,5 @@ if [ $OLD_VERSION -le 400 ]; then
   fi
   #end pre omd 4
 fi
-
-# make sure tmpfs is not mounted and tmp/ is empty
-omd umount > /dev/null 2>&1
-rm -rf $OMD_ROOT/tmp
-mkdir $OMD_ROOT/tmp
 
 exit 0

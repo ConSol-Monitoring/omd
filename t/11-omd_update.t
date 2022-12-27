@@ -14,7 +14,7 @@ BEGIN {
 
 plan skip_all => 'Author test. Set $ENV{TEST_AUTHOR} to a true value to run.' unless $ENV{TEST_AUTHOR};
 plan skip_all => 'Root permissions required' unless $> == 0;
-plan( tests => 107 );
+plan( tests => 170 );
 
 my $omd_bin  = TestUtils::get_omd_bin();
 my $site     = TestUtils::create_test_site() or TestUtils::bail_out_clean("no further testing without site");
@@ -56,7 +56,28 @@ TestUtils::test_command({ cmd => "/bin/rm /omd/versions/$omd_update/skel/.my.cnf
 # prepare new files
 TestUtils::test_command({ cmd => "/bin/sh -c \"echo '\\ntest file\\n' >> /omd/versions/$omd_update/skel/.new_file\""});
 
+# dry-run update
+TestUtils::test_command({ cmd => $omd_bin." start $site",  like => '/Starting naemon/' });
+TestUtils::test_command({
+            cmd  => $omd_bin." -V $omd_update -n update $site",
+            like => ['/Updated\s+.gitignore/',
+                     '/Updated\s+.bashrc/',
+                     '/Merged\s+.profile/',
+                     '/Permissions\s+0644\s+\->\s+0755\s+.modulebuildrc/',
+                     '/Vanished\s+.my.cnf/',
+                     '/Installed file\s+.new_file/',
+                     '/DRY RUN/',
+                     '/0 conflicts/',
+                     "/\QExecuting pre-update script \"omd\"...OK\E/",
+                    ],
+            });
+TestUtils::test_command({
+            cmd  => $omd_bin." -V $omd_update -n update $site -v .my.cnf",
+            like => ['/DRY RUN/', '/Vanished\s+.my.cnf/', '/0 conflicts/'],
+            });
+
 # run update
+TestUtils::test_command({ cmd => $omd_bin." stop $site",       like => '/Stopping naemon/' });
 TestUtils::test_command({
             cmd  => $omd_bin." -V $omd_update -f update $site",
             like => ['/Updated\s+.gitignore/',
@@ -75,6 +96,40 @@ TestUtils::test_command({ cmd => "/bin/grep -c \"test newline\" /omd/sites/$site
 TestUtils::test_command({ cmd => "/bin/grep -c \"test_history\" /omd/sites/$site/.gitignore", like => ['/^\s*1/']});
 TestUtils::test_command({ cmd => "/bin/grep -c \"test file\" /omd/sites/$site/.new_file", like => ['/^\s*1/']});
 TestUtils::test_command({ cmd => "/bin/grep -c \"$site\" /omd/sites/$site/.my.cnf", like => ['/^$/'], exit => undef, errlike => ['/No such file or directory/']});
+
+##################################################
+# hot update to previous version
+TestUtils::test_command({ cmd => $omd_bin." version -b $site",  like => "/^\Q$omd_update\E\$/" });
+TestUtils::test_command({ cmd => $omd_bin." start $site",  like => '/Starting naemon/' });
+TestUtils::test_command({
+            cmd => $omd_bin." status $site",
+            like => ['/apache:\s*running/',
+                     '/rrdcached:\s*running/',
+                     '/npcd:\s*running/',
+                     '/naemon:\s*running/',
+                     '/Overall state:\s*running/',
+                    ]
+            });
+TestUtils::test_command({
+            cmd  => $omd_bin." -V $omd_version -f update $site",
+            like => ['/Updated\s+.gitignore/',
+                     '/Updated\s+.bashrc/',
+                     '/Merged\s+.profile/',
+                     '/Permissions\s+0755\s+\->\s+0644\s+.modulebuildrc/',
+                     '/Installed file\s+.my.cnf/',
+                     '/Vanished\s+.new_file/',
+                    ],
+            });
+TestUtils::test_command({
+            cmd => $omd_bin." status $site",
+            like => ['/apache:\s*running/',
+                     '/rrdcached:\s*running/',
+                     '/npcd:\s*running/',
+                     '/naemon:\s*running/',
+                     '/Overall state:\s*running/',
+                    ]
+            });
+TestUtils::test_command({ cmd => $omd_bin." version -b $site",  like => "/^\Q$omd_version\E\$/" });
 
 ##################################################
 # cleanup test site

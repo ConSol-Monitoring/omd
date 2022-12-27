@@ -2,8 +2,15 @@ This file documents the revision history for the Open Monitoring Distribution (L
 
 next:
           - OMD:
-            - omd options can now be set before or after the command, ex.: omd status -b
-            - omd backup: add --exclude/-v options
+            - omd order of options can now be set before or after the command, ex.: omd status -b
+            - omd backup: add --exclude and -v option
+            - omd mv/cp: add --exclude option
+            - omd update: add --dry-run/-n option
+              - since old versions do some checks before switching to the new version, you
+                need to start the dry-run update directly like for ex.:
+                '/omd/versions/5.10-labs-edition/bin/omd update -n'
+                (only required when updating from releases < 5.10)
+            - omd update: add support for updates while site is running (using force option -f)
           - Thruk: update to 3.02
           - Grafana:
             - update pnp datasource
