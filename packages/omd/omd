@@ -2798,6 +2798,10 @@ def main_create(args, options={}):
     if not os.path.exists(real_version_path):
         bail_out(tty_error + ": Error verifying versions folder: %s" % real_version_path)
 
+    if not call_scripts('pre-create', (g_sitename, OMD_VERSION)):
+        sys.stdout.write("create canceled by pre-create script\n\n")
+        sys.exit(1)
+
     # Create operating system user for site
     uid = options.uid
     gid = options.gid
@@ -2819,6 +2823,8 @@ def main_create(args, options={}):
         config_settings["TMPFS"] = "off"
         sys.stdout.write("Going to set TMPFS to off.\n")
 
+    call_scripts('post-create', (g_sitename, OMD_VERSION)):
+
     if not options.no_init:
         admin_password = init_site(config_settings, options)
         welcome_message(admin_password)
@@ -2827,6 +2833,7 @@ def main_create(args, options={}):
         sys.stdout.write("Create new site %s in disabled state and with empty %s.\n" % (g_sitename, sitedir))
         sys.stdout.write("You can now mount a filesystem to %s.\n" % (sitedir))
         sys.stdout.write("Afterwards you can initialize the site with 'omd init'.\n")
+
 
 def welcome_message(admin_password):
     sys.stdout.write("Created new site %s%s%s with version %s%s%s.\n\n" % (tty_bold, g_sitename, tty_normal, tty_bold, OMD_VERSION, tty_normal))

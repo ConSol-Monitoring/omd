@@ -11,6 +11,7 @@ next:
                 '/omd/versions/5.10-labs-edition/bin/omd update -n'
                 (only required when updating from releases < 5.10)
             - omd update: add support for updates while site is running (using force option -f)
+            - omd create: add support for pre-create/post-create scripts
           - Thruk: update to 3.02
           - Grafana:
             - update pnp datasource
