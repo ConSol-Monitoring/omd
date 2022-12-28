@@ -12,6 +12,7 @@ next:
                 (only required when updating from releases < 5.10)
             - omd update: add support for updates while site is running (using force option -f)
             - omd create: add support for pre-create/post-create scripts
+            - omd rm: add support for pre-rm/post-rm scripts
           - Thruk: update to 3.02
           - Grafana:
             - update pnp datasource

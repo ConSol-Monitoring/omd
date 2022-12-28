@@ -2577,11 +2577,13 @@ def pipe_pager():
     else:
         return ""
 
-def call_scripts(phase, prefix=None):
+def call_scripts(phase, prefix=None, args=None):
     if prefix is None:
         prefix = g_sitedir
     path = prefix + "/lib/omd/scripts/" + phase
     exited_ok = True
+    if not args:
+        args = []
     if os.path.exists(path):
         putenv("OMD_ROOT", g_sitedir)
         putenv("OMD_SITE", g_sitename)
@@ -2589,7 +2591,7 @@ def call_scripts(phase, prefix=None):
             if f[0] == '.':
                 continue
             sys.stdout.write('Executing %s script "%s"...' % (phase, f))
-            p = subprocess.Popen('%s/%s' % (path, f), shell = True, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+            p = subprocess.Popen(['%s/%s' % (path, f)].extend(args), shell = True, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
             stdout = p.stdout.read()
             stderr = p.stderr.read()
             exitcode = p.wait()
@@ -2798,7 +2800,7 @@ def main_create(args, options={}):
     if not os.path.exists(real_version_path):
         bail_out(tty_error + ": Error verifying versions folder: %s" % real_version_path)
 
-    if not call_scripts('pre-create', (g_sitename, OMD_VERSION)):
+    if not call_scripts('pre-create', prefix=real_version_path, args=[g_sitename, OMD_VERSION]):
         sys.stdout.write("create canceled by pre-create script\n\n")
         sys.exit(1)
 
@@ -2823,7 +2825,7 @@ def main_create(args, options={}):
         config_settings["TMPFS"] = "off"
         sys.stdout.write("Going to set TMPFS to off.\n")
 
-    call_scripts('post-create', (g_sitename, OMD_VERSION)):
+    call_scripts('post-create', args=[g_sitename, OMD_VERSION])
 
     if not options.no_init:
         admin_password = init_site(config_settings, options)
@@ -2971,6 +2973,11 @@ def main_rm(args, options={}):
     # site user but later steps need root privilegies. So a simple user
     # switch to the site user would not work. Better create a subprocess
     # for this dedicated action and switch to the user in that subprocess
+
+    if not call_scripts('pre-rm', args=[g_sitename, OMD_VERSION]):
+        sys.stdout.write("update canceled by pre-rm script\n\n")
+        sys.exit(1)
+
     os.system('omd stop %s' % g_sitename)
 
     reuse = options.reuse
@@ -3008,6 +3015,8 @@ def main_rm(args, options={}):
         reload_apache()
     else:
         restart_apache()
+
+    call_scripts('post-rm', prefix=("/omd/versions/%s" % OMD_VERSION), args=[g_sitename, OMD_VERSION])
 
 def create_site_dir(sitename):
     os.makedirs(site_dir(sitename))
@@ -3483,7 +3492,7 @@ def main_update(args, options={}):
     putenv("OMD_UPDATE_FROM_VERSION", from_version)
     putenv("OMD_UPDATE_TO_VERSION", to_version)
     putenv("OMD_UPDATE_BASE", target_folder)
-    if not call_scripts('pre-update', ("/omd/versions/%s" % to_version)):
+    if not call_scripts('pre-update', prefix=("/omd/versions/%s" % to_version)):
         sys.stdout.write("update canceled by pre-update script\n\n")
         sys.exit(1)
 
@@ -4016,7 +4025,7 @@ def main_restore(args, options={}):
             to_version = OMD_VERSION
             sys.stdout.write("\nUpdating site %s from %s to version %s...\n" % (g_sitename, from_version, to_version))
 
-            if not call_scripts('pre-update', ("/omd/versions/%s" % to_version)):
+            if not call_scripts('pre-update', prefix=("/omd/versions/%s" % to_version)):
                 sys.stdout.write("update canceled by pre-update script\n\n")
                 sys.exit(1)
 
