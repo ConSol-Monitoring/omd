@@ -210,6 +210,8 @@ def run_dialog(args):
     p = subprocess.Popen(["dialog", "--shadow", "--no-mouse"] + args, env = env, stderr = subprocess.PIPE)
     response = p.stderr.read()
     rc = 0 == os.waitpid(p.pid, 0)[1]
+    if not rc and response != "":
+        bail_out(tty_error + ": " + response.decode())
     os.system("clear")
     return rc, response.decode('utf-8')
 
@@ -3439,10 +3441,14 @@ def main_update(args, options={}):
     # This line is reached, if the version of the OMD binary (the target)
     # is different from the current version of the site.
     if not options.dry_run and not opt_force and not dialog_yesno(
-            "You are going to update.\nsite: \Z1%s\Z0\nfrom: \Z1%s\Z0\nto:   \Z1%s\Z0\n"
+            "You are going to update:\n"
+            "site: \Z5%s\Z0\n"
+            "host: \Z5%s\Z0\n"
+            "from: \Z5%s\Z0\n"
+            "to:   \Z5%s\Z0\n"
             "This will include updating all of you configuration files and merging "
             "changes in the default files with changes made by you. In case of conflicts "
-            "your help will be needed." % (g_sitename, from_version, to_version),
+            "your help will be needed." % (g_sitename, hostname(), from_version, to_version),
             "Update!", "Abort"):
         bail_out("Aborted.")
 
@@ -3455,10 +3461,14 @@ def main_update(args, options={}):
     # show one extra confirmation dialog when updating from 1.x/2.x to 3.x
     if int(version_numeric(from_version)) != int(version_numeric(to_version)):
         if not options.dry_run and not opt_force and dialog_yesno(
-            "*******        MAJOR UPDATE TO %s        ******\n"
-            "You are going to update.\nsite: \Z1%s\Z0\nfrom: \Z1%s\Z0\nto:   \Z1%s\Z0\n"
+            "\ZuMAJOR UPDATE\ZU\n"
+            "You are going to update:\n"
+            "site: \Z5%s\Z0\n"
+            "host: \Z5%s\Z0\n"
+            "from: \Z5%s\Z0\n"
+            "to:   \Z5%s\Z0\n"
             "Please read the migration guide at: https://labs.consol.de/omd/migration_%s.html "
-            "and ensure you have a backup. You have been warned." % (to_version, g_sitename, from_version, to_version, to_version[:1]),
+            "and ensure you have a backup. You have been warned." % (g_sitename, hostname(), from_version, to_version, to_version[:1]),
             "Abort", "Continue"):
             bail_out("Aborted.")
         if hot_update:
