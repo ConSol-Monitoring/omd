@@ -199,7 +199,7 @@ def run_dialog(args):
     p = subprocess.Popen(["dialog", "--shadow", "--no-mouse"] + args, env = env, stderr = subprocess.PIPE)
     response = p.stderr.read()
     rc = 0 == os.waitpid(p.pid, 0)[1]
-    if not rc and response != "":
+    if not rc and response.decode() != "":
         bail_out(tty_error + ": " + response.decode())
     os.system("clear")
     return rc, response.decode('utf-8')
@@ -2587,7 +2587,7 @@ def call_scripts(phase, prefix=None, args=None):
             if exitcode == 0:
                 sys.stdout.write(tty_ok + '\n')
             elif exitcode == 5:
-                sys.stdout.write(tty_yellow + 'skipped\n')
+                sys.stdout.write(tty_yellow + 'skipped' + tty_normal + '\n')
             else:
                 exited_ok = False
                 sys.stdout.write(tty_error + ' (exit code: %d, use -v for details)\n' % exitcode)
