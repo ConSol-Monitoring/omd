@@ -3548,7 +3548,7 @@ def main_update(args, options={}):
         if os.path.exists(backup_skel_path):
             shutil.rmtree(backup_skel_path)
 
-    call_scripts('post-update')
+    call_scripts('post-update', prefix=("/omd/versions/%s" % to_version))
 
     sys.stdout.write('%sFinished update.\n\n' % ((options.dry_run and tty_yellow+"*DRY RUN* "+tty_normal or "")))
 
