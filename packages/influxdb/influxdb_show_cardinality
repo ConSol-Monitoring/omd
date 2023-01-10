@@ -1,0 +1,25 @@
+#!/bin/bash
+
+if [ "$#" -ne 1 -o "$1" = "-h" ]; then
+  echo "Usage: $0 [<db_name>]"
+  exit 1
+fi
+
+DB_NAME=$1
+
+cd $OMD_ROOT
+source .bashrc
+
+INFLUX="influx -database $DB_NAME"
+
+echo "TAG VALUE CARDINALITY:"
+MEASUREMENT_NAMES=$($INFLUX -execute 'SHOW MEASUREMENTS' | tail -n +4)
+for MEASUREMENT_NAME in $MEASUREMENT_NAMES; do
+  COUNT=$($INFLUX -execute "SHOW SERIES CARDINALITY FROM \"$MEASUREMENT_NAME\"" | tail -n +4)
+  echo "$DB_NAME.$MEASUREMENT_NAME.TOTAL: $COUNT"
+  TAG_NAMES=$($INFLUX -execute "SHOW TAG KEYS FROM \"$MEASUREMENT_NAME\"" | tail -n +4)
+    for TAG_NAME in $TAG_NAMES; do
+        COUNT=$($INFLUX -execute "SHOW TAG VALUES CARDINALITY FROM \"$MEASUREMENT_NAME\" WITH KEY = \"$TAG_NAME\"" | tail -n +4)
+        echo "$DB_NAME.$MEASUREMENT_NAME.$TAG_NAME: $COUNT"
+    done
+done

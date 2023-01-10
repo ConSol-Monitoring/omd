@@ -24,6 +24,9 @@ next:
           - Prometheus
             - promlens 0.3.0
           - Ansible 2.14.1
+          - InfluxDB
+            - add influxdb_show_cardinality script
+            - add influxdb_vim_series script
  
 5.00     Nov 14 2022
           - DEPRECATION WARNING: the following components got removed

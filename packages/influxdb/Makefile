@@ -26,6 +26,8 @@ install:
 	install -m 755 $(PWD)/$(GOPATH)/bin/influxd $(DESTDIR)$(OMD_ROOT)/bin
 	install -m 755 $(PWD)/$(GOPATH)/bin/influx_inspect $(DESTDIR)$(OMD_ROOT)/bin
 	install -m 755 influxdb_drop_series $(DESTDIR)$(OMD_ROOT)/bin
+	install -m 755 influxdb_show_cardinality $(DESTDIR)$(OMD_ROOT)/bin
+	install -m 755 influxdb_vim_series $(DESTDIR)$(OMD_ROOT)/bin
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/monitoring-plugins
 	install -m 755 $(PWD)/check_influxdb.pl $(DESTDIR)$(OMD_ROOT)/lib/monitoring-plugins
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/histou/templates/default/
