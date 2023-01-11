@@ -53,7 +53,7 @@ GRP=###SITE###
 
 EXTERNAL_FQDN=${OMD_EXTERNAL_FQDN:-$(hostname --fqdn)}
 
-OPTIONS="--web.listen-address=127.0.0.1:${CONFIG_PROMLENS_TCP_PORT} --log.level=info --web.external-url=http://${EXTERNAL_FQDN}/${OMD_SITE}/promlens"
+OPTIONS="--web.listen-address=127.0.0.1:${CONFIG_PROMLENS_TCP_PORT} --log.level=info --web.external-url=http://${EXTERNAL_FQDN}/${OMD_SITE}/promlens --shared-links.sql.driver=sqlite --shared-links.sql.dsn=$SQLITE"
 if [ -r $TOKEN ]; then
     OPTIONS="$OPTIONS --grafana.url=http://127.0.0.1:${CONFIG_GRAFANA_TCP_PORT} --grafana.api-token-file=$TOKEN"
 fi

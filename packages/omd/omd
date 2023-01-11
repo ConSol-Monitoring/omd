@@ -1137,8 +1137,6 @@ def merge_update_file(relpath, userdir, old_version, new_version, skel_path, dry
                 print("%s\npatch output:\n%s%s" % ("*"*50, merge_res[1].decode(), merge_res[2].decode()))
                 print("%s\nyour local changes:\n" % ("*"*50))
                 os.system("diff -u %s-%s %s.orig" % (user_path, old_version, user_path))
-                print("\n%s\nupstream changes:\n" % ("*"*50))
-                os.system("diff -u %s-%s %s-%s" % (user_path, old_version, user_path, new_version))
                 print("\n%s\n" % ("*"*50))
             break
         if opt_conflict in [ "install", "abort" ]:
@@ -1646,7 +1644,7 @@ def print_update_file_details(relpath, old_perms, old_path, old_version, old_ske
     print_file_info(new_path, new_perm)
 
     arrow = tty_magenta + '->' + tty_normal
-    sys.stdout.write("\nPlanned changes:\n")
+    sys.stdout.write("\nPlanned content changes:\n")
     if old_perm != new_perm and user_perm != new_perm:
         sys.stdout.write("  - Permissions: %04o %s %04o\n" % (user_perm, arrow, new_perm))
 
