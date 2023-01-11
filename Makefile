@@ -370,6 +370,7 @@ version:
 	    sed -ri 's/^(OMD_SERIAL[[:space:]]*= *).*/\1'"$(NEWSERIAL)/" Makefile.omd ; \
 	    sed -ri 's/^(OMD_PATCH_LEVEL[[:space:]]*= *).*/\1'"1/" Makefile.omd ; \
 	    sed -ri 's/^(OMD_VERSION[[:space:]]*= *).*/\1"'"$$newversion"'"/' packages/omd/omd ; \
+	    sed -ri 's/Version:.*/Version: '$$newversion'/' packages/omd/index.html ; \
 	fi ;
 
 test:
