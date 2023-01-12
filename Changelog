@@ -22,6 +22,7 @@ next:
           - Mysql:
             - change tmpdir to ~/var/tmp
           - Prometheus
+            - Prometheus 2.37.5
             - promlens 0.3.0
           - Ansible 2.14.1
           - InfluxDB
