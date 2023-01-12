@@ -2569,31 +2569,27 @@ def call_scripts(phase, prefix=None, args=None):
         prefix = g_sitedir
     path = prefix + "/lib/omd/scripts/" + phase
     exited_ok = True
+    if not os.path.exists(path):
+        return exited_ok
+
     if not args:
         args = []
-    if os.path.exists(path):
-        putenv("OMD_ROOT", g_sitedir)
-        putenv("OMD_SITE", g_sitename)
-        for f in os.listdir(path):
-            if f[0] == '.':
-                continue
-            sys.stdout.write('Executing %s script "%s"...' % (phase, f))
-            p = subprocess.Popen(['%s/%s' % (path, f)]+args, shell = True, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
-            stdout = p.stdout.read()
-            stderr = p.stderr.read()
-            exitcode = p.wait()
-            if exitcode == 0:
-                sys.stdout.write(tty_ok + '\n')
-            elif exitcode == 5:
-                sys.stdout.write(tty_yellow + 'skipped' + tty_normal + '\n')
-            else:
-                exited_ok = False
-                sys.stdout.write(tty_error + ' (exit code: %d, use -v for details)\n' % exitcode)
-            if opt_verbose:
-                if stdout:
-                    sys.stdout.write('Output: %s\n' % stdout)
-                if stderr:
-                    sys.stdout.write('Errors: %s\n' % stderr)
+    putenv("OMD_ROOT", g_sitedir)
+    putenv("OMD_SITE", g_sitename)
+    for f in os.listdir(path):
+        if f[0] == '.':
+            continue
+        sys.stdout.write('Executing %s script "%s"...' % (phase, f))
+        sys.stdout.flush()
+        p = subprocess.Popen(['%s/%s' % (path, f)]+args)
+        exitcode = p.wait()
+        if exitcode == 0:
+            sys.stdout.write(tty_ok + '\n')
+        elif exitcode == 5:
+            sys.stdout.write(tty_yellow + 'skipped' + tty_normal + '\n')
+        else:
+            exited_ok = False
+            sys.stdout.write(tty_error + ' (exit code: %d, use -v for details)\n' % exitcode)
     return exited_ok
 
 
@@ -2783,11 +2779,12 @@ def main_create(args, options={}):
     sitename_must_be_valid(g_sitename, reuse)
 
     sitedir = site_dir(g_sitename)
-    real_version_path = os.path.realpath("%s/../../versions" % sitedir)
-    if not os.path.exists(real_version_path):
-        bail_out(tty_error + ": Error verifying versions folder: %s" % real_version_path)
+    version_base_path = os.path.realpath("%s/../../versions" % sitedir)
+    if not os.path.exists(version_base_path):
+        bail_out(tty_error + ": Error verifying versions folder: %s" % version_base_path)
 
-    if not call_scripts('pre-create', prefix=real_version_path, args=[g_sitename, OMD_VERSION]):
+    real_version_path = os.path.join(version_base_path, OMD_VERSION)
+    if not call_scripts('pre-create-root', prefix=real_version_path, args=[g_sitename, OMD_VERSION]):
         sys.stdout.write("create canceled by pre-create script\n\n")
         sys.exit(1)
 
@@ -2812,8 +2809,6 @@ def main_create(args, options={}):
         config_settings["TMPFS"] = "off"
         sys.stdout.write("Going to set TMPFS to off.\n")
 
-    call_scripts('post-create', args=[g_sitename, OMD_VERSION])
-
     if not options.no_init:
         admin_password = init_site(config_settings, options)
         welcome_message(admin_password)
@@ -2823,6 +2818,8 @@ def main_create(args, options={}):
         sys.stdout.write("You can now mount a filesystem to %s.\n" % (sitedir))
         sys.stdout.write("Afterwards you can initialize the site with 'omd init'.\n")
 
+    os.chdir(sitedir)
+    call_scripts('post-create-root', args=[g_sitename, OMD_VERSION])
 
 def welcome_message(admin_password):
     sys.stdout.write("Created new site %s%s%s with version %s%s%s.\n\n" % (tty_bold, g_sitename, tty_normal, tty_bold, OMD_VERSION, tty_normal))
@@ -2936,7 +2933,7 @@ def finalize_site(what, apache_reload):
             save_site_conf()
             config_set_all()
 
-            call_scripts('post-' + what)
+            call_scripts('post-' + what, args=[g_sitename, OMD_VERSION])
             sys.exit(0)
         except Exception as e:
             bail_out(tty_error + ": finalize_site: %s" % e)
@@ -2961,7 +2958,7 @@ def main_rm(args, options={}):
     # switch to the site user would not work. Better create a subprocess
     # for this dedicated action and switch to the user in that subprocess
 
-    if not call_scripts('pre-rm', args=[g_sitename, OMD_VERSION]):
+    if not call_scripts('pre-rm-root', args=[g_sitename, OMD_VERSION]):
         sys.stdout.write("update canceled by pre-rm script\n\n")
         sys.exit(1)
 
@@ -3003,7 +3000,7 @@ def main_rm(args, options={}):
     else:
         restart_apache()
 
-    call_scripts('post-rm', prefix=("/omd/versions/%s" % OMD_VERSION), args=[g_sitename, OMD_VERSION])
+    call_scripts('post-rm-root', prefix=("/omd/versions/%s" % OMD_VERSION), args=[g_sitename, OMD_VERSION])
 
 def create_site_dir(sitename):
     os.makedirs(site_dir(sitename))
