@@ -3579,6 +3579,21 @@ def prepare_dry_run_update_path(dry_run_path, from_version, to_version):
         shutil.rmtree(dry_run_path)
     os.mkdir(dry_run_path)
 
+    # create empty files for all files which exist in the current site to simulate ex.: non empty obsolete folders
+    for (root,dirs,files) in os.walk('.'):
+        if root.startswith("./"):
+            root = root[2:]
+        if root.startswith(".update_dry_run"):
+            continue
+        for dir in dirs:
+            dir = os.path.join(root, dir)
+            if not os.path.exists(os.path.join(dry_run_path, dir)):
+                os.mkdir(os.path.join(dry_run_path, dir))
+        for file in files:
+            file = os.path.join(root, file)
+            with open(os.path.join(dry_run_path, file), 'w') as fp:
+                pass
+
     sync_files_path = os.path.join(dry_run_path, '.sync_files')
     open(sync_files_path, "w").write("\n".join(sync_files))
 
