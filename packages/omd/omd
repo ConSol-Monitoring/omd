@@ -3081,7 +3081,7 @@ def get_exclude_patterns(options):
 
     # add user supplied excludes
     if options.exclude != None:
-        exclude.extend(options.exclude)
+        excludes.extend(options.exclude)
 
     return excludes
 
