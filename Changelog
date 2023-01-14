@@ -24,7 +24,6 @@ next:
           - Prometheus
             - Prometheus 2.37.5
             - promlens 0.3.0
-          - Ansible 2.14.1
           - InfluxDB
             - add influxdb_show_cardinality script
             - add influxdb_vim_series script

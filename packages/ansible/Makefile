@@ -1,10 +1,25 @@
 include ../../Makefile.omd
 
+# ON SLES12 Python3 is too old for ansible
+# On DEBIAN 9 python 3 is broken and writes a ton of warnings to stderr
+USE_PYTHON2   = $(shell echo $(DISTRO_INFO) | egrep -ic 'DEBIAN 9|SLES 12' )
+ifeq ($(USE_PYTHON2), 1)
+PYTHON=python2
+else
 PYTHON=python3
-ANSIBLE_VERSION=2.14.1
+endif
+ANSIBLE_VERSION=2.9.7
 ANSIBLE=ansible-$(ANSIBLE_VERSION)
+
+# This is where the python modules are going to be installed to
+ifeq ($(PYTHON), python2)
+LOCALPYTHONDIR=$(OMD_ROOT)/lib/python2
+SCRIPT_PATH=$(OMD_ROOT)/bin/.ansible
+else
 LOCALPYTHONDIR=$(OMD_ROOT)/lib/python
 SCRIPT_PATH=$(OMD_ROOT)/bin
+endif
+
 
 
 build:
