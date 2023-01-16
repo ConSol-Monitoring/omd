@@ -162,7 +162,7 @@ set +e
 # create cache file
 TARBALL_TMP=$(mktemp)
 set -e
-tar --exclude=\*.orig --exclude-from=$EXCLUDES_FILE -czf $TARBALL_TMP "$SRC"
+tar --exclude=\*.orig --exclude-from=$EXCLUDES_FILE -czf $TARBALL_TMP "./$SRC"
 rm -f "$CACHE_FILE"
 rm -f $CACHE_PATTERN
 mv $TARBALL_TMP "$CACHE_FILE"
