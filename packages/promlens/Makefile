@@ -16,16 +16,19 @@ build:
 	export PATH=$$GOROOT/bin:$(shell realpath $$(ls -d1 ../node/node-v*/bin)):$$PATH && \
 	export NODE_PATH=$(NODE_PATH) && \
 		make SKIP_GOLANGCI_LINT=1 -C $(SRC) build
+	cp $(SRC)/$(NAME) ./$(NAME)
+	rm -rf $(SRC)
 
 install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/bin
-	install -m 755 $(SRC)/$(NAME) $(DESTDIR)$(OMD_ROOT)/bin
+	install -m 755 ./$(NAME) $(DESTDIR)$(OMD_ROOT)/bin
 
 skel:
 	mkdir -p $(SKEL)/var/promlens
 
 clean:
 	rm -rf $(SRC)
+	rm -f ./$(NAME)
 
 upstream: clean
 	wget https://github.com/prometheus/promlens/archive/refs/tags/v$(VERSION).tar.gz -O $(SRC).tar.gz
