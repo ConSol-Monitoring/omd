@@ -58,6 +58,26 @@ build: $(EXTRA_BUILD_DEPS)
 		export CXXFLAGS=-O2; \
 		$(CMAKE) .. $(CONFIGUREOPTS) && \
 		make -j1
+	# save build artifacts and clean build dir to speed up cached builds
+	rm -rf ./dest
+	$(MAKE) DESTDIR=$(shell pwd)/dest -C $(DIR)/build install
+	mv ./dest/$(OMD_ROOT)/* ./dest/.
+	rm -rf ./dest/omd
+	mkdir -p ./dest/bin
+	mv ./dest/sbin/* ./dest/bin/
+	rmdir ./dest/sbin
+	mkdir -p ./dest/lib
+	mv ./dest/lib*/icinga2/* ./dest/lib/
+	rm -rf ./dest/lib*/icinga2
+	mkdir -p ./dest/etc/icinga2
+	rsync -a $(DIR)/etc/icinga2/. ./dest/etc/icinga2/.
+	mkdir -p ./dest/etc/bash_completion.d
+	install -m 0644 $(DIR)/etc/bash_completion.d/icinga2 ./dest/etc/bash_completion.d
+	rm -rf $(DIR)
+	rm -rf $(BOOSTDIR)
+	rm -rf $(BOOSTDEST)
+	rm -rf $(CMAKEDIR)
+	rm -rf $(CMAKEDEST)
 
 $(CMAKEDEST):
 	tar xzf $(CMAKEDIR).tar.gz
@@ -75,13 +95,7 @@ $(BOOSTDEST): $(CMAKEDEST)
 build_boost: $(BOOSTDEST)
 
 install:
-	$(MAKE) DESTDIR=$(DESTDIR) -C $(DIR)/build install
-	rm -rf $(DESTDIR)$(OMD_ROOT)/etc
-	rm -rf $(DESTDIR)$(OMD_ROOT)/var
-	mv $(DESTDIR)$(OMD_ROOT)/sbin/* $(DESTDIR)$(OMD_ROOT)/bin/
-	rmdir $(DESTDIR)$(OMD_ROOT)/sbin
-	mv $(DESTDIR)$(OMD_ROOT)/lib*/icinga2/* $(DESTDIR)$(OMD_ROOT)/lib/
-	rm -rf $(DESTDIR)$(OMD_ROOT)/lib*/icinga2
+	rsync -a ./dest/. $(DESTDIR)$(OMD_ROOT)/.
 	sed   -e "s#/lib/icinga2/sbin/icinga2#/lib/sbin/icinga2#g" -i $(DESTDIR)$(OMD_ROOT)/bin/icinga2
 	sed -e "s#/lib64/icinga2/sbin/icinga2#/lib/sbin/icinga2#g" -i $(DESTDIR)$(OMD_ROOT)/bin/icinga2
 	strip $(DESTDIR)$(OMD_ROOT)/lib/monitoring-plugins/check_nscp_api
@@ -90,13 +104,13 @@ install:
 
 skel:
 	mkdir -p $(SKEL)/etc/icinga2
-	cp -rp $(DIR)/etc/icinga2/* $(SKEL)/etc/icinga2/
+	cp -rp ./dest/etc/icinga2/* $(SKEL)/etc/icinga2/
 	chmod 644 $(SKEL)/etc/icinga2/scripts/*
 	rm -rf $(SKEL)/etc/icinga2/conf.d/win32
 	rm -f $(SKEL)/etc/icinga2/features-*/windowseventlog.conf
 	mv $(SKEL)/etc/icinga2/constants.conf.cmake $(SKEL)/etc/icinga2/constants.conf
 	mkdir -p $(SKEL)/etc/bash_completion.d
-	install -m 0644 $(DIR)/etc/bash_completion.d/icinga2 $(SKEL)/etc/bash_completion.d
+	install -m 0644 ./dest/etc/bash_completion.d/icinga2 $(SKEL)/etc/bash_completion.d
 	sed -i -e 's/@ICINGA2_USER@/###SITE###/g' \
 	       -e 's/@ICINGA2_GROUP@/###SITE###/g' \
 	       -e 's/@ICINGA2_PLUGINDIR@/###ROOT###\/lib\/monitoring\-plugins/g' \
@@ -148,6 +162,7 @@ clean:
 	rm -rf $(BOOSTDEST)
 	rm -rf $(CMAKEDIR)
 	rm -rf $(CMAKEDEST)
+	rm -rf dest/
 
 upstream:
 	rm -rf icinga2 icinga2-master
