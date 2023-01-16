@@ -1,77 +1,73 @@
 SHELL = /bin/bash
 # You can select a subset of the packages by overriding this
 # variale, e.g. make PACKAGES='nagios rrdtool' pack
-PACKAGES=freetds \
-         perl-modules \
-         go-1.4 \
-         go-1.19 \
-         node \
-         node-modules \
-         influxdb \
-         nagflux \
-         python-modules \
-         apache-omd \
-         check_multi \
-         dokuwiki \
-         example \
-         jmx4perl \
-         mysql-omd \
-         icinga2 \
-         naemon \
-         naemon-livestatus \
-         naemon-plugins \
-         logos \
-         nrpe \
-         nsca \
-         omd \
-         monitoring-plugins \
-         check_plugins \
-         pnp4nagios \
-         pnp4nagios4 \
-         rrdtool \
-         thruk \
-         thruk-plugins \
-         thruk-consol-theme \
-         grafana \
-         grafana-loki \
-         histou \
-         maintenance \
-         gearmand \
-         mod-gearman \
-         mod-gearman-worker-go \
-         patch \
-         nail \
-         notifications-tt \
-         ansible \
-         coshsh \
-         lmd \
-         prometheus \
-         prometheus_snmp_exporter \
-         prometheus_node_exporter \
-         prometheus_alertmanager \
-         prometheus_blackbox_exporter \
-         prometheus_pushgateway \
-         promlens \
-         promxy \
-         telegraf \
-         snmptrapd \
-         downtime-api \
-         dacretain \
-         grafana-pnp-datasource \
-         grafana-thruk-datasource \
-         sakuli\
-         victoriametrics \
-         xinetd \
-		 shellinabox
+PACKAGES =
+PACKAGES += freetds
+PACKAGES += perl-modules
+PACKAGES += go-1.4
+PACKAGES += go-1.19
+PACKAGES += node
+PACKAGES += node-modules
+PACKAGES += influxdb
+PACKAGES += nagflux
+PACKAGES += python-modules
+PACKAGES += apache-omd
+PACKAGES += check_multi
+PACKAGES += dokuwiki
+PACKAGES += example
+PACKAGES += jmx4perl
+PACKAGES += mysql-omd
+PACKAGES += icinga2
+PACKAGES += naemon
+PACKAGES += naemon-livestatus
+PACKAGES += naemon-plugins
+PACKAGES += logos
+PACKAGES += nrpe
+PACKAGES += nsca
+PACKAGES += omd
+PACKAGES += monitoring-plugins
+PACKAGES += check_plugins
+PACKAGES += pnp4nagios
+PACKAGES += pnp4nagios4
+PACKAGES += rrdtool
+PACKAGES += thruk
+PACKAGES += thruk-plugins
+PACKAGES += thruk-consol-theme
+PACKAGES += grafana
+PACKAGES += grafana-loki
+PACKAGES += histou
+PACKAGES += maintenance
+PACKAGES += gearmand
+PACKAGES += mod-gearman
+PACKAGES += mod-gearman-worker-go
+PACKAGES += patch
+PACKAGES += nail
+PACKAGES += notifications-tt
+PACKAGES += ansible
+PACKAGES += coshsh
+PACKAGES += lmd
+PACKAGES += prometheus
+PACKAGES += prometheus_snmp_exporter
+PACKAGES += prometheus_node_exporter
+PACKAGES += prometheus_alertmanager
+PACKAGES += prometheus_blackbox_exporter
+PACKAGES += prometheus_pushgateway
+PACKAGES += promlens
+PACKAGES += promxy
+PACKAGES += telegraf
+PACKAGES += snmptrapd
+PACKAGES += downtime-api
+PACKAGES += dacretain
+PACKAGES += grafana-pnp-datasource
+PACKAGES += grafana-thruk-datasource
+PACKAGES += sakuli
+PACKAGES += victoriametrics
+PACKAGES += xinetd
+PACKAGES += shellinabox
 
 include Makefile.omd
 
-# If you just want to test package building, you can reduce the
-# number of packages to just "omd" - to speed up your tests.
-# PACKAGES=omd
-
-# This file is kept by 'make config' and also may override
-# the list of packages
+# This file may override the list of packages
 -include .config
 
 DESTDIR ?=$(shell pwd)/destdir
@@ -197,30 +193,6 @@ clean:
             $(MAKE) -C $$p clean ; \
         done
 
-mrproper:
-	git clean -xfd
-
-config:
-	@inarray () { \
-            elem="$$1" ; \
-            shift ; \
-            for x in "$$@" ; do if [ $$elem = $$x ] ; then return 0 ; fi ; done ; \
-            return 1  ; \
-        } ; \
-        if [ "$(PACKAGES)" = '*' ] ; \
-        then \
-            enabled='*' ; \
-        else \
-            enabled=( $(PACKAGES) ) ; \
-        fi ; \
-        echo "$$enabled" ; \
-        avail=$$(for p in $$(cd packages ; ls) ; do if [ "$$enabled" = '*' ] || inarray $$p $${enabled[@]} ; then en=on ; else en="-" ; fi ; echo -n "$$p - $$en " ; done) ; \
-        if packages=$$(dialog --stdout --checklist "Package configuration" 1 0 0 $$avail ) ; \
-        then \
-            echo "PACKAGES = $$packages" | sed 's/"//g' > .config ; \
-        fi
-
-
 # Create installations files that do not lie beyond /omd/versions/$(OMD_VERSION)
 # and files not owned by a specific package.
 install-global:
@@ -274,17 +246,8 @@ $(SOURCE_TGZ)-snap snap:
 # to create the source rpm.
 # The second choice is to call this form a CLEAN git archive directory which
 # then uses 'make snap' to use that snapshot.
-rpm:
-	rm -f omd.spec
+rpm: omd.spec
 	test -f $(SOURCE_TGZ) || ( test -d .git && $(MAKE) $(SOURCE_TGZ) || $(MAKE) $(SOURCE_TGZ)-snap )
-	sed -e 's/^Requires:.*/Requires:        $(OS_PACKAGES)/' \
-	    -e 's/%{version}/$(OMD_VERSION)/g' \
-	    -e 's/^Version:.*/Version: $(DISTRO_CODE)/' \
-	    -e 's/^Release:.*/Release: $(OMD_PATCH_LEVEL)/' \
-	    -e 's#@APACHE_CONFDIR@#$(APACHE_CONF_DIR)#g' \
-	    -e 's#@APACHE_NAME@#$(APACHE_NAME)#g' \
-	    -e 's#@APACHE_INCLUDEOPT@#$(APACHE_INCLUDEOPT)#g' \
-	    omd.spec.in > omd.spec
 	mkdir -p $(RPM_TOPDIR)/{SOURCES,BUILD,RPMS,SRPMS,SPECS}
 	cp $(SOURCE_TGZ) $(RPM_TOPDIR)/SOURCES
 	# NO_BRP_STALE_LINK_ERROR ignores errors when symlinking from skel to
@@ -332,19 +295,6 @@ deb: deb-changelog
 			-i.gitignore -I.gitignore \
 			-uc -us -rfakeroot -b
 
-# Only to be used for developement testing setup 
-setup: pack xzf alt
-
-# On debian based systems register the alternative switches
-alt:
-	@if which update-alternatives >/dev/null 2>&1; then \
-	    update-alternatives --install /omd/versions/default \
-		omd /omd/versions/$(OMD_VERSION) $(OMD_SERIAL) \
-		--slave /usr/bin/omd omd.bin /omd/versions/$(OMD_VERSION)/bin/omd \
-		--slave /usr/share/man/man8/omd.8.gz omd.man8 \
-               /omd/versions/$(OMD_VERSION)/share/man/man8/omd.8.gz ; \
-	fi ;
-
 version:
 	@if [ -z "$(VERSION)" ] ; then \
 	    newversion=$$(dialog --stdout --inputbox "New Version:" 0 0 "$(OMD_VERSION)") ; \
@@ -373,3 +323,13 @@ timedtest:
 			printf "% 8ss\n" $$time; \
 		fi; \
 	done
+
+omd.spec: omd.spec.in
+	sed -e 's/^Requires:.*/Requires:        $(OS_PACKAGES)/' \
+	    -e 's/%{version}/$(OMD_VERSION)/g' \
+	    -e 's/^Version:.*/Version: $(DISTRO_CODE)/' \
+	    -e 's/^Release:.*/Release: $(OMD_PATCH_LEVEL)/' \
+	    -e 's#@APACHE_CONFDIR@#$(APACHE_CONF_DIR)#g' \
+	    -e 's#@APACHE_NAME@#$(APACHE_NAME)#g' \
+	    -e 's#@APACHE_INCLUDEOPT@#$(APACHE_INCLUDEOPT)#g' \
+	    omd.spec.in > omd.spec
