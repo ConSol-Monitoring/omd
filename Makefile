@@ -75,8 +75,7 @@ include Makefile.omd
 -include .config
 
 DESTDIR ?=$(shell pwd)/destdir
-RPM_TOPDIR=$$(pwd)/rpm.topdir
-DPKG_TOPDIR=$$(pwd)/dpkg.topdir
+RPM_TOPDIR=$(shell pwd)/rpm.topdir
 SOURCE_TGZ=omd-$(OMD_VERSION).tar.gz
 BIN_TGZ=omd-bin-$(OMD_VERSION).tar.gz
 NEWSERIAL=$$(($(OMD_SERIAL) + 1))
@@ -256,14 +255,10 @@ install-global:
 	install -m 644 README COPYING TEAM $(DESTDIR)$(OMD_ROOT)/share/doc
 	install -m 644 Changelog $(DESTDIR)$(OMD_ROOT)/share/doc/CHANGELOG
 
-# Create source tarball. This currently only works in a checked out GIT 
+# Create source tarball. This currently only works in a checked out GIT
 # repository.
 $(SOURCE_TGZ) dist:
-	rm -rf omd-$(OMD_VERSION)
-	mkdir -p omd-$(OMD_VERSION)
-	git archive HEAD | tar xf - -C omd-$(OMD_VERSION)
-	tar czf $(SOURCE_TGZ) omd-$(OMD_VERSION)
-	rm -rf omd-$(OMD_VERSION)
+	git archive --prefix=omd-$(OMD_VERSION)/ --format=tar.gz --output=$(SOURCE_TGZ) HEAD
 
 # Creates source tarball. This does only work well in directories extracted
 # from a CLEAN git archive tarball.
@@ -280,6 +275,8 @@ $(SOURCE_TGZ)-snap snap:
 # The second choice is to call this form a CLEAN git archive directory which
 # then uses 'make snap' to use that snapshot.
 rpm:
+	rm -f omd.spec
+	test -f $(SOURCE_TGZ) || ( test -d .git && $(MAKE) $(SOURCE_TGZ) || $(MAKE) $(SOURCE_TGZ)-snap )
 	sed -e 's/^Requires:.*/Requires:        $(OS_PACKAGES)/' \
 	    -e 's/%{version}/$(OMD_VERSION)/g' \
 	    -e 's/^Version:.*/Version: $(DISTRO_CODE)/' \
@@ -288,15 +285,15 @@ rpm:
 	    -e 's#@APACHE_NAME@#$(APACHE_NAME)#g' \
 	    -e 's#@APACHE_INCLUDEOPT@#$(APACHE_INCLUDEOPT)#g' \
 	    omd.spec.in > omd.spec
-	rm -f $(SOURCE_TGZ)
-	test -d .git && $(MAKE) $(SOURCE_TGZ) || $(MAKE) $(SOURCE_TGZ)-snap
 	mkdir -p $(RPM_TOPDIR)/{SOURCES,BUILD,RPMS,SRPMS,SPECS}
 	cp $(SOURCE_TGZ) $(RPM_TOPDIR)/SOURCES
 	# NO_BRP_STALE_LINK_ERROR ignores errors when symlinking from skel to
 	# share,lib,bin because the link has a invalid target until the site is created
 	NO_BRP_STALE_LINK_ERROR="yes" \
-	rpmbuild -bb --define "_topdir $(RPM_TOPDIR)" \
-	     --buildroot=$$(pwd)/rpm.buildroot omd.spec
+		rpmbuild -bb \
+		--define "_topdir $(RPM_TOPDIR)" \
+		--buildroot=$$(pwd)/rpm.buildroot \
+		omd.spec
 	mv -v $(RPM_TOPDIR)/RPMS/*/*.rpm .
 	rm -rf $(RPM_TOPDIR) rpm.buildroot
 
@@ -335,19 +332,8 @@ deb: deb-changelog
 			-i.gitignore -I.gitignore \
 			-uc -us -rfakeroot -b
 
-deb-snap: deb-environment
-	make clean && git checkout -- Makefile.omd packages/omd/omd && \
-	make VERSION=`./get_version` version && make deb && \
-	git checkout -- Makefile.omd packages/omd/omd
-
 # Only to be used for developement testing setup 
 setup: pack xzf alt
-
-# Only for development: install tarball below /
-xzf:
-	tar xzf $(BIN_TGZ) -C / # HACK: Add missing suid bits if compiled as non-root
-	chmod 4755 $(OMD_ROOT)/lib/nagios/plugins/check_{icmp,dhcp}
-	$(APACHE_CTL) -k graceful
 
 # On debian based systems register the alternative switches
 alt:
