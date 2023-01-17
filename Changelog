@@ -27,6 +27,7 @@ next:
           - InfluxDB
             - add influxdb_show_cardinality script
             - add influxdb_vim_series script
+          - Ansible 2.9.27
  
 5.00     Nov 14 2022
           - DEPRECATION WARNING: the following components got removed
