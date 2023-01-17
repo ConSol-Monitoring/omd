@@ -21,10 +21,10 @@ build:
 		python3 -m pip install --no-cache-dir --no-index --no-deps --find-links=wheels/ --target=dest/ --upgrade wheels/*.whl
 
 install:
-	mkdir -p $(DESTDIR)/$(OMD_ROOT)/bin
-	rsync -a dest/bin/. $(DESTDIR)/$(OMD_ROOT)/bin/.
-	mkdir -p $(DESTDIR)/$(OMD_ROOT)/lib/python
-	rsync -a dest/ansible* $(DESTDIR)/$(OMD_ROOT)/lib/python/
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/bin
+	rsync -a ./dest/bin/. $(DESTDIR)$(OMD_ROOT)/bin/.
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/python
+	rsync -a ./dest/ansible* $(DESTDIR)$(OMD_ROOT)/lib/python/
 
 skel:
 

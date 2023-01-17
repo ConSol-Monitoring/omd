@@ -47,7 +47,7 @@ install:
 	install -m 644 $(DIR)/CONTRIBUTORS $(DESTDIR)$(OMD_ROOT)/share/doc/rrdtool
 	
 	# Python binding
-	cd $(DIR)/bindings/python && python3 setup.py install --root=$(DESTDIR)/$(OMD_ROOT) --home ""
+	cd $(DIR)/bindings/python && python3 setup.py install --root=$(DESTDIR)$(OMD_ROOT) --home ""
 	if [ -n "$(DESTDIR)$(OMD_ROOT)" -a -d "$(DESTDIR)$(OMD_ROOT)/lib64" ] ; then \
 	    rsync -avh $(DESTDIR)$(OMD_ROOT)/lib64/* $(DESTDIR)$(OMD_ROOT)/lib/ ; \
 	    rm -rf $(DESTDIR)$(OMD_ROOT)/lib64 ; \

@@ -30,7 +30,7 @@ build: clean
 
 install:
 	$(MAKE) DESTDIR=$(DESTDIR) -C $(DIR) install
-	#cp $(DESTDIR)/$(OMD_ROOT)/bin/gearmand $(DESTDIR)/$(OMD_ROOT)/bin/gearmand.dbg
+	#cp $(DESTDIR)$(OMD_ROOT)/bin/gearmand $(DESTDIR)$(OMD_ROOT)/bin/gearmand.dbg
 
 skel:
 
