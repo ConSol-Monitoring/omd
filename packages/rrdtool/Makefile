@@ -36,8 +36,11 @@ build:
 install:
 	export PERL5LIB=$(P5TMPDIST)/dest/lib/perl5; \
 	$(MAKE) DESTDIR=$(DESTDIR) -C $(DIR) install
+	find $(DESTDIR)$(OMD_ROOT)/lib/perl5/ -type f -exec chmod u+rw  {} \; # strip fails otherwise
+	find $(DESTDIR)$(OMD_ROOT)/lib/perl5/ -type d -exec chmod u+rwx {} \; # strip fails otherwise
 	
 	# clean up perl man pages which end up in wrong location
+	rm -fr $(DESTDIR)/usr/share/man
 	rm -fr $(DESTDIR)/usr/local
 	# clean up systemd init files
 	rm -fr $(DESTDIR)/lib
