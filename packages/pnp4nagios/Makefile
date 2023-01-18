@@ -43,6 +43,8 @@ build:
 	-if [ "x$(RUN_AUTOMAKE)" = "x1" ]; then cd $(DIR) && automake -af; fi
 	cd $(DIR) && ./configure $(CONFIGUREOPTS)
 	$(MAKE) -C $(DIR) all
+	rm -f $(DIR)/share/pnp/documents/de_DE/dwnld.html
+	cp $(DIR)/share/pnp/documents/en_US/dwnld.html $(DIR)/share/pnp/documents/de_DE/dwnld.html
 
 install:
 	mkdir -p $(DESTDIR)$(APACHE_CONF_DIR)

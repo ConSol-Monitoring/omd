@@ -1,20 +1,10 @@
-From c4178b25a2aa6c6c06dc38f3ac1fa8538382e691 Mon Sep 17 00:00:00 2001
-From: Sven Nierlein <sven@nierlein.de>
-Date: Mon, 17 Dec 2018 16:09:51 +0100
-Subject: [PATCH] Update wiki2html.sh
-
-Fix dangling symlink. Symlinks are relative to the target file, not the current working directory.
----
- helpers/wiki2html.sh | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/helpers/wiki2html.sh b/helpers/wiki2html.sh
-index 81e1c4f..29a5d7c 100755
---- a/helpers/wiki2html.sh
-+++ b/helpers/wiki2html.sh
-@@ -39,4 +39,4 @@ for L in $LANG; do
+--- a/helpers/wiki2html.sh	2023-01-18 12:17:23.795319035 +0100
++++ b/helpers/wiki2html.sh	2023-01-18 12:17:52.080433565 +0100
+@@ -38,5 +38,5 @@
+     done
      ((lindex++))
  done
- rm de_DE/dwnld.html
+-rm de_DE/dwnld.html
 -ln -s en_US/dwnld.html de_DE/dwnld.html
-+ln -s ../en_US/dwnld.html de_DE/dwnld.html
++rm -f de_DE/dwnld.html
++cp en_US/dwnld.html de_DE/dwnld.html
