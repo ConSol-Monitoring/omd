@@ -65,6 +65,7 @@ rm -f $RPM_BUILD_ROOT/usr/bin/omd
 rm -f $RPM_BUILD_ROOT/usr/share/man/man8/omd.8.gz
 rm -f $RPM_BUILD_ROOT/@APACHE_CONFDIR@/*
 rm -f $RPM_BUILD_ROOT/etc/init.d/omd
+rm -rf $RPM_BUILD_ROOT/usr/lib/systemd
 find \
     $RPM_BUILD_ROOT/opt/omd/versions/%{version}/bin/ \
     $RPM_BUILD_ROOT/opt/omd/versions/%{version}/lib/ \
