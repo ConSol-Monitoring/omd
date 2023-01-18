@@ -19,18 +19,25 @@ build:
 	$(GOENV) && \
 		cd $(DIR)/cmd/chunks-inspect/ && \
 		go build
+	mkdir -p ./dest
+	install -m 755 $(DIR)/cmd/loki/loki                     ./dest/loki
+	install -m 755 $(DIR)/clients/cmd/promtail/promtail     ./dest/promtail
+	install -m 755 $(DIR)/cmd/logcli/logcli                 ./dest/logcli
+	install -m 755 $(DIR)/cmd/chunks-inspect/chunks-inspect ./dest/chunks-inspect
+	rm -rf $(DIR)
 
 install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/bin
-	install -m 755 $(DIR)/cmd/loki/loki                     $(DESTDIR)$(OMD_ROOT)/bin/loki
-	install -m 755 $(DIR)/clients/cmd/promtail/promtail     $(DESTDIR)$(OMD_ROOT)/bin/promtail
-	install -m 755 $(DIR)/cmd/logcli/logcli                 $(DESTDIR)$(OMD_ROOT)/bin/logcli
-	install -m 755 $(DIR)/cmd/chunks-inspect/chunks-inspect $(DESTDIR)$(OMD_ROOT)/bin/chunks-inspect
+	install -m 755 ./dest/loki           $(DESTDIR)$(OMD_ROOT)/bin/loki
+	install -m 755 ./dest/promtail       $(DESTDIR)$(OMD_ROOT)/bin/promtail
+	install -m 755 ./dest/logcli         $(DESTDIR)$(OMD_ROOT)/bin/logcli
+	install -m 755 ./dest/chunks-inspect $(DESTDIR)$(OMD_ROOT)/bin/chunks-inspect
 
 skel:
 
 clean:
 	rm -rf $(DIR)
+	rm -rf ./dest
 
 package: clean
 	$(GOENV) go env
