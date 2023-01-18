@@ -2,7 +2,7 @@ SHELL=/bin/bash
 NAME=Consol
 N_PREFIX=$(shell pwd)/node_modules
 NODEVERSION=16
-export PATH := $(shell ls -d1 ../../node/node-*/bin):$(PATH)
+export PATH := $(shell ls -d1 ../../node/node-*/bin 2>/dev/null):$(PATH)
 
 .PHONY: Thruk
 
