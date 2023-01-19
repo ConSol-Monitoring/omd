@@ -1667,6 +1667,13 @@ def print_update_file_details(relpath, old_perms, old_path, old_version, old_ske
         if old_link != new_link:
             sys.stdout.write("  - Link target: %s %s %s\n" % (old_link, arrow, new_link))
 
+    if old_type == "dir" and new_type == None:
+        # print remaining files of folder
+        sys.stdout.write("\nRemaining files:\n")
+        for item in os.listdir(old_path):
+            sys.stdout.write("  - %s\n" % (item))
+
+
 #.
 #   .--tmpfs---------------------------------------------------------------.
 #   |                     _                    __                          |
