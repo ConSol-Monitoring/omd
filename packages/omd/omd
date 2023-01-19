@@ -201,7 +201,6 @@ def run_dialog(args):
     rc = 0 == os.waitpid(p.pid, 0)[1]
     if not rc and response.decode() != "":
         bail_out(tty_error + ": " + response.decode())
-    os.system("clear")
     return rc, response.decode('utf-8')
 
 
