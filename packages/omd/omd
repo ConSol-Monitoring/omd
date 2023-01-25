@@ -4171,13 +4171,19 @@ def main_cleanup(args, options=None):
         version_path = os.path.join("/omd/versions", version)
 
         packages = package_manager.find_packages_of_path(version_path)
-        if len(packages) != 1:
-            sys.stdout.write("%s%-20s%s Could not determine package. Keeping this version.\n" %
+        omdpackages = list(filter(lambda pkg: b"-addons" not in pkg, packages))
+        addonpackages = list(filter(lambda pkg: b"-addons" in pkg, packages))
+        if len(omdpackages) != 1:
+            sys.stdout.write("%s%-35s%s Could not determine package. Keeping this version.\n" %
                     (tty_bold, version, tty_normal))
             continue
 
-        sys.stdout.write("%s%-20s%s Uninstalling\n" % (tty_bold, version, tty_normal))
-        package_manager.uninstall(packages[0])
+        for pkg in addonpackages:
+            sys.stdout.write("%s%-35s%s Uninstalling\n" % (tty_bold, pkg, tty_normal))
+            package_manager.uninstall(pkg)
+
+        sys.stdout.write("%s%-35s%s Uninstalling\n" % (tty_bold, version, tty_normal))
+        package_manager.uninstall(omdpackages[0])
 
         # In case there were modifications made to the version the uninstall may leave
         # some files behind. Remove the whole version directory
