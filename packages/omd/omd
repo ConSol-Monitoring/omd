@@ -2665,7 +2665,7 @@ def main_setversion(args, options={}):
         if not ok:
             bail_out("Aborted.")
     else:
-        version = args[0]
+        version = opt_version or args[0]
 
     if version != 'auto' and not version_exists(version):
         bail_out(tty_error + ": The given version does not exist.")
@@ -3413,6 +3413,8 @@ def main_update(args, options={}):
         possible_versions.sort(reverse=True)
         if len(possible_versions) == 0:
             bail_out(tty_error + ": There is no other OMD version to update to.")
+        elif opt_version:
+            to_version = opt_version
         elif len(possible_versions) == 1:
             to_version = possible_versions[0]
         else:
