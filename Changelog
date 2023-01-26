@@ -15,6 +15,7 @@ next:
             - omd rm: add support for pre-rm/post-rm scripts
           - Thruk: update to 3.02
           - Grafana:
+            - update to 9.3.6
             - update pnp datasource
           - Gearman:
             - Gearmand update 1.1.20

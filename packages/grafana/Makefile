@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 NAME       = grafana
-VERSION    = 9.2.4
+VERSION    = 9.3.6
 SRC        = $(NAME)-$(VERSION).tar.gz
 GOPATH     = go
 GOPKG      = 1.19
@@ -15,7 +15,6 @@ MACHINE=arm64
 else
 $(error arch $(shell uname -m ) not supported)
 endif
-
 
 .PHONY: skel
 
@@ -72,15 +71,15 @@ package: public clean
 		git clone --depth=1 --branch="v$(VERSION)" https://github.com/grafana/grafana.git
 	cd $(GOPATH)/src/github.com/grafana/grafana && \
 		$(GO) fmt ./...
-	echo "Get everything"
-	cd $(GOPATH)/src/github.com/grafana/grafana && \
-		$(GO) mod vendor
 	echo "run make gen-go"
 	cd $(GOPATH)/src/github.com/grafana/grafana && \
 		export GOROOT=$(PWD)/../go-$(GOPKG)/go-$(GOVERSION); \
 		export GOPATH=$(PWD)/$(GOPATH)/; \
 		export PATH=$$GOROOT/bin:$$PATH; \
 		make gen-go
+	echo "Get everything"
+	cd $(GOPATH)/src/github.com/grafana/grafana && \
+		$(GO) mod vendor
 	echo "build app"
 	cd $(GOPATH)/src/github.com/grafana/grafana && \
 		$(GO) run build.go setup
