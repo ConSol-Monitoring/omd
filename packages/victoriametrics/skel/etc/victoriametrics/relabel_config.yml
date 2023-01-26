@@ -1,0 +1,8 @@
+- source_labels: [__name__,warn-fill]
+  regex: metrics[^;]*;(.+)
+  target_label: warn_fill
+- source_labels: [__name__,crit-fill]
+  regex: metrics[^;]*;(.+)
+  target_label: crit_fill
+- action: labeldrop
+  regex: (warn|crit)-fill
