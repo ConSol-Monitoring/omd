@@ -227,7 +227,7 @@ print $_[0]."\n\n" if($_[0]);
 print << "EOT";
 --help, -h this
 
---op, -o on of 'lt' or 'gt' (less than, greater than)
+--op, -o one of 'lt' or 'gt' (less than, greater than)
   if omitted 'lt' (less than) is assumed
 
 --critical=THRESHOLD, -c THRESHOLD
