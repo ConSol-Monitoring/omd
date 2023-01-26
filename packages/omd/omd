@@ -3206,8 +3206,10 @@ def main_diff(args, options={}):
     global bare
     bare = options.bare # sorry for the global variable here
 
+    changed = 0
     for arg in args:
-        diff_list(from_skelroot, g_sitedir, from_version, arg)
+        changed += diff_list(from_skelroot, g_sitedir, from_version, arg)
+    sys.exit(1 if changed > 0 else 0)
 
 
 def main_vimdiff(args, options={}):
@@ -3309,13 +3311,20 @@ def diff_list(from_skelroot, g_sitedir, from_version, orig_path, diff_binary = N
     else:
         bail_out(tty_error + ": Sorry, 'omd diff' only works for files in the site's directory.")
 
+    changed = 0
+    def print_diff_and_count(rel_path, source_path, target_path, source_version, source_perms, diff_binary = None):
+        if print_diff(rel_path, source_path, target_path, source_version, source_perms, diff_binary = None):
+            nonlocal changed
+            changed += 1
+
     if not os.path.isdir(abs_path):
-        print_diff(rel_path, from_skelroot, g_sitedir, from_version, old_perms, diff_binary)
+        print_diff_and_count(rel_path, from_skelroot, g_sitedir, from_version, old_perms, diff_binary)
     else:
         if not rel_path:
             rel_path = "."
-        walk_skel(from_skelroot, print_diff, (from_skelroot, g_sitedir,
+        walk_skel(from_skelroot, print_diff_and_count, (from_skelroot, g_sitedir,
                   from_version, old_perms), {}, depth_first=False, relbase = rel_path)
+    return changed
 
 
 def print_diff(rel_path, source_path, target_path, source_version, source_perms, diff_binary = None):
@@ -3331,7 +3340,7 @@ def print_diff(rel_path, source_path, target_path, source_version, source_perms,
     changed_type, changed_content, changed = file_status(source_file, target_file)
 
     if not changed:
-        return
+        return False
 
     fn = tty_bold + rel_path + tty_normal
     if bare:
@@ -3371,7 +3380,7 @@ def print_diff(rel_path, source_path, target_path, source_version, source_perms,
 
     if not target_type:
         print_status(good, fn, 'd', 'Deleted')
-        return
+        return True
 
     elif changed_type and changed_content:
         print_status(good, fn, 'tc', 'Changed type and content')
@@ -3387,6 +3396,8 @@ def print_diff(rel_path, source_path, target_path, source_version, source_perms,
 
     if source_perm != target_perm:
         print_status(warn, fn, 'p', 'Changed permissions')
+
+    return True
 
 
 
@@ -4580,7 +4591,7 @@ commands = [
 
   Command(
     command     = "diff",
-    description = "Shows differences compared to the original version files",
+    description = "Shows differences compared to the original version files. Will exit 1 if there ther had been changes.",
     fn          = main_diff,
     needs_site  = 1,
     must_exist  = True,
