@@ -115,6 +115,9 @@ BASE_OPTIONS=(
 # Retention taken from Config
 vm_retentionPeriod="${CONFIG_VICTORIAMETRICS_RETENTION}"
 
+# unset relabelConfig if file is not there
+[ -r "$vm_relabelConfig" ] || unset vm_relabelConfig
+
 if [ "${CONFIG_VICTORIAMETRICS_MODE}" = "ssl" ] ; then
   if [  -z "$vm_tlsCertFile" ] ; then echo "vm_tlsCertFile missing"; exit 8; fi
   if [  -z "$vm_tlsKeyFile" ] ; then echo "vm_tlsKeyFile missing"; exit 8; fi

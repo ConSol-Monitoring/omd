@@ -43,6 +43,3 @@ vm_tlsKeyFile=$OMD_ROOT/etc/apache/site.key
 
 # OMD default relabel config to rewrite InfluxDB tags (pushed from nagflux) to PromQL compliant labels
 vm_relabelConfig=$OMD_ROOT/etc/victoriametrics/relabel_config.yml
-[ -r "$vm_relabelConfig" ] && export vm_relabelConfig
-
-return 0
