@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 NAME       = grafana-loki
-VERSION    = 2.7.0
+VERSION    = 2.7.2
 DIR        = loki-$(VERSION)
 SRC        = $(DIR).tar.gz
 GOPKG      = 1.19
@@ -40,6 +40,7 @@ clean:
 	rm -rf ./dest
 
 package: clean
+	rm -f *.gz
 	$(GOENV) go env
 	wget "https://github.com/grafana/loki/archive/v$(VERSION).tar.gz"
 	tar zxf v$(VERSION).tar.gz

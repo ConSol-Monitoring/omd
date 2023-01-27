@@ -17,6 +17,7 @@ next:
           - Grafana:
             - update to 9.3.6
             - update pnp datasource
+            - Loki update to 2.7.2
           - Gearman:
             - Gearmand update 1.1.20
             - Mod-Gearman module update 5.0.0
