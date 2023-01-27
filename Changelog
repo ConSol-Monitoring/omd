@@ -20,7 +20,7 @@ next:
             - Loki update to 2.7.2
           - Gearman:
             - Gearmand update 1.1.20
-            - Mod-Gearman module update 5.0.0
+            - Mod-Gearman module update 5.0.1
           - Mysql:
             - change tmpdir to ~/var/tmp
           - Prometheus
