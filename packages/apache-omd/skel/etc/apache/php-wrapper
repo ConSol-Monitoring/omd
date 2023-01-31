@@ -6,6 +6,7 @@ export PHP_FCGI_MAX_REQUESTS=1000
 
 # Replace with the path to your FastCGI-enabled PHP executable
 exec ###PHP_FCGI_BIN### \
+    -d memory_limit=256M \
     -d session.save_handler=files \
     -d session.save_path=###ROOT###/tmp/php/session \
     -d upload_tmp_dir=###ROOT###/tmp/php/upload \
