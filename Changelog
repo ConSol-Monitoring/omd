@@ -16,6 +16,7 @@ next:
           - Thruk: update to 3.02
           - Naemon:
             - update core to 1.4.1
+            - update livestatus to 1.4.1
           - Grafana:
             - update to 9.3.6
             - update pnp datasource
