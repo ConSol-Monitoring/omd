@@ -27,7 +27,7 @@ CHECKRESULTS_DIR=$OMD_ROOT/tmp/prometheus/checkresults
 
 EXTERNAL_FQDN=${OMD_EXTERNAL_FQDN:-$(hostname --fqdn)}
 
-OPTIONS="--config.file $CFG_FILE --web.listen-address=$CONFIG_PROMETHEUS_TCP_ADDR:$CONFIG_PROMETHEUS_TCP_PORT --web.external-url=http://${EXTERNAL_FQDN}/$OMD_SITE/prometheus --storage.tsdb.path $DATA_DIR --web.console.libraries=$OMD_ROOT/etc/prometheus/console_libraries --web.console.templates=$OMD_ROOT/etc/prometheus/consoles --storage.tsdb.retention=${CONFIG_PROMETHEUS_RETENTION}d"
+OPTIONS="--config.file $CFG_FILE --web.listen-address=$CONFIG_PROMETHEUS_TCP_ADDR:$CONFIG_PROMETHEUS_TCP_PORT --web.external-url=http://${EXTERNAL_FQDN}/$OMD_SITE/prometheus --storage.tsdb.path $DATA_DIR --web.console.libraries=$OMD_ROOT/etc/prometheus/console_libraries --web.console.templates=$OMD_ROOT/etc/prometheus/consoles --storage.tsdb.retention.time=${CONFIG_PROMETHEUS_RETENTION}d"
 if [ -r $OMD_ROOT/etc/prometheus/webconfig.yml ]; then
     # https://prometheus.io/docs/prometheus/latest/configuration/https/
     OPTIONS="$OPTIONS --web.config.file=$OMD_ROOT/etc/prometheus/webconfig.yml"
