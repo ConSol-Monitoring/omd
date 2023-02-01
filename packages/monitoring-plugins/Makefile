@@ -1,11 +1,11 @@
 include ../../Makefile.omd
 
 NAME = monitoring-plugins
-VERSION = 2.3.2
+VERSION = 2.3.3
 DIR = $(NAME)-$(VERSION)
 URIPARSER=0.8.6
 # GIT TAG is set automatically by "make upstream"
-GIT_TAG     = cf66d7
+GIT_TAG     = 2.3.3
 
 CONFIGUREOPTS = \
     --prefix=$(OMD_ROOT) \
