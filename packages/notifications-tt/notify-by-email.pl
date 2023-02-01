@@ -75,15 +75,18 @@ sub process_template {
 	close FILE;
 	my $template = Template->new({PRE_CHOMP => 1, POST_CHOMP => 0, EVAL_PERL => 1, ABSOLUTE => 1, ENCODING => 'utf8'});
 	$template->process(\$data, \%macro, \$output) or die Template->error;
-	print $output if $verbose;
+	print STDERR $output if $verbose;
 	send_mail();
 }
 
 sub send_mail {
 	$mail .= ' ' . join ' ',map { "-S".$_ } @vars;
+	print STDERR "sending mail to: ".$macro{'CONTACTEMAIL'}."\n" if $verbose;
+	print STDERR "cmd: $mail $macro{'CONTACTEMAIL'}\n" if $verbose;
 	open (MAIL,"|$mail $macro{'CONTACTEMAIL'}") || die("Couldn't open $mail: $!");
 	print MAIL $output;
 	close MAIL;
+	print STDERR "mail done\n" if $verbose;
 }
 
 sub usage {
