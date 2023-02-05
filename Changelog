@@ -23,7 +23,7 @@ next:
             - Loki update to 2.7.2
           - Gearman:
             - Gearmand update 1.1.20
-            - Mod-Gearman module update 5.0.1
+            - Mod-Gearman module update 5.0.2
             - update mod-gearman-worker-go to 1.3.0
           - Mysql:
             - change tmpdir to ~/var/tmp
