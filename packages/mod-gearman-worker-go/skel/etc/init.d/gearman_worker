@@ -9,7 +9,7 @@ if [ "$CONFIG_MOD_GEARMAN" != "on" -o "$CONFIG_GEARMAN_WORKER" != "on" ] ; then
     exit 5
 fi
 
-DAEMON=$OMD_ROOT/bin/mod_gearman_worker-go
+DAEMON=$OMD_ROOT/bin/mod_gearman_worker
 NAME=gearman_worker
 PIDFILE=$OMD_ROOT/tmp/run/gearman_worker.pid
 

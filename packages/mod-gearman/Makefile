@@ -26,18 +26,17 @@ build:
 	make -C $(PROXYDIR) gearman_proxy.pl
 
 install:
-	$(MAKE) DESTDIR=$(DESTDIR) -C $(DIR) -j 1 install
-	# fix path for plugin
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/bin
+	install -m 0755 calculate_required_worker           $(DESTDIR)$(OMD_ROOT)/bin/
+	install -m 0755 $(DIR)/gearman_top                  $(DESTDIR)$(OMD_ROOT)/bin/
+	install -m 0755 $(DIR)/send_gearman                 $(DESTDIR)$(OMD_ROOT)/bin/
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/monitoring-plugins
-	mv $(DESTDIR)$(OMD_ROOT)/bin/check_gearman $(DESTDIR)$(OMD_ROOT)/lib/monitoring-plugins/
-	rm -rf $(DESTDIR)$(OMD_ROOT)/share/mod_gearman/*.conf
-	rm -f $(DESTDIR)$(OMD_ROOT)/lib/mod_gearman/mod_gearman.so
-	cp $(DESTDIR)$(OMD_ROOT)/lib/mod_gearman/mod_gearman_naemon.o $(DESTDIR)$(OMD_ROOT)/lib/mod_gearman/mod_gearman_naemon.o.dbg
-	rm -rf $(DESTDIR)$(OMD_ROOT)/lib/mod_gearman/mod_gearman_nagios*
-	rm -rf $(DESTDIR)$(OMD_ROOT)/etc
-	rm -rf $(DESTDIR)$(OMD_ROOT)/var
-	install -m 0755 $(PROXYDIR)/gearman_proxy.pl $(DESTDIR)$(OMD_ROOT)/share/mod_gearman/gearman_proxy.pl
-	install -m 0755 calculate_required_worker $(DESTDIR)$(OMD_ROOT)/bin/calculate_required_worker
+	install -m 0755 $(DIR)/check_gearman                $(DESTDIR)$(OMD_ROOT)/lib/monitoring-plugins/
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/mod_gearman
+	install -m 0644 $(DIR)/mod_gearman_naemon.o         $(DESTDIR)$(OMD_ROOT)/lib/mod_gearman/mod_gearman_naemon.o
+	install -m 0644 $(DIR)/mod_gearman_naemon.o         $(DESTDIR)$(OMD_ROOT)/lib/mod_gearman/mod_gearman_naemon.o.dbg
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/mod_gearman
+	install -m 0755 $(PROXYDIR)/gearman_proxy.pl        $(DESTDIR)$(OMD_ROOT)/share/mod_gearman/
 
 skel:
 	mkdir -p $(SKEL)/etc/mod-gearman

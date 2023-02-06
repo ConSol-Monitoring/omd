@@ -29,8 +29,8 @@ build:
 
 install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/bin
-	install -m 755 $(PWD)/$(GOPATH)/bin/mod_gearman_worker  $(DESTDIR)$(OMD_ROOT)/bin/mod_gearman_worker-go
-	install -m 755 $(PWD)/$(GOPATH)/src/$(GITURL)/mod_gearman_worker_epn.pl  $(DESTDIR)$(OMD_ROOT)/bin/mod_gearman_worker_epn.pl
+	install -m 0755 $(PWD)/$(GOPATH)/bin/mod_gearman_worker                  $(DESTDIR)$(OMD_ROOT)/bin/
+	install -m 0755 $(PWD)/$(GOPATH)/src/$(GITURL)/mod_gearman_worker_epn.pl $(DESTDIR)$(OMD_ROOT)/bin/
 
 skel:
 	cp $(GOPATH)/src/$(GITURL)/worker.cfg $(SKEL)/etc/mod-gearman/worker.cfg
