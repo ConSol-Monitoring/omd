@@ -174,7 +174,8 @@ pack:
 	find $(DESTDIR)$(OMD_ROOT)/skel -type f | xargs -n1 sed -i -e 's+$(OMD_ROOT)+###ROOT###+g'
 
 	# Remove site-specific directories that went under /omd/version
-	rm -rf $(DESTDIR)/{var,tmp}
+	rm -rf $(DESTDIR)/{var,tmp,etc,local,man}
+	rm -rf $(DESTDIR)$(OMD_ROOT)/{var,tmp,etc,local,man}
 
 	# bail out if some patches did not apply
 	@rejected=$$(find $(DESTDIR)$(OMD_ROOT)/skel -type f -name \*.rej) ; \
