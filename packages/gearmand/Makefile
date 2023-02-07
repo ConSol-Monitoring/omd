@@ -18,6 +18,8 @@ CONFIGUREOPTS = \
 
 .PHONY: skel
 
+TMPDEST=$(shell pwd)/dest
+
 build: clean
 	tar xzf gearmand-$(VERSION).tar.gz
 	for p in patches/*.patch ; do \
@@ -27,12 +29,18 @@ build: clean
 	cd $(DIR) && \
 	CFLAGS="-g3" ./configure $(CONFIGUREOPTS)
 	$(MAKE) -C $(DIR)
+	$(MAKE) DESTDIR=$(TMPDEST) -C $(DIR) install
+	rm -rf $(DIR)
+	mv $(TMPDEST)$(OMD_ROOT)/* $(TMPDEST)/
+	rm -rf $(TMPDEST)/omd
 
 install:
-	$(MAKE) DESTDIR=$(DESTDIR) -C $(DIR) install
+	mkdir -p $(DESTDIR)$(OMD_ROOT)
+	rsync -a $(TMPDEST)/. $(DESTDIR)$(OMD_ROOT)/.
 	#cp $(DESTDIR)$(OMD_ROOT)/bin/gearmand $(DESTDIR)$(OMD_ROOT)/bin/gearmand.dbg
 
 skel:
 
 clean:
 	rm -rf $(DIR)
+	rm -rf $(TMPDEST)

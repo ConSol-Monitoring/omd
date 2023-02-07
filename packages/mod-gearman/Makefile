@@ -2,7 +2,6 @@ include ../../Makefile.omd
 
 NAME         = mod_gearman
 VERSION      = 5.0.2
-GEARMAND     = $(shell grep "^VERSION " ../gearmand/Makefile | awk '{ print $$3 }')
 DIR          = mod_gearman-$(VERSION)
 PROXY        = GearmanProxy
 PROXYVERSION = 2.08
@@ -19,7 +18,7 @@ build:
 	#done
 	cd $(DIR) && \
 	  export PKG_CONFIG_PATH=$(shell ls -d1 $$(pwd)/../naemon/naemon-*/.) C_INCLUDE_PATH=$(shell pwd)/$(DIR)/include:$(shell ls -d1 $$(pwd)/../naemon/naemon-*/.)/src; \
-	  ./configure --prefix=$(OMD_ROOT) --libdir=$(OMD_ROOT)/lib --enable-debug --enable-embedded-perl --with-gearman=$(shell pwd)/../gearmand/gearmand-${GEARMAND} && \
+	  ./configure --prefix=$(OMD_ROOT) --libdir=$(OMD_ROOT)/lib --enable-debug --enable-embedded-perl --with-gearman=$(shell pwd)/../gearmand/dest && \
 	  $(MAKE) -j 1
 	tar zxf $(PROXYDIR).tar.gz
 	cd $(PROXYDIR) && PERL5LIB=$$(pwd) perl Makefile.PL
