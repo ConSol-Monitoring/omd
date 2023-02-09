@@ -14,13 +14,16 @@ BEGIN {
 
 plan skip_all => 'Author test. Set $ENV{TEST_AUTHOR} to a true value to run.' unless $ENV{TEST_AUTHOR};
 plan skip_all => 'Root permissions required' unless $> == 0;
-plan( tests => 158 );
+plan( tests => 174 );
 
 my $omd_bin  = TestUtils::get_omd_bin();
 my $site     = TestUtils::create_test_site() or TestUtils::bail_out_clean("no further testing without site");
 my $versions_test = { cmd => $omd_bin." versions"};
 TestUtils::test_command($versions_test);
 my @versions = $versions_test->{'stdout'} =~ m/(^[0-9\.]+)$/mxg;
+
+# make sure all files belong to site user
+TestUtils::test_command({ cmd => "/usr/bin/find /omd/sites/$site/ -user root -ls", like => '/^$/' });
 
 # create fake version to update to
 my $version_test = { cmd => $omd_bin." version -b"};
@@ -76,6 +79,9 @@ TestUtils::test_command({
             like => ['/DRY RUN/', '/Vanished\s+.my.cnf/', '/0 conflicts/'],
             });
 
+# make sure all files still belong to site user
+TestUtils::test_command({ cmd => "/usr/bin/find /omd/sites/$site/ -user root -ls", like => '/^$/' });
+
 # run update
 TestUtils::test_command({ cmd => $omd_bin." stop $site",       like => '/Stopping naemon/' });
 TestUtils::test_command({
@@ -88,6 +94,9 @@ TestUtils::test_command({
                      '/Installed file\s+.new_file/',
                     ],
             });
+
+# make sure all files still belong to site user
+TestUtils::test_command({ cmd => "/usr/bin/find /omd/sites/$site/ -user root -ls", like => '/^$/' });
 
 # verify changes
 TestUtils::test_command({ cmd => "/bin/grep -c TESTRC /omd/sites/$site/.profile", like => ['/^\s*1/']});
@@ -130,6 +139,9 @@ TestUtils::test_command({
                     ]
             });
 TestUtils::test_command({ cmd => $omd_bin." version -b $site",  like => "/^\Q$omd_version\E\$/" });
+
+# make sure all files still belong to site user
+TestUtils::test_command({ cmd => "/usr/bin/find /omd/sites/$site/ -user root -ls", like => '/^$/' });
 
 ##################################################
 # cleanup test site

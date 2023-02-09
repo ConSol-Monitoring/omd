@@ -3577,44 +3577,43 @@ def prepare_dry_run_update_path(dry_run_path, from_version, to_version):
 
     # create list of required files:
     # all files that exist in the current site and either exist in the old or new skel folder
-    sync_files = []
-    for (root,dirs,files) in os.walk('.'):
-        for file in files + dirs:
-            file = os.path.join(root, file)
-            if file.startswith("./"):
-                file = file[2:]
-            f_from = os.path.join(from_skel_path, file)
-            f_to   = os.path.join(to_skel_path, file)
-            if (os.path.islink(f_from) and os.path.lexists(f_from) or os.path.exists(f_from)) or (os.path.islink(f_to) and os.path.lexists(f_to) or os.path.exists(f_to)):
-                sync_files.append(file)
-    for extra in ['tmp', 'bin', 'include', 'lib', 'share', 'version' ]:
-        sync_files.append(extra)
+    sync_files = ['tmp', 'bin', 'include', 'lib', 'share', 'version' ]
+    for (dir) in [from_skel_path, to_skel_path]:
+        dirlen = len(dir)+1
+        for (root,dirs,files) in os.walk(dir):
+            for file in files + dirs:
+                file = os.path.join(root, file)[dirlen:]
+                if os.path.lexists(file):
+                    sync_files.append(file)
+    sync_files = sorted(list(set(sync_files)))
 
     # remove previous run
     if os.path.exists(dry_run_path):
         shutil.rmtree(dry_run_path)
     os.mkdir(dry_run_path)
 
-    # create empty files for all files which exist in the current site to simulate ex.: non empty obsolete folders
-    for (root,dirs,files) in os.walk('.'):
-        if root.startswith("./"):
-            root = root[2:]
-        if root.startswith(".update_dry_run"):
-            continue
-        for dir in dirs:
-            dir = os.path.join(root, dir)
-            if not os.path.exists(os.path.join(dry_run_path, dir)):
-                os.mkdir(os.path.join(dry_run_path, dir))
-        for file in files:
-            file = os.path.join(root, file)
-            with open(os.path.join(dry_run_path, file), 'w') as fp:
-                pass
-
     sync_files_path = os.path.join(dry_run_path, '.sync_files')
     open(sync_files_path, "w").write("\n".join(sync_files))
 
     if 0 != os.system("rsync -ax --files-from=%s '%s/.' '%s/.'" % (sync_files_path, site_dir(g_sitename), dry_run_path)):
         bail_out(tty_error + ": Cannot create tmp directory for dry-run update.")
+
+    # create empty files for all files which exist in the current site to simulate ex.: non empty obsolete folders
+    for (root,dirs,files) in os.walk('.'):
+        if root.startswith("./"):
+            root = root[2:]
+        # skip folders which eiter neither in old or new skel
+        if not os.path.lexists(os.path.join(from_skel_path, root)) and not os.path.lexists(os.path.join(to_skel_path, root)):
+            continue
+        for dir in dirs:
+            dir = os.path.join(root, dir)
+            if not os.path.lexists(os.path.join(dry_run_path, dir)):
+                os.mkdir(os.path.join(dry_run_path, dir))
+        for file in files:
+            file = os.path.join(dry_run_path, root, file)
+            if not os.path.lexists(file):
+                with open(file, 'w') as fp:
+                    pass
 
     return
 
