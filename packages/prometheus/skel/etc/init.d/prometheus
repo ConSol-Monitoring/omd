@@ -27,10 +27,21 @@ CHECKRESULTS_DIR=$OMD_ROOT/tmp/prometheus/checkresults
 
 EXTERNAL_FQDN=${OMD_EXTERNAL_FQDN:-$(hostname --fqdn)}
 
-OPTIONS="--config.file $CFG_FILE --web.listen-address=$CONFIG_PROMETHEUS_TCP_ADDR:$CONFIG_PROMETHEUS_TCP_PORT --web.external-url=http://${EXTERNAL_FQDN}/$OMD_SITE/prometheus --storage.tsdb.path $DATA_DIR --web.console.libraries=$OMD_ROOT/etc/prometheus/console_libraries --web.console.templates=$OMD_ROOT/etc/prometheus/consoles --storage.tsdb.retention.time=${CONFIG_PROMETHEUS_RETENTION}d"
+OPTIONS=()
+# The following two are needed to be at the beginning
+# They are used to identify the process in prometheus_proc()
+OPTIONS+=(--config.file="$CFG_FILE")
+OPTIONS+=(--storage.tsdb.path="$DATA_DIR")
+
+OPTIONS+=(--web.listen-address=$CONFIG_PROMETHEUS_TCP_ADDR:$CONFIG_PROMETHEUS_TCP_PORT)
+OPTIONS+=(--web.external-url=http://${EXTERNAL_FQDN}/$OMD_SITE/prometheus)
+OPTIONS+=(--web.console.libraries=/omd/sites/demo/etc/prometheus/console_libraries)
+OPTIONS+=(--web.console.templates=/omd/sites/demo/etc/prometheus/consoles)
+OPTIONS+=(--storage.tsdb.retention.time=${CONFIG_PROMETHEUS_RETENTION}d)
+
 if [ -r $OMD_ROOT/etc/prometheus/webconfig.yml ]; then
     # https://prometheus.io/docs/prometheus/latest/configuration/https/
-    OPTIONS="$OPTIONS --web.config.file=$OMD_ROOT/etc/prometheus/webconfig.yml"
+    OPTIONS+=(--web.config.file=$OMD_ROOT/etc/prometheus/webconfig.yml)
 fi
 
 # Put together fragments and build a new prometheus.yml
@@ -120,7 +131,7 @@ rebuild_config() {
 # It returns 1 when no process can be found and echos the PID while
 # returning 0 when a process can be found.
 prometheus_proc() {
-    PID=$(pgrep -u $OMD_SITE -o -fx "$BIN $OPTIONS" 2>/dev/null)
+    PID=$(pgrep -u $OMD_SITE -o -f "$BIN ${OPTIONS[*]:0:2}" 2>/dev/null)
     if [ "$PID" != "" ]; then
         echo "$PID"
         return 0
@@ -206,7 +217,7 @@ prometheus_wait_stop() {
 
 prometheus_wait_start() {
     prep_start
-    nohup $BIN $OPTIONS >>$LOGFILE 2>&1 &
+    nohup $BIN "${OPTIONS[@]}" >>$LOGFILE 2>&1 &
     I=0
     while ! pidof_prometheus >/dev/null 2>&1;  do
         if [ $I = '10' ]; then
@@ -276,7 +287,7 @@ case "$1" in
         exit 0
     ;;
     status)
-        PID=$(pidof_prometheus 2>&1) || true
+        PID=$(pidof_prometheus 2>/dev/null) || true
         if kill -0 "${PID:-}" >/dev/null 2>&1; then
             echo "Running ($PID)."
             exit 0
