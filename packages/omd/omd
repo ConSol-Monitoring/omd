@@ -3545,6 +3545,7 @@ def main_update(args, options={}):
         load_site_conf()
         create_config_environment()
         config_set_all()
+        save_site_conf()
 
         if os.path.exists(backup_skel_path):
             shutil.rmtree(backup_skel_path)
