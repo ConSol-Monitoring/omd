@@ -12,14 +12,17 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 465 );
+plan( tests => 468 );
 
 my $omd_bin = TestUtils::get_omd_bin();
 
 # print omd version
 my $vtest = { cmd => $omd_bin." version", "exit" => undef };
 TestUtils::test_command($vtest) or TestUtils::bail_out_clean("no further testing without working omd");
-diag($vtest->{'stdout'});
+my($omd_v, $python_v) = split(/\,\s+/mx, $vtest->{'stdout'});
+diag($omd_v);
+ok($python_v, "has python version");
+diag($python_v);
 
 # extract omd version
 $vtest = { cmd => $omd_bin." version -b", "exit" => undef };
@@ -29,8 +32,16 @@ TestUtils::test_command($vtest) or TestUtils::bail_out_clean("no further testing
 my $atest = { cmd => "/bin/sh -c '".TestUtils::config('APACHE_INIT_NAME')." -V | grep \"Server version\"'", "exit" => undef, errlike => undef };
 TestUtils::test_command($atest) or TestUtils::bail_out_clean("no further testing without working omd");
 diag("Apache ".$atest->{'stdout'});
+
+# print perl version
 use Config;
+ok($^V, "has perl version");
 diag(sprintf("Perl: %s - Arch: %s", $^V, $Config{'archname'}));
+
+# extract php version
+my $ptest = { cmd => "/bin/sh -c 'php -v | head -n 1'", "exit" => undef, errlike => undef };
+TestUtils::test_command($ptest) or TestUtils::bail_out_clean("no further testing without working omd");
+diag($ptest->{'stdout'});
 
 # there should be no sbin/ folder, all binaries should be in bin/
 chomp(my $omd_version = $vtest->{'stdout'});
