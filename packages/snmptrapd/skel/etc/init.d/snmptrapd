@@ -1,34 +1,27 @@
 #!/bin/bash
-# init file for snmptrapd
-# chkconfig: - 50 50
-# description: snmptrapd
-#
-# processname: /usr/sbin/snmptrapd
-# pidfile: /omd/sites/###SITE###/var/run/snmptrapd.pid
 
-# source function library
-#. /etc/rc.status
+### OMD INIT INFO
+# PIDFILE:  tmp/run/snmptrapd.pid
+# DEPENDS:  CONFIG_SNMPTRAPD = on
+# BINARY:   /usr/sbin/snmptrapd
+# ARGMATCH: etc/snmptrapd.conf
+### END INIT INFO
 
-. $OMD_ROOT/etc/omd/site.conf
+cd || exit 1
+. etc/omd/site.conf
 if [ "$CONFIG_SNMPTRAPD" != "on" ] ; then
   exit 5
 fi
+. lib/omd/init_profile
 
 NAME="snmptrapd"
 PROG="/usr/sbin/snmptrapd"
 LOGDIR="/omd/sites/$OMD_SITE/var/log/snmp"
 LOG="$LOGDIR/snmptrapd.log"
-PIDFILE="$OMD_ROOT/var/run/snmptrapd.pid"
+PIDFILE="$OMD_ROOT/tmp/run/snmptrapd.pid"
 OPTIONS="-ObentU -C -c $OMD_ROOT/etc/snmptrapd.conf -A -Lf $LOG -p $PIDFILE udp:$CONFIG_SNMPTRAPD_UDP_PORT"
 
 mkdir -p $LOGDIR
-mkdir -p "$OMD_ROOT/var/run"
-
-if [ -z $OMD_SITE ]; then
-    echo -n $"Starting $NAME: failed. \$OMD_SITE not set."
-    exit 1
-fi
-
 
 pidof_snmptrapd() {
   # if there is actually an snmptrapd process whose pid is in PIDFILE,
@@ -43,7 +36,7 @@ pidof_snmptrapd() {
     fi
   else
     # It might happen that there is no pidfile but a process is running
-    # As fallback check the process table for apache with PPID=1 and
+    # As fallback check the process table for snmptrapd with PPID=1 and
     # running as this user
     PID=$(pgrep -u $OMD_SITE -P 1 -f $PROG)
     if [ -n "$PID" ]; then
@@ -102,7 +95,7 @@ snmptrapd_wait_start() {
   return 0
 }
 
-
+__init_hook $0 $1 pre
 case "$1" in
     start)
         printf "%s snmptrapd-init %s\n" "$(date)" "$*" >> $LOG
@@ -163,4 +156,3 @@ case "$1" in
 esac
 
 exit 3
-

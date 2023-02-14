@@ -24,21 +24,24 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+OMD_VERSION = "5.00-labs-edition"
+
+import sys
+sys.path.append("/omd/versions/%s/lib/python" % OMD_VERSION)
+
 import abc
 import argparse
 import grp
 import os
+import psutil
 import pwd
 import re
 import shutil
 import string
 import subprocess
-import sys
 import time
 import tty
 import typing
-
-OMD_VERSION = "5.00-labs-edition"
 
 # Some global variables
 opt_verbose     = False
@@ -1868,24 +1871,57 @@ def check_status(sitename, display=True, daemon=None, bare=False):
     num_running = 0
     num_unused = 0
     num_stopped = 0
+    uid = pwd.getpwnam(g_sitename).pw_uid
+    processlist = [{'pid': process.pid, 'name': process.name(), 'cmdline': " ".join(process.cmdline())} for process in psutil.process_iter() if process.uids().real == uid]
+    config = parse_site_conf(sitename)
     rc_dir, scripts = init_scripts(sitename)
     components = [ s.split('-', 1)[-1] for s in scripts ]
     if daemon and daemon not in components:
         if not bare:
             sys.stderr.write('ERROR: This daemon does not exist.\n')
         return 3
+
+    # get widest known enabled script
+    rc_metas = {}
+    output_size = 16
+    for script in scripts:
+        komponent = script.split("/")[-1].split('-', 1)[-1]
+        if daemon and komponent != daemon:
+            continue
+        rc_info = get_init_script_meta(os.path.join(rc_dir, script), config, processlist)
+        rc_metas[komponent] = rc_info
+        if rc_info != None and rc_info["unused"] != None:
+            if rc_info["unused"]:
+                continue
+        l = len(komponent)+2
+        if l > output_size:
+            output_size = l
+
     for script in scripts:
         komponent = script.split("/")[-1].split('-', 1)[-1]
         if daemon and komponent != daemon:
             continue
 
-        state = os.system("%s/%s status >/dev/null 2>&1" % (rc_dir, script)) >> 8
+        # assume state from init script meta data config option and pidfile
+        rc_info = rc_metas[komponent]
+        state = None
+        if rc_info != None and rc_info["unused"] != None:
+            if rc_info["unused"]:
+                state = 5
+            elif rc_info["pidfile"]:
+                if rc_info["pid"]:
+                    state = 0
+                else:
+                    state = 1
+
+        if state == None:
+            state = os.system("%s/%s status >/dev/null 2>&1" % (rc_dir, script)) >> 8
 
         if display and (state != 5 or opt_verbose):
             if bare:
                 sys.stdout.write(komponent + " ")
             else:
-                sys.stdout.write("%-16s" % (komponent + ":"))
+                sys.stdout.write(("%-"+str(output_size)+"s") % (komponent + ":"))
                 sys.stdout.write(tty_bold)
 
         if bare:
@@ -1923,13 +1959,103 @@ def check_status(sitename, display=True, daemon=None, bare=False):
         if bare:
             sys.stdout.write("OVERALL %d\n" % exit_code)
         else:
-            sys.stdout.write("-----------------------\n")
-            sys.stdout.write("Overall state:  %s\n" %
-                (tty_bold + ovstate + tty_normal))
+            sys.stdout.write(("-"*(output_size+7)) +"\n")
+            sys.stdout.write(("%-"+str(output_size)+"s%s\n") % ("Overall state:", tty_bold + ovstate + tty_normal))
     return exit_code
 
 
+def get_init_script_meta(script, config, processlist):
+    meta = {
+        "pidfile": None,
+        "pid": None,
+        "binary": None,
+        "argmatch": None,
+        "depends": [],
+        "unused": None,
+    }
+    in_info_block = False
+    with open(script) as file:
+        for i in range(15):
+            line = next(file).strip()
+            if line.find("OMD INIT INFO") != -1:
+                in_info_block = True
+            if line.find("END INIT INFO") != -1:
+                break
+            if not in_info_block:
+                continue
+            info = re.findall("^#\s*(\w+):\s(.*)$", line)
+            if len(info) == 0:
+                continue
+            match = info[0]
+            if match[0] == "PIDFILE":
+                meta["pidfile"] = match[1].strip()
+            elif match[0] == "BINARY":
+                meta["binary"] = match[1].strip()
+            elif match[0] == "ARGMATCH":
+                meta["argmatch"] = match[1].strip()
+            elif match[0] == "DEPENDS":
+                depends = re.findall("CONFIG_(\w+)\s*([\!=]+)\s*(.*?)\s*$", line)
+                if len(depends) == 1:
+                    meta["depends"].append(depends[0])
+                else:
+                    sys.stderr.write("syntax error in omd init info depends: %s in file %s\n" % (line, script))
+            else:
+                sys.stderr.write("unsupported omd init info attribute: %s in file %s\n" % (line, script))
 
+    if not in_info_block:
+        return meta
+
+    if len(meta["depends"]) > 0:
+        meta["unused"] = False
+        for (var, op, val) in meta["depends"]:
+            conf_value = config.get(var, None)
+            if conf_value == None:
+                sys.stderr.write("unknown config variable: %s in file %s\n" % (var, script))
+                continue
+
+            if op == "=" or op == "==":
+                if val != conf_value:
+                    meta["unused"] = True
+                    break
+            elif op == "!=":
+                if val == conf_value:
+                    meta["unused"] = True
+                    break
+            else:
+                sys.stderr.write("unknown operator: %s in file %s\n" % (op, script))
+
+    if meta["pidfile"] != None:
+        try:
+            with open(meta["pidfile"], 'r') as fd:
+                pid = fd.read().strip()
+                if check_pid(pid):
+                    meta["pid"] = pid
+                else:
+                    # remove stale pid file
+                    sys.stderr.write("removing stale pid file: %s\n" % meta["pidfile"])
+                    os.remove(meta["pidfile"])
+        except Exception:
+            pass
+
+    if meta["pid"] == None and meta["binary"] != None:
+        for p in processlist:
+            if p['cmdline'].find(meta["binary"]) != -1 and p['cmdline'].find(meta["argmatch"]) != -1:
+                meta["pid"] = p['pid']
+                break
+
+    if meta["pid"] != None:
+        meta["unused"] = False
+
+    return meta
+
+
+def check_pid(pid):
+    try:
+        os.kill(pid, 0)
+    except OSError:
+        return False
+    else:
+        return True
 
 #.
 #   .--Config & Hooks------------------------------------------------------.
@@ -2351,11 +2477,13 @@ def config_configure_hook(hook_name):
         load_hook_dependencies()
 
 def call_init_hook(command, when):
+    hook = "etc/init-hooks.d/omd-%s-%s" % (command, when)
+    if not os.path.exists(hook):
+        return
     try:
-        subprocess.check_call("etc/init-hooks.d/omd-%s-%s" % (command, when))
-    except (FileNotFoundError, PermissionError) as e:
-        if(opt_verbose):
-            sys.stderr.write(str(e)+"\n")
+        subprocess.check_call(hook)
+    except PermissionError as e:
+        sys.stderr.write(str(e)+"\n")
     except subprocess.CalledProcessError as e:
         bail_out(tty_error + ": %s: %s" % (g_sitename, e))
 
@@ -4128,7 +4256,6 @@ def kill_site_user_processes(site, exclude_current_and_parents=False):
 def get_current_and_parent_pids():
     """Return list of PIDs of the current process and parent process tree till pid 0"""
     pids = []
-    import psutil
     process = psutil.Process()
     while process and process.pid != 0:
         pids.append(process.pid)

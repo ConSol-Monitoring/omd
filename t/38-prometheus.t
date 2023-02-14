@@ -32,7 +32,7 @@ TestUtils::test_command({ cmd => $omd_bin." config $site set ALERTMANAGER on" })
 TestUtils::test_command({ cmd => $omd_bin." start $site", like => ['/Starting prometheus\.+OK/',
                                                                    '/Starting blackbox_exporter\.+OK/',
                                                                    '/Starting alertmanager\.+OK/',
-                                                                   '/Starting Grafana\.+OK/',
+                                                                   '/Starting grafana\.+OK/',
                                                                   ]});
 TestUtils::test_command({ cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_http -t 60 -H 127.0.0.1 --onredirect=follow -a omdadmin:omd -u \"/$site/prometheus\" -s \"<title>Prometheus Time Series Collection and Processing Server</title>\"'", like => '/HTTP OK:/', waitfor => 'OK:', maxwait => 180 });
 TestUtils::test_command({ cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_http -t 60 -H 127.0.0.1 --onredirect=follow -a omdadmin:omd -u \"/$site/alertmanager\" -s \"<title>Alertmanager</title>\"'", like => '/HTTP OK:/', waitfor => 'OK:' });

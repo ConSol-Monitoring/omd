@@ -167,9 +167,9 @@ my $tests = [
   { cmd => "/bin/su - $site -c 'omd diff'", like => ['/^$/'] },
 
   # parallel mode
-  { cmd => $omd_bin." stop -p", like => ["/Invoking 'stop'/", '/Stopping dedicated Apache/'] },
-  { cmd => $omd_bin." start -p", like => ["/Invoking 'start'/", '/Starting dedicated Apache/'] },
-  { cmd => $omd_bin." reload -p", like => ["/Invoking 'reload'/", "/Reloading dedicated Apache for site/"] },
+  { cmd => $omd_bin." stop -p", like => ["/Invoking 'stop'/", '/Stopping apache/'] },
+  { cmd => $omd_bin." start -p", like => ["/Invoking 'start'/", '/Starting apache/'] },
+  { cmd => $omd_bin." reload -p", like => ["/Invoking 'reload'/", "/Reloading apache/"] },
   { cmd => $omd_bin." restart -p", like => ["/Invoking 'restart'/", "/Initializing Crontab\.*OK/"] },
 ];
 
@@ -179,7 +179,7 @@ for my $test (@{$tests}) {
 }
 
 # bulk config change I
-TestUtils::test_command({ cmd => "/bin/sh -c 'echo \"APACHE_MODE=ssl\nWEB_REDIRECT=on\nWEB_ALIAS=sitealias\" | omd config $site change'", like => ['/Stopping dedicated Apache/', '/Stopping naemon/', '/Starting naemon/'] });
+TestUtils::test_command({ cmd => "/bin/sh -c 'echo \"APACHE_MODE=ssl\nWEB_REDIRECT=on\nWEB_ALIAS=sitealias\" | omd config $site change'", like => ['/Stopping apache/', '/Stopping naemon/', '/Starting naemon/'] });
 TestUtils::restart_system_apache();
 
 # WEB_REDIRECT
@@ -191,7 +191,7 @@ TestUtils::test_command({ cmd => "/omd/sites/$site/lib/monitoring-plugins/check_
 TestUtils::test_command({ cmd => "/omd/sites/$site/lib/monitoring-plugins/check_http -S -t 60 -H localhost -u '/' -f follow -s 'login.cgi'", like => '/HTTP WARN/', exit => 1 });
 
 # redirects with custom ports (http mode)
-TestUtils::test_command({ cmd => "/bin/sh -c 'echo \"APACHE_MODE=own\nWEB_REDIRECT=off\nWEB_ALIAS=\n\" | omd config $site change'", like => ['/Stopping dedicated Apache/'] });
+TestUtils::test_command({ cmd => "/bin/sh -c 'echo \"APACHE_MODE=own\nWEB_REDIRECT=off\nWEB_ALIAS=\n\" | omd config $site change'", like => ['/Stopping apache/'] });
 TestUtils::restart_system_apache();
 TestUtils::test_command({ cmd => "/bin/sh -c 'curl -sk http://localhost/$site/'", like => [qr%\Qhttp://localhost:80/$site/\E%] }) or BAIL_OUT("broken");
 TestUtils::test_command({ cmd => "/bin/sh -c 'curl -sk http://localhost/$site/omd/'", like => [qr%\Qhttp://localhost:80/$site/thruk/cgi-bin/login.cgi\E%] }) or BAIL_OUT("broken");
@@ -200,7 +200,7 @@ TestUtils::test_command({ cmd => "/bin/sh -c 'curl -sk -H \"X-Forwarded-Proto: h
 TestUtils::test_command({ cmd => "/bin/sh -c 'curl -sk -H \"X-Forwarded-Proto: https\" -H \"X-Forwarded-Port: 1234\" -H \"X-Forwarded-Host: vhost.com\" http://localhost/$site/'", like => [qr%\Qhttps://vhost.com:1234/$site/omd/\E%] }) or BAIL_OUT("broken");
 
 # redirects with custom ports (https mode)
-TestUtils::test_command({ cmd => "/bin/sh -c 'echo \"APACHE_MODE=ssl\n\" | omd config $site change'", like => ['/Stopping dedicated Apache/'] }) or BAIL_OUT("broken");
+TestUtils::test_command({ cmd => "/bin/sh -c 'echo \"APACHE_MODE=ssl\n\" | omd config $site change'", like => ['/Stopping apache/'] }) or BAIL_OUT("broken");
 TestUtils::restart_system_apache();
 TestUtils::test_command({ cmd => "/bin/sh -c 'curl -sk http://localhost/$site/'", like => [qr%\Qhttps://localhost/$site/\E%] }) or BAIL_OUT("broken");
 TestUtils::test_command({ cmd => "/bin/sh -c 'curl -sk https://localhost/$site/'", like => [qr%\Qhttps://localhost:443/$site/omd/\E%] }) or BAIL_OUT("broken");
@@ -210,7 +210,7 @@ TestUtils::test_command({ cmd => "/bin/sh -c 'curl -sk -H \"X-Forwarded-Proto: h
 TestUtils::test_command({ cmd => "/bin/sh -c 'curl -sk -H \"X-Forwarded-Proto: https\" -H \"X-Forwarded-Port: 1234\" -H \"X-Forwarded-Host: vhost.com\" https://localhost/$site/'", like => [qr%\Qhttps://vhost.com:1234/$site/omd/\E%] }) or BAIL_OUT("broken");
 
 # bulk config change II
-TestUtils::test_command({ cmd => "/bin/sh -c 'echo \"APACHE_MODE=none\nAUTOSTART=off\" | omd config $site change'", like => ['/Stopping dedicated Apache/', '/Stopping naemon/', '/Starting naemon/'] });
+TestUtils::test_command({ cmd => "/bin/sh -c 'echo \"APACHE_MODE=none\nAUTOSTART=off\" | omd config $site change'", like => ['/Stopping apache/', '/Stopping naemon/', '/Starting naemon/'] });
 
 # cleanup
 TestUtils::test_command({ cmd => $omd_bin." rm $site", like => '/Restarting Apache...\s*OK/', stdin => "yes\n" });

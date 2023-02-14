@@ -1,13 +1,18 @@
 #!/bin/bash
 
-cd $OMD_ROOT
+### OMD INIT INFO
+# PIDFILE:  tmp/run/mysqld/mysqld.pid
+# DEPENDS:  CONFIG_MYSQL = on
+# BINARY:   bin/mysqld_safe
+# ARGMATCH: .my.cnf
+### END INIT INFO
 
-# Check if MySQL is enabled in OMD. If not terminate.
-. lib/omd/init_profile
+cd || exit 1
 . etc/omd/site.conf
 if [ "$CONFIG_MYSQL" != on ] ; then
     exit 5
 fi
+. lib/omd/init_profile
 
 MYSQLD_PID=tmp/run/mysqld/mysqld.pid
 MYSQL_CNF=.my.cnf

@@ -1,22 +1,19 @@
 #!/bin/bash
 
-# chkconfig: 345 98 02
-# description: RRD Tool cache daemon
-
-### BEGIN INIT INFO
-# Provides:       rrdcached
-# Required-Start: 
-# Required-Stop:  
-# Default-Start:  2 3 5
-# Default-Stop:
-# Description:    Start RRD cache daemon
+### OMD INIT INFO
+# PIDFILE:  tmp/run/rrdcached.pid
+# DEPENDS:  CONFIG_PNP4NAGIOS != off
+# BINARY:   bin/rrdcached
+# ARGMATCH: tmp/run/rrdcached.sock
 ### END INIT INFO
 
 # Start only if PNP is enabled
-. ###ROOT###/etc/omd/site.conf
+cd || exit 1
+. etc/omd/site.conf
 if [ "$CONFIG_PNP4NAGIOS" == off ] ; then
     exit 5
 fi
+. lib/omd/init_profile
 
 # Set default values
 TIMEOUT=3600
@@ -26,7 +23,7 @@ WRITE_THREADS=4
 
 # Read in tuning configuration of admin
 CONFFILE=$OMD_ROOT/etc/rrdcached.conf
-if [ -e "$CONFFILE" ] ; then 
+if [ -e "$CONFFILE" ] ; then
     . $CONFFILE
 fi
 
@@ -44,83 +41,34 @@ fi
 CACHE_DIR="$OMD_ROOT/tmp/rrdcached"
 JOURNAL_DIR="$OMD_ROOT/var/rrdcached"
 SOCKET="$OMD_ROOT/tmp/run/rrdcached.sock"
-PIDFILE="$OMD_ROOT/tmp/rrdcached.pid"
-LOGFILE="$OMD_ROOT/var/log/rrdcached.log"
-OPTS="-t $WRITE_THREADS -w $TIMEOUT -z $RANDOM_DELAY -f $FLUSH_TIMEOUT -s $OMD_SITE -m 660 -l unix:$SOCKET -p $PIDFILE -j $JOURNAL_DIR -o $LOGFILE"
+PID_FILE="$OMD_ROOT/tmp/run/rrdcached.pid"
+LOG_FILE="$OMD_ROOT/var/log/rrdcached.log"
 DAEMON="$OMD_ROOT/bin/rrdcached"
+OPTS=""
+OPTS+=" -t $WRITE_THREADS "
+OPTS+=" -w $TIMEOUT "
+OPTS+=" -z $RANDOM_DELAY "
+OPTS+=" -f $FLUSH_TIMEOUT "
+OPTS+=" -s $OMD_SITE "
+OPTS+=" -m 660 "
+OPTS+=" -l unix:$SOCKET "
+OPTS+=" -p $PID_FILE "
+OPTS+=" -j $JOURNAL_DIR"
+OPTS+=" -o $LOG_FILE"
+RELOAD_RESTARTS=1
 
-mkdir -p $JOURNAL_DIR
+mkdir -p $JOURNAL_DIR $CACHE_DIR $RRD_DIR
 
-case "$1" in
-    start)
- 	echo -n 'Starting rrdcached...'
-	if [ -e "$PIDFILE" ] ; then
-	    PID=$(cat $PIDFILE)
-	    if [ -n "$PID" ] && ps $PID > /dev/null 2>&1 ; then
-		echo "Already running."
-		exit 0
-	    fi
-	    echo "removing stale pid file..."
-	    rm -f $PIDFILE
-	fi
-
-	# make sure, directories are there (ramdisk!)
-	mkdir -p $CACHE_DIR $RRD_DIR && 
-	$DAEMON $OPTS &&
-	echo OK || echo Error
-    ;;
-    stop)
-	echo -n 'Stopping rrdcached...'
-        PID=$(cat $PIDFILE 2>/dev/null)
-        if [ -z "$PID" ] ; then
-	    echo "not running."
-        elif kill "$PID"  2>/dev/null; then
-            echo -n 'waiting for termination..'
-	    N=0
-	    while [ -d /proc/$PID ] ; do
-		[ $((n%5)) -eq 0 ] && echo -n .
-		if [ $N -ge 200 ] ; then
-		    echo "still running after 20 secs!"
-		    exit 1
-                fi
-		N=$((N+1))
-		sleep 0.1
-	    done    
-	    echo "OK"
-        else
-	    echo "Failed"
-        fi
-    ;;
-    restart|reload)
-	$0 stop
-	$0 start
-    ;;
-    status)
-	echo -n 'Checking status of rrdcached...'
-	if [ -e "$PIDFILE" ] ; then
-	    PID=$(cat $PIDFILE)
-	    if [ -n "$PID" ] && ps $PID > /dev/null 2>&1 ; then
-		echo "running"
-		exit 0
-	    fi
-	fi
-	echo "stopped"
-	exit 1
-    ;;
-    flush)
-        echo -n 'Triggering global flush of rrdcached...'
-        result=$(echo 'FLUSHALL' | unixcat ~/tmp/run/rrdcached.sock)
-        if [ "$result" = "0 Started flush." ] ; then
-            echo "OK"
-            exit 0
-        else
-            echo Failed: $result
-            exit 1
-        fi
-    ;;
-    check)
-    ;;
-    *)
-	echo "Usage: $0 {start|stop|restart|reload|status}"
-    ;;
+case "$1" in flush)
+    echo -n 'Triggering global flush of rrdcached...'
+    result=$(echo 'FLUSHALL' | unixcat $SOCKET)
+    if [ "$result" = "0 Started flush." ] ; then
+        echo "OK"
+        exit 0
+    else
+        echo Failed: $result
+        exit 1
+    fi
 esac
+
+__generic_init "$*"

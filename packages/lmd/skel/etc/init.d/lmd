@@ -1,137 +1,21 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
-# description: LMD - Livestatus Multitool Daemon
+### OMD INIT INFO
+# PIDFILE:  tmp/thruk/lmd/pid
+# BINARY:   bin/lmd
+# ARGMATCH: thruk/lmd.ini
+### END INIT INFO
 
-# This init script controls the LMD daemon
-
+cd || exit 1
 if [ $(grep -r "^\ *use_lmd_core\ *=\ *1" ~/etc/thruk/thruk.conf ~/etc/thruk/thruk_local.conf ~/etc/thruk/thruk_local.d/*.cfg ~/etc/thruk/thruk_local.d/*.conf 2>/dev/null | wc -l) -eq 0 ] ; then
     exit 5
 fi
-
 . .profile
 . lib/omd/init_profile
-. etc/omd/site.conf
 
+NAME="lmd"
+DAEMON="$OMD_ROOT/bin/thruk"
+OPTS="lmd start"
 PID_FILE=$OMD_ROOT/tmp/thruk/lmd/pid
-pid=$( cat $PID_FILE 2>/dev/null )
-if [ -n "$pid" ]; then
-  if ! kill -0 $pid  >/dev/null 2>&1; then
-    echo "removing stale pid file"
-    rm -f $PID_FILE
-    pid=""
-  fi
-fi
 
-stop_lmd() {
-  if [ ! -n "$pid" ]; then
-    echo -n "not running. "
-    return 0
-  else
-    kill -TERM $pid
-    I=0
-    while kill -0 $pid  >/dev/null 2>&1;  do
-      if [ $I = '600' ]; then
-        echo -ne "\nsending SIGKILL"
-        kill -9 $pid
-        rm -f $PID_FILE
-      elif [ $I = '700' ]; then
-        return 1
-      fi
-
-      [ $((I%5)) -eq 0 ] && echo -n "."
-      I=$(($I+1))
-      sleep 0.1
-    done
-  fi
-  return 0
-}
-
-start_lmd() {
-  if [ -n "$pid" ]; then
-    echo -n "already running. "
-    return 1
-  else
-    thruk --local lmd start >/dev/null 2>&1
-    I=0
-    pid=$( cat $PID_FILE 2>/dev/null )
-    while ! kill -0 $pid  >/dev/null 2>&1;  do
-      if [ $I = '50' ]; then
-        return 1
-      fi
-
-      [ $((I%5)) -eq 0 ] && echo -n "."
-      I=$(($I+1))
-      sleep 0.1
-      pid=$( cat $PID_FILE 2>/dev/null )
-    done
-    return 0
-  fi
-}
-
-reload_lmd() {
-  if [ ! -n "$pid" ]; then
-    echo -n "not running. "
-    return 1
-  else
-    kill -HUP $pid
-    return 0
-  fi
-}
-
-__init_hook $0 $1 pre
-case $1 in
-  start)
-    echo -n "Starting LMD..."
-    if start_lmd; then
-      __init_hook $0 $1 post 0
-      echo 'OK'
-      exit 0
-    else
-      __init_hook $0 $1 post 1
-      echo 'ERROR'
-      exit 1
-    fi
-  ;;
-  stop)
-    echo -n "Stopping LMD..."
-    if stop_lmd; then
-      __init_hook $0 $1 post 0
-      echo 'OK'
-      exit 0
-    else
-      __init_hook $0 $1 post 1
-      echo 'ERROR'
-      exit 1
-    fi
-  ;;
-  restart)
-    $0 stop
-    $0 start
-  ;;
-  reload)
-    echo -n "Reloading LMD..."
-    if reload_lmd; then
-      __init_hook $0 $1 post 0
-      echo 'OK'
-      exit 0
-    else
-      __init_hook $0 $1 post 1
-      echo 'ERROR'
-      exit 1
-    fi
-  ;;
-  status)
-    if [ -n "$pid" ]; then
-      echo "LMD is running (pid $pid)."
-      exit 0
-    else
-      echo "LMD is NOT running."
-      exit 1
-    fi
-  ;;
-  check)
-    ;;
-  *)
-    echo "Usage: $0 {start|stop|restart|reload|status}"
-  ;;
-esac
+__generic_init "$*"

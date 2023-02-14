@@ -44,7 +44,7 @@ TestUtils::test_command({ cmd => "/usr/bin/env sed -e '/^\\[InfluxDB .victoriame
 TestUtils::test_command({ cmd => "/usr/bin/env sed -e 's/\\(\\s*MinSeverity\\).*/\\1 = \"DEBUG\"/' -i ~$site/etc/nagflux/config.gcfg"});
 
 
-TestUtils::test_command({ cmd => $omd_bin." start $site", like => '/Starting Nagflux\.+OK/' });
+TestUtils::test_command({ cmd => $omd_bin." start $site", like => '/Starting nagflux\.+OK/' });
 
 
 my $ranges = sprintf("<<END

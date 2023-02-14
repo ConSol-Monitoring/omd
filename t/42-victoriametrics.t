@@ -23,7 +23,7 @@ TestUtils::test_command({ cmd => $omd_bin." config $site set CORE none" });
 TestUtils::test_command({ cmd => $omd_bin." config $site set GRAFANA on" });
 TestUtils::test_command({ cmd => $omd_bin." config $site set VICTORIAMETRICS on" });
 TestUtils::test_command({ cmd => $omd_bin." start $site", like => ['/Starting victoriametrics\.+OK/',
-                                                                   '/Starting Grafana\.+OK/',
+                                                                   '/Starting grafana\.+OK/',
                                                                   ]});
 
 TestUtils::test_command({ cmd => qq[/bin/su - $site -c 'victoria-metrics-prod --version'],  like => '/^victoria-metrics/' });

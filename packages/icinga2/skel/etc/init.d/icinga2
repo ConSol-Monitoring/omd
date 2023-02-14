@@ -1,30 +1,23 @@
 #!/bin/bash
 
-# chkconfig: 345 99 01
-# description: Icinga2 network monitoring daemon
-
-### BEGIN INIT INFO
-# Provides:       icinga2
-# Required-Start:
-# Required-Stop:
-# Default-Start:  2 3 5
-# Default-Stop:
-# Description:    Icinga2 network monitoring daemon
+### OMD INIT INFO
+# PIDFILE:  tmp/run/icinga2.pid
+# DEPENDS:  CONFIG_CORE = icinga2
+# BINARY:   bin/icinga2
+# ARGMATCH: etc/icinga2/icinga2.conf
 ### END INIT INFO
 
-cd ###ROOT###
-. .profile
-. lib/omd/init_profile
+cd || exit 1
 . etc/omd/site.conf
 [ "$CONFIG_CORE" = "icinga2" ] || exit 5
+. .profile
+. lib/omd/init_profile
 
 BIN=$OMD_ROOT/bin/icinga2
 CFG_FILE=$OMD_ROOT/etc/icinga2/icinga2.conf
 CMD_FILE=$OMD_ROOT/tmp/run/icinga.cmd
 PID_FILE=$OMD_ROOT/tmp/run/icinga2.pid
 ERROR_LOG=$OMD_ROOT/var/icinga2/log/icinga2/error.log
-USR=$OMD_SITE
-GRP=$OMD_SITE
 
 OPTIONS="-c $CFG_FILE"
 
@@ -78,7 +71,6 @@ prep_start() {
         rm -f $CMD_FILE
     fi
     touch $PID_FILE
-    chown $USR:$GRP $PID_FILE
     ln -sfn $OMD_ROOT/tmp/icinga2 $OMD_ROOT/tmp/core
 }
 

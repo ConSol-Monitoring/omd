@@ -1,64 +1,36 @@
 #!/bin/bash
 
-# chkconfig: 345 99 01
-# description: Alertmanager Alertmanager
-
-### BEGIN INIT INFO
-# Provides:       alertmanager
-# Required-Start: 
-# Required-Stop:  
-# Default-Start:  2 3 5
-# Default-Stop:
-# Description:    Alertmanager Alertmanager
+### OMD INIT INFO
+# PIDFILE:  tmp/lock/alertmanager.lock
+# DEPENDS:  CONFIG_ALERTMANAGER = on
+# BINARY:   bin/alertmanager
+# ARGMATCH: web.listen-address
 ### END INIT INFO
 
-# Author: Gerhard Lausser <gerhard.lausser@consol.de>
-
-# Notes for OMD init script requirements
-# - Must handle omd config options like daemon enabling/disabling
-# - When a daemon is disabled by omd config it needs
-#   to return an exit code of 5.
-# - The init script must output an exit code of 2 when
-#   an unknown param is used.
-# - In general the exit code for succeeded actions is
-#   0 and for failed actions it is 1.
-# - There are exceptions for the exit code handling:
-#   - When a service is already stopped and should be
-#     restarted/stopped, it should result in an exit code of 0.
-#   - When a service is already running and should be started
-#     this also should result in an exit code of 0.
-# - When a restart is requested and the program is still not running
-#   the script should only execute a start
-# - When a restart is requested and the program can not be stopped the
-#   script should terminate without starting the daemon
-# - When a reload is requested and the program is not running
-#   the init script should execute a start instead
-
-cd ###ROOT###
+cd || exit 1
+. etc/omd/site.conf
+[ "$CONFIG_ALERTMANAGER" = "on" ] || exit 5
 . .profile
 . lib/omd/init_profile
-. etc/omd/site.conf
+
 [ -r etc/alertmanager/vars ] \
 && [ -f etc/alertmanager/vars ] \
 && . etc/alertmanager/vars
 
-[ "$CONFIG_ALERTMANAGER" = "on" ] || exit 5
-
-mkdir -p ###ROOT###/tmp/alertmanager
-mkdir -p ###ROOT###/var/alertmanager
-BIN=###ROOT###/bin/alertmanager
-TOOL=###ROOT###/bin/amtool
-CFG_FILE=###ROOT###/tmp/alertmanager/alertmanager.yml
-LOG_DIR=###ROOT###/var/alertmanager
-LOGFILE=###ROOT###/var/alertmanager/alertmanager.log
-PID_FILE=###ROOT###/tmp/lock/alertmanager.lock
-DATA_DIR=###ROOT###/var/alertmanager/data
-USR=###SITE###
-GRP=###SITE###
+mkdir -p $OMD_ROOT/tmp/alertmanager
+mkdir -p $OMD_ROOT/var/alertmanager
+BIN=$OMD_ROOT/bin/alertmanager
+TOOL=$OMD_ROOT/bin/amtool
+CFG_FILE=$OMD_ROOT/tmp/alertmanager/alertmanager.yml
+LOG_DIR=$OMD_ROOT/var/alertmanager
+LOGFILE=$OMD_ROOT/var/alertmanager/alertmanager.log
+PID_FILE=$OMD_ROOT/tmp/lock/alertmanager.lock
+DATA_DIR=$OMD_ROOT/var/alertmanager/data
+USR=$OMD_SITE
 
 EXTERNAL_FQDN=${OMD_EXTERNAL_FQDN:-$(hostname --fqdn)}
 
-OPTIONS="--config.file $CFG_FILE --web.listen-address=$CONFIG_ALERTMANAGER_TCP_ADDR:$CONFIG_ALERTMANAGER_TCP_PORT --web.external-url=http://${EXTERNAL_FQDN}/###SITE###/alertmanager --storage.path=$DATA_DIR"
+OPTIONS="--config.file $CFG_FILE --web.listen-address=$CONFIG_ALERTMANAGER_TCP_ADDR:$CONFIG_ALERTMANAGER_TCP_PORT --web.external-url=http://${EXTERNAL_FQDN}/$OMD_SITE/alertmanager --storage.path=$DATA_DIR"
 
 if [ -n "$CLUSTER_LISTEN_ADDRESS" ] ; then
        # Cluster mode active
@@ -76,17 +48,17 @@ OPTIONS="$EXTRA_OPTIONS $OPTIONS"
 #
 #
 rebuild_config() {
-    cp ###ROOT###/etc/alertmanager/alertmanager.yml $CFG_FILE
-    WORK_CFG=###ROOT###/tmp/alertmanager.yml.$$
+    cp $OMD_ROOT/etc/alertmanager/alertmanager.yml $CFG_FILE
+    WORK_CFG=$OMD_ROOT/tmp/alertmanager.yml.$$
     if grep -q "# - start of routes" $CFG_FILE && grep -q "# - end of routes" $CFG_FILE; then
         cat $CFG_FILE |\
             sed -n '1,/# - start of routes/p' > $WORK_CFG
-        # all files in ###ROOT###/etc/alertmanager/alertmanager.d/routes/*/*.yml
-        for routes in ###ROOT###/etc/alertmanager/alertmanager.d/routes/*.yml
+        # all files in $OMD_ROOT/etc/alertmanager/alertmanager.d/routes/*/*.yml
+        for routes in $OMD_ROOT/etc/alertmanager/alertmanager.d/routes/*.yml
         do
             [ -f $routes ] && cat $routes >> $WORK_CFG
         done
-        for routes in ###ROOT###/etc/alertmanager/alertmanager.d/routes/*
+        for routes in $OMD_ROOT/etc/alertmanager/alertmanager.d/routes/*
         do
             if [ -d $routes ]; then
                 for subroutes in ${routes}/*.yml
@@ -103,12 +75,12 @@ rebuild_config() {
     if grep -q "# - start of inhibit_rules" $CFG_FILE && grep -q "# - end of inhibit_rules" $CFG_FILE; then
         cat $CFG_FILE |\
             sed -n '1,/# - start of inhibit_rules/p' > $WORK_CFG
-        # all files in ###ROOT###/etc/alertmanager/alertmanager.d/inhibit_rules/*/*.yml
-        for inhibits in ###ROOT###/etc/alertmanager/alertmanager.d/inhibit_rules/*.yml
+        # all files in $OMD_ROOT/etc/alertmanager/alertmanager.d/inhibit_rules/*/*.yml
+        for inhibits in $OMD_ROOT/etc/alertmanager/alertmanager.d/inhibit_rules/*.yml
         do
             [ -f $inhibits ] && cat $inhibits >> $WORK_CFG
         done
-        for inhibits in ###ROOT###/etc/alertmanager/alertmanager.d/inhibit_rules/*
+        for inhibits in $OMD_ROOT/etc/alertmanager/alertmanager.d/inhibit_rules/*
         do
             if [ -d $inhibits ]; then
                 for subinhibits in ${inhibits}/*.yml
@@ -125,12 +97,12 @@ rebuild_config() {
     if grep -q "# - start of receivers" $CFG_FILE && grep -q "# - end of receivers" $CFG_FILE; then
         cat $CFG_FILE |\
             sed -n '1,/# - start of receivers/p' > $WORK_CFG
-        # all files in ###ROOT###/etc/alertmanager/alertmanager.d/receivers/*/*.yml
-        for receivers in ###ROOT###/etc/alertmanager/alertmanager.d/receivers/*.yml
+        # all files in $OMD_ROOT/etc/alertmanager/alertmanager.d/receivers/*/*.yml
+        for receivers in $OMD_ROOT/etc/alertmanager/alertmanager.d/receivers/*.yml
         do
             [ -f $receivers ] && cat $receivers >> $WORK_CFG
         done
-        for receivers in ###ROOT###/etc/alertmanager/alertmanager.d/receivers/*
+        for receivers in $OMD_ROOT/etc/alertmanager/alertmanager.d/receivers/*
         do
             if [ -d $receivers ]; then
                 for subreceivers in ${receivers}/*.yml
@@ -144,12 +116,12 @@ rebuild_config() {
         cp $WORK_CFG $CFG_FILE
     fi
 
-    for y in ###ROOT###/etc/alertmanager/alertmanager.d/*.yml
+    for y in $OMD_ROOT/etc/alertmanager/alertmanager.d/*.yml
     do
        test -f $y && cat $y >> $CFG_FILE
     done
-    sed -ri "s&""#""#""#ROOT#""#""#""&###ROOT###&g" $CFG_FILE
-    sed -ri "s&""#""#""#SITE#""#""#""&###SITE###&g" $CFG_FILE
+    sed -ri "s&""#""#""#ROOT#""#""#""&$OMD_ROOT&g" $CFG_FILE
+    sed -ri "s&""#""#""#SITE#""#""#""&$OMD_SITE&g" $CFG_FILE
     sed -ri "s/###ALERTMANAGER_TCP_PORT###/$CONFIG_ALERTMANAGER_TCP_PORT/g" $CFG_FILE
     sed -ri "s/###ALERTMANAGER_TCP_ADDR###/$CONFIG_ALERTMANAGER_TCP_ADDR/g" $CFG_FILE
 
@@ -206,7 +178,6 @@ verify_config() {
 
 prep_start() {
     touch $PID_FILE
-    chown $USR:$GRP $PID_FILE
 }
 
 alertmanager_wait_stop() {
@@ -340,7 +311,7 @@ case "$1" in
             exit 1
         fi
     ;;
-    
+
     reload|force-reload)
        PID=$(pidof_alertmanager 2>&1) || true
         if kill -0 "${PID:-}" >/dev/null 2>&1; then
@@ -357,5 +328,5 @@ case "$1" in
         exit 2
     ;;
 esac
- 
+
 # EOF

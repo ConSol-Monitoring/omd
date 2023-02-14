@@ -1,21 +1,18 @@
 #!/bin/bash
 
-### BEGIN INIT INFO
-# Provides:          influxdb
-# Required-Start:    $local_fs
-# Required-Stop:     $local_fs
-# Should-Start:
-# Should-Stop:
-# Default-Start:     2 3 4 5
-# Default-Stop:      0 1 6
-# Short-Description: Start/Stop the influxdb database
+### OMD INIT INFO
+# PIDFILE:  tmp/run/influxdb.pid
+# DEPENDS:  CONFIG_INFLUXDB = on
+# BINARY:   bin/influxd
+# ARGMATCH: etc/influxdb/influxdb.conf
 ### END INIT INFO
 
-# Check if influxdb is enabled in OMD. If not terminate.
+cd || exit 1
 . etc/omd/site.conf
 if [ "$CONFIG_INFLUXDB" != "on" ] ; then
     exit 5
 fi
+. lib/omd/init_profile
 
 NAME=influxdb
 DAEMON="$OMD_ROOT/version/bin/influxd"
@@ -47,8 +44,7 @@ if [ "x$CONFIG_INFLUXDB_MODE" = "xssl" ]; then
 fi
 
 # create state dir
-mkdir -p $OMD_ROOT/tmp/run \
-         $OMD_ROOT/var/influxdb/db \
+mkdir -p $OMD_ROOT/var/influxdb/db \
          $OMD_ROOT/var/influxdb/raft
 
 get_status() {
@@ -87,6 +83,7 @@ stop_influxdb() {
     fi
 }
 
+__init_hook $0 $1 pre
 case "$1" in
     start)
         printf '%s' "Starting $NAME..."
@@ -131,7 +128,7 @@ case "$1" in
                 echo 'SHOW RETENTION POLICIES ON nagflux' | influx $CONNECT -username $USER -password $PASS 2>/dev/null | grep -q '^autogen.*true'
                 if [ $? -eq 0 ]; then
                         # autogen only exists on some databases; let's keep the data within this bucket
-                        # until https://github.com/influxdata/influxdb/issues/8351 is implemented 
+                        # until https://github.com/influxdata/influxdb/issues/8351 is implemented
                         # which makes it possible to rename autogen to default
                         echo 'ALTER RETENTION POLICY "autogen" ON "nagflux" DURATION '${CONFIG_INFLUXDB_RETENTION}w' DEFAULT' | influx $CONNECT -username $USER -password $PASS >/dev/null
                 else
@@ -142,7 +139,7 @@ case "$1" in
                                 echo 'ALTER RETENTION POLICY "default" ON "nagflux" DURATION '${CONFIG_INFLUXDB_RETENTION}w' DEFAULT' | influx $CONNECT -username $USER -password $PASS >/dev/null
                         fi
                 fi
-                echo "OK"        
+                echo "OK"
                 exit 0;
             else
                 echo "FAILED"

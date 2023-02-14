@@ -1,10 +1,17 @@
 #!/bin/bash
 
-cd $OMD_ROOT
-. .profile
-. lib/omd/init_profile
+### OMD INIT INFO
+# PIDFILE:  tmp/run/prometheus.pid
+# DEPENDS:  CONFIG_PROMETHEUS = on
+# BINARY:   bin/prometheus
+# ARGMATCH: web.listen-address
+### END INIT INFO
+
+cd || exit 1
 . etc/omd/site.conf
 [ "$CONFIG_PROMETHEUS" = "on" ] || exit 5
+. .profile
+. lib/omd/init_profile
 
 mkdir -p $OMD_ROOT/tmp/prometheus
 mkdir -p $OMD_ROOT/var/prometheus
@@ -13,15 +20,13 @@ TOOL=$OMD_ROOT/bin/promtool
 CFG_FILE=$OMD_ROOT/tmp/prometheus/prometheus.yml
 LOG_DIR=$OMD_ROOT/var/prometheus
 LOGFILE=$OMD_ROOT/var/prometheus/prometheus.log
-CMD_FILE=$OMD_ROOT/tmp/run/prometheus.cmd
-PID_FILE=$OMD_ROOT/tmp/lock/prometheus.lock
 DATA_DIR=$OMD_ROOT/var/prometheus/data
-CHECKRESULTS_DIR=$OMD_ROOT/tmp/prometheus/checkresults
+PID_FILE=$OMD_ROOT/tmp/run/prometheus.pid
 
 # You can set the environment variable CORE_NOVERIFY=yes
 # in order to supress a verification of the prometheus configuration
 # in case of start, restart or reload. This is in order to
-# avoid duplicate effort when being called by cmk -R or 
+# avoid duplicate effort when being called by cmk -R or
 # cmk -O.
 # export CORE_NOVERIFY=yes
 
@@ -171,14 +176,6 @@ verify_config() {
     fi
 }
 
-prep_start() {
-    if [ -f $CMD_FILE ]; then
-        rm -f $CMD_FILE
-    fi
-    touch $PID_FILE
-    rm -f $CHECKRESULTS_DIR/*
-}
-
 prometheus_wait_stop() {
     pid=$(pidof_prometheus) || true
     if ! kill -0 "${pid:-}" >/dev/null 2>&1; then
@@ -209,15 +206,14 @@ prometheus_wait_stop() {
             pid=$(pidof_prometheus | head -n1) || true
         done
     fi
-
-    [ -f "$PID_FILE" ] && rm -f "$PID_FILE"
+    rm -f "$PID_FILE"
     return 0
 
 }
 
 prometheus_wait_start() {
-    prep_start
     nohup $BIN "${OPTIONS[@]}" >>$LOGFILE 2>&1 &
+    printf '%d' $! > $PID_FILE
     I=0
     while ! pidof_prometheus >/dev/null 2>&1;  do
         if [ $I = '10' ]; then
@@ -311,7 +307,7 @@ case "$1" in
             exit 1
         fi
     ;;
-    
+
     reload|force-reload)
         PID=$(pidof_prometheus 2>&1) || true
         if kill -0 "${PID:-}" >/dev/null 2>&1; then
@@ -328,5 +324,5 @@ case "$1" in
         exit 2
     ;;
 esac
- 
+
 # EOF

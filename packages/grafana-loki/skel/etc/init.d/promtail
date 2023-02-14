@@ -1,31 +1,37 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
-# description: Grafana promtail agent
+### OMD INIT INFO
+# PIDFILE:  tmp/run/promtail.pid
+# DEPENDS:  CONFIG_LOKI_PROMTAIL = on
+# BINARY:   bin/promtail
+# ARGMATCH: tmp/promtail.yaml
+### END INIT INFO
 
-# Check if grafana-loki-promtail is enabled in OMD. If not terminate.
-. lib/omd/init_profile
+cd || exit 1
 . etc/omd/site.conf
 if [ "$CONFIG_LOKI_PROMTAIL" != "on" ] ; then
     exit 5
 fi
+. lib/omd/init_profile
 
 NAME="Promtail"
 CONF_DIR=$OMD_ROOT/etc/loki
 LOG_DIR=$OMD_ROOT/var/log
 DATA_DIR=$OMD_ROOT/var/loki
 CONF_SRC=$CONF_DIR/promtail.yaml
-PID_FILE=$OMD_ROOT/tmp/run/$NAME.pid
-LOGFILE=$LOG_DIR/promtail.log
+PID_FILE=$OMD_ROOT/tmp/run/promtail.pid
+LOG_FILE=$LOG_DIR/promtail.log
 DAEMON=$OMD_ROOT/bin/promtail
 CFG_FILE=$OMD_ROOT/tmp/promtail.yaml
+OPTS="-config.expand-env=true -client.external-labels=instance=$(hostname) -config.file=${CFG_FILE}"
+NOHUP=1
+STORE_PID=1
+STOP_TIMEOUT=30
 
-OPTIONS="-config.expand-env=true -client.external-labels=instance=$(hostname) -config.file=${CFG_FILE}"
+mkdir -p "$LOG_DIR" "$DATA_DIR"
 
 # Put together fragments and build a new promtail.yaml
-#
-#
 rebuild_config() {
-    # 
     cat $CONF_SRC |\
         sed -n '1,/# - start of scrape configs/p' > $CFG_FILE
     for scrapes in $CONF_DIR/promtail.d/scrape_configs/*.yaml
@@ -37,98 +43,12 @@ rebuild_config() {
         sed -n '/# - end of scrape configs/,$p' >> $CFG_FILE
 }
 
-
-get_status() {
-    pid=$( cat $PID_FILE 2>/dev/null )
-    if [ -n "$pid" ]; then
-        if ps -p $pid > /dev/null 2>&1 ; then
-            echo "$NAME is running with pid $pid"
-            return 0;
-        fi
-    fi
-    echo "$NAME is not running"
-    return 1;
-}
-
-stop_promtail() {
-    pid=$( cat $PID_FILE 2>/dev/null )
-    if [ -z "$pid" ]; then
-        echo ". Not running."
-    else
-        ps -p $pid > /dev/null 2>&1 && kill $pid
-        for x in $(seq 15); do
-            printf "."
-            ps -p $pid > /dev/null 2>&1 || break
-            sleep 0.2;
-        done
-        if ! ps -p $pid > /dev/null 2>&1 ; then
-            echo "OK"
-            __init_hook $0 $1 post 0
-            exit 0;
-        else
-            echo "failed"
-            __init_hook $0 $1 post 1
-            exit 1;
-        fi
-    fi
-}
-
-__init_hook $0 $1 pre
-# OMD: create configuration file out of fragments
 case "$1" in start|restart|reload)
     rebuild_config
     if [ ! -f $CFG_FILE ]; then
-        echo "Prometheus configuration file $CFG_FILE not found. Terminating..."
+        echo "${NAME} configuration file $CFG_FILE not found. Terminating..."
         exit 1
     fi
 esac
-case "$1" in
-  start)
-        printf '%s' "Starting $NAME..."
 
-        if get_status > /dev/null ; then
-            echo "failed"
-            echo "$NAME already running"
-            exit 0;
-        fi
-
-        mkdir -p "$LOG_DIR" "$DATA_DIR"
-        touch "$PID_FILE"
-        ASSUME_NO_MOVING_GC_UNSAFE_RISK_IT_WITH=go1.18 nohup $DAEMON $OPTIONS >>$LOGFILE 2>&1 &
-        if [ $? -eq 0 ]; then
-            echo "OK"
-            echo "$!" > $PID_FILE
-            __init_hook $0 $1 post 0
-            exit 0;
-        else
-            echo "failed"
-            __init_hook $0 $1 post 1
-            exit 1;
-        fi
-    ;;
-  stop)
-        printf '%s' "Stopping $NAME..."
-        pid=$( cat $PID_FILE 2>/dev/null )
-        if [ -z "$pid" ]; then
-            echo ". Not running."
-        else
-            stop_promtail;
-        fi
-    ;;
-  status)
-        get_status;
-        exit $?;
-    ;;
-    reload|restart)
-        $0 stop && sleep 1 && $0 start
-        exit $?
-    ;;
-  check)
-    ;;
-  *)
-        echo "Usage: $NAME {start|stop|kill|status|restart}"
-        exit 1
-    ;;
-esac
-
-exit 0
+__generic_init "$*"
