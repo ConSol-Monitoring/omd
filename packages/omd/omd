@@ -2221,13 +2221,11 @@ def hook_exists(hook_name):
 
 def call_hook(hook_name, args):
     hook_file = g_sitedir + "/lib/omd/hooks/" + hook_name
-    argsstring = " ".join([ "'%s'" % arg for arg in args ])
-    command = hook_file + " " + argsstring
     putenv("OMD_ROOT", g_sitedir)
     putenv("OMD_SITE", g_sitename)
-    pipe = os.popen(command)
-    content = pipe.read().strip()
-    exitcode = pipe.close()
+    p = subprocess.run([hook_file]+args, stdout=subprocess.PIPE, shell=False)
+    content = p.stdout.decode("UTF-8").strip()
+    exitcode = p.returncode
     if exitcode and args[0] != "depends":
         sys.stderr.write("Error running %s: %s\n" % (command, content))
     return exitcode, content
@@ -2333,11 +2331,10 @@ def config_set_all():
         # Hooks might vanish after and up- or downdate
         if hook_exists(hook_name):
             exitcode, output = call_hook(hook_name, [ "set", value ])
-            if not exitcode:
-                if output and output != value:
-                    g_site_conf[hook_name] = output
-                    putenv("CONFIG_" + hook_name, output)
-                    save_site_conf()
+            if exitcode == 0 and output and output != value:
+                g_site_conf[hook_name] = output
+                putenv("CONFIG_" + hook_name, output)
+                save_site_conf()
 
 
 
