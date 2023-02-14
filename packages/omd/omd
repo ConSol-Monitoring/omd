@@ -1858,7 +1858,11 @@ def call_init_scripts(sitename, command, daemon = None):
             scripts.reverse()
         ok = True
 
+        site_config = parse_site_conf(sitename)
         for script in scripts:
+            rc_info = get_init_script_meta(os.path.join(rc_dir, script), site_config)
+            if rc_info != None and rc_info["unused"]:
+                continue
             if not call_init_script("%s/%s" % (rc_dir, script), command):
                 ok = False
 
@@ -1873,7 +1877,7 @@ def check_status(sitename, display=True, daemon=None, bare=False):
     num_stopped = 0
     uid = pwd.getpwnam(g_sitename).pw_uid
     processlist = [{'pid': process.pid, 'name': process.name(), 'cmdline': " ".join(process.cmdline())} for process in psutil.process_iter() if process.uids().real == uid]
-    config = parse_site_conf(sitename)
+    site_config = parse_site_conf(sitename)
     rc_dir, scripts = init_scripts(sitename)
     components = [ s.split('-', 1)[-1] for s in scripts ]
     if daemon and daemon not in components:
@@ -1888,7 +1892,7 @@ def check_status(sitename, display=True, daemon=None, bare=False):
         komponent = script.split("/")[-1].split('-', 1)[-1]
         if daemon and komponent != daemon:
             continue
-        rc_info = get_init_script_meta(os.path.join(rc_dir, script), config, processlist)
+        rc_info = get_init_script_meta(os.path.join(rc_dir, script), site_config, processlist=processlist)
         rc_metas[komponent] = rc_info
         if rc_info != None and rc_info["unused"] != None:
             if rc_info["unused"]:
@@ -1964,7 +1968,7 @@ def check_status(sitename, display=True, daemon=None, bare=False):
     return exit_code
 
 
-def get_init_script_meta(script, config, processlist):
+def get_init_script_meta(script, site_config, processlist=None):
     meta = {
         "pidfile": None,
         "pid": None,
@@ -2008,7 +2012,7 @@ def get_init_script_meta(script, config, processlist):
     if len(meta["depends"]) > 0:
         meta["unused"] = False
         for (var, op, val) in meta["depends"]:
-            conf_value = config.get(var, None)
+            conf_value = site_config.get(var, None)
             if conf_value == None:
                 sys.stderr.write("unknown config variable: %s in file %s\n" % (var, script))
                 continue
@@ -2037,7 +2041,7 @@ def get_init_script_meta(script, config, processlist):
         except Exception:
             pass
 
-    if meta["pid"] == None and meta["binary"] != None:
+    if meta["pid"] == None and meta["binary"] != None and processlist != None:
         for p in processlist:
             if p['cmdline'].find(meta["binary"]) != -1 and p['cmdline'].find(meta["argmatch"]) != -1:
                 meta["pid"] = p['pid']
