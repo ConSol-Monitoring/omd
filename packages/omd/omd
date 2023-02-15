@@ -4437,7 +4437,7 @@ exclude_options = [
     ( "--no-rrds", None,  { "help":"do not copy RRD files (performance data", "action":"count", "default":0 } ),
     ( "--no-dbs",  None,  { "help":"do not copy database data (mysql, influxdb, victoriametrics)", "action":"count", "default":0 } ),
     ( "--no-logs", None,  { "help":"do not copy log files", "action":"count", "default":0 } ),
-    ( "--no-past", None,  { "help":"do not copy RRD file and log files", "action":"count", "default":0 } ),
+    ( "--no-past", "-N",  { "help":"do not copy RRD file and log files", "action":"count", "default":0 } ),
     ( "--exclude", None,  { "help":"do not copy given exclude path. Can be used multiple times", "action":"append" }),
 ]
 
