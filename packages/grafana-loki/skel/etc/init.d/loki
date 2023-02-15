@@ -14,7 +14,7 @@ if [ "$CONFIG_LOKI" != "on" ] ; then
 fi
 . lib/omd/init_profile
 
-NAME="Loki"
+NAME="loki"
 PID_FILE=$OMD_ROOT/tmp/run/loki.pid
 LOG_FILE=$OMD_ROOT/var/log/loki.log
 DAEMON=$OMD_ROOT/bin/loki

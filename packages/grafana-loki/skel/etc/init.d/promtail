@@ -14,7 +14,7 @@ if [ "$CONFIG_LOKI_PROMTAIL" != "on" ] ; then
 fi
 . lib/omd/init_profile
 
-NAME="Promtail"
+NAME="promtail"
 CONF_DIR=$OMD_ROOT/etc/loki
 LOG_DIR=$OMD_ROOT/var/log
 DATA_DIR=$OMD_ROOT/var/loki
@@ -23,7 +23,10 @@ PID_FILE=$OMD_ROOT/tmp/run/promtail.pid
 LOG_FILE=$LOG_DIR/promtail.log
 DAEMON=$OMD_ROOT/bin/promtail
 CFG_FILE=$OMD_ROOT/tmp/promtail.yaml
-OPTS="-config.expand-env=true -client.external-labels=instance=$(hostname) -config.file=${CFG_FILE}"
+OPTS=""
+OPTS+=" -config.expand-env=true"
+OPTS+=" -client.external-labels=instance=$(hostname)"
+OPTS+=" -config.file=${CFG_FILE}"
 NOHUP=1
 STORE_PID=1
 STOP_TIMEOUT=30

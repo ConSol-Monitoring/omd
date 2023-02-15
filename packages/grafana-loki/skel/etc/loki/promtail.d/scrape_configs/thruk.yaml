@@ -1,7 +1,7 @@
 - job_name: thruk_log
   pipeline_stages:
   - regex:
-      expression: '^\\[(?P<timestamp>\\d{4}/\\d{2}/\\d{2} ..:..:..)\\]\\[(?P<instance>[a-zA-Z0-9_-]+)\\]\\[(?P<severity>\\w+)\\] (?P<message>(?s:.*))$'
+      expression: "^\\\\[(?P<timestamp>\\\\d{4}/\\\\d{2}/\\\\d{2} ..:..:..)\\\\]\\\\[(?P<instance>[a-zA-Z0-9_-]+)\\\\]\\\\[(?P<severity>\\\\w+)\\\\] (?P<message>(?s:.*))$"
   - template:
       source: severity
       template: '{{ ToLower .Value }}'
@@ -20,11 +20,11 @@
 - job_name: thruk_lmd
   pipeline_stages:
   - multiline:
-      firstline: '\\[\\d{4}-\\d{2}-\\d{2} [0-9:.]+\\]\\[(\\w+)\\]\\[pid:\\d+\\].*'
+      firstline: '\\\\[\\\\d{4}-\\\\d{2}-\\\\d{2} [0-9:.]+\\\\]\\\\[(\\\\w+)\\\\]\\\\[pid:\\\\d+\\\\].*'
       max_wait_time: 3s
       max_lines: 100
   - regex:
-      expression: '^\\[(?P<time>\\d{4}-\\d{2}-\\d{2} [0-9:.]+)\\]\\[(?P<severity>\\w+)\\](?P<message>(?s:.*))$'
+      expression: '^\\\\[(?P<time>\\\\d{4}-\\\\d{2}-\\\\d{2} [0-9:.]+)\\\\]\\\\[(?P<severity>\\\\w+)\\\\](?P<message>(?s:.*))$'
   static_configs:
   - targets:
       - localhost
@@ -37,7 +37,7 @@
 - job_name: thruk_cron
   pipeline_stages:
   - regex:
-      expression: '^\\[(?P<time>\\d{2}:\\d{2}:\\d{2},\\d+)\\]\\[(?P<severity>\\w+)\\](?P<message>(?s:.*))$'
+      expression: '^\\\\[(?P<time>\\\\d{2}:\\\\d{2}:\\\\d{2},\\\\d+)\\\\]\\\\[(?P<severity>\\\\w+)\\\\](?P<message>(?s:.*))$'
   - template:
       source: severity
       template: '{{ ToLower .Value }}'
