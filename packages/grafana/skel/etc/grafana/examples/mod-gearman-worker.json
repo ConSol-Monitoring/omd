@@ -23,7 +23,7 @@
   },
   "editable": true,
   "fiscalYearStartMonth": 0,
-  "graphTooltip": 0,
+  "graphTooltip": 1,
   "links": [],
   "liveNow": false,
   "panels": [
@@ -1020,7 +1020,7 @@
               },
               {
                 "params": [],
-                "type": "mean"
+               "type": "mean"
               }
             ]
           ],
@@ -1081,7 +1081,8 @@
             "uid": "P1809F7CD0C75ACF3"
           },
           "dsType": "influxdb",
-          "expr": "sum(rate(modgearmanworker_tasks_completed_total{instance=~\"$instance\"}[1m]))",
+          "editorMode": "code",
+          "expr": "sum(rate(modgearmanworker_tasks_completed_total{instance=~\"$instance\"}[5m]))",
           "format": "time_series",
           "groupBy": [
             {
@@ -1102,6 +1103,7 @@
           "legendFormat": "jobs per second",
           "metric": "process_resident_memory_bytes",
           "policy": "default",
+          "range": true,
           "refId": "E",
           "resultFormat": "time_series",
           "select": [
@@ -1130,6 +1132,7 @@
         "type": "prometheus",
         "uid": "P1809F7CD0C75ACF3"
       },
+      "description": "Shows how often a plugin has been run.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1186,7 +1189,7 @@
       "gridPos": {
         "h": 9,
         "w": 24,
-       "x": 0,
+        "x": 0,
         "y": 13
       },
       "id": 5,
@@ -1200,7 +1203,8 @@
           "placement": "right",
           "showLegend": true,
           "sortBy": "Last *",
-          "sortDesc": true
+          "sortDesc": true,
+          "width": 300
         },
         "tooltip": {
           "mode": "multi",
@@ -1214,7 +1218,8 @@
             "type": "prometheus",
             "uid": "P1809F7CD0C75ACF3"
           },
-          "expr": "topk(10, sum(rate(modgearmanworker_plugin_system_cpu_time_seconds_count{instance=~\"$instance\"}[1m])) by (description))",
+          "editorMode": "code",
+          "expr": "topk(10, sum(rate(modgearmanworker_plugin_system_cpu_time_seconds_count{instance=~\"$instance\"}[5m])) by (description))",
           "format": "time_series",
           "groupBy": [
             {
@@ -1234,6 +1239,7 @@
           "legendFormat": "{{description}}",
           "orderByTime": "ASC",
           "policy": "default",
+          "range": true,
           "refId": "A",
           "resultFormat": "time_series",
           "select": [
@@ -1261,6 +1267,7 @@
         "type": "prometheus",
         "uid": "P1809F7CD0C75ACF3"
       },
+      "description": "Plots the total sum of cpu usage by plugin.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1331,7 +1338,8 @@
           "placement": "right",
           "showLegend": true,
           "sortBy": "Last *",
-          "sortDesc": true
+          "sortDesc": true,
+          "width": 300
         },
         "tooltip": {
           "mode": "multi",
@@ -1345,7 +1353,8 @@
             "type": "prometheus",
             "uid": "P1809F7CD0C75ACF3"
           },
-          "expr": "topk(10, sum(rate(modgearmanworker_plugin_system_cpu_time_seconds_sum{instance=~\"$instance\"}[1m])+rate(modgearmanworker_plugin_user_cpu_time_seconds_sum{instance=~\"$instance\"}[1m])) by (description))",
+          "editorMode": "code",
+          "expr": "topk(10, sum(rate(modgearmanworker_plugin_system_cpu_time_seconds_sum{instance=~\"$instance\"}[5m])+rate(modgearmanworker_plugin_user_cpu_time_seconds_sum{instance=~\"$instance\"}[5m])) by (description))",
           "format": "time_series",
           "groupBy": [
             {
@@ -1365,6 +1374,7 @@
           "legendFormat": "{{description}}",
           "orderByTime": "ASC",
           "policy": "default",
+          "range": true,
           "refId": "A",
           "resultFormat": "time_series",
           "select": [
@@ -1384,7 +1394,142 @@
           "tags": []
         }
       ],
-      "title": "Top 10 Plugins by CPU Usage",
+      "title": "Top 10 Plugins by Total CPU Usage",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "P1809F7CD0C75ACF3"
+      },
+      "description": "Plots the average cpu usage grouped by plugin.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 30,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 24,
+        "x": 0,
+        "y": 31
+      },
+      "id": 16,
+      "links": [],
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true,
+          "sortBy": "Last *",
+          "sortDesc": true,
+          "width": 300
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "9.3.6",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "P1809F7CD0C75ACF3"
+          },
+          "editorMode": "code",
+          "expr": "topk(\n    10, \n    sum(\n        (rate(modgearmanworker_plugin_system_cpu_time_seconds_sum{instance=~\"$instance\"}[5m])\n        +rate(modgearmanworker_plugin_user_cpu_time_seconds_sum{instance=~\"$instance\"}[5m])\n        )\n        / \n        rate(modgearmanworker_plugin_system_cpu_time_seconds_count{instance=~\"$instance\"}[5m])\n    ) by (description)    \n)",
+          "format": "time_series",
+          "groupBy": [
+            {
+              "params": [
+                "$__interval"
+              ],
+              "type": "time"
+            },
+            {
+              "params": [
+                "null"
+              ],
+              "type": "fill"
+            }
+          ],
+          "intervalFactor": 1,
+          "legendFormat": "{{description}}",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "range": true,
+          "refId": "A",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "mean"
+              }
+            ]
+          ],
+          "tags": []
+        }
+      ],
+      "title": "Top 10 Plugins by Average CPU Usage",
       "type": "timeseries"
     },
     {
@@ -1450,7 +1595,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 31
+        "y": 40
       },
       "id": 6,
       "links": [],
@@ -1474,7 +1619,8 @@
             "uid": "P1809F7CD0C75ACF3"
           },
           "dsType": "influxdb",
-          "expr": "sum(rate(modgearmanworker_tasks_completed_total{instance=~\"$instance\"}[1m])) by (type)",
+          "editorMode": "code",
+          "expr": "sum(rate(modgearmanworker_tasks_completed_total{instance=~\"$instance\"}[5m])) by (type)",
           "format": "time_series",
           "groupBy": [
             {
@@ -1495,6 +1641,7 @@
           "legendFormat": "{{ type }}",
           "metric": "process_resident_memory_bytes",
           "policy": "default",
+          "range": true,
           "refId": "D",
           "resultFormat": "time_series",
           "select": [
@@ -1614,7 +1761,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 31
+        "y": 40
       },
       "id": 7,
       "links": [],
@@ -1640,7 +1787,7 @@
           "dsType": "influxdb",
           "editorMode": "code",
           "exemplar": true,
-          "expr": "sum(rate(modgearmanworker_tasks_errors_total{instance=~\"$instance\"}[1m])) by (type)",
+          "expr": "sum(rate(modgearmanworker_tasks_errors_total{instance=~\"$instance\"}[5m])) by (type)",
           "format": "time_series",
           "groupBy": [
             {
@@ -1687,9 +1834,9 @@
             "uid": "P1809F7CD0C75ACF3"
           },
           "dsType": "influxdb",
-          "editorMode": "code",
+          "editorMode": "coe",
           "exemplar": true,
-          "expr": "sum(rate(modgearmanworker_tasks_errors_total{instance=~\"$instance\"}[1m])) / sum(rate(modgearmanworker_tasks_completed_total{instance=~\"$instance\"}[1m])) * 100",
+          "expr": "sum(rate(modgearmanworker_tasks_errors_total{instance=~\"$instance\"}[5m])) / sum(rate(modgearmanworker_tasks_completed_total{instance=~\"$instance\"}[5m])) * 100",
           "format": "time_series",
           "groupBy": [
             {
@@ -1797,7 +1944,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 39
+        "y": 48
       },
       "id": 15,
       "links": [],
@@ -1822,7 +1969,7 @@
           },
           "dsType": "influxdb",
           "editorMode": "code",
-          "expr": "sum(rate(modgearmanworker_tasks_completed_total{instance=~\"$instance\"}[1m])) by (exec)",
+          "expr": "sum(rate(modgearmanworker_tasks_completed_total{instance=~\"$instance\"}[5m])) by (exec)",
           "format": "time_series",
           "groupBy": [
             {
@@ -1978,6 +2125,6 @@
   "timezone": "browser",
   "title": "Mod-Gearman Worker",
   "uid": "u2qAFJ1mk",
-  "version": 1,
+  "version": 3,
   "weekStart": ""
 }
