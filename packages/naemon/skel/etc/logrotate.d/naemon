@@ -8,7 +8,7 @@
     missingok
     notifempty
     postrotate
-      [ -f ###ROOT###/tmp/lock/naemon.lock ] && kill -s USR1 `cat ###ROOT###/tmp/lock/naemon.lock`
+      [ -f ###ROOT###/tmp/run/naemon.pid ] && kill -s USR1 `cat ###ROOT###/tmp/run/naemon.pid`
     endscript
     create 0664 ###SITE### ###SITE###
 }
