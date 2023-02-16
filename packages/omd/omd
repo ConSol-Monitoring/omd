@@ -4318,7 +4318,7 @@ def main_cleanup(args, options=None):
             continue
 
         for pkg in addonpackages:
-            sys.stdout.write("%s%-35s%s Uninstalling\n" % (tty_bold, pkg, tty_normal))
+            sys.stdout.write("%s%-35s%s Uninstalling\n" % (tty_bold, str(pkg), tty_normal))
             package_manager.uninstall(pkg)
 
         sys.stdout.write("%s%-35s%s Uninstalling\n" % (tty_bold, version, tty_normal))
