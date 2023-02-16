@@ -5,14 +5,14 @@
         stages:
         - regex:
             source: filename
-            expression: "^.*/apache/(?P<apache_log>\\\\w+)_log"
+            expression: '^.*/apache/(?P<apache_log>\\w+)_log'
         - labels:
             apache_log:
     - match:
         selector: '{apache_log="error"}'
         stages:
         - regex:
-            expression: "^(?P<time>\\\\[\\\\w+ \\\\w+\\\\s+\\\\d{1,2} \\\\d{2}:\\\\d{2}:\\\\d{2}.\\\\d+ \\\\d{4}\\\\]) \\\\[(?P<apache_module>\\\\w+):(?P<severity>\\\\w+)\\\\] (?P<message>(?s:.*))$"
+            expression: '^(?P<time>\\[\\w+ \\w+\\s+\\d{1,2} \\d{2}:\\d{2}:\\d{2}.\\d+ \\d{4}\\]) \\[(?P<apache_module>\\w+):(?P<severity>\\w+)\\] (?P<message>(?s:.*))$'
         - template:
             source: severity
             template: '{{ ToLower .Value }}'
@@ -23,7 +23,7 @@
         selector: '{apache_log="access"}'
         stages:
         - regex:
-            expression: "^(?P<ip>\\\\S+) (?P<identd>\\\\S+) (?P<user>\\\\S+) \\\\[(?P<timestamp>[\\\\w:/]+\\\\s[+\\\\-]\\\\d{4})\\\\] \\"(?P<action>\\\\S+)\\\\s?(?P<path>\\\\S+)?\\\\s?(?P<protocol>\\\\S+)?\\" (?P<status>\\\\d{3}|-) (?P<size>\\\\d+|-)\\\\s?\\"?(?P<referer>[^\\"]*)\\"?\\\\s?\\"?(?P<useragent>[^\\"]*)?\\"?$"
+            expression: '^(?P<ip>\\S+) (?P<identd>\\S+) (?P<user>\\S+) \\[(?P<timestamp>[\\w:/]+\\s[+\\-]\\d{4})\\] \\"(?P<action>\\S+)\\s?(?P<path>\\S+)?\\s?(?P<protocol>\\S+)?\\" (?P<status>\\d{3}|-) (?P<size>\\d+|-)\\s?\\"?(?P<referer>[^\\"]*)\\"?\\s?\\"?(?P<useragent>[^\\"]*)?\\"?$'
         - labels:
             status:
   static_configs:
