@@ -4964,7 +4964,7 @@ check_site_user(cmd_spec.must_exist)
 # Commands operating on an existing site *must* run omd in
 # the same version as the site has! Sole exception: update.
 # That command must be run in the target version
-if g_sitename and cmd_spec.must_exist and command != "update" and command != "restore":
+if g_sitename and not args.version and cmd_spec.must_exist and command != "update" and command != "restore":
     v = site_version(g_sitename)
     if v is None: # Site has no homedirectory
         if command == "rm":
@@ -4975,7 +4975,7 @@ if g_sitename and cmd_spec.must_exist and command != "update" and command != "re
                      "If you have created that site with 'omd create --no-init %s'\n"
                      "then please first do an 'omd init %s'." % (3*(g_sitename,)))
     elif OMD_VERSION != v:
-        if omd_version_exists(v) or not opt_force:
+        if omd_version_exists(v) and not opt_force:
             exec_other_omd(v)
 
 read_info()
