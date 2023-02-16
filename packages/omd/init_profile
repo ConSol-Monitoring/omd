@@ -171,6 +171,13 @@ __generic_init_wait_start() {
     return 1
   fi
 
+  if [ -n "$PID_FILE" ]; then
+    mkdir -p $(dirname $PID_FILE)
+  fi
+  if [ -n "$LOG_FILE" ]; then
+    mkdir -p $(dirname $LOG_FILE)
+  fi
+
   if [ "$NOHUP" = "1" ]; then
     if [ -z "$LOG_FILE" ]; then
       LOG_FILE="/dev/null"
