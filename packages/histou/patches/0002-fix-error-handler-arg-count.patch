@@ -1,0 +1,11 @@
+--- a/index.php	2023-02-16 09:42:25.719253087 +0100
++++ b/index.php	2023-02-16 09:42:41.355835512 +0100
+@@ -13,7 +13,7 @@
+ require_once('histou/bootstrap.php');
+ 
+ set_error_handler(
+-    function ($errno, $errstr, $errfile, $errline, array $errcontext) {
++    function ($errno, $errstr, $errfile, $errline, $errcontext = null) {
+         // error was suppressed with the @-operator
+         if (0 === error_reporting()) {
+             return false;
