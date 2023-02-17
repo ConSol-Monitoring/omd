@@ -31,6 +31,7 @@ next:
           - Prometheus
             - Prometheus 2.37.5
             - promlens 0.3.0
+            - update mod_prometheus_status apache module 0.3.0
           - InfluxDB
             - add influxdb_show_cardinality script
             - add influxdb_vim_series script
