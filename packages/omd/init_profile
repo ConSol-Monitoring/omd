@@ -289,7 +289,7 @@ __generic_init_reload() {
     fi
   fi
   [ "$CORE_NOVERIFY" ] || __generic_init_verify_config quiet || return 1
-  echo " (PID: ${PID})... "
+  echo -n " (PID: ${PID})... "
   if ! kill -HUP ${PID}; then
     echo "ERROR: failed to send SIGHUP"
     return 1
