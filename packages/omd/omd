@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-OMD_VERSION = "5.00-labs-edition"
+OMD_VERSION = "5.10-labs-edition"
 
 import sys
 sys.path.append("/omd/versions/%s/lib/python" % OMD_VERSION)
