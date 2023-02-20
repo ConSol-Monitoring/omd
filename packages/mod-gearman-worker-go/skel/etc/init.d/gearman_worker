@@ -4,7 +4,7 @@
 # PIDFILE:  tmp/run/gearman_worker.pid
 # DEPENDS:  CONFIG_MOD_GEARMAN = on
 # DEPENDS:  CONFIG_GEARMAN_WORKER = on
-# BINARY:   bin/mod_gearman_worker
+# BINARY:   /mod_gearman_worker
 # ARGMATCH: etc/mod-gearman/worker.cfg
 ### END INIT INFO
 
