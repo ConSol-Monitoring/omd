@@ -14,7 +14,7 @@ next:
             - omd create: add support for pre-create/post-create scripts
             - omd rm: add support for pre-rm/post-rm scripts
             - omd status: performance improvements
-          - Thruk: update to 3.02
+          - Thruk: update to 3.04
           - LMD: Update 2.1.4
           - Naemon:
             - update core to 1.4.1
