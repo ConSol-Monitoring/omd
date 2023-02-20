@@ -15,6 +15,7 @@ next:
             - omd rm: add support for pre-rm/post-rm scripts
             - omd status: performance improvements
           - Thruk: update to 3.02
+          - LMD: Update 2.1.4
           - Naemon:
             - update core to 1.4.1
             - update livestatus to 1.4.1
