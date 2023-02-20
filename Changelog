@@ -1,6 +1,6 @@
 This file documents the revision history for the Open Monitoring Distribution (Labs Edition)
 
-next:
+5.10     Feb 20 2023
           - OMD:
             - omd order of options can now be set before or after the command, ex.: omd status -b
             - omd backup: add --exclude and -v option
