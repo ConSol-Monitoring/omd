@@ -1980,31 +1980,35 @@ def get_init_script_meta(script, site_config, processlist=None):
     in_info_block = False
     with open(script) as file:
         for i in range(15):
-            line = next(file).strip()
-            if line.find("OMD INIT INFO") != -1:
-                in_info_block = True
-            if line.find("END INIT INFO") != -1:
-                break
-            if not in_info_block:
-                continue
-            info = re.findall("^#\s*(\w+):\s(.*)$", line)
-            if len(info) == 0:
-                continue
-            match = info[0]
-            if match[0] == "PIDFILE":
-                meta["pidfile"] = match[1].strip()
-            elif match[0] == "BINARY":
-                meta["binary"] = match[1].strip()
-            elif match[0] == "ARGMATCH":
-                meta["argmatch"] = match[1].strip()
-            elif match[0] == "DEPENDS":
-                depends = re.findall("CONFIG_(\w+)\s*([\!=]+)\s*(.*?)\s*$", line)
-                if len(depends) == 1:
-                    meta["depends"].append(depends[0])
+            try:
+                line = next(file).strip()
+                if line.find("OMD INIT INFO") != -1:
+                    in_info_block = True
+                if line.find("END INIT INFO") != -1:
+                    break
+                if not in_info_block:
+                    continue
+                info = re.findall("^#\s*(\w+):\s(.*)$", line)
+                if len(info) == 0:
+                    continue
+                match = info[0]
+                if match[0] == "PIDFILE":
+                    meta["pidfile"] = match[1].strip()
+                elif match[0] == "BINARY":
+                    meta["binary"] = match[1].strip()
+                elif match[0] == "ARGMATCH":
+                    meta["argmatch"] = match[1].strip()
+                elif match[0] == "DEPENDS":
+                    depends = re.findall("CONFIG_(\w+)\s*([\!=]+)\s*(.*?)\s*$", line)
+                    if len(depends) == 1:
+                        meta["depends"].append(depends[0])
+                    else:
+                        sys.stderr.write("syntax error in omd init info depends: %s in file %s\n" % (line, script))
                 else:
-                    sys.stderr.write("syntax error in omd init info depends: %s in file %s\n" % (line, script))
-            else:
-                sys.stderr.write("unsupported omd init info attribute: %s in file %s\n" % (line, script))
+                    sys.stderr.write("unsupported omd init info attribute: %s in file %s\n" % (line, script))
+            except StopIteration as e:
+                break
+
 
     if not in_info_block:
         return meta
