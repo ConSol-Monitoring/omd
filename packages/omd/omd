@@ -1008,11 +1008,17 @@ def patch_template_file(src, dst, old, new):
                 os.system("pwd ; diff -u %s %s.orig%s" % (old_orig_path, dst, pipe_pager()))
             elif choice == "restore":
                 os.rename(dst + ".orig", dst)
-                sys.stdout.write("Restored your version.\n")
+                if opt_conflict == "keepold":
+                    sys.stdout.write(warn + " Restored file  %s (forced restore)\n" % src)
+                else:
+                    sys.stdout.write(good + " Restored file  %s\n" % src)
                 break
             elif choice == "install":
                 os.rename(new_orig_path, dst)
-                sys.stdout.write("Installed default file (with site name %s).\n" % new)
+                if opt_conflict == "install":
+                    sys.stdout.write(warn + " Installed file %s (forced default install)\n" % src)
+                else:
+                    sys.stdout.write(good + " Installed file %s\n" % src)
                 break
             elif choice == "shell":
                 relname = src.split("/")[-1]
@@ -1195,7 +1201,10 @@ def merge_update_file(relpath, userdir, old_version, new_version, skel_path, dry
         elif choice == "restore":
             os.rename(user_path + ".orig", user_path)
             os.chmod(user_path, permissions)
-            sys.stdout.write("Restored your version.\n")
+            if opt_conflict == "keepold":
+                sys.stdout.write(warn + " Restored file  %s (forced restore)\n" % fn)
+            else:
+                sys.stdout.write(good + " Restored file  %s\n" % fn)
             break
         elif choice == "try again":
             os.rename(user_path + ".orig", user_path)
@@ -1211,7 +1220,10 @@ def merge_update_file(relpath, userdir, old_version, new_version, skel_path, dry
         else: # install
             os.rename("%s-%s" % (user_path, new_version), user_path)
             os.chmod(user_path, permissions)
-            sys.stdout.write("Installed default file of version %s.\n" % new_version)
+            if opt_conflict == "install":
+                sys.stdout.write(warn + " Installed file %s (forced default install)\n" % fn)
+            else:
+                sys.stdout.write(good + " Installed file %s\n" % fn)
             break
 
     clean_local_temp_files()
