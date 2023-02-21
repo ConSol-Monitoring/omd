@@ -20,7 +20,7 @@ CRONTAB_OPTS=""
 __init_hook $0 $1 pre
 case "$1" in
     start)
-        echo -en "Initializing Crontab..."
+        echo -en "Starting ${NAME}..."
         ${MERGECRONTABS} ${CROND} | $CRONTAB $CRONTAB_OPTS - > /dev/null
         if [ $? -eq 0 ]; then
             echo "OK"
@@ -31,12 +31,12 @@ case "$1" in
         fi
     ;;
     stop)
-        echo -n "Removing Crontab..."
+        echo -n "Stopping ${NAME}..."
         $CRONTAB $CRONTAB_OPTS -l >/dev/null 2>&1
         if [ $? -eq 0 ]; then
             $CRONTAB $CRONTAB_OPTS -r
         else
-            echo -n "(already empty)..."
+            echo -n "already empty..."
         fi
         echo OK
         exit 0

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 ### OMD INIT INFO
-# PIDFILE:  tmp/lock/alertmanager.lock
+# PIDFILE:  tmp/run/alertmanager.pid
 # DEPENDS:  CONFIG_ALERTMANAGER = on
 # BINARY:   bin/alertmanager
 # ARGMATCH: web.listen-address
@@ -19,34 +19,39 @@ cd || exit 1
 
 mkdir -p $OMD_ROOT/tmp/alertmanager
 mkdir -p $OMD_ROOT/var/alertmanager
-BIN=$OMD_ROOT/bin/alertmanager
+DAEMON=$OMD_ROOT/bin/alertmanager
 TOOL=$OMD_ROOT/bin/amtool
 CFG_FILE=$OMD_ROOT/tmp/alertmanager/alertmanager.yml
 LOG_DIR=$OMD_ROOT/var/alertmanager
-LOGFILE=$OMD_ROOT/var/alertmanager/alertmanager.log
-PID_FILE=$OMD_ROOT/tmp/lock/alertmanager.lock
+LOG_FILE=$OMD_ROOT/var/alertmanager/alertmanager.log
+PID_FILE=$OMD_ROOT/tmp/run/alertmanager.pid
 DATA_DIR=$OMD_ROOT/var/alertmanager/data
-USR=$OMD_SITE
 
 EXTERNAL_FQDN=${OMD_EXTERNAL_FQDN:-$(hostname --fqdn)}
 
-OPTIONS="--config.file $CFG_FILE --web.listen-address=$CONFIG_ALERTMANAGER_TCP_ADDR:$CONFIG_ALERTMANAGER_TCP_PORT --web.external-url=http://${EXTERNAL_FQDN}/$OMD_SITE/alertmanager --storage.path=$DATA_DIR"
+OPTS=""
+OPTS+=" --config.file $CFG_FILE"
+OPTS+=" --web.listen-address=$CONFIG_ALERTMANAGER_TCP_ADDR:$CONFIG_ALERTMANAGER_TCP_PORT"
+OPTS+=" --web.external-url=http://${EXTERNAL_FQDN}/$OMD_SITE/alertmanager"
+OPTS+=" --storage.path=$DATA_DIR"
 
 if [ -n "$CLUSTER_LISTEN_ADDRESS" ] ; then
        # Cluster mode active
-  OPTIONS="--cluster.listen-address $CLUSTER_LISTEN_ADDRESS $OPTIONS"
+  OPTS+=" --cluster.listen-address $CLUSTER_LISTEN_ADDRESS"
   for peer in "${CLUSTER_PEERS[@]}"; do
-               OPTIONS="--cluster.peer $peer $OPTIONS"
+    OPTS+=" --cluster.peer $peer"
   done
 else
-  OPTIONS="--cluster.listen-address= $OPTIONS"
+  OPTS+=" --cluster.listen-address="
 fi
 
-OPTIONS="$EXTRA_OPTIONS $OPTIONS"
+OPTS+=" $EXTRA_OPTIONS"
+NOHUP=1
+STORE_PID=1
+CHECK_CALLBACK=verify_config
+
 
 # Put together fragments and build a new alertmanager.yml
-#
-#
 rebuild_config() {
     cp $OMD_ROOT/etc/alertmanager/alertmanager.yml $CFG_FILE
     WORK_CFG=$OMD_ROOT/tmp/alertmanager.yml.$$
@@ -128,34 +133,6 @@ rebuild_config() {
     rm -f "$WORK_CFG"
 }
 
-# Fetches the pid of the currently running alertmanager process of the given
-# user.
-#
-# --ppid 1 in ps seem not to filter by direct ppid but by the whole
-# parent process tree. So filter by hand again.
-#
-# It returns 1 when no process can be found and echos the PID while
-# returning 0 when a process can be found.
-alertmanager_proc() {
-    [[ -f $PID_FILE ]] && kill -0 $(< $PID_FILE) >/dev/null 2>&1 || return 1
-    read comm user < <(ps -p $(< $PID_FILE) -o comm,user 2>/dev/null | tail -n 1) >/dev/null 2>&1
-    test "$comm" = alertmanager >/dev/null 2>&1 || return 1
-    test "$user" = $USR >/dev/null 2>&1 || return 1
-    cat $PID_FILE
-    return 0
-}
-
-# First try to use the process list to gather a alertmanager process,
-# when no process is found via ps take a look at the lock file
-#
-# It returns 1 when no process can be found and echos the PID while
-# returning 0 when a process can be found.
-pidof_alertmanager() {
-    alertmanager_proc
-    return $?
-}
-
-
 verify_config() {
     if [ "$1" != "quiet" ]; then
         echo -n "Running configuration check... "
@@ -176,68 +153,7 @@ verify_config() {
     fi
 }
 
-prep_start() {
-    touch $PID_FILE
-}
-
-alertmanager_wait_stop() {
-    pid=$(pidof_alertmanager) || true
-    if ! kill -0 "${pid:-}" >/dev/null 2>&1; then
-        echo -n 'Not running. '
-        return 0
-    fi
-
-    # wait until really stopped.
-    # it might happen that alertmanager has a subprocess which
-    # is left running and becomes ppid 1 after killing the
-    # main alertmanager process. So fetch the process id again
-    # multiple times to fetch new processes until all are gone.
-    if [ -n "${pid:-}" ]; then
-        I=0
-        while kill -0 ${pid:-} >/dev/null 2>&1; do
-            # Send single kill per process
-            kill $pid
-            while kill -0 ${pid:-} >/dev/null 2>&1;  do
-                if [ $I = '60' ]; then
-                    return 1
-                else
-                    echo -n "."
-                    I=$(($I+1))
-                    sleep 1
-                fi
-            done
-            # Is there another proc with ppid 1?
-            pid=$(pidof_alertmanager | head -n1) || true
-        done
-    fi
-
-    [ -f "$PID_FILE" ] && rm -f "$PID_FILE"
-    return 0
-
-}
-
-alertmanager_wait_start() {
-    prep_start
-    nohup $BIN $OPTIONS >>$LOGFILE 2>&1 &
-    typeset apid=$!
-
-    sleep 2
-
-    if kill -0 $apid ; then
-        echo $apid > $PID_FILE
-        return 0
-    else
-        rm -f $PID_FILE
-        return 1
-    fi
-}
-
-if [ ! -f $BIN ]; then
-    echo "Alertmanager binary $BIN not found. Terminating..."
-    exit 1
-fi
-
-case "$1" in start|restart|reload|checkconfig)
+case "$1" in start|restart|reload|check|checkconfig)
     rebuild_config
     if [ ! -f $CFG_FILE ]; then
         echo "Alertmanager configuration file $CFG_FILE not found. Terminating..."
@@ -245,88 +161,4 @@ case "$1" in start|restart|reload|checkconfig)
     fi
 esac
 
-__init_hook $0 $1 pre
-case "$1" in
-    start)
-        echo -n "Starting alertmanager..."
-         if pidof_alertmanager >/dev/null 2>&1; then
-             echo 'Already running.'
-             exit 1
-         fi
-
-         #if ! verify_config quiet; then
-         #    exit 1
-         #fi
-
-         if alertmanager_wait_start; then
-             echo 'OK'
-             __init_hook $0 $1 post 0
-             exit 0
-         else
-             echo 'ERROR'
-             __init_hook $0 $1 post 1
-             exit 1
-         fi
-    ;;
-    stop)
-        echo -n "Stopping alertmanager..."
-        if alertmanager_wait_stop; then
-            echo 'OK'
-             __init_hook $0 $1 post 0
-            exit 0
-        else
-            echo 'ERROR'
-             __init_hook $0 $1 post 1
-            exit 1
-        fi
-    ;;
-    check|checkconfig)
-        if ! verify_config; then
-            exit 1
-        fi
-        exit 0
-    ;;
-    status)
-        PID=$(pidof_alertmanager 2>&1) || true
-        if kill -0 "${PID:-}" >/dev/null 2>&1; then
-            echo "Running ($PID)."
-            exit 0
-        else
-            echo 'Not running. '
-            exit 1
-        fi
-    ;;
-    restart)
-        if ! verify_config quiet; then
-            exit 1
-        fi
-
-        $0 stop || (echo "Unable to stop Alertmanager. Terminating..." && exit 1)
-        echo -n "Starting Alertmanager..."
-        if alertmanager_wait_start; then
-            echo 'OK'
-            exit 0
-        else
-            echo 'ERROR'
-            exit 1
-        fi
-    ;;
-
-    reload|force-reload)
-       PID=$(pidof_alertmanager 2>&1) || true
-        if kill -0 "${PID:-}" >/dev/null 2>&1; then
-            kill -HUP $PID
-            exit 0
-        else
-            exit 1
-        fi
-    ;;
-    check)
-    ;;
-    *)
-        echo "Usage: alertmanager {start|stop|restart|reload|status|checkconfig}"
-        exit 2
-    ;;
-esac
-
-# EOF
+__generic_init "$*"

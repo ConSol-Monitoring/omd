@@ -170,7 +170,7 @@ my $tests = [
   { cmd => $omd_bin." stop -p", like => ["/Invoking 'stop'/", '/Stopping apache/'] },
   { cmd => $omd_bin." start -p", like => ["/Invoking 'start'/", '/Starting apache/'] },
   { cmd => $omd_bin." reload -p", like => ["/Invoking 'reload'/", "/Reloading apache/"] },
-  { cmd => $omd_bin." restart -p", like => ["/Invoking 'restart'/", "/Initializing Crontab\.*OK/"] },
+  { cmd => $omd_bin." restart -p", like => ["/Invoking 'restart'/", "/Starting crontab\.*OK/"] },
 ];
 
 # run tests

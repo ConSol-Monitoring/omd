@@ -15,144 +15,28 @@ fi
 . lib/omd/init_profile
 
 NAME="snmptrapd"
-PROG="/usr/sbin/snmptrapd"
+DAEMON="/usr/sbin/snmptrapd"
 LOGDIR="/omd/sites/$OMD_SITE/var/log/snmp"
-LOG="$LOGDIR/snmptrapd.log"
-PIDFILE="$OMD_ROOT/tmp/run/snmptrapd.pid"
-OPTIONS="-ObentU -C -c $OMD_ROOT/etc/snmptrapd.conf -A -Lf $LOG -p $PIDFILE udp:$CONFIG_SNMPTRAPD_UDP_PORT"
+LOG_FILE="$LOGDIR/snmptrapd.log"
+PID_FILE="$OMD_ROOT/tmp/run/snmptrapd.pid"
+OPTS=""
+OPTS+=" -ObentU"
+OPTS+=" -C -c $OMD_ROOT/etc/snmptrapd.conf"
+OPTS+=" -A"
+OPTS+=" -Lf $LOG_FILE"
+OPTS+=" -p $PID_FILE"
+OPTS+=" udp:$CONFIG_SNMPTRAPD_UDP_PORT"
 
+RELOAD_RESTARTS=1
 mkdir -p $LOGDIR
 
-pidof_snmptrapd() {
-  # if there is actually an snmptrapd process whose pid is in PIDFILE,
-  # print it and return 0.
-  if [ -e "$PIDFILE" ]; then
-    PID=$(cat "$PIDFILE")
-    if kill -0 $PID >/dev/null 2>&1; then
-      echo $PID
-      return 0
-    else
-      rm -f $PIDFILE
-    fi
-  else
-    # It might happen that there is no pidfile but a process is running
-    # As fallback check the process table for snmptrapd with PPID=1 and
-    # running as this user
-    PID=$(pgrep -u $OMD_SITE -P 1 -f $PROG)
-    if [ -n "$PID" ]; then
-        echo $PID
-        return 0
-    fi
-  fi
-  return 1
-}
-
-snmptrapd_wait_stop() {
-  # running ?
-  pid=$(pidof_snmptrapd) || true
-  if [ -n "${pid:-}" ]; then
-    kill ${pid:-}
-  else
-    echo -n '(not running)...'
-    return 0
-  fi
-
-  # wait until really stopped
-  if [ -n "${pid:-}" ]; then
-    i=0
-    while kill -0 "${pid:-}" 2> /dev/null;  do
-      if [ $i = '60' ]; then
-        return 1
-      else
-        echo -n "."
-        i=$(($i+1))
-        sleep 0.1
-      fi
-     done
-  fi
-
-  [ -f "$PID_FILE" ] && rm -f "$PID_FILE"
-  return 0
-}
-
-snmptrapd_wait_start() {
-  if pidof_snmptrapd >/dev/null 2>&1; then
-    echo -n '(already running)...'
-    return 1
-  fi
-  $PROG $OPTIONS
-  i=0
-  while ! pidof_snmptrapd >/dev/null 2>&1;  do
-    if [ $i = '10' ]; then
-      return 1
-    else
-      echo -n "."
-      i=$(($i+1))
-      sleep 0.1
-    fi
-  done
-
-  return 0
-}
-
-__init_hook $0 $1 pre
 case "$1" in
     start)
-        printf "%s snmptrapd-init %s\n" "$(date)" "$*" >> $LOG
-        echo -n "Starting dedicated SNMPTrapd for site $OMD_SITE..."
-        if snmptrapd_wait_start; then
-          echo 'OK'
-          exit 0
-        elif snmptrapd_wait_start; then
-          # 2nd try. It looks like this snmptrapd gets killed by a logfile rotation
-          echo 'OK'
-          exit 0
-        else
-          echo 'ERROR'
-          exit 1
-        fi
+        printf "%s snmptrapd-init %s\n" "$(date)" "$*" >> $LOG_FILE
     ;;
     stop)
-        printf "%s snmptrapd-init %s\n" "$(date)" "$*" >> $LOG
-        echo -n "Stopping dedicated SNMPTrapd for site $OMD_SITE..."
-        if snmptrapd_wait_stop; then
-          echo 'OK'
-          exit 0
-        else
-          echo 'ERROR'
-          exit 1
-        fi
+        printf "%s snmptrapd-init %s\n" "$(date)" "$*" >> $LOG_FILE
     ;;
-    restart)
-        $0 stop
-        $0 start
-        exit $?
-    ;;
-    reload)
-      PID=$(pidof_snmptrapd) || true
-      if [ -n "$PID" ]; then
-        $0 stop
-        $0 start
-        exit $?
-      else
-        echo "no pid file found, not running"
-        exit 1
-      fi
-    ;;
-    status)
-      PID=$(pidof_snmptrapd) || true
-      if [ -n "$PID" ]; then
-          echo "$NAME running with pid $PID"
-          exit 0
-      else
-          echo "no pid file found, not running"
-          exit 1
-      fi
-    ;;
-    check)
-    ;;
-    *)
-    echo $"Usage: $0 {start|stop|restart|condrestart|reload}"
 esac
 
-exit 3
+__generic_init "$*"

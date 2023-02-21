@@ -49,7 +49,7 @@ TestUtils::test_command({ cmd => '/bin/ps -ef | grep samplicate', like => '/samp
 
 # start site1 with a local snmptrapd. find out the listener port
 TestUtils::test_command({ cmd => $omd_bin." config $site1 set SNMPTRAPD on" });
-TestUtils::test_command({ cmd => $omd_bin." start $site1", like => '/Starting dedicated SNMPTrapd for site.+OK/' });
+TestUtils::test_command({ cmd => $omd_bin." start $site1", like => '/Starting snmptrapd\.+OK/' });
 my $site1port = { cmd => $omd_bin." config $site1 show SNMPTRAPD_UDP_PORT", like => '/\d+/' };
 TestUtils::test_command($site1port);
 $site1port = $site1port->{stdout};
@@ -71,7 +71,7 @@ TestUtils::test_command({ cmd => '/bin/ps -ef | grep samplicate', like => '/samp
 # now restart site2 but with an snmptrapd
 TestUtils::test_command({ cmd => $omd_bin." stop $site2" });
 TestUtils::test_command({ cmd => $omd_bin." config $site2 set SNMPTRAPD on" });
-TestUtils::test_command({ cmd => $omd_bin." start $site2", like => '/Starting dedicated SNMPTrapd for site.+OK/' });
+TestUtils::test_command({ cmd => $omd_bin." start $site2", like => '/Starting snmptrapd\.+OK/' });
 my $site2port = { cmd => $omd_bin." config $site2 show SNMPTRAPD_UDP_PORT", like => '/\d+/' };
 TestUtils::test_command($site2port);
 $site2port = $site2port->{stdout};

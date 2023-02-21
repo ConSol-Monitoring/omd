@@ -40,6 +40,7 @@ __init_hook() {
 #   - $KILL_SESSION    kill hole session on shutdown when set to 1.
 #   - $STOP_CALLBACK   function will be called for every stop retry.
 #   - $CHECK_CALLBACK  function will be called in check/checkconfig mode.
+#   - $START_CALLBACK  function will be called after successful start.
 __generic_init() {
   __init_hook $0 $1 pre
   if [ -z "$DAEMON" ]; then
@@ -182,36 +183,56 @@ __generic_init_wait_start() {
     if [ -z "$LOG_FILE" ]; then
       LOG_FILE="/dev/null"
     fi
-    nohup setsid $DAEMON $OPTS >>$LOG_FILE 2>&1 &
+    STARTCMD="nohup setsid $DAEMON $OPTS"
+    $STARTCMD >>$LOG_FILE 2>&1 &
     PID=$!
     disown
   else
+    STARTCMD="$DAEMON $OPTS"
     if [ -n "$LOG_FILE" ]; then
-      if ! $DAEMON $OPTS >>$LOG_FILE 2>&1; then
-        echo "ERROR: failed to start (errors logged to ${LOG_FILE})"
+      if ! $STARTCMD >>$LOG_FILE 2>&1; then
+        __generic_init_wait_start_failed
         return 1
       fi
     else
-      if ! $DAEMON $OPTS; then
-        echo "ERROR: failed to start"
+      if ! $STARTCMD; then
+        __generic_init_wait_start_failed
         return 1
       fi
     fi
   fi
 
+  if [ -n "$START_CALLBACK" ]; then
+    if ! $START_CALLBACK; then
+      return 1
+    fi
+  fi
+
+  if [ -z "$PID" ]; then
+    PID=$(__generic_init_pid)
+  fi
+
   if [ -z "$PID_FILE" ]; then
+    if [ -z "$PID" ] || ! kill -0 $PID; then
+      __generic_init_wait_start_failed
+      return 1
+    fi
     echo "OK"
     return 0
   fi
 
   if [ -n "$STORE_PID" ]; then
+    if [ -z "$PID" ] || ! kill -0 $PID; then
+      __generic_init_wait_start_failed
+      return 1
+    fi
     if [ -n "$PID" ]; then
       printf '%d' $PID > $PID_FILE
       echo "OK"
       return 0
     fi
-    echo "ERROR"
-    return 0
+    __generic_init_wait_start_failed
+    return 1
   fi
 
 
@@ -225,6 +246,14 @@ __generic_init_wait_start() {
         UP=1
         break
     fi
+    # test if there is a pid at all
+    PID=$(__generic_init_pid)
+    if [ -z "$PID" ] || ! kill -0 "$PID"; then
+      if [ $COUNTER -lt 80 ]; then
+        __generic_init_wait_start_failed
+        return 1
+      fi
+    fi
     sleep 0.1
   done
   if [ $UP = 1 ]; then
@@ -232,6 +261,16 @@ __generic_init_wait_start() {
     return 0
   fi
   echo "ERROR"
+  return 1
+}
+
+################################################################################
+__generic_init_wait_start_failed() {
+  echo "ERROR: failed to start"
+  echo "  - startup command: ${STARTCMD}"
+  if [ -n "$LOG_FILE" ] && [ "$LOG_FILE" != "/dev/null" ]; then
+    echo "  - startup logfile: ${LOG_FILE}"
+  fi
   return 1
 }
 
