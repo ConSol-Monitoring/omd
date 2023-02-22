@@ -41,6 +41,9 @@ if($os =~ /centos 6/i) {
 TestUtils::test_command({ cmd => "/bin/su - $site -c 'ansible all -m ping -e 'ansible_python_interpreter=auto_silent' -i inventory'", like => '/localhost \| (?i:success)/' });
 TestUtils::test_command({ cmd => "/bin/su - $site -c 'ansible -i inventory -e 'ansible_python_interpreter=auto_silent' -a \"omd status\" localhost'", like => '/localhost \| (?i:FAILED) \| rc=1/', exit => 2 });
 
+TestUtils::test_command({ cmd => "/bin/su - $site -c 'omd start'", like => '/Starting apache\.+OK/', exit => 0 });
+TestUtils::test_command({ cmd => "/bin/su - $site -c 'ansible -i inventory -e 'ansible_python_interpreter=auto_silent' -a \"omd status\" localhost'", like => ['/Overall state:  running/', '/rc=0/'] });
+
 TestUtils::test_command({ cmd => $omd_bin." stop $site" });
 TestUtils::remove_test_site($site);
 
