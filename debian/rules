@@ -7,9 +7,6 @@
 # Uncomment this to turn on verbose mode.
 #export DH_VERBOSE=1
 
-# do not build dbgsym packages
-DEB_DH_STRIP_ARGS := --no-automatic-dbgsym
-
 _PWD=`pwd`
 
 include Makefile.omd
@@ -128,7 +125,7 @@ binary-arch: build install
 #	dh_undocumented
 	dh_installman
 	dh_link
-	dh_strip --exclude=waitmax --exclude=agent_modbus --exclude=.dbg --exclude=.local-chromium
+	dh_strip --no-automatic-dbgsym --exclude=waitmax --exclude=agent_modbus --exclude=.dbg --exclude=.local-chromium
 	dh_compress
 	dh_fixperms --exclude=node_modules
 #	dh_perl
