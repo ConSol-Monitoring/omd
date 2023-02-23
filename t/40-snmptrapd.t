@@ -15,7 +15,7 @@ BEGIN {
 
 chomp(my $os = qx(./distro));
 
-#plan( tests => 212 );
+plan( skip_all => "this test does not run inside docker" ) if TestUtils::is_docker();
 plan( skip_all => "this distribution does not run with systemd" ) if ! -x "/bin/systemctl";
 my $snmptrap = -x "/bin/snmptrap" ? "/bin/snmptrap" : -x "/usr/bin/snmptrap" ? "/usr/bin/snmptrap" : undef;
 plan( skip_all => "this server cannot send traps" ) if ! defined $snmptrap;

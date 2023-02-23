@@ -3085,6 +3085,7 @@ def finalize_site(what, apache_reload):
             # user. We also could do this at 'omd start', but this might confuse
             # users. They could create files below tmp which would be shadowed
             # by the mount.
+            save_site_conf()
             prepare_and_populate_tmpfs(g_sitename)
 
             # Run all hooks in order to setup things according to the

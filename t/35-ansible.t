@@ -24,6 +24,9 @@ my $site    = TestUtils::create_test_site() or TestUtils::bail_out_clean("no fur
 # is ansible installed?
 TestUtils::test_command({ cmd => "/bin/su - $site -c 'test -x bin/ansible'", like => '/^$/' });
 
+# use usermod to unlock the user, otherwise ssh does not allow login
+TestUtils::test_command({ cmd => "/usr/sbin/usermod -p test $site", like => '/.*/', errlike => '/.*/', exit => undef });
+
 # enable and test ssh to localhost
 TestUtils::test_command({ cmd => "/bin/su - $site -c 'mkdir .ssh'", like => '/^$/' });
 TestUtils::test_command({ cmd => "/bin/su - $site -c 'chmod 700 .ssh'", like => '/^$/' });

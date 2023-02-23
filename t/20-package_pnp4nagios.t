@@ -13,7 +13,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 178 );
+plan( tests => 192 );
 
 ##################################################
 # create our test site
@@ -32,7 +32,8 @@ TestUtils::test_command({ cmd => "/usr/bin/env sed -i -e 's/^perfdata_file_proce
 # prepare initial data
 TestUtils::test_command({ cmd => $omd_bin." start $site" });
 # submit a forced check, so we have initial perf data
-TestUtils::test_command({ cmd => "/bin/su - $site -c './lib/monitoring-plugins/check_http -H localhost -a omdadmin:omd -u /$site/thruk/cgi-bin/cmd.cgi -e 200 -P \"cmd_typ=7&cmd_mod=2&host=omd-$site&service=Dummy+Service&start_time=2010-11-06+09%3A46%3A02&force_check=on&btnSubmit=Commit\" -r \"Your command request was successfully submitted\"'", like => '/HTTP OK:/' });
+TestUtils::test_command({ cmd => "/bin/su - $site -c './lib/monitoring-plugins/check_http -H localhost -a omdadmin:omd -u /$site/thruk/cgi-bin/cmd.cgi -e 200 -P \"cmd_typ=7&cmd_mod=2&host=omd-$site&service=Dummy+Service&start_time=now&force_check=on\" -r \"Your command request was successfully submitted\"'", like => '/HTTP OK:/' });
+TestUtils::test_command({ cmd => "/bin/su - $site -c 'thruk r \"/csv/services?columns=has_been_checked&has_been_checked=1&host_name=omd-$site&description=Dummy+Service\"'", like => '/^1$/smx', waitfor => '^1$' });
 TestUtils::test_command({ cmd => "/bin/su - $site -c './etc/init.d/rrdcached flush'", like => '/flush.*OK/' });
 TestUtils::wait_for_file("/omd/sites/$site/var/pnp4nagios/perfdata/omd-$site/Dummy_Service_omd-dummy.rrd") or TestUtils::bail_out_clean("No need to test pnp without existing rrd");;
 
@@ -92,6 +93,8 @@ TestUtils::test_command({ cmd => $omd_bin." start $site" });
 # submit a forced check, so we have initial perf data
 TestUtils::test_command({ cmd => "/bin/su - $site -c './lib/monitoring-plugins/check_http -H localhost -a omdadmin:omd -u /$site/thruk/cgi-bin/cmd.cgi -e 200 -P \"cmd_typ=96&cmd_mod=2&host=omd-$site&start_time=2010-11-06+09%3A46%3A02&force_check=on\" -r \"Your command request was successfully submitted\"'", like => '/HTTP OK:/' });
 TestUtils::test_command({ cmd => "/bin/su - $site -c './lib/monitoring-plugins/check_http -H localhost -a omdadmin:omd -u /$site/thruk/cgi-bin/cmd.cgi -e 200 -P \"cmd_typ=7&cmd_mod=2&host=omd-$site&service=Dummy+Service&start_time=2010-11-06+09%3A46%3A02&force_check=on\" -r \"Your command request was successfully submitted\"'", like => '/HTTP OK:/' });
+TestUtils::test_command({ cmd => "/bin/su - $site -c 'thruk r \"/csv/services?columns=has_been_checked&has_been_checked=1&host_name=omd-$site&description=Dummy+Service\"'", like => '/^1$/smx', waitfor => '^1$' });
+TestUtils::test_command({ cmd => "/bin/su - $site -c './etc/init.d/rrdcached flush'", like => '/flush.*OK/' });
 TestUtils::wait_for_file("/omd/sites/$site/var/pnp4nagios/perfdata/omd-$site/Dummy_Service_omd-dummy.rrd") or TestUtils::bail_out_clean("No need to test pnp without existing rrd");;
 TestUtils::wait_for_file("/omd/sites/$site/var/pnp4nagios/perfdata/omd-$site/_HOST__omd-dummy.rrd") or TestUtils::bail_out_clean("No need to test pnp without existing rrd");;
 

@@ -297,7 +297,11 @@ sub create_test_site {
     if(scalar @{[glob('/omd/sites/*/.')]} >= 1) {
         $errlike = '/is in use/';
     }
-    if(test_command({ cmd => TestUtils::get_omd_bin()." create $site", errlike => $errlike })) {
+    my $createoptions = "";
+    if(`grep docker /proc/1/mountinfo 2>/dev/null | grep -c hosts` > 0) {
+        $createoptions = " --no-tmpfs ";
+    }
+    if(test_command({ cmd => TestUtils::get_omd_bin()." create $createoptions $site", errlike => $errlike })) {
         # disable cookie auth for tests
         my $omd_bin = TestUtils::get_omd_bin();
         print `$omd_bin config $site set THRUK_COOKIE_AUTH off`;
@@ -612,9 +616,9 @@ sub read_config {
 
 ##################################################
 
-=head2 config
+=head2 wait_for_file
 
-  return config value
+  wait for file to appear
 
 =cut
 sub wait_for_file {
@@ -1054,6 +1058,20 @@ sub get_external_ip {
     chomp($ip);
     ok($ip, "got external ip");
     return($ip);
+}
+
+##################################################
+
+=head2 is_docker
+
+  returns true if test runs in a docker container
+
+=cut
+sub is_docker {
+    if(`grep docker /proc/1/mountinfo 2>/dev/null | grep -c hosts` > 0) {
+        return 1;
+    }
+    return;
 }
 
 ##################################################

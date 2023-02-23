@@ -17,6 +17,7 @@ BUILD_PACKAGES       += git-buildpackage
 BUILD_PACKAGES       += golang                         # required to bootstrap go
 BUILD_PACKAGES       += gperf
 BUILD_PACKAGES       += help2man                       # required by naemon
+BUILD_PACKAGES       += iputils-ping                   # required by monitoring-plugins
 BUILD_PACKAGES       += libboost-all-dev
 BUILD_PACKAGES       += libc6-dev
 BUILD_PACKAGES       += libcurl4-openssl-dev           # needed by perl modules / thruk

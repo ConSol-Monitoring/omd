@@ -1,0 +1,45 @@
+From 84527bd6b7977c67f50c16c6bf22de0b8825a0ef Mon Sep 17 00:00:00 2001
+From: Sven Nierlein <sven@nierlein.de>
+Date: Thu, 23 Feb 2023 19:38:00 +0100
+Subject: [PATCH] fix too low thread stacksize
+
+thread stack size cannot be lower than PTHREAD_STACK_MIN. On some systems, ex.: debian 11 on aarch64, the lower limit is 1M. This results
+in lots of `livestatus: Error: Cannot set thread stack size to 65536` entries in the logfile.
+So lets check if the value is at least PTHREAD_STACK_MIN to avoid this error message.
+---
+ src/module.c | 8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
+
+diff --git a/src/module.c b/src/module.c
+index b8801ed..bffd4c5 100644
+--- a/src/module.c
++++ b/src/module.c
+@@ -140,7 +140,7 @@ static int accept_connection(int sd, int events, void *discard)
+     if (g_debug_level >= 2 && 0 == pthread_attr_getstacksize(&attr, &defsize))
+       logger(LG_INFO, "Default stack size is %lu", defsize);
+     if (0 != pthread_attr_setstacksize(&attr, g_thread_stack_size))
+-      logger(LG_INFO, "Error: Cannot set thread stack size to %lu", g_thread_stack_size);
++      logger(LG_INFO, "Error: Cannot set thread stack size to %lu: %s", g_thread_stack_size, strerror(errno));
+     else {
+       if (g_debug_level >= 2)
+         logger(LG_INFO, "Setting thread stack size to %lu", g_thread_stack_size);
+@@ -666,6 +666,10 @@ void livestatus_parse_arguments(const char *args_orig)
+             }
+             else if (!strcmp(left, "thread_stack_size")) {
+                 g_thread_stack_size = strtoul(right, 0, 10);
++                if(g_thread_stack_size < PTHREAD_STACK_MIN) {
++                    g_thread_stack_size = PTHREAD_STACK_MIN;
++                    logger(LG_INFO, "thread stacks cannot be lower than %lu", PTHREAD_STACK_MIN);
++                }
+                 logger(LG_INFO, "Setting size of thread stacks to %lu", g_thread_stack_size);
+             }
+             else if (!strcmp(left, "max_response_size")) {
+@@ -787,6 +791,8 @@ int nebmodule_init(int flags __attribute__ ((__unused__)), char *args, void *han
+     g_should_terminate = false;
+     g_client_threads = NULL;
+     g_num_client_threads = 0;
++    if(g_thread_stack_size < PTHREAD_STACK_MIN)
++        g_thread_stack_size = PTHREAD_STACK_MIN;
+     initialize_logger();
+     livestatus_parse_arguments(args);
+     open_logfile();

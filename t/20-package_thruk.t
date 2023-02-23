@@ -13,7 +13,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 987 );
+plan( tests => 996 );
 
 ##################################################
 # create our test site
@@ -220,7 +220,9 @@ for my $core (qw/naemon/) {
     unlink("/omd/sites/$site/tmp/thruk/thruk.cache");
     unlink("/omd/sites/$site/var/thruk/obj_retention.dat");
 
-    TestUtils::test_command({ cmd => "/bin/su - $site -c './bin/thruk -A omdadmin \"cmd.cgi?cmd_typ=7&cmd_mod=2&host=omd-$site&service=Dummy+Service&start_time=now&force_check=on&btnSubmit=Commit\" --local'", like => '/command request was successfully submitted/', errlike => '/cmd: COMMAND/' });
+    TestUtils::test_command({ cmd => "/bin/su - $site -c './bin/thruk -A omdadmin \"cmd.cgi?cmd_typ=7&cmd_mod=2&host=omd-$site&service=Dummy+Service&start_time=now&force_check=on\" --local'", like => '/command request was successfully submitted/', errlike => '/cmd: COMMAND/' });
+    TestUtils::test_command({ cmd => "/bin/su - $site -c 'thruk r \"/csv/services?columns=has_been_checked&has_been_checked=1&host_name=omd-$site&description=Dummy+Service\"'", like => '/^1$/smx', waitfor => '^1$' });
+    TestUtils::test_command({ cmd => "/bin/su - $site -c './etc/init.d/rrdcached flush'", like => '/flush.*OK/' });
     TestUtils::wait_for_file("/omd/sites/$site/var/pnp4nagios/perfdata/omd-$site/Dummy_Service_omd-dummy.rrd", 240) or TestUtils::bail_out_clean("No need to test Thruk without working pnp");;
 
     for my $test (@{$tests}) {
