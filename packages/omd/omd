@@ -1888,7 +1888,16 @@ def check_status(sitename, display=True, daemon=None, bare=False):
     num_unused = 0
     num_stopped = 0
     uid = pwd.getpwnam(g_sitename).pw_uid
-    processlist = [{'pid': process.pid, 'name': process.name(), 'cmdline': " ".join(process.cmdline())} for process in psutil.process_iter() if process.uids().real == uid]
+    processlist = []
+    for process in psutil.process_iter():
+        try:
+            if process.uids().real != uid:
+                continue
+            processlist.append({'pid': process.pid, 'name': process.name(), 'cmdline': " ".join(process.cmdline())})
+        except psutil.NoSuchProcess as e:
+            # that's fine, probably short lived process or just exited
+            continue
+
     site_config = parse_site_conf(sitename)
     rc_dir, scripts = init_scripts(sitename)
     components = [ s.split('-', 1)[-1] for s in scripts ]
