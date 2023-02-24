@@ -5,7 +5,7 @@
 # DEPENDS:  CONFIG_MOD_GEARMAN = on
 # DEPENDS:  CONFIG_PNP4NAGIOS = gearman
 # BINARY:   lib/pnp4nagios/process_perfdata.pl
-# ARGMATCH: etc/pnp4nagios/process_perfdata.cfg.*--gearman=.*--daemon
+# ARGMATCH: --daemon
 ### END INIT INFO
 
 # Check if Mod-Gearman is enabled in OMD. If not terminate.
