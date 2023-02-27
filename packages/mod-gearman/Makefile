@@ -29,6 +29,7 @@ install:
 	install -m 0755 calculate_required_worker           $(DESTDIR)$(OMD_ROOT)/bin/
 	install -m 0755 $(DIR)/gearman_top                  $(DESTDIR)$(OMD_ROOT)/bin/
 	install -m 0755 $(DIR)/send_gearman                 $(DESTDIR)$(OMD_ROOT)/bin/
+	install -m 0755 $(DIR)/send_multi                   $(DESTDIR)$(OMD_ROOT)/bin/
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/monitoring-plugins
 	install -m 0755 $(DIR)/check_gearman                $(DESTDIR)$(OMD_ROOT)/lib/monitoring-plugins/
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/mod_gearman
