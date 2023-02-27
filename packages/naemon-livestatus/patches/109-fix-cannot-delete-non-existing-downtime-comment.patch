@@ -1,0 +1,70 @@
+From 708c82a9abe2d4ebb8a06630076075f8556e605d Mon Sep 17 00:00:00 2001
+From: Sven Nierlein <sven@consol.de>
+Date: Mon, 27 Feb 2023 15:43:55 +0100
+Subject: [PATCH] avoid Cannot delete non-existing downtime/comment error
+ during startup
+
+During startup it is ok that some downtimes do not yet exists, for example
+if a host/service has been removed but still had downtimes.
+So start logging this as a info message after the eventloop has started.
+
+Signed-off-by: Sven Nierlein <sven@consol.de>
+---
+ src/TableDownComm.cc | 8 ++++++--
+ src/module.c         | 3 +++
+ 2 files changed, 9 insertions(+), 2 deletions(-)
+
+diff --git a/src/TableDownComm.cc b/src/TableDownComm.cc
+index 90cec6e..f3a6f25 100644
+--- a/src/TableDownComm.cc
++++ b/src/TableDownComm.cc
+@@ -36,6 +36,8 @@
+ #include <pthread.h>
+ #include <string.h>
+ 
++extern int g_eventloopstarted;
++
+ TableDownComm::TableDownComm(bool is_downtime)
+ {
+     int err;
+@@ -197,8 +199,10 @@ void TableDownComm::remove(unsigned id)
+     }
+ 
+     it = _entries.find(id);
+-    if (it == _entries.end())
+-        logger(LG_INFO, "Cannot delete non-existing downtime/comment %u", id);
++    if (it == _entries.end()) {
++        if(g_eventloopstarted)
++            logger(LG_INFO, "Cannot delete non-existing downtime/comment %u", id);
++    }
+     else {
+         delete it->second;
+         _entries.erase(it);
+diff --git a/src/module.c b/src/module.c
+index bffd4c5..79cbecd 100644
+--- a/src/module.c
++++ b/src/module.c
+@@ -97,6 +97,7 @@ int g_service_authorization = AUTH_LOOSE;
+ int g_group_authorization = AUTH_STRICT;
+ int g_data_encoding = ENCODING_UTF8;
+ time_t g_last_log_rotation = -1;
++int g_eventloopstarted = false;
+ 
+ void *client_thread(void *data __attribute__ ((__unused__)));
+ 
+@@ -487,6 +488,7 @@ int broker_process(int event_type __attribute__ ((__unused__)), void *data)
+     int ret;
+     struct nebstruct_process_struct *ps = (struct nebstruct_process_struct *)data;
+     if (ps->type == NEBTYPE_PROCESS_EVENTLOOPSTART) {
++        g_eventloopstarted = true;
+         update_timeperiods_cache(time(0));
+         do_statistics();
+         if (0 != (ret = iobroker_register(nagios_iobs, g_socket_fd, NULL, accept_connection))) {
+@@ -793,6 +795,7 @@ int nebmodule_init(int flags __attribute__ ((__unused__)), char *args, void *han
+     g_num_client_threads = 0;
+     if(g_thread_stack_size < PTHREAD_STACK_MIN)
+         g_thread_stack_size = PTHREAD_STACK_MIN;
++    g_eventloopstarted = false;
+     initialize_logger();
+     livestatus_parse_arguments(args);
+     open_logfile();
