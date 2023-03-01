@@ -5031,7 +5031,7 @@ if not cmd_spec.no_suid and g_sitename and os.getuid() == 0 and not cmd_spec.onl
             break
 
 # Make sure environment is in a defined state
-if g_sitename:
+if g_sitename and command != "rm":
     clear_environment()
     set_environment()
 
