@@ -3755,12 +3755,15 @@ def prepare_dry_run_update_path(dry_run_path, from_version, to_version):
         bail_out(tty_error + ": Cannot create tmp directory for dry-run update.")
 
     # create empty files for all files which exist in the current site to simulate ex.: non empty obsolete folders
-    for (root,dirs,files) in os.walk('.'):
+    for (root,dirs,files) in os.walk('.', topdown=True):
         if root.startswith("./"):
             root = root[2:]
-        # skip folders which eiter neither in old or new skel
+        # skip folders which are neither in old or new skel to avoid deep recursion into custom folder
         if not os.path.lexists(os.path.join(from_skel_path, root)) and not os.path.lexists(os.path.join(to_skel_path, root)):
             continue
+        for dir in dirs:
+            if not os.path.lexists(os.path.join(from_skel_path,root, dir)) and not os.path.lexists(os.path.join(to_skel_path, root, dir)):
+                dirs.remove(dir)
         for dir in dirs:
             dir = os.path.join(root, dir)
             if not os.path.lexists(os.path.join(dry_run_path, dir)):
