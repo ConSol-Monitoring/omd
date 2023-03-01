@@ -5,11 +5,15 @@
 # This script prepares the site to fix some known issues which causes update conflicts.
 # It will be run prior the update process with the new OMD.
 
-cd $OMD_UPDATE_BASE
+cd $OMD_UPDATE_BASE || exit 1
 umask 0022
 
 NEW_VERSION=$OMD_UPDATE_TO_VERSION
 OLD_VERSION=$OMD_UPDATE_FROM_VERSION
+if [ -z "$NEW_VERSION" -o -z "$OLD_VERSION" ]; then
+    echo "missing environment, please set at least OMD_UPDATE_TO_VERSION and OMD_UPDATE_FROM_VERSION"
+    exit 1
+fi
 # convert version to int so we can compare it in bash
 # version 2.20 becomes 220
 MAJOR=${OLD_VERSION%%.*}

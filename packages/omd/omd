@@ -4206,6 +4206,9 @@ def main_restore(args, options={}):
             to_version = OMD_VERSION
             sys.stdout.write("\nUpdating site %s from %s to version %s...\n" % (g_sitename, from_version, to_version))
 
+            putenv("OMD_UPDATE_FROM_VERSION", from_version)
+            putenv("OMD_UPDATE_TO_VERSION", to_version)
+            putenv("OMD_UPDATE_BASE", g_sitedir)
             if not call_scripts('pre-update', prefix=("/omd/versions/%s" % to_version)):
                 sys.stdout.write("update canceled by pre-update script\n\n")
                 sys.exit(1)
