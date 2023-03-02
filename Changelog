@@ -1,5 +1,9 @@
 This file documents the revision history for the Open Monitoring Distribution (Labs Edition)
 
+next:
+          - Gearman:
+            - update mod-gearman-worker-go to 1.3.2
+
 5.10     Feb 20 2023
           - OMD:
             - omd order of options can now be set before or after the command, ex.: omd status -b
