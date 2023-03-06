@@ -213,7 +213,7 @@ __generic_init_wait_start() {
   fi
 
   if [ -z "$PID_FILE" ]; then
-    if [ -z "$PID" ] || ! kill -0 $PID; then
+    if [ -z "$PID" ] || ! kill -0 $PID >/dev/null 2>&1; then
       __generic_init_wait_start_failed
       return 1
     fi
@@ -222,7 +222,7 @@ __generic_init_wait_start() {
   fi
 
   if [ -n "$STORE_PID" ]; then
-    if [ -z "$PID" ] || ! kill -0 $PID; then
+    if [ -z "$PID" ] || ! kill -0 $PID >/dev/null 2>&1; then
       __generic_init_wait_start_failed
       return 1
     fi
@@ -248,7 +248,7 @@ __generic_init_wait_start() {
     fi
     # test if there is a pid at all
     PID=$(__generic_init_pid)
-    if [ -z "$PID" ] || ! kill -0 "$PID"; then
+    if [ -z "$PID" ] || ! kill -0 "$PID" >/dev/null 2>&1; then
       if [ $COUNTER -lt 80 ]; then
         __generic_init_wait_start_failed
         return 1
