@@ -1,0 +1,150 @@
+From f9e5823a9d7050b7dbbe4d7d8eca9db3c2a79d5e Mon Sep 17 00:00:00 2001
+From: Sven Nierlein <sven@consol.de>
+Date: Thu, 9 Mar 2023 14:07:18 +0100
+Subject: [PATCH] add column groups to contacts table
+
+Right now if you want to know the groups of a contact you would have to query the contactgroups table and filter by members. This PR add a groups list to the contacts table.
+
+Signed-off-by: Sven Nierlein <sven@consol.de>
+---
+ src/ContactgroupsObjectlistColumn.cc | 60 ++++++++++++++++++++++++++++
+ src/ContactgroupsObjectlistColumn.h  | 26 ++++++++++++
+ src/Makefile.am                      |  3 +-
+ src/TableContacts.cc                 |  3 ++
+ 4 files changed, 91 insertions(+), 1 deletion(-)
+ create mode 100644 src/ContactgroupsObjectlistColumn.cc
+ create mode 100644 src/ContactgroupsObjectlistColumn.h
+
+diff --git a/src/ContactgroupsObjectlistColumn.cc b/src/ContactgroupsObjectlistColumn.cc
+new file mode 100644
+index 0000000..469af9f
+--- /dev/null
++++ b/src/ContactgroupsObjectlistColumn.cc
+@@ -0,0 +1,60 @@
++#include "ContactgroupsObjectlistColumn.h"
++#include "nagios.h"
++#include "Query.h"
++
++objectlist *ContactgroupsObjectlistColumn::getData(void *data)
++{
++    if (data) {
++        data = shiftPointer(data);
++        if (data)
++            return *(objectlist **)((char *)data + _offset);
++    }
++    return 0;
++}
++
++void ContactgroupsObjectlistColumn::output(void *data, Query *query)
++{
++    query->outputBeginList();
++    objectlist *list = getData(data);
++    if (list) {
++        bool first = true;
++        while (list) {
++            contactgroup *sg = (contactgroup *)list->object_ptr;
++            if (!first)
++                query->outputListSeparator();
++            else
++                first = false;
++            query->outputString(sg->group_name);
++            list = list->next;
++        }
++    }
++    query->outputEndList();
++}
++
++void *ContactgroupsObjectlistColumn::getNagiosObject(char *name)
++{
++    return find_contactgroup(name);
++}
++
++bool ContactgroupsObjectlistColumn::isNagiosMember(void *data, void *nagobject)
++{
++    if (!nagobject || !data)
++        return false;
++
++    // data is already shifted (_indirect_offset is taken into account)
++    // But _offset needs still to be accounted for
++    objectlist *list = *(objectlist **)((char *)data + _offset);
++
++    while (list) {
++        if (list->object_ptr == nagobject)
++            return true;
++        list = list->next;
++    }
++    return false;
++}
++
++bool ContactgroupsObjectlistColumn::isEmpty(void *data)
++{
++    objectlist *list = *(objectlist **)((char *)data + _offset);
++    return list == 0;
++}
+diff --git a/src/ContactgroupsObjectlistColumn.h b/src/ContactgroupsObjectlistColumn.h
+new file mode 100644
+index 0000000..be0c7e5
+--- /dev/null
++++ b/src/ContactgroupsObjectlistColumn.h
+@@ -0,0 +1,26 @@
++#ifndef ContactgroupsObjectlistColumn_h
++#define ContactgroupsObjectlistColumn_h
++
++#include "config.h"
++
++#include "ListColumn.h"
++#include "nagios.h"
++
++class ContactgroupsObjectlistColumn : public ListColumn
++{
++    int _offset;
++public:
++    ContactgroupsObjectlistColumn(string name, string description, int offset, int indirect_offset)
++        : ListColumn(name, description, indirect_offset), _offset(offset) {}
++    int type() { return COLTYPE_LIST; }
++    void output(void *, Query *);
++    void *getNagiosObject(char *name); // return pointer to host group
++    bool isNagiosMember(void *data, void *nagobject);
++    bool isEmpty(void *data);
++private:
++    objectlist *getData(void *);
++};
++
++
++
++#endif // ContactgroupsObjectlistColumn_h
+diff --git a/src/Makefile.am b/src/Makefile.am
+index 40b0983..2a13f32 100644
+--- a/src/Makefile.am
++++ b/src/Makefile.am
+@@ -55,7 +55,8 @@ livestatus_la_SOURCES = \
+ 	TimeperiodExclusionColumn.cc TimeperiodDaysColumn.cc TimeperiodExceptionsColumn.cc pnp4nagios.cc \
+ 	HostlistDependencyColumn.cc HostlistDependencyColumnFilter.cc \
+ 	ServicelistDependencyColumn.cc ServicelistDependencyColumnFilter.cc \
+-	ContactgroupsColumn.cc RowSortedSet.cc HostServiceState.cc opids.cc auth.cc
++	ContactgroupsColumn.cc RowSortedSet.cc HostServiceState.cc opids.cc auth.cc \
++	ContactgroupsObjectlistColumn.cc
+ 
+ if HAVE_DIET
+ 	diet -v $(CC) -x c -Wno-deprecated-declarations $(CFLAGS) $(LDFLAGS) -I.. -s -o $@ $^
+diff --git a/src/TableContacts.cc b/src/TableContacts.cc
+index 0ac56a7..858d3c4 100644
+--- a/src/TableContacts.cc
++++ b/src/TableContacts.cc
+@@ -30,6 +30,7 @@
+ #include "OffsetTimeperiodColumn.h"
+ #include "AttributelistColumn.h"
+ #include "CustomVarsColumn.h"
++#include "ContactgroupsObjectlistColumn.h"
+ 
+ TableContacts::TableContacts()
+ {
+@@ -83,6 +84,8 @@ void TableContacts::addColumns(Table *table, string prefix, int indirect_offset)
+                 "A bitmask specifying which attributes have been modified", (char *)(&ctc.modified_attributes) - ref, indirect_offset, false));
+     table->addColumn(new AttributelistColumn(prefix + "modified_attributes_list",
+                 "A list of all modified attributes", (char *)(&ctc.modified_attributes) - ref, indirect_offset, true));
++    table->addColumn(new ContactgroupsObjectlistColumn(prefix + "groups",
++                "A list of all contact groups this contact is in", (char *)(&ctc.contactgroups_ptr) - ref, indirect_offset));
+ 
+     table->clearNatSort();
+     table->addNatSort( prefix + "name" );
