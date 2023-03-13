@@ -137,9 +137,9 @@ if [ $ACTIVATE_INIT -eq 1 ]; then
     if test -e /omd/versions/default/share/omd/omd.service; then
         ln -sfn /omd/versions/default/share/omd/omd.service %{_unitdir}/omd.service
         %systemd_post omd.service
+        systemctl daemon-reload
         systemctl disable omd.service
         systemctl enable omd.service
-        systemctl daemon-reload
     fi
 %endif
 fi
@@ -246,8 +246,8 @@ if [ -n "$v" ]; then
 if test -e /omd/versions/default/share/omd/omd.service; then
     ln -sfn /omd/versions/default/share/omd/omd.service %{_unitdir}/omd.service
     %systemd_post omd.service
-    systemctl enable omd.service
     systemctl daemon-reload
+    systemctl enable omd.service
 fi
 %endif
 else
