@@ -12,7 +12,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 468 );
+plan( tests => 474 );
 
 my $omd_bin = TestUtils::get_omd_bin();
 
@@ -66,6 +66,7 @@ my $tests = [
   { cmd => $omd_bin." -h",           like => '/General Options/', exit => 1  },
   { cmd => $omd_bin." help version", like => ['/Options for.*version.*command/', '/output plain text/'], exit => 1  },
   { cmd => $omd_bin." versions",     like => '/^\d+\.\d+( \(default\))?/'  },
+  { cmd => $omd_bin." diag check",   like => '/Running system checks/', exit => undef  },
   { cmd => $omd_bin." rm $site",     stdin => "yes\n", 'exit' => undef, errlike => undef },
   { cmd => $omd_bin." rm $site2",    stdin => "yes\n", 'exit' => undef, errlike => undef },
   { cmd => $omd_bin." rm $site2",    stdin => "yes\n", 'exit' => undef, errlike => undef },
@@ -94,6 +95,7 @@ my $tests = [
                                                 '/Overall state:\s*running/',
                                                ]
   },
+  { cmd => $omd_bin." diag $site check", like => '/Running system checks/', exit => undef  },
   { cmd => $omd_bin." stop $site",       like => '/Stopping naemon/' },
   { cmd => $omd_bin." cp $site $site2",  like => '/Copying site '.$site.' to '.$site2.'.../',
                                          errlike => '/Apache port \d+ is in use\. I\'ve choosen \d+ instead\./' },
