@@ -3224,6 +3224,12 @@ def main_diag(args, options={}):
                 'Here you find some support options.',
                 options
             )
+        if os.getuid() != 0:
+            g_sitename = site_name()
+            g_sitedir = site_dir(g_sitename)
+            clear_environment()
+            set_site_globals()
+            set_environment()
         if choice == 'exit':
             ask_again = False
         if choice == 'check':
