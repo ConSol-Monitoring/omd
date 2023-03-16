@@ -18,7 +18,7 @@ mkdir -p $OMD_ROOT/var/pushgateway/data
 NAME=pushgateway
 DAEMON=$OMD_ROOT/bin/pushgateway
 LOG_DIR=$OMD_ROOT/var/pushgateway
-LOGFILE=$OMD_ROOT/var/pushgateway/pushgateway.log
+LOG_FILE=$OMD_ROOT/var/pushgateway/pushgateway.log
 DATA_DIR=$OMD_ROOT/var/pushgateway/data
 PID_FILE=$OMD_ROOT/tmp/run/pushgateway.pid
 EXTERNAL_FQDN=${OMD_EXTERNAL_FQDN:-$(hostname --fqdn)}
