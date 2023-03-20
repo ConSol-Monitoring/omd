@@ -31,43 +31,49 @@ case "$1" in
     ;;
 
     purge)
-      ALTERNATIVES=`update-alternatives --list omd 2>/dev/null | egrep -v 'No alternatives'` || /bin/true
-      if [ -z "$ALTERNATIVES" ]; then
-	  echo "Removing system group 'omd'"
-	  groupdel omd || true
-	  echo "Removing global links/directories"
-	  # rm -f /usr/bin/omd # -> alternatives
-	  # rm -f /usr/share/man/man8/omd.8.gz # -> alternatives
-	  # rm -f /etc/init.d/omd # -> alternatives
-	  rm -f /etc/default/omd
-          if test -d /etc/apache2/conf-available; then
-            # On e.g. ubuntu 13.10 conf.d is not used anymore, use conf-available
-            APACHE_OMD_CONF="/etc/apache2/conf-available/zzz_omd.conf"
-          fi
-	  ! test -x /usr/sbin/a2disconf || a2disconf zzz_omd
-	  rm -f "$APACHE_OMD_CONF"
-          rm -f "$SYSCTL_OMD_CONF"
-      ls -1 /etc/apache2/sites-available/*default*.conf 2>/dev/null | \
-        while read file; do
-          if grep /omd/apache/ $file >/dev/null 2>&1; then
-            sed -i -e '/Include.*\/omd\/apache/d' $file
-          fi
-        done
-	  rm -f /omd
-	  # Try to remove empty directories
-	  if test -d /opt/omd/versions; then
-	    rmdir --ignore-fail-on-non-empty /opt/omd/versions
-	  fi
-	  if test -d /opt/omd/sites; then
-	    rmdir --ignore-fail-on-non-empty /opt/omd/sites
-	  fi
-	  if test -d /opt/omd/apache; then
-	    rmdir --ignore-fail-on-non-empty /opt/omd/apache
-	  fi
-	  if test -d /opt/omd; then
-	    rmdir --ignore-fail-on-non-empty /opt/omd
-	  fi
-
+        ALTERNATIVES=`update-alternatives --list omd 2>/dev/null | egrep -v 'No alternatives'` || /bin/true
+        if [ -z "$ALTERNATIVES" ]; then
+            echo "Removing system group 'omd'"
+            groupdel omd || true
+            echo "Removing global links/directories"
+            # rm -f /usr/bin/omd # -> alternatives
+            # rm -f /usr/share/man/man8/omd.8.gz # -> alternatives
+            # rm -f /etc/init.d/omd # -> alternatives
+            rm -f /etc/default/omd
+            if test -d /etc/apache2/conf-available; then
+                # On e.g. ubuntu 13.10 conf.d is not used anymore, use conf-available
+                APACHE_OMD_CONF="/etc/apache2/conf-available/zzz_omd.conf"
+            fi
+            ! test -x /usr/sbin/a2disconf || a2disconf zzz_omd
+            rm -f "$APACHE_OMD_CONF"
+            rm -f "$SYSCTL_OMD_CONF"
+            ls -1 /etc/apache2/sites-available/*default*.conf 2>/dev/null | \
+              while read file; do
+                if grep /omd/apache/ $file >/dev/null 2>&1; then
+                  sed -i -e '/Include.*\/omd\/apache/d' $file
+                fi
+              done
+            rm -f /omd
+            # Try to remove empty directories
+            if test -d /opt/omd/versions; then
+                rmdir --ignore-fail-on-non-empty /opt/omd/versions
+            fi
+            if test -d /opt/omd/sites; then
+                rmdir --ignore-fail-on-non-empty /opt/omd/sites
+            fi
+            if test -d /opt/omd/apache; then
+                rmdir --ignore-fail-on-non-empty /opt/omd/apache
+            fi
+            if test -d /opt/omd; then
+                rmdir --ignore-fail-on-non-empty /opt/omd
+            fi
+      else
+        if [ -d /usr/lib/systemd/system/. ]; then
+            rm -f /usr/lib/systemd/system/omd.service
+            cp -fp /omd/versions/default/share/omd/omd.service /usr/lib/systemd/system/omd.service
+            systemctl daemon-reload
+            systemctl enable omd.service
+        fi
       fi
     ;;
 

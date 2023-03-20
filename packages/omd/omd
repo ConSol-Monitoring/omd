@@ -3254,7 +3254,7 @@ def main_diag(args, options={}):
             sys.stdout.write(tty_bold + "System:" + tty_normal+"\n")
             # check omd systemctl status
             # exit code 3 mean not active but loaded (https://www.freedesktop.org/software/systemd/man/systemctl.html#Exit%20status)
-            if os.system('/bin/systemctl status omd.service >/dev/null 2>&1') >> 8 == 3:
+            if os.system('/bin/systemctl status omd.service >/dev/null 2>&1') >> 8 in [0, 3]:
                 sys.stdout.write("  " + tty_ok + " service: omd\n")
             else:
                 sys.stdout.write("  " + tty_error + " service: omd failed, autostart on reboot won't work\n")

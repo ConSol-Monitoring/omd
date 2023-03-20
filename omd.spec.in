@@ -132,17 +132,17 @@ ln -sfn /omd/versions/default/lib/omd/omd_bash_completion /etc/bash_completion.d
 if [ $ACTIVATE_INIT -eq 1 ]; then
     chkconfig --add omd >/dev/null 2>&1
     chkconfig omd on >/dev/null 2>&1
+fi
 
 %if 0%{?_unitdir:1}
     if test -e /omd/versions/default/share/omd/omd.service; then
-        ln -sfn /omd/versions/default/share/omd/omd.service %{_unitdir}/omd.service
+        rm -f %{_unitdir}/omd.service
+        cp -fp /omd/versions/default/share/omd/omd.service %{_unitdir}/omd.service
         %systemd_post omd.service
         systemctl daemon-reload
-        systemctl disable omd.service
         systemctl enable omd.service
     fi
 %endif
-fi
 
 
 
@@ -235,6 +235,7 @@ if [ $1 = 0 ] ; then
 rm -rf /omd/versions/%{version}
 rm -f /omd/versions/default
 %if 0%{?_unitdir:1}
+rm -f %{_unitdir}/omd.service
 %systemd_postun omd.service
 systemctl daemon-reload
 %endif
@@ -244,7 +245,8 @@ if [ -n "$v" ]; then
     ln -sfn "$v" /omd/versions/default
 %if 0%{?_unitdir:1}
 if test -e /omd/versions/default/share/omd/omd.service; then
-    ln -sfn /omd/versions/default/share/omd/omd.service %{_unitdir}/omd.service
+    rm -f %{_unitdir}/omd.service
+    cp -fp /omd/versions/default/share/omd/omd.service %{_unitdir}/omd.service
     %systemd_post omd.service
     systemctl daemon-reload
     systemctl enable omd.service
