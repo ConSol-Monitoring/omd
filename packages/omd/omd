@@ -3227,86 +3227,40 @@ def main_diag(args, options={}):
         if os.getuid() != 0:
             g_sitename = site_name()
             g_sitedir = site_dir(g_sitename)
+        if g_sitename and site_exists(g_sitename):
             clear_environment()
             set_site_globals()
             set_environment()
         if choice == 'exit':
             ask_again = False
         if choice == 'check':
+            for key, val in g_info.items():
+                putenv("OMD_DIST_"+key, val)
             sys.stdout.write(tty_bold + "Running system checks:" + tty_normal+"\n")
             sys.stdout.write(("-"*50) +"\n")
             sys.stdout.write(tty_bold + "Versions:" + tty_normal+"\n")
-            sys.stdout.write("     OMD:    %s\n" % OMD_VERSION)
-            sys.stdout.write("     Python: %s\n" % ".".join(str(x) for x in sys.version_info[:3]))
-            perlversion = "unknown"
-            try:
-                perlversion = subprocess.run("perl -e 'print $^V'", shell=True, stdout=subprocess.PIPE, timeout=10).stdout
-            except Exception:
-                pass
-            sys.stdout.write("     Perl:   %s\n" % perlversion.decode("utf-8"))
-            phpversion = "unknown"
-            try:
-                phpversion = subprocess.run("/bin/sh -c 'php -v | head -n 1'", shell=True, stdout=subprocess.PIPE, timeout=10).stdout
-            except Exception:
-                pass
-            sys.stdout.write("     PHP:    %s\n" % phpversion.rstrip().decode("utf-8"))
+            path = "/omd/versions/%s/lib/omd/scripts/diag" % OMD_VERSION
+            scripts = os.listdir(path)
+            scripts.sort()
+            for f in scripts:
+                if not f.startswith("version_"):
+                    continue
+                errors += call_diag_script('%s/%s' % (path, f))
 
+            sys.stdout.write(("-"*50) +"\n")
             sys.stdout.write(tty_bold + "System:" + tty_normal+"\n")
-            # check omd systemctl status
-            # exit code 3 mean not active but loaded (https://www.freedesktop.org/software/systemd/man/systemctl.html#Exit%20status)
-            if os.system('/bin/systemctl status omd.service >/dev/null 2>&1') >> 8 in [0, 3]:
-                sys.stdout.write("  " + tty_ok + " service: omd\n")
-            else:
-                sys.stdout.write("  " + tty_error + " service: omd failed, autostart on reboot won't work\n")
-                errors += 1
+            for f in scripts:
+                if not f.startswith("system_"):
+                    continue
+                errors += call_diag_script('%s/%s' % (path, f))
 
-            # check apache status
-            if os.system(init_cmd(g_info['APACHE_INIT_NAME'], 'status') + ' >/dev/null 2>&1') >> 8 == 0:
-                sys.stdout.write("  " + tty_ok + " service: apache\n")
-            else:
-                sys.stdout.write("  " + tty_error + " service: apache\n")
-                errors += 1
-
-            for path in [
-                "/omd",
-                g_info["APACHE_CONF_DIR"] + "/zzz_omd.conf",
-                "/usr/bin/omd",
-                ]:
-                if os.path.exists(path):
-                    sys.stdout.write("  " + tty_ok + " file exists: %s\n" % path)
-                else:
-                    sys.stdout.write("  " + tty_error + " file exists: %s\n" % path)
-                    errors += 1
-
-            if g_sitename:
+            if g_sitename and site_exists(g_sitename):
+                sys.stdout.write(("-"*50) +"\n")
                 sys.stdout.write(tty_bold + ("Site %s:" % g_sitename) + tty_normal+"\n")
-                if not site_exists(g_sitename):
-                    sys.stdout.write("  " + tty_error + " site %s does not exist\n" % g_sitename)
-                    errors += 1
-                else:
-                    for path in [
-                        "/omd/sites/%s" % g_sitename,
-                        "/omd/apache/%s.conf" % g_sitename,
-                        "/omd/apache/%s.include" % g_sitename,
-                        ]:
-                        if os.path.exists(path):
-                            sys.stdout.write("  " + tty_ok + " file exists: %s\n" % path)
-                        else:
-                            sys.stdout.write("  " + tty_error + " file exists: %s\n" % path)
-                            errors += 1
-                    # check version links
-                    for path in [ "bin", "include", "lib", "share", "version", ]:
-                        if os.path.islink(g_sitedir + "/" + path):
-                            sys.stdout.write("  " + tty_ok + " link exists: %s/%s\n" % (g_sitedir, path))
-                        else:
-                            sys.stdout.write("  " + tty_error + " link exists: %s/%s link\n" % (g_sitedir, path))
-                            errors += 1
-                    # check site status
-                    if site_is_running(g_sitename):
-                        sys.stdout.write("  " + tty_ok + " site omd status\n")
-                    else:
-                        sys.stdout.write("  " + tty_error + " site omd status\n")
-                        errors += 1
+                for f in scripts:
+                    if not f.startswith("site_"):
+                        continue
+                    errors += call_diag_script('%s/%s' % (path, f))
 
             # print summary
             sys.stdout.write(("-"*50) +"\n")
@@ -3320,6 +3274,30 @@ def main_diag(args, options={}):
     if errors > 0:
         sys.exit(1)
     sys.exit(0)
+
+# diag scripts can either set the exit code to != 0 to indicate an error
+# or prefix each line with OK, ERROR or VERSION
+def call_diag_script(script):
+    errors = 0
+    p = subprocess.Popen([script], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    exitcode = p.wait()
+    output = p.communicate()
+    for line in output[0].decode("UTF-8").splitlines():
+        if line.startswith("OK"):
+            sys.stdout.write("  " + tty_ok + " %s\n" % line[3:])
+        elif line.startswith("ERROR"):
+            sys.stdout.write("  " + tty_error + " %s\n" % line[6:])
+            errors += 1
+        elif line.startswith("VERSION"):
+            info = re.split(r'\s+', line[8:], 1)
+            sys.stdout.write('     %-7s %s\n' % (info[0].strip(), info[1].strip()))
+        elif exitcode == 0:
+            sys.stdout.write("  " + tty_ok + " %s\n" % line)
+        else:
+            sys.stdout.write("  " + tty_error + " %s\n" % line)
+            errors += 1
+    sys.stderr.write(output[1].decode("UTF-8"))
+    return(errors)
 
 def set_conflict_option(options):
     global opt_conflict

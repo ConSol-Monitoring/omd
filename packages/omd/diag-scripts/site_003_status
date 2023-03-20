@@ -1,0 +1,10 @@
+#!/bin/bash
+
+omd status $OMD_SITE -b | grep -v ^OVERALL | \
+while read NAME RC; do
+    if [ $RC -eq 0 ]; then
+        echo "OK omd status: $NAME"
+    else
+        echo "ERROR omd status: $NAME"
+    fi
+done

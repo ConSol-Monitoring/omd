@@ -1,0 +1,3 @@
+#!/bin/bash
+
+echo "VERSION Python: $(python3 -V | awk '{ print $2 }')"

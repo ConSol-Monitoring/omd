@@ -1,0 +1,13 @@
+#!/bin/bash
+
+DIR=
+DIR+=" /omd/sites/$OMD_SITE"
+DIR+=" /omd/apache/$OMD_SITE.conf"
+DIR+=" /omd/apache/$OMD_SITE.include"
+for path in $DIR; do
+    if test -e $path; then
+        echo "OK file exists: $path"
+    else
+        echo "ERROR file exists: $path"
+    fi
+done

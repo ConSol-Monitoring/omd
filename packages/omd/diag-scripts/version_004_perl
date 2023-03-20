@@ -1,0 +1,5 @@
+#!/usr/bin/env perl
+
+my $v = $^V;
+$v =~ s/^v//gmx;
+printf("VERSION Perl: %s", $v);

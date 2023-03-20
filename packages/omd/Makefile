@@ -47,6 +47,9 @@ install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/omd/scripts/post-create
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/omd/scripts/pre-update
 	install -m 755 omd.pre-update $(DESTDIR)$(OMD_ROOT)/lib/omd/scripts/pre-update/omd
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/omd/scripts/diag
+	rsync -a diag-scripts/. $(DESTDIR)$(OMD_ROOT)/lib/omd/scripts/diag/.
+	chmod 755 $(DESTDIR)$(OMD_ROOT)/lib/omd/scripts/diag/*
 
 skel:
 	install -m 644 gitignore $(SKEL)/.gitignore

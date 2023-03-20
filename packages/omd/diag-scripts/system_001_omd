@@ -1,0 +1,13 @@
+#!/bin/bash
+
+# exit code 3 mean not active but loaded (https://www.freedesktop.org/software/systemd/man/systemctl.html#Exit%20status)
+/bin/systemctl status omd.service >/dev/null 2>&1
+RC=$?
+if [ $RC -eq 0 -o $RC -eq 3 ]; then
+    echo "service: omd"
+    exit 0
+else
+    echo "service: omd failed, autostart on reboot won't work"
+    exit 1
+fi
+
