@@ -1,7 +1,7 @@
 include ../../../Makefile.omd
 
 NAME = check_video_health
-VERSION = 1.1.0.1
+VERSION = 1.2
 DIR = $(NAME)-$(VERSION)
 
 .PHONY: skel
