@@ -1,7 +1,7 @@
 From e5f8474e4c9e4b97d8aec69d8d9113393a91dabb Mon Sep 17 00:00:00 2001
 From: nook24 <info@nook24.eu>
 Date: Wed, 24 Nov 2021 15:46:34 +0100
-Subject: [PATCH 1/4] - Use hasmap to find comment data
+Subject: [PATCH 1/6] - Use hasmap to find comment data
 
 Signed-off-by: nook24 <info@nook24.eu>
 ---
@@ -134,7 +134,7 @@ index 9e0126139..650fc4990 100644
 From 1d5dfa02a852c2734e1586d22d29bc578cb68a8f Mon Sep 17 00:00:00 2001
 From: Sven Nierlein <sven@consol.de>
 Date: Wed, 1 Mar 2023 10:52:19 +0100
-Subject: [PATCH 2/4] rework comment handling
+Subject: [PATCH 2/6] rework comment handling
 
 This PR reworks the comment handling to improve performance when having lots of comments.
 
@@ -172,8 +172,6 @@ Signed-off-by: Sven Nierlein <sven@consol.de>
  t-tap/test_commands.c            |   9 +-
  t-tap/test_config.c              |   1 +
  t-tap/test_downtime.c            |   1 +
- tests/.gitignore                 |   9 +
- tests/test-scheduled-downtimes.c |   1 +
  23 files changed, 206 insertions(+), 316 deletions(-)
 
 diff --git a/src/naemon/broker.h b/src/naemon/broker.h
@@ -1223,7 +1221,7 @@ index a564ecba1..1f4781f17 100644
 From c18fa90f49485d89ac30edb77bdd1d4bc4662f07 Mon Sep 17 00:00:00 2001
 From: Sven Nierlein <sven@consol.de>
 Date: Wed, 1 Mar 2023 13:02:25 +0100
-Subject: [PATCH 3/4] add timeing point for number of downtimes/comments
+Subject: [PATCH 3/6] add timeing point for number of downtimes/comments
 
 Signed-off-by: Sven Nierlein <sven@consol.de>
 ---
@@ -1309,7 +1307,7 @@ index 2541f8a00..72979036a 100644
 From 370590c7cfc78f7a9a41e9afec4678432e476eae Mon Sep 17 00:00:00 2001
 From: Sven Nierlein <sven@nierlein.de>
 Date: Thu, 2 Mar 2023 19:32:14 +0100
-Subject: [PATCH 4/4] fix typo in get_new_comment_id
+Subject: [PATCH 4/6] fix typo in get_new_comment_id
 
 swapped id and type parameter. Also start ids at 1 like before.
 ---
@@ -1338,3 +1336,375 @@ index 6f54c41c4..1231d3b6f 100644
  			return new_id;
  		}
  		new_id++;
+
+From f45c2e19298c8701825caaaa81f1710293942843 Mon Sep 17 00:00:00 2001
+From: Sven Nierlein <sven@nierlein.de>
+Date: Thu, 2 Mar 2023 20:09:21 +0100
+Subject: [PATCH 5/6] fix downtime test
+
+comment ids start at 1.
+---
+ tests/test-scheduled-downtimes.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/tests/test-scheduled-downtimes.c b/tests/test-scheduled-downtimes.c
+index 1f4781f17..62b73c12d 100644
+--- a/tests/test-scheduled-downtimes.c
++++ b/tests/test-scheduled-downtimes.c
+@@ -321,7 +321,7 @@ START_TEST(host_downtime_id_retained_across_reload)
+ 
+ 	dt = find_downtime(ANY_DOWNTIME, downtime_id);
+ 	ck_assert(dt != NULL);
+-	ck_assert(0 == dt->comment_id);
++	ck_assert(1 == dt->comment_id);
+ 
+ 	ck_assert(OK == handle_scheduled_downtime(dt));
+ 	comment_id = dt->comment_id;
+
+From 613a5b4927fa41e42deff0737ea5b63cf5f9933c Mon Sep 17 00:00:00 2001
+From: Sven Nierlein <sven@consol.de>
+Date: Mon, 20 Mar 2023 10:26:15 +0100
+Subject: [PATCH 6/6] remove comment_list
+
+it is not required anymore since we store comments in a hash table now.
+
+Signed-off-by: Sven Nierlein <sven@consol.de>
+---
+ src/naemon/comments.c   | 114 ++++++----------------------------------
+ src/naemon/comments.h   |   3 +-
+ src/naemon/common.h     |   2 -
+ src/naemon/xrddefault.c |  46 ++++++++--------
+ src/naemon/xsddefault.c |  43 ++++++++-------
+ 5 files changed, 64 insertions(+), 144 deletions(-)
+
+diff --git a/src/naemon/comments.c b/src/naemon/comments.c
+index 1231d3b6f..47be837ad 100644
+--- a/src/naemon/comments.c
++++ b/src/naemon/comments.c
+@@ -11,9 +11,7 @@
+ #include "nm_alloc.h"
+ #include <glib.h>
+ 
+-comment *comment_list = NULL;
+-int defer_comment_sorting = 0;
+-static GHashTable *comment_hashtable;
++GHashTable *comment_hashtable = NULL;
+ 
+ 
+ /******************************************************************/
+@@ -149,16 +147,6 @@ int delete_comment(int type, unsigned long comment_id)
+ 	/* remove the comment from the list in memory */
+ 	g_hash_table_remove(comment_hashtable, GINT_TO_POINTER(this_comment->comment_id));
+ 
+-	if (comment_list == this_comment) {
+-		comment_list = this_comment->next;
+-		if (comment_list)
+-			comment_list->prev = NULL;
+-	} else {
+-		this_comment->prev->next = this_comment->next;
+-		if (this_comment->next)
+-			this_comment->next->prev = this_comment->prev;
+-	}
+-
+ 	// remove from svc or host
+ 	if (type == HOST_COMMENT) {
+ 		host *temp_host = find_host(this_comment->host_name);
+@@ -348,34 +336,6 @@ int add_comment(int comment_type, int entry_type, char *host_name, char *svc_des
+ 
+ 	g_hash_table_insert(comment_hashtable, GINT_TO_POINTER(new_comment->comment_id), new_comment);
+ 
+-	if (defer_comment_sorting || !comment_list) {
+-		if (comment_list) {
+-			comment_list->prev = new_comment;
+-		}
+-		new_comment->next = comment_list;
+-		new_comment->prev = NULL;
+-		comment_list = new_comment;
+-	} else {
+-		/* add new comment to comment list, sorted by comment id */
+-		comment *cur;
+-		for (cur = comment_list; cur; cur = cur->next) {
+-			if (new_comment->comment_id < cur->comment_id) {
+-				new_comment->prev = cur->prev;
+-				if (cur->prev)
+-					cur->prev->next = new_comment;
+-				new_comment->next = cur;
+-				cur->prev = new_comment;
+-				break;
+-			}
+-			if (!cur->next) {
+-				new_comment->next = NULL;
+-				cur->next = new_comment;
+-				new_comment->prev = cur;
+-				break;
+-			}
+-		}
+-	}
+-
+ 	if (comment_type == HOST_COMMENT)
+ 		prepend_object_to_objectlist(&temp_host->comments_list, (void *)new_comment);
+ 
+@@ -388,51 +348,6 @@ int add_comment(int comment_type, int entry_type, char *host_name, char *svc_des
+ }
+ 
+ 
+-static int comment_compar(const void *p1, const void *p2)
+-{
+-	comment *c1 = *(comment **)p1;
+-	comment *c2 = *(comment **)p2;
+-	return c1->comment_id - c2->comment_id;
+-}
+-
+-
+-int sort_comments(void)
+-{
+-	comment **array, *temp_comment;
+-	unsigned long i = 0, unsorted_comments = 0;
+-
+-	if (!defer_comment_sorting)
+-		return OK;
+-	defer_comment_sorting = 0;
+-
+-	temp_comment = comment_list;
+-	while (temp_comment != NULL) {
+-		temp_comment = temp_comment->next;
+-		unsorted_comments++;
+-	}
+-
+-	if (!unsorted_comments)
+-		return OK;
+-
+-	array = nm_malloc(sizeof(*array) * unsorted_comments);
+-	while (comment_list) {
+-		array[i++] = comment_list;
+-		comment_list = comment_list->next;
+-	}
+-
+-	qsort((void *)array, i, sizeof(*array), comment_compar);
+-	comment_list = temp_comment = array[0];
+-	for (i = 1; i < unsorted_comments; i++) {
+-		temp_comment->next = array[i];
+-		temp_comment = temp_comment->next;
+-		temp_comment->prev = array[i - 1];
+-	}
+-	temp_comment->next = NULL;
+-	nm_free(array);
+-	return OK;
+-}
+-
+-
+ /******************************************************************/
+ /********************* CLEANUP FUNCTIONS **************************/
+ /******************************************************************/
+@@ -440,24 +355,25 @@ int sort_comments(void)
+ /* frees memory allocated for the comment data */
+ void free_comment_data(void)
+ {
+-	comment *this_comment = NULL;
+-	comment *next_comment = NULL;
++	GHashTableIter iter;
++	gpointer comment_;
+ 
+-	if(comment_hashtable != NULL)
+-		g_hash_table_destroy(comment_hashtable);
+-	comment_hashtable = NULL;
++	if(comment_hashtable == NULL)
++		return;
+ 
+ 	/* free memory for the comment list */
+-	for (this_comment = comment_list; this_comment != NULL; this_comment = next_comment) {
+-		next_comment = this_comment->next;
+-		nm_free(this_comment->host_name);
+-		nm_free(this_comment->service_description);
+-		nm_free(this_comment->author);
+-		nm_free(this_comment->comment_data);
+-		nm_free(this_comment);
++	g_hash_table_iter_init(&iter, comment_hashtable);
++	while (g_hash_table_iter_next(&iter, NULL, &comment_)) {
++		comment *temp_comment = comment_;
++		nm_free(temp_comment->host_name);
++		nm_free(temp_comment->service_description);
++		nm_free(temp_comment->author);
++		nm_free(temp_comment->comment_data);
++		nm_free(temp_comment);
+ 	}
+ 
+-	comment_list = NULL;
++	g_hash_table_destroy(comment_hashtable);
++	comment_hashtable = NULL;
+ 
+ 	return;
+ }
+diff --git a/src/naemon/comments.h b/src/naemon/comments.h
+index 7850c079b..0e3bffb39 100644
+--- a/src/naemon/comments.h
++++ b/src/naemon/comments.h
+@@ -48,7 +48,7 @@ typedef struct comment {
+ 	struct 	comment *next;
+ } comment;
+ 
+-extern struct comment *comment_list;
++extern GHashTable *comment_hashtable;
+ 
+ int initialize_comment_data(void);                                /* initializes comment data */
+ int add_new_comment(int, int, char *, char *, time_t, char *, char *, int, int, int, time_t, unsigned long *); /* adds a new host or service comment */
+@@ -71,7 +71,6 @@ int number_of_service_comments(char *, char *);                              /*
+ int number_of_comments(void);
+ 
+ int add_comment(int, int, char *, char *, time_t, char *, char *, unsigned long, int, int, time_t, int); /* adds a comment (host or service) */
+-int sort_comments(void);
+ int add_host_comment(int, char *, time_t, char *, char *, unsigned long, int, int, time_t, int);   /* adds a host comment */
+ int add_service_comment(int, char *, char *, time_t, char *, char *, unsigned long, int, int, time_t, int); /* adds a service comment */
+ 
+diff --git a/src/naemon/common.h b/src/naemon/common.h
+index 21e5bdad3..26e8ed070 100644
+--- a/src/naemon/common.h
++++ b/src/naemon/common.h
+@@ -19,8 +19,6 @@ extern char illegal_output_char_map[256];
+ 
+ extern int log_rotation_method;
+ extern int check_external_commands;
+-/* set this if you're going to add a ton of comments at once */
+-extern int defer_comment_sorting;
+ extern unsigned long next_downtime_id;
+ 
+ extern char *object_cache_file;
+diff --git a/src/naemon/xrddefault.c b/src/naemon/xrddefault.c
+index 4f80980a2..b2893d6fc 100644
+--- a/src/naemon/xrddefault.c
++++ b/src/naemon/xrddefault.c
+@@ -67,6 +67,8 @@ int xrddefault_save_state_information(void)
+ 	service *temp_service = NULL;
+ 	contact *temp_contact = NULL;
+ 	comment *temp_comment = NULL;
++	GHashTableIter iter;
++	gpointer comment_;
+ 	scheduled_downtime *temp_downtime = NULL;
+ 	int x = 0;
+ 	int fd = 0;
+@@ -378,25 +380,28 @@ int xrddefault_save_state_information(void)
+ 	}
+ 
+ 	/* save all comments */
+-	for (temp_comment = comment_list; temp_comment != NULL; temp_comment = temp_comment->next) {
+-
+-		if (temp_comment->comment_type == HOST_COMMENT)
+-			fprintf(fp, "hostcomment {\n");
+-		else
+-			fprintf(fp, "servicecomment {\n");
+-		fprintf(fp, "host_name=%s\n", temp_comment->host_name);
+-		if (temp_comment->comment_type == SERVICE_COMMENT)
+-			fprintf(fp, "service_description=%s\n", temp_comment->service_description);
+-		fprintf(fp, "entry_type=%d\n", temp_comment->entry_type);
+-		fprintf(fp, "comment_id=%lu\n", temp_comment->comment_id);
+-		fprintf(fp, "source=%d\n", temp_comment->source);
+-		fprintf(fp, "persistent=%d\n", temp_comment->persistent);
+-		fprintf(fp, "entry_time=%lu\n", temp_comment->entry_time);
+-		fprintf(fp, "expires=%d\n", temp_comment->expires);
+-		fprintf(fp, "expire_time=%lu\n", temp_comment->expire_time);
+-		fprintf(fp, "author=%s\n", temp_comment->author);
+-		fprintf(fp, "comment_data=%s\n", temp_comment->comment_data);
+-		fprintf(fp, "}\n");
++	if(comment_hashtable != NULL) {
++		g_hash_table_iter_init(&iter, comment_hashtable);
++		while (g_hash_table_iter_next(&iter, NULL, &comment_)) {
++			temp_comment = comment_;
++			if (temp_comment->comment_type == HOST_COMMENT)
++				fprintf(fp, "hostcomment {\n");
++			else
++				fprintf(fp, "servicecomment {\n");
++			fprintf(fp, "host_name=%s\n", temp_comment->host_name);
++			if (temp_comment->comment_type == SERVICE_COMMENT)
++				fprintf(fp, "service_description=%s\n", temp_comment->service_description);
++			fprintf(fp, "entry_type=%d\n", temp_comment->entry_type);
++			fprintf(fp, "comment_id=%lu\n", temp_comment->comment_id);
++			fprintf(fp, "source=%d\n", temp_comment->source);
++			fprintf(fp, "persistent=%d\n", temp_comment->persistent);
++			fprintf(fp, "entry_time=%lu\n", temp_comment->entry_time);
++			fprintf(fp, "expires=%d\n", temp_comment->expires);
++			fprintf(fp, "expire_time=%lu\n", temp_comment->expire_time);
++			fprintf(fp, "author=%s\n", temp_comment->author);
++			fprintf(fp, "comment_data=%s\n", temp_comment->comment_data);
++			fprintf(fp, "}\n");
++		}
+ 	}
+ 
+ 	/* save all downtime */
+@@ -549,7 +554,6 @@ int xrddefault_read_state_information(void)
+ 
+ 	/* Big speedup when reading retention.dat in bulk */
+ 	defer_downtime_sorting = 1;
+-	defer_comment_sorting = 1;
+ 
+ 	/* read all lines in the retention file */
+ 	while (1) {
+@@ -1685,8 +1689,6 @@ int xrddefault_read_state_information(void)
+ 
+ 	if (sort_downtime() != OK)
+ 		return ERROR;
+-	if (sort_comments() != OK)
+-		return ERROR;
+ 
+ 	return OK;
+ }
+diff --git a/src/naemon/xsddefault.c b/src/naemon/xsddefault.c
+index 35e8b9978..a0c26e7e7 100644
+--- a/src/naemon/xsddefault.c
++++ b/src/naemon/xsddefault.c
+@@ -76,6 +76,8 @@ int xsddefault_save_status_data(void)
+ 	service *temp_service = NULL;
+ 	contact *temp_contact = NULL;
+ 	comment *temp_comment = NULL;
++	GHashTableIter iter;
++	gpointer comment_;
+ 	scheduled_downtime *temp_downtime = NULL;
+ 	time_t current_time;
+ 	int fd = 0;
+@@ -335,25 +337,28 @@ int xsddefault_save_status_data(void)
+ 	}
+ 
+ 	/* save all comments */
+-	for (temp_comment = comment_list; temp_comment != NULL; temp_comment = temp_comment->next) {
+-
+-		if (temp_comment->comment_type == HOST_COMMENT)
+-			fprintf(fp, "hostcomment {\n");
+-		else
+-			fprintf(fp, "servicecomment {\n");
+-		fprintf(fp, "\thost_name=%s\n", temp_comment->host_name);
+-		if (temp_comment->comment_type == SERVICE_COMMENT)
+-			fprintf(fp, "\tservice_description=%s\n", temp_comment->service_description);
+-		fprintf(fp, "\tentry_type=%d\n", temp_comment->entry_type);
+-		fprintf(fp, "\tcomment_id=%lu\n", temp_comment->comment_id);
+-		fprintf(fp, "\tsource=%d\n", temp_comment->source);
+-		fprintf(fp, "\tpersistent=%d\n", temp_comment->persistent);
+-		fprintf(fp, "\tentry_time=%lu\n", temp_comment->entry_time);
+-		fprintf(fp, "\texpires=%d\n", temp_comment->expires);
+-		fprintf(fp, "\texpire_time=%lu\n", temp_comment->expire_time);
+-		fprintf(fp, "\tauthor=%s\n", temp_comment->author);
+-		fprintf(fp, "\tcomment_data=%s\n", temp_comment->comment_data);
+-		fprintf(fp, "\t}\n\n");
++	if(comment_hashtable != NULL) {
++		g_hash_table_iter_init(&iter, comment_hashtable);
++		while (g_hash_table_iter_next(&iter, NULL, &comment_)) {
++			temp_comment = comment_;
++			if (temp_comment->comment_type == HOST_COMMENT)
++				fprintf(fp, "hostcomment {\n");
++			else
++				fprintf(fp, "servicecomment {\n");
++			fprintf(fp, "\thost_name=%s\n", temp_comment->host_name);
++			if (temp_comment->comment_type == SERVICE_COMMENT)
++				fprintf(fp, "\tservice_description=%s\n", temp_comment->service_description);
++			fprintf(fp, "\tentry_type=%d\n", temp_comment->entry_type);
++			fprintf(fp, "\tcomment_id=%lu\n", temp_comment->comment_id);
++			fprintf(fp, "\tsource=%d\n", temp_comment->source);
++			fprintf(fp, "\tpersistent=%d\n", temp_comment->persistent);
++			fprintf(fp, "\tentry_time=%lu\n", temp_comment->entry_time);
++			fprintf(fp, "\texpires=%d\n", temp_comment->expires);
++			fprintf(fp, "\texpire_time=%lu\n", temp_comment->expire_time);
++			fprintf(fp, "\tauthor=%s\n", temp_comment->author);
++			fprintf(fp, "\tcomment_data=%s\n", temp_comment->comment_data);
++			fprintf(fp, "\t}\n\n");
++		}
+ 	}
+ 
+ 	/* save all downtime */
