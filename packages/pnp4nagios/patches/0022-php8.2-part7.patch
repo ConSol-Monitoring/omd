@@ -1,0 +1,15 @@
+--- a/share/pnp/application/controllers/docs.php	2023-03-30 22:54:39.535474416 +0200
++++ b/share/pnp/application/controllers/docs.php	2023-03-30 22:56:49.496266151 +0200
+@@ -7,6 +7,12 @@
+  * @license    GPL
+  */
+ class Docs_Controller extends System_Controller  {
++    public $doc_language = NULL;
++    public $lang = NULL;
++    public $page = NULL;
++    public $content = NULL;
++    public $toc = NULL;
++    public $graph_width = NULL;
+ 
+     public function __construct()
+     {

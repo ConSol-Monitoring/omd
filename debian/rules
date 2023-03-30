@@ -19,7 +19,7 @@ DEFAULT_BUILD=build
 endif
 
 
-build: patch build-stamp
+build: build-stamp
 build-stamp:
 	dh_testdir
 
@@ -29,7 +29,7 @@ build-stamp:
 
 	touch build-stamp
 
-clean: clean-patched unpatch
+clean: clean-patched
 	dh_testdir
 	dh_testroot
 	rm -f build-stamp
@@ -52,15 +52,6 @@ clean-patched:
 	dh_testdir
 	dh_testroot
 	${MAKE} clean
-
-patch: patch-stamp
-patch-stamp:
-	dpatch apply-all
-	dpatch cat-all >patch-stamp
-
-unpatch:
-	dpatch deapply-all
-	rm -rf patch-stamp debian/patched
 
 install: build
 	dh_testdir

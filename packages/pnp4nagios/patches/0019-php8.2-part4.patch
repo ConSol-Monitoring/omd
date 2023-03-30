@@ -1,0 +1,24 @@
+--- a/share/pnp/application/controllers/system.php	2023-03-30 17:01:51.449156175 +0200
++++ b/share/pnp/application/controllers/system.php	2023-03-30 17:01:38.884680640 +0200
+@@ -7,6 +7,21 @@
+  * @license GPL
+  */
+ class System_Controller extends Template_Controller {
++    public $data = NULL;
++    public $config = NULL;
++    public $rrdtool = NULL;
++    public $auth = NULL;
++    public $start = NULL;
++    public $end = NULL;
++    public $theme = NULL;
++    public $view = NULL;
++    public $host = NULL;
++    public $service = NULL;
++    public $source = NULL;
++    public $version = NULL;
++    public $tpl = NULL;
++    public $controller = NULL;
++    public $session = NULL;
+ 
+     public function __construct()
+     {

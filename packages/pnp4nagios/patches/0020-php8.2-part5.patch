@@ -1,0 +1,11 @@
+--- a/share/pnp/application/models/rrdtool.php	2023-03-30 15:48:11.258899040 +0200
++++ b/share/pnp/application/models/rrdtool.php	2023-03-30 15:49:47.622510705 +0200
+@@ -5,6 +5,8 @@
+ class Rrdtool_Model extends System_Model
+ {
+ 
++    public $config = NULL;
++
+     private $RRD_CMD   = FALSE;
+     /*
+     *

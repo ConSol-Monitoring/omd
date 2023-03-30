@@ -1,0 +1,10 @@
+--- a/share/pnp/application/vendor/fpdf/pdf_parser.php	2023-03-30 23:01:36.638854715 +0200
++++ b/share/pnp/application/vendor/fpdf/pdf_parser.php	2023-03-30 23:01:49.235319263 +0200
+@@ -49,6 +49,7 @@
+ if (!class_exists('pdf_parser')) {
+     
+ class pdf_parser {
++    public $actual_obj = NULL;
+ 	
+ 	/**
+      * Filename

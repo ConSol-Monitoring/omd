@@ -1,0 +1,16 @@
+--- a/share/pnp/application/controllers/pdf.php	2023-03-30 22:57:45.278323011 +0200
++++ b/share/pnp/application/controllers/pdf.php	2023-03-30 22:59:18.325754103 +0200
+@@ -7,6 +7,13 @@
+  * @license    GPL
+  */
+ class Pdf_Controller extends System_Controller  {
++    public $use_bg = NULL;
++    public $bg = NULL;
++    public $pdf_page_size = NULL;
++    public $pdf_margin_left = NULL;
++    public $pdf_margin_top = NULL;
++    public $pdf_margin_right = NULL;
++    public $type = NULL;
+ 
+     public function __construct(){
+         parent::__construct();

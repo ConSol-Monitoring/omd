@@ -1,0 +1,12 @@
+--- a/share/pnp/application/controllers/graph.php	2023-03-30 17:00:26.969958665 +0200
++++ b/share/pnp/application/controllers/graph.php	2023-03-30 17:00:36.690326604 +0200
+@@ -7,6 +7,9 @@
+  * @license    GPL
+  */
+ class Graph_Controller extends System_Controller  {
++    public $url = NULL;
++    public $is_authorized = NULL;
++    public $title = NULL;
+ 
+     public function __construct()
+     {
