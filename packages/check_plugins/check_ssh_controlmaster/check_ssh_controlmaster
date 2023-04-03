@@ -11,22 +11,15 @@ NUMSERVICES=
 mustrestart="n"
 MESSAGE=""
 NOW=$(date +'%s')
-if [ -x "/usr/bin/nc" ]; then
-  NC="/usr/bin/nc"
-elif [ -x "/bin/nc" ]; then
-  NC="/bin/nc"
-else
-  NC="/usr/bin/netcat"
-fi
-CORE=127.0.0.1
-LSPORT=6557
+LQ="$OMD_ROOT/bin/lq"
+
 . $OMD_ROOT/etc/omd/site.conf
 
 # -l ${REMUSER} -H hostname/address -p 22
 # ->
 
 while getopts "dl:H:p:i:c:m:s:Px" opt; do
-    case $opt in 
+    case $opt in
     d)
         DEBUG=1
         ;;
@@ -127,22 +120,18 @@ fi
 #
 
 if [ -z "$NUMSERVICES" -a -n "$EXTIPHOST" ]; then
-  NUMSERVICES=$($NC $CORE $CONFIG_LIVESTATUS_TCP_PORT <<query
-GET services
-Filter: host_address = $REMHOSTADDR
-Filter: host_name ~ $REMHOSTNAME
-Filter: check_command ~ check_by_ssh
-Stats: sum check_command
-query
-)
+   Q=$(printf '%s\n' "GET services" \
+                     "Filter: host_address = $REMHOSTADDR" \
+                     "Filter: host_name ~ $REMHOSTNAME" \
+                     "Filter: check_command ~ check_by_ssh" \
+                     "Stats: sum check_command")
+  NUMSERVICES=$($LQ "$Q")
 elif [ -z "$NUMSERVICES" ]; then
-  NUMSERVICES=$($NC $CORE $CONFIG_LIVESTATUS_TCP_PORT <<query
-GET services
-Filter: host_address = $REMHOSTADDR
-Filter: check_command ~ check_by_ssh
-Stats: sum check_command
-query
-)
+   Q=$(printf '%s\n' "GET services" \
+                     "Filter: host_address = 172.17.3.25" \
+                     "Filter: check_command ~ check_by_ssh" \
+                     "Stats: sum check_command")
+  NUMSERVICES=$($LQ "$Q")
 fi
 if [ -z "$NUMSERVICES" ]; then
   # no -s, no livestatus, assume we have 5 linux-checks
@@ -164,6 +153,7 @@ fi
 INFOAGE=$(($NOW - $(stat -c "%Y" ${CONTROLPATH}.info)))
 INFOAGE=$(($INFOAGE + $RANDOM % 60))
 OLDFORKS=$(<${CONTROLPATH}.info)
+
 if [ $INFOAGE -gt 3600 -o $OLDFORKS != $FORKS ]; then
   echo $FORKS > $CONTROLPATH.info
 fi
@@ -378,4 +368,3 @@ else
   printf "OK - session established (%d connections)\n" $RUNNING
   exit 0
 fi
-
