@@ -37,7 +37,7 @@ MODULES += idna-3.4.tar.gz                           #  requests-2.28.1
 MODULES += urllib3-1.26.13.tar.gz                    #  requests-2.28.1(<1.27,>=1.21.1)
 MODULES += certifi-2022.12.7.tar.gz                  #  requests-2.28.1
 MODULES += chardet-3.0.4.tar.gz                      #  requests-2.28.1
-MODULES += requests-2.27.1.tar.gz                    # pywbem-1.5.0, pyvmomi-7.0.3
+MODULES += requests-2.27.1.tar.gz                    # pywbem-1.5.0
 
 # Coshsh
 MODULES += MarkupSafe-2.0.1.tar.gz                   # Jinja2-3.1.2
@@ -58,7 +58,7 @@ MODULES += openpyxl-3.0.10.tar.gz                    # pyexcel-xlsx-0.6.0.tar.gz
 MODULES += pyexcel-xlsx-0.6.0.tar.gz
 
 # for Ansible
-MODULES += six-1.16.0.tar.gz                         # paramiko-2.12.0
+MODULES += six-1.16.0.tar.gz                         # paramiko-2.12.0, pyvmomi
 MODULES += paramiko-1.18.5.tar.gz
 MODULES += PyYAML-6.0.tar.gz
 
@@ -80,7 +80,7 @@ MODULES += jsonpath-ng-1.5.3.tar.gz
 # for check_smb_copy
 MODULES += pysmbc-1.0.23.tar.gz
 # for check_vcenter
-MODULES += pyvmomi-7.0.3.tar.gz
+MODULES += pyvmomi-8.0.0.1.2.tar.gz                  # check_vsphere
 # for check_redfish
 MODULES += redfish-3.1.8.tar.gz
 # for check_omd
@@ -88,6 +88,10 @@ MODULES += psutil-5.9.4.tar.gz
 
 MODULES += gearman3-0.2.1.tar.gz
 MODULES += nagiosplugin-1.3.3.tar.gz
+
+# check_vsphere
+MODULES += monplugin-0.5.1.tar.gz                    # check_vsphere
+MODULES += checkvsphere-0.2.0.tar.gz
 
 # pywbem?
 #MODULES += nocaselist-1.0.6.tar.gz                   # pywbem-1.5.0
