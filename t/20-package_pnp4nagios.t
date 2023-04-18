@@ -13,7 +13,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 192 );
+plan( tests => 208 );
 
 ##################################################
 # create our test site
@@ -48,7 +48,10 @@ my $tests = [
   { cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_http -H localhost -u /$site/pnp4nagios -e 401'",                           like => '/HTTP OK:/' },
   { cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_http -H localhost -a omdadmin:omd -u /$site/pnp4nagios -e 301'",           like => '/HTTP OK:/' },
   { cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_http -H localhost -a omdadmin:omd -u /$site/pnp4nagios/index.php -e 302'", like => '/HTTP OK:/' },
+  { cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_http -H localhost -a omdadmin:omd -u /$site/pnp4nagios/index.php -f follow'", like => '/HTTP OK:/' },
   { cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_http -H localhost -a omdadmin:omd -u /$site/pnp4nagios/graph?host=omd-$site -e 200'", like => '/HTTP OK:/' },
+  { cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_http -H localhost -a omdadmin:omd -u /$site/pnp4nagios/popup?host=omd-$site -e 302'", like => '/HTTP OK:/' },
+  { cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_http -H localhost -a omdadmin:omd -u /$site/pnp4nagios/popup?host=omd-$site -f follow'", like => '/HTTP OK:/' },
   { cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_http -H localhost -a omdadmin:omd -u \"/$site/pnp4nagios/graph?host=omd-$site&srv=Dummy+Service\" -e 200'", like => '/HTTP OK:/' },
   { cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_http -H localhost -a omdadmin:omd -u \"/$site/pnp4nagios/image?host=omd-$site&srv=Dummy+Service\" -e 200'", like => '/HTTP OK:/' },
   { cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_http -H localhost -a omdadmin:omd -u \"/$site/pnp4nagios/json?host=omd-$site\" -e 200'", like => '/HTTP OK:/' },
@@ -60,6 +63,7 @@ my $tests = [
   { cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_http -H localhost -a omdadmin:omd -u \"/$site/pnp4nagios/mobile/host/omd-$site\" -e 200'", like => '/HTTP OK:/' },
   { cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_http -H localhost -a omdadmin:omd -u \"/$site/pnp4nagios/mobile/host/omd-$site/Dummy+Service\" -e 200'", like => '/HTTP OK:/' },
   { cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_http -H localhost -a omdadmin:omd -u \"/$site/pnp4nagios/pdf?host=omd-$site&srv=Dummy+Service\" -e 200'", like => '/HTTP OK:/' },
+  { cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_http -H localhost -a omdadmin:omd -u \"/$site/pnp4nagios/index.php/api/hosts\" -e 200'", like => '/HTTP OK:/' },
   #### pages ####
   { cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_http -H localhost -a omdadmin:omd -u /$site/pnp4nagios/page?page=pages-static-ok -e 200'", like => '/HTTP OK:/' },
   { cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_http -H localhost -a omdadmin:omd -u /$site/pnp4nagios/page?page=pages-regex-ok -e 200'", like => '/HTTP OK:/' },
