@@ -157,6 +157,8 @@ build:
 install:
 	mkdir -p $(LOCALPYTHONDIR)
 	rsync -a $(BUILDDEST)/. $(LOCALPYTHONDIR)/.
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/monitoring-plugins/
+	mv $(LOCALPYTHONDIR)/bin/check_vsphere $(DESTDIR)$(OMD_ROOT)/lib/monitoring-plugins/check_vsphere
 
 skel:
 
