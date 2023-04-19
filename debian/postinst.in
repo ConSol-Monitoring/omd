@@ -153,8 +153,8 @@ case "$1" in
     if [ -d /usr/lib/systemd/system/. ]; then
         rm -f /usr/lib/systemd/system/omd.service
         cp -fp /omd/versions/default/share/omd/omd.service /usr/lib/systemd/system/omd.service
-        systemctl daemon-reload
-        systemctl enable omd.service
+        systemctl daemon-reload || :
+        systemctl enable omd.service || :
     fi
 
     ;;
