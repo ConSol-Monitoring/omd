@@ -1,33 +1,167 @@
 - job_name: naemon
   pipeline_stages:
-  - regex:
-      expression: '^\\[(?P<timestamp>\\d+)\\] (?P<type>[\\ A-Za-z]+): (?P<message>.+)$'
-  - timestamp:
-      source: timestamp
-      format: Unix
-  - labels:
-      type:
+    - regex:
+        expression: '^\\[(?P<timestamp>\\d+)\\] (?P<type>[\\ A-Za-z]+): (?P<message>.+)$'
+    - timestamp:
+        source: timestamp
+        format: Unix
+    - labels:
+        type:
+    - match:
+        selector: '{type="SERVICE ALERT"}'
+        stages:
+        - regex:
+            #CONSOL;some_service;CRITICAL;HARD;3;CRITICAL - 2 SAP HANA Alert(s) with rating level >= Medium found (1 High / 1 Medium).
+            expression: '^(?P<host>\\S+);(?P<service>\\S+);(?P<state>\\w+);(?P<state_type>\\w+);\\d+;(?P<message>(?s:.*))$'
+            source: message
+        - labels:
+            host:
+            service:
+            state:
+            state_type:
+            message:
+    - match:
+        selector: '{type="HOST ALERT"}'
+        stages:
+        - regex:
+            #CONSOL;UP;SOFT;2;OK - 10.102.48.42: rta 17.243ms, lost 0%
+            expression: '^(?P<host>\\S+);(?P<state>\\S+);(?P<state_type>\\w+);\\d+;(?P<message>(?s:.*))$'
+            source: message
+        - labels:
+            host:
+            state:
+            state_type:
+            message:
+    - match:
+        selector: '{type="SERVICE INFO"}'
+        stages:
+        - regex:
+            #CONSOL;os_cisco_default_cpu; Service switch to hard down state due to host down.
+            expression: '^(?P<host>\\S+);(?P<service>\\S+);(?P<message>(?s:.*))$'
+            source: message
+        - labels:
+            host:
+            service:
+            message:
+    - match:
+        selector: '{type="HOST INFO"}'
+        stages:
+        - regex:
+            expression: '^(?P<host>\\S+);(?P<message>(?s:.*))$'
+            source: message
+        - labels:
+            host:
+            message:
+    - match:
+        selector: '{type="SERVICE FLAPPING ALERT"}'
+        stages:
+        - regex:
+            #CONSOL;os_windows_default_healthcheck;STOPPED; Service appears to have stopped flapping (3.9% change < 5.0% threshold)
+            expression: '^(?P<host>\\S+);(?P<service>\\S+);(?P<state>\\w+);(?P<message>(?s:.*))$'
+            source: message
+        - labels:
+            host:
+            service:
+            state:
+            message:
+    - match:
+        selector: '{type="HOST FLAPPING ALERT"}'
+        stages:
+        - regex:
+            #CONSOL;STOPPED; Host appears to have stopped flapping (4.0% change < 5.0% threshold)
+            expression: '^(?P<host>\\S+);(?P<state>\\S+);\\d+;(?P<message>(?s:.*))$'
+            source: message
+        - labels:
+            host:
+            state:
+            message:
+    - match:
+        selector: '{type="SERVICE NOTIFICATION"}'
+        stages:
+        - regex:
+            #CONTACT-$i;CONSOL;some_service;CRITICAL;service-by-email;CRITICAL - Plugin timed out after 5 seconds\n
+            expression: '^(?P<contact>\\S+?);(?P<host>\\S+);(?P<service>\\S+);(?P<state>\\w+);(?P<command>\\S+?);(?P<message>(?s:.*))$'
+            source: message
+        - labels:
+            message:
+            host:
+            service:
+            state:
+            command:
+            contact:
+    - match:
+        selector: '{type="HOST NOTIFICATION"}'
+        stages:
+        - regex:
+            #CONTACT-$i;CONSOL;CRITICAL;service-by-email;CRITICAL - Plugin timed out after 5 seconds\n
+            expression: '^(?P<contact>\\S+?);(?P<host>\\S+);(?P<state>\\w+);(?P<command>\\S+?);(?P<message>(?s:.*))$'
+            source: message
+        - labels:
+            message:
+            host:
+            state:
+            command:
+            contact:
+    - match:
+        selector: '{type="SERVICE NOTIFICATION SUPPRESSED"}'
+        stages:
+        - regex:
+            #CONSOL;os_windows_default_nscp_connect;Notifications disabled for current object state.
+            expression: '^(?P<host>\\S+);(?P<service>\\S+);(?P<message>(?s:.*))$'
+            source: message
+        - labels:
+            message:
+            host:
+            service:
+    - match:
+        selector: '{type="SERVICE CONTACT NOTIFICATION SUPPRESSED"}'
+        stages:
+        - regex:
+            #CONTACT;CONSOL;os_windows_default_nscp_connect;Notifications disabled for current object state.
+            expression: '^(?P<contact>\\S+?);(?P<host>\\S+);(?P<service>\\S+);(?P<message>(?s:.*))$'
+            source: message
+        - labels:
+            message:
+            host:
+            service:
+            contact:
+    - match:
+        selector: '{type="HOST NOTIFICATION SUPPRESSED"}'
+        stages:
+        - regex:
+            #CONSOL;Notification blocked for RECOVERY because no notification was sent out for the original problem.
+            expression: '^(?P<host>\\S+);(?P<message>(?s:.*))$'
+            source: message
+        - labels:
+            message:
+            host:
+    - match:
+        selector: '{type="HOST CONTACT NOTIFICATION SUPPRESSED"}'
+        stages:
+        - regex:
+            #CONTACT;CONSOL;Notification blocked for RECOVERY because no notification was sent out for the original problem.
+            expression: '^(?P<contact>\\S+?);(?P<host>\\S+);(?P<message>(?s:.*))$'
+            source: message
+        - labels:
+            message:
+            host:
+            contact:
+    - match:
+        selector: '{type="EXTERNAL COMMAND"}'
+        stages:
+        - regex:
+            #SCHEDULE_FORCED_SVC_CHECK;CONSOL;os_windows_proc_PermissionTool.exe;1681883319
+            #SCHEDULE_HOST_CHECK;CONSOL;1681883374
+            expression: '^(?P<command>\\S+?);(?P<host>\\S+?);(?P<message>(?s:.*))$'
+            source: message
+        - labels:
+            command:
+            message:
+            host:
   static_configs:
   - targets:
       - localhost
     labels:
         __path__: var/naemon/naemon.log
-        job: omd
-        app: naemon
-
-- job_name: naemon_livestatus
-  pipeline_stages:
-  - multiline:
-      firstline: '\\d{4}-\\d{2}-\\d{2} \\d{1,2}:\\d{2}:\\d{2} (Query: GET|Query: COMMAND|[A-PR-Za-z]).*'
-      max_wait_time: 3s
-      max_lines: 500
-  - regex:
-      # Flag (?s:.*) needs to be set for regex stage to capture full traceback log in the extracted map.
-      expression: '^(?P<time>\\d{4}-\\d{2}-\\d{2} \\d{1,2}:\\d{2}:\\d{2}) (?P<message>(?s:.*))$'
-  static_configs:
-  - targets:
-      - localhost
-    labels:
-        __path__: var/naemon/livestatus.log
         job: omd
         app: naemon
