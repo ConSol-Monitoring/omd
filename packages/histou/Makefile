@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 NAME        = histou
-VERSION     = 0.4.3
+VERSION     = 0.5.0
 SRC         = $(NAME)-$(VERSION).tar.gz
 PWD         = $(shell pwd)
 DIR         = $(NAME)
@@ -30,6 +30,6 @@ clean:
 	rm -rf histou
 
 package:
-	git clone  --depth=1 --branch "master" https://github.com/Griesbacher/histou
+	git clone  --depth=1 --branch "master" https://github.com/ConSol/histou
 	tar zcf $(SRC) --exclude=.git --exclude=histou/tests --exclude=histou/conf --exclude=histou/stylecheck.sh histou
 	rm -rf histou
