@@ -1,16 +1,16 @@
 include ../../../Makefile.omd
 
 NAME        = check_prometheus
-VERSION     = master
+VERSION     = main
 SRC         = $(NAME)-$(VERSION).tar.gz
 GOPKG       = 1.19
 GOVERSION   = $(shell grep ^VERSION ../../go-${GOPKG}/Makefile | awk '{ print $$3 }')
 GOPATH      = go
 PWD         = $(shell pwd)
-GITBASE     = github.com/consol
+GITBASE     = github.com/consol-monitoring
 GITURL      = $(GITBASE)/$(NAME)
 # GIT_TAG: TODO: still set manually for new master version in git repo!
-GIT_TAG     = 0.0.2
+GIT_TAG     = 0.0.3
 
 build:
 	tar zxf $(SRC)
