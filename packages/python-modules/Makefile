@@ -90,8 +90,8 @@ MODULES += gearman3-0.2.1.tar.gz
 MODULES += nagiosplugin-1.3.3.tar.gz
 
 # check_vsphere
-MODULES += monplugin-0.5.1.tar.gz                    # check_vsphere
-MODULES += checkvsphere-0.2.0.tar.gz
+MODULES += monplugin-0.6.0.tar.gz                    # check_vsphere
+MODULES += checkvsphere-0.2.1.tar.gz
 
 # pywbem?
 #MODULES += nocaselist-1.0.6.tar.gz                   # pywbem-1.5.0
