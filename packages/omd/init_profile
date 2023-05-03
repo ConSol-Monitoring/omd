@@ -32,6 +32,7 @@ __init_hook() {
 #   - $NOHUP           start daemon in background with nohup.
 #   - $LOG_FILE        redirect output of nohup.
 #   - $PID_FILE        path to pid file.
+#   - $PSPATTERN       pattern to search for running process, defaults to "$DAEMON $OPTS"
 #   - $RELOAD_RESTARTS invoke a restart instead of a reload
 #   - $RELOAD_STARTS   invoke start in case daemon is not running on reload
 #   - $START_TIMEOUT   seconds to wait for startup (default 10)
@@ -50,6 +51,9 @@ __generic_init() {
   if [ -z "$OPTS" ]; then
     echo "ERROR: OPTS not set"
     exit 1
+  fi
+  if [ -z "$PSPATTERN" ]; then
+    PSPATTERN="$DAEMON $OPTS"
   fi
   if [ -z "$NAME" ]; then
     NAME=$(basename $DAEMON)
@@ -151,7 +155,7 @@ __generic_init_pid() {
     PID=; read 2>/dev/null PID < $PID_FILE
   fi
   if [ -z "$PID" ]; then
-    PID=$(pgrep -u $OMD_SITE -o -P 1 -f "$DAEMON $OPTS")
+    PID=$(pgrep -u $OMD_SITE -o -P 1 -f "$PSPATTERN")
   fi
   [ -z "$PID" ] && return 1
   if ! kill -0 ${PID} > /dev/null 2>&1; then

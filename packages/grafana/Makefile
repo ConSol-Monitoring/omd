@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 NAME       = grafana
-VERSION    = 9.3.6
+VERSION    = 9.5.1
 SRC        = $(NAME)-$(VERSION).tar.gz
 GOPATH     = go
 GOPKG      = 1.19
@@ -22,15 +22,15 @@ build:
 	tar zxf $(SRC)
 	cd $(GOPATH)/src/github.com/grafana/grafana && $(GO) run build.go build
 	mkdir -p ./dest/
-	install -m 755 $(GOPATH)/src/github.com/grafana/grafana/bin/linux-$(MACHINE)/grafana-server ./dest/grafana-server
-	install -m 755 $(GOPATH)/src/github.com/grafana/grafana/bin/linux-$(MACHINE)/grafana-cli  ./dest/grafana-cli
+	install -m 755 $(GOPATH)/src/github.com/grafana/grafana/bin/linux-$(MACHINE)/grafana     ./dest/grafana
+	install -m 755 $(GOPATH)/src/github.com/grafana/grafana/bin/linux-$(MACHINE)/grafana-cli ./dest/grafana-cli
 	chmod -R 777 $(GOPATH)
 	rm -rf $(GOPATH)
 
 install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/bin
-	install -m 755 ./dest/grafana-server  $(DESTDIR)$(OMD_ROOT)/bin/grafana
-	install -m 755 ./dest/grafana-cli  $(DESTDIR)$(OMD_ROOT)/bin/grafana-cli
+	install -m 755 ./dest/grafana     $(DESTDIR)$(OMD_ROOT)/bin/grafana
+	install -m 755 ./dest/grafana-cli $(DESTDIR)$(OMD_ROOT)/bin/grafana-cli
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/grafana
 	tar zxf public.tar.gz -C $(DESTDIR)$(OMD_ROOT)/share/grafana
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/grafana/conf

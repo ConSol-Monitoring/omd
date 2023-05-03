@@ -28,7 +28,7 @@ CONF_FILE=$CONF_DIR/grafana.ini
 PID_FILE=$OMD_ROOT/tmp/run/grafana.pid
 LOG_FILE=$LOG_DIR/grafana.log
 DAEMON=$OMD_ROOT/bin/grafana
-OPTS="--homepath=${GRAFANA_HOME} --pidfile=${PID_FILE} --config=${CONF_FILE} cfg:default.paths.data=${DATA_DIR} cfg:default.paths.logs=${LOG_DIR}"
+OPTS="server --homepath=${GRAFANA_HOME} --pidfile=${PID_FILE} --config=${CONF_FILE} cfg:default.paths.data=${DATA_DIR} cfg:default.paths.logs=${LOG_DIR}"
 NOHUP=1
 KILL_SESSION=1
 START_TIMEOUT=60
