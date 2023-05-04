@@ -128,7 +128,7 @@ if [ -z "$NUMSERVICES" -a -n "$EXTIPHOST" ]; then
   NUMSERVICES=$($LQ "$Q")
 elif [ -z "$NUMSERVICES" ]; then
    Q=$(printf '%s\n' "GET services" \
-                     "Filter: host_address = 172.17.3.25" \
+                     "Filter: host_address = $REMHOSTADDR" \
                      "Filter: check_command ~ check_by_ssh" \
                      "Stats: sum check_command")
   NUMSERVICES=$($LQ "$Q")
