@@ -17,3 +17,6 @@ if test -e etc/thruk/cgi.cfg.update; then
   rm etc/thruk/cgi.cfg
   mv etc/thruk/cgi.cfg.update etc/thruk/cgi.cfg
 fi
+
+# updates are a good time to renew cache files
+./bin/thruk cache clear all >/dev/null
