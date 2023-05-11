@@ -763,6 +763,7 @@ sub _diag_lint_errors_and_remove_some_exceptions {
             "Unknown attribute \"start\" for tag <div>",
             "Unknown attribute \"hidden\" for tag <option>",
             "Unknown attribute \"end\" for tag <div>",
+            "Unknown attribute \"oncontextmenu\" for tag <div>",
             qr(Unknown attribute \"data[\w\-]+\" for tag),
             "for tag <meta>",
             "Unknown element <(header|main|footer|nav)>",
