@@ -54,6 +54,8 @@ deps: clean
 		make vendor
 		cd $(PWD) && \
 		tar zcf $(DEPS_SRC) --exclude=.git --exclude=*_test.go $(GOPATH)/src/$(GITURL)/vendor
+		chmod -R 777 $(GOPATH) && \
+		rm -rf $(GOPATH)
 
 package: clean
 	mkdir -p $(GOPATH)
@@ -65,7 +67,9 @@ package: clean
 		cd $(NAME) && \
 		sed -i $(PWD)/Makefile -e 's/^GIT_TAG.*$$/GIT_TAG     = '$$(git describe --always --tags)'/g' && \
 		cd $(PWD) && \
-		tar zcf $(SRC) --exclude=.git --exclude=*_test.go $(GOPATH)/src/$(GITURL)
+		tar zcf $(SRC) --exclude=.git --exclude=*_test.go $(GOPATH)/src/$(GITURL) && \
+		chmod -R 777 $(GOPATH) && \
+		rm -rf $(GOPATH)
 
 upstream: clean
 	$(MAKE) deps
