@@ -66,6 +66,9 @@ skel:
 	    echo "applying $$p..." ; \
 	    ( cd $(SKEL) ; patch -p1 -b ) < $$p || exit 1; \
 	done
+	if grep phantomjs $(SKEL)/etc/thruk/thruk.conf >/dev/null; then \
+	    ( cd $(SKEL) ; patch -p1 -b ) < patches/0001-skel_adjustments.skel_patch.phantomjs || exit 1; \
+	fi
 	find $(SKEL) -name \*.orig -exec rm {} \;
 	mkdir -p $(SKEL)/etc/thruk/bp/
 	cp $(DIR)/examples/bp_functions.pm $(SKEL)/etc/thruk/bp/

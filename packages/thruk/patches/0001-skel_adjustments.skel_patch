@@ -223,15 +223,6 @@
      #git_base_dir        =
      #show_summary_prompt = 1
  
-@@ -838,7 +809,7 @@
-     #report_base_url=http://host.local/thruk/cgi-bin/
- 
-     # phantomjs is used to convert html pages into pdf
--    #phantomjs = /path/to/phantomjs
-+    phantomjs = ###ROOT###/bin/phantomjs
- 
-     # pnp export script is used to export pnp graphs into reports
-     #pnp_export = /path/to/pnp_export.sh
 @@ -874,24 +845,24 @@
  <Component Thruk::Plugin::BP>
      # Results will be send back by using the spool folder.
