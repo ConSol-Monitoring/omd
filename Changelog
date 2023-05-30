@@ -9,6 +9,7 @@ next:
             - Mod-Gearman module update 5.1.0
           - Grafana:
             - update to 9.5.1
+            - update pnp datasource to 2.0.2
 
 5.10     Feb 20 2023
           - OMD:
