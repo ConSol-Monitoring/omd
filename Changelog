@@ -10,6 +10,7 @@ next:
           - Grafana:
             - update to 9.5.1
             - update pnp datasource to 2.0.2
+            - update thruk datasource to 2.0.2
 
 5.10     Feb 20 2023
           - OMD:
