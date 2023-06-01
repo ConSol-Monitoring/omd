@@ -15,6 +15,12 @@ fi
 . .profile
 . lib/omd/init_profile
 
+# Victoriametrics VMUI access
+if [ "$CONFIG_VICTORIAMETRICS" == "on" ]; then
+  . etc/victoriametrics/victoriametrics.conf
+  export VMUI_AUTH=$(printf "%s:%s" "$vm_httpAuth_username" "$vm_httpAuth_password" | base64)
+fi
+
 # Start httpd in the C locale by default.
 HTTPD_LANG="C"
 
