@@ -31,7 +31,6 @@ install:
 	mv $(DESTDIR)$(OMD_ROOT)/share/thruk/script/thruk $(DESTDIR)$(OMD_ROOT)/bin/thruk
 	chmod 755 $(DESTDIR)$(OMD_ROOT)/bin/thruk
 	chmod 755 $(DESTDIR)$(OMD_ROOT)/bin/naglint
-	install -m 755 phantomjs-2.1.1-$(shell uname -m) $(DESTDIR)$(OMD_ROOT)/bin/phantomjs;
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/omd/scripts/post-update
 	install -m 755 thruk.post-update $(DESTDIR)$(OMD_ROOT)/lib/omd/scripts/post-update/thruk
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/monitoring-plugins
@@ -66,9 +65,6 @@ skel:
 	    echo "applying $$p..." ; \
 	    ( cd $(SKEL) ; patch -p1 -b ) < $$p || exit 1; \
 	done
-	if grep phantomjs $(SKEL)/etc/thruk/thruk.conf >/dev/null; then \
-	    ( cd $(SKEL) ; patch -p1 -b ) < patches/0001-skel_adjustments.skel_patch.phantomjs || exit 1; \
-	fi
 	find $(SKEL) -name \*.orig -exec rm {} \;
 	mkdir -p $(SKEL)/etc/thruk/bp/
 	cp $(DIR)/examples/bp_functions.pm $(SKEL)/etc/thruk/bp/
