@@ -1,0 +1,47 @@
+From 0dd11100aa92bab172293ec9615a8a56b0e35ee6 Mon Sep 17 00:00:00 2001
+From: Stefan Taferner <stefan.taferner@porscheinformatik.com>
+Date: Wed, 10 May 2023 19:28:05 +0200
+Subject: [PATCH] avoid mounting when searching for matching mount points
+
+---
+ lib/utils_disk.c | 17 +++++++++--------
+ 1 file changed, 9 insertions(+), 8 deletions(-)
+
+diff --git a/lib/utils_disk.c b/lib/utils_disk.c
+index 468769b19..582d3ea17 100644
+--- a/lib/utils_disk.c
++++ b/lib/utils_disk.c
+@@ -147,24 +147,25 @@ np_set_best_match(struct parameter_list *desired, struct mount_entry *mount_list
+ 
+       /* set best match if path name exactly matches a mounted device name */
+       for (me = mount_list; me; me = me->me_next) {
+-	if (get_fs_usage(me->me_mountdir, me->me_devname, &fsp) < 0)
+-	  continue; /* skip if permissions do not suffice for accessing device */
+-        if (strcmp(me->me_devname, d->name)==0)
+-          best_match = me;
++        if (strcmp(me->me_devname, d->name)==0) {
++          if (get_fs_usage(me->me_mountdir, me->me_devname, &fsp) >= 0) {
++            best_match = me;
++          }
++        }
+       }
+ 
+       /* set best match by directory name if no match was found by devname */
+       if (! best_match) {
+         for (me = mount_list; me; me = me->me_next) {
+-	  if (get_fs_usage(me->me_mountdir, me->me_devname, &fsp) < 0)
+-	    continue; /* skip if permissions do not suffice for accessing device */
+           size_t len = strlen (me->me_mountdir);
+           if ((exact == FALSE && (best_match_len <= len && len <= name_len &&
+              (len == 1 || strncmp (me->me_mountdir, d->name, len) == 0)))
+              || (exact == TRUE && strcmp(me->me_mountdir, d->name)==0))
+           {
+-            best_match = me;
+-            best_match_len = len;
++            if (get_fs_usage(me->me_mountdir, me->me_devname, &fsp) >= 0) {
++              best_match = me;
++              best_match_len = len;
++            }
+           }
+         }
+       }
