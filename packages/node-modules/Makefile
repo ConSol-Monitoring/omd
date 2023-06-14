@@ -39,7 +39,7 @@ skel:
 	if [ "x$(PUPPETEER_EXECUTABLE_PATH)" != "x" ]; then \
 		echo "export PUPPETEER_EXECUTABLE_PATH=$(PUPPETEER_EXECUTABLE_PATH)" >> $(SKEL)/etc/profile.d/puppeteer.sh; \
 	else \
-		echo "export PUPPETEER_EXECUTABLE_PATH=./lib/$$(ls -1 node_modules/puppeteer/.local-chromium/*/chrome-linux/chrome)" >> $(SKEL)/etc/profile.d/puppeteer.sh; \
+		echo "export PUPPETEER_EXECUTABLE_PATH=./lib/$$(ls -1 node_modules/puppeteer/.local-chromium/chrome/*/chrome-linux*/chrome)" >> $(SKEL)/etc/profile.d/puppeteer.sh; \
 	fi
 
 clean:
