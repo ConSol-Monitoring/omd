@@ -23,7 +23,7 @@ vm_httpAuth_username=prom
 # needed only for backups
 vm_snapshotAuthKey=###generated###
 # no key for metrics access
-#metricsAuthKey=
+vm_metricsAuthKey=metrics
 
 #Path to files for TLS certificate. Used only if -tls is set. Prefer ECDSA certs instead of RSA certs, since RSA certs are slow
 # default; use key from local apache

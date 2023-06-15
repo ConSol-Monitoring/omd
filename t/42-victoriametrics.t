@@ -31,10 +31,10 @@ TestUtils::test_command({ cmd => qq[/bin/su - $site -c 'vmagent-prod --version']
 TestUtils::test_command({ cmd => qq[/bin/su - $site -c 'vmauth-prod --version'],  like => '/^vmauth/' });
 TestUtils::test_command({ cmd => qq[/bin/su - $site -c 'vmbackup-prod --version'],  like => '/^vmbackup/' });
 TestUtils::test_command({ cmd => qq[/bin/su - $site -c 'vmalert-prod --version'],  like => '/^vmalert/' });
-TestUtils::test_command({ cmd => qq[/bin/su - $site -c 'vmctl --version'],  like => '/vmctl version/', errlike => '/^/' });
+TestUtils::test_command({ cmd => qq[/bin/su - $site -c 'vmctl'],  like => '/VictoriaMetrics command-line tool/', errlike => '/.*/' });
 TestUtils::test_command({
   cmd => qq[/bin/su - $site -c 'lib/monitoring-plugins/check_http ].
-         qq[-t 60 -H 127.0.0.1 -p 8428 --onredirect=follow -u "/metrics" -s "vm_app_version"'],
+         qq[-t 60 -H 127.0.0.1 -p 8428 --onredirect=follow -u "/metrics?authKey=metrics" -s "vm_app_version"'],
   like => '/HTTP OK:/',
   waitfor => 'HTTP\ OK:',
 });
