@@ -1,0 +1,88 @@
+From d3304a8910f24ba50be8cd2a15bb215c67062fa4 Mon Sep 17 00:00:00 2001
+From: Sven Nierlein <sven@consol.de>
+Date: Fri, 16 Jun 2023 16:09:50 +0200
+Subject: [PATCH] skip removing entries from sqlite if store-queue-on-shutdown
+ is used
+
+if `--store-queue-on-shutdown` is used, database should only be accessed during
+shutdown and on initial startup. Skipping the done() saves the unnecessary query
+preparation, database locks, etc...
+
+instead truncate queue database after successfully importing the retention database.
+
+ - fixes #369
+---
+ libgearman-server/plugins/base.h               |  5 +++++
+ .../plugins/queue/sqlite/instance.cc           | 18 ++++++++++++++++--
+ .../plugins/queue/sqlite/queue.cc              |  2 +-
+ 3 files changed, 22 insertions(+), 3 deletions(-)
+
+diff --git a/libgearman-server/plugins/base.h b/libgearman-server/plugins/base.h
+index 92a79c0c5..bde26ac92 100644
+--- a/libgearman-server/plugins/base.h
++++ b/libgearman-server/plugins/base.h
+@@ -147,6 +147,11 @@ class Context {
+     _store_on_shutdown= store_on_shutdown_;
+   }
+ 
++  bool is_store_on_shutdown()
++  {
++    return _store_on_shutdown;
++  }
++
+   bool has_error()
+   {
+     return _error_string.size();
+diff --git a/libgearman-server/plugins/queue/sqlite/instance.cc b/libgearman-server/plugins/queue/sqlite/instance.cc
+index f8fdc4a1a..540a6446e 100644
+--- a/libgearman-server/plugins/queue/sqlite/instance.cc
++++ b/libgearman-server/plugins/queue/sqlite/instance.cc
+@@ -432,6 +432,11 @@ gearmand_error_t Instance::done(gearman_server_st*,
+                                    const char *function_name,
+                                    size_t function_name_size)
+ {
++  if (is_store_on_shutdown())
++  {
++    return GEARMAND_SUCCESS;
++  }
++
+   gearmand_log_debug(GEARMAN_DEFAULT_LOG_PARAM,
+                      "sqlite done: unique_key: %.*s, function_name: %.*s",
+                      int(unique_size), (char*)unique,
+@@ -593,6 +598,17 @@ gearmand_error_t Instance::replay_loop(gearman_server_st *server)
+                                "failed to reset REPLAY prep statement: %s", sqlite3_errmsg(_db));
+   }
+ 
++  /* truncate database now if in store_on_shutdown mode */
++  if (is_store_on_shutdown())
++  {
++    std::string query("DELETE FROM ");
++    query+= _table;
++    if (_sqlite_dispatch(query) == false) {
++      return gearmand_log_gerror(GEARMAN_DEFAULT_LOG_PARAM, GEARMAND_QUEUE_ERROR,
++                                "failed to truncate table: %s", sqlite3_errmsg(_db));
++    }
++  }
++
+   if (row_count == 0)
+   {
+     return GEARMAND_SUCCESS;
+@@ -603,5 +619,3 @@ gearmand_error_t Instance::replay_loop(gearman_server_st *server)
+ 
+ } // namespace queue
+ } // namespace gearmand
+-
+-
+diff --git a/libgearman-server/plugins/queue/sqlite/queue.cc b/libgearman-server/plugins/queue/sqlite/queue.cc
+index e6f54b6eb..2d9a901ae 100644
+--- a/libgearman-server/plugins/queue/sqlite/queue.cc
++++ b/libgearman-server/plugins/queue/sqlite/queue.cc
+@@ -77,7 +77,7 @@ Sqlite::Sqlite() :
+ {
+   command_line_options().add_options()
+     ("libsqlite3-db", boost::program_options::value(&schema), "Database file to use.")
+-    ("store-queue-on-shutdown", boost::program_options::bool_switch(&_store_on_shutdown)->default_value(false), "Store queue on shutdown.")
++    ("store-queue-on-shutdown", boost::program_options::bool_switch(&_store_on_shutdown)->default_value(false), "Store queue on shutdown only.")
+     ("libsqlite3-table", boost::program_options::value(&table)->default_value(GEARMAND_QUEUE_SQLITE_DEFAULT_TABLE), "Table to use.")
+     ;
+ }
