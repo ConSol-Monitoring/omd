@@ -4510,7 +4510,7 @@ class PackageManager(metaclass=abc.ABCMeta):
         p = self._execute(cmd)
         output = p.communicate()[0]
         if p.wait() != 0:
-            bail_out(tty_error + ": Failed to uninstall package:\n%s" % str(output))
+            bail_out(tty_error + ": Failed to uninstall package: %s" % output.decode("utf-8").strip())
 
 
     def _execute(self, cmd):
@@ -4534,7 +4534,7 @@ class PackageManagerDEB(PackageManager):
         p = self._execute(["dpkg", "-S", real_path])
         output = p.communicate()[0]
         if p.wait() != 0:
-            bail_out(tty_error + ": Failed to find packages:\n%s" % str(output))
+            bail_out(tty_error + ": Failed to find packages: %s" % output.decode("utf-8").strip())
 
         for line in output.split(b"\n"):
             if line.endswith(b": %s" % real_path.encode("UTF-8")):
@@ -4560,7 +4560,7 @@ class PackageManagerRPM(PackageManager):
             return []
 
         elif p.wait() != 0:
-            bail_out(tty_error + ": Failed to find packages:\n%s" % str(output))
+            bail_out(tty_error + ": Failed to find packages: %s" % output.decode("utf-8").strip())
 
         return output.strip().split(b"\n")
 
