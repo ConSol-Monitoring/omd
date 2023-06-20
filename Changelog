@@ -12,6 +12,8 @@ next:
             - update to 9.5.1
             - update pnp datasource to 2.0.2
             - update thruk datasource to 2.0.2
+          - Plugins:
+            - update check_testssl to 3.0.8
 
 5.10     Feb 20 2023
           - OMD:

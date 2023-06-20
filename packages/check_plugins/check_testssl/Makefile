@@ -1,6 +1,7 @@
 include ../../../Makefile.omd
 
 NAME     = check_testssl
+VERSION  = 3.0.8
 
 .PHONY: skel
 
@@ -16,6 +17,11 @@ skel:
 clean:
 
 upstream:
-	wget "https://testssl.sh" -O testssl.sh
-	chmod 755 testssl.sh
-	wget "https://testssl.sh/mapping-rfc.txt" -O mapping-rfc.txt
+	wget https://github.com/drwetter/testssl.sh/archive/refs/tags/v$(VERSION).tar.gz
+	tar zxf v$(VERSION).tar.gz
+	rsync -a testssl.sh-$(VERSION)/testssl.sh testssl.sh
+	rm -rf skel/etc/testssl
+	mkdir -p skel/etc/testssl
+	rsync -a testssl.sh-$(VERSION)/etc/. skel/etc/testssl/.
+	ln -s . skel/etc/testssl/etc
+	rm -rf testssl.sh-$(VERSION) v$(VERSION).tar.gz
