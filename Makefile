@@ -153,16 +153,16 @@ pack:
 	if [ -n "$$failed" ] ; then \
 	    echo "Invalid permissions for skeleton dirs. Must be 0755:" ; \
             echo "I'll fix this for you this time..." ; \
-            chmod -c 755 $$failed ; \
             echo "$$failed" ; \
-        fi
+        fi; \
+		find $(DESTDIR)$(OMD_ROOT)/skel -type d -not -perm 0755 -exec chmod -c 755 {} \;
 	@failed=$$(find $(DESTDIR)$(OMD_ROOT)/skel -type f -not -perm 0644) ; \
 	if [ -n "$$failed" ] ; then \
 	    echo "Invalid permissions for skeleton files. Must be 0644:" ; \
             echo "$$failed" ; \
             echo "I'll fix this for you this time..." ; \
-            chmod -c 644 $$failed ; \
-        fi
+        fi; \
+	    find $(DESTDIR)$(OMD_ROOT)/skel -type f -not -perm 0644 -exec chmod -c 644 {} \;
 
 	@failed=$$(find $(DESTDIR)$(OMD_ROOT)/lib64 2>/dev/null) ; \
 	if [ -n "$$failed" ] ; then \
@@ -171,7 +171,7 @@ pack:
         fi
 
 	# Fix packages which did not add ###ROOT###
-	find $(DESTDIR)$(OMD_ROOT)/skel -type f | xargs -n1 sed -i -e 's+$(OMD_ROOT)+###ROOT###+g'
+	find $(DESTDIR)$(OMD_ROOT)/skel -type f -exec sed -e 's+$(OMD_ROOT)+###ROOT###+g' -i "{}" \;
 
 	# Remove site-specific directories that went under /omd/version
 	rm -rf $(DESTDIR)/{var,tmp,etc,local,man}
