@@ -7,7 +7,7 @@ next:
           - LMD: Update 2.1.5
           - Gearman:
             - update mod-gearman-worker-go to 1.3.3
-            - Mod-Gearman module update 5.1.0
+            - Mod-Gearman module update 5.1.1
           - Grafana:
             - update to 9.5.1
             - update pnp datasource to 2.0.2
