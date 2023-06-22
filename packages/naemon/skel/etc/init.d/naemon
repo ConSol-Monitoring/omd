@@ -80,6 +80,7 @@ case "$1" in start|restart)
 esac
 case "$1" in start|restart|reload)
     rm -f $OMD_ROOT/var/naemon/var/naemon/retention.dat??????
+    rm -f $OMD_ROOT/var/naemon/objects.cache
 esac
 
 __generic_init "$*"
