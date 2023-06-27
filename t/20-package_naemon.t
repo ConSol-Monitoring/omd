@@ -12,7 +12,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 107 );
+plan( tests => 114 );
 
 ##################################################
 # create our test site
@@ -41,6 +41,9 @@ my $tests = [
   { cmd => "/bin/su - $site -c 'file bin/naemon.dbg'", like => '/not stripped/' },
   { cmd => "/bin/su - $site -c 'file lib/naemon/livestatus.o.dbg'", like => '/not stripped/' },
   { cmd => "/bin/su - $site -c 'file lib/mod_gearman/mod_gearman_naemon.o.dbg'", like => '/not stripped/' },
+
+  # default config should not contain warnings
+  { cmd => "/bin/su - $site -c 'omd check core 2>&1'", unlike => ['/Warning:/', '/Error:/'], like => ['/Total Errors:   0/', '/Total Warnings: 0/'] },
 
   { cmd => $omd_bin." stop $site naemon", unlike => '/kill/i' },
 
