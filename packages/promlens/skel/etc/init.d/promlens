@@ -22,6 +22,7 @@ LOG_FILE=$OMD_ROOT/var/promlens/promlens.log
 SQLITE=$OMD_ROOT/var/promlens/links.sql
 PID_FILE=$OMD_ROOT/tmp/run/promlens.pid
 NOHUP=1
+STORE_PID=1
 
 
 EXTERNAL_FQDN=${OMD_EXTERNAL_FQDN:-$(hostname --fqdn)}
