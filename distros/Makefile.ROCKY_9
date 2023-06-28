@@ -90,6 +90,7 @@ OS_PACKAGES          += diffutils
 OS_PACKAGES          += expat
 OS_PACKAGES          += fping
 OS_PACKAGES          += gd
+OS_PACKAGES          += glibc-langpack-en              # contains en_US.UTF-8
 OS_PACKAGES          += httpd
 OS_PACKAGES          += iputils
 OS_PACKAGES          += libdrm                         # chrome
