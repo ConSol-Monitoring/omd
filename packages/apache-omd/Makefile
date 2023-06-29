@@ -7,7 +7,7 @@ FCGI_FILE="mod_fcgid-2.3.9"
 MOD_RPAF_VERSION="0.8"
 MOD_PROMETHEUS_STATUS_VERSION="0.3.0"
 
-GOPKG       = 1.19
+GOPKG       = 1.20
 GOVERSION   = $(shell grep ^VERSION ../go-${GOPKG}/Makefile | awk '{ print $$3 }')
 
 APACHE_MODULES=modrpaf modprometheus_status

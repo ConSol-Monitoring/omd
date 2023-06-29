@@ -4,7 +4,7 @@ NAME       = grafana-loki
 VERSION    = 2.7.2
 DIR        = loki-$(VERSION)
 SRC        = $(DIR).tar.gz
-GOPKG      = 1.19
+GOPKG      = 1.20
 GOVERSION  = $(shell grep ^VERSION ../go-${GOPKG}/Makefile | awk '{ print $$3 }')
 PWD        = $(shell pwd)
 GOENV      = export GOROOT=$(PWD)/../go-$(GOPKG)/go-$(GOVERSION) && export PATH=$$GOROOT/bin:$$PATH

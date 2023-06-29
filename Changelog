@@ -14,6 +14,7 @@ next:
             - update thruk datasource to 2.0.2
           - Plugins:
             - update check_testssl to 3.0.8
+          - Go builds updated to 1.20.5
 
 5.10     Feb 20 2023
           - OMD:
