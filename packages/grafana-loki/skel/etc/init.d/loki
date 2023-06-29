@@ -26,6 +26,6 @@ STOP_TIMEOUT=30
 mkdir -p "$OMD_ROOT/var/log" \
         "$OMD_ROOT/var/loki"
 
-export ASSUME_NO_MOVING_GC_UNSAFE_RISK_IT_WITH=go1.18
+export ASSUME_NO_MOVING_GC_UNSAFE_RISK_IT_WITH=go1.20
 
 __generic_init "$*"
