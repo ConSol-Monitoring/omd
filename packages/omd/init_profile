@@ -53,6 +53,7 @@ __generic_init() {
     exit 1
   fi
   if [ -z "$PSPATTERN" ]; then
+    OPTS=$(__generic_init_trim "$OPTS")
     PSPATTERN="$DAEMON $OPTS"
   fi
   if [ -z "$NAME" ]; then
@@ -187,11 +188,13 @@ __generic_init_wait_start() {
     if [ -z "$LOG_FILE" ]; then
       LOG_FILE="/dev/null"
     fi
+    OPTS=$(__generic_init_trim "$OPTS")
     STARTCMD="nohup setsid $DAEMON $OPTS"
     $STARTCMD >>$LOG_FILE 2>&1 &
     PID=$!
     disown
   else
+    OPTS=$(__generic_init_trim "$OPTS")
     STARTCMD="$DAEMON $OPTS"
     if [ -n "$LOG_FILE" ]; then
       if ! $STARTCMD >>$LOG_FILE 2>&1; then
@@ -367,6 +370,16 @@ __generic_init_verify_config() {
     fi
   fi
   return 0
+}
+
+################################################################################
+__generic_init_trim() {
+    local var="$*"
+    # remove leading whitespace characters
+    var="${var#"${var%%[![:space:]]*}"}"
+    # remove trailing whitespace characters
+    var="${var%"${var##*[![:space:]]}"}"
+    printf '%s' "$var"
 }
 
 ################################################################################

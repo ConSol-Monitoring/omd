@@ -17,7 +17,9 @@ fi
 
 # Victoriametrics VMUI access
 if [ "$CONFIG_VICTORIAMETRICS" == "on" ]; then
-  . etc/victoriametrics/victoriametrics.conf
+  for CFG in etc/victoriametrics/conf.d/*.conf; do
+    . $CFG
+  done
   export VMUI_AUTH=$(printf "%s:%s" "$vm_httpAuth_username" "$vm_httpAuth_password" | base64)
 fi
 

@@ -21,10 +21,10 @@ case "$1" in
             echo "$PORT"
         fi
 
-        # adapt configs:
-        if [ -f  $OMD_ROOT/etc/victoriametrics/victoriametrics.conf ] ; then
-           . $OMD_ROOT/etc/victoriametrics/victoriametrics.conf
-        fi
+        # read config
+        for CFG in $OMD_ROOT/etc/victoriametrics/conf.d/*.conf; do
+           . $CFG
+        done
         if [ "$vm_httpAuth_username:$vm_httpAuth_password" == ":" ] ; then
            auth=""
         else
@@ -38,37 +38,11 @@ case "$1" in
             sed -e '/^\[promql\]/,/^\[/{s%^url = "\(http.?\)://.*/query?\(.*$\)%url = "\1://'$auth$CONFIG_VICTORIAMETRICS_TCP_ADDR':'$PORT'/query?\2%}' -i $OMD_ROOT/etc/histou/histou.ini
         fi
 
-        if [ -f $OMD_ROOT/etc/victoriametrics/remote_write.yml_template ] ; then
-            sed -e 's%- url: ".*/api\(.*\)$%- url: "http://'$CONFIG_VICTORIAMETRICS_TCP_ADDR':'$PORT'/api\1%' -i $OMD_ROOT/etc/victoriametrics/remote_write.yml_template
+        if [ -f $OMD_ROOT/etc/victoriametrics/remote_write.yml ] ; then
+            sed -e 's%- url: ".*/api\(.*\)$%- url: "http://'$CONFIG_VICTORIAMETRICS_TCP_ADDR':'$PORT'/api\1%' -i $OMD_ROOT/etc/victoriametrics/remote_write.yml
         fi
-        cat <<EOF > $OMD_ROOT/etc/victoriametrics/apache.conf
-# This file is managed by 'omd config set VICTORIAMETRICS_TCP_ADDR/VICTORIAMETRICS_TCP_PORT'.
-# Better do not edit manually
-<IfModule !mod_proxy.c>
-    LoadModule proxy_module ###APACHE_MODULE_DIR###/mod_proxy.so
-</IfModule>
-<IfModule !mod_proxy_http.c>
-    LoadModule proxy_http_module ###APACHE_MODULE_DIR###/mod_proxy_http.so
-</IfModule>
-<IfModule !mod_ssl.c>
-    LoadModule ssl_module ###APACHE_MODULE_DIR###/mod_ssl.so
-</IfModule>
 
-SSLProxyEngine On
-SSLProxyVerify none
-SSLProxyCheckPeerName off
-SSLProxyCheckPeerCN off
-ProxyRequests Off
-
-<Location /${OMD_SITE}/vmui>
-    RequestHeader set Authorization "Basic ${VMUI_AUTH}"
-    ProxyPass https://${CONFIG_VICTORIAMETRICS_TCP_ADDR}:${CONFIG_VICTORIAMETRICS_PORT}/vmui retry=0 disablereuse=On
-    ProxyPassReverse https://${CONFIG_VICTORIAMETRICS_TCP_ADDR}:${CONFIG_VICTORIAMETRICS_PORT}/vmui/
-
-    ErrorDocument 503 /503.html?VICTORIAMETRICS=on
-    ErrorDocument 502 /503.html?VICTORIAMETRICS=on
-</Location>
-EOF
+        sed -e 's/:[^ \/]*\/vmui/:'$PORT'\/vmui/g'  -i $OMD_ROOT/etc/apache/conf.d/victoriametrics.conf
     ;;
     depends)
     [ "$CONFIG_VICTORIAMETRICS" = "on" ]

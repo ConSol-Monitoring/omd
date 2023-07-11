@@ -52,6 +52,8 @@ install:
 	install -m 755 *cron* $(DESTDIR)$(OMD_ROOT)/bin
 
 skel:
+	sed -i -e 's|###APACHE_MODULE_DIR###|$(APACHE_MODULE_DIR)|g' \
+	       $(SKEL)/etc/apache/conf.d/victoriametrics.conf
 
 clean:
 	rm -rf $(GOPATH)

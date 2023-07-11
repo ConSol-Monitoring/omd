@@ -16,20 +16,7 @@ case "$1" in
     set)
        mkdir -p $OMD_ROOT/etc/grafana/provisioning/datasources
        rm -f $OMD_ROOT/etc/grafana/provisioning/datasources/victoriametrics.yml
-       if [ "$2" == "off" ]; then
-           rm -f $OMD_ROOT/etc/victoriametrics/apache.conf
-           rm -f $OMD_ROOT/etc/apache/conf.d/victoriametrics.conf
-       cat <<EOF > $OMD_ROOT/etc/apache/conf.d/victoriametrics.conf
-# Better do not edit manually
-<Location "/$OMD_SITE/vmui">
-    ErrorDocument 404 /503.html?VICTORIAMETRICS=on
-</Location>
-EOF
-
-       elif [ "$2" == "on" ]; then
-           rm -f $OMD_ROOT/etc/apache/conf.d/victoriametrics.conf
-           ln -s $OMD_ROOT/etc/victoriametrics/apache.conf \
-                 $OMD_ROOT/etc/apache/conf.d/victoriametrics.conf
+       if [ "$2" == "on" ]; then
            if [ -f $OMD_ROOT/etc/victoriametrics/grafana_datasources.yml ] ; then
              ln -s $OMD_ROOT/etc/victoriametrics/grafana_datasources.yml \
                  $OMD_ROOT/etc/grafana/provisioning/datasources/victoriametrics.yml
