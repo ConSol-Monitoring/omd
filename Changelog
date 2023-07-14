@@ -11,7 +11,7 @@ next:
           - Grafana:
             - update to 9.5.6
             - update pnp datasource to 2.0.2
-            - update thruk datasource to 2.0.2
+            - update thruk datasource to 2.0.3
           - Plugins:
             - update check_testssl to 3.0.8
           - Go builds updated to 1.20.5
