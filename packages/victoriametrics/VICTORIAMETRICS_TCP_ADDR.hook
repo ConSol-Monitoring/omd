@@ -20,7 +20,7 @@ case "$1" in
         [ "$CONFIG_VICTORIAMETRICS" == "on" ]
     ;;
     set)
-        sed -e 's/https:\/\/[^ :]*:/https:\/\/'$2':/g'  -i $OMD_ROOT/etc/apache/conf.d/victoriametrics.conf
+        true
     ;;
 esac
 

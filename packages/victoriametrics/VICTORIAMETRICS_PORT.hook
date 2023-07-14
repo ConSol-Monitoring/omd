@@ -41,8 +41,6 @@ case "$1" in
         if [ -f $OMD_ROOT/etc/victoriametrics/remote_write.yml ] ; then
             sed -e 's%- url: ".*/api\(.*\)$%- url: "http://'$CONFIG_VICTORIAMETRICS_TCP_ADDR':'$PORT'/api\1%' -i $OMD_ROOT/etc/victoriametrics/remote_write.yml
         fi
-
-        sed -e 's/:[^ \/]*\/vmui/:'$PORT'\/vmui/g'  -i $OMD_ROOT/etc/apache/conf.d/victoriametrics.conf
     ;;
     depends)
     [ "$CONFIG_VICTORIAMETRICS" = "on" ]
