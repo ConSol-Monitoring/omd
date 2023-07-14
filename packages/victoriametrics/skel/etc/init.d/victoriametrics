@@ -34,7 +34,7 @@ export LC_ALL=C
 if [ ! -f ${AUTH_CONF_FILE} ]; then
   httpAuth_password=$( tr -cd A-Za-z0-9 < /dev/urandom | head -c 16 )
   snapshotAuthKey=$( tr -cd A-Za-z0-9 < /dev/urandom | head -c 16 )
-  echo <<EOT > ${AUTH_CONF_FILE}
+  cat << EOT > ${AUTH_CONF_FILE}
 # this file is generated automatically, do not change manually. Changes will be overwritten.
 vm_httpAuth_username=prom
 vm_httpAuth_password=${httpAuth_password}
