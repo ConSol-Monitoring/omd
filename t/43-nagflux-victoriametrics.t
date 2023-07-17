@@ -25,7 +25,7 @@ my $startTime = time-9;
 #my $site = 'testsite';
 
 # remove victoriametrics auth via empty config file:
-TestUtils::test_command({ cmd => "/bin/su - $site -c \"echo '# dummy config' > ~$site/etc/victoriametrics/victoriametrics.conf\" ", errlike => '/^$/'});
+TestUtils::test_command({ cmd => qq{/bin/su - $site -c "echo '# dummy config' > ~$site/etc/victoriametrics/conf.d/auto_auth.conf" }, errlike => '/^$/'});
 
 # for test
 TestUtils::test_command({ cmd => $omd_bin." stop $site " , like => '/Stopp.*OK/' });
