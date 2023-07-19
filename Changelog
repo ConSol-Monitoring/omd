@@ -1,6 +1,6 @@
 This file documents the revision history for the Open Monitoring Distribution (Labs Edition)
 
-next:
+5.20     Jul 17 2023
           - OMD:
             - add build support for Debian 12
           - Thruk: update to 3.08.2
@@ -19,6 +19,8 @@ next:
           - VictoriaMetrics
             - update to 1.87.6
             - migrate config to conf.d folder
+          - Prometheus
+            - node_exporter 1.6.1
 
 5.10     Feb 20 2023
           - OMD:
