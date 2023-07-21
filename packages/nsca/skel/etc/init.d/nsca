@@ -17,7 +17,5 @@ fi
 NAME="NSCA"
 DAEMON=$OMD_ROOT/bin/nsca
 OPTS="-c $OMD_ROOT/etc/nsca/nsca.cfg"
-PID_FILE=$OMD_ROOT/tmp/run/nsca.pid
-STORE_PID=1
 
 __generic_init "$*"
