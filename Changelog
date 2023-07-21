@@ -1,6 +1,6 @@
 This file documents the revision history for the Open Monitoring Distribution (Labs Edition)
 
-5.20     Jul 17 2023
+5.20     Jul 22 2023
           - OMD:
             - add build support for Debian 12
           - Thruk: update to 3.08.3
