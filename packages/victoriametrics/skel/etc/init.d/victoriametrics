@@ -30,27 +30,35 @@ mkdir -p \
 
 export LC_ALL=C
 
-# generate random passwords
-if [ ! -f ${AUTH_CONF_FILE} ]; then
-  httpAuth_password=$( tr -cd A-Za-z0-9 < /dev/urandom | head -c 16 )
-  snapshotAuthKey=$( tr -cd A-Za-z0-9 < /dev/urandom | head -c 16 )
-  cat << EOT > ${AUTH_CONF_FILE}
+case "$1" in start|restart|reload|checkconfig|check)
+  # generate random passwords
+  if [ ! -f ${AUTH_CONF_FILE} ]; then
+    # use existing ones if available
+    if [ -f etc/victoriametrics/victoriametrics.conf.migrated.to.conf.d ]; then
+      . etc/victoriametrics/victoriametrics.conf.migrated.to.conf.d
+    fi
+    httpAuth_username=${vm_httpAuth_username:-prom}
+    httpAuth_password=${vm_httpAuth_password:-$( tr -cd A-Za-z0-9 < /dev/urandom | head -c 16 )}
+    snapshotAuthKey=${vm_snapshotAuthKey:-$( tr -cd A-Za-z0-9 < /dev/urandom | head -c 16 )}
+    metricsAuthKey=${vm_metricsAuthKey:-metrics}
+    cat << EOT > ${AUTH_CONF_FILE}
 # this file is generated automatically, do not change manually. Changes will be overwritten.
-vm_httpAuth_username=prom
+vm_httpAuth_username=${httpAuth_username}
 vm_httpAuth_password=${httpAuth_password}
-vm_metricsAuthKey=metrics
+vm_metricsAuthKey=${metricsAuthKey}
 vm_snapshotAuthKey=${snapshotAuthKey}
 EOT
-  echo "created ${AUTH_CONF_FILE} with random passwords, for remote access check this file"
+    echo "created ${AUTH_CONF_FILE} with random passwords, for remote access check this file"
 
-  if [ -f ${OMD_ROOT}/etc/victoriametrics/grafana_datasources.yml ] ; then
-    sed -e "s/basicAuthPassword: .*/basicAuthPassword: ${httpAuth_password}/; s/basicAuthUser: .*/basicAuthUser: prom/" -i ${OMD_ROOT}/etc/victoriametrics/grafana_datasources.yml
-    if omd status grafana > /dev/null 2>&1 ; then
-      omd restart grafana
+    if [ -f ${OMD_ROOT}/etc/victoriametrics/grafana_datasources.yml ] ; then
+      sed -e "s/basicAuthPassword: .*/basicAuthPassword: ${httpAuth_password}/; s/basicAuthUser: .*/basicAuthUser: prom/" -i ${OMD_ROOT}/etc/victoriametrics/grafana_datasources.yml
+      if omd status grafana > /dev/null 2>&1 ; then
+        omd restart grafana
+      fi
+      echo "patched password in grafana_datasources.yml"
     fi
-    echo "patched password in grafana_datasources.yml"
   fi
-fi
+esac
 
 # export every parameter that is set after this line
 set -a
