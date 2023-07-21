@@ -1722,7 +1722,7 @@ def prepare_and_populate_tmpfs(sitename):
     # to be populated like the tmpfs afterwards.
     if g_site_conf["TMPFS"] == "on":
         if tmpfs_mounted(sitename):
-            return
+            return False
 
         sys.stdout.write("Creating temporary filesystem %s..." % tmp)
         sys.stdout.flush()
@@ -1730,12 +1730,12 @@ def prepare_and_populate_tmpfs(sitename):
             os.mkdir(tmp)
         if 0 != os.system("mount %s '%s'" % (g_info["MOUNT_OPTIONS"], tmp) ):
             sys.stdout.write(tty_error + "\n")
-            return
+            return False
     else:
         # Skip initializing when either the tmp dir does not exist
         # and the site is not totally stopped
         if os.path.exists(tmp) and not site_is_stopped(sitename):
-            return
+            return False
 
         sys.stdout.write("Preparing tmp directory %s..." % tmp)
         sys.stdout.flush()
@@ -1745,6 +1745,7 @@ def prepare_and_populate_tmpfs(sitename):
     create_skeleton_files(sitename, "tmp")
     chown_tree(tmp, sitename)
     ok()
+    return True
 
 def unmount_tmpfs(sitename, output = True, kill = False):
     # Clear directory hierarchy when not using a tmpfs
@@ -3876,6 +3877,56 @@ def prepare_dry_run_update_path(dry_run_path, from_version, to_version):
 
     return
 
+def main_mount(args, options = {}):
+    global g_sitename
+    global g_sitedir
+
+    # if no site is selected, all sites are affected
+    exit_status = 0
+    if not g_sitename:
+        for site in all_sites():
+            # Set global vars for the current site
+            g_sitename = site
+            g_sitedir = site_dir(g_sitename)
+            load_site_conf()
+
+            if opt_version and site_version(site) != opt_version:
+                continue
+
+            # already mounted
+            if tmpfs_mounted(g_sitename):
+                sys.stderr.write("Cannot mount tmpfs of site '%s': already mounted.\n" % site)
+                continue
+
+            # Skip the site even when it is partly running
+            if not site_is_stopped(site):
+                sys.stderr.write("Cannot mount tmpfs of site '%s' while it is running.\n" % site)
+                continue
+
+            sys.stdout.write("%sMounting tmpfs of site %s%s..." % (tty_bold, site, tty_normal))
+            sys.stdout.flush()
+
+            # We need to open a subprocess, because each site must be populated with the account of the
+            # site user. And after setuid() we cannot return.
+            stdout = sys.stdout
+            stderr = sys.stderr
+            p = subprocess.Popen(
+                [sys.argv[0], "mount" ] + [ site ] + args,
+                stdin=open(os.devnull, "r"),
+                stdout=stdout,
+                stderr=stderr
+            )
+
+            if not p.wait():
+                exit_status = 1
+    else:
+        # Skip the site even when it is partly running
+        if not site_is_stopped(g_sitename):
+            bail_out(tty_error + ": Cannot mount tmpfs of site '%s' while it is running." % g_sitename)
+        if not prepare_and_populate_tmpfs(g_sitename):
+            exit_status = 1
+    sys.exit(exit_status)
+
 def main_umount(args, options = {}):
     global g_sitename
     global g_sitedir
@@ -3907,7 +3958,6 @@ def main_umount(args, options = {}):
             bail_out(tty_error + ": Cannot unmount tmpfs of site '%s' while it is running." % g_sitename)
         unmount_tmpfs(g_sitename, kill=options.kill)
     sys.exit(exit_status)
-
 
 def main_init_action(command, args, options={}):
     if g_sitename:
@@ -4886,6 +4936,17 @@ commands = [
     only_root   = True,
     needs_site  = 1,
     must_exist  = True,
+  ),
+
+  Command(
+    command     = "mount",
+    description = "Mount ramdisk volumes of site(s) and populate tmp/",
+    fn          = main_mount,
+    needs_site  = 2,
+    must_exist  = True,
+    option_spec = [
+        ( "--version",  "-V",  { "help":"nmount only sites with version ARG" }),
+    ],
   ),
 
   Command(
