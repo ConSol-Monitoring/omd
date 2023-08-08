@@ -166,11 +166,13 @@ if ($Pocet>1){
         }
         break;
 
-      case '-g':    
-        if ($Pocet>$i+1){
-          $Grep=$argv[++$i];
-          if ($DebugArgs) echo "\nDEBUG: -g ".$Grep;
-        }else{
+      case '-g':
+        if ($Pocet > $i + 1) {
+          $Grep[] = $argv[++$i]; // Store search strings in an array
+          if ($DebugArgs) {
+            echo "\nDEBUG: -g " . $Grep[count($Grep) - 1];
+          }
+        } else {
           echo "ERROR in parsing argument -g: missing value";
           Help(3);
         }
@@ -383,11 +385,20 @@ $body
     nagios_exit(1);
   }
 
-  if (isset($Grep)){
-    if (!strstr($body,$Grep)){
-      $Msg.='CIRITCAL String '.$Grep.' not found';
-      nagios_exit(2);
+  $hasGFlag = false;
+  $foundAnySearchString = false;
+  if (!empty($Grep)) {
+    $hasGFlag = true;
+    foreach ($Grep as $searchString) {
+      if (strstr($body, $searchString)) {
+        $foundAnySearchString = true;
+        break;
+      }
     }
+  }
+  if (!$foundAnySearchString && $hasGFlag) {
+    $Msg .= 'CIRITCAL None of the search strings were found';
+    nagios_exit(2);
   }
 
   if (isset($Sbc) and ($size_download < $Sbc)){
