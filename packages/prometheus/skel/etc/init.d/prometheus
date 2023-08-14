@@ -43,8 +43,8 @@ OPTIONS+=(--storage.tsdb.path="$DATA_DIR")
 
 OPTIONS+=(--web.listen-address=$CONFIG_PROMETHEUS_TCP_ADDR:$CONFIG_PROMETHEUS_TCP_PORT)
 OPTIONS+=(--web.external-url=http://${EXTERNAL_FQDN}/$OMD_SITE/prometheus)
-OPTIONS+=(--web.console.libraries=/omd/sites/demo/etc/prometheus/console_libraries)
-OPTIONS+=(--web.console.templates=/omd/sites/demo/etc/prometheus/consoles)
+OPTIONS+=(--web.console.libraries=/omd/sites/$OMD_SITE/etc/prometheus/console_libraries)
+OPTIONS+=(--web.console.templates=/omd/sites/$OMD_SITE/etc/prometheus/consoles)
 OPTIONS+=(--storage.tsdb.retention.time=${CONFIG_PROMETHEUS_RETENTION}d)
 
 if [ -r $OMD_ROOT/etc/prometheus/webconfig.yml ]; then
