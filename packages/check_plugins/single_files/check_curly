@@ -378,7 +378,7 @@ $body
   }
   
   if (isset($Tc) and ($total_time > $Tc)){
-    $Msg.='CRIITCAL Page time '.$total_time.'s exceeded time limit '.$Tc.'s';
+    $Msg.='CRITICAL Page time '.$total_time.'s exceeded time limit '.$Tc.'s';
     nagios_exit(2);
   }elseif (isset($Tw) and ($total_time > $Tw)){
     $Msg.='WARNING Page time '.$total_time.'s exceeded time limit '.$Tw.'s';
@@ -397,7 +397,11 @@ $body
     }
   }
   if (!$foundAnySearchString && $hasGFlag) {
-    $Msg .= 'CIRITCAL None of the search strings were found';
+    if (count($Grep) > 1) {
+        $Msg .= 'CRITICAL None of the search strings were found';
+    } else {
+        $Msg .= 'CRITICAL String ' . $Grep[0] . ' not found';
+    }
     nagios_exit(2);
   }
 
