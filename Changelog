@@ -1,5 +1,8 @@
 This file documents the revision history for the Open Monitoring Distribution (Labs Edition)
 
+          - Grafana:
+            - update to 10.1.0
+
 5.20     Jul 22 2023
           - OMD:
             - add build support for Debian 12

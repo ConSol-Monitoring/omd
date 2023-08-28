@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 NAME       = grafana
-VERSION    = 9.5.6
+VERSION    = 10.1.0
 SRC        = $(NAME)-$(VERSION).tar.gz
 GOPATH     = go
 GOPKG      = 1.20
@@ -83,7 +83,7 @@ package: public clean
 	echo "build app"
 	cd $(GOPATH)/src/github.com/grafana/grafana && \
 		$(GO) run build.go setup
-	echo "packageing"
+	echo "packaging"
 	rm -f grafana-*.tar.gz
 	tar zcf $(SRC) --exclude=.git $(GOPATH)/src/
 
