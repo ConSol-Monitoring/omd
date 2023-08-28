@@ -1,7 +1,7 @@
 include ../../../Makefile.omd
 
 NAME = check_storage_health
-VERSION = 1.6
+VERSION = 2.0
 DIR = $(NAME)-$(VERSION)
 
 .PHONY: skel
