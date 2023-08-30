@@ -2,6 +2,7 @@ This file documents the revision history for the Open Monitoring Distribution (L
 
 	  - VictoriaMetrics 1.93.1 (LTS)
           - Prometheus
+            - Prometheus 2.45.0
             - alertmanager 0.26.0
             - pushgateway 1.6.0
           - Grafana:
