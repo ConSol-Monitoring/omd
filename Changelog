@@ -1,5 +1,6 @@
 This file documents the revision history for the Open Monitoring Distribution (Labs Edition)
 
+	  - VictoriaMetrics 1.93.1 (LTS)
           - Prometheus
             - alertmanager 0.26.0
             - pushgateway 1.6.0

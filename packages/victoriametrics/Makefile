@@ -4,7 +4,7 @@ NAME       = victoriametrics
 PWD        = $(shell pwd)
 
 #for binary downloads
-VERSION    = 1.87.6
+VERSION    = 1.93.1
 VVERSION=v$(VERSION)
 
 GITBASE     = github.com/VictoriaMetrics
