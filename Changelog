@@ -1,6 +1,7 @@
 This file documents the revision history for the Open Monitoring Distribution (Labs Edition)
 
           - Prometheus
+            - alertmanager 0.26.0
             - pushgateway 1.6.0
           - Grafana:
             - update to 10.1.0
