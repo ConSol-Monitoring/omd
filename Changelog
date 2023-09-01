@@ -6,7 +6,7 @@ This file documents the revision history for the Open Monitoring Distribution (L
             - alertmanager 0.26.0
             - pushgateway 1.6.0
           - Grafana:
-            - update to 10.1.0
+            - update to 10.1.1
 
 5.20     Jul 22 2023
           - OMD:
