@@ -1,3 +1,12 @@
+###ROOT###/var/naemon/livestatus.log {
+	missingok
+	rotate 7
+	compress
+	delaycompress
+	notifempty
+	create 640 ###SITE### ###SITE###
+}
+
 ###ROOT###/var/naemon/naemon.log {
     daily
     rotate 3650
@@ -13,11 +22,3 @@
     create 0664 ###SITE### ###SITE###
 }
 
-###ROOT###/var/naemon/livestatus.log {
-	missingok
-	rotate 7
-	compress
-	delaycompress
-	notifempty
-	create 640 ###SITE### ###SITE###
-}
