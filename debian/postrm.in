@@ -44,7 +44,7 @@ case "$1" in
                 # On e.g. ubuntu 13.10 conf.d is not used anymore, use conf-available
                 APACHE_OMD_CONF="/etc/apache2/conf-available/zzz_omd.conf"
             fi
-            ! test -x /usr/sbin/a2disconf || a2disconf zzz_omd
+            ! test -x /usr/sbin/a2disconf || a2disconf zzz_omd || /bin/true
             rm -f "$APACHE_OMD_CONF"
             rm -f "$SYSCTL_OMD_CONF"
             ls -1 /etc/apache2/sites-available/*default*.conf 2>/dev/null | \
