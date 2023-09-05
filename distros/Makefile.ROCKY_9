@@ -21,6 +21,7 @@ BUILD_PACKAGES       += golang                         # go 1.4 does not build o
 BUILD_PACKAGES       += gperf
 BUILD_PACKAGES       += help2man                       # required by naemon
 BUILD_PACKAGES       += httpd-devel
+BUILD_PACKAGES       += iputils                        # ping required to build monitoring-plugins
 BUILD_PACKAGES       += libcom_err-devel               # freetds
 BUILD_PACKAGES       += libevent-devel                 # RHEL Server Optional
 BUILD_PACKAGES       += libicu-devel                   # naemon-livestatus
