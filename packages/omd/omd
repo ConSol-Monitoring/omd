@@ -3614,21 +3614,22 @@ def print_diff(rel_path, source_path, target_path, source_version, source_perms,
                 sys.stdout.write("    %s %s %s\n" % (os.readlink(source_file), arrow, os.readlink(target_file)))
             elif 'c' in status:
                 source_content = instantiate_skel(source_file)
-                if 0 == os.system("which colordiff > /dev/null 2>&1"):
-                    diff = "colordiff"
-                else:
-                    diff = "diff"
                 if diff_binary:
                     skel_tmp_file = target_file + '.skel_default'
                     open(skel_tmp_file, "wb").write(source_content)
                     os.system("%s %s %s" % (diff_binary, target_file, skel_tmp_file))
                     os.remove(skel_tmp_file)
                 else:
+                    if 0 == os.system("which colordiff > /dev/null 2>&1"):
+                        diff = "colordiff"
+                    else:
+                        diff = "diff"
                     process = subprocess.Popen([diff, '-u', '-', target_file], stdin=subprocess.PIPE)
                     if isinstance(source_content, str):
                         source_content = source_content.encode()
                     process.stdin.write(source_content)
                     process.stdin.close()
+                    process.wait()
             elif status == 'p':
                 sys.stdout.write("    %04o %s %04o\n" % (source_perm, arrow, target_perm))
             elif 't' in status:
