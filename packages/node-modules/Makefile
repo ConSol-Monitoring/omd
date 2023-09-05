@@ -11,7 +11,7 @@ NPM=NODE_PATH=$(NODE_PATH) PATH=$(shell realpath $$(ls -d1 ../node/node-v*/bin))
 # use local chromium if enabled in distro file (by adding chrome dependency)
 ifneq (,$(findstring chromium,$(OS_PACKAGES)))
 export PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
-export PUPPETEER_EXECUTABLE_PATH=$(shell which chromium)
+export PUPPETEER_EXECUTABLE_PATH=$(shell which chromium-browser chromium 2>/dev/null | head -n 1)
 else
 export PUPPETEER_DOWNLOAD_PATH=$(shell pwd)/.local-chromium
 endif
@@ -39,7 +39,9 @@ skel:
 	if [ "x$(PUPPETEER_EXECUTABLE_PATH)" != "x" ]; then \
 		echo "export PUPPETEER_EXECUTABLE_PATH=$(PUPPETEER_EXECUTABLE_PATH)" >> $(SKEL)/etc/profile.d/puppeteer.sh; \
 	else \
-		echo "export PUPPETEER_EXECUTABLE_PATH=./lib/$$(ls -1 node_modules/puppeteer/.local-chromium/chrome/*/chrome-linux*/chrome)" >> $(SKEL)/etc/profile.d/puppeteer.sh; \
+		CHROME=$$(ls -1 node_modules/puppeteer/.local-chromium/chrome/*/chrome-linux*/chrome); \
+		test -n "$${CHROME}" || exit 1 ; \
+		echo "export PUPPETEER_EXECUTABLE_PATH=./lib/$${CHROME}" >> $(SKEL)/etc/profile.d/puppeteer.sh; \
 	fi
 
 clean:
