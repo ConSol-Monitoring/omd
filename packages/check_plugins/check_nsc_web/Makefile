@@ -12,7 +12,7 @@ GITBASE     = github.com/ConSol-Monitoring
 GITURL      = $(GITBASE)/$(NAME)
 DEPS_SRC    = deps.tar.gz
 # GIT TAG is set automatically by "make upstream" or "make package"
-GIT_TAG     = 763f125
+GIT_TAG     = df38ade
 
 .PHONY: skel
 
