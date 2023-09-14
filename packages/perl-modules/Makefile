@@ -230,7 +230,7 @@ MODULES = \
           File-Tail-1.3.tar.gz \
           UUID-0.28.tar.gz \
           Thruk-Utils-XS-0.02.tar.gz \
-          Monitoring-GLPlugin-5.14.0.1.tar.gz
+          Monitoring-GLPlugin-5.15.1.tar.gz
 
 
 
