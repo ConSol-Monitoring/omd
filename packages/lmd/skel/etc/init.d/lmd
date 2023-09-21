@@ -18,6 +18,7 @@ DAEMON="$OMD_ROOT/bin/thruk"
 OPTS="lmd start"
 PID_FILE=$OMD_ROOT/tmp/thruk/lmd/pid
 LOG_FILE=$OMD_ROOT/tmp/thruk/lmd/lmd.log
+STOP_TIMEOUT=30
 
 __generic_init "$*"
 
