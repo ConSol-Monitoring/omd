@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 NAME       = telegraf
-VERSION    = 1.26.3
+VERSION    = 1.28.2
 
 .PHONY: skel
 
