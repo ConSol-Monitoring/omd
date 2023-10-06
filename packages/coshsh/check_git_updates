@@ -88,6 +88,13 @@ function remove_git_index_lock() {
         logger_info removed a leftover .git/index.lock in $dir
       fi
     fi
+  elif [ $gitexit -ne 0 ]; then
+    gitstatus=$(git status 2>&1)
+    if [[ "$gitstatus" =~ index.file.corrupt ]]; then
+      logger_info repair a corrupt index file in $dir
+      rm -r .git/index
+      git reset
+    fi
   fi
 }
 
