@@ -91,7 +91,7 @@ MODULES += nagiosplugin-1.3.3.tar.gz
 #MODULES += omdnotificationforwarder-1.0.0.1.tar.gz
 
 # check_vsphere
-MODULES += monplugin-0.6.1.tar.gz                    # check_vsphere
+MODULES += monplugin-0.6.2.tar.gz                    # check_vsphere
 MODULES += checkvsphere-0.3.0.tar.gz
 
 # pywbem?
