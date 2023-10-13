@@ -92,7 +92,7 @@ MODULES += nagiosplugin-1.3.3.tar.gz
 
 # check_vsphere
 MODULES += monplugin-0.6.2.tar.gz                    # check_vsphere
-MODULES += checkvsphere-0.3.0.tar.gz
+MODULES += checkvsphere-0.3.2.tar.gz
 
 # pywbem?
 #MODULES += nocaselist-1.0.6.tar.gz                   # pywbem-1.5.0
