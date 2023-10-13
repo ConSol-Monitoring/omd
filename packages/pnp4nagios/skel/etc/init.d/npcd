@@ -28,4 +28,8 @@ if [ ! -f $NpcdCfgFile ]; then
     exit 1
 fi
 
+# rhel9 a unusual high number of open files during boot and npcd tries to close them all and runs into a timeout.
+# so set a sane default here.
+ulimit -n 1024
+
 __generic_init "$*"
