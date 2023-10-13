@@ -88,7 +88,9 @@ MODULES += psutil-5.9.4.tar.gz
 
 MODULES += gearman3-0.2.1.tar.gz
 MODULES += nagiosplugin-1.3.3.tar.gz
-#MODULES += omdnotificationforwarder-1.0.0.1.tar.gz
+# There is also an omdnotificationforwarder...whl (see $SWHEEL below)
+# because "pip wheel ..." would require the hatch build system.
+MODULES += omdnotificationforwarder-1.1.1-py3-none-any.whl
 
 # check_vsphere
 MODULES += monplugin-0.6.1.tar.gz                    # check_vsphere
@@ -126,8 +128,9 @@ build:
 		$(PIP) install --no-cache-dir --no-index --no-deps --find-links=$(WHEELSDIR) --target=$(BUILDDEST) --upgrade $$WHEEL ; \
 	done; \
 	for M in $(MODULES); do \
-		MBASE=$$(echo $$M | sed -e 's/.tar.gz//g' -e 's/.zip//g' -e 's/-/\*/g') ; \
+		MBASE=$$(echo $$M | sed -e 's/.tar.gz//g' -e 's/.zip//g' -e 's/-py3-.*whl//g' -e 's/-/\*/g') ; \
 		WHEEL=$$(ls $(WHEELSDIR)/$${MBASE}-* 2>/dev/null | head -1) ; \
+		SWHEEL=$$(ls src/$${MBASE}-* 2>/dev/null | head -1 | sed -e 's/^src.//g') ; \
 		echo "** $$M **" ; \
 		[[ -n "$$WHEEL" ]] && [[ -f "$$WHEEL" ]] && continue ; \
 		if [[ $$M =~ .*pymssql.* ]]; then \
@@ -148,6 +151,8 @@ build:
 			); \
 			mv  ./src/tomli-*/dist/*.whl $(WHEELSDIR); \
 			rm -rf ./src/tomli-*/; \
+		elif [[ -n "$$SWHEEL" ]]; then \
+			cp src/$$SWHEEL $(WHEELSDIR) ; \
 		else \
 			$(PIP) wheel --no-cache-dir --no-index --no-deps --wheel-dir=$(WHEELSDIR) --find-links=$(WHEELSDIR) ./src/$$M ; \
 		fi ; \
