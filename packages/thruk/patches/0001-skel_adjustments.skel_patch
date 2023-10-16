@@ -93,14 +93,6 @@
  
  # enable a performance bar inside the status/host list which
  # create a graph from the performance data of the plugin output. Available
-@@ -488,6 +489,7 @@
- # check should be rescheduled instead of the passive check.
- # Have a look at the documentation for a detailed description.
- #command_reschedule_alias = servicename_or_commandname_pattern;agent_service_name
-+command_reschedule_alias = ^check_mk\-(?!inventory);Check_MK
- 
- ######################################
- # Time Format Settings
 @@ -538,23 +540,23 @@
  # Specifiy a file which is then completly under the control of Thruk.
  # It will be used to store cronjobs, ex. for reports. The file has to
@@ -141,7 +133,7 @@
  cookie_auth_session_timeout       = 604800
  cookie_auth_session_cache_timeout = 5
  cookie_auth_direct_agents         = (wget|curl|python|Go-http-client)
-@@ -716,50 +718,19 @@
+@@ -716,50 +718,18 @@
  ######################################
  # Backend Configuration, enter your backends here
  <Component Thruk::Backend>
@@ -199,7 +191,6 @@
 +            core_conf      = ###ROOT###/tmp/core/naemon.cfg
 +            obj_check_cmd  = ###ROOT###/etc/init.d/core check
 +            obj_reload_cmd = ###ROOT###/etc/init.d/core reload
-+            obj_readonly   = check_mk_objects\.cfg
 +       </configtool>
 +    </peer>
  </Component>
