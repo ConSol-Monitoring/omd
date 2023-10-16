@@ -2,7 +2,7 @@ include ../../../Makefile.omd
 
 NAME = single_file_plugins
 
-PLUGINS=$(shell ls -1d check_*)
+PLUGINS=$(shell ls -1d check_* notificationforwarder)
 
 .PHONY: skel
 
