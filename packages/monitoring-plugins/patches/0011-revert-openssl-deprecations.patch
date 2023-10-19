@@ -1,0 +1,54 @@
+--- a/lib/utils_base.c	2023-10-19 10:13:07.143162780 +0200
++++ b/lib/utils_base.c	2023-10-19 10:15:51.606162780 +0200
+@@ -401,45 +401,26 @@
+  * parse of argv, so that uniqueness in parameters are reflected there.
+  */
+ char *_np_state_generate_key() {
++	struct sha256_ctx ctx;
+ 	int i;
+ 	char **argv = this_monitoring_plugin->argv;
++	unsigned char result[20];
+ 	char keyname[41];
+ 	char *p=NULL;
+ 
+-	unsigned char result[256];
+-
+-#ifdef USE_OPENSSL
+-	/*
+-	 * This code path is chosen if openssl is available (which should be the most common
+-	 * scenario). Alternatively, the gnulib implementation/
+-	 *
+-	 */
+-	EVP_MD_CTX *ctx = EVP_MD_CTX_new();
+-
+-	EVP_DigestInit(ctx, EVP_sha256());
+-
+-	for(i=0; i<this_monitoring_plugin->argc; i++) {
+-		EVP_DigestUpdate(ctx, argv[i], strlen(argv[i]));
+-	}
+-
+-	EVP_DigestFinal(ctx, result, NULL);
+-#else
+-
+-	struct sha256_ctx ctx;
++	sha256_init_ctx(&ctx);
+ 
+ 	for(i=0; i<this_monitoring_plugin->argc; i++) {
+ 		sha256_process_bytes(argv[i], strlen(argv[i]), &ctx);
+ 	}
+ 
+-	sha256_finish_ctx(&ctx, result);
+-#endif // FOUNDOPENSSL
+-
++	sha256_finish_ctx(&ctx, &result);
++    
+ 	for (i=0; i<20; ++i) {
+ 		sprintf(&keyname[2*i], "%02x", result[i]);
+ 	}
+-
+ 	keyname[40]='\0';
+-
++    
+ 	p = strdup(keyname);
+ 	if(p==NULL) {
+ 		die(STATE_UNKNOWN, _("Cannot execute strdup: %s"), strerror(errno));

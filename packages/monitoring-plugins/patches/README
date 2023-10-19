@@ -8,8 +8,13 @@
     packats are lost. An RTA is "nan" in this case. But check_icmp would
     insist to make the outcome CRITICAL. The patch fixes this.
 
-0002-negate-pr1505.patch
-    Pull Request 1505: Output plugin's stderr to stderr and do not exit with WARNING in that case
+0010-revert-check_dbi-b4e578e.patch
+    This patch reverts b4e578e2cd835221ee343e56923588828d36f99b since
+    that breaks builds on centos 7 with an old libdbi-devel.
 
-1522-fix-undefined-mysql-port.patch
-    fix building check_mysql with latest mariadb
+0011-revert-openssl-deprecations.patch
+0012-revert-openssl-deprecations2.patch
+0013-revert-openssl-8700f497.patch
+    These patches revert openssl deprection still required for centos 7.
+    - 7c98e2b345b91d8ef3fb1f7a1bcf74194d54c966
+    - 8700f497160cfc2cce8918c8cd8922b7320c510a

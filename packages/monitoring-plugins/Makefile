@@ -1,17 +1,17 @@
 include ../../Makefile.omd
 
 NAME = monitoring-plugins
-VERSION = 2.3.3
+VERSION = 2.3.5
 DIR = $(NAME)-$(VERSION)
 URIPARSER=0.8.6
 # GIT TAG is set automatically by "make upstream"
-GIT_TAG     = 2.3.3
+GIT_TAG     = 2.3.5
 
 CONFIGUREOPTS = \
     --prefix=$(OMD_ROOT) \
     --libexecdir=$(OMD_ROOT)/lib/monitoring-plugins
 
-build: uriparser
+build: uriparser-$(URIPARSER)
 	rm -rf $(DIR)
 	tar xzf $(DIR).tar.gz
 	set -e ; for p in patches/*.patch ; do \
@@ -43,7 +43,7 @@ install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/nagios
 	cd $(DESTDIR)$(OMD_ROOT)/lib/nagios && ln -s ../monitoring-plugins plugins
 
-uriparser:
+uriparser-$(URIPARSER):
 	tar jxf uriparser-$(URIPARSER).tar.bz2
 	cd uriparser-$(URIPARSER) && ./configure --disable-test --disable-doc && make
 
