@@ -3659,6 +3659,7 @@ def print_diff(rel_path, source_path, target_path, source_version, source_perms,
 
 
 def main_update(args, options={}):
+    os.chdir(g_sitedir)
     set_conflict_option(options)
 
     if int(os.popen("df -Pm /omd/sites/%s/. | tail -n 1 | awk '{ print $4 }'" % g_sitename).read()) < 100:
