@@ -57,6 +57,7 @@ BUILD_PACKAGES       += perl-Locale-Maketext-Simple
 BUILD_PACKAGES       += perl-Time-HiRes
 BUILD_PACKAGES       += php
 BUILD_PACKAGES       += pkgconfig
+BUILD_PACKAGES       += postfix                        # provides mailq for monitoring plugins
 BUILD_PACKAGES       += postgresql-devel               # icinga 2
 BUILD_PACKAGES       += python3-devel
 BUILD_PACKAGES       += python3-pip
