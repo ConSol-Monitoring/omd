@@ -1,5 +1,6 @@
 This file documents the revision history for the Open Monitoring Distribution (Labs Edition)
 
+          - Thruk: update to 3.10
           - Monitoring-Plugins: update to 2.3.5
           - Gearman:
             - Mod-Gearman module update 5.1.3
