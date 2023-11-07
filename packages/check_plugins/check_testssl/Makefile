@@ -6,6 +6,11 @@ VERSION  = 3.0.8
 .PHONY: skel
 
 build:
+	cp bin/testssl.sh .
+	for p in patches/*.patch ; do \
+	    echo "applying $$p..." ; \
+	    patch -p1 < $$p || exit 1; \
+	done
 
 install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/monitoring-plugins
@@ -15,6 +20,7 @@ install:
 skel:
 
 clean:
+	rm -f ./testssl.sh
 
 upstream:
 	wget https://github.com/drwetter/testssl.sh/archive/refs/tags/v$(VERSION).tar.gz
