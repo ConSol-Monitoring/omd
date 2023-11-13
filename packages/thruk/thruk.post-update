@@ -20,3 +20,6 @@ fi
 
 # updates are a good time to renew cache files
 ./bin/thruk cache clear all >/dev/null
+
+# clean old puppeteer folders
+rm -rf /tmp/puppeteer_dev_chrome_profile-* >/dev/null 2>&1
