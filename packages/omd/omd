@@ -4333,7 +4333,11 @@ def main_restore(args, options={}):
             if os.path.lexists(targetpath):
                 os.unlink(targetpath)
 
-        tar.extract(tarinfo, path=g_sitedir)
+        # workaround: https://peps.python.org/pep-0706/#backporting-forward-compatibility
+        if hasattr(tarfile, 'data_filter'):
+            tar.extract(tarinfo, path=g_sitedir, filter='tar')
+        else:
+            tar.extract(tarinfo, path=g_sitedir)
     tar.close()
 
     load_site_conf()
