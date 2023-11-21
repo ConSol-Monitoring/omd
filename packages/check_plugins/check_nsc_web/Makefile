@@ -17,8 +17,8 @@ GIT_TAG     = df38ade
 .PHONY: skel
 
 build:
-	tar zxf $(DEPS_SRC)
-	tar zxf $(SRC)
+	tar ozxf $(DEPS_SRC)
+	tar ozxf $(SRC)
 	export GO111MODULE=auto && \
 		export GOROOT=$(PWD)/../../go-$(GOPKG)/go-$(GOVERSION)/ && \
 		export GOPATH=$(PWD)/$(GOPATH)/ && \

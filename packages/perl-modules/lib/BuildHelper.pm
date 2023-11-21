@@ -649,7 +649,7 @@ sub _unpack {
     if($file =~ m/\.zip$/gmx) {
         cmd("unzip $file");
     } else {
-        cmd("tar zxf $file");
+        cmd("tar -ozxf $file");
     }
     my $dir = $file;
     $dir =~  s/(\.tar\.gz|\.tgz|\.zip)//g;

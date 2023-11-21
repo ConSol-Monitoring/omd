@@ -24,7 +24,7 @@ clean:
 
 upstream:
 	wget https://github.com/drwetter/testssl.sh/archive/refs/tags/v$(VERSION).tar.gz
-	tar zxf v$(VERSION).tar.gz
+	tar ozxf v$(VERSION).tar.gz
 	rsync -a testssl.sh-$(VERSION)/testssl.sh testssl.sh
 	rm -rf skel/etc/testssl
 	mkdir -p skel/etc/testssl

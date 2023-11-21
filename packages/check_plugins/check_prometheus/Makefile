@@ -11,8 +11,8 @@ GITURL      = github.com/consol-monitoring/$(NAME)
 GIT_TAG     = 501fd81
 
 build:
-	tar zxf $(SRC)
-	cd $(DIR) && tar zxf ../dependencies.tar.gz
+	tar ozxf $(SRC)
+	cd $(DIR) && tar ozxf ../dependencies.tar.gz
 	export PATH=$(shell pwd)/../../go-$(GOPKG)/go-$(GOVERSION)/bin:$$PATH && \
 		cd $(DIR) && go build -ldflags "-s -w -X main.Build=$(OMD_VERSION)-$(GIT_TAG)"
 	mv $(DIR)/check_prometheus .

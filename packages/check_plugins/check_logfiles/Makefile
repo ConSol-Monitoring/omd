@@ -13,7 +13,7 @@ SLES15 = $(shell echo $(DISTRO_INFO) | grep -c 'SLES 15' )
 CONFIGUREOPTS = ""
 
 build:
-	tar xzf $(DIR).tar.gz
+	tar ozxf $(DIR).tar.gz
 ifeq ($(SLES15), 1)
 	patch -d $(DIR) -p 1 < no_sys_resource_ph.patch
 endif
