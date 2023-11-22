@@ -1,0 +1,23 @@
+#!/bin/bash
+
+### OMD INIT INFO
+# PIDFILE:  tmp/run/node_exporter.pid
+# BINARY:   bin/node_exporter
+# ARGMATCH: collector.systemd
+### END INIT INFO
+
+cd || exit 1
+. etc/omd/site.conf
+. lib/omd/init_profile
+
+DAEMON=$OMD_ROOT/bin/node_exporter
+OPTS=""
+OPTS+=" --log.level warn"
+OPTS+=" --collector.systemd"
+OPTS+=" --web.listen-address :9100"
+LOG_FILE=$OMD_ROOT/var/log/node_exporter.log
+PID_FILE=$OMD_ROOT/tmp/run/node_exporter.pid
+NOHUP=1
+STORE_PID=1
+
+__generic_init "$*"
