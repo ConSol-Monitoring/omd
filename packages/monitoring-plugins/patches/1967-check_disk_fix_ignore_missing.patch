@@ -1,0 +1,227 @@
+From f59c51601122ceac7ef4571d1993a34728e76813 Mon Sep 17 00:00:00 2001
+From: Sven Nierlein <sven@consol.de>
+Date: Mon, 27 Nov 2023 11:35:29 +0100
+Subject: [PATCH 1/2] check_disk: add -n short option for --ignore-missing
+
+Signed-off-by: Sven Nierlein <sven@consol.de>
+---
+ plugins/check_disk.c | 11 +++++------
+ 1 file changed, 5 insertions(+), 6 deletions(-)
+
+diff --git a/plugins/check_disk.c b/plugins/check_disk.c
+index a4180ca7b..e9a9ddd7c 100644
+--- a/plugins/check_disk.c
++++ b/plugins/check_disk.c
+@@ -112,8 +112,7 @@ enum
+ {
+   SYNC_OPTION = CHAR_MAX + 1,
+   NO_SYNC_OPTION,
+-  BLOCK_SIZE_OPTION,
+-  IGNORE_MISSING
++  BLOCK_SIZE_OPTION
+ };
+ 
+ #ifdef _AIX
+@@ -524,7 +523,7 @@ process_arguments (int argc, char **argv)
+     {"ignore-ereg-partition", required_argument, 0, 'i'},
+     {"ignore-eregi-path", required_argument, 0, 'I'},
+     {"ignore-eregi-partition", required_argument, 0, 'I'},
+-    {"ignore-missing", no_argument, 0, IGNORE_MISSING},
++    {"ignore-missing", no_argument, 0, 'n'},
+     {"local", no_argument, 0, 'l'},
+     {"stat-remote-fs", no_argument, 0, 'L'},
+     {"iperfdata", no_argument, 0, 'P'},
+@@ -550,7 +549,7 @@ process_arguments (int argc, char **argv)
+       strcpy (argv[c], "-t");
+ 
+   while (1) {
+-    c = getopt_long (argc, argv, "+?VqhvefCt:c:w:K:W:u:p:x:X:N:mklLPg:R:r:i:I:MEA", longopts, &option);
++    c = getopt_long (argc, argv, "+?VqhvefCt:c:w:K:W:u:p:x:X:N:mklLPg:R:r:i:I:MEAn", longopts, &option);
+ 
+     if (c == -1 || c == EOF)
+       break;
+@@ -792,7 +791,7 @@ process_arguments (int argc, char **argv)
+       cflags = default_cflags;
+       break;
+ 
+-    case IGNORE_MISSING:
++    case 'n':
+       ignore_missing = true;
+       break;
+     case 'A':
+@@ -1004,7 +1003,7 @@ print_help (void)
+   printf ("    %s\n", _("Regular expression to ignore selected path/partition (case insensitive) (may be repeated)"));
+   printf (" %s\n", "-i, --ignore-ereg-path=PATH, --ignore-ereg-partition=PARTITION");
+   printf ("    %s\n", _("Regular expression to ignore selected path or partition (may be repeated)"));
+-  printf (" %s\n", "--ignore-missing");
++  printf (" %s\n", "-n, --ignore-missing");
+   printf ("    %s\n", _("Return OK if no filesystem matches, filesystem does not exist or is inaccessible."));
+   printf ("    %s\n", _("(Provide this option before -p / -r / --ereg-path if used)"));
+   printf (UT_PLUG_TIMEOUT, DEFAULT_SOCKET_TIMEOUT);
+
+From 579db5a93071547f5484c1690b621a60b46b2e1e Mon Sep 17 00:00:00 2001
+From: Sven Nierlein <sven@consol.de>
+Date: Mon, 27 Nov 2023 13:00:57 +0100
+Subject: [PATCH 2/2] check_disk: fix ignore-missing in combination with
+ includes (fixes #1963)
+
+Using --ignore-missing together with regex matching and ignore option lead
+to a wrong error message.
+
+    ./check_disk -n -w 10% -c 5% -W 10% -r /dummy -i /dummy2
+    DISK UNKNOWN: Paths need to be selected before using -i/-I. Use -A to select all paths explicitly
+
+The use case here is a cluster with fail-over mounts. So it is a valid situation that
+the regex match does not find anything in addtition with a ignore which also does not exist.
+
+After this patch:
+
+    ./check_disk -n -w 10% -c 5% -W 10% -r /dummy -i /dummy2
+    DISK OK - No disks were found for provided parameters|
+---
+ plugins/check_disk.c   |  4 ++--
+ plugins/t/check_disk.t | 47 ++++++++++++++++++++++++++++--------------
+ 2 files changed, 33 insertions(+), 18 deletions(-)
+
+diff --git a/plugins/check_disk.c b/plugins/check_disk.c
+index e9a9ddd7c..c6bba2430 100644
+--- a/plugins/check_disk.c
++++ b/plugins/check_disk.c
+@@ -451,7 +451,7 @@ main (int argc, char **argv)
+ 
+   if (strcmp(output, "") == 0 && ! erronly) {
+     preamble = "";
+-    xasprintf (&output, " - No disks were found for provided parameters;");
++    xasprintf (&output, " - No disks were found for provided parameters");
+   }
+ 
+   printf ("DISK %s%s%s%s%s|%s\n", state_text (result), ((erronly && result==STATE_OK)) ? "" : preamble, output, (strcmp(ignored, "") == 0) ? "" : ignored_preamble, ignored, perf);
+@@ -831,7 +831,7 @@ process_arguments (int argc, char **argv)
+ 
+       if (!fnd && ignore_missing == true) {
+         path_ignored = true;
+-        /* path_selected = TRUE;*/
++        path_selected = true;
+         break;
+       } else if (!fnd)
+         die (STATE_UNKNOWN, "DISK %s: %s - %s\n",_("UNKNOWN"),
+diff --git a/plugins/t/check_disk.t b/plugins/t/check_disk.t
+index ca035ce73..bf8dd3620 100644
+--- a/plugins/t/check_disk.t
++++ b/plugins/t/check_disk.t
+@@ -23,11 +23,11 @@ my $mountpoint2_valid = getTestParameter( "NP_MOUNTPOINT2_VALID", "Path to anoth
+ if ($mountpoint_valid eq "" or $mountpoint2_valid eq "") {
+ 	plan skip_all => "Need 2 mountpoints to test";
+ } else {
+-	plan tests => 88;
++	plan tests => 94;
+ }
+ 
+-$result = NPTest->testCmd( 
+-	"./check_disk -w 1% -c 1% -p $mountpoint_valid -w 1% -c 1% -p $mountpoint2_valid" 
++$result = NPTest->testCmd(
++	"./check_disk -w 1% -c 1% -p $mountpoint_valid -w 1% -c 1% -p $mountpoint2_valid"
+ 	);
+ cmp_ok( $result->return_code, "==", 0, "Checking two mountpoints (must have at least 1% free in space and inodes)");
+ my $c = 0;
+@@ -103,8 +103,8 @@ is ($crit_percth_data, int((1-10/100)*$total_percth_data), "Wrong critical in pe
+ 
+ 
+ # Check when order of mount points are reversed, that perf data remains same
+-$result = NPTest->testCmd( 
+-	"./check_disk -w 1% -c 1% -p $mountpoint2_valid -w 1% -c 1% -p $mountpoint_valid" 
++$result = NPTest->testCmd(
++	"./check_disk -w 1% -c 1% -p $mountpoint2_valid -w 1% -c 1% -p $mountpoint_valid"
+ 	);
+ @_ = sort(split(/ /, $result->perf_output));
+ is_deeply( \@perf_data, \@_, "perf data for both filesystems same when reversed");
+@@ -134,8 +134,8 @@ cmp_ok( $result->return_code, '==', 0, "Old syntax okay" );
+ $result = NPTest->testCmd( "./check_disk -w 1% -c 1% -p $more_free" );
+ cmp_ok( $result->return_code, "==", 0, "At least 1% free" );
+ 
+-$result = NPTest->testCmd( 
+-	"./check_disk -w 1% -c 1% -p $more_free -w 100% -c 100% -p $less_free" 
++$result = NPTest->testCmd(
++	"./check_disk -w 1% -c 1% -p $more_free -w 100% -c 100% -p $less_free"
+ 	);
+ cmp_ok( $result->return_code, "==", 2, "Get critical on less_free mountpoint $less_free" );
+ like( $result->output, $failureOutput, "Right output" );
+@@ -151,14 +151,14 @@ $result = NPTest->testCmd(
+ 	);
+ cmp_ok( $result->return_code, '==', 0, "Get ok on more_free mountpoint, when checking avg_free");
+ 
+-$result = NPTest->testCmd( 
+-	"./check_disk -w $avg_free% -c 0% -p $less_free -w $avg_free% -c $avg_free% -p $more_free" 
++$result = NPTest->testCmd(
++	"./check_disk -w $avg_free% -c 0% -p $less_free -w $avg_free% -c $avg_free% -p $more_free"
+ 	);
+ cmp_ok( $result->return_code, "==", 1, "Combining above two tests, get warning");
+ my $all_disks = $result->output;
+ 
+ $result = NPTest->testCmd(
+-	"./check_disk -e -w $avg_free% -c 0% -p $less_free -w $avg_free% -c $avg_free% -p $more_free" 
++	"./check_disk -e -w $avg_free% -c 0% -p $less_free -w $avg_free% -c $avg_free% -p $more_free"
+ 	);
+ isnt( $result->output, $all_disks, "-e gives different output");
+ 
+@@ -240,7 +240,7 @@ TODO: {
+ 	cmp_ok( $result->return_code, '==', 3, "Invalid command line options" );
+ }
+ 
+-$result = NPTest->testCmd( 
++$result = NPTest->testCmd(
+ 	"./check_disk -p $mountpoint_valid -w 10% -c 15%"
+ 	);
+ cmp_ok( $result->return_code, "==", 3, "Invalid options: -p must come after thresholds" );
+@@ -322,7 +322,7 @@ cmp_ok( $result->return_code, '==', 1, "grouping: exit warning if the sum of fre
+ $result = NPTest->testCmd( "./check_disk -w ". ($free_mb_on_all - 1) ." -c ". ($free_mb_on_all - 1) ." -g group -p $mountpoint_valid -p $mountpoint2_valid" );
+ cmp_ok( $result->return_code, '==', 0, "grouping: exit ok if the sum of free megs on mp1+mp2 is more than warn/crit");
+ 
+-# grouping: exit unknown if group name is given after -p 
++# grouping: exit unknown if group name is given after -p
+ $result = NPTest->testCmd( "./check_disk -w ". ($free_mb_on_all - 1) ." -c ". ($free_mb_on_all - 1) ." -p $mountpoint_valid -g group -p $mountpoint2_valid" );
+ cmp_ok( $result->return_code, '==', 3, "Invalid options: -p must come after groupname");
+ 
+@@ -355,17 +355,17 @@ like( $result->output, qr/$mountpoint2_valid/,"ignore: output data does have $mo
+ # ignore-missing: exit okay, when fs is not accessible
+ $result = NPTest->testCmd( "./check_disk --ignore-missing -w 0% -c 0% -p /bob");
+ cmp_ok( $result->return_code, '==', 0, "ignore-missing: return okay for not existing filesystem /bob");
+-like( $result->output, '/^DISK OK - No disks were found for provided parameters; - ignored paths: /bob;.*$/', 'Output OK');
++like( $result->output, '/^DISK OK - No disks were found for provided parameters - ignored paths: /bob;.*$/', 'Output OK');
+ 
+ # ignore-missing: exit okay, when regex does not match
+ $result = NPTest->testCmd( "./check_disk --ignore-missing -w 0% -c 0% -r /bob");
+ cmp_ok( $result->return_code, '==', 0, "ignore-missing: return okay for regular expression not matching");
+-like( $result->output, '/^DISK OK - No disks were found for provided parameters;.*$/', 'Output OK');
++like( $result->output, '/^DISK OK - No disks were found for provided parameters.*$/', 'Output OK');
+ 
+ # ignore-missing: exit okay, when fs with exact match (-E) is not found
+ $result = NPTest->testCmd( "./check_disk --ignore-missing -w 0% -c 0% -E -p /etc");
+ cmp_ok( $result->return_code, '==', 0, "ignore-missing: return okay when exact match does not find fs");
+-like( $result->output, '/^DISK OK - No disks were found for provided parameters; - ignored paths: /etc;.*$/', 'Output OK');
++like( $result->output, '/^DISK OK - No disks were found for provided parameters - ignored paths: /etc;.*$/', 'Output OK');
+ 
+ # ignore-missing: exit okay, when checking one existing fs and one non-existing fs (regex)
+ $result = NPTest->testCmd( "./check_disk --ignore-missing -w 0% -c 0% -r '/bob' -r '^/\$'");
+@@ -375,4 +375,19 @@ like( $result->output, '/^DISK OK - free space: \/ .*$/', 'Output OK');
+ # ignore-missing: exit okay, when checking one existing fs and one non-existing fs (path)
+ $result = NPTest->testCmd( "./check_disk --ignore-missing -w 0% -c 0% -p '/bob' -p '/'");
+ cmp_ok( $result->return_code, '==', 0, "ignore-missing: return okay for regular expression not matching");
+-like( $result->output, '/^DISK OK - free space: / .*; - ignored paths: /bob;.*$/', 'Output OK');
+\ No newline at end of file
++like( $result->output, '/^DISK OK - free space: / .*; - ignored paths: /bob;.*$/', 'Output OK');
++
++# ignore-missing: exit okay, when checking one non-existing fs (path) and one ignored
++$result = NPTest->testCmd( "./check_disk -n -w 0% -c 0% -r /dummy -i /dummy2");
++cmp_ok( $result->return_code, '==', 0, "ignore-missing: return okay for regular expression not matching");
++like( $result->output, '/^DISK OK - No disks were found for provided parameters\|$/', 'Output OK');
++
++# ignore-missing: exit okay, when regex match does not find anything
++$result = NPTest->testCmd( "./check_disk -n -e -l -w 10% -c 5% -W 10% -K 5% -r /dummy");
++cmp_ok( $result->return_code, '==', 0, "ignore-missing: return okay for regular expression not matching");
++like( $result->output, '/^DISK OK\|$/', 'Output OK');
++
++# ignore-missing: exit okay, when regex match does not find anything
++$result = NPTest->testCmd( "./check_disk -n -l -w 10% -c 5% -W 10% -K 5% -r /dummy");
++cmp_ok( $result->return_code, '==', 0, "ignore-missing: return okay for regular expression not matching");
++like( $result->output, '/^DISK OK - No disks were found for provided parameters\|$/', 'Output OK');
