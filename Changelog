@@ -12,6 +12,7 @@ This file documents the revision history for the Open Monitoring Distribution (L
           - Grafana:
             - update to 10.2.2
           - Histou update to 0.5.1
+          - Go builds updated to 1.21.4
 
 5.20     Jul 22 2023
           - OMD:

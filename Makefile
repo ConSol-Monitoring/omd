@@ -7,6 +7,7 @@ PACKAGES += perl-modules
 PACKAGES += go-1.4
 PACKAGES += go-1.19
 PACKAGES += go-1.20
+PACKAGES += go-1.21
 PACKAGES += node
 PACKAGES += node-modules
 PACKAGES += influxdb
