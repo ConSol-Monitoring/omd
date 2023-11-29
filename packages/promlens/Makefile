@@ -3,7 +3,7 @@ include ../../Makefile.omd
 NAME        = promlens
 VERSION     = 0.3.0
 SRC         = $(NAME)-$(VERSION)
-GOPKG       = 1.20
+GOPKG       = 1.21
 GOVERSION   = $(shell grep ^VERSION ../go-${GOPKG}/Makefile | awk '{ print $$3 }')
 
 NODE_PATH=$(shell realpath $$(ls -d1 ../node/node-v*/lib/node_modules/npm/node_modules)):$(shell pwd)/node_modules

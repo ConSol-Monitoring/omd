@@ -4,7 +4,7 @@ NAME       = grafana-loki
 VERSION    = 2.7.2
 DIR        = loki-$(VERSION)
 SRC        = $(DIR).tar.gz
-GOPKG      = 1.20
+GOPKG      = 1.21
 GOVERSION  = $(shell grep ^VERSION ../go-${GOPKG}/Makefile | awk '{ print $$3 }')
 PWD        = $(shell pwd)
 GOENV      = export GOROOT=$(PWD)/../go-$(GOPKG)/go-$(GOVERSION) && export PATH=$$GOROOT/bin:$$PATH
@@ -34,6 +34,7 @@ install:
 	install -m 755 ./dest/chunks-inspect $(DESTDIR)$(OMD_ROOT)/bin/chunks-inspect
 
 skel:
+	sed -i 's/###GOPKG###/$(GOPKG)/' $(SKEL)/etc/init.d/loki $(SKEL)/etc/init.d/promtail
 
 clean:
 	rm -rf $(DIR)
