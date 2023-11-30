@@ -20,10 +20,8 @@ my $site    = TestUtils::create_test_site() or TestUtils::bail_out_clean("no fur
 
 TestUtils::test_command({ cmd => $omd_bin." config $site set THRUK_COOKIE_AUTH off" });
 TestUtils::test_command({ cmd => $omd_bin." config $site set CORE none" });
-TestUtils::test_command({ cmd => $omd_bin." config $site set GRAFANA on" });
 TestUtils::test_command({ cmd => $omd_bin." config $site set VICTORIAMETRICS on" });
 TestUtils::test_command({ cmd => $omd_bin." start $site", like => ['/Starting victoriametrics\.+OK/',
-                                                                   '/Starting grafana\.+OK/',
                                                                   ]});
 
 TestUtils::test_command({ cmd => qq[/bin/su - $site -c 'victoria-metrics-prod --version'],  like => '/^victoria-metrics/' });
@@ -40,4 +38,3 @@ TestUtils::test_command({
 });
 TestUtils::remove_test_site($site);
 done_testing();
-__END__
