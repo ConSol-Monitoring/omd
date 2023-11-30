@@ -41,7 +41,7 @@ TestUtils::wait_for_file("/omd/sites/$site/var/pnp4nagios/perfdata/omd-$site/_HO
 
 #grafana interface
 TestUtils::test_command({ cmd => "/bin/su - $site -c 'cat var/log/grafana/grafana.log'", like => '/HTTP Server Listen/', waitfor => 'HTTP\ Server\ Listen', maxwait => 180 });
-TestUtils::test_url({ url => 'http://localhost/'.$site.'/grafana/', waitfor => '<title>Grafana<\/title>', auth => $auth });
+TestUtils::test_url({ url => 'http://localhost/'.$site.'/grafana/', waitfor => '<title>Grafana<\/title>', auth => $auth, maxwait => 180 });
 TestUtils::test_command({ cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_http -t 60 -H 127.0.0.1 -u /$site/grafana/ -p 8003 -k \"X-WEBAUTH-USER: omdadmin\" -s \"<title>Grafana</title>\"'", like => '/HTTP OK:/', waitfor => 'HTTP\ OK:' });
 TestUtils::test_command({ cmd => "/omd/sites/$site/lib/monitoring-plugins/check_http -t 60 -H localhost -a omdadmin:omd -u '/$site/grafana/' -s '\"login\":\"omdadmin\"'", like => '/HTTP OK:/', waitfor => 'HTTP\ OK:' });
 
