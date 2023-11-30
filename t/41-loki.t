@@ -67,7 +67,7 @@ TestUtils::test_command({
     cmd     => "/bin/su - $site -c 'curl -G --data-urlencode \"query={filename=~\\\".*/thruk.log\\\", severity=\\\"error\\\"}\" -s http://127.0.0.1:3100/loki/api/v1/query_range'",
     like    => [
                 '/Thruk\/Controller\/test\.pm/',
-                '/internal server error/',
+                '/No backend available/',
                 '/omdadmin/',
                ],
 });
