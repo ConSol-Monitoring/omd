@@ -44,6 +44,7 @@ my $test = {
     auth           => "OMD Monitoring Site $site:omdadmin:omd",
     like           => [ "/\[title\]/", "/panels/", "/FROM messages WHERE/" ],
     waitfor        => "$host-$service",
+    maxwait        => 180,
 };
 my $page = TestUtils::test_url($test);
 if($page->{'content'} !~ m/$host-$service/mx) {
@@ -63,6 +64,8 @@ TestUtils::test_url({
     auth           => "OMD Monitoring Site $site:omdadmin:omd",
     like           => [ "/>Grafana</" ],
     skip_html_lint => 1,
+    waitfor        => "<title>Grafana<\/title>",
+    maxwait        => 180,
 });
 
 
