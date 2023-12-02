@@ -106,6 +106,7 @@ sub get_omd_bin {
     unlike  => (list of) regular expressions which must not match stdout
     sleep   => time to wait after executing the command
     waitfor => wait till regex occurs (max 120sec)
+    maxwait => how long should be waited (default 120sec)
   }
 
 =cut
@@ -396,6 +397,7 @@ sub remove_test_site {
     skip_html_lint   => flag to disable the html lint checking
     skip_link_check  => (list of) regular expressions to skip the link checks for
     waitfor          => wait till regex occurs (max 120sec)
+    maxwait          => how long should be waited (default 120sec)
     redirect         => request should redirect
     location         => redirect location
   }
@@ -412,8 +414,9 @@ sub test_url {
         my $now = time();
         my $waitfor = $test->{'waitfor'};
         my $found   = 0;
+        my $maxwait = defined $test->{'maxwait'} ? $test->{'maxwait'} : 30;
         ok(1, "waiting for '$waitfor' on ".$test->{'url'});
-        while($now < $start + 120) {
+        while($now < $start + $maxwait) {
             if($page->{'content'} =~ m/$waitfor/mx) {
                 ok(1, "content ".$waitfor." found after ".($now - $start)."seconds");
                 $found = 1;
