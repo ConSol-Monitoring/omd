@@ -105,8 +105,8 @@ sub get_omd_bin {
     errlike => (list of) regular expressions which have to match stderr, default: empty
     unlike  => (list of) regular expressions which must not match stdout
     sleep   => time to wait after executing the command
-    waitfor => wait till regex occurs (max 120sec)
-    maxwait => how long should be waited (default 120sec)
+    waitfor => wait till regex occurs (max 30sec)
+    maxwait => how long should be waited (default 30sec)
   }
 
 =cut
@@ -163,7 +163,7 @@ sub test_command {
             $now = time();
         }
         if(!$found) {
-            fail("content ".$expr." did not occur within 120 seconds");
+            fail("content ".$expr." did not occur within ".$maxwait." seconds");
             _diag_cmd($test);
         }
     } else {
@@ -426,8 +426,8 @@ sub test_url {
             $now = time();
             $page = _request($test);
         }
-        carp("content (".$waitfor.") did not occur within 120 seconds") unless $found;
-        fail("content (".$waitfor.") did not occur within 120 seconds") unless $found;
+        carp("content (".$waitfor.") did not occur within ".$maxwait." seconds") unless $found;
+        fail("content (".$waitfor.") did not occur within ".$maxwait." seconds") unless $found;
         return $page;
     }
 
@@ -644,7 +644,7 @@ sub wait_for_file {
         $x++;
         sleep(1);
     }
-    fail("file: $file did not appear within $x seconds");
+    fail("file: ".$file." did not appear within ".$timeout." seconds");
     return 0;
 }
 
