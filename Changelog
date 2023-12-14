@@ -11,6 +11,7 @@ This file documents the revision history for the Open Monitoring Distribution (L
             - pushgateway 1.6.0
           - Grafana:
             - update to 10.2.2
+            - update thruk datasource to 2.0.4
           - Histou update to 0.5.1
           - Go builds updated to 1.21.4
 
