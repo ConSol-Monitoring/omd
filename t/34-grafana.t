@@ -33,7 +33,7 @@ TestUtils::test_url({ url => 'http://localhost/'.$site.'/grafana/', like => '/OM
 TestUtils::test_command({ cmd => $omd_bin." stop $site apache", like => '/Stopping.*apache.*OK/' });
 
 TestUtils::test_command({ cmd => $omd_bin." config $site set GRAFANA on" });
-TestUtils::test_command({ cmd => $omd_bin." start $site", like => '/Starting grafana\.+OK/' });
+TestUtils::test_command({ cmd => $omd_bin." start $site", like => '/Starting grafana[\w\ .,]+OK/' });
 
 # schedule forced check
 TestUtils::test_command({ cmd => "/bin/su - $site -c './lib/monitoring-plugins/check_http -H localhost -a omdadmin:omd -u /$site/thruk/cgi-bin/cmd.cgi -e 200 -P \"cmd_typ=96&cmd_mod=2&host=omd-$site&start_time=2010-11-06+09%3A46%3A02&force_check=on&btnSubmit=Commit\" -r \"Your command request was successfully submitted\"'", like => '/HTTP OK:/' });
