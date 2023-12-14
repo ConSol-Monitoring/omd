@@ -163,8 +163,10 @@ sub test_command {
             $now = time();
         }
         if(!$found) {
-            fail("content ".$expr." did not occur within ".$maxwait." seconds");
+            my $msg = "content ".$expr." did not occur within ".$maxwait." seconds";
+            fail($msg);
             _diag_cmd($test);
+            TestUtils::bail_out_clean($msg);
         }
     } else {
         alarm(300);
@@ -426,8 +428,12 @@ sub test_url {
             $now = time();
             $page = _request($test);
         }
-        carp("content (".$waitfor.") did not occur within ".$maxwait." seconds") unless $found;
-        fail("content (".$waitfor.") did not occur within ".$maxwait." seconds") unless $found;
+        if(!$found) {
+            my $msg = "content (".$waitfor.") did not occur within ".$maxwait." seconds";
+            carp($msg);
+            fail($msg);
+            TestUtils::bail_out_clean($msg);
+        }
         return $page;
     }
 
