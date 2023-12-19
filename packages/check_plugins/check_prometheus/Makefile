@@ -8,7 +8,7 @@ GOPKG       = 1.21
 GOVERSION   = $(shell grep ^VERSION ../../go-${GOPKG}/Makefile | awk '{ print $$3 }')
 GITURL      = github.com/consol-monitoring/$(NAME)
 # GIT TAG is set automatically by "make upstream" or "make package"
-GIT_TAG     = 501fd81
+GIT_TAG     = d8edcf3
 
 build:
 	tar ozxf $(SRC)
