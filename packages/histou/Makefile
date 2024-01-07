@@ -5,6 +5,8 @@ VERSION     = 0.5.1
 SRC         = $(NAME)-$(VERSION).tar.gz
 PWD         = $(shell pwd)
 DIR         = $(NAME)
+# GIT TAG is set automatically by "make upstream" or "make package"
+GIT_TAG     = ecdddd5
 
 .PHONY: skel
 
@@ -31,5 +33,8 @@ clean:
 
 package:
 	git clone  --depth=1 --branch "master" https://github.com/ConSol/histou
+	cd histou && sed -i $(PWD)/Makefile -e 's/^GIT_TAG.*$$/GIT_TAG     = '$$(git describe --always --tags)'/g'
 	tar zcf $(SRC) --exclude=.git --exclude=histou/tests --exclude=histou/conf --exclude=histou/stylecheck.sh histou
 	rm -rf histou
+
+upstream: package
