@@ -53,7 +53,7 @@ grafana_post_start() {
         # try again once, but disable this callback
         echo -n "trying again..."
         START_CALLBACK=
-        rm -f $PID_FILE
+        rm -f $PID_FILE $OMD_ROOT/var/grafana/data/grafana.db
         __generic_init_wait_start
     fi
     for x in $(seq 600); do
