@@ -18,7 +18,7 @@ NAME="loki"
 PID_FILE=$OMD_ROOT/tmp/run/loki.pid
 LOG_FILE=$OMD_ROOT/var/log/loki.log
 DAEMON=$OMD_ROOT/bin/loki
-OPTS="-config.file=$OMD_ROOT/etc/loki/loki.yaml"
+OPTS="-config.file=$OMD_ROOT/etc/loki/loki.yaml -config.expand-env=true"
 NOHUP=1
 STORE_PID=1
 STOP_TIMEOUT=30

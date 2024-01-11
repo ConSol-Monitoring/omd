@@ -1,0 +1,12 @@
+###ROOT###/var/log/loki.log {
+	missingok
+	rotate 7
+	compress
+	delaycompress
+	notifempty
+	create 0640 ###SITE### ###SITE###
+	postrotate
+		[ -f ###ROOT###/tmp/run/loki.pid ] && ###ROOT###/bin/omd reload loki > /dev/null
+	endscript
+}
+

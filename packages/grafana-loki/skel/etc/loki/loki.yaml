@@ -1,8 +1,11 @@
 auth_enabled: false
 
 server:
-  http_listen_port: ###CONFIG_LOKI_HTTP_PORT###
+  http_listen_port: ${CONFIG_LOKI_HTTP_PORT:-3100}
   grpc_listen_port: 9096
+
+limits_config:
+  retention_period: ${CONFIG_LOKI_RETENTION:-32d}
 
 common:
   instance_addr: 127.0.0.1
@@ -15,6 +18,13 @@ common:
   ring:
     kvstore:
       store: inmemory
+
+compactor:
+  working_directory: var/loki/retention
+  compaction_interval: 10m
+  retention_enabled: true
+  retention_delete_delay: 5m
+  retention_delete_worker_count: 150
 
 query_range:
   results_cache:
@@ -34,17 +44,7 @@ schema_config:
         period: 24h
 
 ruler:
-  alertmanager_url: http://localhost:9093
+  alertmanager_url: http://${CONFIG_ALERTMANAGER_TCP_ADDR:-127.0.0.1}:${CONFIG_ALERTMANAGER_TCP_PORT:-9093}
 
-# By default, Loki will send anonymous, but uniquely-identifiable usage and configuration
-# analytics to Grafana Labs. These statistics are sent to https://stats.grafana.org/
-#
-# Statistics help us better understand how Loki is used, and they show us performance
-# levels for most users. This helps us prioritize features and documentation.
-# For more information on what's sent, look at
-# https://github.com/grafana/loki/blob/main/pkg/usagestats/stats.go
-# Refer to the buildReport method to see what goes into a report.
-#
-# If you would like to disable reporting, uncomment the following lines:
-#analytics:
-#  reporting_enabled: false
+analytics:
+  reporting_enabled: false
