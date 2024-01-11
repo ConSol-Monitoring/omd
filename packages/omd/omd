@@ -3108,6 +3108,11 @@ def finalize_site(what, apache_reload):
     # Finally reload global apache - with root permissions - and
     # create include-hook for Apache and reload apache
     if am_root:
+        # drwxr-x---. 1 <sitename> omd
+        # sites can read each other's config files (expecially for port numbers), but world can not.
+        os.chown(g_sitedir, user_id(g_sitename), group_id("omd"))
+        os.chmod(g_sitedir, stat.S_IRWXU|stat.S_IRGRP|stat.S_IXGRP)
+
         create_apache_hook(g_sitename)
         if apache_reload:
             reload_apache()
@@ -3167,10 +3172,8 @@ def main_rm(args, options={}):
 
 def create_site_dir(sitename):
     os.makedirs(site_dir(sitename))
-    # drwxr-x---. 1 <sitename> omd
-    # sites can read each other's config files (expecially for port numbers), but world can not.
-    os.chown(site_dir(sitename), user_id(sitename), group_id("omd"))
-    os.chmod(site_dir(sitename), stat.S_IRWXU|stat.S_IRGRP|stat.S_IXGRP)
+    os.chown(site_dir(sitename), user_id(sitename), group_id(sitename))
+
 
 def site_is_disabled(g_sitename):
     apache_conf = "/omd/apache/%s.conf" % g_sitename
