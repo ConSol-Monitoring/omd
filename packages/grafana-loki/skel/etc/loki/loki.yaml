@@ -1,11 +1,11 @@
 auth_enabled: false
 
 server:
-  http_listen_port: ${CONFIG_LOKI_HTTP_PORT:-3100}
+  http_listen_port: ${CONFIG_LOKI_HTTP_PORT}
   grpc_listen_port: 9096
 
 limits_config:
-  retention_period: ${CONFIG_LOKI_RETENTION:-32d}
+  retention_period: ${CONFIG_LOKI_RETENTION}
 
 common:
   instance_addr: 127.0.0.1
