@@ -14,7 +14,7 @@ This file documents the revision history for the Open Monitoring Distribution (L
             - update thruk datasource to 2.0.4
             - enable wal for internal sqlite db
           - Histou update to 0.5.1
-          - Go builds updated to 1.21.4
+          - Go builds updated to 1.21.6
 
 5.20     Jul 22 2023
           - OMD:
