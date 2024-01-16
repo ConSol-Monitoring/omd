@@ -22,43 +22,12 @@ LOG_FILE=$OMD_ROOT/var/victoriametrics/victoriametrics.log
 PID_FILE=$OMD_ROOT/tmp/run/victoriametrics.pid
 DATA_DIR=$OMD_ROOT/var/victoriametrics/data
 CONF_DIR=$OMD_ROOT/etc/victoriametrics/conf.d
-AUTH_CONF_FILE=${OMD_ROOT}/etc/victoriametrics/conf.d/auto_auth.conf
 
 mkdir -p \
     ${DATA_DIR} \
     ${OMD_ROOT}/var/victoriametrics
 
 export LC_ALL=C
-
-case "$1" in start|restart|reload|checkconfig|check)
-  # generate random passwords
-  if [ ! -f ${AUTH_CONF_FILE} ]; then
-    # use existing ones if available
-    if [ -f etc/victoriametrics/victoriametrics.conf.migrated.to.conf.d ]; then
-      . etc/victoriametrics/victoriametrics.conf.migrated.to.conf.d
-    fi
-    httpAuth_username=${vm_httpAuth_username:-prom}
-    httpAuth_password=${vm_httpAuth_password:-$( tr -cd A-Za-z0-9 < /dev/urandom | head -c 16 )}
-    snapshotAuthKey=${vm_snapshotAuthKey:-$( tr -cd A-Za-z0-9 < /dev/urandom | head -c 16 )}
-    metricsAuthKey=${vm_metricsAuthKey:-metrics}
-    cat << EOT > ${AUTH_CONF_FILE}
-# this file is generated automatically, do not change manually. Changes will be overwritten.
-vm_httpAuth_username=${httpAuth_username}
-vm_httpAuth_password=${httpAuth_password}
-vm_metricsAuthKey=${metricsAuthKey}
-vm_snapshotAuthKey=${snapshotAuthKey}
-EOT
-    echo "created ${AUTH_CONF_FILE} with random passwords, for remote access check this file"
-
-    if [ -f ${OMD_ROOT}/etc/victoriametrics/grafana_datasources.yml ] ; then
-      sed -e "s/basicAuthPassword: .*/basicAuthPassword: ${httpAuth_password}/; s/basicAuthUser: .*/basicAuthUser: prom/" -i ${OMD_ROOT}/etc/victoriametrics/grafana_datasources.yml
-      if omd status grafana > /dev/null 2>&1 ; then
-        omd restart grafana
-      fi
-      echo "patched password in grafana_datasources.yml"
-    fi
-  fi
-esac
 
 # export every parameter that is set after this line
 set -a

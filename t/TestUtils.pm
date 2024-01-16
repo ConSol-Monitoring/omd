@@ -166,7 +166,7 @@ sub test_command {
             my $msg = "content ".$expr." did not occur within ".$maxwait." seconds";
             fail($msg);
             _diag_cmd($test);
-            TestUtils::bail_out_clean($msg);
+            bail_out_clean($msg);
         }
     } else {
         alarm(300);
@@ -432,7 +432,7 @@ sub test_url {
             my $msg = "content (".$waitfor.") did not occur within ".$maxwait." seconds";
             carp($msg);
             fail($msg);
-            TestUtils::bail_out_clean($msg);
+            bail_out_clean($msg);
         }
         return $page;
     }
@@ -441,7 +441,7 @@ sub test_url {
         ok( $page->{'response'}->is_redirect, 'Request '.$test->{'url'}.' should redirect' ) or diag(Dumper($test, $page->{'response'}));
         if(defined $test->{'location'}) {
             if(defined $page->{'response'}->{'_headers'}->{'location'}) {
-                like($page->{'response'}->{'_headers'}->{'location'}, qr/$test->{'location'}/, "Content should redirect: ".$test->{'location'});
+                like($page->{'response'}->{'_headers'}->{'location'}, qr/$test->{'location'}/, "Content should redirect: ".$test->{'location'}) or _diag_request($test, $page);;
             } else {
                 fail('no redirect header found');
             }
@@ -457,21 +457,21 @@ sub test_url {
 
     # content type?
     if(defined $test->{'content_type'}) {
-        is($page->{'content_type'}, $test->{'content_type'}, 'Content-Type is: '.$test->{'content_type'});
+        is($page->{'content_type'}, $test->{'content_type'}, 'Content-Type is: '.$test->{'content_type'}) or _diag_request($test, $page);
     }
 
     # matches output?
     if(defined $test->{'like'}) {
         defined $page->{'content'} or _diag_request($test, $page);
         for my $expr (ref $test->{'like'} eq 'ARRAY' ? @{$test->{'like'}} : $test->{'like'} ) {
-            like($page->{'content'}, $expr, "content like ".$expr);
+            like($page->{'content'}, $expr, "content like ".$expr) or _diag_request($test, $page);
         }
     }
 
     # not matching output
     if(defined $test->{'unlike'}) {
         for my $expr (ref $test->{'unlike'} eq 'ARRAY' ? @{$test->{'unlike'}} : $test->{'unlike'} ) {
-            unlike($page->{'content'}, $expr, "content unlike ".$expr)  or _diag_request($test, $page);
+            unlike($page->{'content'}, $expr, "content unlike ".$expr) or _diag_request($test, $page);
         }
     }
 
@@ -558,7 +558,7 @@ sub test_url {
                 diag(Dumper($req));
                 my $tmp_test = { 'url' => $test_url };
                 _diag_request($tmp_test, $req);
-                TestUtils::bail_out_clean("error in url '$test_url' linked from '".$test->{'url'}."'");
+                bail_out_clean("error in url '$test_url' linked from '".$test->{'url'}."'");
             }
         }
         is( $errors, 0, 'All stylesheets, images and javascript exist' );
@@ -748,6 +748,8 @@ sub bail_out_clean {
         #diag(`ps -fu $site 2>&1`);
         #test_command({ cmd => $omd_bin." rm $site", stdin => "yes\n", 'exit' => undef, errlike => undef });
     }
+
+    diag(Carp::longmess("started here"));
 
     BAIL_OUT($msg);
     return;
@@ -983,7 +985,15 @@ sub _diag_cmd {
 sub _diag_request {
     my($test, $page) = @_;
 
-    diag(Dumper($page->{'response'}));
+    diag("\n######################################################\n");
+    diag("origin:\n");
+    diag(Carp::longmess());
+
+    diag("request:\n");
+    diag(($page->{'response'} && $page->{'response'}->request) ? $page->{'response'}->request->as_string() : "no request");
+
+    diag("response:\n");
+    diag($page->{'response'} ? $page->{'response'}->as_string() : "no response");
 
     if($page->{'content'} =~ m/\Qsubject=Thruk%20Error%20Report&amp;body=\E(.*?)">/smx) {
         require URI::Escape;
@@ -1000,6 +1010,8 @@ sub _diag_request {
     _tail("apache logs:", "/omd/sites/$site/var/log/apache/error_log");
     _tail_apache_logs();
     _tail("thruk logs:", "/omd/sites/$site/var/log/thruk.log") if $test->{'url'} =~ m/\/thruk\//;
+
+    diag("\n######################################################\n");
 
     return;
 }

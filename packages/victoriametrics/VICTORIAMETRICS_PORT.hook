@@ -21,25 +21,72 @@ case "$1" in
             echo "$PORT"
         fi
 
-        # read config
-        for CFG in $OMD_ROOT/etc/victoriametrics/conf.d/*.conf; do
-           . $CFG
-        done
-        if [ "$vm_httpAuth_username:$vm_httpAuth_password" == ":" ] ; then
-           auth=""
-        else
-           auth="$vm_httpAuth_username:$vm_httpAuth_password"'@'
+        if [ -f $OMD_ROOT/etc/nagflux/config.gcfg ] ; then
+            enabled="true"
+            if [ "$CONFIG_VICTORIAMETRICS" = off ]; then
+                enabled="false"
+            fi
+            sed -e '/^\[InfluxDB \"victoriametrics\"\]/,/^\[/{s%^\s*Enabled = .*$%\tEnabled = '$enabled'%}' -i $OMD_ROOT/etc/nagflux/config.gcfg
+        fi
+
+        proto="http"
+        auth=""
+        if [ "$CONFIG_VICTORIAMETRICS" = on ]; then
+            AUTH_CONF_FILE=${OMD_ROOT}/etc/victoriametrics/conf.d/auto_auth.conf
+            # generate random passwords
+            if [ ! -f ${AUTH_CONF_FILE} ]; then
+                # use existing ones if available
+                if [ -f ${OMD_ROOT}/etc/victoriametrics/victoriametrics.conf.migrated.to.conf.d ]; then
+                    . ${OMD_ROOT}/etc/victoriametrics/victoriametrics.conf.migrated.to.conf.d
+                fi
+                httpAuth_username=${vm_httpAuth_username:-prom}
+                httpAuth_password=${vm_httpAuth_password:-$( tr -cd A-Za-z0-9 < /dev/urandom | head -c 16 )}
+                snapshotAuthKey=${vm_snapshotAuthKey:-$( tr -cd A-Za-z0-9 < /dev/urandom | head -c 16 )}
+                metricsAuthKey=${vm_metricsAuthKey:-metrics}
+                cat << EOT > ${AUTH_CONF_FILE}
+# this file is generated automatically, do not change manually. Changes will be overwritten.
+vm_httpAuth_username=${httpAuth_username}
+vm_httpAuth_password=${httpAuth_password}
+vm_metricsAuthKey=${metricsAuthKey}
+vm_snapshotAuthKey=${snapshotAuthKey}
+EOT
+            fi
+
+            # read config
+            for CFG in $OMD_ROOT/etc/victoriametrics/conf.d/*.conf; do
+                . $CFG
+            done
+            if [ "$vm_httpAuth_username:$vm_httpAuth_password" == ":" ] ; then
+                auth=""
+            else
+                auth="$vm_httpAuth_username:$vm_httpAuth_password"'@'
+            fi
+            if [ $CONFIG_VICTORIAMETRICS_MODE = 'ssl' ]; then
+                proto="https"
+            fi
         fi
         if [ -f $OMD_ROOT/etc/nagflux/config.gcfg ] ; then
             sed -e '/^\[InfluxDB \"victoriametrics\"\]/,/^\[/{s%^\s*Address = \("https\{0,1\}:\).*%\tAddress = \1//'$auth$CONFIG_VICTORIAMETRICS_TCP_ADDR':'$PORT'"%}' -i $OMD_ROOT/etc/nagflux/config.gcfg
         fi
 
         if [ -f $OMD_ROOT/etc/histou/histou.ini ] ; then
-            sed -e '/^\[promql\]/,/^\[/{s%^url = "\(http.?\)://.*/query?\(.*$\)%url = "\1://'$auth$CONFIG_VICTORIAMETRICS_TCP_ADDR':'$PORT'/query?\2%}' -i $OMD_ROOT/etc/histou/histou.ini
+            sed -e '/^\[victoriametrics\]/,/^\[/{s%^url = "https\{0,1\}://.*$%url = "'$proto'://'$auth$CONFIG_VICTORIAMETRICS_TCP_ADDR':'$PORT'"%}' -i $OMD_ROOT/etc/histou/histou.ini
+            if [ $CONFIG_INFLUXDB = 'off' -a "$CONFIG_VICTORIAMETRICS" = on ]; then
+                sed -e 's%^databaseType.*%databaseType = "victoriametrics"%' -i $OMD_ROOT/etc/histou/histou.ini
+            fi
         fi
 
         if [ -f $OMD_ROOT/etc/victoriametrics/remote_write.yml ] ; then
-            sed -e 's%- url: ".*/api\(.*\)$%- url: "http://'$CONFIG_VICTORIAMETRICS_TCP_ADDR':'$PORT'/api\1%' -i $OMD_ROOT/etc/victoriametrics/remote_write.yml
+            sed -e 's%- url: ".*/api\(.*\)$%- url: "'$proto'://'$CONFIG_VICTORIAMETRICS_TCP_ADDR':'$PORT'/api\1%' -i $OMD_ROOT/etc/victoriametrics/remote_write.yml
+            if [ "$CONFIG_VICTORIAMETRICS" = on ]; then
+                sed -e 's%username: .*%username: '$vm_httpAuth_username'%' -e 's%password: .*%password: '$vm_httpAuth_password'%' -i $OMD_ROOT/etc/victoriametrics/remote_write.yml
+            fi
+        fi
+
+        if [ "$CONFIG_VICTORIAMETRICS" = on ]; then
+            if [ -f $OMD_ROOT/etc/victoriametrics/grafana_datasources.yml ] ; then
+                sed -e "s/basicAuthPassword:.*/basicAuthPassword: ${vm_httpAuth_password}/; s/basicAuthUser:.*/basicAuthUser: $vm_httpAuth_username/" -i ${OMD_ROOT}/etc/victoriametrics/grafana_datasources.yml
+            fi
         fi
     ;;
     depends)

@@ -17,7 +17,7 @@ my $php_version = `php -v`;
 $php_version =~ s%^PHP\ (\d\.\d).*%$1%gmsx;
 plan skip_all => "icinga2 not included, cannot test" unless -x '/omd/versions/default/bin/icinga2';
 plan( skip_all => 'histou requires at least php 5.3') if $php_version < 5.3;
-plan( tests => 57 );
+plan( tests => 79 );
 
 ##################################################
 # create our test site
@@ -29,6 +29,7 @@ chomp($host);
 my $service = 'load';
 
 TestUtils::test_command({ cmd => $omd_bin." config $site set INFLUXDB on" });
+TestUtils::test_command({ cmd => $omd_bin." config $site set VICTORIAMETRICS on" });
 TestUtils::test_command({ cmd => $omd_bin." config $site set NAGFLUX on" });
 TestUtils::test_command({ cmd => $omd_bin." config $site set PNP4NAGIOS off" });
 TestUtils::test_command({ cmd => $omd_bin." config $site set GRAFANA on" });
@@ -67,6 +68,38 @@ TestUtils::test_url({
     url            => "http://localhost/$site/grafana/dashboard-solo/script/histou.js?host=$host&service=$service&theme=light&panelId=1",
     auth           => $auth,
     like           => [ "/>Grafana</" ],
+    skip_html_lint => 1,
+});
+TestUtils::test_url({
+    url            => "http://localhost/$site/histou/index.php?host=$host&service=$service",
+    auth           => $auth,
+    like           => [ "/$host/", "/$service/", "/influxdb/" ],
+    skip_html_lint => 1,
+});
+
+
+# activate victoriametrics for histou
+TestUtils::test_command({ cmd => "/bin/su - $site -c 'sed -i etc/histou/histou.ini -e s/^databaseType.*/databaseType\\ =\\ \"victoriametrics\"/g'", like => '/^\s*$/' });
+TestUtils::test_url({
+    url            => "http://localhost/$site/histou/index.php?host=$host&service=$service",
+    auth           => $auth,
+    like           => [ "/$host/", "/$service/", "/victoriametrics/" ],
+    skip_html_lint => 1,
+    waitfor        => 'victoriametrics',
+    maxwait        => 180,
+});
+
+
+TestUtils::test_url({
+    url            => "http://localhost/$site/grafana/dashboard-solo/script/histou.js?host=$host&service=$service&theme=light&panelId=1",
+    auth           => $auth,
+    like           => [ "/>Grafana</" ],
+    skip_html_lint => 1,
+});
+TestUtils::test_url({
+    url            => "http://localhost/$site/histou/index.php?host=$host&service=$service",
+    auth           => $auth,
+    like           => [ "/$host/", "/$service/", "/victoriametrics/" ],
     skip_html_lint => 1,
 });
 
