@@ -38,38 +38,56 @@ mkdir -p "$LOG_DIR" "$DATA_DIR"
 # add post hook for first start
 if ! test -s $OMD_ROOT/var/grafana/data/grafana.db; then
     START_CALLBACK=grafana_post_start
+    START_TIMEOUT=150
 fi
 grafana_post_start() {
     echo -n "first run, waiting for initial database creation"
     for x in $(seq 600); do
         grep -c "Completed legacy migration" $LOG_FILE >/dev/null 2>&1 && break
         [ $((x%10)) -eq 0 ] && echo -n "."
-        PID=$(pgrep -u $OMD_SITE -o -f "$DAEMON")
-        test -n "$PID" || break # break if pid disapears
+        if [ $x -gt 30 ]; then
+            if !__generic_init_pid >/dev/null 2>&1; then
+                echo "grafana pid disapeared"
+                ps -fu $USER
+                break # stop if pid disapears
+            fi
+        fi
         sleep 0.1
     done
-    PID=$(cat $PID_FILE 2>/dev/null)
-    if [ -z "$PID" ] || ! ps -p $PID >/dev/null 2>&1; then
+    SUCCESS=$(grep -c "Completed legacy migration" $LOG_FILE)
+    if [ "$SUCCESS" -eq 0 ]; then
         # try again once, but disable this callback
-        echo -n "trying again..."
+        tail $LOG_FILE
+        echo -n " failed, trying again..."
         START_CALLBACK=
-        rm -f $PID_FILE $OMD_ROOT/var/grafana/data/grafana.db
+        rm -f $PID_FILE $LOG_FILE $OMD_ROOT/var/grafana/data/grafana.db*
         __generic_init_wait_start
     fi
     for x in $(seq 600); do
         grep -c "Completed legacy migration" $LOG_FILE >/dev/null 2>&1 && break
         [ $((x%10)) -eq 0 ] && echo -n "."
-        PID=$(pgrep -u $OMD_SITE -o -f "$DAEMON")
-        test -n "$PID" || break # break if pid disapears
+        if [ $x -gt 30 ]; then
+            __generic_init_pid >/dev/null 2>&1 || break # stop if pid disapears
+        fi
         sleep 0.1
     done
-    PID=$(cat $PID_FILE 2>/dev/null)
-    if [ -z "$PID" ] || ! ps -p $PID >/dev/null 2>&1; then
+    sleep 1
+    SUCCESS=$(grep -c "Completed legacy migration" $LOG_FILE)
+    if [ "$SUCCESS" -eq 0 ]; then
         echo ""
         echo "startup failed, see the logfile for details: $LOG_FILE"
         exit 1
     fi
-    grep "Completed legacy migration" $LOG_FILE >/dev/null 2>&1
+
+    # PID changes during migration, so update pid file
+    PID=$(pgrep -u $OMD_SITE -o -f "$PSPATTERN")
+    if [ -z $PID ]; then
+        ps -fu $USER
+        echo ""
+        echo "startup failed, grafana not running, see the logfile for details: $LOG_FILE"
+        exit 1
+    fi
+    echo $PID > $PID_FILE
 }
 
 __generic_init "$*"
