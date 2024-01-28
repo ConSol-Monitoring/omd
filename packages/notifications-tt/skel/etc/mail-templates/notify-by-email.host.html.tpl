@@ -22,7 +22,7 @@ Content-Transfer-Encoding: 7bit
 - Hostalias:   [% HOSTALIAS %]
 - - - - - - - - - - - - - - - - -
 - State:       [% HOSTSTATE %]
-- Date:        [% SHORTDATETIME %]
+- Date:        [% SHORTDATETIME %] (Duration: [% PROBLEMDURATION %])
 - Output:      [% HOSTOUTPUT +%]
 [%+ LONGHOSTOUTPUT.replace('\\\n', "\n") %]
 [% IF NOTIFICATIONTYPE == 'ACKNOWLEDGEMENT' %]
@@ -111,7 +111,7 @@ a:hover {
   <tr><td>Hostalias:</td><td>[% HOSTALIAS %]</td></tr>
 [% END %]
   <tr><td>State:</td><td><div class="host[% HOSTSTATE %]" style="width:200px; text-align:center;">[% HOSTSTATE %]</span></td></tr>
-  <tr><td>Date:</td><td>[% SHORTDATETIME %]</td></tr>
+  <tr><td>Date:</td><td>[% SHORTDATETIME %]  (Duration: [% PROBLEMDURATION %])</td></tr>
 [% IF LONGHOSTOUTPUT %]
   <tr><td valign="top">Output:</td><td><pre>[% HOSTOUTPUT %]<br/>[% LONGHOSTOUTPUT.trim().replace("\n", "<br/>").replace('\\\n', "<br/>") %]</pre></td></tr>
 [% ELSE %]

@@ -15,7 +15,7 @@ Content-Transfer-Encoding: 8bit
 - Hostaddress: [% HOSTADDRESS %]
 - - - - - - - - - - - - - - - - -
 - State:       [% HOSTSTATE %]
-- Date:        [% SHORTDATETIME %]
+- Date:        [% SHORTDATETIME %] (Duration: [% PROBLEMDURATION %])
 - Output:      [% HOSTOUTPUT +%]
 [%+ LONGHOSTOUTPUT.replace('\\\n', "\n") %]
 [% IF NOTIFICATIONTYPE == 'ACKNOWLEDGEMENT' %]
