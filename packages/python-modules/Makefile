@@ -113,7 +113,7 @@ build:
 	export CFLAGS="-std=c99"; \
 	set -e ; \
 	for M in $(BASE); do \
-		MBASE=$$(echo $$M | sed -e 's/.tar.gz//g' -e 's/.zip//g' -e 's/-/\*/g') ; \
+		MBASE=$$(echo $$M | sed -E -e 's/.tar.gz//g' -e 's/.zip//g' -e 's/-/\*/g') ; \
 		WHEEL=$$(ls $(WHEELSDIR)/$${MBASE}-* 2>/dev/null | head -1) ; \
 		[[ -n "$$WHEEL" ]] && [[ -f "$$WHEEL" ]] && continue ; \
 		( \
@@ -128,7 +128,7 @@ build:
 		$(PIP) install --no-cache-dir --no-index --no-deps --find-links=$(WHEELSDIR) --target=$(BUILDDEST) --upgrade $$WHEEL ; \
 	done; \
 	for M in $(MODULES); do \
-		MBASE=$$(echo $$M | sed -e 's/.tar.gz//g' -e 's/.zip//g' -e 's/-py3-.*whl//g' -e 's/-/\*/g') ; \
+		MBASE=$$(echo $$M | sed -E -e 's/.tar.gz//g' -e 's/.zip//g' -e 's/-py3-.*whl//g' -e 's/-/\*/g') ; \
 		WHEEL=$$(ls $(WHEELSDIR)/$${MBASE}-* 2>/dev/null | head -1) ; \
 		SWHEEL=$$(ls src/$${MBASE}-* 2>/dev/null | head -1 | sed -e 's/^src.//g') ; \
 		echo "** $$M **" ; \
