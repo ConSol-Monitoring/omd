@@ -46,6 +46,7 @@ MODULES += Jinja2-3.0.3.tar.gz
 # Coshsh - datasources
 MODULES += mysqlclient-2.1.1.tar.gz
 MODULES += pymssql-2.2.7.tar.gz
+MODULES += mysql_connector_python-8.3.0-py2.py3-none-any.whl
 MODULES += lml-0.1.0.tar.gz                          # pyexcel-0.7.0.tar.gz
 MODULES += pyexcel-io-0.6.6.tar.gz                   # pyexcel-0.7.0.tar.gz
 MODULES += texttable-1.6.7.tar.gz                    # pyexcel-0.7.0.tar.gz
