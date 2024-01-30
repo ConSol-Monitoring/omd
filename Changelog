@@ -1,6 +1,8 @@
 This file documents the revision history for the Open Monitoring Distribution (Labs Edition)
 
 next:
+          - grafana:
+            - update to 10.3.1
 
 5.30     Jan 29 2024
           - Thruk: update to 3.12
