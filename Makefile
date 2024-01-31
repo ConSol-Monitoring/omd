@@ -84,7 +84,7 @@ else
 DEFAULT_BUILD=build
 endif
 
-.PHONY: install-global
+.PHONY: install-global Changelog
 
 omd: $(DEFAULT_BUILD)
 
@@ -271,7 +271,7 @@ deb-environment:
 	  exit 1; \
 	fi
 
-# create a debian/changelog to build the package 
+# create a debian/changelog to build the package
 deb-changelog: deb-environment
 	# this is a hack!
 	rm -f debian/changelog
@@ -311,6 +311,9 @@ version:
 	    sed -ri 's/^(OMD_VERSION[[:space:]]*= *).*/\1"'"$$newversion"'"/' packages/omd/omd ; \
 	    sed -ri 's/Version:.*/Version: '$$newversion'/' packages/omd/index.html ; \
 	fi ;
+
+Changelog:
+	./t/changelog.pl --write
 
 test:
 	t/test_all.sh
