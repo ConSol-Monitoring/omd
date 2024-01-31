@@ -5,7 +5,7 @@ use strict;
 use Getopt::Long;
 
 ################################################################################
-my @categories = qw/thruk naemon gearman grafana prometheus/;
+my @categories = qw/omd thruk naemon gearman grafana prometheus/;
 my $renames = {
     'gearmand'              => { cat => "gearman" },
     'promlens'              => { cat => "prometheus" },
@@ -41,29 +41,15 @@ sub main {
     my $next = $opt_tag ? $opt_tag : "next";
     _log("generating changes for %s release. (%s .. %s)", $next, $last_tag, $cur) if $opt_verbose;
 
-    my $changes = _get_changes($cur, $last_tag);
+    my $changes = _fetch_existing_changlog($cur);
+    $changes = _apply_new_changes($changes, $cur, $last_tag);
     my $txt = _format_changes($cur, $changes);
-    print $txt;
-    if($opt_write) {
-        open(my $changelog, '<', 'Changelog') or die("cannot read Changelog: $!");
-        my @old = <$changelog>;
-        close($changelog);
-        my $head = shift @old;
-        shift @old while($old[0] =~ m/^\s*$/mx); # trim empty lines
-        if($old[0] =~ m/^next:/mx) {
-            shift @old;
-            shift @old while($old[0] !~ m/^\s*$/mx); # trim until empty line
-            shift @old while($old[0] =~ m/^\s*$/mx); # trim exceeding empty lines
-        }
 
-        open($changelog, '>', 'Changelog') or die("cannot write Changelog: $!");
-        printf($changelog $head);
-        printf($changelog "\n");
-        printf($changelog $txt);
-        printf($changelog "\n");
-        printf($changelog join("", @old));
-        close($changelog);
-    }
+    print "################# Changelog #################\n";
+    print $txt;
+    print "#############################################\n";
+
+    _write_changelog($txt) if $opt_write;
 }
 
 ################################################################################
@@ -95,15 +81,19 @@ sub _format_changes_cat {
     for my $prj (sort keys %{$changes->{$cat}}) {
         my $version = $changes->{$cat}->{$prj};
         my $name = $prj ? $prj." " : "";
-        $txt .= sprintf("%s- %supdate to %s\n", (" " x $indent), $name, $version);
+        if(defined $version) {
+            $txt .= sprintf("%s- %supdate to %s\n", (" " x $indent), $name, $version);
+        } else {
+            $txt .= sprintf("%s- %s\n", (" " x $indent), $prj);
+        }
     }
     return($txt);
 }
 
 ################################################################################
-sub _get_changes {
-    my($cur, $last_tag) = @_;
-    my $changes = {};
+sub _apply_new_changes {
+    my($changes, $cur, $last_tag) = @_;
+
     if($cur eq 'HEAD') {
         $cur = "";
     } else {
@@ -157,8 +147,92 @@ sub _get_category {
 }
 
 ################################################################################
+sub _write_changelog {
+    my($txt) = @_;
+
+    open(my $changelog, '<', 'Changelog') or die("cannot read Changelog: $!");
+    my @old = <$changelog>;
+    close($changelog);
+    my $head = shift @old;
+    shift @old while($old[0] =~ m/^\s*$/mx); # trim empty lines
+    if($old[0] =~ m/^next:/mx) {
+        shift @old;
+        shift @old while($old[0] !~ m/^\s*$/mx); # trim until empty line
+        shift @old while($old[0] =~ m/^\s*$/mx); # trim exceeding empty lines
+    }
+
+    open($changelog, '>', 'Changelog') or die("cannot write Changelog: $!");
+    printf($changelog $head);
+    printf($changelog "\n");
+    printf($changelog $txt);
+    printf($changelog "\n");
+    printf($changelog join("", @old));
+    close($changelog);
+
+    _log("Changelog updated");
+}
+
+################################################################################
+sub _fetch_existing_changlog {
+    my($cur) = @_;
+
+    my $changes = {};
+
+    # extract existing changes
+    open(my $changelog, '<', 'Changelog') or die("cannot read Changelog: $!");
+    my @old = <$changelog>;
+    close($changelog);
+
+    my $head = shift @old;
+    shift @old while($old[0] =~ m/^\s*$/mx); # trim empty lines
+    return unless $old[0] =~ m/^next:/mx;
+    shift @old;
+    my @current;
+    while($old[0] !~ m/^\s*$/mx) {
+        push @current, shift @old;
+    }
+
+    my $cat = "";
+    for my $line (@current) {
+        chomp($line);
+        if(   $line =~ m/^          \- (\w+):$/) {
+            $cat = $1;
+        }
+        elsif($line =~ m/^            \- (.*?)update to (.*)$/) {
+            $changes->{$cat}->{_trim_whitespace($1)} = _trim_whitespace($2);
+        }
+        elsif($line =~ m/^          \- (.*?)update to (.*)$/) {
+            $cat = "";
+            $changes->{$cat}->{_trim_whitespace($1)} = _trim_whitespace($2);
+        }
+        elsif($line =~ m/^          \- (.+)$/) {
+            $cat = "";
+            $changes->{$cat}->{_trim_whitespace($1)} = undef;
+        }
+        elsif($line =~ m/^            \- (.+)$/) {
+            $changes->{$cat}->{_trim_whitespace($1)} = undef;
+        }
+        else {
+            die("unknown changelog entry: ".$line);
+        }
+    }
+
+    return($changes);
+}
+
+################################################################################
+sub _trim_whitespace {
+    my($txt) = @_;
+    $txt =~ s/^\s+//gmx;
+    $txt =~ s/\s+$//gmx;
+    return($txt);
+}
+
+################################################################################
 sub _log {
     my($fmt, @args) = @_;
     chomp($fmt);
     printf($fmt."\n", @args);
 }
+
+################################################################################
