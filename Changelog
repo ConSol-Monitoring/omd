@@ -1,6 +1,8 @@
 This file documents the revision history for the Open Monitoring Distribution (Labs Edition)
 
 next:
+          - naemon:
+            - update to 1.4.2
           - grafana:
             - update to 10.3.1
 
