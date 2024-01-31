@@ -84,7 +84,7 @@ else
 DEFAULT_BUILD=build
 endif
 
-.PHONY: install-global changelog
+.PHONY: install-global Changelog
 
 omd: $(DEFAULT_BUILD)
 
@@ -312,7 +312,7 @@ version:
 	    sed -ri 's/Version:.*/Version: '$$newversion'/' packages/omd/index.html ; \
 	fi ;
 
-changelog:
+Changelog:
 	./t/changelog.pl --write
 
 test:
