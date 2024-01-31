@@ -104,10 +104,15 @@ sub _format_changes_cat {
 sub _get_changes {
     my($cur, $last_tag) = @_;
     my $changes = {};
+    if($cur eq 'HEAD') {
+        $cur = "";
+    } else {
+        $cur = "..".$cur;
+    }
     my @files = glob("packages/*/Makefile");
     for my $f (@files) {
         _log("checking version from %s", $f) if $opt_verbose;
-        chomp(my $diff  = `git diff $last_tag..$cur -- $f 2>/dev/null`);
+        chomp(my $diff  = `git diff $last_tag$cur -- $f 2>/dev/null`);
         if(!$diff) {
             _log(" -> no changes at all") if $opt_verbose;
             next;
