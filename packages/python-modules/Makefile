@@ -4,6 +4,7 @@ NAME       = python-modules
 SHELL      = /bin/bash
 FREETDS    = $(shell readlink -m ../freetds/tmpinstall$(OMD_ROOT))
 HAS_CYTHON = $(shell python3 has_cython.py)
+PYTHON_V   = $(shell python3 --version 2>&1 | cut -d' ' -f2)
 
 DEPENDS  = freetds
 
@@ -46,7 +47,7 @@ MODULES += Jinja2-3.0.3.tar.gz
 # Coshsh - datasources
 MODULES += mysqlclient-2.1.1.tar.gz
 MODULES += pymssql-2.2.7.tar.gz
-#todo#MODULES += mysql_connector_python-8.3.0-py2.py3-none-any.whl
+MODULES += mysql_connector_python-8.3.0-py2.py3-none-any.whl
 MODULES += lml-0.1.0.tar.gz                          # pyexcel-0.7.0.tar.gz
 MODULES += pyexcel-io-0.6.6.tar.gz                   # pyexcel-0.7.0.tar.gz
 MODULES += texttable-1.6.7.tar.gz                    # pyexcel-0.7.0.tar.gz
@@ -143,6 +144,13 @@ build:
 			LINK_KRB5=NO \
 			CFLAGS="-I $(FREETDS)/include -L $(FREETDS)/lib" \
 			$(PIP) wheel --no-cache-dir --wheel-dir=$(WHEELSDIR) --find-links=$(WHEELSDIR) ./src/$$M ; \
+		elif [[ $$M =~ .*mysql_connector_python.* ]]; then \
+			if [[ "$$(printf '%s\n' "3.8" "$(PYTHON_V)" | sort -V | head -n 1)" != "3.8" ]]; then \
+				echo mysql_connector_python requires a python newer than 3.8 ; \
+				continue ; \
+			else \
+				$(PIP) wheel --no-cache-dir --no-index --no-deps --wheel-dir=$(WHEELSDIR) --find-links=$(WHEELSDIR) ./src/$$M ; \
+			fi ; \
 		elif [[ $$M =~ .*tomli.* ]]; then \
 			( \
 				cd src && \
