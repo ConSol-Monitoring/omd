@@ -1,134 +1,93 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
-# description: Grafana web server & backend
+### OMD INIT INFO
+# PIDFILE:  tmp/run/grafana.pid
+# DEPENDS:  CONFIG_GRAFANA = on
+# BINARY:   bin/grafana
+# ARGMATCH: etc/grafana/grafana.ini
+### END INIT INFO
 
-# allow the setting of enviroment variable for customization
-# e.g. for AWS sigv4 auth see https://docs.aws.amazon.com/prometheus/latest/userguide/AMP-onboard-query-standalone-grafana.html
-. .profile
-# Check if grafana is enabled in OMD. If not terminate.
-. lib/omd/init_profile
+cd || exit 1
 . etc/omd/site.conf
 if [ "$CONFIG_GRAFANA" != "on" ] ; then
     exit 5
 fi
+. lib/omd/init_profile
+. .profile
 
-NAME="Grafana"
+# allow the setting of enviroment variable for customization
+# e.g. for AWS sigv4 auth see https://docs.aws.amazon.com/prometheus/latest/userguide/AMP-onboard-query-standalone-grafana.html
+
+NAME="grafana"
 GRAFANA_HOME=$OMD_ROOT/share/grafana
 CONF_DIR=$OMD_ROOT/etc/grafana
 WORK_DIR=$GRAFANA_HOME
 DATA_DIR=$OMD_ROOT/var/grafana
 LOG_DIR=$OMD_ROOT/var/log/grafana
 CONF_FILE=$CONF_DIR/grafana.ini
-PID_FILE=$OMD_ROOT/tmp/run/$NAME.pid
-LOGFILE=$LOG_DIR/grafana.log
+PID_FILE=$OMD_ROOT/tmp/run/grafana.pid
+LOG_FILE=$LOG_DIR/grafana.log
 DAEMON=$OMD_ROOT/bin/grafana
+OPTS="server --homepath=${GRAFANA_HOME} --pidfile=${PID_FILE} --config=${CONF_FILE} cfg:default.paths.data=${DATA_DIR} cfg:default.paths.logs=${LOG_DIR}"
+NOHUP=1
+KILL_SESSION=1
+START_TIMEOUT=60
 
-OPTIONS="--homepath=${GRAFANA_HOME} --pidfile=${PID_FILE} --config=${CONF_FILE} cfg:default.paths.data=${DATA_DIR} cfg:default.paths.logs=${LOG_DIR}"
+mkdir -p "$LOG_DIR" "$DATA_DIR"
 
-get_status() {
-    pid=$( cat $PID_FILE 2>/dev/null )
-    if [ -n "$pid" ]; then
-        if ps -p $pid > /dev/null 2>&1 ; then
-            echo "$NAME is running with pid $pid"
-            return 0;
-        fi
-    fi
-    echo "$NAME is not running"
-    return 1;
-}
-
-kill_session() {
-    local sess=$1
-    ps -ax -o sess= -o pid= | awk '$1 == v {print $2}' v=$sess | xargs kill
-}
-
-stop_grafana() {
-    pid=$( cat $PID_FILE 2>/dev/null )
-    if [ -z "$pid" ]; then
-        echo ". Not running."
-    else
-        # get session id
-        sess=$( ps -o sess= -p $pid )
-        if [ "$sess" != "" ]; then
-          kill_session $sess
-        fi
-        for x in $(seq 15); do
-            printf "."
-            ps -p $pid > /dev/null 2>&1 || break
-            sleep 0.2;
-        done
-        if ! ps -p $pid > /dev/null 2>&1 ; then
-            echo "OK"
-	    __init_hook $0 $1 post 0
-            exit 0;
-        else
-            echo "failed"
-	    __init_hook $0 $1 post 1
-            exit 1;
-        fi
-    fi
-}
-
-__init_hook $0 $1 pre
-case "$1" in
-  start)
-        printf '%s' "Starting $NAME..."
-
-        if get_status > /dev/null ; then
-            echo "failed"
-            echo "$NAME already running"
-            exit 0;
-        fi
-
-        mkdir -p "$LOG_DIR" "$DATA_DIR"
-        touch "$PID_FILE"
-        # make sure to start them it in a separate session
-        # so we can easier kill the crap
-        nohup setsid $DAEMON $OPTIONS >>$LOGFILE 2>&1 &
-
-        # wait for grafana to write pidfile
-        counter=20
-        up=0
-        while (( counter-- )) ; do
-            if get_status > /dev/null 2>&1 ; then
-                up=1
-                break
+# add post hook for first start
+if ! test -s $OMD_ROOT/var/grafana/data/grafana.db; then
+    START_CALLBACK=grafana_post_start
+    START_TIMEOUT=150
+fi
+grafana_post_start() {
+    echo -n "first run, waiting for initial database creation"
+    for x in $(seq 600); do
+        grep -c "Completed legacy migration" $LOG_FILE >/dev/null 2>&1 && break
+        [ $((x%10)) -eq 0 ] && echo -n "."
+        if [ $x -gt 30 ]; then
+            if !__generic_init_pid >/dev/null 2>&1; then
+                echo "grafana pid disapeared"
+                ps -fu $USER
+                break # stop if pid disapears
             fi
-            sleep 1
-        done
-        if [ $up = 1 ]; then
-             echo "OK"
-	    __init_hook $0 $1 post 0
-            exit 0;
-        else
-            echo "failed"
-	    __init_hook $0 $1 post 1
-            exit 1;
         fi
-    ;;
-  stop)
-        printf '%s' "Stopping $NAME..."
-        pid=$( cat $PID_FILE 2>/dev/null )
-        if [ -z "$pid" ]; then
-            echo ". Not running."
-        else
-            stop_grafana;
+        sleep 0.1
+    done
+    SUCCESS=$(grep -c "Completed legacy migration" $LOG_FILE)
+    if [ "$SUCCESS" -eq 0 ]; then
+        # try again once, but disable this callback
+        tail $LOG_FILE
+        echo -n " failed, trying again..."
+        START_CALLBACK=
+        rm -f $PID_FILE $LOG_FILE $OMD_ROOT/var/grafana/data/grafana.db*
+        __generic_init_wait_start
+    fi
+    for x in $(seq 600); do
+        grep -c "Completed legacy migration" $LOG_FILE >/dev/null 2>&1 && break
+        [ $((x%10)) -eq 0 ] && echo -n "."
+        if [ $x -gt 30 ]; then
+            __generic_init_pid >/dev/null 2>&1 || break # stop if pid disapears
         fi
-    ;;
-  status)
-        get_status;
-        exit $?;
-    ;;
-    reload|restart)
-        $0 stop && sleep 1 && $0 start
-        exit $?
-    ;;
-  check)
-    ;;
-  *)
-        echo "Usage: $NAME {start|stop|kill|status|restart}"
+        sleep 0.1
+    done
+    sleep 1
+    SUCCESS=$(grep -c "Completed legacy migration" $LOG_FILE)
+    if [ "$SUCCESS" -eq 0 ]; then
+        echo ""
+        echo "startup failed, see the logfile for details: $LOG_FILE"
         exit 1
-    ;;
-esac
+    fi
 
-exit 0
+    # PID changes during migration, so update pid file
+    PID=$(pgrep -u $OMD_SITE -o -f "$PSPATTERN")
+    if [ -z $PID ]; then
+        ps -fu $USER
+        echo ""
+        echo "startup failed, grafana not running, see the logfile for details: $LOG_FILE"
+        exit 1
+    fi
+    echo $PID > $PID_FILE
+}
+
+__generic_init "$*"

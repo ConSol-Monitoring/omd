@@ -1,0 +1,12 @@
+--- a/lib/utils_base.h	2023-10-19 10:19:35.810162780 +0200
++++ b/lib/utils_base.h	2023-10-19 10:19:40.214162780 +0200
+@@ -2,9 +2,7 @@
+ #define _UTILS_BASE_
+ /* Header file for Monitoring Plugins utils_base.c */
+ 
+-#ifndef USE_OPENSSL
+ # include "sha256.h"
+-#endif
+ 
+ /* This file holds header information for thresholds - use this in preference to
+    individual plugin logic */

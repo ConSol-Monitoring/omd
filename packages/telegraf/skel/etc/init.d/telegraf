@@ -1,21 +1,5 @@
 #!/bin/bash
 
-# chkconfig: 345 99 01
-# decription: Telegraf
-
-### BEGIN INIT INFO
-# Provides:          telegraf
-# Required-Start:    $local_fs
-# Required-Stop:     $local_fs
-# Should-Start:
-# Should-Stop:
-# Default-Start:     2 3 4 5
-# Default-Stop:      0 1 6
-# Short-Description: Start/Stop telegraf
-### END INIT INFO
-
-# Author: Matthias Gallinger <matthias.gallinger@consol.de>
-
 cd || exit 1
 . .profile
 . lib/omd/init_profile

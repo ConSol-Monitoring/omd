@@ -1,110 +1,26 @@
 #!/bin/bash
 
-### BEGIN INIT INFO
-# Provides:          mod_gearman_proxy
-# Required-Start:    $local_fs
-# Required-Stop:     $local_fs
-# Should-Start:
-# Should-Stop:
-# Default-Start:     2 3 4 5
-# Default-Stop:      0 1 6
-# Short-Description: Start/Stop the mod_gearman proxy daemon
+### OMD INIT INFO
+# PIDFILE:  tmp/run/gearman_proxy.pid
+# DEPENDS:  CONFIG_MOD_GEARMAN = on
+# DEPENDS:  CONFIG_GEARMAN_PROXY = on
+# BINARY:   share/mod_gearman/gearman_proxy.pl
+# ARGMATCH: etc/mod-gearman/gearman_proxy.cfg
 ### END INIT INFO
 
-# Check if Mod-Gearman is enabled in OMD. If not terminate.
-cd $OMD_ROOT
-. $OMD_ROOT/.profile
-. $OMD_ROOT/etc/omd/site.conf
-# not integrated in omds config menu yet
+cd || exit 1
+. etc/omd/site.conf
 if [ "$CONFIG_MOD_GEARMAN" != "on" -o "$CONFIG_GEARMAN_PROXY" != "on" ] ; then
     exit 5
 fi
-PROXY=$OMD_ROOT/share/mod_gearman/gearman_proxy.pl
-PIDFILE=$OMD_ROOT/tmp/run/gearman_proxy.pid
-LOGFILE=$OMD_ROOT/var/log/gearman/proxy.log
-CONFIGFILE=$OMD_ROOT/etc/mod-gearman/gearman_proxy.cfg
-CONFIGFOLDER=$OMD_ROOT/etc/mod-gearman/gearman_proxy.cfg.d
-mkdir -p $OMD_ROOT/tmp/run
+. .profile
+. lib/omd/init_profile
 
 NAME=gearman_proxy
-USER=$USER
-USERID=`id -u`
+DAEMON=$OMD_ROOT/share/mod_gearman/gearman_proxy.pl
+PID_FILE=$OMD_ROOT/tmp/run/gearman_proxy.pid
+LOG_FILE=$OMD_ROOT/var/log/gearman/proxy.log
+OPTS="--log=$LOG_FILE --pid=$PID_FILE --config=$OMD_ROOT/etc/mod-gearman/gearman_proxy.cfg --config=$OMD_ROOT/etc/mod-gearman/gearman_proxy.cfg.d"
+NOHUP=1
 
-# create state dir
-if [ "$USERID" -eq 0 ]; then
-  mkdir -p $(dirname $PIDFILE)
-  chown $USER: $(dirname $PIDFILE)
-fi
-
-get_status() {
-    pid=$( cat $PIDFILE 2>/dev/null )
-    if [ -n "$pid" ]; then
-        if ps -p $pid > /dev/null 2>&1 ; then
-            echo "$NAME is running with pid $pid"
-            return 0;
-        fi
-    fi
-    echo "$NAME is not running"
-    return 1;
-}
-
-case "$1" in
-    start)
-        echo -n "Starting $NAME..."
-        if get_status > /dev/null ; then
-            echo "failed"
-            echo "$NAME already running"
-            exit 0;
-        fi
-
-        $PROXY --log=$LOGFILE --pid=$PIDFILE --config=$CONFIGFILE --config=$CONFIGFOLDER &
-        if [ $? -eq 0 ]; then
-            echo "OK"
-        else
-            echo "failed"
-        fi
-        ;;
-    stop)
-        echo -n "Stopping $NAME..."
-        pid=`cat $PIDFILE 2>/dev/null`
-        if [ -f $PIDFILE  ]; then
-            kill $pid
-            rm -f $PIDFILE
-            if [ $? -eq 0 ]; then
-                echo "OK"
-                exit 0;
-            else
-                echo "failed"
-                exit 1;
-            fi
-        else
-            echo "Not running."
-        fi
-        ;;
-    status)
-        get_status;
-        exit $?;
-    ;;
-    reload)
-        pid=`cat $PIDFILE 2>/dev/null`
-        if [ "$pid" != "" ]; then
-            echo "Reloading $NAME configuration files..."
-            kill -HUP $pid
-            exit 0;
-        fi
-        echo "$NAME is not running"
-        exit 1;
-    ;;
-    restart)
-        $0 stop && sleep 1 && $0 start
-        exit $?
-        ;;
-    check)
-        ;;
-    *)
-        echo "Usage: $NAME {start|stop|status|restart}"
-        exit 1
-        ;;
-esac
-
-exit 0
+__generic_init "$*"

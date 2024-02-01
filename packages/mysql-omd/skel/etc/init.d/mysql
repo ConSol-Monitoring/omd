@@ -1,15 +1,21 @@
 #!/bin/bash
 
-cd $OMD_ROOT
+### OMD INIT INFO
+# PIDFILE:  tmp/run/mysqld/mysqld.pid
+# DEPENDS:  CONFIG_MYSQL = on
+# BINARY:   bin/mysqld_safe
+# ARGMATCH: .my.cnf
+### END INIT INFO
 
-# Check if MySQL is enabled in OMD. If not terminate.
-. lib/omd/init_profile
+cd || exit 1
 . etc/omd/site.conf
 if [ "$CONFIG_MYSQL" != on ] ; then
     exit 5
 fi
+. lib/omd/init_profile
 
-MYSQLD_PID=tmp/run/mysqld/mysqld.pid
+NAME="mysql"
+PID_FILE=tmp/run/mysqld/mysqld.pid
 MYSQL_CNF=.my.cnf
 
 ## Checks if there is a server running and if so if it is accessible.
@@ -22,7 +28,7 @@ mysqld_status () {
     ping_output=`mysqladmin --defaults-file=$MYSQL_CNF ping 2>&1`; ping_alive=$(( ! $? ))
 
     ps_alive=0
-    if [ -f "$MYSQLD_PID" ] && ps `cat $MYSQLD_PID` >/dev/null 2>&1; then ps_alive=1; fi
+    if [ -f "$PID_FILE" ] && ps `cat $PID_FILE` >/dev/null 2>&1; then ps_alive=1; fi
 
     if [ "$1" = "check_alive"  -a  $ping_alive = 1 ] ||
        [ "$1" = "check_dead"   -a  $ping_alive = 0  -a  $ps_alive = 0 ]; then
@@ -37,18 +43,18 @@ mysqld_status () {
 
 mysql_wait_start() {
     if mysqld_status check_alive nowarn; then
-        echo -n "already running. "
+        echo -n "(already running)..."
         return 1
     else
         mysqld_safe --defaults-file=$MYSQL_CNF >/dev/null 2>&1 &
         i=0
         while mysqld_status check_dead nowarn;  do
-            if [ $i = '10' ]; then
+            if [ $i = '100' ]; then
                 return 1
             else
-                echo -n "."
+                [ $((i%10)) -eq 0 ] && echo -n "."
                 i=$(($i+1))
-                sleep 1
+                sleep 0.1
            fi
         done
         return 0
@@ -57,7 +63,7 @@ mysql_wait_start() {
 
 mysql_wait_stop() {
     if mysqld_status check_dead nowarn; then
-       echo -n 'Not running. '
+       echo -n 'not running...'
        return 0
     fi
 
@@ -66,12 +72,12 @@ mysql_wait_stop() {
     # wait until really stopped
     i=0
     while ! mysqld_status check_dead nowarn;  do
-        if [ $i = '10' ]; then
+        if [ $i = '100' ]; then
             return 1
         else
-            echo -n "."
+            [ $((i%10)) -eq 0 ] && echo -n "."
             i=$(($i+1))
-            sleep 1
+            sleep 0.1
        fi
     done
 
@@ -80,13 +86,14 @@ mysql_wait_stop() {
 
 check_install_db() {
     if [ ! -e ~/var/mysql/mysql ] ; then
-        echo "first start of MySQL, creating initial database..."
+        echo -n "first start of MySQL, creating initial database..."
         AUTHOPTION=""
         if [ $(mysql_install_db --help 2>&1 | grep -c auth-root-authentication) -gt 0 ]; then
             AUTHOPTION="--auth-root-authentication-method=normal"
         fi
         mysql_install_db --defaults-file=$MYSQL_CNF --force $AUTHOPTION > $OMD_ROOT/var/log/omd.log 2>&1
         if [ $? != 0 ]; then
+            echo ""
             echo "failed: please have a look at $OMD_ROOT/var/log/omd.log"
             echo "and https://labs.consol.de/omd/packages/mariadb/"
             exit 1
@@ -97,11 +104,11 @@ check_install_db() {
 __init_hook $0 $1 pre
 case $1 in
     start)
-        echo -n "Starting MySQL... "
+        echo -n "Starting ${NAME}..."
         mkdir -p $OMD_ROOT/etc/mysql/conf.d
         check_install_db;
         if mysql_wait_start; then
-            echo 'OK.'
+            echo 'OK'
             __init_hook $0 $1 post 0
             # create thruk logcache database
             if [ -e $OMD_ROOT/etc/thruk/thruk_local.d/omd_logcache.conf ] && [ $(grep -c ^logcache $OMD_ROOT/etc/thruk/thruk_local.d/omd_logcache.conf) -ge 1 ]; then
@@ -115,19 +122,19 @@ case $1 in
             fi
             exit 0
         else
-            echo 'ERROR.'
+            echo 'ERROR'
             __init_hook $0 $1 post 1
             exit 1
         fi
     ;;
     stop)
-        echo -n "Stopping MySQL... "
+        echo -n "Stopping ${NAME}..."
         if mysql_wait_stop; then
-            echo 'OK.'
+            echo 'OK'
             __init_hook $0 $1 post 0
             exit 0
         else
-            echo 'ERROR.'
+            echo 'ERROR'
             __init_hook $0 $1 post 1
             exit 1
         fi

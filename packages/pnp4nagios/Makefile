@@ -3,7 +3,7 @@ include ../../Makefile.omd
 .PHONY: skel
 
 NAME = pnp4nagios
-VERSION = 0.6.25
+VERSION = 0.6.42
 DIR = $(NAME)-$(VERSION)
 # Unset CONFIG_SITE
 CONFIG_SITE = ''
@@ -29,15 +29,22 @@ CONFIGUREOPTS = \
     --with-perl_lib_path=$(OMD_ROOT)/lib/perl5/lib/perl5 \
     --with-base-url='/\#\#\#SITE\#\#\#/pnp4nagios'
 
+RUN_AUTOMAKE=0
+ifeq ($(shell uname -m),aarch64)
+RUN_AUTOMAKE=1
+endif
+
 build:
 	tar xzf $(DIR).tar.gz
-	for p in patches/*.diff ; do \
+	for p in patches/*.patch ; do \
 		echo "applying $$p..." ; \
-		( cd $(DIR) ; patch -p1 -b ) < $$p ; \
+		( cd $(DIR) ; patch -p1 ) < $$p ; \
        done
-
-	cd $(DIR) ; ./configure $(CONFIGUREOPTS)
+	-if [ "x$(RUN_AUTOMAKE)" = "x1" ]; then cd $(DIR) && automake -af; fi
+	cd $(DIR) && ./configure $(CONFIGUREOPTS)
 	$(MAKE) -C $(DIR) all
+	rm -f $(DIR)/share/pnp/documents/de_DE/dwnld.html
+	cp $(DIR)/share/pnp/documents/en_US/dwnld.html $(DIR)/share/pnp/documents/de_DE/dwnld.html
 
 install:
 	mkdir -p $(DESTDIR)$(APACHE_CONF_DIR)
@@ -64,4 +71,16 @@ install:
 	install -m 644 check_gearman.php $(DESTDIR)$(OMD_ROOT)/share/pnp4nagios/htdocs/templates.dist/check_gearman.php
 
 clean:
+	rm -rf $(DIR)
+
+upstream: package
+
+package:
+	rm -f $(DIR).tar.gz
+	wget "https://github.com/ConSol/pnp/archive/refs/heads/master.tar.gz"
+	tar zxf master.tar.gz
+	rm -f master.tar.gz
+	mv pnp-*/ $(DIR)
+	tar cf $(DIR).tar $(DIR)
+	gzip -9 $(DIR).tar
 	rm -rf $(DIR)

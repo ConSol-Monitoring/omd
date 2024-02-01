@@ -17,7 +17,7 @@ Content-Transfer-Encoding: 8bit
 - Service:     [% SERVICEDESC %]
 - - - - - - - - - - - - - - - - -
 - State:       [% SERVICESTATE %]
-- Date:        [% SHORTDATETIME %]
+- Date:        [% SHORTDATETIME %] (Duration: [% PROBLEMDURATION %])
 - Output:      [% SERVICEOUTPUT +%]
 [%+ LONGSERVICEOUTPUT.replace('\\\n', "\n") %]
 [% IF NOTIFICATIONTYPE == 'ACKNOWLEDGEMENT' %]

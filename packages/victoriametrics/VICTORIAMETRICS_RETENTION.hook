@@ -17,7 +17,9 @@ case "$1" in
         echo "[0-9]+[hdwy]{0,1}"
     ;;
     set)
-        :
+      if [ -f ${OMD_ROOT}/etc/victoriametrics/conf.d/auto_retention.conf ]; then
+        sed -e 's/vm_retentionPeriod=.*/vm_retentionPeriod='$2'/' -i ${OMD_ROOT}/etc/victoriametrics/conf.d/auto_retention.conf
+      fi
     ;;
     depends)
     [ "$CONFIG_VICTORIAMETRICS" = "on" ]

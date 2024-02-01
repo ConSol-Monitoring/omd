@@ -6,6 +6,8 @@ SHELL    = /bin/bash
 
 ifeq ($(shell uname -m),x86_64)
 DIR=$(NAME)-v$(VERSION)-linux-x64
+else ifeq ($(shell uname -m),aarch64)
+DIR=$(NAME)-v$(VERSION)-linux-arm64
 else
 $(error arch $(shell uname -m ) not supported)
 endif

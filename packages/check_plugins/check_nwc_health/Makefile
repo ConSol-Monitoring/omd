@@ -1,7 +1,7 @@
 include ../../../Makefile.omd
 
 NAME = check_nwc_health
-VERSION = 10.3
+VERSION = 11.2.4
 DIR = $(NAME)-$(VERSION)
 
 .PHONY: skel
@@ -9,7 +9,7 @@ DIR = $(NAME)-$(VERSION)
 CONFIGUREOPTS = "--disable-standalone"
 
 build:
-	tar xzf $(DIR).tar.gz
+	tar ozxf $(DIR).tar.gz
 	cd $(DIR) ; ./configure $(CONFIGUREOPTS)
 	$(MAKE) -C $(DIR)
 

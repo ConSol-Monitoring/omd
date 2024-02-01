@@ -1,7 +1,7 @@
 include ../../../Makefile.omd
 
 NAME = check_ntp_health
-VERSION = 1.4.0.2
+VERSION = 1.5
 DIR = $(NAME)-$(VERSION)
 
 .PHONY: skel
@@ -9,7 +9,7 @@ DIR = $(NAME)-$(VERSION)
 CONFIGUREOPTS = "--disable-standalone"
 
 build:
-	tar xzf $(DIR).tar.gz
+	tar ozxf $(DIR).tar.gz
 	cd $(DIR) ; ./configure $(CONFIGUREOPTS)
 	$(MAKE) -C $(DIR)
 

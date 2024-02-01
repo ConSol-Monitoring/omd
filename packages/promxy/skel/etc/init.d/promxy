@@ -1,235 +1,40 @@
 #!/bin/bash
 
-# chkconfig: 345 99 01
-# description: Promxy
-
-### BEGIN INIT INFO
-# Provides:       promxy
-# Required-Start:
-# Required-Stop:
-# Default-Start:  2 3 5
-# Default-Stop:
-# Description: Promxy
+### OMD INIT INFO
+# PIDFILE:  tmp/run/promxy.pid
+# DEPENDS:  CONFIG_PROMXY = on
+# BINARY:   local/bin/promxy
+# ARGMATCH: etc/promxy/config.yaml
 ### END INIT INFO
 
-# Author: Danijel Tasov <danijel.tasov@consol.de>
-
-# Notes for OMD init script requirements
-# - Must handle omd config options like daemon enabling/disabling
-# - When a daemon is disabled by omd config it needs
-#   to return an exit code of 5.
-# - The init script must output an exit code of 2 when
-#   an unknown param is used.
-# - In general the exit code for succeeded actions is
-#   0 and for failed actions it is 1.
-# - There are exceptions for the exit code handling:
-#   - When a service is already stopped and should be
-#     restarted/stopped, it should result in an exit code of 0.
-#   - When a service is already running and should be started
-#     this also should result in an exit code of 0.
-# - When a restart is requested and the program is still not running
-#   the script should only execute a start
-# - When a restart is requested and the program can not be stopped the
-#   script should terminate without starting the daemon
-# - When a reload is requested and the program is not running
-#   the init script should execute a start instead
-
 cd || exit 1
+. etc/omd/site.conf
+[ "$CONFIG_PROMXY" = "on" ] || exit 5
 . .profile
 . lib/omd/init_profile
-. etc/omd/site.conf
 
-[ "$CONFIG_PROMXY" = "on" ] || exit 5
-
-BIN=${OMD_ROOT}/local/bin/promxy
+DAEMON=${OMD_ROOT}/local/bin/promxy
 
 CFG_FILE=${OMD_ROOT}/etc/promxy/config.yaml
 LOG_DIR=${OMD_ROOT}/var/log/promxy
-LOGFILE=${OMD_ROOT}/var/log/promxy/promxy.log
-PID_FILE=${OMD_ROOT}/tmp/lock/promxy.lock
+LOG_FILE=${OMD_ROOT}/var/log/promxy/promxy.log
+PID_FILE=${OMD_ROOT}/tmp/run/promxy.pid
 
 unset LANG
 export LC_ALL=C
 
-#TODO: switch to omd
+OPTS=""
+OPTS+=" --config=${CFG_FILE}"
+OPTS+=" --web.external-url=https://$(hostname --fqdn)/${OMD_SITE}/promxy"
+OPTS+=" --bind-addr=${CONFIG_PROMXY_TCP_ADDR}:${CONFIG_PROMXY_TCP_PORT}"
+OPTS+=" --log-level=info"
+OPTS+=" --log-level=trace"
+NOHUP=1
+STORE_PID=1
 
-OPTIONS=""
-OPTIONS+=" --config=${CFG_FILE}"
-OPTIONS+=" --web.external-url=https://$(hostname --fqdn)/${OMD_SITE}/promxy"
-OPTIONS+=" --bind-addr=${CONFIG_PROMXY_TCP_ADDR}:${CONFIG_PROMXY_TCP_PORT}"
-OPTIONS+=" --log-level=info"
-OPTIONS+=" --log-level=trace"
-
-#
-rebuild_config() {
-  return 0
-}
-
-promxy_proc() {
-    PID=$(cat $PID_FILE 2>/dev/null)
-    #PROC=$(ps -u $USR --ppid 1 -o pid,ppid,cmd \
-    #         | grep "$BIN $OPTIONS" 2>&1 | grep ' 1 ' | grep -v grep)
-    #PID=$(echo "$PROC" | sed 's/^ *//g' | cut -d' ' -f1)
-    if [ "$PID" != "" ]; then
-        PROC=$(ps -fp "$PID" 2>/dev/null | grep -c promxy)
-        if [ "$PROC" -gt 0 ] ; then
-            echo "$PID"
-            return 0
-        fi
-    fi
-    return 1
-}
-
-pidof_promxy() {
-    promxy_proc
-    return $?
-}
-
-
-verify_config() {
-        return 0
-}
-
-prep_start() {
-    if [ -f $CMD_FILE ]; then
-        rm -f $CMD_FILE
-    fi
-    touch $PID_FILE
-}
-
-promxy_wait_stop() {
-    pid=$(pidof_promxy) || true
-    if ! kill -0 "${pid:-}" >/dev/null 2>&1; then
-        echo -n 'Not running. '
-        return 0
-    fi
-
-    if [ -n "${pid:-}" ]; then
-        I=0
-        while kill -0 ${pid:-} >/dev/null 2>&1; do
-            # Send single kill per process
-            kill $pid
-            while kill -0 ${pid:-} >/dev/null 2>&1;  do
-                if [ $I = '15' ]; then
-                    return 1
-                else
-                    echo -n "."
-                    I=$(($I+1))
-                    sleep 2
-                fi
-            done
-        done
-    fi
-
-    [ -f "$PID_FILE" ] && rm -f "$PID_FILE"
-    return 0
-
-}
-
-promxy_wait_start() {
-    prep_start
-    nohup $BIN $OPTIONS >>$LOGFILE 2>&1 &
-    echo $! > $PID_FILE
-    I=0
-    sleep 2
-    while ! pidof_promxy >/dev/null 2>&1;  do
-        if [ $I = '5' ]; then
-            return 1
-        else
-            echo -n "."
-            I=$(($I+1))
-            sleep 1
-        fi
-    done
-    return 0
-}
-
-if [ ! -f $BIN ]; then
-    echo "promxy binary $BIN not found. Try ~/bin/get_promxy. Terminating..."
+if [ ! -f $DAEMON ]; then
+    echo "promxy binary $DAEMON not found. Try ~/bin/get_promxy. Terminating..."
     exit 1
 fi
 
-__init_hook $0 $1 pre
-case "$1" in
-    start)
-        echo -n "Starting promxy..."
-        if pidof_promxy >/dev/null 2>&1; then
-            echo 'Already running.'
-            exit 1
-        fi
-
-        if ! verify_config quiet; then
-            exit 1
-        fi
-
-        if promxy_wait_start; then
-            echo 'OK'
-            __init_hook $0 $1 post 0
-            exit 0
-        else
-            echo 'ERROR'
-            __init_hook $0 $1 post 1
-            exit 1
-        fi
-    ;;
-    stop)
-        echo -n "Stopping promxy..."
-        if promxy_wait_stop; then
-            echo 'OK'
-             __init_hook $0 $1 post 0
-            exit 0
-        else
-            echo 'ERROR'
-             __init_hook $0 $1 post 1
-            exit 1
-        fi
-    ;;
-    check|checkconfig)
-        if ! verify_config; then
-            exit 1
-        fi
-        exit 0
-    ;;
-    status)
-        PID=$(pidof_promxy) || true
-        if kill -0 "${PID:-}" >/dev/null 2>&1; then
-            echo "Running ($PID)."
-            exit 0
-        else
-            echo 'Not running. '
-            exit 1
-        fi
-    ;;
-    restart)
-        if ! verify_config quiet; then
-            exit 1
-        fi
-
-        $0 stop || (echo "Unable to stop promxy. Terminating..." && exit 1)
-        echo -n "Starting promxy ..."
-        if promxy_wait_start; then
-            echo 'OK'
-            exit 0
-        else
-            echo 'ERROR'
-            exit 1
-        fi
-    ;;
-
-    reload|force-reload)
-        PID=$(pidof_promxy 2>&1) || true
-        if kill -0 "${PID:-}" >/dev/null 2>&1; then
-            kill -HUP $PID
-            exit 0
-        else
-            exit 1
-        fi
-    ;;
-
-    *)
-        echo "Usage: promxy {start|stop|restart|reload|status|checkconfig}"
-        exit 2
-    ;;
-esac
-
-# EOF
+__generic_init "$*"

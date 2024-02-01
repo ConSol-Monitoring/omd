@@ -5,18 +5,23 @@ use strict;
 use Getopt::Long;
 use IPC::Open3 qw/open3/;
 use IO::Select qw//;
+use Cpanel::JSON::XS qw/decode_json/;
+use lib 'share/thruk/lib';
 
 $| = 1;
 
-my($database, $host, $service, $command, $label, $verbose) = ('nagflux');
+my($database, $host, $service, $command, $label, $verbose, $age) = ('nagflux');
 GetOptions (
             "h|host=s"     => \$host,
             "s|service=s"  => \$service,
             "c|command=s"  => \$command,
             "l|label=s"    => \$label,
             "d|database=s" => \$label,
+            "a|age=s"      => \$age,
             "verbose"      => \$verbose),
 or _usage("Error in command line arguments\n");
+
+my @influx_cmd = ("bash", "-c", "source .bashrc; influx -database $database -precision s -format json");
 
 my @filter;
 push @filter, sprintf("host = '%s'", $host) if $host;
@@ -24,19 +29,39 @@ push @filter, sprintf("service = '%s'", $service) if $service;
 push @filter, sprintf("command = '%s'", $command) if $command;
 push @filter, sprintf("performanceLabel = '%s'", $label) if $label;
 
-if(scalar @filter == 0) {
+if(scalar @filter == 0 && !$age) {
     _usage("no filter specified");
 }
 my $filter = join(" and ", @filter);
+my $where = $filter ? "WHERE ".$filter : "";
 
-my($rc, $res) = _run("bash", '-c', "source .bashrc; influx -database $database -execute \"show series where $filter\"");
-$res = [grep(!/^(key|\-+)$/, @{$res})];
+my $query  = "select last(value), time, host, service, command, performanceLabel from metrics $where group by host, service, command, performanceLabel";
+my $series = _influx($query);
+if($age) {
+    require Thruk::Utils;
+    $age = time() - Thruk::Utils::expand_duration($age);
+}
+my @delete;
+for my $s (@{$series->{'results'}}) {
+    for my $r (@{$s->{'series'}}) {
+        if(!$age || $r->{'values'}->[0]->[0] < $age) {
+            push @delete, { name => $r->{'name'}, tags => $r->{'tags'}, 'age' => $r->{'values'}->[0]->[0] };
+        }
+    }
+}
+
+if(scalar @delete == 0) {
+    print "no matching series found\n";
+    exit;
+}
 
 while(1) {
-    printf("Drop %d series? [s]how - [c]ontinue: ", scalar @{$res});
+    printf("Drop %d series? [s]how - [c]ontinue: ", scalar @delete);
     chomp(my $buf = <STDIN>);
     if($buf =~ m/^s$/mxi) {
-        print join("", @{$res});
+        for my $r (@delete) {
+            printf("%s: last entry: %s - %s\n", $r->{'name'}, scalar localtime($r->{'age'}), _tags($r->{'tags'}));
+        }
         next;
     }
     if($buf !~ m/^(c|y|j)/mxi) {
@@ -46,21 +71,56 @@ while(1) {
     last;
 }
 
-($rc, $res) = _run("bash", '-c', "source .bashrc; influx -database $database -execute \"drop series where $filter\"");
-print join("", @{$res});
+for my $r (@delete) {
+    my @filter;
+    push @filter, sprintf('"host" = \'%s\'', _escape($r->{'tags'}->{'host'}))       if($age || $host);
+    push @filter, sprintf('"service" = \'%s\'', _escape($r->{'tags'}->{'service'})) if($age || $service);
+    push @filter, sprintf('"command" = \'%s\'', _escape($r->{'tags'}->{'command'})) if($age || $command);
+    push @filter, sprintf('"performanceLabel" = \'%s\'', _escape($r->{'tags'}->{'performanceLabel'})) if($age || $label);
+    my $filter = join(" and ", @filter);
+    _influx("drop series where ".$filter);
+    printf(".");
+}
+printf("\nfinished\n");
 exit(0);
 
-sub _run {
-    my($cmd, @args) = @_;
+sub _tags {
+    my($tags) = @_;
+    my @str;
+    for my $key (qw/host service command performanceLabel/) {
+        push @str, $key.":".$tags->{$key};
+    }
+    return(join(", ", @str));
+}
 
+sub _escape {
+    my($str) = @_;
+    $str =~ s/\\/\\\\/gmx;
+    $str =~ s/,/\\\\,/gmx;
+    $str =~ s/'/\\'/gmx;
+    return $str;
+}
+
+sub _influx {
+    my($query) = @_;
+
+    my($cmd, @args) = @influx_cmd;
     my($pid, $wtr, $rdr, @lines);
     $pid = open3($wtr, $rdr, $rdr, $cmd, @args);
+    print $wtr $query;
+    print $wtr "\n";
+    close($wtr);
     while(<$rdr>) { push @lines, $_; }
     waitpid($pid, 0);
     while(<$rdr>) { push @lines, $_; }
     my $rc = $?>>8;
-    return($rc, \@lines);
+    if($rc != 0) {
+        die(sprintf("influx cmd failed with exit code %d:\n%s", $rc, join("", @lines)));
+    }
+    my $result = Cpanel::JSON::XS->new->ascii->decode(join("", @lines));
+    return($result);
 }
+
 
 sub _usage {
     my($msg) = @_;
@@ -85,11 +145,12 @@ influxdb_drop_series - drop series by host/service
     -s, --service=<service>       Drop series for this service.
     -c, --command=<command>       Drop series for this command.
     -l, --label=<label>           Drop series for this label.
+    -a, --age=<age>               Drop series older than age, ex.: 2w
 
 
 =head1 DESCRIPTION
 
-This script drops influxdb series by given filter. At least on filter must be used.
+This script drops influxdb series by given filter. At least one filter must be used.
 All filter will be combined with logical AND.
 
 =head1 EXAMPLES
@@ -103,4 +164,3 @@ Drop all series for Load service on host localhost.
 Sven Nierlein, 2021, <sven@consol.de>
 
 =cut
-

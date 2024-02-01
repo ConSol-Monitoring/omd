@@ -12,7 +12,7 @@ DIR = $(NAME)-$(VERSION)
 CONFIGUREOPTS = ""
 
 build:
-	tar xzf $(DIR).tar.gz
+	tar ozxf $(DIR).tar.gz
 	for i in configure.ac aclocal.m4 configure Makefile.am Makefile.in ; do \
 	  test -f $(DIR)/$$i && touch $(DIR)/$$i ; \
 	done

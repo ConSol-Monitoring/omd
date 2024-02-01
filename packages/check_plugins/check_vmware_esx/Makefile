@@ -6,7 +6,7 @@ DIR         = $(NAME)-$(VERSION)
 SRC         = $(DIR).tar.gz
 
 build:
-	tar zxf $(SRC)
+	tar ozxf $(SRC)
 	#for p in patches/*.patch ; do \
 	#    echo "applying $$p..." ; \
 	#    ( cd $(DIR) ; patch -p1 ) < $$p || exit 1; \

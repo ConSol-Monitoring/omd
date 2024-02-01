@@ -5,14 +5,22 @@
 # This script prepares the site to fix some known issues which causes update conflicts.
 # It will be run prior the update process with the new OMD.
 
-cd $OMD_ROOT
+cd $OMD_UPDATE_BASE || exit 1
 umask 0022
 
-NEW_VERSION=$(grep ^OMD_VERSION $(dirname $0)/../../../../bin/omd | awk '{ print $3 }' | tr -d '"')
-OLD_VERSION=$(readlink version | sed 's%.*versions/\([0-9]*\.*[0-9]*\)[-\.].*$%\1%')
+NEW_VERSION=$OMD_UPDATE_TO_VERSION
+OLD_VERSION=$OMD_UPDATE_FROM_VERSION
+if [ -z "$NEW_VERSION" -o -z "$OLD_VERSION" ]; then
+    echo "missing environment, please set at least OMD_UPDATE_TO_VERSION and OMD_UPDATE_FROM_VERSION"
+    exit 1
+fi
 # convert version to int so we can compare it in bash
 # version 2.20 becomes 220
-OLD_VERSION=$(( $(( ${OLD_VERSION%.*} * 100 )) + ${OLD_VERSION#*.} ))
+MAJOR=${OLD_VERSION%%.*}
+MINOR=${OLD_VERSION#*.}
+MINOR=${MINOR%%.*}
+OLD_VERSION=$(( $(( $MAJOR * 100 )) + $MINOR ))
+
 OLD_SKEL=version/skel
 if [ -e ".backup_meta/skel" ]; then
     # when restoring from an non-installed version, skel folder is here
@@ -141,9 +149,21 @@ if [ $OLD_VERSION -le 400 ]; then
   #end pre omd 4
 fi
 
-# make sure tmpfs is not mounted and tmp/ is empty
-omd umount > /dev/null 2>&1
-rm -rf $OMD_ROOT/tmp
-mkdir $OMD_ROOT/tmp
+if [ $OLD_VERSION -le 512 ]; then
+    grep "do not edit manually" etc/apache/conf.d/victoriametrics.conf >/dev/null 2>&1 && rm -f etc/apache/conf.d/victoriametrics.conf
+    if [ -e etc/victoriametrics/victoriametrics.conf -a -f $OLD_SKEL/etc/victoriametrics/victoriametrics.conf_template ]; then
+        mkdir -p etc/victoriametrics/conf.d
+        rm -f etc/victoriametrics/conf.d/zzz_migrated.conf
+        echo "migrating etc/victoriametrics/victoriametrics.conf to etc/victoriametrics/conf.d/zzz_migrated.conf"
+        grep ^vm_ etc/victoriametrics/victoriametrics.conf | grep -v httpAuth | grep -v snapshotAuth | grep -v metricsAuth | \
+        while read LINE; do
+            # migrate only if its not the default
+            if ! grep "^$LINE" $OLD_SKEL/etc/victoriametrics/victoriametrics.conf_template > /dev/null 2>&1; then
+                echo "$LINE" >> etc/victoriametrics/conf.d/zzz_migrated.conf
+            fi
+        done
+        mv etc/victoriametrics/victoriametrics.conf etc/victoriametrics/victoriametrics.conf.migrated.to.conf.d
+    fi
+fi
 
 exit 0

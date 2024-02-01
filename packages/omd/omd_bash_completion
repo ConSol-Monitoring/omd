@@ -21,7 +21,7 @@ _omd()
     local opts=""
     local cur="${COMP_WORDS[COMP_CWORD]}"
 
-    # simply expland files and folders if current item starts with . or /
+    # simply expand files and folders if current item starts with . or /
     if [[ $cur =~ ^/|^\. ]]; then
         COMPREPLY=( $(compgen -o default -- ${cur}) )
         return 0
@@ -83,7 +83,7 @@ _omd()
     # omd <sitecmd> ... (as root)
     elif [ $EUID -eq 0 -a $prev = $subcmd ] && [[ $subcmd =~ $ROOTSITECMDS|$SITECMDS ]]; then
         # complete with site names
-        opts="-h --help $(omd sites --bare)"
+        opts="$(_omd_cmd_options $subcmd) $(omd sites --bare)"
 
     # omd backup|restore ...
     elif [[ $subcmd =~ backup|restore ]]; then

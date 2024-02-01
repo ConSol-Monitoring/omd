@@ -1,0 +1,22 @@
+# set thruk agents alias
+alias ta="thruk agents"
+
+# wrapper to create completion function for aliases
+function make-completion-wrapper () {
+  local function_name="$2"
+  local arg_count=$(($#-3))
+  local comp_function_name="$1"
+  shift 2
+  local function="
+    function $function_name {
+      ((COMP_CWORD+=$arg_count))
+      COMP_WORDS=( "$@" \${COMP_WORDS[@]:1} )
+      "$comp_function_name"
+      return 0
+    }"
+  eval "$function"
+}
+
+# complete the alias
+make-completion-wrapper _thruk _thruk_agents thruk agents
+complete -F _thruk_agents ta

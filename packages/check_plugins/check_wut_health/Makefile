@@ -1,7 +1,7 @@
 include ../../../Makefile.omd
 
 NAME = check_wut_health
-VERSION = 2.11
+VERSION = 3.1
 DIR = $(NAME)-$(VERSION)
 
 .PHONY: skel
@@ -9,7 +9,7 @@ DIR = $(NAME)-$(VERSION)
 CONFIGUREOPTS = "--disable-standalone"
 
 build:
-	tar xzf $(DIR).tar.gz
+	tar ozxf $(DIR).tar.gz
 	cd $(DIR) ; ./configure $(CONFIGUREOPTS)
 	$(MAKE) -C $(DIR)
 

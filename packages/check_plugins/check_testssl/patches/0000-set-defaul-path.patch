@@ -1,0 +1,11 @@
+--- a/testssl.sh	2022-09-28 09:19:37.000000000 +0200
++++ b/testssl.sh	2023-11-07 09:30:16.191371565 +0100
+@@ -132,7 +132,7 @@
+ declare -r SYSTEM="$(uname -s)"
+ declare -r SYSTEMREV="$(uname -r)"
+ SYSTEM2=""                                        # currently only being used for WSL = bash on windows
+-TESTSSL_INSTALL_DIR="${TESTSSL_INSTALL_DIR:-""}"  # If you run testssl.sh and it doesn't find it necessary file automagically set TESTSSL_INSTALL_DIR
++TESTSSL_INSTALL_DIR="${TESTSSL_INSTALL_DIR:-"$OMD_ROOT/etc/testssl"}"  # If you run testssl.sh and it doesn't find it necessary file automagically set TESTSSL_INSTALL_DIR
+ CA_BUNDLES_PATH="${CA_BUNDLES_PATH:-""}"          # You can have your stores some place else
+ ADDITIONAL_CA_FILES="${ADDITIONAL_CA_FILES:-""}"  # single file with a CA in PEM format or comma separated lists of them
+ CIPHERS_BY_STRENGTH_FILE=""

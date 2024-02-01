@@ -1,91 +1,28 @@
 #!/bin/bash
-### BEGIN INIT INFO
-# Provides:          snmp_exporter
-# Required-Start:    $remote_fs $syslog
-# Required-Stop:     $remote_fs $syslog
-# Default-Start:     2 3 4 5
-# Default-Stop:      0 1 6
-### END INIT INFO
-# ToDo
-# - Logging to $OMD_ROOT/var/log/snmp_exporter.log
 
-. $OMD_ROOT/etc/omd/site.conf
+### OMD INIT INFO
+# PIDFILE:  tmp/run/snmp_exporter.pid
+# DEPENDS:  CONFIG_PROMETHEUS_SNMP_EXPORTER = on
+# BINARY:   bin/snmp_exporter
+# ARGMATCH: etc/snmp_exporter/config/snmp.yml
+### END INIT INFO
+
+cd || exit 1
+. etc/omd/site.conf
 if [ "$CONFIG_PROMETHEUS_SNMP_EXPORTER" != on ] ; then
     exit 5
 fi
+. lib/omd/init_profile
 
 DAEMON=$OMD_ROOT/bin/snmp_exporter
-NAME=snmp_exporter
-USER=###SITE###
-DESC="Prometheus SNMP Exporter"
 CONF=$OMD_ROOT/etc/snmp_exporter/config/snmp.yml
-OPTS="--config.file $CONF --log.level warn --web.listen-address $CONFIG_PROMETHEUS_SNMP_ADDR:$CONFIG_PROMETHEUS_SNMP_PORT"
-LOGIFLE=$OMD_ROOT/var/log/snmp_exporter.log
+OPTS=""
+OPTS+=" --config.file $CONF"
+OPTS+=" --log.level warn"
+OPTS+=" --web.listen-address $CONFIG_PROMETHEUS_SNMP_ADDR:$CONFIG_PROMETHEUS_SNMP_PORT"
+LOG_FILE=$OMD_ROOT/var/log/snmp_exporter.log
+PID_FILE=$OMD_ROOT/tmp/run/snmp_exporter.pid
+NOHUP=1
+STORE_PID=1
 
-###
-# obviously if the daemon doesn't exist we should stop now
-if [ ! -x $DAEMON ]; then
-    exit 1
-fi
-
-pidof_snmpexp() {
-    pgrep -u $USER -o -P 1 -fx "$DAEMON $OPTS" 2>/dev/null
-}
-
-die(){
-    echo $@
-    exit 1
-}
-
-case "$1" in
-start)
-    echo -n "Starting $DESC..."
-
-    if pidof_snmpexp >/dev/null 2>&1; then
-        echo '(already running)...ERROR'
-        exit 1
-    fi
-
-    nohup $DAEMON $OPTS &>> $LOGIFLE &
-    #nohup $DAEMON $OPTS & || die "ERROR"
-    echo "OK"
-    exit 0
-;;
-stop)
-    echo -n "Stopping $DESC..."
-    PID=$(pidof_snmpexp)
-    if [ -n "$PID" ] && ps $PID > /dev/null 2>&1 ; then
-        kill $(pidof_snmpexp) || die "ERROR"
-    else
-        echo -n 'not running...'
-    fi
-    echo "OK"
-    exit 0
-;;
-reload|force-reload)
-    echo -n "Reloading $DESC..."
-    kill -HUP $(pidof_snmpexp) || die "ERROR"
-    echo "OK"
-    exit 0
-;;
-restart)
-    $0 stop
-    $0 start
-    exit 0
-;;
-status)
-    PID=$(pidof_snmpexp)
-    if [ -n "$PID" ] && ps $PID > /dev/null 2>&1 ; then
-        echo "$NAME is running ($PID)."
-        exit 0
-    fi
-    echo "$NAME is NOT running."
-    exit 1
-;;
-check)
-;;
-*)
-    echo "Usage: $NAME {start|stop|restart|reload|status}"
-    exit 2
-;;
-esac
+__generic_init "$*"

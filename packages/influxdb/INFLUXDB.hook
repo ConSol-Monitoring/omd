@@ -21,6 +21,12 @@ case "$1" in
              ln -s $OMD_ROOT/etc/influxdb/grafana_datasources.yml \
                  $OMD_ROOT/etc/grafana/provisioning/datasources/influxd.yml
            fi
+
+           if [ -f $OMD_ROOT/etc/histou/histou.ini ] ; then
+               if [ $CONFIG_VICTORIAMETRICS = 'off' ]; then
+                   sed -e 's%^databaseType.*%databaseType = "influxdb"%' -i $OMD_ROOT/etc/histou/histou.ini
+               fi
+           fi
        fi
     ;;
 esac

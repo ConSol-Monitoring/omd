@@ -1,8 +1,94 @@
 This file documents the revision history for the Open Monitoring Distribution (Labs Edition)
 
 next:
+          - naemon:
+            - update to 1.4.2
+            - livestatus update to 1.4.2
+          - grafana:
+            - update to 10.3.1
+
+5.30     Jan 29 2024
+          - Thruk: update to 3.12
+          - LMD: Update 2.1.9
+          - Monitoring-Plugins: update to 2.3.5
+          - Gearman:
+            - Mod-Gearman module update 5.1.3
+            - update mod-gearman-worker-go to 1.3.8
+          - VictoriaMetrics 1.93.1 (LTS)
+          - Prometheus
+            - Prometheus 2.45.2
+            - alertmanager 0.26.0
+            - pushgateway 1.6.0
+            - node_exporter 1.7.0
           - Grafana:
+            - update to 10.2.3
+            - loki update to 2.9.3
+            - update thruk datasource to 2.0.4
+            - enable wal for internal sqlite db
+          - Histou update to 0.5.1
+          - Go builds updated to 1.21.6
+
+5.20     Jul 22 2023
+          - OMD:
+            - add build support for Debian 12
+          - Thruk: update to 3.08.3
+          - LMD: Update 2.1.6
+          - Gearman:
+            - update mod-gearman-worker-go to 1.3.7
+            - Mod-Gearman module update 5.1.2
+          - Grafana:
+            - update to 9.5.6
+            - update pnp datasource to 2.0.2
+            - update thruk datasource to 2.0.3
+          - Plugins:
+            - update check_testssl to 3.0.8
+            - update check_vsphere to 0.3.0
+          - Go builds updated to 1.20.5
+          - VictoriaMetrics
+            - update to 1.87.6
+            - migrate config to conf.d folder
+          - Prometheus
+            - node_exporter 1.6.1
+
+5.10     Feb 20 2023
+          - OMD:
+            - omd order of options can now be set before or after the command, ex.: omd status -b
+            - omd backup: add --exclude and -v option
+            - omd mv/cp: add --exclude option
+            - omd update: add --dry-run/-n option
+              - since old versions do some checks before switching to the new version, you
+                need to start the dry-run update directly like for ex.:
+                '/omd/versions/5.10-labs-edition/bin/omd update -n'
+                (only required when updating from releases < 5.10)
+            - omd update: add support for updates while site is running (using force option -f)
+            - omd create: add support for pre-create/post-create scripts
+            - omd rm: add support for pre-rm/post-rm scripts
+            - omd status: performance improvements
+          - Thruk: update to 3.04
+          - LMD: Update 2.1.4
+          - Naemon:
+            - update core to 1.4.1
+            - update livestatus to 1.4.1
+          - Grafana:
+            - update to 9.3.6
             - update pnp datasource
+            - Loki update to 2.7.2
+          - Gearman:
+            - Gearmand update 1.1.20
+            - Mod-Gearman module update 5.0.2
+            - update mod-gearman-worker-go to 1.3.1
+            - do not install c-worker anymore
+          - Mysql:
+            - change tmpdir to ~/var/tmp
+          - Prometheus
+            - Prometheus 2.37.5
+            - promlens 0.3.0
+            - update mod_prometheus_status apache module 0.3.0
+          - InfluxDB
+            - add influxdb_show_cardinality script
+            - add influxdb_vim_series script
+          - Ansible 2.9.27
+          - Monitoring-Plugins: update to 2.3.3
  
 5.00     Nov 14 2022
           - DEPRECATION WARNING: the following components got removed

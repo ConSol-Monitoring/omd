@@ -1,0 +1,85 @@
+From 848399468cc2f065b5b31de2257a8e9453f86d65 Mon Sep 17 00:00:00 2001
+From: Sven Nierlein <sven@consol.de>
+Date: Thu, 25 Jan 2024 14:01:31 +0100
+Subject: [PATCH] suppress only normal notifications from service parents
+
+This change makes service parents work more like service dependencies. Previously
+service parents simply dropped all notifications which leads to some issues:
+
+- if a service goes down, sends a notification but comes up before the parent, no recover will be sent
+- forced notifications, downtimes etc won't send a notification
+
+With this change only "normal" notifications will be suppressed if all parents are down. But the following
+notifications will still be sent:
+
+- custom notifications
+- acknowlegements
+- flapping alerts
+- downtime alerts
+
+Signed-off-by: Sven Nierlein <sven@consol.de>
+---
+ src/naemon/notifications.c | 29 +++++++++++++++--------------
+ 1 file changed, 15 insertions(+), 14 deletions(-)
+
+diff --git a/src/naemon/notifications.c b/src/naemon/notifications.c
+index 05e15d42..303c18b2 100644
+--- a/src/naemon/notifications.c
++++ b/src/naemon/notifications.c
+@@ -608,18 +608,6 @@ int check_service_notification_viability(service *svc, int type, int options)
+ 
+ 	temp_host = svc->host_ptr;
+ 
+-	/* if all parents are bad (usually just one), we shouldn't notify */
+-	if (svc->parents) {
+-		sm = svc->parents;
+-		while (sm && sm->service_ptr->current_state != STATE_OK) {
+-			sm = sm->next;
+-		}
+-		if (sm == NULL) {
+-			LOG_SERVICE_NSR(NSR_BAD_PARENTS);
+-			return ERROR;
+-		}
+-	}
+-
+ 	/* if the service has no notification period, inherit one from the host */
+ 	temp_period = svc->notification_period_ptr;
+ 	if (temp_period == NULL) {
+@@ -669,7 +657,6 @@ int check_service_notification_viability(service *svc, int type, int options)
+ 	}
+ 
+ 
+-
+ 	/****************************************/
+ 	/*** SPECIAL CASE FOR ACKNOWLEGEMENTS ***/
+ 	/****************************************/
+@@ -687,7 +674,6 @@ int check_service_notification_viability(service *svc, int type, int options)
+ 		return OK;
+ 	}
+ 
+-
+ 	/****************************************/
+ 	/*** SPECIAL CASE FOR FLAPPING ALERTS ***/
+ 	/****************************************/
+@@ -735,6 +721,21 @@ int check_service_notification_viability(service *svc, int type, int options)
+ 		return OK;
+ 	}
+ 
++	/******************************************************/
++	/*** CHECK SERVICE PARENTS FOR NORMAL NOTIFICATIONS ***/
++	/******************************************************/
++	/* if all parents are bad (usually just one), we shouldn't notify */
++	/* but do not prevent recovery notifications */
++	if (svc->parents && svc->current_state != STATE_OK) {
++		sm = svc->parents;
++		while (sm && sm->service_ptr->current_state != STATE_OK) {
++			sm = sm->next;
++		}
++		if (sm == NULL) {
++			LOG_SERVICE_NSR(NSR_BAD_PARENTS);
++			return ERROR;
++		}
++	}
+ 
+ 	/****************************************/
+ 	/*** NORMAL NOTIFICATIONS ***************/

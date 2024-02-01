@@ -19,5 +19,8 @@ case "$1" in
     depends)
         [ "$CONFIG_VICTORIAMETRICS" == "on" ]
     ;;
+    set)
+        true
+    ;;
 esac
 

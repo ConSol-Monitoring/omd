@@ -5,7 +5,7 @@
 check_omd.py - a script for checking a particular OMD site status
 2018 By Christian Stankowic <info at cstan dot io>
 https://github.com/stdevel/check_omd
-Last modified by Lorenz Gruenwald 07.10.2022 (requires python 3.6)
+Last modified by Lorenz Gruenwald 18.09.2023 (requires python 3.6)
 """
 
 import argparse
@@ -19,7 +19,7 @@ import time
 import psutil
 import re
 
-__version__ = "1.6.0"
+__version__ = "1.6.1"
 """
 str: Program version
 """
@@ -29,24 +29,36 @@ logging: Logger instance
 """
 
 def raise_timeout(cmd, timeout):
-    print ("CRITICAL - executing command '{}' exceeded {} seconds timeout".format(" ".join(cmd), timeout))
+    """
+    Raises a timeout and exits the program
+    """
+    _cmd = " ".join(cmd)
+    print(f"CRITICAL - executing command '{_cmd}' exceeded {timeout} seconds timeout")
     if OPTIONS.heal:
-        os.remove(lockfile)
-        LOGGER.debug("removing lockfile %s", lockfile)
+        os.remove(LOCKFILE)
+        LOGGER.debug("removing LOCKFILE %s", LOCKFILE)
     sys.exit(2)
 
-def proc_running(service):
+def check_proc_running(service, site):
+    """
+    Checks if a process related to service is already running
+    """
+    pstree = ""
     for proc in psutil.process_iter():
         try:
             # Check if process name contains service
             if service.lower() in proc.name().lower():
                 if proc.cmdline():
-                    if re.search(r"{}".format("start|stop|restart|reload")," ".join(proc.cmdline()),re.I):
+                    if re.search(r'start|stop|restart|reload', " ".join(proc.cmdline()),re.I) and proc.username() == site:
                         LOGGER.debug("Found start/stop/restart/reload process related to '%s'", service)
-                        return True
+                        try:
+                            pstree = subprocess.check_output(('pstree -uAlsap %d' % proc.pid), shell=True).decode(('utf-8'))
+                        except:
+                            pass
+                        return True, pstree
         except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
             pass
-    return False
+    return False, pstree
 
 def get_site_status():
     """
@@ -69,21 +81,15 @@ def get_site_status():
     if proc.stderr:
         err = proc.stderr.decode('utf-8')
         if "no such site" in err:
-            print(
-                "UNKNOWN: unable to check site: '{0}' - did you miss "
-                "running this plugin as OMD site user?".format(err.rstrip())
-            )
+            print(f"UNKNOWN: unable to check site: '{err.rstrip()}' - did you miss running this plugin as OMD site user?")
         else:
-            print("UNKNOWN: unable to check site: '{0}'".format(err.rstrip()))
+            print(f"UNKNOWN: unable to check site: '{err.rstrip()}'")
         return 3
 
     if proc.stdout:
         # try to find out whether omd was executed as root
         if proc.stdout.count(bytes("OVERALL", "utf-8")) > 1:
-            print(
-                "UNKNOWN: unable to check site, it seems this plugin is "
-                "executed as root (use OMD site context!)"
-            )
+            print("UNKNOWN: unable to check site, it seems this plugin is executed as root (use OMD site context!)")
             return 3
 
         # check all services
@@ -107,8 +113,11 @@ def get_site_status():
                     else:
                         if OPTIONS.heal:
                             # check if another process related to this is already in progress
-                            if proc_running(service):
-                                print("WARNING - {} was not running, but another process is starting/stopping/restarting it".format(service))
+                            process_running, pstree = check_proc_running(service,site)
+                            if process_running:
+                                print(f"WARNING - {service} was not running, but another process is starting/stopping/restarting it")
+                                if pstree:
+                                    print(pstree)
                                 return 1
                             cmd = ['omd', 'restart', service]
                             LOGGER.debug("running command '%s'", cmd)
@@ -136,42 +145,35 @@ def get_site_status():
                 )
         if OPTIONS.heal:
             if len(fail_srvs) == 0 and len(restarted_srvs) == 0:
-               return 0
+                return 0
             returncode = 1
             if len(fail_srvs) > 0:
-                print("CRITICAL - could not restart {} service(s) on site '{}': '{}'".format(
-                    len(fail_srvs), site, ' '.join(fail_srvs)
-                    )
-                )
+                _count = len(fail_srvs)
+                _srvs = ' '.join(fail_srvs)
+                print(f"CRITICAL - could not restart {_count} service(s) on site '{site}': '{_srvs}'")
                 returncode = 2
             if len(restarted_srvs) > 0:
-                print(
-                    "WARNING: Restarted {} service(s) on site '{}': '{}'".format(
-                        len(restarted_srvs), site, ' '.join(restarted_srvs)
-                    )
-                )
+                _count = len(restarted_srvs)
+                _srvs = ' '.join(restarted_srvs)
+                print(f"WARNING: Restarted {_count} service(s) on site '{site}': '{_srvs}'")
             return returncode
 
         if len(fail_srvs) == 0 and len(warn_srvs) == 0:
-            print("OK: OMD site '{0}' services are running.".format(site))
+            print(f"OK: OMD site '{site}' services are running.")
             return 0
         elif len(fail_srvs) > 0:
-            print(
-                "CRITICAL: OMD site '{0}' has failed service(s): "
-                "'{1}'".format(site, ' '.join(fail_srvs))
-            )
+            _srvs = ' '.join(fail_srvs)
+            print(f"CRITICAL: OMD site '{site}' has failed service(s): '{_srvs}'")
             return 2
         else:
-            print(
-                "WARNING: OMD site '{0}' has service(s) in warning state: "
-                "'{1}'".format(site, ' '.join(warn_srvs))
-            )
+            _srvs = ' '.join(warn_srvs)
+            print(f"WARNING: OMD site '{site}' has service(s) in warning state: '{_srvs}'")
             return 1
 
 
 if __name__ == "__main__":
     if sys.version_info[0] < 3 or (sys.version_info[0] == 3 and sys.version_info[1] < 6):
-        print ("Unsupported python version, 3.6 required, you have {}".format(sys.version))
+        print(f"Unsupported python version, 3.6 required, you have {sys.version}")
         sys.exit(2)
     # define description, version and load parser
     DESC = """%(prog)s is used to check a particular OMD site status. By default,
@@ -231,28 +233,28 @@ if __name__ == "__main__":
 
     LOGGER.debug("OPTIONS: %s", OPTIONS)
 
-    lockfile = '/tmp/check_omd.lock'
+    LOCKFILE = '/tmp/check_omd.lock'
 
     if OPTIONS.heal:
-        if (os.path.isfile(lockfile)):
-            fileage = int(time.time() - os.stat(lockfile)[stat.ST_MTIME])
-            LOGGER.debug("%s is %s seconds old", lockfile, fileage)
+        if (os.path.isfile(LOCKFILE)):
+            fileage = int(time.time() - os.stat(LOCKFILE)[stat.ST_MTIME])
+            LOGGER.debug("%s is %s seconds old", LOCKFILE, fileage)
             if fileage > OPTIONS.timeout:
-                print ("Lockfile too old, deleting lockfile")
-                os.remove(lockfile)
+                print("LOCKFILE too old, deleting LOCKFILE")
+                os.remove(LOCKFILE)
                 sys.exit(0)
-            print ("CRITICAL - Lockfile exists, exit program")
+            print("CRITICAL - LOCKFILE exists, exit program")
             sys.exit(2)
         else:
-            f = open(lockfile, 'x')
-            f.close()
-            LOGGER.debug("created lockfile %s", lockfile)
+            with open(LOCKFILE, 'x') as f:
+                f.close()
+            LOGGER.debug("created LOCKFILE %s", LOCKFILE)
             # check site status
-            exitcode = get_site_status()
-            os.remove(lockfile)
-            LOGGER.debug("removing lockfile %s", lockfile)
-            sys.exit(exitcode)
+            EXITCODE = get_site_status()
+            os.remove(LOCKFILE)
+            LOGGER.debug("removing LOCKFILE %s", LOCKFILE)
+            sys.exit(EXITCODE)
     else:
-        exitcode = get_site_status()
-        sys.exit(exitcode)
+        EXITCODE = get_site_status()
+        sys.exit(EXITCODE)
 

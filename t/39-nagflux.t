@@ -26,7 +26,7 @@ TestUtils::test_command({ cmd => $omd_bin." config $site set INFLUXDB on" });
 TestUtils::test_command({ cmd => $omd_bin." config $site set PNP4NAGIOS off" });
 TestUtils::test_command({ cmd => $omd_bin." config $site set NAGFLUX on" });
 TestUtils::test_command({ cmd => $omd_bin." config $site set CORE naemon" });
-TestUtils::test_command({ cmd => $omd_bin." start $site", like => '/Starting Nagflux\.+OK/' });
+TestUtils::test_command({ cmd => $omd_bin." start $site", like => '/Starting nagflux\.+OK/' });
 
 my $ranges = sprintf("<<END
 DATATYPE::SERVICEPERFDATA	TIMET::%d	HOSTNAME::xxx	SERVICEDESC::range	SERVICEPERFDATA::a used=4	SERVICECHECKCOMMAND::check_ranges!-w 3: -c 4: -g :46 -l :48	SERVICESTATE::0	SERVICESTATETYPE::1

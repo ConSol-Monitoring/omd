@@ -1,0 +1,11 @@
+#!/bin/bash
+
+CMD=${OMD_DIST_INIT_CMD/'%(action)s'/status}
+CMD=${CMD/'%(name)s'/$OMD_DIST_APACHE_INIT_NAME}
+if $CMD >/dev/null 2>&1; then
+    echo "service: apache"
+    exit 0
+else
+    echo "service: apache failed"
+    exit 1
+fi

@@ -1,0 +1,254 @@
+#!/usr/bin/perl
+
+use warnings;
+use strict;
+use Digest::SHA qw/sha256_hex/;
+use File::Temp qw/tempfile/;
+use IPC::Open3 qw/open3/;
+use Cpanel::JSON::XS qw//;
+use Getopt::Long;
+
+$| = 1;
+
+my($opt_database, $opt_help, $opt_verbose, @opt_filter) = ('nagflux');
+GetOptions (
+            "h|help"       => \$opt_help,
+            "d|database=s" => \$opt_database,
+            "v|verbose"    => \$opt_verbose,
+            "<>"           => sub { push @opt_filter, $_[0]; }),
+or _usage("Error in command line arguments\n");
+_usage() if $opt_help;
+
+my @influx_cmd = ("bash", "-c", "source .bashrc; influx -database $opt_database -format json");
+
+my $tag_filter     = "";
+my @pattern_filter;
+if(scalar @opt_filter > 0) {
+    my @tag_filter;
+    for my $f (@opt_filter) {
+        if($f !~ m/=/mx) {
+            push @pattern_filter, $f;
+            next;
+        }
+        my($key,$value) = split(/=/mx, $f, 2);
+        push @tag_filter, sprintf("\"%s\"='%s'", $key, $value);
+    }
+    $tag_filter = " WHERE ".join(" AND ", @tag_filter) if scalar @tag_filter > 0;
+}
+
+my $tmpfile;
+END {
+    if($tmpfile) {
+        unlink($tmpfile);
+        _log("removed tmp file: %s", $tmpfile) if $opt_verbose;
+    }
+}
+
+# create tmp file from series
+my $raw_series = _influx("SHOW SERIES".$tag_filter);
+my $series = _parse_series($raw_series, \@pattern_filter);
+if(scalar keys %{$series} == 0) {
+    print "no series found.\n";
+    exit;
+}
+$tmpfile = _write_tmp_file($series);
+my $editor = $ENV{'EDITOR'} || 'vim';
+system($editor." ".$tmpfile);
+
+# now parse that file and drop the series
+my $keep_series = _parse_tmp_file($tmpfile);
+my $dropped = _drop_series($keep_series, $series);
+printf("dropped %d series\n", $dropped);
+exit;
+
+################################################################################
+# parse series from "SHOW SERIES" query
+sub _parse_series {
+    my($result, $filter) = @_;
+    my $series           = {};
+    my $short_digest_len = 5;
+
+    for my $s (@{$result->{'results'}->[0]->{'series'}->[0]->{'values'}}) {
+        my $line = $s->[0];
+        my $found = 1;
+        if($filter && scalar @{$filter} > 0) {
+            $found = 0;
+            for my $f (@{$filter}) {
+                if($line =~ m/$f/) {
+                    $found = 1;
+                    last;
+                }
+            }
+        }
+        next unless $found;
+        my $digest = sha256_hex($line);
+        my $short_digest = substr($digest, 0, $short_digest_len);
+        while(defined $series->{$short_digest}) {
+            $short_digest_len++;
+            $short_digest = substr($digest, 0, $short_digest_len);
+            # update existing series
+            for my $key (sort keys %{$series}) {
+                my $new_key = substr($series->{$key}->{'digest'}, 0, $short_digest_len);
+                $series->{$new_key} = delete $series->{$key};
+                $series->{$new_key}->{'short'} = $new_key;
+            }
+        }
+        $series->{$short_digest} = {
+            line   => $line,
+            digest => $digest,
+            short  => $short_digest,
+        };
+    }
+    _log("got %d series", scalar keys %{$series}) if $opt_verbose;
+    return($series);
+}
+
+################################################################################
+sub _write_tmp_file {
+    my($series) = @_;
+    my($fh, $filename) = tempfile("influx_series_XXXXXX");
+    printf($fh "# showing %d series found\n", scalar keys %{$series});
+    printf($fh "# remove a line here and the series will be dropped from the influxdb.\n");
+    for my $s (sort { $a->{'line'} cmp $b->{'line'} } values %{$series}) {
+        my $line = $s->{'line'};
+        printf($fh "%s %s\n", $s->{'short'}, $line);
+    }
+    close($fh);
+    _log("written tmp series file: %s", $filename) if $opt_verbose;
+    return($filename);
+}
+
+################################################################################
+sub _parse_tmp_file {
+    my($tmpfile) = @_;
+    my($keep) = {};
+    open(my $fh, '<', $tmpfile) or die("cannot read $tmpfile: $!");
+    while(my $raw_line = <$fh>) {
+        next if $raw_line =~ m/^\#/mx;
+        my($short_digest, $line) = split(/\ /mx, $raw_line, 2);
+        $keep->{$short_digest} = $line;
+    }
+    close($fh);
+    return($keep);
+}
+
+################################################################################
+sub _drop_series {
+    my($keep_series, $series) = @_;
+
+    my $dropped = 0;
+    for my $s (sort { $a->{'line'} cmp $b->{'line'} } values %{$series}) {
+        if(!defined $keep_series->{$s->{'short'}}) {
+            my $short_line = $s->{'line'};
+            if(length($short_line) > 100) {
+                $short_line = substr($short_line, 0, 100)."...";
+            }
+            print "removing ".$short_line."\n";
+            my($measurement, $series) = split(/,/mx, $s->{'line'}, 2);
+            my @tags = split(/,/mx, $series);
+            # merge escaped commas
+            my @merged_tags;
+            for my $t (@tags) {
+                my $last = scalar @merged_tags -1;
+                if($last >= 0 && $merged_tags[$last] =~ m/\\$/mx) {
+                    $merged_tags[$last] = $merged_tags[$last].",".$t;
+                } else {
+                    push @merged_tags, $t;
+                }
+            }
+            my $filter = [];
+            for my $tag (@merged_tags) {
+                my($key, $value) = split(/=/mx, $tag, 2);
+                $value =~ s/\\\ / /gmx;
+                $value =~ s/\\/\\\\/gmx;
+                $value =~ s/'/\\'/gmx;
+                push @{$filter}, sprintf("\"%s\"='%s'", $key, $value);
+            }
+            my $tag_filter = join(" AND ", @{$filter});
+            my $res = _influx("DROP SERIES FROM \"$measurement\" WHERE $tag_filter");
+            $dropped++;
+        }
+    }
+
+    return($dropped);
+}
+
+################################################################################
+sub _influx {
+    my($query) = @_;
+
+    my($cmd, @args) = @influx_cmd;
+    _log("cmd: %s %s", $cmd, join(" ", @args)) if $opt_verbose;
+    my($pid, $wtr, $rdr, @lines);
+    $pid = open3($wtr, $rdr, $rdr, $cmd, @args);
+    _log("sending query: %s", $query) if $opt_verbose;
+    print $wtr $query;
+    print $wtr "\n";
+    close($wtr);
+    while(<$rdr>) { push @lines, $_; }
+    waitpid($pid, 0);
+    while(<$rdr>) { push @lines, $_; }
+    my $rc = $?>>8;
+    if($rc != 0) {
+        die(sprintf("influx cmd failed with exit code %d:\n%s", $rc, join("", @lines)));
+    }
+    my $result = Cpanel::JSON::XS->new->ascii->decode(join("", @lines));
+    return($result);
+}
+
+################################################################################
+sub _log {
+    my($str, @args) = @_;
+    chomp($str);
+    $str = "[DEBUG] ".$str."\n";
+    printf(STDERR $str, @args);
+}
+
+################################################################################
+sub _usage {
+    my($msg) = @_;
+    require Pod::Usage;
+    Pod::Usage::pod2usage( { -verbose => 2, -exit => 3 } );
+    exit(3);
+}
+
+################################################################################
+
+1;
+
+__END__
+
+=head1 NAME
+
+influxdb_vim_series - drop series with vim
+
+=head1 SYNOPSIS
+
+  Usage: influxdb_vim_series [options] [filter]
+
+  Globaloptions:
+    -h, --help                    Show help and exit
+    -d, --database=<database>     Use given database (default: nagflux)
+    -v, --verbose                 Show verbose output
+
+  Filter:
+    filter of the form tag=value as used as series filter for the SHOW SERIES query.
+
+    Other filter will be used as regular expresion afterwards to filter series.
+
+=head1 DESCRIPTION
+
+This script drops influxdb series by using vim.
+
+=head1 EXAMPLES
+
+Drop series for example host and command.
+
+  %> influxdb_vim_series host=example command=check_ping
+
+=head1 AUTHOR
+
+Sven Nierlein, 2023, <sven@consol.de>
+
+=cut
+

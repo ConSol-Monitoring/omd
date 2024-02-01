@@ -18,11 +18,11 @@ datasources:
     orgId: 1
     url: http://${CONFIG_VICTORIAMETRICS_TCP_ADDR}:${CONFIG_VICTORIAMETRICS_PORT}
     basicAuth: true
-    basicAuthUser: TODOgenerated
+    basicAuthUser: prom
     isDefault: false
     editable: false
     jsonData:
       httpMethod: POST
       tlsSkipVerify: true
     secureJsonData:
-      basicAuthPassword: TODOgenerated
+      basicAuthPassword:

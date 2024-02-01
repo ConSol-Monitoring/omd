@@ -24,6 +24,9 @@ my $site    = TestUtils::create_test_site() or TestUtils::bail_out_clean("no fur
 # is ansible installed?
 TestUtils::test_command({ cmd => "/bin/su - $site -c 'test -x bin/ansible'", like => '/^$/' });
 
+# use usermod to unlock the user, otherwise ssh does not allow login
+TestUtils::test_command({ cmd => "/usr/sbin/usermod -p test $site", like => '/.*/', errlike => '/.*/', exit => undef });
+
 # enable and test ssh to localhost
 TestUtils::test_command({ cmd => "/bin/su - $site -c 'mkdir .ssh'", like => '/^$/' });
 TestUtils::test_command({ cmd => "/bin/su - $site -c 'chmod 700 .ssh'", like => '/^$/' });
@@ -40,6 +43,9 @@ if($os =~ /centos 6/i) {
 }
 TestUtils::test_command({ cmd => "/bin/su - $site -c 'ansible all -m ping -e 'ansible_python_interpreter=auto_silent' -i inventory'", like => '/localhost \| (?i:success)/' });
 TestUtils::test_command({ cmd => "/bin/su - $site -c 'ansible -i inventory -e 'ansible_python_interpreter=auto_silent' -a \"omd status\" localhost'", like => '/localhost \| (?i:FAILED) \| rc=1/', exit => 2 });
+
+TestUtils::test_command({ cmd => "/bin/su - $site -c 'omd start'", like => '/Starting apache\.+OK/', exit => 0 });
+TestUtils::test_command({ cmd => "/bin/su - $site -c 'ansible -i inventory -e 'ansible_python_interpreter=auto_silent' -a \"omd status\" localhost'", like => ['/Overall state:  running/', '/rc=0/'] });
 
 TestUtils::test_command({ cmd => $omd_bin." stop $site" });
 TestUtils::remove_test_site($site);

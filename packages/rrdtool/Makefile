@@ -36,8 +36,11 @@ build:
 install:
 	export PERL5LIB=$(P5TMPDIST)/dest/lib/perl5; \
 	$(MAKE) DESTDIR=$(DESTDIR) -C $(DIR) install
+	find $(DESTDIR)$(OMD_ROOT)/lib/perl5/ -type f -exec chmod u+rw  {} \; # strip fails otherwise
+	find $(DESTDIR)$(OMD_ROOT)/lib/perl5/ -type d -exec chmod u+rwx {} \; # strip fails otherwise
 	
 	# clean up perl man pages which end up in wrong location
+	rm -fr $(DESTDIR)/usr/share/man
 	rm -fr $(DESTDIR)/usr/local
 	# clean up systemd init files
 	rm -fr $(DESTDIR)/lib
@@ -47,7 +50,7 @@ install:
 	install -m 644 $(DIR)/CONTRIBUTORS $(DESTDIR)$(OMD_ROOT)/share/doc/rrdtool
 	
 	# Python binding
-	cd $(DIR)/bindings/python && python3 setup.py install --root=$(DESTDIR)/$(OMD_ROOT) --home ""
+	cd $(DIR)/bindings/python && python3 setup.py install --root=$(DESTDIR)$(OMD_ROOT) --home ""
 	if [ -n "$(DESTDIR)$(OMD_ROOT)" -a -d "$(DESTDIR)$(OMD_ROOT)/lib64" ] ; then \
 	    rsync -avh $(DESTDIR)$(OMD_ROOT)/lib64/* $(DESTDIR)$(OMD_ROOT)/lib/ ; \
 	    rm -rf $(DESTDIR)$(OMD_ROOT)/lib64 ; \

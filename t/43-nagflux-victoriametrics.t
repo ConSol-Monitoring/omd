@@ -25,12 +25,9 @@ my $startTime = time-9;
 #my $site = 'testsite';
 
 # remove victoriametrics auth via empty config file:
-TestUtils::test_command({ cmd => "/bin/su - $site -c \"echo '# dummy config' > ~$site/etc/victoriametrics/victoriametrics.conf\" ", errlike => '/^$/'});
+TestUtils::test_command({ cmd => qq{/bin/su - $site -c "echo '# dummy config' > ~$site/etc/victoriametrics/conf.d/auto_auth.conf" }, errlike => '/^$/'});
 
-# for test
 TestUtils::test_command({ cmd => $omd_bin." stop $site " , like => '/Stopp.*OK/' });
- #, waitfor => '/.*victoria.*/' });
-# end for test
 
 TestUtils::test_command({ cmd => $omd_bin." config $site set VICTORIAMETRICS on" });
 TestUtils::test_command({ cmd => $omd_bin." config $site set PNP4NAGIOS off" });
@@ -44,7 +41,7 @@ TestUtils::test_command({ cmd => "/usr/bin/env sed -e '/^\\[InfluxDB .victoriame
 TestUtils::test_command({ cmd => "/usr/bin/env sed -e 's/\\(\\s*MinSeverity\\).*/\\1 = \"DEBUG\"/' -i ~$site/etc/nagflux/config.gcfg"});
 
 
-TestUtils::test_command({ cmd => $omd_bin." start $site", like => '/Starting Nagflux\.+OK/' });
+TestUtils::test_command({ cmd => $omd_bin." start $site", like => '/Starting nagflux\.+OK/' });
 
 
 my $ranges = sprintf("<<END
@@ -62,7 +59,7 @@ END
 
 
 #Test if database is up
-TestUtils::test_command({ cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_http -t 60 -H 127.0.0.1 -p 8428 -u \"/health\"  '", like => '/HTTP OK:/', waitfor => 'HTTP\ OK:' });
+TestUtils::test_command({ cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_http -t 60 -H 127.0.0.1 -p 8428 -u \"/health\"  '", like => '/HTTP OK:/', waitfor => 'HTTP\ OK:', maxwait => 180 });
 
 #Mock Nagios and write spoolfiles
 TestUtils::test_command({ cmd => "/bin/su - $site -c 'cat > var/pnp4nagios/spool/ranges $ranges'"});
@@ -72,6 +69,7 @@ TestUtils::test_url({
     url            => "http://127.0.0.1:8428/api/v1/query?query=count(max_over_time(\{host=~\"xx.*\"\}[10m]))",
     like           => [ "/.*metrics.*/" ],
     waitfor        => ".*value\":\\\[.*,\"20.*",
+    maxwait        => 180,
 });
 
 

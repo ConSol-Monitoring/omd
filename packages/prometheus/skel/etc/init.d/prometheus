@@ -1,89 +1,72 @@
 #!/bin/bash
 
-# chkconfig: 345 99 01
-# description: Prometheus network monitoring daemon
-
-### BEGIN INIT INFO
-# Provides:       prometheus
-# Required-Start: 
-# Required-Stop:  
-# Default-Start:  2 3 5
-# Default-Stop:
-# Description:    Prometheus network monitoring daemon
+### OMD INIT INFO
+# PIDFILE:  tmp/run/prometheus.pid
+# DEPENDS:  CONFIG_PROMETHEUS = on
+# BINARY:   bin/prometheus
+# ARGMATCH: web.listen-address
 ### END INIT INFO
 
-# Author: Gerhard Lausser <gerhard.lausser@consol.de>
-
-# Notes for OMD init script requirements
-# - Must handle omd config options like daemon enabling/disabling
-# - When a daemon is disabled by omd config it needs
-#   to return an exit code of 5.
-# - The init script must output an exit code of 2 when
-#   an unknown param is used.
-# - In general the exit code for succeeded actions is
-#   0 and for failed actions it is 1.
-# - There are exceptions for the exit code handling:
-#   - When a service is already stopped and should be
-#     restarted/stopped, it should result in an exit code of 0.
-#   - When a service is already running and should be started
-#     this also should result in an exit code of 0.
-# - When a restart is requested and the program is still not running
-#   the script should only execute a start
-# - When a restart is requested and the program can not be stopped the
-#   script should terminate without starting the daemon
-# - When a reload is requested and the program is not running
-#   the init script should execute a start instead
-
-cd ###ROOT###
-. .profile
-. lib/omd/init_profile
+cd || exit 1
 . etc/omd/site.conf
 [ "$CONFIG_PROMETHEUS" = "on" ] || exit 5
+. .profile
+. lib/omd/init_profile
 
-mkdir -p ###ROOT###/tmp/prometheus
-mkdir -p ###ROOT###/var/prometheus
-BIN=###ROOT###/bin/prometheus
-TOOL=###ROOT###/bin/promtool
-CFG_FILE=###ROOT###/tmp/prometheus/prometheus.yml
-LOG_DIR=###ROOT###/var/prometheus
-LOGFILE=###ROOT###/var/prometheus/prometheus.log
-CMD_FILE=###ROOT###/tmp/run/prometheus.cmd
-PID_FILE=###ROOT###/tmp/lock/prometheus.lock
-DATA_DIR=###ROOT###/var/prometheus/data
-CHECKRESULTS_DIR=###ROOT###/tmp/prometheus/checkresults
-USR=###SITE###
-GRP=###SITE###
+mkdir -p $OMD_ROOT/tmp/prometheus
+mkdir -p $OMD_ROOT/var/prometheus
+DAEMON=$OMD_ROOT/bin/prometheus
+TOOL=$OMD_ROOT/bin/promtool
+CFG_FILE=$OMD_ROOT/tmp/prometheus/prometheus.yml
+LOG_DIR=$OMD_ROOT/var/prometheus
+LOG_FILE=$OMD_ROOT/var/prometheus/prometheus.log
+DATA_DIR=$OMD_ROOT/var/prometheus/data
+PID_FILE=$OMD_ROOT/tmp/run/prometheus.pid
+NOHUP=1
+STORE_PID=1
+CHECK_CALLBACK=verify_config
 
 # You can set the environment variable CORE_NOVERIFY=yes
 # in order to supress a verification of the prometheus configuration
 # in case of start, restart or reload. This is in order to
-# avoid duplicate effort when being called by cmk -R or 
+# avoid duplicate effort when being called by cmk -R or
 # cmk -O.
 # export CORE_NOVERIFY=yes
 
 EXTERNAL_FQDN=${OMD_EXTERNAL_FQDN:-$(hostname --fqdn)}
 
-OPTIONS="--config.file $CFG_FILE --web.listen-address=$CONFIG_PROMETHEUS_TCP_ADDR:$CONFIG_PROMETHEUS_TCP_PORT --web.external-url=http://${EXTERNAL_FQDN}/###SITE###/prometheus --storage.tsdb.path $DATA_DIR --web.console.libraries=###ROOT###/etc/prometheus/console_libraries --web.console.templates=###ROOT###/etc/prometheus/consoles --storage.tsdb.retention=${CONFIG_PROMETHEUS_RETENTION}d"
-if [ -r ###ROOT###/etc/prometheus/webconfig.yml ]; then
+OPTIONS=()
+# The following two are needed to be at the beginning
+# They are used to identify the process in prometheus_proc()
+OPTIONS+=(--config.file="$CFG_FILE")
+OPTIONS+=(--storage.tsdb.path="$DATA_DIR")
+
+OPTIONS+=(--web.listen-address=$CONFIG_PROMETHEUS_TCP_ADDR:$CONFIG_PROMETHEUS_TCP_PORT)
+OPTIONS+=(--web.external-url=http://${EXTERNAL_FQDN}/$OMD_SITE/prometheus)
+OPTIONS+=(--web.console.libraries=/omd/sites/$OMD_SITE/etc/prometheus/console_libraries)
+OPTIONS+=(--web.console.templates=/omd/sites/$OMD_SITE/etc/prometheus/consoles)
+OPTIONS+=(--storage.tsdb.retention.time=${CONFIG_PROMETHEUS_RETENTION}d)
+
+if [ -r $OMD_ROOT/etc/prometheus/webconfig.yml ]; then
     # https://prometheus.io/docs/prometheus/latest/configuration/https/
-    OPTIONS="$OPTIONS --web.config.file=###ROOT###/etc/prometheus/webconfig.yml"
+    OPTIONS+=(--web.config.file=$OMD_ROOT/etc/prometheus/webconfig.yml)
 fi
 
+OPTS="${OPTIONS[@]}"
+
 # Put together fragments and build a new prometheus.yml
-#
-#
 rebuild_config() {
-    cp ###ROOT###/etc/prometheus/prometheus.yml $CFG_FILE
-    WORK_CFG=###ROOT###/tmp/prometheus.yml.$$
+    cp $OMD_ROOT/etc/prometheus/prometheus.yml $CFG_FILE
+    WORK_CFG=$OMD_ROOT/tmp/prometheus.yml.$$
     if grep -q "# - start of rule files" $CFG_FILE && grep -q "# - end of rule files" $CFG_FILE; then
         cat $CFG_FILE |\
             sed -n '1,/# - start of rule files/p' > $WORK_CFG
-        # all files in ###ROOT###/etc/prometheus/prometheus.d/rules/*/*.yml
-        for rules in ###ROOT###/etc/prometheus/prometheus.d/rules/*.yml
+        # all files in etc/prometheus/prometheus.d/rules/*/*.yml
+        for rules in $OMD_ROOT/etc/prometheus/prometheus.d/rules/*.yml
         do
             [ -f $rules ] && echo "  - $rules" >> $WORK_CFG
         done
-        for rules in ###ROOT###/etc/prometheus/prometheus.d/rules/*
+        for rules in $OMD_ROOT/etc/prometheus/prometheus.d/rules/*
         do
             if [ -d $rules ]; then
                 for subrules in ${rules}/*.yml
@@ -100,13 +83,13 @@ rebuild_config() {
     if grep -q "# - start of scrape configs" $CFG_FILE && grep -q "# - end of scrape configs" $CFG_FILE; then
         cat $CFG_FILE |\
             sed -n '1,/# - start of scrape configs/p' > $WORK_CFG
-        # all files in ###ROOT###/etc/prometheus/prometheus.d/scrape_configs/*.yml
-        for scrapes in ###ROOT###/etc/prometheus/prometheus.d/scrape_configs/*.yml
+        # all files in etc/prometheus/prometheus.d/scrape_configs/*.yml
+        for scrapes in $OMD_ROOT/etc/prometheus/prometheus.d/scrape_configs/*.yml
         do
             echo >> $WORK_CFG
             [ -f $scrapes ] && cat "$scrapes" >> $WORK_CFG
         done
-        for scrapes in ###ROOT###/etc/prometheus/prometheus.d/scrape_configs/*
+        for scrapes in $OMD_ROOT/etc/prometheus/prometheus.d/scrape_configs/*
         do
             if [ -d $scrapes ]; then
                 for subscrapes in ${scrapes}/*.yml
@@ -129,15 +112,15 @@ rebuild_config() {
 
             # access always via localhost -> always http
             echo '  - scheme: http' >> $CFG_FILE
-            echo '    path_prefix: /###SITE###/alertmanager' >> $CFG_FILE
+            echo "    path_prefix: /$OMD_SITE/alertmanager" >> $CFG_FILE
             echo '    static_configs:' >> $CFG_FILE
             echo '    - targets:' >> $CFG_FILE
-            echo '      - 127.0.0.1:###ALERTMANAGER_TCP_PORT###' >> $CFG_FILE
+            echo "      - $CONFIG_ALERTMANAGER_TCP_ADDR:$CONFIG_ALERTMANAGER_TCP_PORT" >> $CFG_FILE
         fi
     fi
 
-    sed -ri "s&""#""#""#ROOT#""#""#""&###ROOT###&g" $CFG_FILE
-    sed -ri "s&""#""#""#SITE#""#""#""&###SITE###&g" $CFG_FILE
+    sed -ri "s&""#""#""#ROOT#""#""#""&$OMD_ROOT&g" $CFG_FILE
+    sed -ri "s&""#""#""#SITE#""#""#""&$OMD_SITE&g" $CFG_FILE
 
     # replace ###VAR### variables from env variable CONFIG_VAR
     for var in "${!CONFIG_@}"; do
@@ -146,38 +129,6 @@ rebuild_config() {
 
     rm -f "$WORK_CFG"
 }
-
-# Fetches the pid of the currently running prometheus process of the given
-# user.
-#
-# --ppid 1 in ps seem not to filter by direct ppid but by the whole
-# parent process tree. So filter by hand again.
-#
-# It returns 1 when no process can be found and echos the PID while
-# returning 0 when a process can be found.
-prometheus_proc() {
-    PID=$(pgrep -u $USR -o -fx "$BIN $OPTIONS" 2>/dev/null)
-    #PROC=$(ps -u $USR --ppid 1 -o pid,ppid,cmd \
-    #         | grep "$BIN $OPTIONS" 2>&1 | grep ' 1 ' | grep -v grep)
-    #PID=$(echo "$PROC" | sed 's/^ *//g' | cut -d' ' -f1)
-    if [ "$PID" != "" ]; then
-        echo "$PID"
-        return 0
-    else
-        return 1
-    fi
-}
-
-# First try to use the process list to gather a prometheus process,
-# when no process is found via ps take a look at the lock file
-#
-# It returns 1 when no process can be found and echos the PID while
-# returning 0 when a process can be found.
-pidof_prometheus() {
-    prometheus_proc
-    return $?
-}
-
 
 verify_config() {
     if [ "$1" != "quiet" ]; then
@@ -199,74 +150,6 @@ verify_config() {
     fi
 }
 
-prep_start() {
-    if [ -f $CMD_FILE ]; then
-        rm -f $CMD_FILE
-    fi
-    touch $PID_FILE
-    chown $USR:$GRP $PID_FILE
-    rm -f $CHECKRESULTS_DIR/*
-}
-
-prometheus_wait_stop() {
-    pid=$(pidof_prometheus) || true
-    if ! kill -0 "${pid:-}" >/dev/null 2>&1; then
-        echo -n 'Not running. '
-        return 0
-    fi
-
-    # wait until really stopped.
-    # it might happen that prometheus has a subprocess which
-    # is left running and becomes ppid 1 after killing the
-    # main prometheus process. So fetch the process id again
-    # multiple times to fetch new processes until all are gone.
-    if [ -n "${pid:-}" ]; then
-        I=0
-        while kill -0 ${pid:-} >/dev/null 2>&1; do
-            # Send single kill per process
-            kill $pid
-            while kill -0 ${pid:-} >/dev/null 2>&1;  do
-                if [ $I = '60' ]; then
-                    return 1
-                else
-                    echo -n "."
-                    I=$(($I+1))
-                    sleep 1
-                fi
-            done
-            # Is there another proc with ppid 1?
-            pid=$(pidof_prometheus | head -n1) || true
-        done
-    fi
-
-    [ -f "$PID_FILE" ] && rm -f "$PID_FILE"
-    return 0
-
-}
-
-prometheus_wait_start() {
-    prep_start
-    nohup $BIN $OPTIONS >>$LOGFILE 2>&1 &
-    I=0
-    while ! pidof_prometheus >/dev/null 2>&1;  do
-        if [ $I = '10' ]; then
-            return 1
-        else
-            echo -n "."
-            I=$(($I+1))
-            sleep 1
-        fi
-    done
-
-    return 0
-}
-
-if [ ! -f $BIN ]; then
-    echo "Prometheus binary $BIN not found. Terminating..."
-    exit 1
-fi
-
-__init_hook $0 $1 pre
 # OMD: create configuration file out of fragments
 case "$1" in start|restart|reload|checkconfig|check)
     rebuild_config
@@ -275,87 +158,5 @@ case "$1" in start|restart|reload|checkconfig|check)
         exit 1
     fi
 esac
-case "$1" in
-    start)
-        echo -n "Starting prometheus..."
-        if pidof_prometheus >/dev/null 2>&1; then
-            echo 'Already running.'
-            exit 1
-        fi
 
-        if ! verify_config quiet; then
-            exit 1
-        fi
-
-        if prometheus_wait_start; then
-            echo 'OK'
-            __init_hook $0 $1 post 0
-            exit 0
-        else
-            echo 'ERROR'
-            __init_hook $0 $1 post 1
-            exit 1
-        fi
-    ;;
-    stop)
-        echo -n "Stopping prometheus..."
-        if prometheus_wait_stop; then
-            echo 'OK'
-             __init_hook $0 $1 post 0
-            exit 0
-        else
-            echo 'ERROR'
-             __init_hook $0 $1 post 1
-            exit 1
-        fi
-    ;;
-    check|checkconfig)
-        if ! verify_config; then
-            exit 1
-        fi
-        exit 0
-    ;;
-    status)
-        PID=$(pidof_prometheus 2>&1) || true
-        if kill -0 "${PID:-}" >/dev/null 2>&1; then
-            echo "Running ($PID)."
-            exit 0
-        else
-            echo 'Not running. '
-            exit 1
-        fi
-    ;;
-    restart)
-        if ! verify_config quiet; then
-            exit 1
-        fi
-
-        $0 stop || (echo "Unable to stop Prometheus. Terminating..." && exit 1)
-        echo -n "Starting Prometheus..."
-        if prometheus_wait_start; then
-            echo 'OK'
-            exit 0
-        else
-            echo 'ERROR'
-            exit 1
-        fi
-    ;;
-    
-    reload|force-reload)
-        PID=$(pidof_prometheus 2>&1) || true
-        if kill -0 "${PID:-}" >/dev/null 2>&1; then
-            kill -HUP $PID
-            exit 0
-        else
-            exit 1
-        fi
-    ;;
-    check)
-    ;;
-    *)
-        echo "Usage: prometheus {start|stop|restart|reload|status|checkconfig}"
-        exit 2
-    ;;
-esac
- 
-# EOF
+__generic_init "$*"

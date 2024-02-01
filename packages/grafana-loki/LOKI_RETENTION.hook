@@ -1,0 +1,21 @@
+#!/bin/bash
+
+# Alias: Retention policy for Loki
+# Menu: Addons
+# Description:
+#  If you enabled Loki, this is the
+#  number of days after old metrics will be deleted.
+
+case "$1" in
+    default)
+        echo "32d"
+    ;;
+    choices)
+        echo "[0-9]{1,4}[mMhd]"
+    ;;
+    set)
+    ;;
+    depends)
+    [ "$CONFIG_LOKI" = "on" ]
+    ;;
+esac

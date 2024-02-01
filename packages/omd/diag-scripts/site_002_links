@@ -1,0 +1,9 @@
+#!/bin/bash
+
+for path in bin include lib share version; do
+    if test -h $OMD_ROOT/$path; then
+        echo "OK file exists: $OMD_ROOT/$path"
+    else
+        echo "ERROR file exists: $OMD_ROOT/$path"
+    fi
+done

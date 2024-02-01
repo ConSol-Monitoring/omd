@@ -1,12 +1,13 @@
 include ../../Makefile.omd
 include ../pnp4nagios/Makefile
+DEPENDS = naemon pnp4nagios
 
 .PHONY: skel
 
 build:
 	tar xzf ../pnp4nagios/$(DIR).tar.gz
 	set -e; \
-	for p in ../pnp4nagios/patches/*.diff ; do \
+	! test -e ../pnp4nagios/patches/ || for p in ../pnp4nagios/patches/*.patch ; do \
 	    echo "applying $$p..." ; \
 	    ( cd $(DIR) ; patch -p1 ) < $$p || exit 1; \
 	done
@@ -15,6 +16,7 @@ build:
 	    ( cd $(DIR) ; patch -p1 ) < $$p || exit 1; \
 	done
 	find $(DIR) -name \*.orig -exec rm {} \;
+	-if [ "x$(RUN_AUTOMAKE)" = "x1" ]; then cd $(DIR) && automake -af; fi
 	cd $(DIR) ; \
 		LIBS="$(shell PKG_CONFIG_PATH="`ls -d1 ../naemon/naemon-*/.`" pkg-config --libs-only-L naemon-uninstalled)" \
 		CFLAGS="$(shell PKG_CONFIG_PATH="`ls -d1 ../naemon/naemon-*/.`" pkg-config --cflags naemon-uninstalled)" \

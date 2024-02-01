@@ -6,7 +6,7 @@ NAME        = mod-gearman-worker-go
 VERSION     = master
 BRANCH      = master
 SRC         = $(NAME)-$(VERSION).tar.gz
-GOPKG       = 1.19
+GOPKG       = 1.21
 GOVERSION   = $(shell grep ^VERSION ../go-${GOPKG}/Makefile | awk '{ print $$3 }')
 GOPATH      = go
 PWD         = $(shell pwd)
@@ -14,7 +14,7 @@ GITBASE     = github.com/ConSol
 GITURL      = $(GITBASE)/$(NAME)
 DEPS_SRC    = deps.tar.gz
 # GIT TAG is set automatically by "make upstream" or "make package"
-GIT_TAG     = v1.2.3
+GIT_TAG     = v1.3.8
 
 .PHONY: skel
 
@@ -29,7 +29,8 @@ build:
 
 install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/bin
-	install -m 755 $(PWD)/$(GOPATH)/bin/mod_gearman_worker  $(DESTDIR)$(OMD_ROOT)/bin/mod_gearman_worker-go
+	install -m 0755 $(PWD)/$(GOPATH)/bin/mod_gearman_worker                  $(DESTDIR)$(OMD_ROOT)/bin/
+	install -m 0755 $(PWD)/$(GOPATH)/src/$(GITURL)/mod_gearman_worker_epn.pl $(DESTDIR)$(OMD_ROOT)/bin/
 
 skel:
 	cp $(GOPATH)/src/$(GITURL)/worker.cfg $(SKEL)/etc/mod-gearman/worker.cfg
@@ -53,6 +54,8 @@ deps: clean
 		make vendor
 		cd $(PWD) && \
 		tar zcf $(DEPS_SRC) --exclude=.git --exclude=*_test.go $(GOPATH)/src/$(GITURL)/vendor
+		chmod -R 777 $(GOPATH) && \
+		rm -rf $(GOPATH)
 
 package: clean
 	mkdir -p $(GOPATH)
@@ -64,6 +67,10 @@ package: clean
 		cd $(NAME) && \
 		sed -i $(PWD)/Makefile -e 's/^GIT_TAG.*$$/GIT_TAG     = '$$(git describe --always --tags)'/g' && \
 		cd $(PWD) && \
-		tar zcf $(SRC) --exclude=.git --exclude=*_test.go $(GOPATH)/src/$(GITURL)
+		tar zcf $(SRC) --exclude=.git --exclude=*_test.go $(GOPATH)/src/$(GITURL) && \
+		chmod -R 777 $(GOPATH) && \
+		rm -rf $(GOPATH)
 
-upstream: clean deps package
+upstream: clean
+	$(MAKE) deps
+	$(MAKE) package

@@ -25,10 +25,10 @@ my $site    = TestUtils::create_test_site() or TestUtils::bail_out_clean("no fur
 my $prepares = [
   { cmd => $omd_bin." config $site set CORE icinga2" },
 
-  { cmd => "/bin/su - $site -c './etc/init.d/icinga2 check'",      errlike => '/Finished validating the configuration/' },
-  { cmd => "/bin/su - $site -c './etc/init.d/icinga2 status'",     like => '/Not running/', exit => 1 },
+  { cmd => "/bin/su - $site -c 'omd check icinga2'",            errlike => '/Finished validating the configuration/' },
+  { cmd => "/bin/su - $site -c './etc/init.d/icinga2 status'",     like => '/icinga2 is NOT running/', exit => 1 },
   { cmd => $omd_bin." start $site" },
-  { cmd => "/bin/su - $site -c './etc/init.d/icinga2 status'",     like => '/Running \(\d+\)/' },
+  { cmd => "/bin/su - $site -c './etc/init.d/icinga2 status'",     like => '/icinga2 is running \(\d+\)/' },
 ];
 for my $p (@{$prepares}) {
     TestUtils::test_command($p);

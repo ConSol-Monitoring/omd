@@ -1,86 +1,41 @@
 #!/bin/bash
 
+### OMD INIT INFO
+# PIDFILE:  tmp/run/xinetd.pid
+# BINARY:   xinetd
+# ARGMATCH: etc/xinetd.conf
+### END INIT INFO
+
 # Start only if at least on xinetd based service
 # is activated
 
+cd || exit 1
 test "$(ls -A $OMD_ROOT/etc/xinetd.d/)" || exit 5
+. lib/omd/init_profile
 
-PIDFILE=$OMD_ROOT/tmp/run/xinetd.pid
+PID_FILE=$OMD_ROOT/tmp/run/xinetd.pid
 if [ -x $OMD_ROOT/bin/xinetd ]; then
     DAEMON=$OMD_ROOT/bin/xinetd
 else
     DAEMON=/usr/sbin/xinetd
 fi
-OPTS="-pidfile $OMD_ROOT/tmp/run/xinetd.pid -filelog $OMD_ROOT/var/log/xinetd.log -f $OMD_ROOT/etc/xinetd.conf"
+OPTS=""
+OPTS+=" -pidfile ${PID_FILE}"
+OPTS+=" -filelog $OMD_ROOT/var/log/xinetd.log"
+OPTS+=" -f $OMD_ROOT/etc/xinetd.conf"
 
 case "$1" in
     start)
-        echo -n 'Starting xinetd...'
-        if [ -e "$PIDFILE" ] ; then
-            PID=$(cat $PIDFILE)
-            if [ -n "$PID" ] && ps $PID > /dev/null 2>&1 ; then
-                echo "still running with pid $PID! Aborting!"
-                exit 1
-            fi
-            echo "removing stale pid file..."
-            rm -f $PIDFILE
-        fi
-
         # Do not use usual system daemon path. Some start script
         # (e.g. SLES) will think that the system xinetd is already
         # running and do not start it if the OMD xinetd is running.
         mkdir -p $OMD_ROOT/var/tmp
         cp $DAEMON $OMD_ROOT/var/tmp/xinetd
-        $OMD_ROOT/var/tmp/xinetd $OPTS
-        echo OK
+        DAEMON=$OMD_ROOT/var/tmp/xinetd
     ;;
     stop)
-        echo -n 'Stopping xinetd...'
-        PID=$(cat $PIDFILE 2>/dev/null)
-        if [ -z "$PID" ] ; then
-            echo "not running."
-        elif kill "$PID" 2>/dev/null ; then
-            echo "OK"
-        else
-            echo "Failed"
-        fi
         rm -f $OMD_ROOT/var/tmp/xinetd
     ;;
-    restart)
-        $0 stop
-        $0 start
-    ;;
-    reload)
-        echo -n 'Reloading xinetd...'
-        if [ -e "$PIDFILE" ] ; then
-            PID=$(cat $PIDFILE)
-            if kill -HUP $PID
-            then
-                echo OK
-            else
-                echo ERROR
-                exit 1
-            fi
-        else
-            echo "not running"
-            exit 1
-        fi
-    ;;
-    status)
-        echo -n 'Checking status of xinetd...'
-        if [ -e "$PIDFILE" ] ; then
-            PID=$(cat $PIDFILE)
-            if [ -n "$PID" ] && ps $PID > /dev/null 2>&1 ; then
-                echo "running"
-                exit 0
-            fi
-        fi
-        echo "stopped"
-        exit 1
-    ;;
-    check)
-    ;;
-    *)
-        echo "Usage: $0 {start|stop|restart|reload|status}"
-    ;;
 esac
+
+__generic_init "$*"

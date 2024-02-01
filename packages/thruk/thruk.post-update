@@ -1,5 +1,10 @@
 #!/bin/bash
 
+# nothing todo on dry runs
+if [ "$OMD_UPDATE_DRY_RUN" != "" ]; then
+    exit 5;
+fi
+
 cd $OMD_ROOT
 if [ -s etc/cron.d/thruk.auto ] || [ -e etc/apache/conf.d/thruk_cookie_auth.conf -a -e etc/rc.d/*apache ]; then
     omd start nonexistant >/dev/null 2>&1 # hack to mount tmp filesystem since there is no omd mount (yet?)
@@ -12,3 +17,9 @@ if test -e etc/thruk/cgi.cfg.update; then
   rm etc/thruk/cgi.cfg
   mv etc/thruk/cgi.cfg.update etc/thruk/cgi.cfg
 fi
+
+# updates are a good time to renew cache files
+./bin/thruk cache clear all >/dev/null
+
+# clean old puppeteer folders
+rm -rf /tmp/puppeteer_dev_chrome_profile-* >/dev/null 2>&1

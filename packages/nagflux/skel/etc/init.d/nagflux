@@ -1,104 +1,32 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
-# description: Nagflux importer
+### OMD INIT INFO
+# PIDFILE:  tmp/run/nagflux.pid
+# DEPENDS:  CONFIG_NAGFLUX = on
+# BINARY:   bin/nagflux
+# ARGMATCH: etc/nagflux/config.gcfg
+### END INIT INFO
 
 # Check if nagflux is enabled in OMD. If not terminate.
+cd || exit 1
 . etc/omd/site.conf
 if [ "$CONFIG_NAGFLUX" != "on" ] ; then
     exit 5
 fi
+. lib/omd/init_profile
 
-NAME="Nagflux"
+NAME="nagflux"
 CONF_DIR=$OMD_ROOT/etc/nagflux
 CONF_FILE=$CONF_DIR/config.gcfg
-PID_FILE=$OMD_ROOT/tmp/run/$NAME.pid
+PID_FILE=$OMD_ROOT/tmp/run/nagflux.pid
 LOG_DIR=$OMD_ROOT/var/log/nagflux
-LOGFILE=$LOG_DIR/nagflux.log
+LOG_FILE=$LOG_DIR/nagflux.log
 DAEMON=$OMD_ROOT/bin/nagflux
+OPTS="-configPath=${CONF_FILE}"
+NOHUP=1
+STORE_PID=1
+RELOAD_RESTARTS=1
 
-OPTIONS="-configPath=${CONF_FILE}"
+mkdir -p $LOG_DIR
 
-get_status() {
-        pid=$( cat $PID_FILE 2>/dev/null )
-        if [ -n "$pid" ]; then
-            if ps -p $pid > /dev/null 2>&1 ; then
-                echo "$NAME is running with pid $pid"
-                return 0;
-            fi
-        fi
-        echo "$NAME is not running"
-        return 1;
-}
-
-stop_nagflux() {
-    pid=$( cat $PID_FILE 2>/dev/null )
-    if [ -z "$pid" ]; then
-        echo ". Not running."
-    else
-        ps -p $pid > /dev/null 2>&1 && kill $pid
-        for x in $(seq 50); do
-            printf "."
-            ps -p $pid > /dev/null 2>&1 || break
-            sleep 0.2;
-        done
-        if ! ps -p $pid > /dev/null 2>&1 ; then
-            echo "OK"
-            exit 0;
-        else
-            echo "failed"
-            exit 1;
-        fi
-    fi
-}
-
-case "$1" in
-  start)
-
-        printf '%s' "Starting $NAME..."
-
-        if get_status > /dev/null ; then
-            echo "failed"
-            echo "$NAME already running"
-            exit 0;
-        fi
-
-        mkdir -p "$LOG_DIR"
-        touch "$PID_FILE"
-        nohup $DAEMON $OPTIONS >>$LOGFILE 2>&1 &
-        if [ $? -eq 0 ]; then
-            echo "$!" > $PID_FILE
-            echo "OK"
-            exit 0;
-        else
-            rm $PID_FILE
-            echo "failed"
-            exit 1;
-        fi
-        ;;
-  stop)
-        printf '%s' "Stopping $NAME..."
-        pid=$( cat $PID_FILE 2>/dev/null )
-        if [ -z "$pid" ]; then
-            echo ". Not running."
-        else
-            stop_nagflux;
-        fi
-        ;;
-  status)
-        get_status;
-        exit $?;
-    ;;
-    reload|restart)
-        $0 stop && sleep 1 && $0 start
-        exit $?
-    ;;
-  check)
-    ;;
-  *)
-        echo "Usage: $NAME {start|stop|kill|status|restart}"
-        exit 1
-    ;;
-esac
-
-exit 0
-
+__generic_init "$*"

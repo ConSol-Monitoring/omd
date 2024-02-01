@@ -16,7 +16,7 @@ if [ "x$OMD_ROOT" = "x" ]; then
     exit 3
 fi
 
-MD5=$(cd "$DIR" && find . -type f -exec md5sum {} \; 2>&1 | sort | md5sum | awk '{ print $1 }')
+MD5=$( (find $DIR/ -type f -exec md5sum {} \; && find $DIR/ -type l -exec md5sum {} \; ) 2>&1 | sort | md5sum | awk '{ print $1 }')
 
 # add dependencies and rebuild if any of the dependency has changed
 DEPS=$(grep -P 'DEPENDS\ *=' $DIR/Makefile 2>/dev/null | awk -F = '{ print $2 }' | sort -u | sed "s|\$(OMD_ROOT)|$OMD_ROOT|g")

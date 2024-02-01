@@ -1,0 +1,4 @@
+host_name,name,type,monitoring_type,monitoring_0,monitoring_1,monitoring_2,monitoring_3,monitoring_4,monitoring_5
+test_host_0,os,Red Hat,KEYVALUES,swap_warning,15%,swap_critical,8%
+test_host_0,os,Red Hat,KEYVALUES,cron_warning,30,cron_critical,100
+test_host_1,os,Windows2k8r2,KEYVALUES,thresholds:cron_warning,31,thresholds:cron_critical,101

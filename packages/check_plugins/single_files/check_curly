@@ -166,11 +166,13 @@ if ($Pocet>1){
         }
         break;
 
-      case '-g':    
-        if ($Pocet>$i+1){
-          $Grep=$argv[++$i];
-          if ($DebugArgs) echo "\nDEBUG: -g ".$Grep;
-        }else{
+      case '-g':
+        if ($Pocet > $i + 1) {
+          $Grep[] = $argv[++$i]; // Store search strings in an array
+          if ($DebugArgs) {
+            echo "\nDEBUG: -g " . $Grep[count($Grep) - 1];
+          }
+        } else {
           echo "ERROR in parsing argument -g: missing value";
           Help(3);
         }
@@ -376,18 +378,31 @@ $body
   }
   
   if (isset($Tc) and ($total_time > $Tc)){
-    $Msg.='CRIITCAL Page time '.$total_time.'s exceeded time limit '.$Tc.'s';
+    $Msg.='CRITICAL Page time '.$total_time.'s exceeded time limit '.$Tc.'s';
     nagios_exit(2);
   }elseif (isset($Tw) and ($total_time > $Tw)){
     $Msg.='WARNING Page time '.$total_time.'s exceeded time limit '.$Tw.'s';
     nagios_exit(1);
   }
 
-  if (isset($Grep)){
-    if (!strstr($body,$Grep)){
-      $Msg.='CIRITCAL String '.$Grep.' not found';
-      nagios_exit(2);
+  $hasGFlag = false;
+  $foundAnySearchString = false;
+  if (!empty($Grep)) {
+    $hasGFlag = true;
+    foreach ($Grep as $searchString) {
+      if (strstr($body, $searchString)) {
+        $foundAnySearchString = true;
+        break;
+      }
     }
+  }
+  if (!$foundAnySearchString && $hasGFlag) {
+    if (count($Grep) > 1) {
+        $Msg .= 'CRITICAL None of the search strings were found';
+    } else {
+        $Msg .= 'CRITICAL String ' . $Grep[0] . ' not found';
+    }
+    nagios_exit(2);
   }
 
   if (isset($Sbc) and ($size_download < $Sbc)){

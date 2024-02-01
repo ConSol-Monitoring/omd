@@ -6,7 +6,7 @@ NAME        = lmd
 VERSION     = master
 BRANCH      = master
 SRC         = $(NAME)-$(VERSION).tar.gz
-GOPKG       = 1.19
+GOPKG       = 1.21
 GOVERSION   = $(shell grep ^VERSION ../go-${GOPKG}/Makefile | awk '{ print $$3 }')
 GOPATH      = go
 PWD         = $(shell pwd)
@@ -14,7 +14,7 @@ GITBASE     = github.com/sni
 GITURL      = $(GITBASE)/$(NAME)
 DEPS_SRC    = deps.tar.gz
 # GIT TAG is set automatically by "make upstream" or "make package"
-GIT_TAG     = v2.1.2
+GIT_TAG     = v2.1.9
 
 .PHONY: skel
 
@@ -61,4 +61,6 @@ package: clean
 		cd $(PWD) && \
 		tar zcf $(SRC) --exclude=.git --exclude=*_test.go $(GOPATH)/src/$(GITURL)
 
-upstream: clean deps package
+upstream: clean
+	$(MAKE) deps
+	$(MAKE) package

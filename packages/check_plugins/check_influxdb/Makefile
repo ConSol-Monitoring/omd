@@ -3,13 +3,13 @@ include ../../../Makefile.omd
 NAME        = check_influxdb
 VERSION     = a44cf5ebbf4f71a9462571118ce53637a5bc9ab9
 SRC         = $(NAME)-$(VERSION).tar.gz
-GOPKG       = 1.19
+GOPKG       = 1.21
 GOVERSION   = $(shell grep ^VERSION ../../go-${GOPKG}/Makefile | awk '{ print $$3 }')
 GOPATH      = go
 PWD         = $(shell pwd)
 
 build:
-	tar zxf $(SRC)
+	tar ozxf $(SRC)
 	for p in patches/*.patch ; do \
 	    echo "applying $$p..." ; \
 	    ( cd $(PWD)/$(GOPATH)/src/github.com/griesbacher/check_influxdb; patch -p1 ) < $$p || exit 1; \

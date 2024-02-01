@@ -48,7 +48,7 @@ for my $test (@{$tests}) {
 TestUtils::test_command({ cmd => $omd_bin." stop $site" });
 my $sessionid = TestUtils::create_fake_cookie_login($site);
 TestUtils::test_command({ cmd => $omd_bin." config $site set THRUK_COOKIE_AUTH on", like => '/^$/' });
-TestUtils::test_command({ cmd => $omd_bin." start $site", like => '/Starting dedicated Apache/' });
+TestUtils::test_command({ cmd => $omd_bin." start $site", like => '/Starting apache/' });
 TestUtils::set_cookie("thruk_auth", $sessionid, time() + 3600);
 
 TestUtils::test_url({ 

@@ -38,6 +38,8 @@ oradiag_*/
 *.orig
 ./core*
 etc/nagvis/conf.d/urls.ini.php
+.npm/_logs/
+.npm/_cacache/
 
 # Append your own ignores after this comment to avoid conflicts
 

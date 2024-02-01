@@ -1,0 +1,13 @@
+#!/bin/bash
+
+DIR=
+DIR+=" /omd"
+DIR+=" $OMD_DIST_APACHE_CONF_DIR/zzz_omd.conf"
+DIR+=" /usr/bin/omd"
+for path in $DIR; do
+    if test -e $path; then
+        echo "OK file exists: $path"
+    else
+        echo "ERROR file exists: $path"
+    fi
+done

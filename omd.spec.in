@@ -65,9 +65,21 @@ rm -f $RPM_BUILD_ROOT/usr/bin/omd
 rm -f $RPM_BUILD_ROOT/usr/share/man/man8/omd.8.gz
 rm -f $RPM_BUILD_ROOT/@APACHE_CONFDIR@/*
 rm -f $RPM_BUILD_ROOT/etc/init.d/omd
-find $RPM_BUILD_ROOT/opt/omd/versions/%{version}/bin/ -type f | grep -v waitmax | grep -v agent_modbus | grep -v \.dbg | grep -v .local-chromium | xargs -n 500 strip 2>&1 | grep -iv 'File format not recognized' ||:
-find $RPM_BUILD_ROOT/opt/omd/versions/%{version}/lib/nagios/plugins/ -type f | grep -v \.dbg | xargs -n 500 strip 2>&1 | grep -iv 'File format not recognized' ||:
-find $RPM_BUILD_ROOT/opt/omd/versions/%{version}/lib/ -type f | grep -v waitmax | grep -v agent_modbus | grep -v \.dbg | grep -v .local-chromium | xargs -n 500 strip 2>&1 | grep -iv 'File format not recognized' ||:
+rm -rf $RPM_BUILD_ROOT/usr/lib/systemd
+find \
+    $RPM_BUILD_ROOT/opt/omd/versions/%{version}/bin/ \
+    $RPM_BUILD_ROOT/opt/omd/versions/%{version}/lib/ \
+    -type f \
+    \( \
+        -not -name "*.dbg" \
+        -not -name "waitmax" \
+        -not -name "agent_modbus" \
+        -not -path "*/.local-chromium/*" \
+    \) \
+    -print0 \
+  | xargs -0 -n 500 strip 2>&1 \
+  | grep -ivP 'File format not recognized|File truncated' \
+  || :
 
 %files
 %defattr(-,root,root)
@@ -110,7 +122,7 @@ echo "New default version is %{version}."
 ln -sfn "%{version}" /omd/versions/default
 ln -sfn /omd/versions/default/bin/omd /usr/bin/omd
 ln -sfn /omd/versions/default/share/man/man8/omd.8.gz /usr/share/man/man8/omd.8.gz
-ln -sfn /omd/versions/default/share/omd/omd.init /etc/init.d/omd
+if test -d /etc/init.d; then ln -sfn /omd/versions/default/share/omd/omd.init /etc/init.d/omd; else : ; fi
 ln -sfn /omd/versions/default/share/omd/apache.conf @APACHE_CONFDIR@/zzz_omd.conf
 mkdir -p /etc/bash_completion.d
 ln -sfn /omd/versions/default/lib/omd/omd_bash_completion /etc/bash_completion.d/omd
@@ -120,17 +132,17 @@ ln -sfn /omd/versions/default/lib/omd/omd_bash_completion /etc/bash_completion.d
 if [ $ACTIVATE_INIT -eq 1 ]; then
     chkconfig --add omd >/dev/null 2>&1
     chkconfig omd on >/dev/null 2>&1
+fi
 
 %if 0%{?_unitdir:1}
     if test -e /omd/versions/default/share/omd/omd.service; then
-        ln -sfn /omd/versions/default/share/omd/omd.service %{_unitdir}/omd.service
+        rm -f %{_unitdir}/omd.service
+        cp -fp /omd/versions/default/share/omd/omd.service %{_unitdir}/omd.service
         %systemd_post omd.service
-        systemctl disable omd.service
-        systemctl enable omd.service
         systemctl daemon-reload
+        systemctl enable omd.service
     fi
 %endif
-fi
 
 
 
@@ -223,6 +235,7 @@ if [ $1 = 0 ] ; then
 rm -rf /omd/versions/%{version}
 rm -f /omd/versions/default
 %if 0%{?_unitdir:1}
+rm -f %{_unitdir}/omd.service
 %systemd_postun omd.service
 systemctl daemon-reload
 %endif
@@ -232,10 +245,11 @@ if [ -n "$v" ]; then
     ln -sfn "$v" /omd/versions/default
 %if 0%{?_unitdir:1}
 if test -e /omd/versions/default/share/omd/omd.service; then
-    ln -sfn /omd/versions/default/share/omd/omd.service %{_unitdir}/omd.service
+    rm -f %{_unitdir}/omd.service
+    cp -fp /omd/versions/default/share/omd/omd.service %{_unitdir}/omd.service
     %systemd_post omd.service
-    systemctl enable omd.service
     systemctl daemon-reload
+    systemctl enable omd.service
 fi
 %endif
 else

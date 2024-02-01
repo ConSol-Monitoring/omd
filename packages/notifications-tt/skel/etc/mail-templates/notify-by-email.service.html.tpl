@@ -24,7 +24,7 @@ Content-Transfer-Encoding: 7bit
 - Service:     [% SERVICEDESC %]
 - - - - - - - - - - - - - - - - -
 - State:       [% SERVICESTATE %]
-- Date:        [% SHORTDATETIME %]
+- Date:        [% SHORTDATETIME %] (Duration: [% PROBLEMDURATION %])
 - Output:      [% SERVICEOUTPUT +%]
 [%+ LONGSERVICEOUTPUT.replace('\\\n', "\n") %]
 [% IF NOTIFICATIONTYPE == 'ACKNOWLEDGEMENT' %]
@@ -114,7 +114,7 @@ a:hover {
 [% END %]
   <tr><td>Service:</td><td>[% SERVICEDESC %]</td></tr>
   <tr><td>State:</td><td><div class="service[% SERVICESTATE %]" style="width:200px; text-align:center;">[% SERVICESTATE %]</span></td></tr>
-  <tr><td>Date:</td><td>[% SHORTDATETIME %]</td></tr>
+  <tr><td>Date:</td><td>[% SHORTDATETIME %] (Duration: [% PROBLEMDURATION %])</td></tr>
 [% IF LONGSERVICEOUTPUT && LONGSERVICEOUTPUT.match('base64,') %]
   <tr><td valign="top">Output:</td><td>[% SERVICEOUTPUT %]<br/><img style="max-width: 100%; max-height: 100%;" src="cid:embedded.png@1" alt="embedded graph"></td></tr>
 [% ELSIF LONGSERVICEOUTPUT %]

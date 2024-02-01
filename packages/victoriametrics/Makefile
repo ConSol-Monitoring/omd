@@ -4,12 +4,12 @@ NAME       = victoriametrics
 PWD        = $(shell pwd)
 
 #for binary downloads
-VERSION    = 1.79.5
+VERSION    = 1.93.1
 VVERSION=v$(VERSION)
 
 GITBASE     = github.com/VictoriaMetrics
 VM_SRC      = VictoriaMetrics-$(VVERSION).tar.gz
-GOPKG       = 1.19
+GOPKG       = 1.21
 GOVERSION   = $(shell grep ^VERSION ../go-${GOPKG}/Makefile | awk '{ print $$3 }')
 GOPATH      = $(PWD)/go
 GOROOT=$(PWD)/../go-$(GOPKG)/go-$(GOVERSION)/
@@ -52,6 +52,8 @@ install:
 	install -m 755 *cron* $(DESTDIR)$(OMD_ROOT)/bin
 
 skel:
+	sed -i -e 's|###APACHE_MODULE_DIR###|$(APACHE_MODULE_DIR)|g' \
+	       $(SKEL)/etc/apache/conf.d/victoriametrics.conf
 
 clean:
 	rm -rf $(GOPATH)

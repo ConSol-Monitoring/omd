@@ -93,7 +93,7 @@ MODULES = \
           Math-Complex-1.59.tar.gz \
           Module-Find-0.13.tar.gz \
           Module-Load-0.32.tar.gz \
-          Mozilla-CA-20221114.tar.gz \
+          Mozilla-CA-20231213.tar.gz \
           OLE-Storage_Lite-0.19.tar.gz \
           Package-Stash-XS-0.28.tar.gz \
           Params-Check-0.38.tar.gz \
@@ -230,7 +230,7 @@ MODULES = \
           File-Tail-1.3.tar.gz \
           UUID-0.28.tar.gz \
           Thruk-Utils-XS-0.02.tar.gz \
-          Monitoring-GLPlugin-5.4.tar.gz
+          Monitoring-GLPlugin-5.18.tar.gz
 
 
 
@@ -265,9 +265,11 @@ install:
 	if [ -z $(DESTDIR) ]; then echo "cannot install without DESTDIR set!"; exit 1; fi
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/perl5 $(DESTDIR)$(OMD_ROOT)/bin
 	rsync -a $(P5TMPDIST)/dest/lib $(DESTDIR)$(OMD_ROOT)/lib/perl5/
+	find $(DESTDIR)$(OMD_ROOT)/lib/perl5/ -type f -exec chmod u+rw  {} \; # strip fails otherwise
+	find $(DESTDIR)$(OMD_ROOT)/lib/perl5/ -type d -exec chmod u+rwx {} \; # strip fails otherwise
 	rsync -a $(P5TMPDIST)/dest/bin $(DESTDIR)$(OMD_ROOT)/lib/perl5/
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/local/lib/perl5
-	install -m 755 bin/cpan.wrapper $(DESTDIR)$(OMD_ROOT)/bin/cpan.wrapper
+	install -m 0755 bin/cpan.wrapper $(DESTDIR)$(OMD_ROOT)/bin/cpan.wrapper
 
 skel:
 	echo "install  --install_base  ###ROOT###/local/lib/perl5" > $(SKEL)/.modulebuildrc

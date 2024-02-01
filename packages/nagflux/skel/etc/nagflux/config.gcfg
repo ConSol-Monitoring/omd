@@ -66,12 +66,12 @@
 	Version = 1.0
 	##############
 	# The address is controlled by omd itself. Do not change it here.
-	# Instead use 'omd config VICTORIAMETRICS_HTTP_PORT/TCP_ADDR set <port>/<ip|name>'
+	# Instead use 'omd config VICTORIAMETRICS_PORT/TCP_ADDR set <port>/<ip|name>'
 	# and 'omd config VICTORIAMETRICS_MODE set (ssl|http)'
 	# Note: per default not activated!
- 
-	# Victoriametrics HTTP port access line protocol on /write URL: 
-	Address = "http://localhost:###CONFIG_VICTORIAMETRICS_PORT###"
+
+	# Victoriametrics HTTP port access line protocol on /write URL:
+	Address = "http://###CONFIG_VICTORIAMETRICS_TCP_ADDR###:###CONFIG_VICTORIAMETRICS_PORT###"
 	#
 	# also keep this comments to reduce the merge conflicts during updates
 	##############

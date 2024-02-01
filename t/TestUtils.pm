@@ -105,7 +105,8 @@ sub get_omd_bin {
     errlike => (list of) regular expressions which have to match stderr, default: empty
     unlike  => (list of) regular expressions which must not match stdout
     sleep   => time to wait after executing the command
-    waitfor => wait till regex occurs (max 120sec)
+    waitfor => wait till regex occurs (max 30sec)
+    maxwait => how long should be waited (default 30sec)
   }
 
 =cut
@@ -162,8 +163,10 @@ sub test_command {
             $now = time();
         }
         if(!$found) {
-            fail("content ".$expr." did not occur within 120 seconds");
+            my $msg = "content ".$expr." did not occur within ".$maxwait." seconds";
+            fail($msg);
             _diag_cmd($test);
+            bail_out_clean($msg);
         }
     } else {
         alarm(300);
@@ -297,7 +300,11 @@ sub create_test_site {
     if(scalar @{[glob('/omd/sites/*/.')]} >= 1) {
         $errlike = '/is in use/';
     }
-    if(test_command({ cmd => TestUtils::get_omd_bin()." create $site", errlike => $errlike })) {
+    my $createoptions = "";
+    if(`grep docker /proc/1/mountinfo 2>/dev/null | grep -c hosts` > 0) {
+        $createoptions = " --no-tmpfs ";
+    }
+    if(test_command({ cmd => TestUtils::get_omd_bin()." create $createoptions $site", errlike => $errlike })) {
         # disable cookie auth for tests
         my $omd_bin = TestUtils::get_omd_bin();
         print `$omd_bin config $site set THRUK_COOKIE_AUTH off`;
@@ -392,6 +399,7 @@ sub remove_test_site {
     skip_html_lint   => flag to disable the html lint checking
     skip_link_check  => (list of) regular expressions to skip the link checks for
     waitfor          => wait till regex occurs (max 120sec)
+    maxwait          => how long should be waited (default 120sec)
     redirect         => request should redirect
     location         => redirect location
   }
@@ -408,8 +416,9 @@ sub test_url {
         my $now = time();
         my $waitfor = $test->{'waitfor'};
         my $found   = 0;
+        my $maxwait = defined $test->{'maxwait'} ? $test->{'maxwait'} : 30;
         ok(1, "waiting for '$waitfor' on ".$test->{'url'});
-        while($now < $start + 120) {
+        while($now < $start + $maxwait) {
             if($page->{'content'} =~ m/$waitfor/mx) {
                 ok(1, "content ".$waitfor." found after ".($now - $start)."seconds");
                 $found = 1;
@@ -419,8 +428,12 @@ sub test_url {
             $now = time();
             $page = _request($test);
         }
-        carp("content (".$waitfor.") did not occur within 120 seconds") unless $found;
-        fail("content (".$waitfor.") did not occur within 120 seconds") unless $found;
+        if(!$found) {
+            my $msg = "content (".$waitfor.") did not occur within ".$maxwait." seconds";
+            carp($msg);
+            fail($msg);
+            bail_out_clean($msg);
+        }
         return $page;
     }
 
@@ -428,7 +441,7 @@ sub test_url {
         ok( $page->{'response'}->is_redirect, 'Request '.$test->{'url'}.' should redirect' ) or diag(Dumper($test, $page->{'response'}));
         if(defined $test->{'location'}) {
             if(defined $page->{'response'}->{'_headers'}->{'location'}) {
-                like($page->{'response'}->{'_headers'}->{'location'}, qr/$test->{'location'}/, "Content should redirect: ".$test->{'location'});
+                like($page->{'response'}->{'_headers'}->{'location'}, qr/$test->{'location'}/, "Content should redirect: ".$test->{'location'}) or _diag_request($test, $page);;
             } else {
                 fail('no redirect header found');
             }
@@ -444,21 +457,21 @@ sub test_url {
 
     # content type?
     if(defined $test->{'content_type'}) {
-        is($page->{'content_type'}, $test->{'content_type'}, 'Content-Type is: '.$test->{'content_type'});
+        is($page->{'content_type'}, $test->{'content_type'}, 'Content-Type is: '.$test->{'content_type'}) or _diag_request($test, $page);
     }
 
     # matches output?
     if(defined $test->{'like'}) {
         defined $page->{'content'} or _diag_request($test, $page);
         for my $expr (ref $test->{'like'} eq 'ARRAY' ? @{$test->{'like'}} : $test->{'like'} ) {
-            like($page->{'content'}, $expr, "content like ".$expr);
+            like($page->{'content'}, $expr, "content like ".$expr) or _diag_request($test, $page);
         }
     }
 
     # not matching output
     if(defined $test->{'unlike'}) {
         for my $expr (ref $test->{'unlike'} eq 'ARRAY' ? @{$test->{'unlike'}} : $test->{'unlike'} ) {
-            unlike($page->{'content'}, $expr, "content unlike ".$expr)  or _diag_request($test, $page);
+            unlike($page->{'content'}, $expr, "content unlike ".$expr) or _diag_request($test, $page);
         }
     }
 
@@ -545,7 +558,7 @@ sub test_url {
                 diag(Dumper($req));
                 my $tmp_test = { 'url' => $test_url };
                 _diag_request($tmp_test, $req);
-                TestUtils::bail_out_clean("error in url '$test_url' linked from '".$test->{'url'}."'");
+                bail_out_clean("error in url '$test_url' linked from '".$test->{'url'}."'");
             }
         }
         is( $errors, 0, 'All stylesheets, images and javascript exist' );
@@ -612,9 +625,9 @@ sub read_config {
 
 ##################################################
 
-=head2 config
+=head2 wait_for_file
 
-  return config value
+  wait for file to appear
 
 =cut
 sub wait_for_file {
@@ -637,7 +650,7 @@ sub wait_for_file {
         $x++;
         sleep(1);
     }
-    fail("file: $file did not appear within $x seconds");
+    fail("file: ".$file." did not appear within ".$timeout." seconds");
     return 0;
 }
 
@@ -736,6 +749,8 @@ sub bail_out_clean {
         #test_command({ cmd => $omd_bin." rm $site", stdin => "yes\n", 'exit' => undef, errlike => undef });
     }
 
+    diag(Carp::longmess("started here"));
+
     BAIL_OUT($msg);
     return;
 }
@@ -759,6 +774,7 @@ sub _diag_lint_errors_and_remove_some_exceptions {
             "Unknown attribute \"start\" for tag <div>",
             "Unknown attribute \"hidden\" for tag <option>",
             "Unknown attribute \"end\" for tag <div>",
+            "Unknown attribute \"oncontextmenu\" for tag <div>",
             qr(Unknown attribute \"data[\w\-]+\" for tag),
             "for tag <meta>",
             "Unknown element <(header|main|footer|nav)>",
@@ -969,7 +985,15 @@ sub _diag_cmd {
 sub _diag_request {
     my($test, $page) = @_;
 
-    diag(Dumper($page->{'response'}));
+    diag("\n######################################################\n");
+    diag("origin:\n");
+    diag(Carp::longmess());
+
+    diag("request:\n");
+    diag(($page->{'response'} && $page->{'response'}->request) ? $page->{'response'}->request->as_string() : "no request");
+
+    diag("response:\n");
+    diag($page->{'response'} ? $page->{'response'}->as_string() : "no response");
 
     if($page->{'content'} =~ m/\Qsubject=Thruk%20Error%20Report&amp;body=\E(.*?)">/smx) {
         require URI::Escape;
@@ -986,6 +1010,8 @@ sub _diag_request {
     _tail("apache logs:", "/omd/sites/$site/var/log/apache/error_log");
     _tail_apache_logs();
     _tail("thruk logs:", "/omd/sites/$site/var/log/thruk.log") if $test->{'url'} =~ m/\/thruk\//;
+
+    diag("\n######################################################\n");
 
     return;
 }
@@ -1054,6 +1080,20 @@ sub get_external_ip {
     chomp($ip);
     ok($ip, "got external ip");
     return($ip);
+}
+
+##################################################
+
+=head2 is_docker
+
+  returns true if test runs in a docker container
+
+=cut
+sub is_docker {
+    if(`grep docker /proc/1/mountinfo 2>/dev/null | grep -c hosts` > 0) {
+        return 1;
+    }
+    return;
 }
 
 ##################################################

@@ -1,0 +1,891 @@
+From c749cabfc27799f7d42a6a779ba09110484f2832 Mon Sep 17 00:00:00 2001
+From: Sven Nierlein <sven@consol.de>
+Date: Fri, 26 Jan 2024 11:17:34 +0100
+Subject: [PATCH 1/2] add problem timestamps and duration
+
+this PR makes hosts / services save the start and end timestamp of the current
+problem. Those values can then be used as macros, ex. in notification scripts.
+For this, there are several new macros available:
+
+- $HOSTPROBLEMSTART$ start timestamp of problem
+- $HOSTPROBLEMEND$ end timestamp of problem (or zero if problem still persists)
+- $HOSTPROBLEMDURATIONSEC$ duration of problem
+- $HOSTPROBLEMDURATION$ duration as human readable text
+
+the same macros exist for services:
+- $SERVICEPROBLEMSTART$
+- $SERVICEPROBLEMEND$
+- $SERVICEPROBLEMDURATIONSEC$
+- $SERVICEPROBLEMDURATION$
+
+While there is a currently ongoing problem, the values point to this current
+problem and the end timestamp is zero. Once the problem is resolved, the values
+can still be used and won't change until a new problem starts.
+
+This makes it possible to use the problem duration in recovery notifications which
+otherwise would not be possible.
+---
+ lib/nsutils.c                | 14 +++++-
+ lib/nsutils.h                |  8 ++++
+ src/naemon/checks_host.c     |  3 ++
+ src/naemon/checks_service.c  |  4 ++
+ src/naemon/macros.c          | 90 +++++++++++++++++++++++-------------
+ src/naemon/macros.h          | 12 ++++-
+ src/naemon/nebmodules.h      |  2 +-
+ src/naemon/objects_host.h    |  2 +
+ src/naemon/objects_service.h |  2 +
+ src/naemon/xrddefault.c      | 12 +++++
+ src/naemon/xsddefault.c      |  4 ++
+ 11 files changed, 118 insertions(+), 35 deletions(-)
+
+diff --git a/lib/nsutils.c b/lib/nsutils.c
+index cf01ad89d..e3b600ca0 100644
+--- a/lib/nsutils.c
++++ b/lib/nsutils.c
+@@ -82,7 +82,19 @@ const char *mkstr(const char *fmt, ...)
+ 	return ret;
+ }
+ 
+-
++/* format duration seconds into human readable string */
++const char* duration_string(unsigned long duration) {
++	int days, hours, minutes, seconds;
++
++	days = duration / 86400;
++	duration -= (days * 86400);
++	hours = duration / 3600;
++	duration -= (hours * 3600);
++	minutes = duration / 60;
++	duration -= (minutes * 60);
++	seconds = duration;
++	return (char *)mkstr("%dd %dh %dm %ds", days, hours, minutes, seconds);
++}
+ 
+ /* close and reopen stdin, stdout and stderr to /dev/null */
+ void close_standard_fds(void)
+diff --git a/lib/nsutils.h b/lib/nsutils.h
+index 005460dfb..38406025c 100644
+--- a/lib/nsutils.h
++++ b/lib/nsutils.h
+@@ -98,6 +98,14 @@ extern int online_cpus(void);
+ extern const char *mkstr(const char *fmt, ...)
+ 	__attribute__((__format__(__printf__, 1, 2)));
+ 
++/**
++ * format duration seconds into human readable string.
++ * @note The returned string must *not* be free()'d!
++ * @param[in] duration The duration in seconds
++ * @return A pointer to the formatted string on success. Undefined on errors
++ */
++extern const char *duration_string(unsigned long);
++
+ /**
+  * Calculate the millisecond delta between two timeval structs
+  * @param[in] start The start time
+diff --git a/src/naemon/checks_host.c b/src/naemon/checks_host.c
+index 63c387c10..8b8c38f46 100644
+--- a/src/naemon/checks_host.c
++++ b/src/naemon/checks_host.c
+@@ -1010,12 +1010,15 @@ static int handle_host_state(host *hst, int *alert_recorded)
+ 			/* don't reset last problem id, or it will be zero the next time a problem is encountered */
+ 			hst->current_problem_id = next_problem_id;
+ 			next_problem_id++;
++			hst->problem_start = current_time;
++			hst->problem_end = 0L;
+ 		}
+ 
+ 		/* clear the problem id when transitioning from a problem state to an UP state */
+ 		if (hst->current_state == STATE_UP) {
+ 			hst->last_problem_id = hst->current_problem_id;
+ 			hst->current_problem_id = 0L;
++			hst->problem_end = current_time;
+ 		}
+ 
+ 		/* write the host state change to the main log file */
+diff --git a/src/naemon/checks_service.c b/src/naemon/checks_service.c
+index a5037f810..4c113ea4e 100644
+--- a/src/naemon/checks_service.c
++++ b/src/naemon/checks_service.c
+@@ -688,12 +688,16 @@ int handle_async_service_check_result(service *temp_service, check_result *queue
+ 			/* don't reset last problem id, or it will be zero the next time a problem is encountered */
+ 			temp_service->current_problem_id = next_problem_id;
+ 			next_problem_id++;
++			temp_service->problem_start = current_time;
++			temp_service->problem_end = 0L;
+ 		}
+ 
+ 		/* clear the problem id when transitioning from a problem state to an OK state */
+ 		if (temp_service->current_state == STATE_OK) {
+ 			temp_service->last_problem_id = temp_service->current_problem_id;
+ 			temp_service->current_problem_id = 0L;
++			temp_service->current_problem_id = 0L;
++			temp_service->problem_end = current_time;
+ 		}
+ 	}
+ 
+diff --git a/src/naemon/macros.c b/src/naemon/macros.c
+index c0f460c84..0d1f39337 100644
+--- a/src/naemon/macros.c
++++ b/src/naemon/macros.c
+@@ -627,10 +627,6 @@ static int grab_standard_host_macro_r(nagios_macros *mac, int macro_type, host *
+ 	objectlist *temp_objectlist = NULL;
+ 	time_t current_time = 0L;
+ 	unsigned long duration = 0L;
+-	int days = 0;
+-	int hours = 0;
+-	int minutes = 0;
+-	int seconds = 0;
+ 	char *buf1 = NULL;
+ 	char *buf2 = NULL;
+ 	int total_host_services = 0;
+@@ -708,19 +704,10 @@ static int grab_standard_host_macro_r(nagios_macros *mac, int macro_type, host *
+ 	case MACRO_HOSTDURATION:
+ 		time(&current_time);
+ 		duration = (unsigned long)(current_time - temp_host->last_state_change);
+-
+ 		if (macro_type == MACRO_HOSTDURATIONSEC)
+ 			*output = (char *)mkstr("%lu", duration);
+ 		else {
+-
+-			days = duration / 86400;
+-			duration -= (days * 86400);
+-			hours = duration / 3600;
+-			duration -= (hours * 3600);
+-			minutes = duration / 60;
+-			duration -= (minutes * 60);
+-			seconds = duration;
+-			*output = (char *)mkstr("%dd %dh %dm %ds", days, hours, minutes, seconds);
++			*output = (char *)mkstr("%s", duration_string(duration));
+ 		}
+ 		break;
+ 	case MACRO_HOSTEXECUTIONTIME:
+@@ -762,6 +749,26 @@ static int grab_standard_host_macro_r(nagios_macros *mac, int macro_type, host *
+ 	case MACRO_LASTHOSTPROBLEMID:
+ 		*output = (char *)mkstr("%lu", temp_host->last_problem_id);
+ 		break;
++	case MACRO_HOSTPROBLEMSTART:
++		*output = (char *)mkstr("%lu", (unsigned long)temp_host->problem_start);
++		break;
++	case MACRO_HOSTPROBLEMEND:
++		*output = (char *)mkstr("%lu", (unsigned long)temp_host->problem_end);
++		break;
++	case MACRO_HOSTPROBLEMDURATIONSEC:
++	case MACRO_HOSTPROBLEMDURATION:
++		if(temp_host->problem_end > 0) {
++			duration = (unsigned long)(temp_host->problem_end - temp_host->problem_start);
++		} else if(temp_host->problem_start > 0) {
++			time(&current_time);
++			duration = (unsigned long)(current_time - temp_host->problem_start);
++		}
++		if (macro_type == MACRO_HOSTPROBLEMDURATIONSEC)
++			*output = (char *)mkstr("%lu", duration);
++		else {
++			*output = (char *)mkstr("%s", duration_string(duration));
++		}
++		break;
+ 	case MACRO_HOSTACTIONURL:
+ 		if (temp_host->action_url)
+ 			*output = temp_host->action_url;
+@@ -950,10 +957,6 @@ static int grab_standard_service_macro_r(nagios_macros *mac, int macro_type, ser
+ 	objectlist *temp_objectlist = NULL;
+ 	time_t current_time = 0L;
+ 	unsigned long duration = 0L;
+-	int days = 0;
+-	int hours = 0;
+-	int minutes = 0;
+-	int seconds = 0;
+ 	char *buf1 = NULL;
+ 	char *buf2 = NULL;
+ 
+@@ -1044,24 +1047,12 @@ static int grab_standard_service_macro_r(nagios_macros *mac, int macro_type, ser
+ 		break;
+ 	case MACRO_SERVICEDURATIONSEC:
+ 	case MACRO_SERVICEDURATION:
+-
+ 		time(&current_time);
+ 		duration = (unsigned long)(current_time - temp_service->last_state_change);
+-
+-		/* get the state duration in seconds */
+ 		if (macro_type == MACRO_SERVICEDURATIONSEC)
+ 			*output = (char *)mkstr("%lu", duration);
+-
+-		/* get the state duration */
+ 		else {
+-			days = duration / 86400;
+-			duration -= (days * 86400);
+-			hours = duration / 3600;
+-			duration -= (hours * 3600);
+-			minutes = duration / 60;
+-			duration -= (minutes * 60);
+-			seconds = duration;
+-			*output = (char *)mkstr("%dd %dh %dm %ds", days, hours, minutes, seconds);
++			*output = (char *)mkstr("%s", duration_string(duration));
+ 		}
+ 		break;
+ 	case MACRO_SERVICENOTIFICATIONNUMBER:
+@@ -1082,6 +1073,26 @@ static int grab_standard_service_macro_r(nagios_macros *mac, int macro_type, ser
+ 	case MACRO_LASTSERVICEPROBLEMID:
+ 		*output = (char *)mkstr("%lu", temp_service->last_problem_id);
+ 		break;
++	case MACRO_SERVICEPROBLEMSTART:
++		*output = (char *)mkstr("%lu", (unsigned long)temp_service->problem_start);
++		break;
++	case MACRO_SERVICEPROBLEMEND:
++		*output = (char *)mkstr("%lu", (unsigned long)temp_service->problem_end);
++		break;
++	case MACRO_SERVICEPROBLEMDURATIONSEC:
++	case MACRO_SERVICEPROBLEMDURATION:
++		if(temp_service->problem_end > 0) {
++			duration = (unsigned long)(temp_service->problem_end - temp_service->problem_start);
++		} else if(temp_service->problem_start > 0) {
++			time(&current_time);
++			duration = (unsigned long)(current_time - temp_service->problem_start);
++		}
++		if (macro_type == MACRO_SERVICEPROBLEMDURATIONSEC)
++			*output = (char *)mkstr("%lu", duration);
++		else {
++			*output = (char *)mkstr("%s", duration_string(duration));
++		}
++		break;
+ 	case MACRO_SERVICEACTIONURL:
+ 		if (temp_service->action_url)
+ 			*output = temp_service->action_url;
+@@ -1569,6 +1580,11 @@ static int grab_macrox_value_r(nagios_macros *mac, int macro_type, char *arg1, c
+ 	case MACRO_LASTHOSTPROBLEMID:
+ 	case MACRO_LASTHOSTSTATE:
+ 	case MACRO_LASTHOSTSTATEID:
++	case MACRO_HOSTPROBLEMSTART:
++	case MACRO_HOSTPROBLEMEND:
++	case MACRO_HOSTPROBLEMDURATIONSEC:
++	case MACRO_HOSTPROBLEMDURATION:
++
+ 
+ 		/* a standard host macro */
+ 		if (arg2 == NULL) {
+@@ -1688,6 +1704,10 @@ static int grab_macrox_value_r(nagios_macros *mac, int macro_type, char *arg1, c
+ 	case MACRO_LASTSERVICEPROBLEMID:
+ 	case MACRO_LASTSERVICESTATE:
+ 	case MACRO_LASTSERVICESTATEID:
++	case MACRO_SERVICEPROBLEMSTART:
++	case MACRO_SERVICEPROBLEMEND:
++	case MACRO_SERVICEPROBLEMDURATIONSEC:
++	case MACRO_SERVICEPROBLEMDURATION:
+ 
+ 		/* use saved service pointer */
+ 		if (arg1 == NULL && arg2 == NULL) {
+@@ -2691,6 +2711,14 @@ int init_macrox_names(void)
+ 	add_macrox_name(HOSTVALUE);
+ 	add_macrox_name(SERVICEVALUE);
+ 	add_macrox_name(PROBLEMVALUE);
++	add_macrox_name(HOSTPROBLEMSTART);
++	add_macrox_name(HOSTPROBLEMEND);
++	add_macrox_name(HOSTPROBLEMDURATIONSEC);
++	add_macrox_name(HOSTPROBLEMDURATION);
++	add_macrox_name(SERVICEPROBLEMSTART);
++	add_macrox_name(SERVICEPROBLEMEND);
++	add_macrox_name(SERVICEPROBLEMDURATIONSEC);
++	add_macrox_name(SERVICEPROBLEMDURATION);
+ 
+ 	return OK;
+ }
+diff --git a/src/naemon/macros.h b/src/naemon/macros.h
+index a4f8f402b..a8621f075 100644
+--- a/src/naemon/macros.h
++++ b/src/naemon/macros.h
+@@ -22,7 +22,7 @@
+ /****************** MACRO DEFINITIONS *****************/
+ #define MACRO_ENV_VAR_PREFIX			"NAGIOS_"
+ #define MAX_USER_MACROS				256	/* max $USERx$ macros */
+-#define MACRO_X_COUNT				156	/* size of macro_x[] array */
++#define MACRO_X_COUNT				164	/* size of macro_x[] array */
+ 
+ NAGIOS_BEGIN_DECL
+ 
+@@ -201,7 +201,15 @@ typedef struct nagios_macros nagios_macros;
+ #define MACRO_HOSTVALUE                         153
+ #define MACRO_SERVICEVALUE                      154
+ #define MACRO_PROBLEMVALUE                      155
+-
++#define MACRO_HOSTPROBLEMSTART                  156
++#define MACRO_HOSTPROBLEMEND                    157
++#define MACRO_HOSTPROBLEMDURATIONSEC            158
++#define MACRO_HOSTPROBLEMDURATION               159
++#define MACRO_SERVICEPROBLEMSTART               160
++#define MACRO_SERVICEPROBLEMEND                 161
++#define MACRO_SERVICEPROBLEMDURATIONSEC         162
++#define MACRO_SERVICEPROBLEMDURATION            163
++/* NOTE: update MACRO_X_COUNT above to highest macro + 1 */
+ 
+ /************* MACRO CLEANING OPTIONS *****************/
+ #define STRIP_ILLEGAL_MACRO_CHARS       1
+diff --git a/src/naemon/nebmodules.h b/src/naemon/nebmodules.h
+index 6fe064b9a..d0f152eef 100644
+--- a/src/naemon/nebmodules.h
++++ b/src/naemon/nebmodules.h
+@@ -10,7 +10,7 @@ NAGIOS_BEGIN_DECL
+ 
+ /***** MODULE VERSION INFORMATION *****/
+ #define NEB_API_VERSION(x) int __neb_api_version = x;
+-#define CURRENT_NEB_API_VERSION    6
++#define CURRENT_NEB_API_VERSION    7
+ 
+ 
+ /***** MODULE INFORMATION *****/
+diff --git a/src/naemon/objects_host.h b/src/naemon/objects_host.h
+index 9bd1f9434..262b6d9d3 100644
+--- a/src/naemon/objects_host.h
++++ b/src/naemon/objects_host.h
+@@ -91,6 +91,8 @@ struct host {
+ 	unsigned long last_event_id;
+ 	unsigned long current_problem_id;
+ 	unsigned long last_problem_id;
++	time_t  problem_start;
++	time_t  problem_end;
+ 	double  latency;
+ 	double  execution_time;
+ 	int     is_executing;
+diff --git a/src/naemon/objects_service.h b/src/naemon/objects_service.h
+index 16da2dd42..ac7b17e2a 100644
+--- a/src/naemon/objects_service.h
++++ b/src/naemon/objects_service.h
+@@ -85,6 +85,8 @@ struct service {
+ 	unsigned long last_event_id;
+ 	unsigned long current_problem_id;
+ 	unsigned long last_problem_id;
++	time_t  problem_start;
++	time_t  problem_end;
+ 	time_t	last_notification;
+ 	time_t  next_notification;
+ 	int     no_more_notifications;
+diff --git a/src/naemon/xrddefault.c b/src/naemon/xrddefault.c
+index b2893d6fc..8fffdf0f8 100644
+--- a/src/naemon/xrddefault.c
++++ b/src/naemon/xrddefault.c
+@@ -180,6 +180,8 @@ int xrddefault_save_state_information(void)
+ 		fprintf(fp, "current_event_id=%lu\n", temp_host->current_event_id);
+ 		fprintf(fp, "current_problem_id=%lu\n", temp_host->current_problem_id);
+ 		fprintf(fp, "last_problem_id=%lu\n", temp_host->last_problem_id);
++		fprintf(fp, "problem_start=%lu\n", temp_host->problem_start);
++		fprintf(fp, "problem_end=%lu\n", temp_host->problem_end);
+ 		fprintf(fp, "plugin_output=%s\n", (temp_host->plugin_output == NULL) ? "" : temp_host->plugin_output);
+ 		fprintf(fp, "long_plugin_output=%s\n", (temp_host->long_plugin_output == NULL) ? "" : temp_host->long_plugin_output);
+ 		fprintf(fp, "performance_data=%s\n", (temp_host->perf_data == NULL) ? "" : temp_host->perf_data);
+@@ -275,6 +277,8 @@ int xrddefault_save_state_information(void)
+ 		fprintf(fp, "current_event_id=%lu\n", temp_service->current_event_id);
+ 		fprintf(fp, "current_problem_id=%lu\n", temp_service->current_problem_id);
+ 		fprintf(fp, "last_problem_id=%lu\n", temp_service->last_problem_id);
++		fprintf(fp, "problem_start=%lu\n", temp_service->problem_start);
++		fprintf(fp, "problem_end=%lu\n", temp_service->problem_end);
+ 		fprintf(fp, "current_attempt=%d\n", temp_service->current_attempt);
+ 		fprintf(fp, "max_attempts=%d\n", temp_service->max_attempts);
+ 		fprintf(fp, "normal_check_interval=%f\n", temp_service->check_interval);
+@@ -1064,6 +1068,10 @@ int xrddefault_read_state_information(void)
+ 							temp_host->current_problem_id = strtoul(val, NULL, 10);
+ 						else if (!strcmp(var, "last_problem_id"))
+ 							temp_host->last_problem_id = strtoul(val, NULL, 10);
++						else if (!strcmp(var, "problem_start"))
++							temp_host->problem_start = strtoul(val, NULL, 10);
++						else if (!strcmp(var, "problem_end"))
++							temp_host->problem_end = strtoul(val, NULL, 10);
+ 						else if (!strcmp(var, "state_type"))
+ 							temp_host->state_type = atoi(val);
+ 						else if (!strcmp(var, "last_state_change"))
+@@ -1310,6 +1318,10 @@ int xrddefault_read_state_information(void)
+ 							temp_service->current_problem_id = strtoul(val, NULL, 10);
+ 						else if (!strcmp(var, "last_problem_id"))
+ 							temp_service->last_problem_id = strtoul(val, NULL, 10);
++						else if (!strcmp(var, "problem_start"))
++							temp_service->problem_start = strtoul(val, NULL, 10);
++						else if (!strcmp(var, "problem_end"))
++							temp_service->problem_end = strtoul(val, NULL, 10);
+ 						else if (!strcmp(var, "state_type"))
+ 							temp_service->state_type = atoi(val);
+ 						else if (!strcmp(var, "last_state_change"))
+diff --git a/src/naemon/xsddefault.c b/src/naemon/xsddefault.c
+index a0c26e7e7..cd78d1a80 100644
+--- a/src/naemon/xsddefault.c
++++ b/src/naemon/xsddefault.c
+@@ -202,6 +202,8 @@ int xsddefault_save_status_data(void)
+ 		fprintf(fp, "\tcurrent_event_id=%lu\n", temp_host->current_event_id);
+ 		fprintf(fp, "\tcurrent_problem_id=%lu\n", temp_host->current_problem_id);
+ 		fprintf(fp, "\tlast_problem_id=%lu\n", temp_host->last_problem_id);
++		fprintf(fp, "\tproblem_start=%lu\n", temp_host->problem_start);
++		fprintf(fp, "\tproblem_end=%lu\n", temp_host->problem_end);
+ 		fprintf(fp, "\tplugin_output=%s\n", (temp_host->plugin_output == NULL) ? "" : temp_host->plugin_output);
+ 		fprintf(fp, "\tlong_plugin_output=%s\n", (temp_host->long_plugin_output == NULL) ? "" : temp_host->long_plugin_output);
+ 		fprintf(fp, "\tperformance_data=%s\n", (temp_host->perf_data == NULL) ? "" : temp_host->perf_data);
+@@ -269,6 +271,8 @@ int xsddefault_save_status_data(void)
+ 		fprintf(fp, "\tcurrent_event_id=%lu\n", temp_service->current_event_id);
+ 		fprintf(fp, "\tcurrent_problem_id=%lu\n", temp_service->current_problem_id);
+ 		fprintf(fp, "\tlast_problem_id=%lu\n", temp_service->last_problem_id);
++		fprintf(fp, "\tproblem_start=%lu\n", temp_service->problem_start);
++		fprintf(fp, "\tproblem_end=%lu\n", temp_service->problem_end);
+ 		fprintf(fp, "\tcurrent_attempt=%d\n", temp_service->current_attempt);
+ 		fprintf(fp, "\tmax_attempts=%d\n", temp_service->max_attempts);
+ 		fprintf(fp, "\tstate_type=%d\n", temp_service->state_type);
+
+From d85e21c3517abacd91b4bdde6f6a4414ad8610fc Mon Sep 17 00:00:00 2001
+From: Sven Nierlein <sven@consol.de>
+Date: Fri, 26 Jan 2024 12:43:22 +0100
+Subject: [PATCH 2/2] convert problem_id and notification_id to uuids (fixes
+ #362)
+
+this makes problems and notifications distinguishable over different instances.
+Using glibs g_uuid_string_random implemantion so it does not introduce any
+new dependency. Since the uuid is not used for cryptographic purposes this
+should be fine.
+
+Existing IDs will be converted to strings.
+---
+ src/naemon/checks_host.c     |  6 ++--
+ src/naemon/checks_service.c  |  7 ++---
+ src/naemon/globals.h         |  2 --
+ src/naemon/macros.c          | 14 +++++----
+ src/naemon/notifications.c   | 12 ++++----
+ src/naemon/objects_host.c    |  3 ++
+ src/naemon/objects_host.h    |  6 ++--
+ src/naemon/objects_service.c |  3 ++
+ src/naemon/objects_service.h |  6 ++--
+ src/naemon/utils.c           |  3 --
+ src/naemon/xrddefault.c      | 56 ++++++++++++++++++------------------
+ src/naemon/xsddefault.c      | 14 ++++-----
+ 12 files changed, 66 insertions(+), 66 deletions(-)
+
+diff --git a/src/naemon/checks_host.c b/src/naemon/checks_host.c
+index 8b8c38f46..244792b36 100644
+--- a/src/naemon/checks_host.c
++++ b/src/naemon/checks_host.c
+@@ -1008,8 +1008,8 @@ static int handle_host_state(host *hst, int *alert_recorded)
+ 		/* update the problem id when transitioning to a problem state */
+ 		if (hst->last_state == STATE_UP) {
+ 			/* don't reset last problem id, or it will be zero the next time a problem is encountered */
+-			hst->current_problem_id = next_problem_id;
+-			next_problem_id++;
++			nm_free(hst->current_problem_id);
++			hst->current_problem_id = (char*)g_uuid_string_random();
+ 			hst->problem_start = current_time;
+ 			hst->problem_end = 0L;
+ 		}
+@@ -1017,7 +1017,7 @@ static int handle_host_state(host *hst, int *alert_recorded)
+ 		/* clear the problem id when transitioning from a problem state to an UP state */
+ 		if (hst->current_state == STATE_UP) {
+ 			hst->last_problem_id = hst->current_problem_id;
+-			hst->current_problem_id = 0L;
++			hst->current_problem_id = NULL;
+ 			hst->problem_end = current_time;
+ 		}
+ 
+diff --git a/src/naemon/checks_service.c b/src/naemon/checks_service.c
+index 4c113ea4e..ad74f26ba 100644
+--- a/src/naemon/checks_service.c
++++ b/src/naemon/checks_service.c
+@@ -686,8 +686,8 @@ int handle_async_service_check_result(service *temp_service, check_result *queue
+ 		/* update the problem id when transitioning to a problem state */
+ 		if (temp_service->last_state == STATE_OK) {
+ 			/* don't reset last problem id, or it will be zero the next time a problem is encountered */
+-			temp_service->current_problem_id = next_problem_id;
+-			next_problem_id++;
++			nm_free(temp_service->current_problem_id);
++			temp_service->current_problem_id = (char*)g_uuid_string_random();
+ 			temp_service->problem_start = current_time;
+ 			temp_service->problem_end = 0L;
+ 		}
+@@ -695,8 +695,7 @@ int handle_async_service_check_result(service *temp_service, check_result *queue
+ 		/* clear the problem id when transitioning from a problem state to an OK state */
+ 		if (temp_service->current_state == STATE_OK) {
+ 			temp_service->last_problem_id = temp_service->current_problem_id;
+-			temp_service->current_problem_id = 0L;
+-			temp_service->current_problem_id = 0L;
++			temp_service->current_problem_id = NULL;
+ 			temp_service->problem_end = current_time;
+ 		}
+ 	}
+diff --git a/src/naemon/globals.h b/src/naemon/globals.h
+index fa0f744c9..4abb5acc7 100644
+--- a/src/naemon/globals.h
++++ b/src/naemon/globals.h
+@@ -158,9 +158,7 @@ extern int currently_running_service_checks;
+ extern int currently_running_host_checks;
+ 
+ extern unsigned long next_event_id;
+-extern unsigned long next_problem_id;
+ extern unsigned long next_comment_id;
+-extern unsigned long next_notification_id;
+ 
+ extern unsigned long modified_process_attributes;
+ extern unsigned long modified_host_process_attributes;
+diff --git a/src/naemon/macros.c b/src/naemon/macros.c
+index 0d1f39337..587a75a48 100644
+--- a/src/naemon/macros.c
++++ b/src/naemon/macros.c
+@@ -735,7 +735,7 @@ static int grab_standard_host_macro_r(nagios_macros *mac, int macro_type, host *
+ 		*output = (char *)mkstr("%d", temp_host->current_notification_number);
+ 		break;
+ 	case MACRO_HOSTNOTIFICATIONID:
+-		*output = (char *)mkstr("%lu", temp_host->current_notification_id);
++		*output = temp_host->current_notification_id;
+ 		break;
+ 	case MACRO_HOSTEVENTID:
+ 		*output = (char *)mkstr("%lu", temp_host->current_event_id);
+@@ -744,10 +744,12 @@ static int grab_standard_host_macro_r(nagios_macros *mac, int macro_type, host *
+ 		*output = (char *)mkstr("%lu", temp_host->last_event_id);
+ 		break;
+ 	case MACRO_HOSTPROBLEMID:
+-		*output = (char *)mkstr("%lu", temp_host->current_problem_id);
++		if(temp_host->current_problem_id != NULL)
++			*output = temp_host->current_problem_id;
+ 		break;
+ 	case MACRO_LASTHOSTPROBLEMID:
+-		*output = (char *)mkstr("%lu", temp_host->last_problem_id);
++		if(temp_host->last_problem_id != NULL)
++			*output = temp_host->last_problem_id;
+ 		break;
+ 	case MACRO_HOSTPROBLEMSTART:
+ 		*output = (char *)mkstr("%lu", (unsigned long)temp_host->problem_start);
+@@ -1059,7 +1061,7 @@ static int grab_standard_service_macro_r(nagios_macros *mac, int macro_type, ser
+ 		*output = (char *)mkstr("%d", temp_service->current_notification_number);
+ 		break;
+ 	case MACRO_SERVICENOTIFICATIONID:
+-		*output = (char *)mkstr("%lu", temp_service->current_notification_id);
++		*output = temp_service->current_notification_id;
+ 		break;
+ 	case MACRO_SERVICEEVENTID:
+ 		*output = (char *)mkstr("%lu", temp_service->current_event_id);
+@@ -1068,10 +1070,10 @@ static int grab_standard_service_macro_r(nagios_macros *mac, int macro_type, ser
+ 		*output = (char *)mkstr("%lu", temp_service->last_event_id);
+ 		break;
+ 	case MACRO_SERVICEPROBLEMID:
+-		*output = (char *)mkstr("%lu", temp_service->current_problem_id);
++		*output = temp_service->current_problem_id;
+ 		break;
+ 	case MACRO_LASTSERVICEPROBLEMID:
+-		*output = (char *)mkstr("%lu", temp_service->last_problem_id);
++		*output = temp_service->last_problem_id;
+ 		break;
+ 	case MACRO_SERVICEPROBLEMSTART:
+ 		*output = (char *)mkstr("%lu", (unsigned long)temp_service->problem_start);
+diff --git a/src/naemon/notifications.c b/src/naemon/notifications.c
+index 05e15d429..55753b4b7 100644
+--- a/src/naemon/notifications.c
++++ b/src/naemon/notifications.c
+@@ -400,8 +400,8 @@ int service_notification(service *svc, int type, char *not_author, char *not_dat
+ 	log_debug_info(DEBUGL_NOTIFICATIONS, 1, "Current notification number: %d (%s)\n", svc->current_notification_number, (increment_notification_number == TRUE) ? "incremented" : "changed");
+ 
+ 	/* save and increase the current notification id */
+-	svc->current_notification_id = next_notification_id;
+-	next_notification_id++;
++	nm_free(svc->current_notification_id);
++	svc->current_notification_id = g_uuid_string_random();
+ 
+ 	log_debug_info(DEBUGL_NOTIFICATIONS, 2, "Creating list of contacts to be notified.\n");
+ 
+@@ -478,7 +478,7 @@ int service_notification(service *svc, int type, char *not_author, char *not_dat
+ 		mac.x[MACRO_NOTIFICATIONNUMBER] = nm_strdup(mac.x[MACRO_SERVICENOTIFICATIONNUMBER]);
+ 
+ 		/* set the notification id macro */
+-		nm_asprintf(&mac.x[MACRO_SERVICENOTIFICATIONID], "%lu", svc->current_notification_id);
++		nm_asprintf(&mac.x[MACRO_SERVICENOTIFICATIONID], "%s", svc->current_notification_id);
+ 
+ 		/* notify each contact (duplicates have been removed) */
+ 		for (temp_notification = notification_list; temp_notification != NULL; temp_notification = temp_notification->next) {
+@@ -1283,8 +1283,8 @@ int host_notification(host *hst, int type, char *not_author, char *not_data, int
+ 	log_debug_info(DEBUGL_NOTIFICATIONS, 1, "Current notification number: %d (%s)\n", hst->current_notification_number, (increment_notification_number == TRUE) ? "incremented" : "unchanged");
+ 
+ 	/* save and increase the current notification id */
+-	hst->current_notification_id = next_notification_id;
+-	next_notification_id++;
++	nm_free(hst->current_notification_id);
++	hst->current_notification_id = g_uuid_string_random();
+ 
+ 	log_debug_info(DEBUGL_NOTIFICATIONS, 2, "Creating list of contacts to be notified.\n");
+ 
+@@ -1360,7 +1360,7 @@ int host_notification(host *hst, int type, char *not_author, char *not_data, int
+ 		mac.x[MACRO_NOTIFICATIONNUMBER] = nm_strdup(mac.x[MACRO_HOSTNOTIFICATIONNUMBER]);
+ 
+ 		/* set the notification id macro */
+-		nm_asprintf(&mac.x[MACRO_HOSTNOTIFICATIONID], "%lu", hst->current_notification_id);
++		nm_asprintf(&mac.x[MACRO_HOSTNOTIFICATIONID], "%s", hst->current_notification_id);
+ 
+ 		/* notify each contact (duplicates have been removed) */
+ 		for (temp_notification = notification_list; temp_notification != NULL; temp_notification = temp_notification->next) {
+diff --git a/src/naemon/objects_host.c b/src/naemon/objects_host.c
+index 8ad528789..0037d1365 100644
+--- a/src/naemon/objects_host.c
++++ b/src/naemon/objects_host.c
+@@ -326,6 +326,9 @@ void destroy_host(host *this_host)
+ 	nm_free(this_host->icon_image_alt);
+ 	nm_free(this_host->vrml_image);
+ 	nm_free(this_host->statusmap_image);
++	nm_free(this_host->current_notification_id);
++	nm_free(this_host->last_problem_id);
++	nm_free(this_host->current_problem_id);
+ 	nm_free(this_host);
+ }
+ 
+diff --git a/src/naemon/objects_host.h b/src/naemon/objects_host.h
+index 262b6d9d3..099bec320 100644
+--- a/src/naemon/objects_host.h
++++ b/src/naemon/objects_host.h
+@@ -89,8 +89,8 @@ struct host {
+ 	int     current_attempt;
+ 	unsigned long current_event_id;
+ 	unsigned long last_event_id;
+-	unsigned long current_problem_id;
+-	unsigned long last_problem_id;
++	char   *current_problem_id;
++	char   *last_problem_id;
+ 	time_t  problem_start;
+ 	time_t  problem_end;
+ 	double  latency;
+@@ -112,7 +112,7 @@ struct host {
+ 	int     notified_on;
+ 	int     current_notification_number;
+ 	int     no_more_notifications;
+-	unsigned long current_notification_id;
++	char   *current_notification_id;
+ 	int     check_flapping_recovery_notification;
+ 	int     scheduled_downtime_depth;
+ 	int     pending_flex_downtime; /* UNUSED */
+diff --git a/src/naemon/objects_service.c b/src/naemon/objects_service.c
+index 9dc89e512..d1e8e3eda 100644
+--- a/src/naemon/objects_service.c
++++ b/src/naemon/objects_service.c
+@@ -339,6 +339,9 @@ void destroy_service(service *this_service, int truncate_lists)
+ 	nm_free(this_service->action_url);
+ 	nm_free(this_service->icon_image);
+ 	nm_free(this_service->icon_image_alt);
++	nm_free(this_service->current_notification_id);
++	nm_free(this_service->last_problem_id);
++	nm_free(this_service->current_problem_id);
+ 	nm_free(this_service);
+ }
+ 
+diff --git a/src/naemon/objects_service.h b/src/naemon/objects_service.h
+index ac7b17e2a..35031b85d 100644
+--- a/src/naemon/objects_service.h
++++ b/src/naemon/objects_service.h
+@@ -83,8 +83,8 @@ struct service {
+ 	int	current_attempt;
+ 	unsigned long current_event_id;
+ 	unsigned long last_event_id;
+-	unsigned long current_problem_id;
+-	unsigned long last_problem_id;
++	char   *current_problem_id;
++	char   *last_problem_id;
+ 	time_t  problem_start;
+ 	time_t  problem_end;
+ 	time_t	last_notification;
+@@ -101,7 +101,7 @@ struct service {
+ 	int     is_being_freshened;
+ 	unsigned int notified_on;
+ 	int     current_notification_number;
+-	unsigned long current_notification_id;
++	char   *current_notification_id;
+ 	double  latency;
+ 	double  execution_time;
+ 	int     is_executing;
+diff --git a/src/naemon/utils.c b/src/naemon/utils.c
+index bc4f1e628..9d2732986 100644
+--- a/src/naemon/utils.c
++++ b/src/naemon/utils.c
+@@ -128,9 +128,7 @@ unsigned long retained_process_host_attribute_mask = 0L;
+ unsigned long retained_process_service_attribute_mask = 0L;
+ 
+ unsigned long next_event_id = 0L;
+-unsigned long next_problem_id = 0L;
+ unsigned long next_comment_id = 0L;
+-unsigned long next_notification_id = 0L;
+ 
+ int verify_config = FALSE;
+ int precache_objects = FALSE;
+@@ -1140,7 +1138,6 @@ int reset_variables(void)
+ 	next_comment_id = 0L; /* comment and downtime id get initialized to nonzero elsewhere */
+ 	next_downtime_id = 0L;
+ 	next_event_id = 1;
+-	next_notification_id = 1;
+ 
+ 	status_update_interval = DEFAULT_STATUS_UPDATE_INTERVAL;
+ 
+diff --git a/src/naemon/xrddefault.c b/src/naemon/xrddefault.c
+index 8fffdf0f8..67db96cab 100644
+--- a/src/naemon/xrddefault.c
++++ b/src/naemon/xrddefault.c
+@@ -154,8 +154,6 @@ int xrddefault_save_state_information(void)
+ 	fprintf(fp, "next_comment_id=%lu\n", next_comment_id);
+ 	fprintf(fp, "next_downtime_id=%lu\n", next_downtime_id);
+ 	fprintf(fp, "next_event_id=%lu\n", next_event_id);
+-	fprintf(fp, "next_problem_id=%lu\n", next_problem_id);
+-	fprintf(fp, "next_notification_id=%lu\n", next_notification_id);
+ 	fprintf(fp, "}\n");
+ 
+ 	/* save host state information */
+@@ -178,8 +176,8 @@ int xrddefault_save_state_information(void)
+ 		fprintf(fp, "last_hard_state=%d\n", temp_host->last_hard_state);
+ 		fprintf(fp, "last_event_id=%lu\n", temp_host->last_event_id);
+ 		fprintf(fp, "current_event_id=%lu\n", temp_host->current_event_id);
+-		fprintf(fp, "current_problem_id=%lu\n", temp_host->current_problem_id);
+-		fprintf(fp, "last_problem_id=%lu\n", temp_host->last_problem_id);
++		fprintf(fp, "current_problem_id=%s\n", (temp_host->current_problem_id == NULL) ? "" : temp_host->current_problem_id);
++		fprintf(fp, "last_problem_id=%s\n", (temp_host->last_problem_id == NULL) ? "" : temp_host->last_problem_id);
+ 		fprintf(fp, "problem_start=%lu\n", temp_host->problem_start);
+ 		fprintf(fp, "problem_end=%lu\n", temp_host->problem_end);
+ 		fprintf(fp, "plugin_output=%s\n", (temp_host->plugin_output == NULL) ? "" : temp_host->plugin_output);
+@@ -202,7 +200,7 @@ int xrddefault_save_state_information(void)
+ 		fprintf(fp, "notified_on_unreachable=%d\n", flag_isset(temp_host->notified_on, OPT_UNREACHABLE));
+ 		fprintf(fp, "last_notification=%lu\n", temp_host->last_notification);
+ 		fprintf(fp, "current_notification_number=%d\n", temp_host->current_notification_number);
+-		fprintf(fp, "current_notification_id=%lu\n", temp_host->current_notification_id);
++		fprintf(fp, "current_notification_id=%s\n", (temp_host->current_notification_id == NULL) ? "" : temp_host->current_notification_id);
+ 		if (conf_host && conf_host->notifications_enabled != temp_host->notifications_enabled) {
+ 			fprintf(fp, "config:notifications_enabled=%d\n", conf_host->notifications_enabled);
+ 			fprintf(fp, "notifications_enabled=%d\n", temp_host->notifications_enabled);
+@@ -275,8 +273,8 @@ int xrddefault_save_state_information(void)
+ 		fprintf(fp, "last_hard_state=%d\n", temp_service->last_hard_state);
+ 		fprintf(fp, "last_event_id=%lu\n", temp_service->last_event_id);
+ 		fprintf(fp, "current_event_id=%lu\n", temp_service->current_event_id);
+-		fprintf(fp, "current_problem_id=%lu\n", temp_service->current_problem_id);
+-		fprintf(fp, "last_problem_id=%lu\n", temp_service->last_problem_id);
++		fprintf(fp, "current_problem_id=%s\n", (temp_service->current_problem_id == NULL) ? "" : temp_service->current_problem_id);
++		fprintf(fp, "last_problem_id=%s\n", (temp_service->last_problem_id == NULL) ? "" : temp_service->last_problem_id);
+ 		fprintf(fp, "problem_start=%lu\n", temp_service->problem_start);
+ 		fprintf(fp, "problem_end=%lu\n", temp_service->problem_end);
+ 		fprintf(fp, "current_attempt=%d\n", temp_service->current_attempt);
+@@ -300,7 +298,7 @@ int xrddefault_save_state_information(void)
+ 		fprintf(fp, "notified_on_warning=%d\n", flag_isset(temp_service->notified_on, OPT_WARNING));
+ 		fprintf(fp, "notified_on_critical=%d\n", flag_isset(temp_service->notified_on, OPT_CRITICAL));
+ 		fprintf(fp, "current_notification_number=%d\n", temp_service->current_notification_number);
+-		fprintf(fp, "current_notification_id=%lu\n", temp_service->current_notification_id);
++		fprintf(fp, "current_notification_id=%s\n", (temp_service->current_notification_id == NULL) ? "" : temp_service->current_notification_id);
+ 		fprintf(fp, "last_notification=%lu\n", temp_service->last_notification);
+ 		if (conf_svc && conf_svc->notifications_enabled != temp_service->notifications_enabled) {
+ 			fprintf(fp, "config:notifications_enabled=%d\n", conf_svc->notifications_enabled);
+@@ -1002,10 +1000,6 @@ int xrddefault_read_state_information(void)
+ 						next_downtime_id = strtoul(val, NULL, 10);
+ 					else if (!strcmp(var, "next_event_id"))
+ 						next_event_id = strtoul(val, NULL, 10);
+-					else if (!strcmp(var, "next_problem_id"))
+-						next_problem_id = strtoul(val, NULL, 10);
+-					else if (!strcmp(var, "next_notification_id"))
+-						next_notification_id = strtoul(val, NULL, 10);
+ 				}
+ 				break;
+ 
+@@ -1064,11 +1058,13 @@ int xrddefault_read_state_information(void)
+ 							temp_host->current_event_id = strtoul(val, NULL, 10);
+ 						else if (!strcmp(var, "last_event_id"))
+ 							temp_host->last_event_id = strtoul(val, NULL, 10);
+-						else if (!strcmp(var, "current_problem_id"))
+-							temp_host->current_problem_id = strtoul(val, NULL, 10);
+-						else if (!strcmp(var, "last_problem_id"))
+-							temp_host->last_problem_id = strtoul(val, NULL, 10);
+-						else if (!strcmp(var, "problem_start"))
++						else if (!strcmp(var, "current_problem_id")) {
++							nm_free(temp_host->current_problem_id);
++							temp_host->current_problem_id = nm_strdup(val);
++						} else if (!strcmp(var, "last_problem_id")) {
++							nm_free(temp_host->last_problem_id);
++							temp_host->last_problem_id = nm_strdup(val);
++						} else if (!strcmp(var, "problem_start"))
+ 							temp_host->problem_start = strtoul(val, NULL, 10);
+ 						else if (!strcmp(var, "problem_end"))
+ 							temp_host->problem_end = strtoul(val, NULL, 10);
+@@ -1094,9 +1090,10 @@ int xrddefault_read_state_information(void)
+ 							temp_host->last_notification = strtoul(val, NULL, 10);
+ 						else if (!strcmp(var, "current_notification_number"))
+ 							temp_host->current_notification_number = atoi(val);
+-						else if (!strcmp(var, "current_notification_id"))
+-							temp_host->current_notification_id = strtoul(val, NULL, 10);
+-						else if (!strcmp(var, "is_flapping"))
++						else if (!strcmp(var, "current_notification_id")) {
++							nm_free(temp_host->current_notification_id);
++							temp_host->current_notification_id = nm_strdup(val);
++						} else if (!strcmp(var, "is_flapping"))
+ 							temp_host->is_flapping = atoi(val);
+ 						else if (!strcmp(var, "percent_state_change"))
+ 							temp_host->percent_state_change = strtod(val, NULL);
+@@ -1314,11 +1311,13 @@ int xrddefault_read_state_information(void)
+ 							temp_service->current_event_id = strtoul(val, NULL, 10);
+ 						else if (!strcmp(var, "last_event_id"))
+ 							temp_service->last_event_id = strtoul(val, NULL, 10);
+-						else if (!strcmp(var, "current_problem_id"))
+-							temp_service->current_problem_id = strtoul(val, NULL, 10);
+-						else if (!strcmp(var, "last_problem_id"))
+-							temp_service->last_problem_id = strtoul(val, NULL, 10);
+-						else if (!strcmp(var, "problem_start"))
++						else if (!strcmp(var, "current_problem_id")) {
++							nm_free(temp_service->current_problem_id);
++							temp_service->current_problem_id = nm_strdup(val);
++						} else if (!strcmp(var, "last_problem_id")) {
++							nm_free(temp_service->last_problem_id);
++							temp_service->last_problem_id = nm_strdup(val);
++						} else if (!strcmp(var, "problem_start"))
+ 							temp_service->problem_start = strtoul(val, NULL, 10);
+ 						else if (!strcmp(var, "problem_end"))
+ 							temp_service->problem_end = strtoul(val, NULL, 10);
+@@ -1363,9 +1362,10 @@ int xrddefault_read_state_information(void)
+ 							temp_service->notified_on |= ((atoi(val) > 0) ? OPT_CRITICAL : 0);
+ 						else if (!strcmp(var, "current_notification_number"))
+ 							temp_service->current_notification_number = atoi(val);
+-						else if (!strcmp(var, "current_notification_id"))
+-							temp_service->current_notification_id = strtoul(val, NULL, 10);
+-						else if (!strcmp(var, "last_notification"))
++						else if (!strcmp(var, "current_notification_id")) {
++							nm_free(temp_service->current_notification_id);
++							temp_service->current_notification_id = nm_strdup(val);
++						} else if (!strcmp(var, "last_notification"))
+ 							temp_service->last_notification = strtoul(val, NULL, 10);
+ 						else if (!strcmp(var, "is_flapping"))
+ 							temp_service->is_flapping = atoi(val);
+diff --git a/src/naemon/xsddefault.c b/src/naemon/xsddefault.c
+index cd78d1a80..f338fd47c 100644
+--- a/src/naemon/xsddefault.c
++++ b/src/naemon/xsddefault.c
+@@ -161,8 +161,6 @@ int xsddefault_save_status_data(void)
+ 	fprintf(fp, "\tnext_comment_id=%lu\n", next_comment_id);
+ 	fprintf(fp, "\tnext_downtime_id=%lu\n", next_downtime_id);
+ 	fprintf(fp, "\tnext_event_id=%lu\n", next_event_id);
+-	fprintf(fp, "\tnext_problem_id=%lu\n", next_problem_id);
+-	fprintf(fp, "\tnext_notification_id=%lu\n", next_notification_id);
+ 	fprintf(fp, "\tactive_scheduled_host_check_stats=%d,%d,%d\n", check_statistics[ACTIVE_SCHEDULED_HOST_CHECK_STATS].minute_stats[0], check_statistics[ACTIVE_SCHEDULED_HOST_CHECK_STATS].minute_stats[1], check_statistics[ACTIVE_SCHEDULED_HOST_CHECK_STATS].minute_stats[2]);
+ 	fprintf(fp, "\tactive_ondemand_host_check_stats=%d,%d,%d\n", check_statistics[ACTIVE_ONDEMAND_HOST_CHECK_STATS].minute_stats[0], check_statistics[ACTIVE_ONDEMAND_HOST_CHECK_STATS].minute_stats[1], check_statistics[ACTIVE_ONDEMAND_HOST_CHECK_STATS].minute_stats[2]);
+ 	fprintf(fp, "\tpassive_host_check_stats=%d,%d,%d\n", check_statistics[PASSIVE_HOST_CHECK_STATS].minute_stats[0], check_statistics[PASSIVE_HOST_CHECK_STATS].minute_stats[1], check_statistics[PASSIVE_HOST_CHECK_STATS].minute_stats[2]);
+@@ -200,8 +198,8 @@ int xsddefault_save_status_data(void)
+ 		fprintf(fp, "\tlast_hard_state=%d\n", temp_host->last_hard_state);
+ 		fprintf(fp, "\tlast_event_id=%lu\n", temp_host->last_event_id);
+ 		fprintf(fp, "\tcurrent_event_id=%lu\n", temp_host->current_event_id);
+-		fprintf(fp, "\tcurrent_problem_id=%lu\n", temp_host->current_problem_id);
+-		fprintf(fp, "\tlast_problem_id=%lu\n", temp_host->last_problem_id);
++		fprintf(fp, "\tcurrent_problem_id=%s\n", (temp_host->current_problem_id == NULL) ? "" : temp_host->current_problem_id);
++		fprintf(fp, "\tlast_problem_id=%s\n", (temp_host->last_problem_id == NULL) ? "" : temp_host->last_problem_id);
+ 		fprintf(fp, "\tproblem_start=%lu\n", temp_host->problem_start);
+ 		fprintf(fp, "\tproblem_end=%lu\n", temp_host->problem_end);
+ 		fprintf(fp, "\tplugin_output=%s\n", (temp_host->plugin_output == NULL) ? "" : temp_host->plugin_output);
+@@ -222,7 +220,7 @@ int xsddefault_save_status_data(void)
+ 		fprintf(fp, "\tnext_notification=%lu\n", temp_host->next_notification);
+ 		fprintf(fp, "\tno_more_notifications=%d\n", temp_host->no_more_notifications);
+ 		fprintf(fp, "\tcurrent_notification_number=%d\n", temp_host->current_notification_number);
+-		fprintf(fp, "\tcurrent_notification_id=%lu\n", temp_host->current_notification_id);
++		fprintf(fp, "\tcurrent_notification_id=%s\n", (temp_host->current_notification_id == NULL) ? "" : temp_host->current_notification_id);
+ 		fprintf(fp, "\tnotifications_enabled=%d\n", temp_host->notifications_enabled);
+ 		fprintf(fp, "\tproblem_has_been_acknowledged=%d\n", temp_host->problem_has_been_acknowledged);
+ 		fprintf(fp, "\tacknowledgement_type=%d\n", temp_host->acknowledgement_type);
+@@ -269,8 +267,8 @@ int xsddefault_save_status_data(void)
+ 		fprintf(fp, "\tlast_hard_state=%d\n", temp_service->last_hard_state);
+ 		fprintf(fp, "\tlast_event_id=%lu\n", temp_service->last_event_id);
+ 		fprintf(fp, "\tcurrent_event_id=%lu\n", temp_service->current_event_id);
+-		fprintf(fp, "\tcurrent_problem_id=%lu\n", temp_service->current_problem_id);
+-		fprintf(fp, "\tlast_problem_id=%lu\n", temp_service->last_problem_id);
++		fprintf(fp, "\tcurrent_problem_id=%s\n", (temp_service->current_problem_id == NULL) ? "" : temp_service->current_problem_id);
++		fprintf(fp, "\tlast_problem_id=%s\n", (temp_service->last_problem_id == NULL) ? "" : temp_service->last_problem_id);
+ 		fprintf(fp, "\tproblem_start=%lu\n", temp_service->problem_start);
+ 		fprintf(fp, "\tproblem_end=%lu\n", temp_service->problem_end);
+ 		fprintf(fp, "\tcurrent_attempt=%d\n", temp_service->current_attempt);
+@@ -289,7 +287,7 @@ int xsddefault_save_status_data(void)
+ 		fprintf(fp, "\tnext_check=%lu\n", temp_service->next_check);
+ 		fprintf(fp, "\tcheck_options=%d\n", temp_service->check_options);
+ 		fprintf(fp, "\tcurrent_notification_number=%d\n", temp_service->current_notification_number);
+-		fprintf(fp, "\tcurrent_notification_id=%lu\n", temp_service->current_notification_id);
++		fprintf(fp, "\tcurrent_notification_id=%s\n", (temp_service->current_notification_id == NULL) ? "" : temp_service->current_notification_id);
+ 		fprintf(fp, "\tlast_notification=%lu\n", temp_service->last_notification);
+ 		fprintf(fp, "\tnext_notification=%lu\n", temp_service->next_notification);
+ 		fprintf(fp, "\tno_more_notifications=%d\n", temp_service->no_more_notifications);

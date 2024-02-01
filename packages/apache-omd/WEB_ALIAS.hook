@@ -39,11 +39,8 @@ RewriteRule ^/$OMD_SITE(.*) /$ALIAS\$1 [R=permanent,L,NE]
 
 <IfModule mod_proxy_http.c>
   <Location /$ALIAS>
-    # Setting "retry=0" to prevent 60 second caching of problem states e.g. when
-    # the site apache is down and someone tries to access the page.
-    # "disablereuse=On" prevents the apache from keeping the connection which leads to
-    # wrong devlivered pages sometimes
-    ProxyPass $PROTO://$CONFIG_APACHE_TCP_ADDR:$CONFIG_APACHE_TCP_PORT/$OMD_SITE retry=0 disablereuse=On
+    # do not add ProxyPass Options here, they will be ignored because of worker sharing anyway ([proxy:warn] AH01146: Ignoring parameter 'retry=0' for worker 'https://...' because of worker sharing)
+    ProxyPass $PROTO://$CONFIG_APACHE_TCP_ADDR:$CONFIG_APACHE_TCP_PORT/$OMD_SITE
     ProxyPassReverse $PROTO://$CONFIG_APACHE_TCP_ADDR:$CONFIG_APACHE_TCP_PORT/$OMD_SITE
   </Location>
 </IfModule>

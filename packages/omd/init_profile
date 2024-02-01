@@ -1,5 +1,10 @@
-#!/bin/sh
+#!/bin/bash
 
+cd $OMD_ROOT
+mkdir -p var/log
+mkdir -p tmp/run
+
+################################################################################
 __init_hook() {
   # Takes 3 parameters
   # 1. Name of the init-script (can be the full path name, we will only use the file part)
@@ -16,3 +21,365 @@ __init_hook() {
     fi
   done
 }
+
+################################################################################
+# generic init function
+# requires:
+#   - $DAEMON          path to binary
+#   - $OPTS            start options
+# optional:
+#   - $NAME            contains name of service
+#   - $NOHUP           start daemon in background with nohup.
+#   - $LOG_FILE        redirect output of nohup.
+#   - $PID_FILE        path to pid file.
+#   - $PSPATTERN       pattern to search for running process, defaults to "$DAEMON $OPTS"
+#   - $RELOAD_RESTARTS invoke a restart instead of a reload
+#   - $RELOAD_STARTS   invoke start in case daemon is not running on reload
+#   - $START_TIMEOUT   seconds to wait for startup (default 10)
+#   - $STOP_TIMEOUT    seconds to wait for shutdown (default 10)
+#   - $STORE_PID       save pidfile instead of waiting for $DAEMON to do so.
+#   - $KILL_SESSION    kill hole session on shutdown when set to 1.
+#   - $STOP_CALLBACK   function will be called for every stop retry.
+#   - $CHECK_CALLBACK  function will be called in check/checkconfig mode.
+#   - $START_CALLBACK  function will be called after successful start.
+__generic_init() {
+  __init_hook $0 $1 pre
+  if [ -z "$DAEMON" ]; then
+    echo "ERROR: DAEMON not set"
+    exit 1
+  fi
+  if [ -z "$OPTS" ]; then
+    echo "ERROR: OPTS not set"
+    exit 1
+  fi
+  if [ -z "$PSPATTERN" ]; then
+    OPTS=$(__generic_init_trim "$OPTS")
+    PSPATTERN="$DAEMON $OPTS"
+  fi
+  if [ -z "$NAME" ]; then
+    NAME=$(basename $DAEMON)
+  fi
+  case "$1" in
+    start)
+      [ "$CORE_NOVERIFY" ] || __generic_init_verify_config quiet || exit 1
+      echo -n "Starting ${NAME}..."
+      if __generic_init_wait_start; then
+        __init_hook $0 $1 post 0
+        exit 0
+      fi
+      __init_hook $0 $1 post 1
+      exit 1
+    ;;
+
+    stop|kill)
+      echo -n "Stopping ${NAME}..."
+      if __generic_init_wait_stop; then
+      __init_hook $0 $1 post 0
+        exit 0
+      fi
+      __init_hook $0 $1 post 1
+      exit 1
+    ;;
+
+    stop-gracefully)
+      echo -n "Stopping ${NAME} (gracefully)..."
+      STOP_TIMEOUT=600
+      if __generic_init_wait_stop; then
+      __init_hook $0 stop post 0
+        exit 0
+      fi
+      __init_hook $0 stop post 1
+      exit 1
+    ;;
+
+    reload|force-reload)
+      RELOADFN="__generic_init_reload"
+      if [ "$RELOAD_RESTARTS" ]; then
+        RELOADFN="__generic_init_restart"
+      else
+        echo -n "Reloading ${NAME} configuration"
+      fi
+      if $RELOADFN; then
+      __init_hook $0 $1 post 0
+        exit 0
+      fi
+      __init_hook $0 $1 post 1
+      exit 1
+    ;;
+
+    restart)
+      if __generic_init_restart; then
+      __init_hook $0 $1 post 0
+        exit 0
+      fi
+      __init_hook $0 $1 post 1
+      exit 1
+    ;;
+
+    try-restart)
+      if __generic_init_pid >/dev/null 2>&1; then
+        __generic_init_restart && exit 0
+        exit 1
+      fi
+      exit 0
+    ;;
+
+    status)
+      PID=$(__generic_init_pid)
+      if [ -n "$PID" ] && ps $PID > /dev/null 2>&1 ; then
+          echo "${NAME} is running ($PID)."
+          exit 0
+      fi
+      echo "${NAME} is NOT running."
+      exit 1
+    ;;
+
+    check|checkconfig)
+      if __generic_init_verify_config; then
+      __init_hook $0 $1 post 0
+        exit 0
+      fi
+      __init_hook $0 $1 post 1
+      exit 1
+    ;;
+
+    *)
+      echo "Usage: ${NAME} {start|stop|stop-gracefully|restart|reload|kill|status|try-restart}"
+      exit 3
+    ;;
+  esac
+}
+
+################################################################################
+__generic_init_pid() {
+  if [ -n "$PID_FILE" ]; then
+    PID=; read 2>/dev/null PID < $PID_FILE
+  fi
+  if [ -z "$PID" ]; then
+    PID=$(pgrep -u $OMD_SITE -o -P 1 -f "$PSPATTERN")
+  fi
+  [ -z "$PID" ] && return 1
+  if ! kill -0 ${PID} > /dev/null 2>&1; then
+    return 1
+  fi
+  echo "${PID}"
+  return 0
+}
+
+################################################################################
+__generic_init_wait_start() {
+  if [ ! -x $DAEMON ]; then
+    echo "'${DAEMON}' not executable...ERROR"
+    return 1
+  fi
+  if __generic_init_pid >/dev/null 2>&1; then
+    echo "(already running with pid ${PID})...ERROR"
+    return 1
+  fi
+
+  if [ -n "$PID_FILE" ]; then
+    mkdir -p $(dirname $PID_FILE)
+  fi
+  if [ -n "$LOG_FILE" ]; then
+    mkdir -p $(dirname $LOG_FILE)
+  fi
+
+  if [ "$NOHUP" = "1" ]; then
+    if [ -z "$LOG_FILE" ]; then
+      LOG_FILE="/dev/null"
+    fi
+    OPTS=$(__generic_init_trim "$OPTS")
+    STARTCMD="nohup setsid $DAEMON $OPTS"
+    $STARTCMD >>$LOG_FILE 2>&1 &
+    PID=$!
+    disown
+  else
+    OPTS=$(__generic_init_trim "$OPTS")
+    STARTCMD="$DAEMON $OPTS"
+    if [ -n "$LOG_FILE" ]; then
+      if ! $STARTCMD >>$LOG_FILE 2>&1; then
+        __generic_init_wait_start_failed
+        return 1
+      fi
+    else
+      if ! $STARTCMD; then
+        __generic_init_wait_start_failed
+        return 1
+      fi
+    fi
+  fi
+
+  if [ -n "$START_CALLBACK" ]; then
+    if ! $START_CALLBACK; then
+      return 1
+    fi
+  fi
+
+  if [ -z "$PID" ]; then
+    PID=$(__generic_init_pid)
+  fi
+
+  if [ -z "$PID_FILE" ]; then
+    if [ -z "$PID" ] || ! kill -0 $PID >/dev/null 2>&1; then
+      __generic_init_wait_start_failed
+      return 1
+    fi
+    echo "OK"
+    return 0
+  fi
+
+  if [ -n "$STORE_PID" ]; then
+    if [ -z "$PID" ] || ! kill -0 $PID >/dev/null 2>&1; then
+      __generic_init_wait_start_failed
+      return 1
+    fi
+    if [ -n "$PID" ]; then
+      printf '%d' $PID > $PID_FILE
+      echo "OK"
+      return 0
+    fi
+    __generic_init_wait_start_failed
+    return 1
+  fi
+
+
+  # wait for pid file
+  COUNTER=100
+  if [ -n "$START_TIMEOUT" ]; then COUNTER=$(( START_TIMEOUT * 10 )); fi
+  UP=0
+  while (( COUNTER-- )) ; do
+    [ $((COUNTER%10)) -eq 0 ] && echo -n "."
+    if test -s $PID_FILE > /dev/null 2>&1 ; then
+        UP=1
+        break
+    fi
+    # test if there is a pid at all
+    PID=$(__generic_init_pid)
+    if [ -z "$PID" ] || ! kill -0 "$PID" >/dev/null 2>&1; then
+      if [ $COUNTER -lt 80 ]; then
+        __generic_init_wait_start_failed
+        return 1
+      fi
+    fi
+    sleep 0.1
+  done
+  if [ $UP = 1 ]; then
+    echo "OK"
+    return 0
+  fi
+  echo "ERROR"
+  return 1
+}
+
+################################################################################
+__generic_init_wait_start_failed() {
+  echo "ERROR: failed to start"
+  echo "  - startup command: ${STARTCMD}"
+  if [ -n "$LOG_FILE" ] && [ "$LOG_FILE" != "/dev/null" ]; then
+    echo "  - startup logfile: ${LOG_FILE}"
+  fi
+  return 1
+}
+
+################################################################################
+__generic_init_wait_stop() {
+  PID=$(__generic_init_pid)
+  if [ -n "$PID" ]; then
+    if [ "$KILL_SESSION" = "1" ]; then
+      __generic_init_kill_session $PID
+    else
+      kill -TERM ${PID} >/dev/null 2>&1
+    fi
+  else
+    echo 'not running...OK'
+    return 0
+  fi
+
+  # wait for pid to disapear
+  COUNTER=100
+  if [ -n "$STOP_TIMEOUT" ]; then COUNTER=$(( STOP_TIMEOUT * 10 )); fi
+  while (( COUNTER-- )) ; do
+    [ $((COUNTER%10)) -eq 0 ] && echo -n "."
+    if ! __generic_init_pid >/dev/null; then
+      rm -f "$PID_FILE"
+      echo "OK"
+      return 0
+    fi
+
+    if [ -n "$STOP_CALLBACK" ]; then
+      $STOP_CALLBACK $COUNTER
+    fi
+
+    [ $COUNTER -eq 10 ] && kill -INT  ${PID} >/dev/null 2>&1
+    [ $COUNTER -eq  1 ] && kill -KILL ${PID} >/dev/null 2>&1
+
+    sleep 0.1
+  done
+
+  echo "ERROR"
+  return 1
+}
+
+################################################################################
+__generic_init_reload() {
+  PID=$(__generic_init_pid)
+  if [ -z "$PID" ]; then
+    if [ "$RELOAD_STARTS" ]; then
+      if ! __generic_init_wait_start; then
+        return 1
+      fi
+      return 0
+    else
+      echo '. not running...ERROR'
+      return 1
+    fi
+  fi
+  [ "$CORE_NOVERIFY" ] || __generic_init_verify_config quiet || return 1
+  echo -n " (PID: ${PID})... "
+  if ! kill -HUP ${PID}; then
+    echo "ERROR: failed to send SIGHUP"
+    return 1
+  fi
+  echo "OK"
+  return 0
+}
+
+################################################################################
+__generic_init_restart() {
+  [ "$CORE_NOVERIFY" ] || __generic_init_verify_config quiet || return 1
+  CORE_NOVERIFY=1 # no need to verify twice
+  $0 stop && sleep 0.5 && $0 start && return 0
+  return 1
+}
+
+################################################################################
+__generic_init_kill_session() {
+    local pid=$1
+    # get session id
+    sess=$( ps -o sess= -p $pid )
+    if [ -n "$sess" ]; then
+      ps -ax -o sess= -o pid= | awk '$1 == v {print $2}' v="$sess" | xargs -r kill
+    fi
+}
+
+################################################################################
+__generic_init_verify_config() {
+  if [ -n "$CHECK_CALLBACK" ]; then
+    if ! $CHECK_CALLBACK "$*"; then
+      return 1
+    fi
+  fi
+  return 0
+}
+
+################################################################################
+__generic_init_trim() {
+    local var="$*"
+    # remove leading whitespace characters
+    var="${var#"${var%%[![:space:]]*}"}"
+    # remove trailing whitespace characters
+    var="${var%"${var##*[![:space:]]}"}"
+    printf '%s' "$var"
+}
+
+################################################################################

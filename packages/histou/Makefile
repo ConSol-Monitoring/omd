@@ -1,27 +1,29 @@
 include ../../Makefile.omd
 
 NAME        = histou
-VERSION     = 0.4.3
+VERSION     = 0.5.2
 SRC         = $(NAME)-$(VERSION).tar.gz
 PWD         = $(shell pwd)
 DIR         = $(NAME)
+# GIT TAG is set automatically by "make upstream" or "make package"
+GIT_TAG     = v0.5.2
 
 .PHONY: skel
 
 build:
-	tar zxf $(SRC) --exclude=histou.js --exclude=.git
-	set -e ; for p in patches/*.patch ; do \
-	    echo "applying $$p..." ; \
-	    ( cd $(DIR) && patch -p1 -b -F 5 ) < $$p ; \
-	done
+	tar zxf $(SRC) --exclude=.git
+	#set -e ; for p in patches/*.patch ; do \
+	#    echo "applying $$p..." ; \
+	#    ( cd $(DIR) && patch -p1 -b -F 5 ) < $$p ; \
+	#done
 
 install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/$(DIR)
-	rsync -a $(DIR)/. $(DESTDIR)$(OMD_ROOT)/share/$(DIR)/.
+	rsync -a $(DIR)/. --exclude=histou.js $(DESTDIR)$(OMD_ROOT)/share/$(DIR)/.
 	sed -i s/'\x27histou.ini'/\$$_SERVER[\'OMD_ROOT\'].\'"\/etc\/histou\/histou.ini"/ $(DESTDIR)$(OMD_ROOT)/share/$(DIR)/index.php
 	sed -i s/'\x27histou.ini'/\$$_SERVER[\'OMD_ROOT\'].\'"\/etc\/histou\/histou.ini"/ $(DESTDIR)$(OMD_ROOT)/share/$(DIR)/rule_examinant.php
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/grafana/public/dashboards/
-	cp omd-histou.js $(DESTDIR)$(OMD_ROOT)/share/grafana/public/dashboards/histou.js
+	cp $(DIR)/histou.js $(DESTDIR)$(OMD_ROOT)/share/grafana/public/dashboards/histou.js
 
 skel:
 	sed -i 's#phpCommand = .*#phpCommand = "$(PHP_FCGI_BIN)"#' $(SKEL)/etc/histou/histou.ini
@@ -30,8 +32,9 @@ clean:
 	rm -rf histou
 
 package:
-	#git clone  --depth=1 --branch "v$(VERSION)" https://github.com/Griesbacher/histou
-	git clone  --depth=1 --branch "master" https://github.com/Griesbacher/histou
+	git clone  --depth=1 --branch "master" https://github.com/ConSol/histou
+	cd histou && sed -i $(PWD)/Makefile -e 's/^GIT_TAG.*$$/GIT_TAG     = '$$(git describe --always --tags)'/g'
 	tar zcf $(SRC) --exclude=.git --exclude=histou/tests --exclude=histou/conf --exclude=histou/stylecheck.sh histou
-	sed  "s#var url = location.protocol+'//'+window.location.hostname+'/histou/';#var site = window.location.href.match(/(https?:\\\\/\\\\/.*?\\\\/.*?)\\\\/grafana\\\\/.*/);\n    if(site \&\& site.length > 1){\n        url = site[1]+'/histou/';\n    }#" histou/histou.js > omd-histou.js
 	rm -rf histou
+
+upstream: package

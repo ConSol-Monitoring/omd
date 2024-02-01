@@ -14,7 +14,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 193 );
+plan( tests => 256 );
 
 ##################################################
 # get version strings
@@ -27,7 +27,8 @@ isnt($libgearman_version, '', "got libgearman_version") or BAIL_OUT("need lib-ge
 # create our test site
 my $omd_bin = TestUtils::get_omd_bin();
 
-for my $core (qw/naemon/) {
+{
+    my $core     = 'naemon';
     my $site     = TestUtils::create_test_site() or TestUtils::bail_out_clean("no further testing without site");
     my $host     = "omd-".$site;
     my $service  = "Dummy Service";
@@ -47,6 +48,8 @@ for my $core (qw/naemon/) {
     # create test host/service
     TestUtils::prepare_obj_config('t/data/omd/testconf1', '/omd/sites/'.$site.'/etc/'.$core.'/conf.d', $site);
     TestUtils::test_command({ cmd => "/bin/cp t/data/mod-gearman/multi.cfg /omd/sites/$site/etc/$core/conf.d/multi.cfg" });
+    TestUtils::test_command({ cmd => "/bin/cp t/data/mod-gearman/internal.cfg /omd/sites/$site/etc/$core/conf.d/internal.cfg" });
+    TestUtils::test_command({ cmd => "/bin/su - $site -c 'echo \"p test\" > etc/test.cfg'", like => '/^\s*$/' });
 
     ##################################################
     # decrease status update interval
@@ -79,6 +82,14 @@ for my $core (qw/naemon/) {
                                                ]
       },
       { cmd => "/bin/su - $site -c 'echo \"COMMAND [".time()."] SCHEDULE_FORCED_SVC_CHECK;localhost;locale;".time()."\" | lq'", like => '/^\s*$/' },
+      { cmd => "/bin/su - $site -c 'echo \"COMMAND [".time()."] SCHEDULE_FORCED_HOST_CHECK;$host;".time()."\" | lq'", like => '/^\s*$/' },
+      { cmd => "/bin/su - $site -c 'echo -e \"".'GET hosts\nFilter: name = '.$host.'\nColumns: plugin_output\n'."\" | lq'", waitfor => 'Please\ remove\ this\ host\ later' },
+      { cmd => "/bin/su - $site -c 'echo \"COMMAND [".time()."] SCHEDULE_FORCED_SVC_CHECK;$host;internal_dummy;".time()."\" | lq'", like => '/^\s*$/' },
+      { cmd => "/bin/su - $site -c 'echo \"COMMAND [".time()."] SCHEDULE_FORCED_SVC_CHECK;$host;internal_dummy2;".time()."\" | lq'", like => '/^\s*$/' },
+      { cmd => "/bin/su - $site -c 'echo \"COMMAND [".time()."] SCHEDULE_FORCED_SVC_CHECK;$host;internal_dummy3;".time()."\" | lq'", like => '/^\s*$/' },
+      { cmd => "/bin/su - $site -c 'echo \"COMMAND [".time()."] SCHEDULE_FORCED_SVC_CHECK;$host;internal_dummy4;".time()."\" | lq'", like => '/^\s*$/' },
+      { cmd => "/bin/su - $site -c 'echo \"COMMAND [".time()."] SCHEDULE_FORCED_SVC_CHECK;$host;internal_nsc_web;".time()."\" | lq'", like => '/^\s*$/' },
+      { cmd => "/bin/su - $site -c 'echo \"COMMAND [".time()."] SCHEDULE_FORCED_SVC_CHECK;$host;internal_nsc_web2;".time()."\" | lq'", like => '/^\s*$/' },
       { cmd => "/bin/su - $site -c 'sleep 2'", like => '/^\s*$/' },
       { cmd => "/bin/su - $site -c 'echo \"GET services\nFilter: host_name = localhost\nFilter: description = locale\nColumns: state plugin_output long_plugin_output\n\n\" | lq'", like => '/^0;LANG=/' },
     ];
@@ -122,8 +133,6 @@ for my $core (qw/naemon/) {
     TestUtils::file_contains({
         file => "/opt/omd/sites/$site/var/log/gearman/worker.log", 
         like => [
-#            '/Using Embedded Perl interpreter for: .*check_webinject/',
-#            '/Embedded Perl successfully compiled/',
             '/^output=.*find\ any\ test/mx',
         ],
         unlike => ['/\[Error\]/'],
@@ -140,9 +149,7 @@ for my $core (qw/naemon/) {
     });
 
     # test check_source
-    if($core eq 'naemon') {
-        TestUtils::test_command({ cmd => "/bin/su - $site -c 'echo -e \"".'GET hosts\nColumns: name check_source\n'."\" | lq'", waitfor => 'Mod-Gearman\ Worker' });
-    }
+    TestUtils::test_command({ cmd => "/bin/su - $site -c 'echo -e \"".'GET hosts\nColumns: name check_source\n'."\" | lq'", waitfor => 'Mod-Gearman\ Worker' });
 
     # test host notifications
     TestUtils::test_command({ cmd => "/bin/su - $site -c 'echo \"COMMAND [".time()."] SEND_CUSTOM_HOST_NOTIFICATION;$host;2;omdadmin;test hst notification\" | lq'", like => '/^\s*$/' });
@@ -158,6 +165,15 @@ for my $core (qw/naemon/) {
     TestUtils::test_command({ cmd => "/bin/su - $site -c 'echo -e \"".'GET services\nFilter: description = multiline\nColumns: perf_data\n'."\" | lq'", like => '/^perf=1c$/' });
 
     ##################################################
+    # test internal checks
+    TestUtils::test_command({ cmd => "/bin/su - $site -c 'echo -e \"".'GET services\nFilter: description = internal_dummy\nColumns: state plugin_output\n'."\" | lq'", like => '/^0;OK: Please remove this host later$/' });
+    TestUtils::test_command({ cmd => "/bin/su - $site -c 'echo -e \"".'GET services\nFilter: description = internal_dummy2\nColumns: state plugin_output\n'."\" | lq'", like => '/^0;OK: Please remove this host later$/' });
+    TestUtils::test_command({ cmd => "/bin/su - $site -c 'echo -e \"".'GET services\nFilter: description = internal_dummy3\nColumns: state plugin_output\n'."\" | lq'", like => '/^1;WARNING: this is warning$/' });
+    TestUtils::test_command({ cmd => "/bin/su - $site -c 'echo -e \"".'GET services\nFilter: description = internal_dummy4\nColumns: state plugin_output\n'."\" | lq'", like => '/^2;CRITICAL: critical$/' });
+    TestUtils::test_command({ cmd => "/bin/su - $site -c 'echo -e \"".'GET services\nFilter: description = internal_nsc_web\nColumns: state plugin_output\n'."\" | lq'", like => '/^0;OK$/' });
+    TestUtils::test_command({ cmd => "/bin/su - $site -c 'echo -e \"".'GET services\nFilter: description = internal_nsc_web2\nColumns: state plugin_output\n'."\" | lq'", like => '/^0;OK$/' });
+
+    ##################################################
     # test sqlite retention
     TestUtils::test_command({ cmd => "/bin/su - $site -c '$omd_bin stop gearmand'", like => '/OK/' });
     TestUtils::test_command({ cmd => "/bin/su - $site -c 'test -f var/gearmand.db'", like => '/^$/' });
@@ -171,5 +187,5 @@ for my $core (qw/naemon/) {
     # cleanup test site
     TestUtils::test_command({ cmd => $omd_bin." stop $site" });
     TestUtils::remove_test_site($site);
-}
+};
 

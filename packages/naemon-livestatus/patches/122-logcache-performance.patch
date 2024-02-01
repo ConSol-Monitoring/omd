@@ -1,0 +1,219 @@
+From 198eefc49f25833bfc2f6754b2757f852d716453 Mon Sep 17 00:00:00 2001
+From: Sven Nierlein <sven@consol.de>
+Date: Thu, 25 Jan 2024 15:33:54 +0100
+Subject: [PATCH 1/2] logger: use millisecond precision when logging timestamps
+
+---
+ src/logger.c | 11 +++++++----
+ 1 file changed, 7 insertions(+), 4 deletions(-)
+
+diff --git a/src/logger.c b/src/logger.c
+index 7ac0c9d..975da30 100644
+--- a/src/logger.c
++++ b/src/logger.c
+@@ -27,7 +27,7 @@
+ #include <stdarg.h>
+ #include <stdio.h>
+ #include <string.h>
+-#include <time.h>
++#include <sys/time.h>
+ #include <pthread.h>
+ #include <syslog.h>
+ 
+@@ -121,9 +121,12 @@ void logger(int priority, const char *loginfo, ...)
+         if (g_logfile) {
+             /* write date/time */
+             char timestring[64];
+-            time_t now_t = time(0);
+-            struct tm now; localtime_r(&now_t, &now);
+-            strftime(timestring, 64, "%F %T ", &now);
++            struct timeval tv;
++            gettimeofday(&tv, NULL);
++            struct tm now; localtime_r(&tv.tv_sec, &now);
++            strftime(timestring, 64, "[%F %T", &now);
++            fputs(timestring, g_logfile);
++            snprintf(timestring, 64, ".%03ld] ", tv.tv_usec/1000);
+             fputs(timestring, g_logfile);
+ 
+             /* write log message */
+
+From ffa0dc10afdc547179ccab7dc08f64a0df901ad4 Mon Sep 17 00:00:00 2001
+From: Sven Nierlein <sven@consol.de>
+Date: Thu, 25 Jan 2024 17:55:26 +0100
+Subject: [PATCH 2/2] logcache: avoid reading files outside of requested
+ timerange
+
+logfile now reads the last timestamp of a logfile as well and uses this
+to select the required logfiles for a given query.
+
+previously, getting logs for one day might have opened and parsed 3 logfiles.
+One before the selected day, the day itself and one day afterwards. With
+this patch only one file is parsed, making the logs query 3x as fast.
+---
+ src/LogCache.cc |  4 +++-
+ src/Logfile.cc  | 52 +++++++++++++++++++++++++++++++++++++++++++++++++
+ src/Logfile.h   |  4 +++-
+ src/TableLog.cc | 13 ++++++++++---
+ 4 files changed, 68 insertions(+), 5 deletions(-)
+
+diff --git a/src/LogCache.cc b/src/LogCache.cc
+index c0bdd61..07b47eb 100644
+--- a/src/LogCache.cc
++++ b/src/LogCache.cc
+@@ -93,7 +93,7 @@ bool LogCache::logCachePreChecks()
+         logger(LG_INFO, "Warning: no logfile found, not even %s", log_file);
+         return false;
+     }
+-    // Has Nagios rotated logfiles? => Update
++    // Has Naemon rotated logfiles? => Update
+     // our file index. And delete all memorized
+     // log messages.
+     if (last_log_rotation > _last_index_update) {
+@@ -119,6 +119,7 @@ void LogCache::forgetLogfiles()
+ 
+ void LogCache::updateLogfileIndex()
+ {
++    logger(LG_DEBUG, "LogCache::updateLogfileIndex()");
+     _last_index_update = time(0);
+     // We need to find all relevant logfiles. This includes
+     // directory.
+@@ -151,6 +152,7 @@ void LogCache::updateLogfileIndex()
+ 
+ void LogCache::scanLogfile(char *path, bool watch)
+ {
++    logger(LG_DEBUG, "LogCache::scanLogfile: %s", path);
+     Logfile *logfile = new Logfile(path, watch);
+     time_t since = logfile->since();
+     if (since) {
+diff --git a/src/Logfile.cc b/src/Logfile.cc
+index d3e569a..8a983b5 100644
+--- a/src/Logfile.cc
++++ b/src/Logfile.cc
+@@ -40,6 +40,7 @@ extern unsigned long g_max_lines_per_logfile;
+ Logfile::Logfile(const char *path, bool watch)
+   : _path(strdup(path))
+   , _since(0)
++  , _end(0)
+   , _watch(watch)
+   , _inode(0)
+   , _lineno(0)
+@@ -291,3 +292,54 @@ char *Logfile::readIntoBuffer(int *size)
+     close(fd);
+     return buffer;
+ }
++
++time_t Logfile::end()
++{
++    if(_end > 0)
++        return _end;
++
++    int fd = open(_path, O_RDONLY);
++    if (fd < 0) {
++        logger(LG_WARN, "Cannot open %s for reading: %s", _path, strerror(errno));
++        return 0;
++    }
++
++    int BUFFER_SIZE = 50;
++    char buffer[BUFFER_SIZE];
++
++    off_t o = lseek(fd, -BUFFER_SIZE, SEEK_END);
++    if (o == -1) {
++        logger(LG_WARN, "Cannot seek to end of %s: %s", _path, strerror(errno));
++        close(fd);
++        return 0;
++    }
++
++    // search last newline which is followed by [
++    for(int i = 1; i <= 100 ;i++) {
++        off_t pos = (-BUFFER_SIZE*i)+i;
++        off_t o = lseek(fd, pos, SEEK_END);
++        if (o == -1) {
++            logger(LG_WARN, "Cannot seek to end of %s: %s", _path, strerror(errno));
++            close(fd);
++            return 0;
++        }
++        if(read(fd, buffer, BUFFER_SIZE) <= 0) {
++            close(fd);
++            return 0;
++        }
++        for (int j = BUFFER_SIZE - 2; j >= 0; j--) {
++            if(buffer[j] == '\n' && buffer[j+1] == '[') {
++                lseek(fd, pos+j+2, SEEK_END);
++                read(fd, buffer, 10);
++                buffer[10] = '\x0';
++                _end = atoi(buffer);
++                break;
++            }
++        }
++        if(_end > 0)
++            break;
++    }
++
++    close(fd);
++    return _end;
++}
+\ No newline at end of file
+diff --git a/src/Logfile.h b/src/Logfile.h
+index 07eb947..dd02f5c 100644
+--- a/src/Logfile.h
++++ b/src/Logfile.h
+@@ -45,6 +45,7 @@ class Logfile
+ private:
+     char      *_path;
+     time_t     _since;         // time of first entry
++    time_t     _end;           // time of last entry
+     bool       _watch;         // true only for current logfile
+     ino_t      _inode;         // needed to detect switching
+     fpos_t     _read_pos;      // read until this position
+@@ -63,6 +64,8 @@ class Logfile
+     void load(LogCache *LogCache, time_t since, time_t until, unsigned logclasses);
+     void flush();
+     time_t since() { return _since; }
++    time_t end();
++    bool watch() { return _watch; }
+     unsigned classesRead() { return _logclasses_read; }
+     long numEntries() { return _entries.size(); }
+     logfile_entries_t* getEntriesFromQuery(Query *query, LogCache *lc, time_t since, time_t until, unsigned);
+@@ -83,4 +86,3 @@ class Logfile
+ 
+ 
+ #endif // Logfile_h
+-
+diff --git a/src/TableLog.cc b/src/TableLog.cc
+index a75bf5f..f1dcc61 100644
+--- a/src/TableLog.cc
++++ b/src/TableLog.cc
+@@ -119,6 +119,7 @@ void TableLog::answerQuery(Query *query)
+     // to limit the number of logfiles we need to scan and
+     // to find the optimal entry point into the logfile
+     query->findIntLimits("time", &since, &until);
++    logger(LG_DEBUG, "TableLog: query time limits: from %u / until %u", since, until);
+ 
+     // The second optimization is for log message types.
+     // We want to load only those log type that are queried.
+@@ -141,16 +142,22 @@ void TableLog::answerQuery(Query *query)
+     // Now find newest log where 'until' is contained. The problem
+     // here: For each logfile we only know the time of the *first* entry,
+     // not that of the last.
+-    while (it != g_store->logCache()->logfiles()->begin() && it->first > until) // while logfiles are too new...
++    while (it != g_store->logCache()->logfiles()->begin() && it->first >= until) // while logfiles are too new...
+         --it; // go back in history
+-    if (it->first > until) { // all logfiles are too new
++    if (it->first >= until) { // all logfiles are too new
+         g_store->logCache()->unlockLogCache();
+         return;
+     }
+ 
+     while (true) {
+         Logfile *log = it->second;
+-        if (!log->answerQueryReverse(query, g_store->logCache(), since, until, classmask))
++        logger(LG_DEBUG, "TableLog: considering logfile: %s (from %u / until %u)", log->path(), log->since(), log->end());
++        if(!log->watch() && log->end() > 0 && log->end() < since) {
++            logger(LG_DEBUG, "TableLog: skipped, end of logfile older than start of query");
++            // since all other logfiles are even older, we can end here
++            break;
++        }
++        else if (!log->answerQueryReverse(query, g_store->logCache(), since, until, classmask))
+             break; // end of time range found
+         if (it == g_store->logCache()->logfiles()->begin())
+             break; // this was the oldest one

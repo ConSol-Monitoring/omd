@@ -1,34 +1,41 @@
 
-#### Certificate stores
+### Certificate stores
 
-The certificate stores were retrieved by
+The certificate trust stores were retrieved from
 
-* Mozilla; see https://curl.haxx.se/docs/caextract.html
-* Linux: Just copied from an up-to-date Linux machine
-* Microsoft: Following command pulls all certificates from Windows Update services: (see also http://aka.ms/RootCertDownload, https://technet.microsoft.com/en-us/library/dn265983(v=ws.11).aspx#BKMK_CertUtilOptions):  ``CertUtil -syncWithWU -f -f . ``. 
-* Apple: It comes from Apple OS X keychain app.  Open Keychain Access utility, i.e.
-  In the Finder window, under Favorites --> "Applications" --> "Utilities" 
-  (OR perform a Spotlight Search for Keychain Access)
-  --> "Keychain Access" (2 click). In that window --> "Keychains" --> "System"
+* **Linux:** Copied from an up-to-date Debian Linux machine
+* **Mozilla:** https://curl.haxx.se/docs/caextract.html
+* **Java:** extracted (``keytool -list -rfc -keystore lib/security/cacerts | grep -E -v '^$|^\*\*\*\*\*|^Entry |^Creation |^Alias '``) from a JDK LTS version from https://jdk.java.net/. (use dos2unix).
+* **Microsoft:** Following command pulls all certificates from Windows Update services: ``CertUtil -syncWithWU -f -f . `` (see also http://aka.ms/RootCertDownload, https://technet.microsoft.com/en-us/library/dn265983(v=ws.11).aspx#BKMK_CertUtilOptions). They are in DER format. Convert them like ``for f in *.cer; do echo $f >/dev/stderr; openssl x509 -in $f -inform DER -outform PEM ;done >/tmp/Microsoft.pem``
+* **Apple:**
+    1. __System:__ from Apple OS X keychain app.  Open Keychain Access utility, i.e.
+  In the Finder window, under Favorites --> "Applications" --> "Utilities"
+  (OR perform a Spotlight Search for "Keychain Access")
+  --> "Keychain Access" (2 click). In that window --> "Keychains" --> "System Root"
   --> "Category" --> "All Items"
-  Select all CA certificates except for Developer ID Certification Authority,  "File" --> "Export Items"
+  Select all CA certificates except for "Developer ID Certification Authority", omit expired ones,  "File" --> "Export Items"
+    2. __Internet:__ Pick the latest subdir (=highest number) from https://opensource.apple.com/source/security_certificates/. They are in all DER format despite their file extension. Download them with ``wget --level=1 --cut-dirs=5 --mirror --convert-links --adjust-extension --page-requisites --no-parent https://opensource.apple.com/source/security_certificates/security_certificates-<latest>/certificates/roots/``. Then: ``for f in *.cer *.der *.crt; do echo $f >/dev/stderr; openssl x509 -in $f -inform DER -outform PEM ;done >/tmp/Apple.pem``
 
-In this directory you can also save e.g. your company Root CA(s) in PEM
-format, extension ``pem``. This has two catches momentarily: You will still
-get a warning for the other certificate stores while scanning internal net-
-works.  Second catch: If you scan other hosts in the internet the check against
-your Root CA will fail, too. This will be fixed in the future, see #230.
+**Attention**: You need to remove the DST Root CA X3 which is for your reference in this directory.
 
-#### Further needed files
+Google Chromium uses basically the trust stores above, see https://www.chromium.org/Home/chromium-security/root-ca-policy.
+
+If you want to check trust against e.g. a company internal CA you need to use ``./testssl.sh --add-ca companyCA1.pem,companyCA2.pem <further_cmds>`` or ``ADDTL_CA_FILES=companyCA1.pem,companyCA2.pem ./testssl.sh <further_cmds>``.
+
+
+#### Further files
+
 * ``tls_data.txt`` contains lists of cipher suites and private keys for sockets-based tests
 
 * ``cipher-mapping.txt`` contains information about all of the cipher suites defined for SSL/TLS
 
+* ``curves-mapping.txt`` contains information about all of the elliptic curves defined by IANA
+
 * ``ca_hashes.txt`` is used for HPKP test in order to have a fast comparison with known CAs. Use
    ``~/utils/create_ca_hashes.sh`` for an update
 
-* ``common-primes.txt`` is used for LOGJAM
+* ``common-primes.txt`` is used for LOGJAM and the PFS section
 
-* ``client-simulation.txt`` as the name indicates it's the data for the client simulation. Use
-  ``~/utils/update_client_sim_data.pl`` for an update. Note: This list has been manually
-  edited to sort it and weed it out.
+* ``client-simulation.txt`` / ``client-simulation.wiresharked.txt`` are as the names indicate data for the client simulation.
+  The first one is derived from ``~/utils/update_client_sim_data.pl``, and manually edited to sort and label those we don't want.
+  The second file provides more client data retrieved from wireshark captures and some instructions how to do that yourself.
