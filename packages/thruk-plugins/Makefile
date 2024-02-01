@@ -23,6 +23,8 @@ skel:
 
 clean:
 
+upstream: packages
+
 packages:
 	for plugin in $(PLUGINS); do \
 		wget https://github.com/sni/thruk-plugin-$$plugin/archive/master.tar.gz -O thruk-plugin-$$plugin.tgz; \
