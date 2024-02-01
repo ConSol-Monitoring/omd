@@ -2326,8 +2326,11 @@ def config_set(args):
         sys.exit(1)
 
     if not site_is_stopped(g_sitename):
-        sys.stderr.write("Cannot change config variables while site is running.\n")
-        sys.exit(1)
+        if opt_force:
+            sys.stdout.write("Warning: site should be stopped for configuration changes.\n")
+        else:
+            sys.stderr.write("Cannot change config variables while site is running.\n")
+            sys.exit(1)
 
     hook_name = args[0]
     value = args[1]
@@ -4095,13 +4098,6 @@ def main_config(args, options={}):
     if site_needs_update(g_sitename):
         bail_out(tty_error + ": This site needs to be updated with: omd update")
 
-    if (len(args) == 0 or args[0] != "show") and \
-        opt_force and not site_is_stopped(g_sitename):
-        need_start = True
-        stop_site(g_sitename)
-    else:
-        need_start = False
-
     load_config_hooks() # needed for all config commands
     if len(args) == 0:
         config_configure()
@@ -4116,9 +4112,6 @@ def main_config(args, options={}):
             config_change()
         else:
             config_usage()
-
-    if need_start:
-        start_site(g_sitename)
 
 def main_su(args, options={}):
     try:
