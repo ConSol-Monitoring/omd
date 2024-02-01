@@ -1,7 +1,7 @@
 From 198eefc49f25833bfc2f6754b2757f852d716453 Mon Sep 17 00:00:00 2001
 From: Sven Nierlein <sven@consol.de>
 Date: Thu, 25 Jan 2024 15:33:54 +0100
-Subject: [PATCH 1/2] logger: use millisecond precision when logging timestamps
+Subject: [PATCH 1/4] logger: use millisecond precision when logging timestamps
 
 ---
  src/logger.c | 11 +++++++----
@@ -40,7 +40,7 @@ index 7ac0c9d..975da30 100644
 From ffa0dc10afdc547179ccab7dc08f64a0df901ad4 Mon Sep 17 00:00:00 2001
 From: Sven Nierlein <sven@consol.de>
 Date: Thu, 25 Jan 2024 17:55:26 +0100
-Subject: [PATCH 2/2] logcache: avoid reading files outside of requested
+Subject: [PATCH 2/4] logcache: avoid reading files outside of requested
  timerange
 
 logfile now reads the last timestamp of a logfile as well and uses this
@@ -217,3 +217,400 @@ index a75bf5f..f1dcc61 100644
              break; // end of time range found
          if (it == g_store->logCache()->logfiles()->begin())
              break; // this was the oldest one
+
+From 39cba5e11081d23cbe67c304579cb2722074d339 Mon Sep 17 00:00:00 2001
+From: Sven Nierlein <sven@consol.de>
+Date: Thu, 1 Feb 2024 11:08:15 +0100
+Subject: [PATCH 3/4] fix crash when freeing entries in logcache
+
+std::map erase returns the next iterator and thats the safe
+way to erase entries while iterating over the map.
+
+Signed-off-by: Sven Nierlein <sven@consol.de>
+---
+ src/LogCache.cc          | 26 ++++++++++++--------------
+ src/LogCache.h           |  1 -
+ src/Logfile.cc           | 12 +++++++++---
+ src/Store.cc             |  9 +++++++++
+ src/Table.h              |  2 +-
+ src/TableLog.cc          | 16 +++++++---------
+ src/TableLog.h           |  2 +-
+ src/TableStateHistory.cc |  8 --------
+ src/TableStateHistory.h  |  2 +-
+ 9 files changed, 40 insertions(+), 38 deletions(-)
+
+diff --git a/src/LogCache.cc b/src/LogCache.cc
+index 07b47eb..e38d57c 100644
+--- a/src/LogCache.cc
++++ b/src/LogCache.cc
+@@ -42,7 +42,7 @@
+ #include "LogCache.h"
+ 
+ extern time_t last_log_rotation;
+-
++extern int g_debug_level;
+ 
+ #define CHECK_MEM_CYCLE 1000 /* Check memory every N'th new message */
+ 
+@@ -77,12 +77,18 @@ LogCache::~LogCache()
+ 
+ void LogCache::lockLogCache()
+ {
++    if (g_debug_level > 0)
++        logger(LG_INFO, "LogCache: waiting for logcache lock");
+     pthread_mutex_lock(&_lock);
++    if (g_debug_level > 0)
++        logger(LG_INFO, "LogCache: got logcache lock");
+ }
+ 
+ void LogCache::unlockLogCache()
+ {
+     pthread_mutex_unlock(&_lock);
++    if (g_debug_level > 0)
++        logger(LG_INFO, "LogCache: released logcache lock");
+ }
+ 
+ bool LogCache::logCachePreChecks()
+@@ -93,7 +99,7 @@ bool LogCache::logCachePreChecks()
+         logger(LG_INFO, "Warning: no logfile found, not even %s", log_file);
+         return false;
+     }
+-    // Has Naemon rotated logfiles? => Update
++    // Has Nagios rotated logfiles? => Update
+     // our file index. And delete all memorized
+     // log messages.
+     if (last_log_rotation > _last_index_update) {
+@@ -119,7 +125,8 @@ void LogCache::forgetLogfiles()
+ 
+ void LogCache::updateLogfileIndex()
+ {
+-    logger(LG_DEBUG, "LogCache::updateLogfileIndex()");
++    if (g_debug_level > 0)
++        logger(LG_INFO, "LogCache::updateLogfileIndex()");
+     _last_index_update = time(0);
+     // We need to find all relevant logfiles. This includes
+     // directory.
+@@ -152,7 +159,8 @@ void LogCache::updateLogfileIndex()
+ 
+ void LogCache::scanLogfile(char *path, bool watch)
+ {
+-    logger(LG_DEBUG, "LogCache::scanLogfile: %s", path);
++    if (g_debug_level > 0)
++        logger(LG_INFO, "LogCache::scanLogfile: %s", path);
+     Logfile *logfile = new Logfile(path, watch);
+     time_t since = logfile->since();
+     if (since) {
+@@ -170,16 +178,6 @@ void LogCache::scanLogfile(char *path, bool watch)
+         delete logfile;
+ }
+ 
+-void LogCache::dumpLogfiles()
+-{
+-    for (_logfiles_t::iterator it = _logfiles.begin();
+-            it != _logfiles.end();
+-            ++it)
+-    {
+-        Logfile *log = it->second;
+-    }
+-}
+-
+ /* This method is called each time a log message is loaded
+    into memory. If the number of messages loaded in memory
+    is to large, memory will be freed by flushing logfiles
+diff --git a/src/LogCache.h b/src/LogCache.h
+index 9c5a450..1b3aa64 100644
+--- a/src/LogCache.h
++++ b/src/LogCache.h
+@@ -63,7 +63,6 @@ class LogCache
+ private:
+     void scanLogfile(char *path, bool watch);
+     _logfiles_t::iterator findLogfileStartingBefore(time_t);
+-    void dumpLogfiles();
+ };
+ 
+ #endif // LogCache_h
+diff --git a/src/Logfile.cc b/src/Logfile.cc
+index 8a983b5..6eae9bb 100644
+--- a/src/Logfile.cc
++++ b/src/Logfile.cc
+@@ -35,6 +35,7 @@
+ #include "LogCache.h"
+ 
+ extern unsigned long g_max_lines_per_logfile;
++extern int g_debug_level;
+ 
+ 
+ Logfile::Logfile(const char *path, bool watch)
+@@ -143,6 +144,8 @@ void Logfile::load(LogCache *logcache, time_t since, time_t until, unsigned logc
+ void Logfile::loadRange(FILE *file, unsigned missing_types,
+         LogCache *logcache, time_t since, time_t until, unsigned logclasses)
+ {
++    if (g_debug_level > 0)
++        logger(LG_INFO, "Logfile::loadRange: %s", this->path());
+     while (fgets(_linebuffer, MAX_LOGLINE, file))
+     {
+         if (_lineno >= g_max_lines_per_logfile) {
+@@ -154,19 +157,22 @@ void Logfile::loadRange(FILE *file, unsigned missing_types,
+             logcache->handleNewMessage(this, since, until, logclasses); // memory management
+         }
+     }
++    if (g_debug_level > 0)
++        logger(LG_INFO, "Logfile::loadRange done: %s", this->path());
+ }
+ 
+ long Logfile::freeMessages(unsigned logclasses)
+ {
+     long freed = 0;
+-    for (logfile_entries_t::iterator it = _entries.begin(); it != _entries.end(); ++it)
+-    {
++    for (logfile_entries_t::iterator it = _entries.begin(); it != _entries.end();) {
+         LogEntry *entry = it->second;
+         if ((1 << entry->_logclass) & logclasses)
+         {
+             delete it->second;
+-            _entries.erase(it);
++            it = _entries.erase(it);
+             freed ++;
++        } else {
++            it++;
+         }
+     }
+     _logclasses_read &= ~logclasses;
+diff --git a/src/Store.cc b/src/Store.cc
+index f5fe147..c14eb6e 100644
+--- a/src/Store.cc
++++ b/src/Store.cc
+@@ -41,6 +41,7 @@
+ extern int g_debug_level;
+ extern unsigned long g_max_cached_messages;
+ extern char *qh_socket_path;
++extern Store *g_store;
+ 
+ Store::Store()
+   : _log_cache(g_max_cached_messages)
+@@ -187,6 +188,11 @@ void Store::answerGetRequest(InputBuffer *input, OutputBuffer *output, const cha
+     }
+     Query query(input, output, table);
+ 
++    if(table->hasLogcache()) {
++        g_store->logCache()->lockLogCache();
++        g_store->logCache()->logCachePreChecks();
++    }
++
+     if (table && !output->hasError()) {
+         if (query.hasNoColumns()) {
+             table->addAllColumnsToQuery(&query);
+@@ -203,4 +209,7 @@ void Store::answerGetRequest(InputBuffer *input, OutputBuffer *output, const cha
+         if (g_debug_level > 0)
+             logger(LG_INFO, "Time to process request: %lu us. Size of answer: %d bytes", ustime, output->size());
+     }
++
++    if(table->hasLogcache())
++        g_store->logCache()->unlockLogCache();
+ }
+diff --git a/src/Table.h b/src/Table.h
+index c365d3a..2b2a9b7 100644
+--- a/src/Table.h
++++ b/src/Table.h
+@@ -57,6 +57,7 @@ class Table
+     virtual const char *prefixname() { return name(); }
+     virtual bool isAuthorized(contact *, void *) { return true; }
+     virtual void *findObject(char *objectspec __attribute__ ((__unused__))) { return 0; } // objectspec may be modified while parsing
++    virtual bool hasLogcache() { return false; };
+     void clearNatSort();
+     void addNatSort(string);
+     void addColumn(Column *);
+@@ -68,4 +69,3 @@ class Table
+ 
+ 
+ #endif // Table_h
+-
+diff --git a/src/TableLog.cc b/src/TableLog.cc
+index f1dcc61..e71031c 100644
+--- a/src/TableLog.cc
++++ b/src/TableLog.cc
+@@ -48,6 +48,7 @@
+ #define CHECK_MEM_CYCLE 1000 /* Check memory every N'th new message */
+ 
+ extern Store *g_store;
++extern int g_debug_level;
+ 
+ TableLog::TableLog()
+ {
+@@ -108,9 +109,6 @@ TableLog::~TableLog()
+ 
+ void TableLog::answerQuery(Query *query)
+ {
+-    g_store->logCache()->lockLogCache();
+-    g_store->logCache()->logCachePreChecks();
+-
+     int since = 0;
+     int until = time(0) + 1;
+     // Optimize time interval for the query. In log querys
+@@ -119,14 +117,14 @@ void TableLog::answerQuery(Query *query)
+     // to limit the number of logfiles we need to scan and
+     // to find the optimal entry point into the logfile
+     query->findIntLimits("time", &since, &until);
+-    logger(LG_DEBUG, "TableLog: query time limits: from %u / until %u", since, until);
++    if (g_debug_level > 0)
++        logger(LG_INFO, "TableLog: query time limits: from %u / until %u", since, until);
+ 
+     // The second optimization is for log message types.
+     // We want to load only those log type that are queried.
+     uint32_t classmask = LOGCLASS_ALL;
+     query->optimizeBitmask("class", &classmask);
+     if (classmask == 0) {
+-        g_store->logCache()->unlockLogCache();
+         return;
+     }
+ 
+@@ -145,15 +143,16 @@ void TableLog::answerQuery(Query *query)
+     while (it != g_store->logCache()->logfiles()->begin() && it->first >= until) // while logfiles are too new...
+         --it; // go back in history
+     if (it->first >= until) { // all logfiles are too new
+-        g_store->logCache()->unlockLogCache();
+         return;
+     }
+ 
+     while (true) {
+         Logfile *log = it->second;
+-        logger(LG_DEBUG, "TableLog: considering logfile: %s (from %u / until %u)", log->path(), log->since(), log->end());
++        if (g_debug_level > 0)
++            logger(LG_INFO, "TableLog: considering logfile: %s (from %u / until %u)", log->path(), log->since(), log->end());
+         if(!log->watch() && log->end() > 0 && log->end() < since) {
+-            logger(LG_DEBUG, "TableLog: skipped, end of logfile older than start of query");
++            if (g_debug_level > 0)
++                logger(LG_INFO, "TableLog: skipped, end of logfile older than start of query");
+             // since all other logfiles are even older, we can end here
+             break;
+         }
+@@ -163,7 +162,6 @@ void TableLog::answerQuery(Query *query)
+             break; // this was the oldest one
+         --it;
+     }
+-    g_store->logCache()->unlockLogCache();
+ }
+ 
+ 
+diff --git a/src/TableLog.h b/src/TableLog.h
+index 9be88d0..a24910c 100644
+--- a/src/TableLog.h
++++ b/src/TableLog.h
+@@ -41,10 +41,10 @@ class TableLog : public Table
+     const char *name() { return "log"; }
+     const char *prefixname() { return "logs"; }
+     bool isAuthorized(contact *ctc, void *data);
+-    void handleNewMessage(Logfile *logfile, time_t since, time_t until, unsigned logclasses);
+     void addColumns(Table *, string prefix, int indirect_offset, bool add_host = true, bool add_service = true);
+     void answerQuery(Query *query);
+     Column *column(const char *colname); // override in order to handle current_
++    bool hasLogcache() { return true; };
+ 
+ private:
+     bool answerQuery(Query *, Logfile *, time_t, time_t);
+diff --git a/src/TableStateHistory.cc b/src/TableStateHistory.cc
+index dc41101..928ceac 100644
+--- a/src/TableStateHistory.cc
++++ b/src/TableStateHistory.cc
+@@ -204,9 +204,6 @@ void TableStateHistory::answerQuery(Query *query)
+         }
+     }
+ 
+-    g_store->logCache()->lockLogCache();
+-    g_store->logCache()->logCachePreChecks();
+-
+     // This flag might be set to true by the return value of processDataset(...)
+     _abort_query = false;
+ 
+@@ -226,14 +223,12 @@ void TableStateHistory::answerQuery(Query *query)
+     _query->findIntLimits("time", &_since, &_until);
+     if (_since == 0) {
+         query->setError(RESPONSE_CODE_INVALID_REQUEST, "Start of timeframe required. e.g. Filter: time > 1234567890");
+-        g_store->logCache()->unlockLogCache();
+         return;
+     }
+ 
+     _query_timeframe = _until - _since - 1;
+     if (_query_timeframe == 0) {
+         query->setError(RESPONSE_CODE_INVALID_REQUEST, "Query timeframe is 0 seconds");
+-        g_store->logCache()->unlockLogCache();
+         return;
+     }
+ 
+@@ -251,7 +246,6 @@ void TableStateHistory::answerQuery(Query *query)
+     if (_it_logs->first > _until) {
+         // All logfiles are too new, invalid timeframe
+         // -> No data available. Return empty result.
+-        g_store->logCache()->unlockLogCache();
+         return;
+     }
+ 
+@@ -544,8 +538,6 @@ void TableStateHistory::answerQuery(Query *query)
+         }
+     }
+     object_blacklist.clear();
+-
+-    g_store->logCache()->unlockLogCache();
+ }
+ 
+ void TableStateHistory::cleanupQuery(Query *query) {
+diff --git a/src/TableStateHistory.h b/src/TableStateHistory.h
+index 0de5cf8..b33a840 100644
+--- a/src/TableStateHistory.h
++++ b/src/TableStateHistory.h
+@@ -67,12 +67,12 @@ class TableStateHistory : public Table
+     const char *name() { return "statehist"; }
+     const char *prefixname() { return "statehist_"; }
+     bool isAuthorized(contact *ctc, void *data);
+-    void handleNewMessage(Logfile *logfile, time_t since, time_t until, unsigned logclasses);
+     void answerQuery(Query *query);
+     void cleanupQuery(Query *query);
+     Column *column(const char *colname); // override in order to handle current_
+     int updateHostServiceState(Query *query, const LogEntry *entry, HostServiceState *state, const bool only_update);
+     static void addColumns(Table *);
++    bool hasLogcache() { return true; };
+ 
+ private:
+     LogEntry* getPreviousLogentry();
+
+From f296ab80a87572c31a861e11b4d6f45bb722d8c5 Mon Sep 17 00:00:00 2001
+From: Sven Nierlein <sven@consol.de>
+Date: Thu, 1 Feb 2024 14:09:44 +0100
+Subject: [PATCH 4/4] logcache: run mem cycle less often
+
+and make logcache erase compile on rhel7.
+---
+ src/LogCache.cc | 2 +-
+ src/Logfile.cc  | 6 ++++--
+ 2 files changed, 5 insertions(+), 3 deletions(-)
+
+diff --git a/src/LogCache.cc b/src/LogCache.cc
+index e38d57c..237bad6 100644
+--- a/src/LogCache.cc
++++ b/src/LogCache.cc
+@@ -44,7 +44,7 @@
+ extern time_t last_log_rotation;
+ extern int g_debug_level;
+ 
+-#define CHECK_MEM_CYCLE 1000 /* Check memory every N'th new message */
++#define CHECK_MEM_CYCLE 10000 /* Check memory every N'th new message */
+ 
+ // watch naemon' logfile rotation
+ extern char *log_archive_path;
+diff --git a/src/Logfile.cc b/src/Logfile.cc
+index 6eae9bb..95b4ae4 100644
+--- a/src/Logfile.cc
++++ b/src/Logfile.cc
+@@ -169,8 +169,10 @@ long Logfile::freeMessages(unsigned logclasses)
+         if ((1 << entry->_logclass) & logclasses)
+         {
+             delete it->second;
+-            it = _entries.erase(it);
+-            freed ++;
++            logfile_entries_t::iterator entry = it;
++            it++;
++            _entries.erase(entry);
++            freed++;
+         } else {
+             it++;
+         }
