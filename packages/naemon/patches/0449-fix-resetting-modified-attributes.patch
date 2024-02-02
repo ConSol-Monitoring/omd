@@ -1,0 +1,34 @@
+From 886157eeb408d6f28a017a3d786b5d69f57037c6 Mon Sep 17 00:00:00 2001
+From: Sven Nierlein <sven@consol.de>
+Date: Fri, 2 Feb 2024 16:33:35 +0100
+Subject: [PATCH] fix resetting modified_attributes
+
+resetting modified_attributes to zero had no effect. The reason was a wrong
+assumption when reading the retention file. The retained value was restored
+even if the correspondig modified_attributes was not set (anymore).
+
+Now we have the following attribute changes (assuming retention is enabled):
+
+- attribute was changed via gui -> retained on next reload
+- attribute was changed via gui but config value changed afterwards -> use the configured value instead of the retained one
+- config value changed and attribute has not been changed via gui -> use the configured value
+
+Signed-off-by: Sven Nierlein <sven@consol.de>
+---
+ src/naemon/xrddefault.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/src/naemon/xrddefault.c b/src/naemon/xrddefault.c
+index b2893d6f..0abb9e1d 100644
+--- a/src/naemon/xrddefault.c
++++ b/src/naemon/xrddefault.c
+@@ -468,8 +468,7 @@ int xrddefault_save_state_information(void)
+ /******************************************************************/
+ #define RETAIN_BOOL(type, obj, v, attr) \
+ 	do { \
+-		if ((obj->modified_attributes & attr && !have.v) || (have.v && conf.v == obj->v)) { \
+-			printf("Retaining boolean " #v " for " #type " (%s) (conf.v = %d; have.v = %d)\n", val, conf.v, have.v); \
++		if (obj->modified_attributes & attr && (!have.v || (have.v && conf.v == obj->v))) { \
+ 			pre_modify_##type##_attribute(obj, attr); \
+ 			obj->v = atoi(val) > 0 ? TRUE : FALSE; \
+ 		} \

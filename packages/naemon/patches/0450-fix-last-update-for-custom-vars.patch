@@ -1,0 +1,76 @@
+From 24197016973120e32bf000e992045e97ca2984d6 Mon Sep 17 00:00:00 2001
+From: Sven Nierlein <sven@consol.de>
+Date: Fri, 2 Feb 2024 18:01:58 +0100
+Subject: [PATCH] fix updating last_update when sending CHANGE_CUSTOM_*_VAR
+ command
+
+all commands update the last_update attribute, so do this for CHANGE_CUSTOM_*_VAR commands as well.
+
+Signed-off-by: Sven Nierlein <sven@consol.de>
+---
+ src/naemon/commands.c | 30 +++++++++++++++++++++---------
+ 1 file changed, 21 insertions(+), 9 deletions(-)
+
+diff --git a/src/naemon/commands.c b/src/naemon/commands.c
+index 7d7a371c..2dd93e7b 100644
+--- a/src/naemon/commands.c
++++ b/src/naemon/commands.c
+@@ -2539,20 +2539,32 @@ static int contactgroup_command_handler(const struct external_command *ext_comma
+ 
+ static int change_custom_var_handler(const struct external_command *ext_command, time_t entry_time)
+ {
++	time_t current_time = 0L;
+ 	customvariablesmember *customvariablesmember_p = NULL;
+ 	char *varname;
+ 	int x = 0;
++	struct service *target_service = NULL;
++	struct host * target_host = NULL;
++	struct contact * target_contact = NULL;
++
++	time(&current_time);
++
+ 	switch (ext_command->id) {
+ 	case CMD_CHANGE_CUSTOM_SVC_VAR:
+-		customvariablesmember_p = ((service *)GV("service"))->custom_variables;
++		target_service = GV_SERVICE("service");
++		target_service->last_update = current_time;
++		customvariablesmember_p = target_service->custom_variables;
+ 		break;
+ 
+ 	case CMD_CHANGE_CUSTOM_HOST_VAR:
+-		customvariablesmember_p = ((host *)GV("host_name"))->custom_variables;
++		target_host = GV_HOST("host_name");
++		target_host->last_update = current_time;
++		customvariablesmember_p = target_host->custom_variables;
+ 		break;
+ 
+ 	case CMD_CHANGE_CUSTOM_CONTACT_VAR:
+-		customvariablesmember_p = ((contact *)GV("contact_name"))->custom_variables;
++		target_contact = GV_CONTACT("contact_name");
++		customvariablesmember_p = target_contact->custom_variables;
+ 		break;
+ 	default:
+ 		nm_log(NSLOG_RUNTIME_ERROR, "Unknown custom variables modification command ID %d", (ext_command->id));
+@@ -2587,16 +2599,16 @@ static int change_custom_var_handler(const struct external_command *ext_command,
+ 	nm_free(varname);
+ 	switch (ext_command->id) {
+ 	case CMD_CHANGE_CUSTOM_SVC_VAR:
+-		((service *)GV("service"))->modified_attributes |= MODATTR_CUSTOM_VARIABLE;
+-		return update_service_status(GV("service"), FALSE);
++		target_service->modified_attributes |= MODATTR_CUSTOM_VARIABLE;
++		return update_service_status(target_service, FALSE);
+ 		break;
+ 	case CMD_CHANGE_CUSTOM_HOST_VAR:
+-		((host *)GV("host_name"))->modified_attributes |= MODATTR_CUSTOM_VARIABLE;
+-		return update_host_status(GV("host_name"), FALSE);
++		target_host->modified_attributes |= MODATTR_CUSTOM_VARIABLE;
++		return update_host_status(target_host, FALSE);
+ 		break;
+ 	case CMD_CHANGE_CUSTOM_CONTACT_VAR:
+-		((contact *)GV("contact_name"))->modified_attributes |= MODATTR_CUSTOM_VARIABLE;
+-		return update_contact_status(GV("contact_name"), FALSE);
++		target_contact->modified_attributes |= MODATTR_CUSTOM_VARIABLE;
++		return update_contact_status(target_contact, FALSE);
+ 		break;
+ 	default:
+ 		nm_log(NSLOG_RUNTIME_ERROR, "Unknown custom variables modification command ID %d", (ext_command->id));
