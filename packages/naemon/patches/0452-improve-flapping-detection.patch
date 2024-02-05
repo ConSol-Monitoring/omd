@@ -1,0 +1,37 @@
+From 4de4a8665d6d9e875ad87516abe4727b78e9df80 Mon Sep 17 00:00:00 2001
+From: Sven Nierlein <sven@consol.de>
+Date: Tue, 6 Feb 2024 11:57:53 +0100
+Subject: [PATCH] check global enable_flap_detection flag for notifications
+
+if global enable_flap_detection has been disabled but hosts/services still
+have the is_flapping flag set, notifications will be held back forever.
+
+the quick fix is to ignore the flapping state if its disabled globally.
+
+Signed-off-by: Sven Nierlein <sven@consol.de>
+---
+ src/naemon/notifications.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/src/naemon/notifications.c b/src/naemon/notifications.c
+index 841ae9e8..adb35d62 100644
+--- a/src/naemon/notifications.c
++++ b/src/naemon/notifications.c
+@@ -794,7 +794,7 @@ int check_service_notification_viability(service *svc, int type, int options)
+ 	}
+ 
+ 	/* if this service is currently flapping, don't send the notification */
+-	if (svc->is_flapping == TRUE) {
++	if (enable_flap_detection == TRUE && svc->flap_detection_enabled == TRUE && svc->is_flapping == TRUE) {
+ 		LOG_SERVICE_NSR(NSR_IS_FLAPPING);
+ 		return ERROR;
+ 	}
+@@ -1654,7 +1654,7 @@ int check_host_notification_viability(host *hst, int type, int options)
+ 	}
+ 
+ 	/* if this host is currently flapping, don't send the notification */
+-	if (hst->is_flapping == TRUE) {
++	if (enable_flap_detection == TRUE && hst->flap_detection_enabled == TRUE && hst->is_flapping == TRUE) {
+ 		LOG_HOST_NSR(NSR_IS_FLAPPING);
+ 		return ERROR;
+ 	}

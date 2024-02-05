@@ -1,7 +1,7 @@
 From c749cabfc27799f7d42a6a779ba09110484f2832 Mon Sep 17 00:00:00 2001
 From: Sven Nierlein <sven@consol.de>
 Date: Fri, 26 Jan 2024 11:17:34 +0100
-Subject: [PATCH 1/2] add problem timestamps and duration
+Subject: [PATCH 1/3] add problem timestamps and duration
 
 this PR makes hosts / services save the start and end timestamp of the current
 problem. Those values can then be used as macros, ex. in notification scripts.
@@ -427,7 +427,7 @@ index a0c26e7e7..cd78d1a80 100644
 From d85e21c3517abacd91b4bdde6f6a4414ad8610fc Mon Sep 17 00:00:00 2001
 From: Sven Nierlein <sven@consol.de>
 Date: Fri, 26 Jan 2024 12:43:22 +0100
-Subject: [PATCH 2/2] convert problem_id and notification_id to uuids (fixes
+Subject: [PATCH 2/3] convert problem_id and notification_id to uuids (fixes
  #362)
 
 this makes problems and notifications distinguishable over different instances.
@@ -889,3 +889,44 @@ index cd78d1a80..f338fd47c 100644
  		fprintf(fp, "\tlast_notification=%lu\n", temp_service->last_notification);
  		fprintf(fp, "\tnext_notification=%lu\n", temp_service->next_notification);
  		fprintf(fp, "\tno_more_notifications=%d\n", temp_service->no_more_notifications);
+
+From 7065db9b868a758fee3db823e926515c10bedd85 Mon Sep 17 00:00:00 2001
+From: Sven Nierlein <sven@consol.de>
+Date: Mon, 5 Feb 2024 16:15:52 +0100
+Subject: [PATCH 3/3] set problem_end only if it has started
+
+this solves an issue for the initial state change from pending to ok and
+when updating naemon from a version not supporting problem durations.
+---
+ src/naemon/checks_host.c    | 3 ++-
+ src/naemon/checks_service.c | 3 ++-
+ 2 files changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/src/naemon/checks_host.c b/src/naemon/checks_host.c
+index 244792b36..fc359eb22 100644
+--- a/src/naemon/checks_host.c
++++ b/src/naemon/checks_host.c
+@@ -1018,7 +1018,8 @@ static int handle_host_state(host *hst, int *alert_recorded)
+ 		if (hst->current_state == STATE_UP) {
+ 			hst->last_problem_id = hst->current_problem_id;
+ 			hst->current_problem_id = NULL;
+-			hst->problem_end = current_time;
++			if(hst->problem_start > 0)
++				hst->problem_end = current_time;
+ 		}
+ 
+ 		/* write the host state change to the main log file */
+diff --git a/src/naemon/checks_service.c b/src/naemon/checks_service.c
+index ad74f26ba..6ac0febc2 100644
+--- a/src/naemon/checks_service.c
++++ b/src/naemon/checks_service.c
+@@ -696,7 +696,8 @@ int handle_async_service_check_result(service *temp_service, check_result *queue
+ 		if (temp_service->current_state == STATE_OK) {
+ 			temp_service->last_problem_id = temp_service->current_problem_id;
+ 			temp_service->current_problem_id = NULL;
+-			temp_service->problem_end = current_time;
++			if(temp_service->problem_start > 0)
++				temp_service->problem_end = current_time;
+ 		}
+ 	}
+ 
