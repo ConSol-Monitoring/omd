@@ -23,7 +23,7 @@ build:
 	echo "module.exports = {}" > .puppeteerrc.cjs # install.sh trys to open .config/.puppeteerrc otherwise
 	mkdir -p node_modules
 	$(NPM) i progress
-	$(NPM) i puppeteer
+	$(NPM) i puppeteer@21.11.0 # last version with node 16 support which is required for rhel7
 	if [ "x$(PUPPETEER_DOWNLOAD_PATH)" != "x" ]; then \
 		rm -rf node_modules/puppeteer/.local-chromium; \
 		cp -rp $(PUPPETEER_DOWNLOAD_PATH) node_modules/puppeteer/.local-chromium; \
