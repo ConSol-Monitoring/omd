@@ -312,6 +312,7 @@ version:
 	    sed -ri 's/Version:.*/Version: '$$newversion'/' packages/omd/index.html ; \
 	fi ;
 
+changelog: Changelog
 Changelog:
 	./t/changelog.pl --write
 
