@@ -28,5 +28,6 @@ clean:
 	rm -rf $(DIR)
 
 package:
-	wget "https://nodejs.org/dist/v$(VERSION)/$(DIR).tar.xz"
+	wget "https://nodejs.org/dist/v$(VERSION)/$(NAME)-v$(VERSION)-linux-x64.tar.xz"
+	wget "https://nodejs.org/dist/v$(VERSION)/$(NAME)-v$(VERSION)-linux-arm64.tar.xz"
 
