@@ -1,7 +1,7 @@
 From 198eefc49f25833bfc2f6754b2757f852d716453 Mon Sep 17 00:00:00 2001
 From: Sven Nierlein <sven@consol.de>
 Date: Thu, 25 Jan 2024 15:33:54 +0100
-Subject: [PATCH 1/4] logger: use millisecond precision when logging timestamps
+Subject: [PATCH 1/9] logger: use millisecond precision when logging timestamps
 
 ---
  src/logger.c | 11 +++++++----
@@ -40,7 +40,7 @@ index 7ac0c9d..975da30 100644
 From ffa0dc10afdc547179ccab7dc08f64a0df901ad4 Mon Sep 17 00:00:00 2001
 From: Sven Nierlein <sven@consol.de>
 Date: Thu, 25 Jan 2024 17:55:26 +0100
-Subject: [PATCH 2/4] logcache: avoid reading files outside of requested
+Subject: [PATCH 2/9] logcache: avoid reading files outside of requested
  timerange
 
 logfile now reads the last timestamp of a logfile as well and uses this
@@ -221,7 +221,7 @@ index a75bf5f..f1dcc61 100644
 From 39cba5e11081d23cbe67c304579cb2722074d339 Mon Sep 17 00:00:00 2001
 From: Sven Nierlein <sven@consol.de>
 Date: Thu, 1 Feb 2024 11:08:15 +0100
-Subject: [PATCH 3/4] fix crash when freeing entries in logcache
+Subject: [PATCH 3/9] fix crash when freeing entries in logcache
 
 std::map erase returns the next iterator and thats the safe
 way to erase entries while iterating over the map.
@@ -576,7 +576,7 @@ index 0de5cf8..b33a840 100644
 From f296ab80a87572c31a861e11b4d6f45bb722d8c5 Mon Sep 17 00:00:00 2001
 From: Sven Nierlein <sven@consol.de>
 Date: Thu, 1 Feb 2024 14:09:44 +0100
-Subject: [PATCH 4/4] logcache: run mem cycle less often
+Subject: [PATCH 4/9] logcache: run mem cycle less often
 
 and make logcache erase compile on rhel7.
 ---
@@ -614,3 +614,325 @@ index 6eae9bb..95b4ae4 100644
          } else {
              it++;
          }
+
+From 5af1a947cbaa50614799908082886aae750af56f Mon Sep 17 00:00:00 2001
+From: Sven Nierlein <sven@consol.de>
+Date: Wed, 7 Feb 2024 14:07:23 +0100
+Subject: [PATCH 5/9] logcache: check connection before building logs result
+
+the logcache uses a lock to only server one request at a time. Pending
+requests will be queued and served in order, even if the client has
+disconnected meanwhile. The log request would be build in this case
+and then livestatus detects the broken pipe once it sends out the first
+byte.
+Better check the client connection once before building the result.
+---
+ src/OutputBuffer.cc | 22 ++++++++++++++++++++++
+ src/OutputBuffer.h  |  1 +
+ src/Store.cc        | 19 ++++++++++++++-----
+ src/Store.h         |  6 ++----
+ src/module.c        |  2 +-
+ src/store.cc        |  4 ++--
+ src/store.h         |  2 +-
+ 7 files changed, 43 insertions(+), 13 deletions(-)
+
+diff --git a/src/OutputBuffer.cc b/src/OutputBuffer.cc
+index 1a309b4..a1ddbec 100644
+--- a/src/OutputBuffer.cc
++++ b/src/OutputBuffer.cc
+@@ -144,6 +144,28 @@ void OutputBuffer::writeData(int fd, const char *write_from, int to_write)
+     }
+ }
+ 
++bool OutputBuffer::isAlive(int fd)
++{
++    struct timeval tv = {0};
++    fd_set fds;
++    FD_ZERO(&fds);
++    FD_SET(fd, &fds);
++
++    int retval = select(fd + 1, NULL, &fds, NULL, &tv);
++    if (retval > 0 && FD_ISSET(fd, &fds)) {
++        ssize_t w = write(fd, "", 0);
++        if (w < 0) {
++            // select returned file handle, but write failed -> client is gone
++            return false;
++        }
++        // select returned file handle and write succeeded -> client is alive
++        return true;
++    }
++
++    // select returned no file handle -> client is gone
++    return false;
++}
++
+ void OutputBuffer::setError(unsigned code, const char *format, ...)
+ {
+     // only the first error is being returned
+diff --git a/src/OutputBuffer.h b/src/OutputBuffer.h
+index 1227052..b13cc12 100644
+--- a/src/OutputBuffer.h
++++ b/src/OutputBuffer.h
+@@ -70,6 +70,7 @@ class OutputBuffer
+     bool doKeepalive() { return _do_keepalive; }
+     void setError(unsigned code, const char *format, ...);
+     bool hasError() { return _error_message != ""; }
++    bool isAlive(int fd);
+ 
+ private:
+     void needSpace(unsigned);
+diff --git a/src/Store.cc b/src/Store.cc
+index c14eb6e..6a93fc3 100644
+--- a/src/Store.cc
++++ b/src/Store.cc
+@@ -116,7 +116,7 @@ void Store::registerDowntime(nebstruct_downtime_data *d)
+     _table_downtimes.addDowntime(d);
+ }
+ 
+-bool Store::answerRequest(InputBuffer *input, OutputBuffer *output)
++bool Store::answerRequest(InputBuffer *input, OutputBuffer *output, int fd)
+ {
+     output->reset();
+     int r = input->readRequest();
+@@ -131,9 +131,9 @@ bool Store::answerRequest(InputBuffer *input, OutputBuffer *output)
+     if (g_debug_level > 0)
+         logger(LG_INFO, "Query: %s", line);
+     if (!strncmp(line, "GET ", 4))
+-        answerGetRequest(input, output, lstrip((char *)line + 4));
++        answerGetRequest(input, output, lstrip((char *)line + 4), fd);
+     else if (!strcmp(line, "GET"))
+-        answerGetRequest(input, output, ""); // only to get error message
++        answerGetRequest(input, output, "", fd); // only to get error message
+     else if (!strncmp(line, "COMMAND ", 8)) {
+         answerCommandRequest(unescape_newlines(lstrip((char *)line + 8)), output);
+         output->setDoKeepalive(true);
+@@ -175,8 +175,9 @@ void Store::answerCommandRequest(const char *command, OutputBuffer *output)
+ }
+ 
+ 
+-void Store::answerGetRequest(InputBuffer *input, OutputBuffer *output, const char *tablename)
++void Store::answerGetRequest(InputBuffer *input, OutputBuffer *output, const char *tablename, int fd)
+ {
++    bool logcacheLocked = false;
+     output->reset();
+ 
+     if (!tablename[0]) {
+@@ -190,7 +191,15 @@ void Store::answerGetRequest(InputBuffer *input, OutputBuffer *output, const cha
+ 
+     if(table->hasLogcache()) {
+         g_store->logCache()->lockLogCache();
++        // check if client is still connected, we might have waited too long for the lock
++        if(!output->isAlive(fd)) {
++            output->setError(RESPONSE_CODE_INCOMPLETE_REQUEST, "Client already disconnected");
++            g_store->logCache()->unlockLogCache();
++            return;
++        }
++
+         g_store->logCache()->logCachePreChecks();
++        logcacheLocked = true;
+     }
+ 
+     if (table && !output->hasError()) {
+@@ -210,6 +219,6 @@ void Store::answerGetRequest(InputBuffer *input, OutputBuffer *output, const cha
+             logger(LG_INFO, "Time to process request: %lu us. Size of answer: %d bytes", ustime, output->size());
+     }
+ 
+-    if(table->hasLogcache())
++    if(logcacheLocked)
+         g_store->logCache()->unlockLogCache();
+ }
+diff --git a/src/Store.h b/src/Store.h
+index fc26566..245578e 100644
+--- a/src/Store.h
++++ b/src/Store.h
+@@ -74,14 +74,12 @@ class Store
+     void registerHostgroup(hostgroup *);
+     void registerComment(nebstruct_comment_data *);
+     void registerDowntime(nebstruct_downtime_data *);
+-    bool answerRequest(InputBuffer *, OutputBuffer *);
++    bool answerRequest(InputBuffer *, OutputBuffer *, int);
+ 
+ private:
+     Table *findTable(string name);
+-    void answerGetRequest(InputBuffer *, OutputBuffer *, const char *);
++    void answerGetRequest(InputBuffer *, OutputBuffer *, const char *, int fd);
+     void answerCommandRequest(const char *, OutputBuffer *);
+ };
+ 
+ #endif // Store_h
+-
+-
+diff --git a/src/module.c b/src/module.c
+index 79cbecd..b29d07e 100644
+--- a/src/module.c
++++ b/src/module.c
+@@ -199,7 +199,7 @@ void *client_thread(void *data)
+         while (keepalive && !g_should_terminate) {
+             if (g_debug_level >= 2 && requestnr > 1)
+                 logger(LG_INFO, "Handling request %d on same connection", requestnr);
+-            keepalive = store_answer_request(input_buffer, output_buffer);
++            keepalive = store_answer_request(input_buffer, output_buffer, cc);
+             flush_output_buffer(output_buffer, cc);
+             g_counters[COUNTER_REQUESTS]++;
+             requestnr ++;
+diff --git a/src/store.cc b/src/store.cc
+index fc6814b..c636f7e 100644
+--- a/src/store.cc
++++ b/src/store.cc
+@@ -75,9 +75,9 @@ void store_register_downtime(nebstruct_downtime_data *d)
+     g_store->registerDowntime(d);
+ }
+ 
+-int store_answer_request(void *ib, void *ob)
++int store_answer_request(void *ib, void *ob, int fd)
+ {
+-    return g_store->answerRequest((InputBuffer *)ib, (OutputBuffer *)ob);
++    return g_store->answerRequest((InputBuffer *)ib, (OutputBuffer *)ob, fd);
+ }
+ 
+ void *create_outputbuffer(int *termination_flag)
+diff --git a/src/store.h b/src/store.h
+index 2abe060..3a10ddb 100644
+--- a/src/store.h
++++ b/src/store.h
+@@ -36,7 +36,7 @@ extern "C"
+     void store_deinit();
+     void store_register_comment(nebstruct_comment_data *);
+     void store_register_downtime(nebstruct_downtime_data *);
+-    int  store_answer_request(void *input_buffer, void *output_buffer);
++    int  store_answer_request(void *input_buffer, void *output_buffer, int fd);
+     void *create_outputbuffer(int *termination_flag);
+     void flush_output_buffer(void *ob, int fd);
+     void delete_outputbuffer(void *);
+
+From 173a60a6515fd9132eba4025235e36d90d4d5036 Mon Sep 17 00:00:00 2001
+From: Sven Nierlein <sven@consol.de>
+Date: Wed, 7 Feb 2024 15:17:52 +0100
+Subject: [PATCH 6/9] log thread id on higher debug levels
+
+this makes it possibe to connect log entries to specific queries.
+---
+ src/logger.c | 9 +++++++--
+ 1 file changed, 7 insertions(+), 2 deletions(-)
+
+diff --git a/src/logger.c b/src/logger.c
+index 975da30..b0fe3c4 100644
+--- a/src/logger.c
++++ b/src/logger.c
+@@ -32,6 +32,7 @@
+ #include <syslog.h>
+ 
+ extern char g_logfile_path[];
++extern int g_debug_level;
+ pthread_t g_mainthread_id;
+ 
+ /* This protects the log file variable g_logfile to avoid concurrent writes as
+@@ -107,9 +108,10 @@ void logger(int priority, const char *loginfo, ...)
+ {
+     va_list ap;
+     va_start(ap, loginfo);
++    pthread_t tid = pthread_self();
+ 
+     /* Only the main process may use the Nagios log methods */
+-    if (g_mainthread_id == pthread_self()) {
++    if (g_mainthread_id == tid) {
+         char buffer[8192];
+         snprintf(buffer, 20, "livestatus: ");
+         vsnprintf(buffer + strlen(buffer),
+@@ -126,7 +128,10 @@ void logger(int priority, const char *loginfo, ...)
+             struct tm now; localtime_r(&tv.tv_sec, &now);
+             strftime(timestring, 64, "[%F %T", &now);
+             fputs(timestring, g_logfile);
+-            snprintf(timestring, 64, ".%03ld] ", tv.tv_usec/1000);
++            if (g_debug_level > 0)
++                snprintf(timestring, 64, ".%03ld][thr-%ld] ", tv.tv_usec/1000, tid);
++            else
++                snprintf(timestring, 64, ".%03ld] ", tv.tv_usec/1000);
+             fputs(timestring, g_logfile);
+ 
+             /* write log message */
+
+From 7c5ad0ee7b2290a36e023c180ac3d7eb3f029621 Mon Sep 17 00:00:00 2001
+From: Sven Nierlein <sven@consol.de>
+Date: Wed, 7 Feb 2024 16:28:36 +0100
+Subject: [PATCH 7/9] fix crash on stats queries on the logs table
+
+Default sort column on log table was the contact name, which makes no sense.
+This was because of the contacts reference columns added at the end which set
+natural sort columns.
+Set the sort column to time.
+---
+ src/TableLog.cc | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/src/TableLog.cc b/src/TableLog.cc
+index e71031c..513fd99 100644
+--- a/src/TableLog.cc
++++ b/src/TableLog.cc
+@@ -100,6 +100,9 @@ void TableLog::addColumns(Table *table, string prefix, int indirect_offset, bool
+         g_table_services->addColumns(table, "current_service_", (char *)&(ref->_service) - (char *)ref, false /* no hosts table */);
+     g_table_contacts->addColumns(table, "current_contact_", (char *)&(ref->_contact) - (char *)ref);
+     g_table_commands->addColumns(table, "current_command_", (char *)&(ref->_command) - (char *)ref);
++
++    table->clearNatSort();
++    table->addNatSort( "time" );
+ }
+ 
+ 
+
+From c3307690854696a53327bcfabff4ac07da5e8720 Mon Sep 17 00:00:00 2001
+From: Sven Nierlein <sven@consol.de>
+Date: Wed, 7 Feb 2024 17:17:45 +0100
+Subject: [PATCH 8/9] fix crash if stats queries errors halfway
+
+---
+ src/Store.cc | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/src/Store.cc b/src/Store.cc
+index 6a93fc3..73790ec 100644
+--- a/src/Store.cc
++++ b/src/Store.cc
+@@ -211,7 +211,8 @@ void Store::answerGetRequest(InputBuffer *input, OutputBuffer *output, const cha
+         gettimeofday(&before, 0);
+         query.start();
+         table->answerQuery(&query);
+-        query.finish();
++        if (!output->hasError()) // crashes on stats queries which result in errors before
++            query.finish();
+         table->cleanupQuery(&query);
+         gettimeofday(&after, 0);
+         unsigned long ustime = (after.tv_sec - before.tv_sec) * 1000000 + (after.tv_usec - before.tv_usec);
+
+From 532addb16e5d1c0a6b0a3aa9ca54926657e15f45 Mon Sep 17 00:00:00 2001
+From: Sven Nierlein <sven@consol.de>
+Date: Wed, 7 Feb 2024 17:18:14 +0100
+Subject: [PATCH 9/9] calculate estimated result size for stats queries
+
+output size is always zero here until we calculate the final result but it would be good to cancel runaway stats queries as well, ex. stats with high cardinality column set
+---
+ src/Query.cc | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
+
+diff --git a/src/Query.cc b/src/Query.cc
+index 5181405..39b7f59 100644
+--- a/src/Query.cc
++++ b/src/Query.cc
+@@ -966,6 +966,17 @@ bool Query::processDataset(void *data)
+                 if( is_new ) {
+                     _current_line++;
+                     _sorter.insert( data, _limit+_offset );
++
++                    // make sure we don't create too many aggregation entries. The size is only a rough estimation
++                    // from the last entry mulitplies with the number of entries.
++                    size_t rowsize = 0;
++                    for (_stats_group_spec_t::iterator iit = groupspec.begin(); iit != groupspec.end(); ++iit)
++                        rowsize += sizeof(char*) * strlen((*iit).c_str());
++                    if (_sorter.size() * rowsize > g_max_response_size) {
++                        logger(LG_INFO, "Maximum response size of %d bytes exceeded!", g_max_response_size);
++                        _output->setError(RESPONSE_CODE_LIMIT_EXCEEDED, "Maximum response size of %d reached", g_max_response_size);
++                        return false;
++                    }
+                 }
+             }
+             else
