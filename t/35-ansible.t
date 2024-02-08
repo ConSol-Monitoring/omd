@@ -47,7 +47,8 @@ TestUtils::test_command({ cmd => "/bin/su - $site -c 'ansible -i inventory -e 'a
 TestUtils::test_command({ cmd => "/bin/su - $site -c 'omd start'", like => '/Starting apache\.+OK/', exit => 0 });
 TestUtils::test_command({ cmd => "/bin/su - $site -c 'ansible -i inventory -e 'ansible_python_interpreter=auto_silent' -a \"omd status\" localhost'", like => ['/Overall state:  running/', '/rc=0/'] });
 
-TestUtils::test_command({ cmd => "/bin/su - $site -c 'touch secret; echo pass > vault_password; ansible-vault encrypt --vault-password-file=vault_password secret'", like => ['/Encryption successful/', '/rc=0/'] });
+TestUtils::test_command({ cmd => "/bin/su - $site -c 'touch secret; echo pass > vault_password; ansible-vault encrypt --vault-password-file=vault_password secret'" });
+TestUtils::test_command({ cmd => "/bin/su - $site -c 'grep -q ANSIBLE_VAULT secret'", like => ['/ANSIBLE_VAULT/'] });
 
 TestUtils::test_command({ cmd => $omd_bin." stop $site" });
 TestUtils::remove_test_site($site);
