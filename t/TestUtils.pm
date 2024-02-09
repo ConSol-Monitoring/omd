@@ -301,7 +301,7 @@ sub create_test_site {
         $errlike = '/is in use/';
     }
     my $createoptions = "";
-    if(`grep docker /proc/1/mountinfo 2>/dev/null | grep -c hosts` > 0) {
+    if(is_docker()) {
         $createoptions = " --no-tmpfs ";
     }
     if(test_command({ cmd => TestUtils::get_omd_bin()." create $createoptions $site", errlike => $errlike })) {
@@ -1090,7 +1090,7 @@ sub get_external_ip {
 
 =cut
 sub is_docker {
-    if(`grep docker /proc/1/mountinfo 2>/dev/null | grep -c hosts` > 0) {
+    if(`grep containers /proc/1/mountinfo 2>/dev/null | grep -c etc/hosts` > 0) {
         return 1;
     }
     return;
