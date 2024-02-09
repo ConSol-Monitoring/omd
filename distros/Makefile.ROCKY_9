@@ -59,6 +59,7 @@ BUILD_PACKAGES       += php
 BUILD_PACKAGES       += pkgconfig
 BUILD_PACKAGES       += postfix                        # provides mailq for monitoring plugins
 BUILD_PACKAGES       += postgresql-devel               # icinga 2
+BUILD_PACKAGES       += procps-ng
 BUILD_PACKAGES       += python3-devel
 BUILD_PACKAGES       += python3-pip
 BUILD_PACKAGES       += python3-setuptools
