@@ -111,6 +111,7 @@ OS_PACKAGES          += php-mbstring
 OS_PACKAGES          += php-pear
 OS_PACKAGES          += php-sqlite3
 OS_PACKAGES          += python3
+OS_PACKAGES          += python3-cryptography
 OS_PACKAGES          += python3-distutils              # required for ansible
 OS_PACKAGES          += rsync
 OS_PACKAGES          += snmp
