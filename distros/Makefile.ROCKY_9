@@ -141,6 +141,7 @@ OS_PACKAGES          += php-pdo
 OS_PACKAGES          += php-simplexml
 OS_PACKAGES          += procps-ng
 OS_PACKAGES          += python3
+OS_PACKAGES          += python3-cryptography
 OS_PACKAGES          += radcli
 OS_PACKAGES          += readline
 OS_PACKAGES          += rsync
