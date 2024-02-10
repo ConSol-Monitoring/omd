@@ -3954,9 +3954,6 @@ def main_umount(args, options = {}):
             if opt_version and site_version(site) != opt_version:
                 continue
 
-            if not tmpfs_mounted(site):
-                continue
-
             # Skip the site even when it is partly running
             if not site_is_stopped(site):
                 sys.stderr.write("Cannot unmount tmpfs of site '%s' while it is running.\n" % site)
@@ -3968,8 +3965,6 @@ def main_umount(args, options = {}):
             if not show_success(unmount_tmpfs(site, False, kill=options.kill)):
                 exit_status = 1
     else:
-        if not tmpfs_mounted(g_sitename):
-            sys.exit(exit_status)
         # Skip the site even when it is partly running
         if not site_is_stopped(g_sitename):
             bail_out(tty_error + ": Cannot unmount tmpfs of site '%s' while it is running." % g_sitename)
