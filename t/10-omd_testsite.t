@@ -12,7 +12,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 474 );
+plan( tests => 493 );
 
 my $omd_bin = TestUtils::get_omd_bin();
 
@@ -96,6 +96,11 @@ my $tests = [
                                                ]
   },
   { cmd => $omd_bin." diag $site check", like => '/Running system checks/', exit => undef  },
+  { cmd => $omd_bin." config $site show ADMIN_MAIL",  like => '/^$/' },
+  { cmd => $omd_bin." config $site set ADMIN_MAIL test",  like => '/^$/', errlike => '/Cannot change config variables while site is running/', exit => 1 },
+  { cmd => $omd_bin." config $site set -f ADMIN_MAIL test",  errlike => '/Does not match allowed pattern/', exit => 1 },
+  { cmd => $omd_bin." config $site set -f ADMIN_MAIL test\@localhost",  like => '/site should be stopped for configuration/' },
+  { cmd => $omd_bin." config $site show ADMIN_MAIL",  like => '/^test@localhost$/' },
   { cmd => $omd_bin." stop $site",       like => '/Stopping naemon/' },
   { cmd => $omd_bin." cp $site $site2",  like => '/Copying site '.$site.' to '.$site2.'.../',
                                          errlike => '/Apache port \d+ is in use\. I\'ve choosen \d+ instead\./' },
