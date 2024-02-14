@@ -1,0 +1,31 @@
+From 988a7151ccba505a9622103e4280e81fa0262d17 Mon Sep 17 00:00:00 2001
+From: Sven Nierlein <sven@consol.de>
+Date: Wed, 14 Feb 2024 10:50:52 +0100
+Subject: [PATCH] initialize hosts last_state_change and last_hard_state_change
+
+Currently the hosts last_state_change and last_hard_state_change will only be initialized
+if the state changes or in check_service.c when the first service result arives.
+I see no reason why this shouldn't be done for host results as well.
+
+Signed-off-by: Sven Nierlein <sven@consol.de>
+---
+ src/naemon/checks_host.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/src/naemon/checks_host.c b/src/naemon/checks_host.c
+index fc359eb2..7f8abcf5 100644
+--- a/src/naemon/checks_host.c
++++ b/src/naemon/checks_host.c
+@@ -1065,6 +1065,12 @@ static int handle_host_state(host *hst, int *alert_recorded)
+ 		}
+ 	}
+ 
++	/* initialize the last host state change times if necessary */
++	if (hst->last_state_change == (time_t)0)
++		hst->last_state_change = hst->last_check;
++	if (hst->last_hard_state_change == (time_t)0)
++		hst->last_hard_state_change = hst->last_check;
++
+ 	return OK;
+ }
+ 
