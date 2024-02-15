@@ -6,7 +6,7 @@ next:
             - livestatus update to 1.4.2
           - plugins:
             - check_nwc_health update to 11.3.0.4
-            - check_vsphere to 0.3.4
+            - check_vsphere update to 0.3.4
           - gearman:
             - mod-gearman-worker-go update to 1.3.9
           - grafana:

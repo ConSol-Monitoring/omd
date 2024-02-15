@@ -14,6 +14,9 @@ my $renames = {
     'mod-gearman-worker'    => { cat => "gearman" },
     'mod-gearman-worker-go' => { cat => "gearman" },
 };
+my $plugin_files = {
+    "check_vsphere" => "packages/python-modules/src/checkvsphere-(.*).tar.gz",
+};
 
 ################################################################################
 my($opt_help, $opt_tag, $opt_verbose, $opt_write);
@@ -94,48 +97,87 @@ sub _format_changes_cat {
 sub _apply_new_changes {
     my($changes, $cur, $last_tag) = @_;
 
+    my @files = glob("packages/*/Makefile packages/check_plugins/*/Makefile");
+    for my $f (@files) {
+        _extract_change_makefile_version($f, $changes, $cur, $last_tag);
+    }
+    for my $p (sort keys %{$plugin_files}) {
+        _extract_change_filename($p, $plugin_files->{$p}, $changes, $cur, $last_tag);
+    }
+    return($changes);
+}
+
+################################################################################
+sub _extract_change_makefile_version {
+    my($f, $changes, $cur, $last_tag) = @_;
+
     if($cur eq 'HEAD') {
         $cur = "";
     } else {
         $cur = "..".$cur;
     }
-    my @files = glob("packages/*/Makefile packages/check_plugins/*/Makefile");
-    for my $f (@files) {
-        _log("checking version from %s", $f) if $opt_verbose;
-        chomp(my $diff  = `git diff $last_tag$cur -- $f 2>/dev/null`);
-        if(!$diff) {
-            _log(" -> no changes at all") if $opt_verbose;
-            next;
-        }
-        my $version;
-        if($diff =~ m/^\+VERSION.*?=\s*(.*)$/mx) {
-            $version = $1;
-        }
-        if($diff =~ m/^\+GIT_TAG.*?=\s*(.*)$/mx) {
-            $version = $1;
-        }
-        if(!$version) {
-            _log(" -> version did not change but found other changes") if $opt_verbose;
-            next;
-        }
-        _log(" -> version changed to %s", $version) if $opt_verbose;
 
-        $version =~ s/^v//gmx;
-        my $prj = $f;
-        my $cat;
-        if($f =~ m/check_plugins/mx) {
-            $prj =~ s/^.*packages\/check_plugins\/([^\/]+)\/.*/$1/gmx;
-            $cat = 'plugins';
-        } else {
-            $prj =~ s/^.*packages\/([^\/]+)\/.*/$1/gmx;
-        }
-        next if $prj =~ m/^go\-/gmx;
-        $cat = _get_category($prj) unless $cat;
-        $prj =~ s/^$cat[\-_]+//gmx;
-        if($prj eq $cat) { $prj = ""; }
-        $changes->{$cat}->{$prj} = $version;
+    _log("checking version from %s", $f) if $opt_verbose;
+    chomp(my $diff  = `git diff $last_tag$cur -- $f 2>/dev/null`);
+    if(!$diff) {
+        _log(" -> no changes at all") if $opt_verbose;
+        return;
     }
-    return($changes);
+    my $version;
+    if($diff =~ m/^\+VERSION.*?=\s*(.*)$/mx) {
+        $version = $1;
+    }
+    if($diff =~ m/^\+GIT_TAG.*?=\s*(.*)$/mx) {
+        $version = $1;
+    }
+    if(!$version) {
+        _log(" -> version did not change but found other changes") if $opt_verbose;
+        return;
+    }
+    _log(" -> version changed to %s", $version) if $opt_verbose;
+
+    $version =~ s/^v//gmx;
+    my $prj = $f;
+    my $cat;
+    if($f =~ m/check_plugins/mx) {
+        $prj =~ s/^.*packages\/check_plugins\/([^\/]+)\/.*/$1/gmx;
+        $cat = 'plugins';
+    } else {
+        $prj =~ s/^.*packages\/([^\/]+)\/.*/$1/gmx;
+    }
+    return if $prj =~ m/^go\-/gmx;
+    $cat = _get_category($prj) unless $cat;
+    $prj =~ s/^$cat[\-_]+//gmx;
+    if($prj eq $cat) { $prj = ""; }
+    $changes->{$cat}->{$prj} = $version;
+}
+
+################################################################################
+sub _extract_change_filename {
+    my($p, $f, $changes, $cur, $last_tag) = @_;
+
+    _log("checking version from %s", $f) if $opt_verbose;
+    chomp(my $filesOld  = `git ls-tree --name-only -r $last_tag 2>/dev/null`);
+    chomp(my $filesNew  = `git ls-tree --name-only -r $cur 2>/dev/null`);
+
+    my $pattern = $f;
+    my($old, $new);
+    $pattern =~ s/\*/.*/gmx;
+    for my $file (split/\n/, $filesOld) {
+        if($file =~ m/$pattern/mx) {
+            $old = $1;
+            last;
+        }
+    }
+    for my $file (split/\n/, $filesNew) {
+        if($file =~ m/$pattern/mx) {
+            $new = $1;
+            last;
+        }
+    }
+    if($old && $new && $old ne $new) {
+        $changes->{'plugins'}->{$p} = $new;
+    }
 }
 
 ################################################################################
