@@ -30,6 +30,11 @@ sub main {
                 "w|write"   => \$opt_write,
                 "h|help   " => \$opt_help)
     or die("Error in command line arguments\n");
+    if($opt_help) {
+        print "usage: $0 [--tag=<tag>] [-v|--verbose] [-w|--write]\n\n";
+        print "ex.: $0 --tag=v5.30-labs-edition\n";
+        exit(3);
+    }
 
     if($opt_write && $opt_tag) {
         die("write can only be used for next (without --tag)");
