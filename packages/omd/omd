@@ -2254,7 +2254,7 @@ def call_hook(hook_name, args):
     content = p.stdout.decode("UTF-8").strip()
     exitcode = p.returncode
     if exitcode and args[0] != "depends":
-        sys.stderr.write("Error running config hook: '%s %s %s': %s\n" % (hook_file, command, " ".join(args), content))
+        sys.stderr.write("Error running config hook (rc: %d): '%s %s %s': %s\n" % (exitcode, hook_file, command, " ".join(args), content))
     return exitcode, content
 
 
