@@ -5,7 +5,7 @@ use strict;
 use Getopt::Long;
 
 ################################################################################
-my @categories = qw/omd thruk naemon gearman grafana prometheus/;
+my @categories = qw/omd thruk naemon plugins gearman grafana prometheus/;
 my $renames = {
     'gearmand'              => { cat => "gearman" },
     'promlens'              => { cat => "prometheus" },
@@ -99,7 +99,7 @@ sub _apply_new_changes {
     } else {
         $cur = "..".$cur;
     }
-    my @files = glob("packages/*/Makefile");
+    my @files = glob("packages/*/Makefile packages/check_plugins/*/Makefile");
     for my $f (@files) {
         _log("checking version from %s", $f) if $opt_verbose;
         chomp(my $diff  = `git diff $last_tag$cur -- $f 2>/dev/null`);
@@ -122,9 +122,15 @@ sub _apply_new_changes {
 
         $version =~ s/^v//gmx;
         my $prj = $f;
-        $prj =~ s/^.*packages\/([^\/]+)\/.*/$1/gmx;
+        my $cat;
+        if($f =~ m/check_plugins/mx) {
+            $prj =~ s/^.*packages\/check_plugins\/([^\/]+)\/.*/$1/gmx;
+            $cat = 'plugins';
+        } else {
+            $prj =~ s/^.*packages\/([^\/]+)\/.*/$1/gmx;
+        }
         next if $prj =~ m/^go\-/gmx;
-        my $cat = _get_category($prj);
+        $cat = _get_category($prj) unless $cat;
         $prj =~ s/^$cat[\-_]+//gmx;
         if($prj eq $cat) { $prj = ""; }
         $changes->{$cat}->{$prj} = $version;
