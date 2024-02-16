@@ -8,6 +8,8 @@ DIR = $(NAME)-$(VERSION)
 # Unset CONFIG_SITE
 CONFIG_SITE = ''
 DEPENDS = rrdtool
+# GIT TAG is set automatically by "make upstream" or "make package"
+GIT_TAG     = 9ee65f7
 
 # Configure options for PNP4Nagios. Since we want to compile
 # as non-root, we use our own user and group for compiling.
@@ -77,10 +79,9 @@ upstream: package
 
 package:
 	rm -f $(DIR).tar.gz
-	wget "https://github.com/ConSol/pnp/archive/refs/heads/master.tar.gz"
-	tar zxf master.tar.gz
-	rm -f master.tar.gz
-	mv pnp-*/ $(DIR)
+	git clone  --depth=1 --branch "master" https://github.com/ConSol-Monitoring/pnp
+	cd pnp && sed -i $(PWD)/Makefile -e 's/^GIT_TAG.*$$/GIT_TAG     = '$$(git describe --always --tags)'/g'
+	mv pnp/ $(DIR)
 	tar cf $(DIR).tar $(DIR)
 	gzip -9 $(DIR).tar
 	rm -rf $(DIR)
