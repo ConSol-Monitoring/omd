@@ -22,7 +22,7 @@ from coshsh.util import compare_attr
 logger = logging.getLogger('coshsh')
 
 def __dr_ident__(params={}):
-    if coshsh.util.compare_attr("type", params, "prometheus_sd_files"):
+    if coshsh.util.compare_attr("type", params, "^prometheus_sd_files$"):
         return DatarecipientPrometheusSDFiles
 
 

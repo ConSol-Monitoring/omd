@@ -22,7 +22,7 @@ from coshsh.util import compare_attr
 logger = logging.getLogger('coshsh')
 
 def __dr_ident__(params={}):
-    if coshsh.util.compare_attr("type", params, "snmp_exporter_generator"):
+    if coshsh.util.compare_attr("type", params, "^snmp_exporter_generator$"):
         return DatarecipientSNMPExporterGenerator
 
 class LockFile(object):

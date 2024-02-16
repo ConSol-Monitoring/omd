@@ -13,7 +13,7 @@ from coshsh.util import compare_attr
 logger = logging.getLogger('coshsh')
 
 def __dr_ident__(params={}):
-    if compare_attr("type", params, "discard"):
+    if compare_attr("type", params, "^discard$"):
         return DrDiscard
 
 class DrDiscard(coshsh.datarecipient.Datarecipient):

@@ -28,9 +28,9 @@ from coshsh.util import compare_attr
 logger = logging.getLogger('coshsh')
 
 def __ds_ident__(params={}):
-    if coshsh.util.compare_attr("type", params, "snmptt"):
+    if coshsh.util.compare_attr("type", params, "^snmptt$"):
         return SNMPTT
-    elif coshsh.util.compare_attr("type", params, "ragpickify"):
+    elif coshsh.util.compare_attr("type", params, "^ragpickify$"):
         return SNMPTTRagpickify
 
 

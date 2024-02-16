@@ -30,7 +30,7 @@ from coshsh.templaterule import TemplateRule
 logger = logging.getLogger('coshsh')
 
 def __ds_ident__(params={}):
-    if coshsh.util.compare_attr("type", params, "snmp_exporter_generator"):
+    if coshsh.util.compare_attr("type", params, "^snmp_exporter_generator$"):
         return SnmpExporterGenerator
 
 class NoAliasDumper(yaml.SafeDumper):
