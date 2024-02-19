@@ -145,7 +145,7 @@ class RemoteAtomicRecipient(AtomicRecipient):
         if filter:
             for f in [filt.strip() for filt in filter.split(',')]:
                 if f.startswith('hostname='):
-                    self.trapdest = f.replace("hostname=", "")
+                    self.remote = f.replace("hostname=", "")
         if self.remote is None:
             logger.error('remote atomic needs a valid hostname')
             raise DatarecipientNotAvailable
