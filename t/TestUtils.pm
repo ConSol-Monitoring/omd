@@ -1205,6 +1205,7 @@ sub _match {
     if(ref $expr eq 'Regexp' || $expr =~ m/^\//mx) {
         return(like($content, $expr, $msg));
     }
+
     my $idx = index($content, $expr);
     if($idx == -1) {
         fail($msg);
@@ -1214,9 +1215,11 @@ sub _match {
         #hexdump($expr);
         #diag("content:");
         #hexdump($content);
-    } else {
-        ok(1, $msg);
+        return;
     }
+
+    ok(1, $msg);
+    return 1;
 }
 
 ##################################################
@@ -1226,6 +1229,7 @@ sub _notmatch {
     if(ref $expr eq 'Regexp' || $expr =~ m/^\//mx) {
         return(unlike($content, $expr, $msg));
     }
+
     my $idx = index($content, $expr);
     if($idx != -1) {
         fail($msg);
