@@ -1,0 +1,129 @@
+From c4c3766a3ccb09e231ad8ebc8bf7bf4f3b8d5a5a Mon Sep 17 00:00:00 2001
+From: Sven Nierlein <sven@consol.de>
+Date: Fri, 23 Feb 2024 17:10:12 +0100
+Subject: [PATCH 1/2] check_disk increase alert precision
+
+Free disk percentage value was rounded to a full integer meaning it alerted about ~1% percent too early. This is about 10GB on a 1TB disk.
+The warning and critical thresholds already support float values, so just the percentage calculation needs to be improved.
+
+old:
+
+    ./check_disk -w 35% -c 20% -p / -f -vvv
+    Thresholds(pct) for / warn: 35.000000 crit 20.000000
+    calling stat on /
+    For /, used_pct=65 free_pct=35 used_units=286451 free_units=156651 total_units=443102 used_inodes_pct=11 free_inodes_pct=89 fsp.fsu_blocksize=4096 mult=1048576
+    Freespace_units result=0
+    Freespace% result=1
+    Usedspace_units result=0
+    Usedspace_percent result=0
+    Usedinodes_percent result=0
+    Freeinodes_percent result=0
+    DISK WARNING - free space: WARNING [ / 156651MiB (35% inode=89%)];| /=300365643776B;302006979788;371700898201;0;464626122752
+
+new:
+
+    ./check_disk -w 35% -c 20% -p / -f -vvv
+    Thresholds(pct) for / warn: 35.000000 crit 20.000000
+    calling stat on /
+    For /, used_pct=64.649722 free_pct=35.350278 used_units=286464 free_units=156637 total_units=443102 used_inodes_pct=10.016183 free_inodes_pct=89.983817 fsp.fsu_blocksize=4096 mult=1048576
+    Freespace_units result=0
+    Freespace% result=0
+    Usedspace_units result=0
+    Usedspace_percent result=0
+    Usedinodes_percent result=0
+    Freeinodes_percent result=0
+    DISK OK - free space: / 156637MiB (35.4% inode=90%);| /=300379275264B;302006979788;371700898201;0;464626122752
+---
+ plugins/check_disk.c | 28 ++++++----------------------
+ 1 file changed, 6 insertions(+), 22 deletions(-)
+
+diff --git a/plugins/check_disk.c b/plugins/check_disk.c
+index c6bba2430..0d84ecd21 100644
+--- a/plugins/check_disk.c
++++ b/plugins/check_disk.c
+@@ -46,7 +46,7 @@ const char *email = "devel@monitoring-plugins.org";
+ #include <stdarg.h>
+ #include "fsusage.h"
+ #include "mountlist.h"
+-#include "intprops.h"    /* necessary for TYPE_MAXIMUM */
++#include <float.h>
+ #if HAVE_LIMITS_H
+ # include <limits.h>
+ #endif
+@@ -325,7 +325,7 @@ main (int argc, char **argv)
+       get_stats (path, &fsp);
+ 
+       if (verbose >= 3) {
+-        printf ("For %s, used_pct=%g free_pct=%g used_units=%lu free_units=%lu total_units=%lu used_inodes_pct=%g free_inodes_pct=%g fsp.fsu_blocksize=%lu mult=%lu\n",
++        printf ("For %s, used_pct=%f free_pct=%f used_units=%lu free_units=%lu total_units=%lu used_inodes_pct=%f free_inodes_pct=%f fsp.fsu_blocksize=%lu mult=%lu\n",
+                 me->me_mountdir,
+                 path->dused_pct,
+                 path->dfree_pct,
+@@ -431,7 +431,7 @@ main (int argc, char **argv)
+ 	  } else {
+ 		  xasprintf(&flag_header, "");
+ 	  }
+-	  xasprintf (&output, "%s%s %s %llu%s (%.0f%%",
++	  xasprintf (&output, "%s%s %s %llu%s (%.1f%%",
+ 			  output, flag_header,
+ 			  (!strcmp(me->me_mountdir, "none") || display_mntp) ? me->me_devname : me->me_mountdir,
+ 			  path->dfree_units,
+@@ -461,24 +461,8 @@ main (int argc, char **argv)
+ 
+ double calculate_percent(uintmax_t value, uintmax_t total) {
+   double pct = -1;
+-  /* I don't understand the below, but it is taken from coreutils' df */
+-  /* Seems to be calculating pct, in the best possible way */
+-  if (value <= TYPE_MAXIMUM(uintmax_t) / 100
+-    && total != 0) {
+-    uintmax_t u100 = value * 100;
+-    pct = u100 / total + (u100 % total != 0);
+-  } else {
+-    /* Possible rounding errors - see coreutils' df for more explanation */
+-    double u = value;
+-    double t = total;
+-    if (t) {
+-      long int lipct = pct = u * 100 / t;
+-      double ipct = lipct;
+-
+-      /* Like 'pct = ceil (dpct);', but without ceil - from coreutils again */
+-      if (ipct - 1 < pct && pct <= ipct + 1)
+-        pct = ipct + (ipct < pct);
+-    }
++  if(value <= DBL_MAX && total != 0) {
++    pct = (double)value / total * 100.0;
+   }
+   return pct;
+ }
+@@ -1130,7 +1114,7 @@ get_stats (struct parameter_list *p, struct fs_usage *fsp) {
+   }
+   /* finally calculate percentages for either plain FS or summed up group */
+   p->dused_pct = calculate_percent( p->used, p->used + p->available );    /* used + available can never be > uintmax */
+-  p->dfree_pct = 100 - p->dused_pct;
++  p->dfree_pct = 100.0 - p->dused_pct;
+   p->dused_inodes_percent = calculate_percent(p->inodes_total - p->inodes_free, p->inodes_total);
+   p->dfree_inodes_percent = 100 - p->dused_inodes_percent;
+ 
+
+From d7d654bb6e8eeecc1ff48c52b64eaa32a6e55dd7 Mon Sep 17 00:00:00 2001
+From: Sven Nierlein <sven@consol.de>
+Date: Fri, 23 Feb 2024 17:50:19 +0100
+Subject: [PATCH 2/2] check_disk: adjust test case to support float precision
+
+---
+ plugins/t/check_disk.t | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/plugins/t/check_disk.t b/plugins/t/check_disk.t
+index bf8dd3620..e0dd70eb0 100644
+--- a/plugins/t/check_disk.t
++++ b/plugins/t/check_disk.t
+@@ -44,7 +44,7 @@ my @perf_data = sort(split(/ /, $result->perf_output));
+ # Calculate avg_free free on mountpoint1 and mountpoint2
+ # because if you check in the middle, you should get different errors
+ $_ = $result->output;
+-my ($free_on_mp1, $free_on_mp2) = (m/\((\d+)%.*\((\d+)%/);
++my ($free_on_mp1, $free_on_mp2) = (m/\((\d+\.\d+)%.*\((\d+\.\d+)%/);
+ die "Cannot parse output: $_" unless ($free_on_mp1 && $free_on_mp2);
+ my $avg_free = ceil(($free_on_mp1+$free_on_mp2)/2);
+ my ($more_free, $less_free);
