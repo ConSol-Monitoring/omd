@@ -250,7 +250,7 @@ sub test_command {
 sub test_plugin_output {
     my $test = shift;
 
-    ok(1, sprintf("testing pluginout put for %s - %s", $test->{'host'}, $test->{'service'}));
+    ok(1, sprintf("testing plugin output for %s - %s", $test->{'host'}, $test->{'service'}));
 
     # requires latest Livestatus module
     use lib '/omd/versions/default/share/thruk/lib';
