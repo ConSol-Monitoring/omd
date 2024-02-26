@@ -54,7 +54,7 @@ fi
 
 # set perl environment
 PERLARCH=$(perl -e 'use Config; print $Config{archname}')
-export PERL5LIB="/omd/versions/default/lib/perl5/lib/perl5/${PERLARCH}:/omd/versions/default/lib/perl5/lib/perl5:$PERL5LIB"
+export PERL5LIB="/omd/versions/default/lib/perl5/lib/perl5/${PERLARCH}:/omd/versions/default/lib/perl5/lib/perl5:$PERL5LIB:/omd/versions/default/share/thruk/lib"
 
 if [ -z $OMD_BIN ]; then
     OMD_BIN=/usr/bin/omd

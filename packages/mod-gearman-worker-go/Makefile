@@ -10,7 +10,7 @@ GOPKG       = 1.21
 GOVERSION   = $(shell grep ^VERSION ../go-${GOPKG}/Makefile | awk '{ print $$3 }')
 GOPATH      = go
 PWD         = $(shell pwd)
-GITBASE     = github.com/ConSol
+GITBASE     = github.com/consol-monitoring
 GITURL      = $(GITBASE)/$(NAME)
 DEPS_SRC    = deps.tar.gz
 # GIT TAG is set automatically by "make upstream" or "make package"

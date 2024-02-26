@@ -8,6 +8,7 @@ package TestUtils;
 
 use warnings;
 use strict;
+use utf8;
 use Carp;
 use Cwd;
 use Test::More;
@@ -194,16 +195,17 @@ sub test_command {
     }
 
     # matches on stdout?
+    my $out = $t->stdout;
     if(defined $test->{'like'}) {
         for my $expr (ref $test->{'like'} eq 'ARRAY' ? @{$test->{'like'}} : $test->{'like'} ) {
-            like($t->stdout, $expr, "stdout like ".$expr) or do { _diag_cmd($test); $return = 0 };
+            _match($out, $expr, "stdout like ".$expr) or do { _diag_cmd($test); $return = 0 };
         }
     }
 
     # unlike matches on stdout?
     if(defined $test->{'unlike'}) {
         for my $expr (ref $test->{'unlike'} eq 'ARRAY' ? @{$test->{'unlike'}} : $test->{'unlike'} ) {
-            unlike($t->stdout, $expr, "stdout unlike ".$expr) or do { _diag_cmd($test); $return = 0 };
+            _notmatch($out, $expr, "stdout unlike ".$expr) or do { _diag_cmd($test); $return = 0 };
         }
     }
 
@@ -211,7 +213,7 @@ sub test_command {
     $test->{'errlike'} = '/^\s*$/' unless exists $test->{'errlike'};
     if(defined $test->{'errlike'}) {
         for my $expr (ref $test->{'errlike'} eq 'ARRAY' ? @{$test->{'errlike'}} : $test->{'errlike'} ) {
-            like($stderr, $expr, "stderr like ".$expr) or do { _diag_cmd($test); $return = 0 };
+            _match($stderr, $expr, "stderr like ".$expr) or do { _diag_cmd($test); $return = 0 };
         }
     }
 
@@ -228,6 +230,82 @@ sub test_command {
     return $return;
 }
 
+##################################################
+
+=head2 test_plugin_output
+
+  test plugin output for pattern
+
+  needs test hash
+  {
+    site    => site name
+    host    => host name
+    service => service description
+    like    => (list of) regular expressions which have to match plugin_output or long_plugin_output
+    unlike  => (list of) regular expressions which must not match plugin_output or long_plugin_output
+    state   => expected state
+  }
+
+=cut
+sub test_plugin_output {
+    my $test = shift;
+
+    ok(1, sprintf("testing plugin output for %s - %s", $test->{'host'}, $test->{'service'}));
+
+    # requires latest Livestatus module
+    use lib '/omd/versions/default/share/thruk/lib';
+    require Monitoring::Livestatus;
+    my $ml = Monitoring::Livestatus->new(
+        socket => "/omd/sites/".$test->{'site'}."/tmp/run/live",
+    );
+    my $res = $ml->selectall_arrayref(sprintf(
+        "GET services\nFilter: host_name = %s\nFilter: description = %s\nColumns: state plugin_output long_plugin_output perf_data\n",
+        $test->{'host'},
+        $test->{'service'},
+    ), { Slice => 1 });
+    if(ref $res ne 'ARRAY' || scalar @{$res} != 1) {
+        fail("no livestatus result");
+        diag("test:");
+        diag(Dumper($test));
+        diag("result:");
+        diag(Dumper($res));
+        return;
+    }
+    my $row = $res->[0];
+
+    # status code?
+    $test->{'state'} = 0 unless exists $test->{'state'};
+    if(defined $test->{'state'}) {
+        is($row->{'state'}, $test->{'state'}, "state for ".$test->{'host'}." - ".$test->{'service'}." is: ".$test->{'state'});
+    }
+
+
+    # matches output?
+    my $content = $row->{'plugin_output'};
+    $content   .= "\n".$row->{'long_plugin_output'} if $row->{'long_plugin_output'};
+    require Thruk::Utils::Encode;
+    $content = Thruk::Utils::Encode::ensure_utf8($content);
+    if(defined $test->{'like'}) {
+        for my $expr (ref $test->{'like'} eq 'ARRAY' ? @{$test->{'like'}} : $test->{'like'} ) {
+            _match($content, $expr, "plugin_output for ".$test->{'host'}." - ".$test->{'service'}." like ".Thruk::Utils::Encode::encode_utf8($expr));
+        }
+    }
+
+    # not matching output
+    if(defined $test->{'unlike'}) {
+        for my $expr (ref $test->{'unlike'} eq 'ARRAY' ? @{$test->{'unlike'}} : $test->{'unlike'} ) {
+            _notmatch($content, $expr, "plugin_output for ".$test->{'host'}." - ".$test->{'service'}." unlike ".Thruk::Utils::Encode::encode_utf8($expr));
+        }
+    }
+
+    # matches perfdata output?
+    my $perfdata = $row->{'perf_data'};
+    if(defined $test->{'perflike'}) {
+        for my $expr (ref $test->{'perflike'} eq 'ARRAY' ? @{$test->{'perflike'}} : $test->{'perflike'} ) {
+            _match($perfdata, $expr, "perf_data for ".$test->{'host'}." - ".$test->{'service'}." like ".Thruk::Utils::Encode::encode_utf8($expr));
+        }
+    }
+}
 
 ##################################################
 
@@ -270,14 +348,14 @@ sub file_contains {
         # matches?
         if(defined $test->{'like'}) {
             for my $expr (@like) {
-                like($content, $expr, "content like ".$expr) or $failed++;
+                _match($content, $expr, "content like ".$expr) or $failed++;
             }
         }
 
         # don't matches
         if(defined $test->{'unlike'}) {
             for my $expr (@unlike) {
-                unlike($content, $expr, "output unlike ".$expr) or $failed++;
+                _notmatch($content, $expr, "output unlike ".$expr) or $failed++;
             }
         }
     };
@@ -441,7 +519,7 @@ sub test_url {
         ok( $page->{'response'}->is_redirect, 'Request '.$test->{'url'}.' should redirect' ) or diag(Dumper($test, $page->{'response'}));
         if(defined $test->{'location'}) {
             if(defined $page->{'response'}->{'_headers'}->{'location'}) {
-                like($page->{'response'}->{'_headers'}->{'location'}, qr/$test->{'location'}/, "Content should redirect: ".$test->{'location'}) or _diag_request($test, $page);;
+                _match($page->{'response'}->{'_headers'}->{'location'}, qr/$test->{'location'}/, "Content should redirect: ".$test->{'location'}) or _diag_request($test, $page);;
             } else {
                 fail('no redirect header found');
             }
@@ -464,14 +542,14 @@ sub test_url {
     if(defined $test->{'like'}) {
         defined $page->{'content'} or _diag_request($test, $page);
         for my $expr (ref $test->{'like'} eq 'ARRAY' ? @{$test->{'like'}} : $test->{'like'} ) {
-            like($page->{'content'}, $expr, "content like ".$expr) or _diag_request($test, $page);
+            _match($page->{'content'}, $expr, "content like ".$expr) or _diag_request($test, $page);
         }
     }
 
     # not matching output
     if(defined $test->{'unlike'}) {
         for my $expr (ref $test->{'unlike'} eq 'ARRAY' ? @{$test->{'unlike'}} : $test->{'unlike'} ) {
-            unlike($page->{'content'}, $expr, "content unlike ".$expr) or _diag_request($test, $page);
+            _notmatch($page->{'content'}, $expr, "content unlike ".$expr) or _diag_request($test, $page);
         }
     }
 
@@ -1094,6 +1172,112 @@ sub is_docker {
         return 1;
     }
     return;
+}
+
+##################################################
+
+=head2 install_test_checks
+
+  setup test plugins with config
+
+=cut
+sub install_test_checks {
+    my($site) = @_;
+
+    `install -m 755 t/lib/check_locale.py /omd/sites/$site/local/lib/monitoring-plugins/`;
+    `install -m 755 t/lib/test.pl /omd/sites/$site/local/lib/monitoring-plugins/`;
+    `install -m 755 t/lib/test_epn.pl /omd/sites/$site/local/lib/monitoring-plugins/`;
+    `install -m 755 t/lib/test.sh /omd/sites/$site/local/lib/monitoring-plugins/`;
+    `install -m 755 t/lib/test_kill.pl /omd/sites/$site/local/lib/monitoring-plugins/`;
+    `install -m 755 t/lib/utf8.pl /omd/sites/$site/local/lib/monitoring-plugins/`;
+    `install -m 755 t/lib/utf8.pl /omd/sites/$site/local/lib/monitoring-plugins/`;
+    `install -m 755 t/lib/utf8_broken.pl /omd/sites/$site/local/lib/monitoring-plugins/`;
+    TestUtils::test_command({ cmd => "/bin/cp t/data/mod-gearman/testcheck.cfg /omd/sites/$site/etc/naemon/conf.d/testcheck.cfg" });
+
+    return
+}
+
+
+##################################################
+sub _match {
+    my($content, $expr, $msg) = @_;
+
+    if(ref $expr eq 'Regexp' || $expr =~ m/^\//mx) {
+        return(like($content, $expr, $msg));
+    }
+
+    my $idx = index($content, $expr);
+    if($idx == -1) {
+        fail($msg);
+        diag("content should contain: ".$expr);
+        #diag($content);
+        #diag("expression:");
+        #hexdump($expr);
+        #diag("content:");
+        #hexdump($content);
+        return;
+    }
+
+    ok(1, $msg);
+    return 1;
+}
+
+##################################################
+sub _notmatch {
+    my($content, $expr, $msg) = @_;
+
+    if(ref $expr eq 'Regexp' || $expr =~ m/^\//mx) {
+        return(unlike($content, $expr, $msg));
+    }
+
+    my $idx = index($content, $expr);
+    if($idx != -1) {
+        fail($msg);
+        diag("content must not contain: ".$expr);
+        diag($content);
+        #diag("expression:");
+        #hexdump($expr);
+        #diag("content:");
+        #hexdump($content);
+        return;
+    }
+
+    ok(1, $msg);
+    return(1);
+}
+
+##################################################
+sub hexdump {
+    my($str) = @_;
+
+    my @chunks = split//, $str;
+    for my $buffer (@{array_chunk(\@chunks, 16)}) {
+        diag(join('', @{$buffer}));
+        my $hex = unpack('H*', join('', @{$buffer}));
+        diag(sprintf("%-48s  %s\n", $hex =~ s/(..)/$1 /gr, join("", @{$buffer})));
+    }
+}
+
+##################################################
+
+=head2 array_chunk
+
+  array_chunk($list, $number)
+
+return list of <number> evenly chunked parts
+
+=cut
+
+sub array_chunk {
+    my($list, $size) = @_;
+    if(scalar @{$list} < $size) {
+        return([$list]);
+    }
+    my $chunks = [];
+    while(my @chunk = splice( @{$list}, 0, $size ) ) {
+        push @{$chunks}, \@chunk;
+    }
+    return($chunks);
 }
 
 ##################################################
