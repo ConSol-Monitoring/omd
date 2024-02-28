@@ -1,0 +1,154 @@
+From 13fa333fb6475236e0d51301f2c859ab02a9a35a Mon Sep 17 00:00:00 2001
+From: Sven Nierlein <sven@consol.de>
+Date: Wed, 28 Feb 2024 15:37:27 +0100
+Subject: [PATCH] check_icmp: keep performance data order in case of
+ none-reachable hosts
+
+For responding hosts nothing changes:
+
+    ./check_icmp -H 10.0.0.1
+    OK - 10.0.0.1 rta 0.336ms lost 0%|rta=0.336ms;200.000;500.000;0; rtmax=0.471ms;;;; rtmin=0.000ms;;;; pl=0%;40;80;0;100
+
+In case the host is down, the performance data now contain 'U' according to:
+https://www.monitoring-plugins.org/doc/guidelines.html#AEN201
+
+Old:
+    ./check_icmp -H 10.0.0.99
+    CRITICAL - 10.0.0.99: Host unreachable @ 10.0.1.138. rta nan, lost 100%|pl=100%;40;80;0;100
+
+Old:
+    ./check_icmp -H 10.0.0.99
+    CRITICAL - 10.0.0.99: Host unreachable @ 10.0.1.138. rta nan, lost 100%|rta=U;;;; rtmax=U;;;; rtmin=U;;;; pl=100%;40;80;0;100
+
+This confuses some performance graphing tools, ex.: pnp.
+
+Signed-off-by: Sven Nierlein <sven@consol.de>
+---
+ plugins-root/check_icmp.c   | 80 +++++++++++++++++++++++--------------
+ plugins-root/t/check_icmp.t |  5 ++-
+ 2 files changed, 53 insertions(+), 32 deletions(-)
+
+diff --git a/plugins-root/check_icmp.c b/plugins-root/check_icmp.c
+index 303241d35..f788d4282 100644
+--- a/plugins-root/check_icmp.c
++++ b/plugins-root/check_icmp.c
+@@ -1547,46 +1547,66 @@ finish(int sig)
+ 	while(host) {
+ 		if(debug) puts("");
+ 
+-		if (rta_mode && host->pl<100) {
+-			printf("%srta=%0.3fms;%0.3f;%0.3f;0; %srtmax=%0.3fms;;;; %srtmin=%0.3fms;;;; ",
+-			   (targets > 1) ? host->name : "",
+-			   host->rta / 1000, (float)warn.rta / 1000, (float)crit.rta / 1000,
+-			   (targets > 1) ? host->name : "", (float)host->rtmax / 1000,
+-			   (targets > 1) ? host->name : "", (host->rtmin < INFINITY) ? (float)host->rtmin / 1000 : (float)0);
++		if (rta_mode) {
++			if (host->pl<100) {
++				printf("%srta=%0.3fms;%0.3f;%0.3f;0; %srtmax=%0.3fms;;;; %srtmin=%0.3fms;;;; ",
++					(targets > 1) ? host->name : "",
++					host->rta / 1000, (float)warn.rta / 1000, (float)crit.rta / 1000,
++					(targets > 1) ? host->name : "", (float)host->rtmax / 1000,
++					(targets > 1) ? host->name : "", (host->rtmin < INFINITY) ? (float)host->rtmin / 1000 : (float)0);
++			} else {
++				printf("%srta=U;;;; %srtmax=U;;;; %srtmin=U;;;; ",
++					(targets > 1) ? host->name : "",
++					(targets > 1) ? host->name : "",
++					(targets > 1) ? host->name : "");
++			}
+ 		}
+ 
+ 		if (pl_mode) {
+ 			printf("%spl=%u%%;%u;%u;0;100 ", (targets > 1) ? host->name : "", host->pl, warn.pl, crit.pl);
+ 		}
+ 
+-		if (jitter_mode && host->pl<100) {
+-			printf("%sjitter_avg=%0.3fms;%0.3f;%0.3f;0; %sjitter_max=%0.3fms;;;; %sjitter_min=%0.3fms;;;; ",
+-				(targets > 1) ? host->name : "",
+-				(float)host->jitter,
+-				(float)warn.jitter,
+-				(float)crit.jitter,
+-				(targets > 1) ? host->name : "",
+-				(float)host->jitter_max / 1000, (targets > 1) ? host->name : "",
+-				(float)host->jitter_min / 1000
+-			);
++		if (jitter_mode) {
++			if (host->pl<100) {
++				printf("%sjitter_avg=%0.3fms;%0.3f;%0.3f;0; %sjitter_max=%0.3fms;;;; %sjitter_min=%0.3fms;;;; ",
++					(targets > 1) ? host->name : "",
++					(float)host->jitter,
++					(float)warn.jitter,
++					(float)crit.jitter,
++					(targets > 1) ? host->name : "",
++					(float)host->jitter_max / 1000, (targets > 1) ? host->name : "",
++					(float)host->jitter_min / 1000
++				);
++			} else {
++				printf("%sjitter_avg=U;;;; %sjitter_max=U;;;; %sjitter_min=U;;;; ",
++					(targets > 1) ? host->name : "",
++					(targets > 1) ? host->name : "",
++					(targets > 1) ? host->name : "");
++			}
+ 		}
+ 
+-		if (mos_mode && host->pl<100) {
+-			printf("%smos=%0.1f;%0.1f;%0.1f;0;5 ",
+-				(targets > 1) ? host->name : "",
+-				(float)host->mos,
+-				(float)warn.mos,
+-				(float)crit.mos
+-			);
++		if (mos_mode) {
++			if (host->pl<100) {
++				printf("%smos=%0.1f;%0.1f;%0.1f;0;5 ",
++					(targets > 1) ? host->name : "",
++					(float)host->mos,
++					(float)warn.mos,
++					(float)crit.mos);
++			} else {
++				printf("%smos=U;;;; ", (targets > 1) ? host->name : "");
++			}
+ 		}
+ 
+-		if (score_mode && host->pl<100) {
+-			printf("%sscore=%u;%u;%u;0;100 ",
+-				(targets > 1) ? host->name : "",
+-				(int)host->score,
+-				(int)warn.score,
+-				(int)crit.score
+-			);
++		if (score_mode) {
++			if (host->pl<100) {
++				printf("%sscore=%u;%u;%u;0;100 ",
++					(targets > 1) ? host->name : "",
++					(int)host->score,
++					(int)warn.score,
++					(int)crit.score);
++			} else {
++				printf("%sscore=U;;;; ", (targets > 1) ? host->name : "");
++			}
+ 		}
+ 
+ 		host = host->next;
+diff --git a/plugins-root/t/check_icmp.t b/plugins-root/t/check_icmp.t
+index 4f9db8687..de1d88d2f 100644
+--- a/plugins-root/t/check_icmp.t
++++ b/plugins-root/t/check_icmp.t
+@@ -12,7 +12,7 @@ my $allow_sudo = getTestParameter( "NP_ALLOW_SUDO",
+ 	"no" );
+ 
+ if ($allow_sudo eq "yes" or $> == 0) {
+-	plan tests => 39;
++	plan tests => 40;
+ } else {
+ 	plan skip_all => "Need sudo to test check_icmp";
+ }
+@@ -57,7 +57,8 @@ $res = NPTest->testCmd(
+ 	"$sudo ./check_icmp -H $host_nonresponsive -w 10000ms,100% -c 10000ms,100% -t 2"
+ 	);
+ is( $res->return_code, 2, "Timeout - host nonresponsive" );
+-like( $res->output, '/100%/', "Error contains '100%' string (for 100% packet loss)" );
++like( $res->output, '/pl=100%/', "Error contains 'pl=100%' string (for 100% packet loss)" );
++like( $res->output, '/rta=U/', "Error contains 'rta=U' string" );
+ 
+ $res = NPTest->testCmd(
+ 	"$sudo ./check_icmp -w 10000ms,100% -c 10000ms,100%"
