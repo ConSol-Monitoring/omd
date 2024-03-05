@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 #Downloadlink for tars: https://golang.org/dl/
 NAME         = go
-VERSION      = 1.21.6
+VERSION      = 1.21.8
 PACKAGE_ROOT = $(shell cd .. && pwd)
 DIR          = $(NAME)-$(VERSION)
 
