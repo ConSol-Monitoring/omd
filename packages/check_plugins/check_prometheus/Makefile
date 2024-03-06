@@ -4,7 +4,7 @@ NAME        = check_prometheus
 VERSION     = main
 DIR         = $(NAME)-$(VERSION)
 SRC         = $(DIR).tar.gz
-GOPKG       = 1.21
+GOPKG       = 1.22
 GOVERSION   = $(shell grep ^VERSION ../../go-${GOPKG}/Makefile | awk '{ print $$3 }')
 GITURL      = github.com/consol-monitoring/$(NAME)
 # GIT TAG is set automatically by "make upstream" or "make package"
