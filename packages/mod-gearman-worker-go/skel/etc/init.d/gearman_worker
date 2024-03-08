@@ -18,10 +18,10 @@ fi
 
 NAME=gearman_worker
 DAEMON=$OMD_ROOT/bin/mod_gearman_worker
+LOG_FILE=$OMD_ROOT/var/log/mod_gearman/worker.log
 PID_FILE=$OMD_ROOT/tmp/run/gearman_worker.pid
 OPTS="-d --config=$OMD_ROOT/etc/mod-gearman/worker.cfg --config=$OMD_ROOT/etc/mod-gearman/worker.cfg.d/ --pidfile=$PID_FILE"
 
-mkdir -p $OMD_ROOT/var/log/gearman
 rm -f $OMD_ROOT/var/log/mod-gearman/gearman
 
 # worker opens lot of connections, so increase default ulimit to our hard limit
