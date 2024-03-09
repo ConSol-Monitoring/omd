@@ -25,7 +25,7 @@ build:
 		export GOROOT=$(PWD)/../go-$(GOPKG)/go-$(GOVERSION)/ && \
 		export GOPATH=$(PWD)/$(GOPATH)/ && \
 		export PATH=$$GOROOT/bin:$$PATH && \
-		go install -ldflags "-s -w -X main.Build=$(OMD_VERSION)-$(GIT_TAG)" $(GITURL)/$(NAME)
+		go install -ldflags "-s -w -X main.Build=$(OMD_VERSION)-$(GIT_TAG)" $(GITURL)/cmd/lmd
 
 install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/bin
