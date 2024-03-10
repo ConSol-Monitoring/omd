@@ -93,6 +93,7 @@ MODULES += nagiosplugin-1.3.3.tar.gz
 # There is also an omdnotificationforwarder...whl (see $SWHEEL below)
 # because "pip wheel ..." would require the hatch build system.
 MODULES += omdnotificationforwarder-2.4.1-py3-none-any.whl
+MODULES += omdeventhandler-0.3-py3-none-any.whl
 
 # check_vsphere
 MODULES += monplugin-0.6.2.tar.gz                    # check_vsphere
