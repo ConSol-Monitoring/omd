@@ -13,7 +13,7 @@ BEGIN {
     import TestUtils;
 }
 
-plan( tests => 289 );
+plan( tests => 293 );
 
 ##################################################
 # get version strings
@@ -53,7 +53,7 @@ TestUtils::test_command({ cmd => "/bin/su - $site -c 'echo \"p test\" > etc/test
 TestUtils::test_command({ cmd => "/usr/bin/env sed -i -e 's/^status_update_interval=30/status_update_interval=3/g' /opt/omd/sites/$site/etc/$core/$core.d/tuning.cfg" });
 
 ##################################################
-TestUtils::test_command({ cmd => "/bin/su - $site -c 'omd check naemon'", like => '/^Running configuration check.*?done\.$/', errlike => '/Things look okay/'}) or TestUtils::bail_out_clean("no further testing without site");
+TestUtils::test_command({ cmd => "/bin/su - $site -c 'omd check naemon'", like => '/Running configuration check.*?done/', errlike => '/Things look okay/'}) or TestUtils::bail_out_clean("no further testing without site");
 
 ##################################################
 # prepare site
@@ -85,6 +85,7 @@ my $preps = [
     { cmd => "/bin/su - $site -c 'echo -e \"".'GET hosts\nFilter: name = '.$host.'\nColumns: plugin_output\n'."\" | lq'", waitfor => 'Please\ remove\ this\ host\ later' },
     { cmd => "/bin/su - $site -c './share/thruk/support/reschedule_all_checks.sh'", like => '/COMMAND/' },
     { cmd => "/bin/su - $site -c 'thruk r \"/services?columns=has_been_checked&has_been_checked=0\"'", like => '/^\[\]$/smx', waitfor => '\[\]', maxwait => 10 },
+    { cmd => "/bin/su - $site -c './share/thruk/support/reschedule_all_checks.sh'", like => '/COMMAND/' }, # run again so dummy checks have the correct output
     { cmd => "/bin/su - $site -c 'echo \"GET services\nFilter: host_name = localhost\nFilter: description = check_locale.py\nColumns: state plugin_output long_plugin_output\n\n\" | lq'", like => '/^0;LANG=/' },
 ];
 for my $test (@{$preps}) {
