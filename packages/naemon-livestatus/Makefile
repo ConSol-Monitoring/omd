@@ -9,6 +9,10 @@ CONFIGUREOPTS = \
     --libdir=$(OMD_ROOT)/lib \
     --prefix=$(OMD_ROOT)
 
+CFLAGS  =
+CFLAGS += -g3
+CFLAGS += -fsigned-char
+
 build:
 	tar xzf $(NAME)-$(VERSION).tar.gz
 	set -e ; for p in patches/*.patch ; do \
@@ -20,8 +24,8 @@ build:
 		autoreconf -s; \
 		automake --add-missing; \
 		NAEMON_LIBS="$(shell PKG_CONFIG_PATH="`ls -d1 ../naemon/naemon-*/.`" pkg-config --libs naemon-uninstalled)" \
-		NAEMON_CFLAGS="$(shell PKG_CONFIG_PATH="`ls -d1 ../naemon/naemon-*/.`" pkg-config --cflags naemon-uninstalled)" \
-		 ./configure $(CONFIGUREOPTS)
+		NAEMON_CFLAGS="$(shell PKG_CONFIG_PATH="`ls -d1 ../naemon/naemon-*/.`" pkg-config --cflags naemon-uninstalled) $(CFLAGS)" \
+		  ./configure $(CONFIGUREOPTS)
 	rm -f $(DIR)/src/lib $(DIR)/src/naemon
 	cd $(DIR)/src && src=`ls -d1 ../../../naemon/naemon-*/src/naemon` && ln -s $$src naemon
 	cd $(DIR)/src && lib=`ls -d1 ../../../naemon/naemon-*/lib` && ln -s $$lib lib

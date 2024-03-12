@@ -16,7 +16,9 @@ CONFIGUREOPTS = \
 
 CC = gcc
 GCCVERSIONGTEQ7 := $(shell expr `gcc -dumpversion | cut -f1 -d.` \>= 7)
-CFLAGS=
+
+CFLAGS  =
+CFLAGS += -g3
 
 ifeq "$(GCCVERSIONGTEQ7)" "1"
   CFLAGS += -Wimplicit-fallthrough=0 \
@@ -30,7 +32,7 @@ build:
 	    echo "applying $$p..." ; \
 	    ( cd $(DIR) && patch -p1 -b -F 5 ) < $$p ; \
 	done
-	cd $(DIR) && CFLAGS="$(CFLAGS) -g3" ./configure $(CONFIGUREOPTS)
+	cd $(DIR) && CFLAGS="$(CFLAGS)" ./configure $(CONFIGUREOPTS)
 	$(MAKE) -C $(DIR) all
 
 install:
