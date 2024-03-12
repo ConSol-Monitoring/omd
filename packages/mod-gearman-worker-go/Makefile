@@ -14,7 +14,7 @@ GITBASE     = github.com/consol-monitoring
 GITURL      = $(GITBASE)/$(NAME)
 DEPS_SRC    = deps.tar.gz
 # GIT TAG is set automatically by "make upstream" or "make package"
-GIT_TAG     = v1.4.0
+GIT_TAG     = v1.5.0
 
 .PHONY: skel
 
@@ -51,10 +51,17 @@ deps: clean
 		cd $(GOPATH)/src/$(GITBASE) && \
 		git clone --depth=1 --branch "$(BRANCH)" https://$(GITURL) && \
 		cd $(NAME) && \
-		make vendor
-		cd $(PWD) && \
-		tar zcf $(DEPS_SRC) --exclude=.git --exclude=*_test.go $(GOPATH)/src/$(GITURL)/vendor
-		chmod -R 777 $(GOPATH) && \
+		if [ "$(GIT_TAG)" = "$$(git describe --always --tags)" ]; then \
+			echo "dependencies already up to date: $(GIT_TAG)"; \
+		else \
+			find -name \*_test.go -delete && \
+			make vendor && \
+			cd $(PWD) && \
+			tar cf deps.tar --exclude=.git --exclude=*_test.go $(GOPATH)/src/$(GITURL)/vendor && \
+			chmod -R 777 $(GOPATH); \
+			rm -f $(DEPS_SRC); \
+			gzip -9 deps.tar; \
+		fi
 		rm -rf $(GOPATH)
 
 package: clean
@@ -65,10 +72,16 @@ package: clean
 		cd $(GOPATH)/src/$(GITBASE) && \
 		git clone --depth=1 --branch "$(BRANCH)" https://$(GITURL) && \
 		cd $(NAME) && \
-		sed -i $(PWD)/Makefile -e 's/^GIT_TAG.*$$/GIT_TAG     = '$$(git describe --always --tags)'/g' && \
-		cd $(PWD) && \
-		tar zcf $(SRC) --exclude=.git --exclude=*_test.go $(GOPATH)/src/$(GITURL) && \
-		chmod -R 777 $(GOPATH) && \
+		if [ "$(GIT_TAG)" = "$$(git describe --always --tags)" ]; then \
+			echo "source already up to date: $(GIT_TAG)"; \
+		else \
+			sed -i $(PWD)/Makefile -e 's/^GIT_TAG.*$$/GIT_TAG     = '$$(git describe --always --tags)'/g' && \
+			cd $(PWD) && \
+			tar cf $(NAME)-$(VERSION).tar --exclude=.git --exclude=*_test.go $(GOPATH)/src/$(GITURL) && \
+			chmod -R 777 $(GOPATH); \
+			rm -f $(SRC); \
+			gzip -9 $(NAME)-$(VERSION).tar; \
+		fi
 		rm -rf $(GOPATH)
 
 upstream: clean
