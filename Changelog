@@ -1,6 +1,8 @@
 This file documents the revision history for the Open Monitoring Distribution (Labs Edition)
 
 next:
+          - thruk:
+            - lmd update to 2.2.0
           - naemon:
             - update to 1.4.2
             - livestatus update to 1.4.2
