@@ -13,7 +13,7 @@ BEGIN {
     import TestUtils;
 }
 
-plan( tests => 293 );
+plan( tests => 298 );
 
 ##################################################
 # get version strings
@@ -167,6 +167,10 @@ TestUtils::test_command({ cmd => "/bin/su - $site -c 'echo -e \"".'GET services\
 TestUtils::test_command({ cmd => "/bin/su - $site -c 'echo -e \"".'GET services\nFilter: description = internal_dummy4\nColumns: state plugin_output\n'."\" | lq'", like => '/^2;CRITICAL: critical$/' });
 TestUtils::test_command({ cmd => "/bin/su - $site -c 'echo -e \"".'GET services\nFilter: description = internal_nsc_web\nColumns: state plugin_output\n'."\" | lq'", like => '/^0;OK$/' });
 TestUtils::test_command({ cmd => "/bin/su - $site -c 'echo -e \"".'GET services\nFilter: description = internal_nsc_web2\nColumns: state plugin_output\n'."\" | lq'", like => '/^0;OK$/' });
+
+##################################################
+# test calculate_required_worker
+TestUtils::test_command({ cmd => "/bin/su - $site -c 'calculate_required_worker'", like => ['/minmum required worker/', '/average interval/'] });
 
 ##################################################
 # test sqlite retention
