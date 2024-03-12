@@ -12,8 +12,8 @@ my $class = Monitoring::Livestatus::Class::Lite->new(
 );
 
 my $status   = $class->table('status'  )->columns(qw/interval_length/)->hashref_array();
-my $hosts    = $class->table('hosts'   )->columns(qw/state_type check_interval retry_interval execution_time/)->filter({active_checks_enabled => 1})->hashref_array();
-my $services = $class->table('services')->columns(qw/state_type check_interval retry_interval execution_time/)->filter({active_checks_enabled => 1})->hashref_array();
+my $hosts    = $class->table('hosts'   )->columns(qw/state_type check_interval retry_interval execution_time/)->filter({active_checks_enabled => 1, check_interval => { '>' => 0 }})->hashref_array();
+my $services = $class->table('services')->columns(qw/state_type check_interval retry_interval execution_time/)->filter({active_checks_enabled => 1, check_interval => { '>' => 0 }})->hashref_array();
 
 my $interval_length   = $status->[0]->{'interval_length'} // 60;
 my $concurrent_checks = 0;
