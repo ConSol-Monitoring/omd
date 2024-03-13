@@ -5,7 +5,7 @@
 check_omd.py - a script for checking a particular OMD site status
 2018 By Christian Stankowic <info at cstan dot io>
 https://github.com/stdevel/check_omd
-Last modified by Lorenz Gruenwald 18.09.2023 (requires python 3.6)
+Last modified by Lorenz Gruenwald 13.03.2024 (requires python 3.6)
 """
 
 import argparse
@@ -18,8 +18,9 @@ import os.path
 import time
 import psutil
 import re
+from pathlib import Path
 
-__version__ = "1.6.1"
+__version__ = "1.6.2"
 """
 str: Program version
 """
@@ -233,7 +234,7 @@ if __name__ == "__main__":
 
     LOGGER.debug("OPTIONS: %s", OPTIONS)
 
-    LOCKFILE = '/tmp/check_omd.lock'
+    LOCKFILE = f"{str(Path.home())}/tmp/check_omd.lock"
 
     if OPTIONS.heal:
         if (os.path.isfile(LOCKFILE)):
