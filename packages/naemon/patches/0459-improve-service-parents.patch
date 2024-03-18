@@ -1,0 +1,313 @@
+From c3268f6c43a28e0fb3694e9aed69effe5a256b67 Mon Sep 17 00:00:00 2001
+From: Sven Nierlein <sven@consol.de>
+Date: Mon, 18 Mar 2024 13:54:54 +0100
+Subject: [PATCH] add new options to keep services running as long as they are
+ up
+
+The issue with the options:
+
+- host_down_disable_service_checks
+- service_skip_check_dependency_status
+- service_skip_check_host_down_status
+- host_skip_check_dependency_status
+
+is that reports break because hosts/services suddenly stop executing and
+keep their OK state. Which makes those options pretty unusable.
+
+So in order to keep reporting correct, you need to keep services running, even
+if the host is down. With these new options, hosts/services keep on running as
+long as they are up. And as soon as the service is down, it stops running until
+the host comes back up. That way naemon has to do less checks, especially less
+checks which run into timeouts and such but reporting is still correct.
+
+The option service_skip_check_dependency_status=-2 will also be used for service parents.
+
+Adding a new option service_parents_disable_service_checks to prevent running service
+checks if service parents are down.
+
+Recommended settings are:
+
+    host_down_disable_service_checks=1       ; disable service checks if host is down
+    service_parents_disable_service_checks=1 ; also disable service checks if parents are down
+    service_skip_check_host_down_status=-2   ; but keep running as long as they are ok
+    service_skip_check_dependency_status=-2  ; same, but for dependency checks.
+    host_skip_check_dependency_status=-2     ; and for host checks.
+---
+ sample-config/naemon.cfg.in | 18 ++++++--
+ src/naemon/checks_host.c    | 33 +++++++++-----
+ src/naemon/checks_service.c | 89 ++++++++++++++++++++++++++++++++-----
+ src/naemon/configuration.c  |  8 ++--
+ src/naemon/defaults.h       |  2 +
+ src/naemon/globals.h        |  1 +
+ src/naemon/utils.c          |  1 +
+ 7 files changed, 123 insertions(+), 29 deletions(-)
+
+diff --git a/sample-config/naemon.cfg.in b/sample-config/naemon.cfg.in
+index 091e3773..406fb30c 100644
+--- a/sample-config/naemon.cfg.in
++++ b/sample-config/naemon.cfg.in
+@@ -1041,18 +1041,27 @@ allow_empty_hostgroup_assignment=0
+ # This option will disable all service checks if the host is not in an UP state
+ #
+ # While desirable in some environments, enabling this value can distort report
+-# values as the expected quantity of checks will not have been performed
+-
++# values as the expected quantity of checks will not have been performed.
++# Set service_skip_check_host_down_status to -2 to mitigate this.
+ #host_down_disable_service_checks=0
+ 
++# DISABLE SERVICE CHECKS WHEN SERVICE PARENTS DOWN
++# This option will disable all service checks if the service parents are not in an UP state
++#
++# While desirable in some environments, enabling this value can distort report
++# values as the expected quantity of checks will not have been performed.
++# Set service_skip_check_dependency_status to -2 to mitigate this.
++#service_parents_disable_service_checks=0
++
+ # SET SERVICE/HOST STATUS WHEN SERVICE CHECK SKIPPED
+ # These options will allow you to set the status of a service when its
+-# service check is skipped due to one of two reasons:
+-# 1) failed dependency check; 2) host not up
++# service check is skipped due to the following reasons:
++# 1) failed dependency check; 2) host not up 3) service parents failed
+ # Number 2 can only happen if 'host_down_disable_service_checks' above
+ # is set to 1.
+ # Valid values for the service* options are:
+ #     -1     Do not change the service status (default)
++#     -2     Keep service running as long as it is ok/warning.
+ #      0     Set the service status to STATE_OK
+ #      1     Set the service status to STATE_WARNING
+ #      2     Set the service status to STATE_CRITICAL
+@@ -1064,6 +1073,7 @@ allow_empty_hostgroup_assignment=0
+ # status of a host when its check is skipped due to a failed dependency check.
+ # Valid values for the host_dependency_skip_check_status are:
+ #     -1     Do not change the service status (default)
++#     -2     Keep host running as long as it is up.
+ #      0     Set the host status to STATE_UP
+ #      1     Set the host status to STATE_DOWN
+ #      2     Set the host status to STATE_UNREACHABLE
+diff --git a/src/naemon/checks_host.c b/src/naemon/checks_host.c
+index ea78d9b4..7a6215c2 100644
+--- a/src/naemon/checks_host.c
++++ b/src/naemon/checks_host.c
+@@ -243,18 +243,29 @@ static int run_async_host_check(host *hst, int check_options, double latency)
+ 		/* check host dependencies for execution */
+ 		log_debug_info(DEBUGL_CHECKS, 0, "Host '%s' checking dependencies...\n", hst->name);
+ 		if (check_host_dependencies(hst, EXECUTION_DEPENDENCY) == DEPENDENCIES_FAILED) {
+-			if (host_skip_check_dependency_status >= 0) {
+-				hst->current_state = host_skip_check_dependency_status;
+-				if (strstr(hst->plugin_output, "(host dependency check failed)") == NULL) {
+-					char *old_output = nm_strdup(hst->plugin_output);
+-					nm_free(hst->plugin_output);
+-					nm_asprintf(&hst->plugin_output, "(host dependency check failed) was: %s", old_output);
+-					nm_free(old_output);
+-				}
++			int keep_running = FALSE;
++			switch(host_skip_check_dependency_status) {
++				case SKIP_KEEP_RUNNING_WHEN_UP:
++					if (hst->current_state == STATE_UP) {
++						keep_running = TRUE;
++					}
++					break;
++				case STATE_UP:
++				case STATE_DOWN:
++				case STATE_UNREACHABLE:
++					hst->current_state = host_skip_check_dependency_status;
++					if (strstr(hst->plugin_output, "(host dependency check failed)") == NULL) {
++						char *old_output = nm_strdup(hst->plugin_output);
++						nm_free(hst->plugin_output);
++						nm_asprintf(&hst->plugin_output, "(host dependency check failed) was: %s", old_output);
++						nm_free(old_output);
++					}
++					break;
++			}
++			if(!keep_running) {
++				log_debug_info(DEBUGL_CHECKS, 0, "Host '%s' failed dependency check. Aborting check\n", hst->name);
++				return ERROR;
+ 			}
+-
+-			log_debug_info(DEBUGL_CHECKS, 0, "Host '%s' failed dependency check. Aborting check\n", hst->name);
+-			return ERROR;
+ 		}
+ 	}
+ 
+diff --git a/src/naemon/checks_service.c b/src/naemon/checks_service.c
+index 0222a373..4fab8215 100644
+--- a/src/naemon/checks_service.c
++++ b/src/naemon/checks_service.c
+@@ -200,27 +200,94 @@ static void handle_service_check_event(struct nm_event_execution_properties *evp
+ 			/* check service dependencies for execution */
+ 			log_debug_info(DEBUGL_CHECKS, 0, "Service '%s' on host '%s' checking dependencies...\n", temp_service->description, temp_service->host_name);
+ 			if (check_service_dependencies(temp_service, EXECUTION_DEPENDENCY) == DEPENDENCIES_FAILED) {
+-				if (service_skip_check_dependency_status >= 0) {
+-					temp_service->current_state = service_skip_check_dependency_status;
+-					if (strstr(temp_service->plugin_output, "(service dependency check failed)") == NULL) {
+-						char *old_output = nm_strdup(temp_service->plugin_output);
+-						nm_free(temp_service->plugin_output);
+-						nm_asprintf(&temp_service->plugin_output, "(service dependency check failed) was: %s", old_output);
+-						nm_free(old_output);
++				int keep_running = FALSE;
++				switch(service_skip_check_dependency_status) {
++					case SKIP_KEEP_RUNNING_WHEN_UP:
++						if (temp_service->current_state <= STATE_WARNING) {
++							keep_running = TRUE;
++						}
++						break;
++					case STATE_OK:
++					case STATE_WARNING:
++					case STATE_CRITICAL:
++					case STATE_UNKNOWN:
++						temp_service->current_state = service_skip_check_dependency_status;
++						if (strstr(temp_service->plugin_output, "(service dependency check failed)") == NULL) {
++							char *old_output = nm_strdup(temp_service->plugin_output);
++							nm_free(temp_service->plugin_output);
++							nm_asprintf(&temp_service->plugin_output, "(service dependency check failed) was: %s", old_output);
++							nm_free(old_output);
++						}
++						break;
++				}
++				if (!keep_running) {
++					log_debug_info(DEBUGL_CHECKS, 0, "Service '%s' on host '%s' failed dependency check. Aborting check\n", temp_service->description, temp_service->host_name);
++					return;
++				}
++			}
++
++			/* check service parents for execution */
++			if(service_parents_disable_service_checks && temp_service->parents) {
++				int parents_failed = FALSE;
++				if (temp_service->current_state != STATE_OK) {
++					servicesmember *sm = temp_service->parents;
++					while (sm && sm->service_ptr->current_state != STATE_OK) {
++						sm = sm->next;
++					}
++					if (sm == NULL) {
++						parents_failed = TRUE;
+ 					}
+ 				}
+-				log_debug_info(DEBUGL_CHECKS, 0, "Service '%s' on host '%s' failed dependency check. Aborting check\n", temp_service->description, temp_service->host_name);
+-				return;
++				if(parents_failed) {
++					switch(service_skip_check_dependency_status) {
++						case SKIP_KEEP_RUNNING_WHEN_UP:
++							if (temp_service->current_state <= STATE_WARNING) {
++								parents_failed = FALSE;
++							}
++							break;
++						case STATE_OK:
++						case STATE_WARNING:
++						case STATE_CRITICAL:
++						case STATE_UNKNOWN:
++							temp_service->current_state = service_skip_check_dependency_status;
++							if (strstr(temp_service->plugin_output, "(service parents failed)") == NULL) {
++								char *old_output = nm_strdup(temp_service->plugin_output);
++								nm_free(temp_service->plugin_output);
++								nm_asprintf(&temp_service->plugin_output, "(service parents failed) was: %s", old_output);
++								nm_free(old_output);
++							}
++							break;
++					}
++				}
++				if(parents_failed) {
++					log_debug_info(DEBUGL_CHECKS, 0, "Service '%s' on host '%s' failed parents check. Aborting check\n", temp_service->description, temp_service->host_name);
++					return;
++				}
+ 			}
+ 
++
+ 			/* check if host is up - if not, do not perform check */
+ 			if (host_down_disable_service_checks) {
+ 				if ((temp_host = temp_service->host_ptr) == NULL) {
+ 					log_debug_info(DEBUGL_CHECKS, 2, "Host pointer NULL in handle_service_check_event().\n");
+ 					return;
+-				} else {
+-					if (temp_host->current_state != STATE_UP) {
++				}
++				if (temp_host->current_state != STATE_UP) {
++					int keep_running = TRUE;
++					switch (service_skip_check_host_down_status) {
++					/* only keep running if service is up or host_down_disable_service_checks is disabled */
++					case SKIP_KEEP_RUNNING_WHEN_UP:
++						if (temp_service->current_state > STATE_WARNING) {
++							log_debug_info(DEBUGL_CHECKS, 2, "Host and service state not UP, so service check will not be performed - will be rescheduled as normal.\n");
++							keep_running = FALSE;
++						}
++						break;
++					default:
+ 						log_debug_info(DEBUGL_CHECKS, 2, "Host state not UP, so service check will not be performed - will be rescheduled as normal.\n");
++						keep_running = FALSE;
++						break;
++					}
++					if(!keep_running) {
+ 						if (service_skip_check_host_down_status >= 0) {
+ 							temp_service->current_state = service_skip_check_host_down_status;
+ 							if (strstr(temp_service->plugin_output, "(host is down)") == NULL) {
+diff --git a/src/naemon/configuration.c b/src/naemon/configuration.c
+index 959ad2d4..355641f3 100644
+--- a/src/naemon/configuration.c
++++ b/src/naemon/configuration.c
+@@ -1067,23 +1067,25 @@ read_config_file(const char *main_config_file, nagios_macros *mac)
+ 			allow_circular_dependencies = atoi(value);
+ 		} else if (!strcmp(variable, "host_down_disable_service_checks")) {
+ 			host_down_disable_service_checks = strtoul(value, NULL, 0);
++		} else if (!strcmp(variable, "service_parents_disable_service_checks")) {
++			service_parents_disable_service_checks = strtoul(value, NULL, 0);
+ 		} else if (!strcmp(variable, "service_skip_check_dependency_status")) {
+ 			service_skip_check_dependency_status = atoi(value);
+-			if (service_skip_check_dependency_status < -1 || service_skip_check_dependency_status > 3) {
++			if (service_skip_check_dependency_status < -2 || service_skip_check_dependency_status > 3) {
+ 				nm_asprintf(&error_message, "Illegal value for service_skip_check_dependency_status");
+ 				error = TRUE;
+ 				break;
+ 			}
+ 		} else if (!strcmp(variable, "service_skip_check_host_down_status")) {
+ 			service_skip_check_host_down_status = atoi(value);
+-			if (service_skip_check_host_down_status < -1 || service_skip_check_host_down_status > 3) {
++			if (service_skip_check_host_down_status < -2 || service_skip_check_host_down_status > 3) {
+ 				nm_asprintf(&error_message, "Illegal value for service_skip_check_host_down_status");
+ 				error = TRUE;
+ 				break;
+ 			}
+ 		} else if (!strcmp(variable, "host_skip_check_dependency_status")) {
+ 			host_skip_check_dependency_status = atoi(value);
+-			if (host_skip_check_dependency_status < -1 || host_skip_check_dependency_status > 3) {
++			if (host_skip_check_dependency_status < -2 || host_skip_check_dependency_status > 3) {
+ 				nm_asprintf(&error_message, "Illegal value for host_skip_check_dependency_status");
+ 				error = TRUE;
+ 				break;
+diff --git a/src/naemon/defaults.h b/src/naemon/defaults.h
+index c1dd48a1..2bcb31f0 100644
+--- a/src/naemon/defaults.h
++++ b/src/naemon/defaults.h
+@@ -89,6 +89,8 @@
+ #define DEFAULT_ALLOW_CIRCULAR_DEPENDENCIES             0        /* Allow circular dependencies */
+ #define DEFAULT_HOST_DOWN_DISABLE_SERVICE_CHECKS        0        /* run service checks if the host is down */
+ #define DEFAULT_SKIP_CHECK_STATUS                      -1        /* do not change status by default */
++#define SKIP_KEEP_RUNNING_WHEN_UP                      -2        /* run service checks as long as the host and service is up (ok/warning) */
++#define DEFAULT_SERVICE_PARENTS_DISABLE_SERVICE_CHECKS  0        /* run service checks if service parents are down */
+ 
+ #define DEFAULT_HOST_PERFDATA_FILE_TEMPLATE "[HOSTPERFDATA]\t$TIMET$\t$HOSTNAME$\t$HOSTEXECUTIONTIME$\t$HOSTOUTPUT$\t$HOSTPERFDATA$"
+ #define DEFAULT_SERVICE_PERFDATA_FILE_TEMPLATE "[SERVICEPERFDATA]\t$TIMET$\t$HOSTNAME$\t$SERVICEDESC$\t$SERVICEEXECUTIONTIME$\t$SERVICELATENCY$\t$SERVICEOUTPUT$\t$SERVICEPERFDATA$"
+diff --git a/src/naemon/globals.h b/src/naemon/globals.h
+index 4abb5acc..1cfdabe3 100644
+--- a/src/naemon/globals.h
++++ b/src/naemon/globals.h
+@@ -146,6 +146,7 @@ extern unsigned long max_debug_file_size;
+ extern int allow_empty_hostgroup_assignment;
+ extern int allow_circular_dependencies;
+ extern int host_down_disable_service_checks;
++extern int service_parents_disable_service_checks;
+ extern int service_skip_check_dependency_status;
+ extern int service_skip_check_host_down_status;
+ extern int host_skip_check_dependency_status;
+diff --git a/src/naemon/utils.c b/src/naemon/utils.c
+index 9d273298..1c101f44 100644
+--- a/src/naemon/utils.c
++++ b/src/naemon/utils.c
+@@ -165,6 +165,7 @@ char *use_timezone = NULL;
+ int allow_empty_hostgroup_assignment = DEFAULT_ALLOW_EMPTY_HOSTGROUP_ASSIGNMENT;
+ int allow_circular_dependencies = DEFAULT_ALLOW_CIRCULAR_DEPENDENCIES;
+ int host_down_disable_service_checks = DEFAULT_HOST_DOWN_DISABLE_SERVICE_CHECKS;
++int service_parents_disable_service_checks = DEFAULT_SERVICE_PARENTS_DISABLE_SERVICE_CHECKS;
+ int service_skip_check_dependency_status = DEFAULT_SKIP_CHECK_STATUS;
+ int service_skip_check_host_down_status = DEFAULT_SKIP_CHECK_STATUS;
+ int host_skip_check_dependency_status = DEFAULT_SKIP_CHECK_STATUS;
