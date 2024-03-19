@@ -97,7 +97,7 @@ MODULES += omdeventhandler-0.4.2-py3-none-any.whl
 
 # check_vsphere
 MODULES += monplugin-0.6.2.tar.gz                    # check_vsphere
-MODULES += checkvsphere-0.3.4.tar.gz
+MODULES += checkvsphere-0.3.5.tar.gz
 
 # pywbem?
 #MODULES += nocaselist-1.0.6.tar.gz                   # pywbem-1.5.0
