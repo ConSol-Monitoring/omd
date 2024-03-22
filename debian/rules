@@ -64,7 +64,6 @@ install: build
 	# -- remove version independent dirs, will be created later by postinst
 	rm -f $(_PWD)/debian/`dh_listpackages | grep -v debug`/usr/bin/omd
 	rmdir $(_PWD)/debian/`dh_listpackages | grep -v debug`/usr/bin
-	rm -f $(_PWD)/debian/`dh_listpackages | grep -v debug`/etc/init.d/omd
 	rm -f $(_PWD)/debian/`dh_listpackages | grep -v debug`/usr/share/man/man8/omd.8.gz
 	rm -f $(_PWD)/debian/`dh_listpackages | grep -v debug`/omd
 	rmdir $(_PWD)/debian/`dh_listpackages | grep -v debug`/opt/omd/apache

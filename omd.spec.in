@@ -114,7 +114,7 @@ fi
 # not want to make it implicitely active again.
 ACTIVATE_INIT=0
 if [ ! -e /omd/versions/default ] ; then
-    echo "Activating init script /etc/init.d/omd or systemd service"
+    echo "Activating omd systemd service"
     ACTIVATE_INIT=1
 fi
 
@@ -122,27 +122,15 @@ echo "New default version is %{version}."
 ln -sfn "%{version}" /omd/versions/default
 ln -sfn /omd/versions/default/bin/omd /usr/bin/omd
 ln -sfn /omd/versions/default/share/man/man8/omd.8.gz /usr/share/man/man8/omd.8.gz
-if test -d /etc/init.d; then ln -sfn /omd/versions/default/share/omd/omd.init /etc/init.d/omd; else : ; fi
 ln -sfn /omd/versions/default/share/omd/apache.conf @APACHE_CONFDIR@/zzz_omd.conf
 mkdir -p /etc/bash_completion.d
 ln -sfn /omd/versions/default/lib/omd/omd_bash_completion /etc/bash_completion.d/omd
 
-# If the init script has been marked as to be activated
-# really activate the init script now
-if [ $ACTIVATE_INIT -eq 1 ]; then
-    chkconfig --add omd >/dev/null 2>&1
-    chkconfig omd on >/dev/null 2>&1
-fi
-
-%if 0%{?_unitdir:1}
-    if test -e /omd/versions/default/share/omd/omd.service; then
-        rm -f %{_unitdir}/omd.service
-        cp -fp /omd/versions/default/share/omd/omd.service %{_unitdir}/omd.service
-        %systemd_post omd.service
-        systemctl daemon-reload
-        systemctl enable omd.service
-    fi
-%endif
+rm -f %{_unitdir}/omd.service
+cp -fp /omd/versions/default/share/omd/omd.service %{_unitdir}/omd.service
+%systemd_post omd.service
+systemctl daemon-reload
+systemctl enable omd.service
 
 
 
@@ -234,24 +222,18 @@ if [ $1 = 0 ] ; then
 # sles12 sometimes does not remove some empty folders
 rm -rf /omd/versions/%{version}
 rm -f /omd/versions/default
-%if 0%{?_unitdir:1}
 rm -f %{_unitdir}/omd.service
 %systemd_postun omd.service
 systemctl daemon-reload
-%endif
 v=$(ls -A /omd/versions 2>/dev/null| sort -n | tail -n 1)
 if [ -n "$v" ]; then
     echo "New default version is $v"
     ln -sfn "$v" /omd/versions/default
-%if 0%{?_unitdir:1}
-if test -e /omd/versions/default/share/omd/omd.service; then
     rm -f %{_unitdir}/omd.service
     cp -fp /omd/versions/default/share/omd/omd.service %{_unitdir}/omd.service
     %systemd_post omd.service
     systemctl daemon-reload
     systemctl enable omd.service
-fi
-%endif
 else
     echo "Removing system group 'omd'"
     groupdel omd
