@@ -43,11 +43,12 @@ class SNMPYaml(coshsh.item.Item):
     def __init__(self, *args, **kwargs):
         super(SNMPYaml, self).__init__(kwargs)
         self.dir = kwargs.get("dir", "/tmp")
+        self.want_tool = kwargs.get("want_tool", "prometheus")
         self.modules = {}
         self.module_combinations = []
         self.missing_modules = []
         self.content = { "modules": {} }
-        self.config_files = { "prometheus": {} }
+        self.config_files = { self.want_tool: {} }
         with open(os.environ["OMD_ROOT"]+"/etc/omd/site.conf") as f:
             settings = {k: v.strip().strip("'") for k, v in (line.split("=") for line in f)}
             self.snmp_exporter_on = True if settings.get("CONFIG_PROMETHEUS_SNMP_EXPORTER", "on") == "on" else False
@@ -98,9 +99,9 @@ class SNMPYaml(coshsh.item.Item):
                 print(errs.decode("ascii"))
                 #time.sleep(1000)
                 if generated:
-                    with open(tmpdir+'/generator.yml') as x: self.config_files["prometheus"]["generator.yml"] = x.read()
+                    with open(tmpdir+'/generator.yml') as x: self.config_files[self.want_tool]["generator.yml"] = x.read()
                     # funktion cisco-process replace
-                    with open(tmpdir+'/snmp.yml') as x: self.config_files["prometheus"]["snmp.yml"] = x.read()
+                    with open(tmpdir+'/snmp.yml') as x: self.config_files[self.want_tool]["snmp.yml"] = x.read()
         if not generated:
             raise DatarecipientCorrupt
         else:
@@ -127,7 +128,7 @@ class SNMPYaml(coshsh.item.Item):
 
     def patch(self):
         # self.config_files["prometheus"]["snmp.yml"]
-        snmp_yml = yaml.safe_load(self.config_files["prometheus"]["snmp.yml"])
+        snmp_yml = yaml.safe_load(self.config_files[self.want_tool]["snmp.yml"])
         patched = False
         for file in sorted(glob.glob(os.path.join(self.dir, "*.patch"))):
             logger.debug("reading patch file " + file)
@@ -158,7 +159,7 @@ class SNMPYaml(coshsh.item.Item):
                 logger.error("yaml error in file {}".format(os.path.basename(file)))
                 logger.error(str(e))
         if patched:
-            self.config_files["prometheus"]["snmp.yml"] = yaml.dump(snmp_yml)
+            self.config_files[self.want_tool]["snmp.yml"] = yaml.dump(snmp_yml)
         
     def dump(self):
         yaml.dump(self.content, sys.stdout)
@@ -170,6 +171,7 @@ class SnmpExporterGenerator(coshsh.datasource.Datasource):
     def __init__(self, **kwargs):
         super(self.__class__, self).__init__(**kwargs)
         self.dir = kwargs.get("dir", "/tmp")
+        self.want_tool = kwargs.get("want_tool", "prometheus")
 
     def open(self):
         logger.info('open datasource %s' % self.name)
@@ -183,7 +185,7 @@ class SnmpExporterGenerator(coshsh.datasource.Datasource):
             'modules': {}
         }
         logger.info("reading " + self.dir)
-        snmpyaml = SNMPYaml(dir=self.dir)
+        snmpyaml = SNMPYaml(dir=self.dir, want_tool=self.want_tool)
         self.add("snmpyamls", snmpyaml)
         for file in sorted(glob.glob(os.path.join(self.dir, "*.yml"))):
             logger.debug("reading file " + file)
