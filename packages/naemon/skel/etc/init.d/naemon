@@ -76,7 +76,7 @@ save_retention() {
 
 case "$1" in start|restart)
     rm -f $CMD_FILE
-    rm -f $CHECKRESULTS_DIR/*
+    find $CHECKRESULTS_DIR/. -type f -delete >/dev/null 2>&1
 esac
 case "$1" in start|restart|reload)
     rm -f $OMD_ROOT/var/naemon/var/naemon/retention.dat??????
