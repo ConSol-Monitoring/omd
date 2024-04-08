@@ -22,7 +22,7 @@ next:
             - update to 2.45.4
           - coshsh update to 10.2.1.3
           - omdnotificationforwarder update to 2.6.0.3
-          - omdeventhandler update to 0.5.0
+          - omdeventhandler update to 1.0
           - pnp4nagios update to 9ee65f7
 
 5.30     Jan 29 2024
