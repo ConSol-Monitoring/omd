@@ -16,7 +16,7 @@ for DIR in `find /proc/ -maxdepth 1 -type d | egrep "^/proc/[0-9]"` ; do
     SUM=0
     PID=`echo $DIR | cut -d / -f 3`
     USER=`stat -c "%U" /proc/$PID/cmdline 2>/dev/null`
-    CMD=`cat /proc/$PID/cmdline 2>/dev/null`
+    CMD=`cat /proc/$PID/cmdline 2>/dev/null | tr -d '\000'`
     if [ "$CMD" = "" ]; then
         continue
     fi
