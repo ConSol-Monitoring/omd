@@ -27,4 +27,6 @@ rm -f $OMD_ROOT/var/log/mod-gearman/gearman
 # worker opens lot of connections, so increase default ulimit to our hard limit
 ulimit -n $(ulimit -Hn) >/dev/null 2>&1
 
+mkdir -p $OMD_ROOT/var/log/gearman
+
 __generic_init "$*"
