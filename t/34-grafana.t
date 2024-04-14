@@ -49,7 +49,7 @@ TestUtils::test_command({ cmd => "/omd/sites/$site/lib/monitoring-plugins/check_
 
 # test 503 page with grafana stopped
 TestUtils::test_command({ cmd => $omd_bin." stop $site grafana", like => '/Stopping grafana/' });
-TestUtils::test_url({ url => 'http://localhost/'.$site.'/grafana/', like => '/OMD: GRAFANA not available/', auth => $auth, code => 503, skip_html_lint => 1 });
+TestUtils::test_url({ url => 'http://localhost/'.$site.'/grafana/', like => '/OMD: GRAFANA not started/', auth => $auth, code => 503, skip_html_lint => 1 });
 
 #grafana interface with ssl
 TestUtils::test_command({ cmd => $omd_bin." stop $site", like => '/Stopping grafana/' });

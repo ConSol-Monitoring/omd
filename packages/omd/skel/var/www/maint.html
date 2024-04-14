@@ -1,8 +1,10 @@
-#!###ROOT###/etc/apache/php-wrapper
-
 <!DOCTYPE html>
 <!--
-    This is the omd maintenance page for when a proxied service is not available.
+    This is the omd maintenance page, it will be displayed when the site apache
+    is stopped. (As ErrorDocument 503 from the system apache)
+    This page can be customized, but you cannot reference any content from the
+    site itself (because that one is stopped.)
+    Images and such should be added inline in base64 notation.
 -->
 <html lang="en">
   <head>
@@ -52,17 +54,8 @@
   </head>
   <body>
     <div class="container">
-      <?php
-        foreach($_REQUEST as $key => $val) {
-            if(isset($_SERVER["CONFIG_".$key])) {
-                if($_SERVER["CONFIG_".$key] == $val) {
-                    print "<div><h1>OMD: $key not started</h1></div><div>Service '".$key."' is currently undergoing maintenance.</div>";
-                } else {
-                    print "<div><h1>OMD: $key not enabled</h1></div><div>Service '".$key."' is disabled.</div>";
-                }
-            }
-        }
-      ?>
+      <div><h1>OMD: Site Not Started</h1></div>
+      <div>We're sorry for the inconvenience. This site is currently undergoing maintenance.</div>
       <div>Please check back later.</div>
       <div><button onclick="window.location.reload()">retry now</button></div>
     </div>

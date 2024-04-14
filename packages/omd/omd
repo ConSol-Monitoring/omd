@@ -2673,22 +2673,34 @@ def create_apache_hook(sitename):
         .write("Include %s/etc/apache/mode.conf\n" % site_dir(sitename))
     open("/omd/apache/%s.include" % sitename, "w")\
         .write("Include %s/etc/apache/system.d/*.conf\n" % site_dir(sitename))
+    sync_apache_maint_page(sitename)
+
+def sync_apache_maint_page(sitename):
+    maint_file = '%s/var/www/maint.html' % site_dir(sitename)
+    if os.path.exists(maint_file):
+        os.system("rsync -a --chmod='F0644' --chown='%s:%s' '%s' '/omd/apache/maint_%s.html'" % (sitename, sitename, maint_file, sitename))
 
 def delete_apache_hook(sitename):
     hook_path = "/omd/apache/%s.conf" % sitename
-    if not os.path.exists(hook_path):
-        return
-    try:
-        os.remove(hook_path)
-    except Exception as e:
-        sys.stderr.write("Cannot remove apache hook %s: %s\n" % (hook_path, e))
+    if os.path.exists(hook_path):
+        try:
+            os.remove(hook_path)
+        except Exception as e:
+            sys.stderr.write("Cannot remove apache hook %s: %s\n" % (hook_path, e))
+
     hook_path = "/omd/apache/%s.include" % sitename
-    if not os.path.exists(hook_path):
-        return
-    try:
-        os.remove(hook_path)
-    except Exception as e:
-        sys.stderr.write("Cannot remove apache hook %s: %s\n" % (hook_path, e))
+    if os.path.exists(hook_path):
+        try:
+            os.remove(hook_path)
+        except Exception as e:
+            sys.stderr.write("Cannot remove apache hook %s: %s\n" % (hook_path, e))
+
+    hook_path = "/omd/apache/maint_%s.html" % sitename
+    if os.path.exists(hook_path):
+        try:
+            os.remove(hook_path)
+        except Exception as e:
+            sys.stderr.write("Cannot remove apache hook %s: %s\n" % (hook_path, e))
 
 
 def init_cmd(name, action):
@@ -3837,6 +3849,7 @@ def main_update(args, options={}):
         if hot_update :
             sys.stdout.write('starting all services after update.\n')
             init_action("start", [], options)
+        sync_apache_maint_page(g_sitename)
         stop_logging()
 
 

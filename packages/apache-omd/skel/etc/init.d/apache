@@ -39,6 +39,9 @@ case "$1" in start|restart|reload)
   # With this ping the problem disappears.
   test -f /etc/debian_version && test $(cut -f1 -d" " /proc/uptime | cut -f1 -d".") -lt 300 && ping -nqc 10 $CONFIG_APACHE_TCP_ADDR >/dev/null 2>&1
 esac
+case "$1" in stop)
+  rsync -a --chmod='F0644' "${OMD_ROOT}/var/www/maint.html" "/omd/apache/maint_${OMD_SITE}.html" >/dev/null 2>&1
+esac
 
 kill_stale_php_cgis() {
   local COUNTER=$1
