@@ -41,8 +41,9 @@
         margin-bottom: 20px;
       }
       .warning {
-        font-size: 42px;
+        font-size: 50px;
         color: #ea580c;
+        margin: -10px;
       }
       /* dark mode colors */
       body.dark-mode {
