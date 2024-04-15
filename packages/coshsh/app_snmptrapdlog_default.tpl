@@ -9,6 +9,7 @@
   max_check_attempts              1
   check_interval                  1
   retry_interval                  1
+  _WORKER                         local
 }
 
 {% endfor %}
@@ -22,6 +23,7 @@
   max_check_attempts              3
   check_interval                  5
   retry_interval                  5
+  _WORKER                         local
 }
 
 {{ application|service("app_snmptrapdlog_default_check_snmptrapd") }}
@@ -33,5 +35,6 @@
   max_check_attempts              3
   check_interval                  1
   retry_interval                  1
+  _WORKER                         local
 }
 
