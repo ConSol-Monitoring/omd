@@ -40,6 +40,10 @@
       p {
         margin-bottom: 20px;
       }
+      .warning {
+        font-size: 42px;
+        color: #ea580c;
+      }
       /* dark mode colors */
       body.dark-mode {
         background-color: #333;
@@ -52,6 +56,7 @@
   </head>
   <body>
     <div class="container">
+      <div class="warning">&#x26A0;</div>
       <?php
         foreach($_REQUEST as $key => $val) {
             if(isset($_SERVER["CONFIG_".$key])) {
@@ -82,3 +87,4 @@
     });
   </script>
 </html>
+
