@@ -38,6 +38,7 @@ case "$1" in
     #ProxyPassReverse http://$CONFIG_PROMETHEUS_TCP_ADDR:$PORT/$OMD_SITE/prometheus
     ProxyPassReverse http://$CONFIG_PROMETHEUS_TCP_ADDR:$PORT/
     RequestHeader set X-WEBAUTH-USER %{REMOTE_USER}e
+    ErrorDocument 503 /503.html?PROMETHEUS=on
 </Location>
 EOF
     ;;
