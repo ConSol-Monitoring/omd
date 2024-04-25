@@ -29,7 +29,7 @@ EOF
         if [ $2 = "on" ]; then
             CURRENT=$(grep -H CONFIG_WEB_REDIRECT /omd/sites/*/etc/omd/site.conf | grep "'on'" | grep -v "/$OMD_SITE/" | sed -e 's%/omd/sites/\(.*\)/etc/omd/site.conf.*%\1%')
             if [ "x$CURRENT" != "x" ]; then
-                echo "only on site can be redirected from /" >&2
+                echo "only one site can be redirected from /" >&2
                 echo "disabling redirect for $OMD_SITE" >&2
                 echo "redirect is currently enabled for site: $CURRENT" >&2
                 echo "off"
