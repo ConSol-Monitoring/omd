@@ -41,9 +41,10 @@ if ! test -s $OMD_ROOT/var/grafana/data/grafana.db; then
     START_TIMEOUT=150
 fi
 grafana_post_start() {
+    COMPLETED_PATTERN="migrations completed"
     echo -n "first run, waiting for initial database creation"
     for x in $(seq 600); do
-        grep -c "Completed legacy migration" $LOG_FILE >/dev/null 2>&1 && break
+        grep -c "$COMPLETED_PATTERN" $LOG_FILE >/dev/null 2>&1 && break
         [ $((x%10)) -eq 0 ] && echo -n "."
         if [ $x -gt 30 ]; then
             if !__generic_init_pid >/dev/null 2>&1; then
@@ -54,7 +55,7 @@ grafana_post_start() {
         fi
         sleep 0.1
     done
-    SUCCESS=$(grep -c "Completed legacy migration" $LOG_FILE)
+    SUCCESS=$(grep -c "$COMPLETED_PATTERN" $LOG_FILE)
     if [ "$SUCCESS" -eq 0 ]; then
         # try again once, but disable this callback
         tail $LOG_FILE
@@ -64,7 +65,7 @@ grafana_post_start() {
         __generic_init_wait_start
     fi
     for x in $(seq 600); do
-        grep -c "Completed legacy migration" $LOG_FILE >/dev/null 2>&1 && break
+        grep -c "$COMPLETED_PATTERN" $LOG_FILE >/dev/null 2>&1 && break
         [ $((x%10)) -eq 0 ] && echo -n "."
         if [ $x -gt 30 ]; then
             __generic_init_pid >/dev/null 2>&1 || break # stop if pid disapears
@@ -72,7 +73,7 @@ grafana_post_start() {
         sleep 0.1
     done
     sleep 1
-    SUCCESS=$(grep -c "Completed legacy migration" $LOG_FILE)
+    SUCCESS=$(grep -c "$COMPLETED_PATTERN" $LOG_FILE)
     if [ "$SUCCESS" -eq 0 ]; then
         echo ""
         echo "startup failed, see the logfile for details: $LOG_FILE"

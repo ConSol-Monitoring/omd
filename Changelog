@@ -20,7 +20,7 @@ next:
           - gearman:
             - mod-gearman-worker-go update to 1.5.1
           - grafana:
-            - update to 10.3.1
+            - update to 10.4.2
             - thruk-datasource update to 2.0.7
           - prometheus:
             - update to 2.45.4
