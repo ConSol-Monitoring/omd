@@ -17,7 +17,7 @@ PIP=python3 -m pip
 
 # install toolchain required to build wheels
 BASE =
-BASE += setuptools-69.5.1-py3-none-any.whl
+BASE += setuptools-59.6.0.tar.gz
 BASE += wheel-0.37.1.tar.gz
 BASE += pip-21.3.1.tar.gz
 
@@ -61,11 +61,7 @@ MODULES += pyexcel-xlsx-0.6.0.tar.gz
 
 # for Ansible
 MODULES += six-1.16.0.tar.gz                         # paramiko-2.12.0, pyvmomi
-MODULES += cffi-1.16.0.tar.gz                        # bcrypt
-MODULES += pycparser-2.22-py3-none-any.whl           # bcrypt
-MODULES += PyNaCl-1.5.0.tar.gz                       # paramiko-3
-MODULES += bcrypt-3.2.2.tar.gz                       # paramiko-3
-MODULES += paramiko-3.4.0-py3-none-any.whl
+MODULES += paramiko-1.18.5.tar.gz
 MODULES += PyYAML-6.0.tar.gz
 
 # for snmp simulator and coshsh snmp inventory
@@ -120,22 +116,17 @@ build:
 	export CFLAGS="-std=c99"; \
 	set -e ; \
 	for M in $(BASE); do \
-		MBASE=$$(echo $$M | sed -E -e 's/.tar.gz//g' -e 's/.zip//g' -e 's/-(py2\.)*py3-.*whl//g' -e 's/-/\*/g') ; \
+		MBASE=$$(echo $$M | sed -E -e 's/.tar.gz//g' -e 's/.zip//g' -e 's/-/\*/g') ; \
 		WHEEL=$$(ls $(WHEELSDIR)/$${MBASE}-* 2>/dev/null | head -1) ; \
-		SWHEEL=$$(ls src/$${MBASE}-* 2>/dev/null | head -1 | sed -e 's/^src.//g') ; \
 		[[ -n "$$WHEEL" ]] && [[ -f "$$WHEEL" ]] && continue ; \
-		if [[ -n "$$SWHEEL" ]]; then \
-			cp src/$$SWHEEL $(WHEELSDIR) ; \
-		else \
-			( \
-				cd src && \
-				( tar zxvf $$M || : ) && \
-				cd ./$$MBASE/ && \
-				python3 setup.py bdist_wheel; \
-			); \
-			mv  ./src/$$MBASE/dist/*.whl $(WHEELSDIR); \
-			rm -rf ./src/$$MBASE/; \
-		fi ; \
+		( \
+			cd src && \
+			( tar zxvf $$M || : ) && \
+			cd ./$$MBASE/ && \
+			python3 setup.py bdist_wheel; \
+		); \
+		mv  ./src/$$MBASE/dist/*.whl $(WHEELSDIR); \
+		rm -rf ./src/$$MBASE/; \
 		WHEEL=$$(ls $(WHEELSDIR)/$${MBASE}-* 2>/dev/null | head -1) ; \
 		$(PIP) install --no-cache-dir --no-index --no-deps --find-links=$(WHEELSDIR) --target=$(BUILDDEST) --upgrade $$WHEEL ; \
 	done; \
