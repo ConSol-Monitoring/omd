@@ -30,6 +30,13 @@ my $site2    = TestUtils::create_test_site('testsnmp2') or TestUtils::bail_out_c
 my $curl    = '/usr/bin/curl --user root:root';
 my $systemctl = "/bin/systemctl";
 
+my $selinux = 0;
+if(`getenforce 2>/dev/null` =~ m/Enforcing/) {
+    `setenforce 0 >/dev/null 2>&1`; # does not work with se linux enabled, samplicate daemon cannot read the tmp file
+    $selinux = 1;
+    diag("disabled selinux");
+}
+
 # according to /opt/omd/versions/default/share/samplicate/README.systemd...
 TestUtils::test_command({ cmd => "/bin/cp /opt/omd/versions/default/share/samplicate/*.service /etc/systemd/system" });
 # reduce sleep. just for the tests
@@ -134,5 +141,11 @@ TestUtils::test_command({ cmd => "$systemctl disable samplicate_watch", errlike 
 TestUtils::test_command({ cmd => "$systemctl disable samplicate", errlike => $os =~ /SLES 12/ ? undef : '/Removed/' });
 TestUtils::test_command({ cmd => "/bin/rm -f /etc/systemd/system/samplicate_watch.service" });
 TestUtils::test_command({ cmd => "/bin/rm -f /etc/systemd/system/samplicate.service" });
+
+# restore selinux
+if($selinux) {
+    `setenforce 1 >/dev/null 2>&1`;
+    diag("enabled selinux again");
+}
 
 done_testing();
