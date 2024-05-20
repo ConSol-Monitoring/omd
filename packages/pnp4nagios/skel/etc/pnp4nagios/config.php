@@ -145,7 +145,7 @@ $conf['overview-range'] = 1 ;
 #
 # Scale the preview images used in /popup 
 #
-$conf['popup-width'] = "300px";
+$conf['popup-width'] = "600px";
 #
 # jQuery UI Theme
 # http://jqueryui.com/themeroller/
