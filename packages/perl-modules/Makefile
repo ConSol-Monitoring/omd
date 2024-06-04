@@ -103,7 +103,7 @@ MODULES = \
           Pod-Simple-3.35.tar.gz \
           Pod-Usage-1.69.tar.gz \
           Scalar-List-Utils-1.49.tar.gz \
-          Spreadsheet-ParseExcel-0.65.tar.gz \
+          Spreadsheet-ParseExcel-0.66.tar.gz \
           Stream-Buffered-0.03.tar.gz \
           String-CRC32-1.6.tar.gz \
           Sub-Exporter-Progressive-0.001013.tar.gz \
