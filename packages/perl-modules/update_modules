@@ -4,7 +4,6 @@ use warnings;
 use strict;
 use Data::Dumper;
 use lib 'lib';
-use lib 'src/lib';
 use BuildHelper;
 
 my @modules;
@@ -31,48 +30,14 @@ for my $file (@modules) {
         }
     }
 
-    if($file =~ m/^MongoDB/mx) {
-        print "skipped, broken since 0.46 on redhat 5.8\n";
-        next;
-    }
-    if($file =~ m/^ExtUtils\-Depends\-/mx) {
-        print "skipped, cpan points to wrong module\n";
-        next;
-    }
-    if($file =~ m/^File-Temp\-/mx) {
-        print "skipped, broken since 0.22\n";
-        next;
-    }
-    if($file =~ m/^Module-Build\-/mx) {
-        print "skipped, newer version requires dependecies which fail on old platforms\n";
-        next;
-    }
-    if($file =~ m/^GD\-/mx) {
-        print "skipped, requires new Module:Build, see above\n";
-        next;
-    }
-    if($file =~ m/^Moose\-/mx) {
-        print "skipped, breaks Excel::Template::Plus::TT with 'Class::MOP::load_class is deprecated'\n";
-        next;
-    }
-    if($file =~ m/^Nagios\-Plugin\-/mx) {
-        print "skipped\n";
-        next;
-    }
-    if($file =~ m/^ExtUtils\-Manifest\-/mx) {
-        print "skipped, broken symlinks in make distcheck\n";
-        next;
-    }
-    if($file =~ m/^JSON\-XS/mx) {
-        print "skipped, broken release, migrate to Cpanel::JSON::XS\n";
-        next;
-    }
-    if($file =~ m/^Log\-Dispatch/mx) {
-        print "skipped, newer releases have lots of dependencies\n";
+    my($modname,$modversion) = BuildHelper::file_to_module($file);
+
+    my $skip = BuildHelper::skip_update($modname);
+    if($skip) {
+        print "skipped, ", $skip, "\n";
         next;
     }
 
-    my($modname,$modversion) = BuildHelper::file_to_module($file);
     my $urlpath = BuildHelper::get_url_for_module($modname);
     my $tarball = $urlpath;
     $tarball =~ s/^.*\///g;

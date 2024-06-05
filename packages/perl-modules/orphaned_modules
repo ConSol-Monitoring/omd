@@ -3,6 +3,7 @@
 use warnings;
 use strict;
 use Getopt::Long;
+use Cwd;
 
 use lib 'lib';
 use BuildHelper;
@@ -14,27 +15,16 @@ BEGIN {
 };
 
 ####################################
-my $verbose = 0;
-GetOptions ('v|verbose' => \$verbose);
+our($minimal_perl_version, @packages, $additional_requirements, $build_requirements, $skip_missing);
+do("./build.config") or die($@);
 
 ####################################
-my @packages     = glob("../jmx4perl/jmx4perl-*.tar.gz ../thruk/thruk-*.tar.gz ../check_plugins/*/*.tar.gz");
-my $more_modules = {
-        'App::cpanminus'                => '0',         # OMD
-        'CPAN'                          => '0',         # OMD
-        'File::Copy::Recursive'         => '0',         # required by Thruks inc::Module::Install
-        'Module::Install'               => '1.01',      # OMD
-        'Monitoring::Plugin'            => '0',         # OMD
-        'Nagios::Plugin'                => '0.35',      # OMD
-        'HTML::Lint'                    => '2.06',      # OMD tests
-        'Monitoring::Livestatus'        => '0',         # OMD
-        'Monitoring::Livestatus::Class' => '0.04',      # OMD tests
-        'DBI'                           => '0',         # check_oracle_health / check_mysql_health
-        'DBD::mysql'                    => '4.019',     # check_mysql_health
-        'Gearman::Client'               => '1.11',      # pnp4nagios / gearman
-        'Crypt::Rijndael'               => '1.09',      # pnp4nagios / gearman
-        'Term::ReadLine::Gnu'           => '1.20',      # jmx4perl
-};
+my $verbose = 0;
+my $list_mode;
+GetOptions(
+    'v|verbose' => \$verbose,
+    'l|list'    => \$list_mode,
+);
 
 ####################################
 # get module dependencies
@@ -42,14 +32,45 @@ my($deps,$files) = BuildHelper::get_all_deps(1);
 my $orphaned     = BuildHelper::get_orphaned($deps, $files, $verbose);
 
 ####################################
+if($list_mode) {
+    my $cwd = cwd();
+    chdir("src") or die("cannot change to src dir");
+    my @tarballs = glob("*.tgz *.tar.gz *.zip");
+    chdir($cwd) or die("cannot change dir back");
+    my $tarballs = {};
+    my $dups = {};
+    for my $t (@tarballs) { $tarballs->{$t} = $t; }
+    for my $p (@packages) {
+        next unless -e $p;
+        printf("* %s\n", $p);
+        my $meta     = BuildHelper::get_meta($p);
+        my $rem_deps = BuildHelper::get_deps_from_meta($meta, "runtime");
+        for my $dep (sort keys %{$rem_deps}) {
+            _print_deps(2, $dep, $dups, $tarballs);
+        }
+    }
+    for my $dep (sort keys %{$additional_requirements}) {
+        _print_deps(2, $dep, $dups, $tarballs);
+    }
+    for my $dep (sort keys %{$build_requirements}) {
+        _print_deps(2, $dep, $dups, $tarballs);
+    }
+    for my $t (sort keys %{$tarballs}) {
+        print "WARNING: ",$t, " is not used anywhere and can be removed.\n";
+    }
+    exit;
+}
+
+####################################
 # remove referenced modules
 for my $p (@packages) {
+    next unless -e $p;
     my $meta     = BuildHelper::get_meta($p);
-    my $rem_deps = BuildHelper::get_deps_from_meta($meta, 1);
+    my $rem_deps = BuildHelper::get_deps_from_meta($meta, "runtime");
     for my $rem_dep (keys %{$rem_deps}) {
         my $rdep = BuildHelper::module_to_file($rem_dep, $files, $rem_deps->{$rem_dep});
-        my $cv   = BuildHelper::is_core_module($rem_dep, 5.008);
-        if(!$rdep and !BuildHelper::version_compare($cv, $rem_deps->{$rem_dep}) and $rem_dep !~ m/^(Test|Devel)/mx) {
+        my $cv   = BuildHelper::is_core_module($rem_dep, $minimal_perl_version);
+        if(!$rdep && !BuildHelper::version_compare($cv, $rem_deps->{$rem_dep}) && !defined $skip_missing->{$rem_dep}) {
             print "WARNING: ",$rem_dep, " does not resolve to a file\n";
         } else {
             delete $orphaned->{$rdep} if $rdep;
@@ -60,19 +81,25 @@ for my $p (@packages) {
 ####################################
 for my $f (keys %{$files}) {
     my($m,$v) = BuildHelper::file_to_module($files->{$f});
-    my $cv    = BuildHelper::is_core_module($m, 5.008);
+    next if defined $additional_requirements->{$m};
+    next if defined $build_requirements->{$m};
+    my $cv    = BuildHelper::is_core_module($m, $minimal_perl_version);
     if($cv and BuildHelper::version_compare($cv, $v)) {
         print "WARNING: ",$m, " is a core module (".$cv.") and ",$files->{$m}," should be removed\n";
     }
 }
 
 # check other modules
-for my $m (keys %{$more_modules}) {
-    if(BuildHelper::is_core_module($m, 5.008)) {
-        print "WARNING: ",$m, " is a core module and should be removed\n";
-        next;
+for my $m (keys %{$additional_requirements}) {
+    my $mdep = BuildHelper::module_to_file($m, $files, $additional_requirements->{$m});
+    if(!defined $mdep) {
+        print "WARNING: ",$m, " does not resolve to a file\n";
+    } else {
+        delete $orphaned->{$mdep};
     }
-    my $mdep = BuildHelper::module_to_file($m, $files, $more_modules->{$m});
+}
+for my $m (keys %{$build_requirements}) {
+    my $mdep = BuildHelper::module_to_file($m, $files, $build_requirements->{$m});
     if(!defined $mdep) {
         print "WARNING: ",$m, " does not resolve to a file\n";
     } else {
@@ -84,8 +111,38 @@ for my $m (keys %{$more_modules}) {
 # print result
 for my $file (keys %{$orphaned}) {
     my($m,$v) = BuildHelper::file_to_module($file);
-    if(!defined $more_modules->{$m}) {
+    if(!defined $additional_requirements->{$m} && !defined $build_requirements->{$m}) {
         print $file, " is orphaned and could probably removed\n";
     }
 }
 
+####################################
+sub _print_deps {
+    my($lvl, $mod, $dups, $tarballs) = @_;
+
+    my $file  = BuildHelper::module_to_file($mod, $files);
+    delete $tarballs->{$file} if $file;
+    my $cv    = BuildHelper::is_core_module($mod, $minimal_perl_version);
+    if(BuildHelper::version_compare($cv, $deps->{$mod})) {
+        if($lvl <= 2) {
+            printf("%-12s %-30s %s\n", "*"x$lvl, $mod, "core module");
+        }
+        return;
+    }
+    if($dups->{$mod}) {
+        printf("%-12s %-30s %s\n", "*"x$lvl, $mod, "duplicate");
+        return;
+    }
+    $dups->{$mod} = 1;
+    printf("%-12s %-30s %s\n", "*"x$lvl, $mod, $file//"");
+    return unless $file;
+    my $cwd = cwd();
+    chdir("src") or die("cannot change to src dir");
+    my $meta  = BuildHelper::get_meta($file);
+    chdir($cwd) or die("cannot change dir back");
+    my $deps  = BuildHelper::get_deps_from_meta($meta, "runtime");
+    for my $dep (sort keys %{$deps}) {
+        next if $mod eq $dep;
+        _print_deps($lvl+1, $dep, $dups, $tarballs);
+    }
+}

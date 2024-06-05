@@ -19,18 +19,30 @@ if(defined $ARGV[0] and $ARGV[0] eq '-u') {
     open(my $out, '>', 'Makefile.new') or die("cannot open Makefile.new: $!");
     open(my $in, '<', 'Makefile') or die("cannot open Makefile: $!");
     my $found = 0;
+    my $prefound = 0;
+    my $premodules = {};
     while(my $line = <$in>) {
+        if($prefound) {
+            my $mod = $line;
+            $mod =~ s/\\$//gmx;
+            $mod =~ s/^\s*//gmx;
+            $mod =~ s/\s*$//gmx;
+            chomp($mod);
+            if($mod =~ m/\.gz/) {
+                for my $m (glob("src/".$mod)) {
+                    $m =~ s/^src\///gmx;
+                    $premodules->{$m} = $m;
+                }
+            }
+        }
+        if($line =~ m/^PREMODULES\s=/) {
+            $prefound = 1;
+        }
         if($line =~ m/^MODULES\s=/) {
+            $prefound = 0;
             print $out "MODULES = \\\n";
             for my $file (@{$sorted}) {
-                next if $file =~ m/^ExtUtils\-MakeMaker\-\d+/mx;
-                next if $file =~ m/^parent\-\d+/mx;
-                next if $file =~ m/^version\-\d+/mx;
-                next if $file =~ m/^Module\-CoreList\-\d+/mx;
-                next if $file =~ m/^JSON\-/mx;
-                next if $file =~ m/^Cpanel\-JSON\-/mx;
-                next if $file =~ m/^Types\-Serialiser\-\d+/mx;
-                next if $file =~ m/^common\-sense\-\d+/mx;
+                next if $premodules->{$file};
                 printf $out "          %s \\\n", $file;
             }
             printf $out "          %s\n", $last if defined $last;

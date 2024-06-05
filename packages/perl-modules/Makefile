@@ -10,12 +10,12 @@ SYBASE   = $(shell readlink -m ../freetds/tmpinstall$(OMD_ROOT))
 # ubuntu (=> 22.04 breaks with archdir perl-base)
 EXTUTILSPATCHED=$(shell perl -V 2>&1 | grep extutils_set_libperl_path)
 ifeq ($(EXTUTILSPATCHED),)
-  BASE_MODULES = ExtUtils-MakeMaker-*.tar.gz
+  PREMODULES = ExtUtils-MakeMaker-*.tar.gz
 else
-  BASE_MODULES =
+  PREMODULES =
 endif
 
-BASE_MODULES += \
+PREMODULES += \
 	      parent-*.tar.gz \
 	      version-*.tar.gz \
 	      Module-CoreList-*.tar.gz \
@@ -253,7 +253,7 @@ build:
 	    export PERL5LIB=$(P5TMPDIST)/dest/lib/perl5:$(P5TMPDIST)/src/lib; \
 	    export SYBASE=$(SYBASE); \
 	    cd $(P5TMPDIST)/src && \
-	        FORCE=1 ./build_module.pl -d "$(DISTRO)" -p $(P5TMPDIST)/dest $(BASE_MODULES); \
+	        FORCE=1 ./build_module.pl -d "$(DISTRO)" -p $(P5TMPDIST)/dest $(PREMODULES); \
 	    export PERL_JSON_BACKEND='Cpanel::JSON::XS'; \
 	    cd $(P5TMPDIST)/src && \
 	        ./build_module.pl -d "$(DISTRO)" -p $(P5TMPDIST)/dest $(MODULES)
