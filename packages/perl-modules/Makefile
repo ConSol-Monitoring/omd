@@ -224,9 +224,6 @@ MODULES = \
           List-UtilsBy-0.10.tar.gz \
           List-AllUtils-0.14.tar.gz \
           namespace-autoclean-0.28.tar.gz \
-          DateTime-Locale-0.45.tar.gz \
-          DateTime-TimeZone-1.88.tar.gz \
-          DateTime-1.18.tar.gz \
           File-Tail-1.3.tar.gz \
           UUID-0.28.tar.gz \
           Thruk-Utils-XS-0.02.tar.gz \
