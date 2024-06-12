@@ -9,11 +9,13 @@ next:
             - update to 1.4.2
             - livestatus update to 1.4.2
           - plugins:
+            - check_dell_health update to 1.1.0.1
             - check_hpasm update to 4.9.0.1
             - check_mssql_health update to 2.7.7
             - check_nsc_web update to 0.7.2
             - check_ntp_health update to 1.5.0.1
             - check_nwc_health update to 11.4.0.1
+            - check_rittal_health update to 4.0
             - check_ups_health update to 4.2.1
             - check_vsphere update to 0.3.6
             - check_wut_health update to 3.2.1
@@ -28,6 +30,7 @@ next:
           - omdeventhandler update to 1.1.0.1
           - omdnotificationforwarder update to 2.6.1.1
           - pnp4nagios update to 8c4d79a
+          - victoriametrics update to 1.101.0
 
 5.30     Jan 29 2024
           - Thruk: update to 3.12
