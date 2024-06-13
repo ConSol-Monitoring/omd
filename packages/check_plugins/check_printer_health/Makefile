@@ -1,7 +1,7 @@
 include ../../../Makefile.omd
 
 NAME = check_printer_health
-VERSION = 1.1.0.2
+VERSION = 1.2
 DIR = $(NAME)-$(VERSION)
 
 .PHONY: skel
