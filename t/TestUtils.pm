@@ -440,6 +440,22 @@ sub set_cookie {
 
 ##################################################
 
+=head2 delete_cookie_store
+
+    delete_cookie_store()
+
+  Removes cookie store from disk.
+
+=cut
+sub delete_cookie_store {
+    our($cookie_file, $cookie_jar);
+    unlink($cookie_file) if $cookie_file;
+    undef $cookie_file;
+    undef $cookie_jar;
+}
+
+##################################################
+
 =head2 remove_test_site
 
   removes a test site
@@ -923,7 +939,10 @@ sub _request {
     }
 
     my $response;
-    if(defined $data->{'post'}) {
+    if(defined $data->{'request'}) {
+        $response = $ua->request($data->{'request'});
+        $data->{'url'} = $data->{'request'}->uri() unless $data->{'url'};
+    } elsif(defined $data->{'post'}) {
         $response = $ua->post($data->{'url'}, $data->{'post'});
     } else {
         $response = $ua->get($data->{'url'});

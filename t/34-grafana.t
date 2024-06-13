@@ -4,6 +4,7 @@ use warnings;
 use strict;
 use Test::More;
 use Sys::Hostname;
+use HTTP::Request::Common 6.12 qw/GET POST/;
 
 BEGIN {
     use lib('t');
@@ -13,7 +14,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 147 );
+plan( tests => 161 );
 
 ##################################################
 # create our test site
@@ -77,20 +78,58 @@ TestUtils::test_command({ cmd => $omd_bin." start $site", like => '/Starting gra
 TestUtils::test_command({ cmd => "/bin/su - $site -c 'cat var/log/grafana/grafana.log'", like => '/HTTP Server Listen/', waitfor => 'HTTP\ Server\ Listen', maxwait => 180 });
 TestUtils::test_command({ cmd => "/omd/sites/$site/lib/monitoring-plugins/check_http -t 60 -H localhost -k 'Cookie: thruk_auth=$sessionid' -u '/$site/grafana/' -s '\"login\":\"omdadmin\"'", like => '/HTTP OK:/', waitfor => 'HTTP\ OK:', maxwait => 180  });
 
+##################################################
+# grafana api calls
+# setup service account with bearer token
+TestUtils::set_cookie("thruk_auth", $sessionid, time() + 3600);
+TestUtils::test_url({ url => 'http://localhost/'.$site.'/grafana/api/user/using/1', like => '/Active organization changed/', post => {} });
+{
+    my $request = POST('http://localhost/'.$site.'/grafana/api/serviceaccounts', {});
+    $request->content_type('application/json; charset=utf-8');
+    $request->content('{"name":"test", "role": "Admin"}');
+    $request->header('Content-Length' => undef);
+    TestUtils::test_url({ request => $request, like => '/avatarUrl/',  code => 201 });
+};
+my $bearer_token;
+{
+    my $request = POST('http://localhost/'.$site.'/grafana/api/serviceaccounts/2/tokens', {});
+    $request->content_type('application/json; charset=utf-8');
+    $request->content('{"name":"test-token"}');
+    $request->header('Content-Length' => undef);
+    my $tst = TestUtils::test_url({ request => $request, like => '/glsa_/' }, code => 201 );
+    if(($tst->{'response'}->content // $tst->{'response'}->decoded_content) =~ m/"(glsa_.*?)"/gmx) {
+        $bearer_token = $1;
+    }
+    ok($bearer_token, "got bearer token")
+};
 
+##################################################
+# remove session cookie and test requests with bearer token
+TestUtils::delete_cookie_store();
+
+# make sure login page is returned
+TestUtils::test_url({ url => 'http://localhost/'.$site.'/grafana/api/dashboards/home', like => '/loginpage/', code => 401 });
+
+{
+    my $request = GET('http://localhost/'.$site.'/grafana/api/dashboards/home');
+    $request->header('Authorization' => "Bearer ".$bearer_token);
+    my $tst = TestUtils::test_url({ request => $request, like => '/gettingstarted/' }, code => 201 );
+};
+
+
+##################################################
 # make sure grafana listens to localhost only
 # first test against localhost and make sure it works
 TestUtils::test_command({ cmd => "/bin/su - $site -c '$curl \"http://127.0.0.1:8003/$site/grafana/\" -H \"X-WEBAUTH-USER: omdadmin\" '",
-                          errlike => ['/200 OK/'], 
+                          errlike => ['/200 OK/'],
                           like  => ['/"login":"omdadmin"/'],
                        });
 # then test external ip and make sure it doesnt work
 TestUtils::test_command({ cmd => "/bin/su - $site -c '$curl \"http://$ip:8003/\" -H \"X-WEBAUTH-USER: omdadmin\" '",
-                          errlike => ['/(Failed to connect|Connection refused)/'], 
+                          errlike => ['/(Failed to connect|Connection refused)/'],
                           unlike  => ['/"login":"omdadmin"/'],
                           exit    => undef,
                        });
 
 TestUtils::test_command({ cmd => $omd_bin." stop $site" });
 TestUtils::remove_test_site($site);
-
