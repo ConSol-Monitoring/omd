@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 NAME       = promxy
-VERSION    = v0.0.75
+VERSION    = v0.0.86
 
 .PHONY: skel
 
