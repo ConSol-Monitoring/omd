@@ -82,7 +82,7 @@ MODULES += jsonpath-ng-1.5.3.tar.gz
 # for check_smb_copy
 MODULES += pysmbc-1.0.23.tar.gz
 # for check_vcenter
-MODULES += pyvmomi-8.0.2.0.1.tar.gz                  # check_vsphere
+MODULES += pyvmomi-8.0.3.0.1.tar.gz                  # check_vsphere
 # for check_redfish
 MODULES += redfish-3.1.8.tar.gz
 # for check_omd
@@ -97,7 +97,7 @@ MODULES += omdeventhandler-1.1.0.1-py3-none-any.whl
 
 # check_vsphere
 MODULES += monplugin-0.6.2.tar.gz                    # check_vsphere
-MODULES += checkvsphere-0.3.7.tar.gz
+MODULES += checkvsphere-0.3.8.tar.gz
 
 # pywbem?
 #MODULES += nocaselist-1.0.6.tar.gz                   # pywbem-1.5.0

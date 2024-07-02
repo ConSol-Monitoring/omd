@@ -14,11 +14,11 @@ next:
             - check_mssql_health update to 2.7.7
             - check_nsc_web update to 0.7.2
             - check_ntp_health update to 1.5.0.1
-            - check_nwc_health update to 11.4.0.1
+            - check_nwc_health update to 11.4.0.2
             - check_printer_health update to 1.2
             - check_rittal_health update to 4.0
             - check_ups_health update to 4.2.1
-            - check_vsphere update to 0.3.7
+            - check_vsphere update to 0.3.8
             - check_wut_health update to 3.2.1
           - gearman:
             - mod-gearman-worker-go update to 1.5.1
@@ -31,6 +31,7 @@ next:
           - omdeventhandler update to 1.1.0.1
           - omdnotificationforwarder update to 2.6.1.1
           - pnp4nagios update to 8c4d79a
+          - promxy update to 0.0.86
           - victoriametrics update to 1.101.0
 
 5.30     Jan 29 2024
