@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 NAME = freetds
-FREETDS_VERSION = 1.3.16
+FREETDS_VERSION = 1.4.19
 FREETDS_DIR = freetds-$(FREETDS_VERSION)
 SHELL = /bin/bash
 
