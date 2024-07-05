@@ -34,6 +34,33 @@ def __ds_ident__(params={}):
         return SNMPTTRagpickify
 
 
+def create_matches_nodes(nodes=[]):
+    # Clean and process nodes at the time of factory creation
+    nodes = [node.strip() for string in nodes for node in string.split()]
+    mode_positive = True
+    if "MODE=NEG" in nodes:
+        mode_positive = False
+    nodes = [n for n in nodes if not n.startswith("MODE=")]
+
+    def matches_nodes(application):
+        match_found = False
+        if not nodes and mode_positive:
+            # no NODES found, this trap is for all
+            return True
+        elif not nodes and not mode_positive:
+            # no NODES found, except one MODE=NEG. Non should get this trap
+            return False
+        if application.host_name in nodes and mode_positive:
+            return True
+        elif application.host_name not in nodes and not mode_positive:
+            # my name is not listed in the nodes (nodes to exclude)
+            return True
+        # do more complitated things like comparing networks, addresses
+        # and hostgroups which is new!
+        return False
+    return matches_nodes
+
+
 class MIB(coshsh.item.Item):
     id = 100
     template_rules = [
@@ -151,6 +178,7 @@ class SNMPTT(coshsh.datasource.Datasource):
         eventtext_pat = re.compile(r'^FORMAT (.*)')
         match_pat = re.compile(r'^MATCH (\$.*)')
         matchmode_pat = re.compile(r'^MATCH MODE=(.*)')
+        nodes_pat = re.compile(r'^NODES (.*)')
         edesc_pat = re.compile(r'^EDESC')
         for ttfile in snmpttfiles:
             unsorted_traps = {}
@@ -160,6 +188,7 @@ class SNMPTT(coshsh.datasource.Datasource):
             last_name = None
             last_matchmode = 'and'
             last_recovers = None
+            last_nodes = []
             #
             # Namenlose Events von 1.3.6.1.4.1.1981_ bekommen 
             # EventName="EventMonitorTrapError"
@@ -170,6 +199,7 @@ class SNMPTT(coshsh.datasource.Datasource):
                     eventtext_m = eventtext_pat.search(line)
                     match_m = match_pat.search(line)
                     matchmode_m = matchmode_pat.search(line)
+                    nodes_m = nodes_pat.search(line)
                     edesc_m = edesc_pat.search(line)
                     if eventname_m:
                         if last_eventname:
@@ -184,6 +214,8 @@ class SNMPTT(coshsh.datasource.Datasource):
                                     'recovers': last_recovers,
                                     'match': last_match,
                                     'nagioslevel': last_nagios,
+                                    'nodes': last_nodes,
+                                    'matches_nodes': create_matches_nodes(last_nodes),
                                 })
                             except Exception:
                                 mib_traps[mib] = [{
@@ -193,6 +225,8 @@ class SNMPTT(coshsh.datasource.Datasource):
                                     'recovers': last_recovers,
                                     'match': last_match,
                                     'nagioslevel': last_nagios,
+                                    'nodes': last_nodes,
+                                    'matches_nodes': create_matches_nodes(last_nodes),
                                 }]
                         last_eventname = eventname_m.group(1).replace(' ', '')
                         last_oid = eventname_m.group(2)
@@ -226,6 +260,7 @@ class SNMPTT(coshsh.datasource.Datasource):
                         last_eventtext = None
                         last_match = None
                         last_recovers = None
+                        last_nodes = []
                     elif eventtext_m:
                         last_eventtext = eventtext_m.group(1).replace("'", '"')
                     elif match_m:
@@ -238,6 +273,8 @@ class SNMPTT(coshsh.datasource.Datasource):
                         last_matchmode = matchmode_m.group(1)
                     elif recovers_m:
                         last_recovers = recovers_m.group(1)
+                    elif nodes_m:
+                        last_nodes.append(nodes_m.group(1))
                 if last_eventname:
                     # save the last event if there is one
                     try:
@@ -248,6 +285,8 @@ class SNMPTT(coshsh.datasource.Datasource):
                             'recovers': last_recovers,
                             'match': last_match,
                             'nagioslevel': last_nagios,
+                            'nodes': last_nodes,
+                            'matches_nodes': create_matches_nodes(last_nodes),
                         })
                     except Exception:
                         mib_traps[mib] = [{
@@ -257,6 +296,8 @@ class SNMPTT(coshsh.datasource.Datasource):
                             'recovers': last_recovers,
                             'match': last_match,
                             'nagioslevel': last_nagios,
+                            'nodes': last_nodes,
+                            'matches_nodes': create_matches_nodes(last_nodes),
                         }]
             try:
                 logger.debug('mib %s counts %d traps' % (mib, len(mib_traps[mib])))
@@ -314,7 +355,7 @@ class SNMPTT(coshsh.datasource.Datasource):
             # - Events, die mehrfach vorkommen, sind auch in MIB.events
             #   und haben ein Attribut "matches" mit den Sub-Events
             try:
-                m.common_prefix = os.path.commonprefix([event['oid'].replace('.', '\.').replace('*', '.*?') for event in m.events])
+                m.common_prefix = os.path.commonprefix([event['oid'].replace('.', r'\.').replace('*', '.*?') for event in m.events])
             except Exception as e:
                 m.common_prefix = '.*'
             self.add('mibconfigs', m)
@@ -359,6 +400,15 @@ class SNMPTT(coshsh.datasource.Datasource):
                 address = self.get('hosts', application.host_name).address
                 for svcmib, mib in application_mibs_known:
                     mobj = self.get('mibconfigs', mib)
+                    # Here we create the dict which contains all the
+                    # passive services an application will get.
+                    # Keys are the mibs, values are a list of traps.
+                    # There is a NODES attribute which can enable/disable
+                    # certain events for certain hosts. We could filter
+                    # mobj.events here in order to assign only the wanted
+                    # events to an application. But there might be more
+                    # datasources to come and maybe hostgroups re not
+                    # completed yet
                     trap_events[svcmib] = [e for e in mobj.events]
                     mobj.add_agent([
                         address,

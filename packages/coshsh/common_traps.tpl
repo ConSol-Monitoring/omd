@@ -1,7 +1,7 @@
 {% for mib in application.trap_events %}
 {% set names = [] %}
 {% for event in application.trap_events[mib] %}
-{% if event.nagioslevel != -1 %}
+{% if event.nagioslevel != -1 and event.matches_nodes(application) %}
 {% do names.append(event.name) %}
 {{ application|service(application.trap_service_prefix + "_traps_" + mib + "_" + event.name) }}
 {#
@@ -16,6 +16,7 @@
   _AGENT_ADDRESSES                {{ application.agent_addresses|join(', ') }}
 {% endif %}
 }
+
 {% endif %}
 {% endfor %}
 {% endfor %}
