@@ -30,7 +30,7 @@ next:
           - coshsh update to 10.2.1.3
           - omdeventhandler update to 1.1.0.1
           - omdnotificationforwarder update to 2.6.1.1
-          - pnp4nagios update to 8c4d79a
+          - pnp4nagios update to f4a831e
           - promxy update to 0.0.86
           - victoriametrics update to 1.101.0
 

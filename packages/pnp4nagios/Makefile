@@ -9,7 +9,7 @@ DIR = $(NAME)-$(VERSION)
 CONFIG_SITE = ''
 DEPENDS = rrdtool
 # GIT TAG is set automatically by "make upstream" or "make package"
-GIT_TAG     = 8c4d79a
+GIT_TAG     = f4a831e
 
 # Configure options for PNP4Nagios. Since we want to compile
 # as non-root, we use our own user and group for compiling.
