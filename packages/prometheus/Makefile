@@ -3,7 +3,7 @@ include ../../Makefile.omd
 .PHONY: skel
 
 NAME       = prometheus
-VERSION    = 2.45.4
+VERSION    = 2.53.0
 BRANCH     = master
 SRC        = $(NAME)-$(VERSION).tar.gz
 GOPKG      = 1.22
