@@ -13,7 +13,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 996 );
+plan( tests => 1004 );
 
 ##################################################
 # create our test site
@@ -195,6 +195,10 @@ my $own_urls = [
 my $cookie_urls = [
   { url => '/thruk/cgi-bin/login.cgi?logout', like => '/password/', unlike => [ '/internal server error/'], code => 401 },
   { url => '/thruk/cgi-bin/tac.cgi', like => '/password/', unlike => [ '/internal server error/'], code => 401 },
+  { url => '/thruk/cgi-bin/login.cgi?logout/thruk/cgi-bin/tac.cgi%3ftest=blah', 'redirect' => 1, location => 'tac.cgi\?test=blah', like => 'This item has moved' },
+  { url => '/thruk/cgi-bin/login.cgi?logout/thruk/cgi-bin/tac.cgi%3ftest=blah&test2=blub', 'redirect' => 1, location => 'tac.cgi\?test=blah&test2=blub', like => 'This item has moved' },
+  { url => '/thruk/cgi-bin/login.cgi?logout/thruk/cgi-bin/tac.cgi&test=blah', 'redirect' => 1, location => 'tac.cgi\?test=blah', like => 'This item has moved' },
+  { url => '/thruk/cgi-bin/login.cgi?logout/thruk/cgi-bin/tac.cgi&test=blah&test2=blub', 'redirect' => 1, location => 'tac.cgi\?test=blah&test2=blub', like => 'This item has moved' },
 ];
 
 # complete the url
