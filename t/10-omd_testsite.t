@@ -12,7 +12,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 493 );
+plan( tests => 496 );
 
 my $omd_bin = TestUtils::get_omd_bin();
 
@@ -86,6 +86,7 @@ my $tests = [
   { cmd => "/bin/su - $site -c 'grep -c 5010 etc/apache/proxy-port.conf'", like => '/^0$/', exit => 1 },
   { cmd => "/bin/df -k /omd/sites/$site/tmp/.", like => $is_docker ? '/overlay/' : '/tmpfs/m' },
   { cmd => $omd_bin." check $site", like => '/Running configuration check/', errlike => '/Running pre-flight check on configuration/' },
+  { cmd => $omd_bin." check $site apache",   like => '/Running configuration check/', errlike => undef },
   { cmd => $omd_bin." start $site",  like => '/Starting naemon/' },
   { cmd => $omd_bin." status $site", like => [
                                                 '/apache:\s*running/',

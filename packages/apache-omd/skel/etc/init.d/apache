@@ -31,6 +31,7 @@ PID_FILE=$OMD_ROOT/tmp/run/apache.pid
 OPTS="-f $OMD_ROOT/etc/apache/apache.conf"
 STOP_TIMEOUT=15
 STOP_CALLBACK="kill_stale_php_cgis"
+CHECK_CALLBACK=verify_config
 
 mkdir -p $OMD_ROOT/var/log/apache
 
@@ -72,4 +73,25 @@ __generic_init_reload() {
   return 0
 }
 
+verify_config() {
+    if [ "$1" != "quiet" ]; then
+        echo -n "Running configuration check... "
+    fi
+    RESULT=$($DAEMON $OPTS -S 2>&1)
+    if [ $? -eq 0 ]; then
+        if [ "$1" != "quiet" ]; then
+            echo "done."
+            echo "$RESULT" >&2
+        fi
+        return 0
+    else
+        if [ "$1" != "quiet" ]; then
+            echo "CONFIG ERROR! Aborted. Check your apache configuration."
+        fi
+        echo "$RESULT" >&2
+        return 1
+    fi
+}
+
 __generic_init "$*"
+
