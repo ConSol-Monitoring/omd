@@ -4,6 +4,7 @@ next:
           - omd:
             - remove /etc/init.d/omd, all systems use systemd now
           - thruk:
+            - update to 3.16
             - lmd update to 2.2.0
           - naemon:
             - update to 1.4.2
