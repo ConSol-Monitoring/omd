@@ -206,28 +206,30 @@ class SNMPTT(coshsh.datasource.Datasource):
                             # save the last event if there is one
                             if last_match:
                                 last_match.append(last_eventtext) # add the format of this match
-                            try:
-                                mib_traps[mib].append({
-                                    'name': last_eventname,
-                                    'oid': last_oid,
-                                    'text': last_eventtext,
-                                    'recovers': last_recovers,
-                                    'match': last_match,
-                                    'nagioslevel': last_nagios,
-                                    'nodes': last_nodes,
-                                    'matches_nodes': create_matches_nodes(last_nodes),
-                                })
-                            except Exception:
-                                mib_traps[mib] = [{
-                                    'name': last_eventname,
-                                    'oid': last_oid,
-                                    'text': last_eventtext,
-                                    'recovers': last_recovers,
-                                    'match': last_match,
-                                    'nagioslevel': last_nagios,
-                                    'nodes': last_nodes,
-                                    'matches_nodes': create_matches_nodes(last_nodes),
-                                }]
+                            if last_nagios != -1 and "MODE=IGNORE" not in last_nodes:
+                                # if not HIDDEN
+                                try:
+                                    mib_traps[mib].append({
+                                        'name': last_eventname,
+                                        'oid': last_oid,
+                                        'text': last_eventtext,
+                                        'recovers': last_recovers,
+                                        'match': last_match,
+                                        'nagioslevel': last_nagios,
+                                        'nodes': last_nodes,
+                                        'matches_nodes': create_matches_nodes(last_nodes),
+                                    })
+                                except Exception:
+                                    mib_traps[mib] = [{
+                                        'name': last_eventname,
+                                        'oid': last_oid,
+                                        'text': last_eventtext,
+                                        'recovers': last_recovers,
+                                        'match': last_match,
+                                        'nagioslevel': last_nagios,
+                                        'nodes': last_nodes,
+                                        'matches_nodes': create_matches_nodes(last_nodes),
+                                    }]
                         last_eventname = eventname_m.group(1).replace(' ', '')
                         last_oid = eventname_m.group(2)
                         last_severity = eventname_m.group(3).upper()
@@ -252,7 +254,8 @@ class SNMPTT(coshsh.datasource.Datasource):
                                 'CRITICAL': 2,
                                 'UNKNOWN': 3,
 
-                                'HIDDEN': -1,
+                                'HIDDEN': -1, # better use IGNORE
+                                'IGNORE': -1,
                             }[last_severity]
                         except Exception as e:
                             logger.debug('trap severity %s unknown' %  eventname_m.group(3))
@@ -277,28 +280,29 @@ class SNMPTT(coshsh.datasource.Datasource):
                         last_nodes.append(nodes_m.group(1))
                 if last_eventname:
                     # save the last event if there is one
-                    try:
-                        mib_traps[mib].append({
-                            'name': last_eventname,
-                            'oid': last_oid,
-                            'text': last_eventtext,
-                            'recovers': last_recovers,
-                            'match': last_match,
-                            'nagioslevel': last_nagios,
-                            'nodes': last_nodes,
-                            'matches_nodes': create_matches_nodes(last_nodes),
-                        })
-                    except Exception:
-                        mib_traps[mib] = [{
-                            'name': last_eventname,
-                            'oid': last_oid,
-                            'text': last_eventtext,
-                            'recovers': last_recovers,
-                            'match': last_match,
-                            'nagioslevel': last_nagios,
-                            'nodes': last_nodes,
-                            'matches_nodes': create_matches_nodes(last_nodes),
-                        }]
+                    if last_nagios != -1 and "MODE=IGNORE" not in last_nodes:
+                        try:
+                            mib_traps[mib].append({
+                                'name': last_eventname,
+                                'oid': last_oid,
+                                'text': last_eventtext,
+                                'recovers': last_recovers,
+                                'match': last_match,
+                                'nagioslevel': last_nagios,
+                                'nodes': last_nodes,
+                                'matches_nodes': create_matches_nodes(last_nodes),
+                            })
+                        except Exception:
+                            mib_traps[mib] = [{
+                                'name': last_eventname,
+                                'oid': last_oid,
+                                'text': last_eventtext,
+                                'recovers': last_recovers,
+                                'match': last_match,
+                                'nagioslevel': last_nagios,
+                                'nodes': last_nodes,
+                                'matches_nodes': create_matches_nodes(last_nodes),
+                            }]
             try:
                 logger.debug('mib %s counts %d traps' % (mib, len(mib_traps[mib])))
             except Exception as e:
