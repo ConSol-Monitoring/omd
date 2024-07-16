@@ -30,11 +30,10 @@ APPS = \
 build-app:
 	cd VictoriaMetrics-$(VERSION) && \
 	  https_proxy=http://127.7.7.7:50000 http_proxy=http://127.7.7.7:50000 \
-	  $(GOROOT)/bin/go build -mod=vendor -trimpath -ldflags "-extldflags '-static' $(GO_BUILDINFO)" -tags 'netgo osusergo nethttpomithttp2' \
-	  -o bin/$(APP_NAME)-prod $(PKG_PREFIX)/app/$(APP_NAME)
+	  PATH=$(GOROOT)/bin:$(PATH) make app-local APP_NAME=$(APP_NAME)
 
 install-app:
-	install -m 755 VictoriaMetrics-$(VERSION)/bin/$(APP_NAME)-prod $(DESTDIR)$(OMD_ROOT)/bin
+	install -m 755 VictoriaMetrics-$(VERSION)/bin/$(APP_NAME) $(DESTDIR)$(OMD_ROOT)/bin/$(APP_NAME)-prod
 
 build:
 	tar xf $(VM_SRC)
