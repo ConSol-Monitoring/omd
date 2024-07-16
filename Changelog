@@ -1,5 +1,8 @@
 This file documents the revision history for the Open Monitoring Distribution (Labs Edition)
 
+next:
+
+
 5.40     Jul 12 2024
           - omd:
             - remove /etc/init.d/omd, all systems use systemd now
