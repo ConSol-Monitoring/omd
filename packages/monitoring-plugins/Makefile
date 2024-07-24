@@ -1,11 +1,16 @@
 include ../../Makefile.omd
 
 NAME = monitoring-plugins
-VERSION = 2.3.5
+VERSION = 2.4.0
 DIR = $(NAME)-$(VERSION)
 URIPARSER=0.8.6
 # GIT TAG is set automatically by "make upstream"
-GIT_TAG     = 2.3.5
+GIT_TAG     = 2.4.0
+
+EXTRA_PATCHES=
+ifeq ($(DISTRO_INFO),CENTOS 7)
+EXTRA_PATCHES=patches/*.patch.rhel7
+endif
 
 CONFIGUREOPTS = \
     --prefix=$(OMD_ROOT) \
@@ -13,8 +18,8 @@ CONFIGUREOPTS = \
 
 build: uriparser-$(URIPARSER)
 	rm -rf $(DIR)
-	tar xzf $(DIR).tar.gz
-	set -e ; for p in patches/*.patch ; do \
+	tar xzf $(DIR).tar.gz --no-same-owner
+	set -e ; for p in patches/*.patch $(EXTRA_PATCHES); do \
 	    echo "applying $$p..." ; \
 	    ( cd $(DIR) ; patch -p1 -b ) < $$p ; \
 	done
@@ -44,7 +49,7 @@ install:
 	cd $(DESTDIR)$(OMD_ROOT)/lib/nagios && ln -s ../monitoring-plugins plugins
 
 uriparser-$(URIPARSER):
-	tar jxf uriparser-$(URIPARSER).tar.bz2
+	tar jxf uriparser-$(URIPARSER).tar.bz2 --no-same-owner
 	cd uriparser-$(URIPARSER) && ./configure --disable-test --disable-doc && make
 
 skel:

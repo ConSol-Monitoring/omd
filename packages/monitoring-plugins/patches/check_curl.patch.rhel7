@@ -1,0 +1,36 @@
+--- a/plugins/check_curl.c	2024-07-25 11:26:01.856621544 +0200
++++ b/plugins/check_curl.c	2024-07-25 11:27:23.239698528 +0200
+@@ -522,10 +522,12 @@
+   handle_curl_option_return_code (curl_easy_setopt (curl, CURLOPT_CONNECTTIMEOUT, socket_timeout), "CURLOPT_CONNECTTIMEOUT");
+   handle_curl_option_return_code (curl_easy_setopt (curl, CURLOPT_TIMEOUT, socket_timeout), "CURLOPT_TIMEOUT");
+ 
++#ifdef CURLOPT_HAPROXYPROTOCOL
+   /* enable haproxy protocol */
+   if (haproxy_protocol) {
+     handle_curl_option_return_code(curl_easy_setopt(curl, CURLOPT_HAPROXYPROTOCOL, 1L), "CURLOPT_HAPROXYPROTOCOL");
+   }
++#endif
+ 
+   // fill dns resolve cache to make curl connect to the given server_address instead of the host_name, only required for ssl, because we use the host_name later on to make SNI happy
+   if(use_ssl && host_name != NULL) {
+@@ -1441,7 +1443,9 @@
+     {"http-version", required_argument, 0, HTTP_VERSION_OPTION},
+     {"enable-automatic-decompression", no_argument, 0, AUTOMATIC_DECOMPRESSION},
+     {"cookie-jar", required_argument, 0, COOKIE_JAR},
++#ifdef CURLOPT_HAPROXYPROTOCOL
+     {"haproxy-protocol", no_argument, 0, HAPROXY_PROTOCOL},
++#endif
+     {0, 0, 0, 0}
+   };
+ 
+@@ -2084,8 +2088,10 @@
+   printf ("    %s\n", _("1.0 = HTTP/1.0, 1.1 = HTTP/1.1, 2.0 = HTTP/2 (HTTP/2 will fail without -S)"));
+   printf (" %s\n", "--enable-automatic-decompression");
+   printf ("    %s\n", _("Enable automatic decompression of body (CURLOPT_ACCEPT_ENCODING)."));
++#ifdef CURLOPT_HAPROXYPROTOCOL
+   printf(" %s\n", "--haproxy-protocol");
+   printf("    %s\n", _("Send HAProxy proxy protocol v1 header (CURLOPT_HAPROXYPROTOCOL)."));
++#endif
+   printf (" %s\n", "---cookie-jar=FILE");
+   printf ("    %s\n", _("Store cookies in the cookie jar and send them out when requested."));
+   printf ("\n");

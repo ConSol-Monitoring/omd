@@ -1,13 +1,13 @@
---- b/plugins/check_dbi.c
-+++ a/plugins/check_dbi.c
+--- a/plugins/check_dbi.c	2024-07-23 21:32:36.000000000 +0200
++++ b/plugins/check_dbi.c	2024-07-25 11:09:12.258424318 +0200
 @@ -141,28 +141,21 @@
  	if (verbose > 2)
  		printf ("Initializing DBI\n");
  
-+	if (dbi_initialize (NULL) < 0) {
--	dbi_inst *instance_p;
+-	dbi_inst *instance_p = { 0 };
 -
 -	if (dbi_initialize_r(NULL, instance_p) < 0) {
++	if (dbi_initialize (NULL) < 0) {
  		printf ("UNKNOWN - failed to initialize DBI; possibly you don't have any drivers installed.\n");
  		return STATE_UNKNOWN;
  	}
@@ -20,15 +20,15 @@
  	if (verbose)
  		printf ("Opening DBI driver '%s'\n", np_dbi_driver);
  
-+	driver = dbi_driver_open (np_dbi_driver);
 -	driver = dbi_driver_open_r(np_dbi_driver, instance_p);
++	driver = dbi_driver_open (np_dbi_driver);
  	if (! driver) {
  		printf ("UNKNOWN - failed to open DBI driver '%s'; possibly it's not installed.\n",
  				np_dbi_driver);
  
  		printf ("Known drivers:\n");
-+		for (driver = dbi_driver_list (NULL); driver; driver = dbi_driver_list (driver)) {
 -		for (driver = dbi_driver_list_r(NULL, instance_p); driver; driver = dbi_driver_list_r(driver, instance_p)) {
++		for (driver = dbi_driver_list (NULL); driver; driver = dbi_driver_list (driver)) {
  			printf (" - %s\n", dbi_driver_get_name (driver));
  		}
  		return STATE_UNKNOWN;
