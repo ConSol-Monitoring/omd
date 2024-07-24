@@ -601,7 +601,7 @@ sub test_url {
       ) {
         my $content = $page->{'content'};
         $content =~ s/<\!\-\-.*?\-\->//gsmx;
-        my @matches = $content =~ m/(src|href)=['|"](.+?)['|"]/gi;
+        my @matches = $content =~ m/(src|href)=['|"](.*?)['|"]/gi;
         my $links_to_check;
         my $x=0;
         for my $match (@matches) {
@@ -616,6 +616,7 @@ sub test_url {
             next if $match =~ m/onclick/;
             next if $match =~ m/logout/;
             next if $match =~ m/\+url/;
+            next if $match eq '';
             if(defined $test->{'skip_link_check'}) {
                 my $skip = 0;
                 for my $expr (ref $test->{'skip_link_check'} eq 'ARRAY' ? @{$test->{'skip_link_check'}} : $test->{'skip_link_check'} ) {
