@@ -1,7 +1,7 @@
 include ../../../Makefile.omd
 
 NAME = check_pdu_health
-VERSION = 3.0
+VERSION = 3.0.1.1
 DIR = $(NAME)-$(VERSION)
 
 .PHONY: skel
