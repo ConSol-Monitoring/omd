@@ -1,0 +1,164 @@
+From 17549189ae6864203a48a2b2488db35a9e020e0e Mon Sep 17 00:00:00 2001
+From: Sven Nierlein <sven@consol.de>
+Date: Mon, 29 Jul 2024 20:53:32 +0200
+Subject: [PATCH] check_curl: fix relative redirects on non-standard port
+
+Having a webserver respond with a relative redirect as for ex. in `Location: /path/to.html`
+check_curl would use the wrong standard http/https port instead
+of crafting the absolute url using the given scheme/hostname and port.
+
+Adding a new test case for this for check_http and check_curl. check_http did
+it correct already, so no fix necessary there.
+
+before:
+
+    %>./check_curl -H 127.0.0.1 -p 50493 -f follow -u /redirect_rel -s redirected -vvv
+    **** HEADER ****
+    HTTP/1.1 302 Found
+    ...
+    Location: /redirect2
+
+    ...
+    * Seen redirect location /redirect2
+    ** scheme: (null)
+    ** host: (null)
+    ** port: (null)
+    ** path: /redirect2
+    Redirection to http://127.0.0.1:80/redirect2
+
+fixed:
+
+    %>./check_curl -H 127.0.0.1 -p 50493 -f follow -u /redirect_rel -s redirected -vvv
+    **** HEADER ****
+    HTTP/1.1 302 Found
+    ...
+    Location: /redirect2
+
+    ...
+    * Seen redirect location /redirect2
+    ** scheme: (null)
+    ** host: (null)
+    ** port: (null)
+    ** path: /redirect2
+    Redirection to http://127.0.0.1:50493/redirect2
+
+Signed-off-by: Sven Nierlein <sven@nierlein.de>
+---
+ plugins/check_curl.c       | 15 ++++++++++-----
+ plugins/tests/check_curl.t | 14 +++++++++++---
+ plugins/tests/check_http.t | 12 +++++++++++-
+ 3 files changed, 32 insertions(+), 9 deletions(-)
+
+diff --git a/plugins/check_curl.c b/plugins/check_curl.c
+index c54be5e4f..01e2770e3 100644
+--- a/plugins/check_curl.c
++++ b/plugins/check_curl.c
+@@ -1285,10 +1285,12 @@ redir (curlhelp_write_curlbuf* header_buf)
+     }
+   }
+ 
+-  if (!uri_strcmp (uri.scheme, "https"))
+-    use_ssl = true;
+-  else
+-    use_ssl = false;
++  if (uri.scheme.first) {
++    if (!uri_strcmp (uri.scheme, "https"))
++      use_ssl = true;
++    else
++      use_ssl = false;
++  }
+ 
+   /* we do a sloppy test here only, because uriparser would have failed
+    * above, if the port would be invalid, we just check for MAX_PORT
+@@ -1306,10 +1308,13 @@ redir (curlhelp_write_curlbuf* header_buf)
+          MAX_PORT, location, display_html ? "</A>" : "");
+ 
+   /* by RFC 7231 relative URLs in Location should be taken relative to
+-   * the original URL, so wy try to form a new absolute URL here
++   * the original URL, so we try to form a new absolute URL here
+    */
+   if (!uri.scheme.first && !uri.hostText.first) {
+     new_host = strdup (host_name ? host_name : server_address);
++    new_port = server_port;
++    if(use_ssl)
++      uri_string (uri.scheme, "https", DEFAULT_BUFFER_SIZE);
+   } else {
+     new_host = strdup (uri_string (uri.hostText, buf, DEFAULT_BUFFER_SIZE));
+   }
+diff --git a/plugins/tests/check_curl.t b/plugins/tests/check_curl.t
+index 3c9148308..eaa9f5183 100755
+--- a/plugins/tests/check_curl.t
++++ b/plugins/tests/check_curl.t
+@@ -21,7 +21,7 @@ use FindBin qw($Bin);
+ 
+ $ENV{'LC_TIME'} = "C";
+ 
+-my $common_tests = 73;
++my $common_tests = 75;
+ my $ssl_only_tests = 8;
+ # Check that all dependent modules are available
+ eval "use HTTP::Daemon 6.01;";
+@@ -178,6 +178,11 @@ sub run_server {
+ 				$c->send_basic_header;
+ 				$c->send_crlf;
+ 				$c->send_response(HTTP::Response->new( 200, 'OK', undef, 'redirected' ));
++			} elsif ($r->url->path eq "/redirect_rel") {
++				$c->send_basic_header(302);
++				$c->send_header("Location", "/redirect2" );
++				$c->send_crlf;
++				$c->send_response('moved to /redirect2');
+ 			} elsif ($r->url->path eq "/redir_timeout") {
+ 				$c->send_redirect( "/timeout" );
+ 			} elsif ($r->url->path eq "/timeout") {
+@@ -471,9 +476,12 @@ sub run_common_tests {
+ 	is( $result->return_code, 0, $cmd);
+ 	like( $result->output, '/^HTTP OK: HTTP/1.1 200 OK - \d+ bytes in [\d\.]+ second/', "Output correct: ".$result->output );
+ 
+-  # These tests may block
+-	print "ALRM\n";
++	$cmd = "$command -f follow -u /redirect_rel -s redirected";
++	$result = NPTest->testCmd( $cmd );
++	is( $result->return_code, 0, $cmd);
++	like( $result->output, '/^HTTP OK: HTTP/1.1 200 OK - \d+ bytes in [\d\.]+ second/', "Output correct: ".$result->output );
+ 
++	# These tests may block
+ 	# stickyport - on full urlS port is set back to 80 otherwise
+ 	$cmd = "$command -f stickyport -u /redir_external -t 5 -s redirected";
+ 	eval {
+diff --git a/plugins/tests/check_http.t b/plugins/tests/check_http.t
+index 6078b2745..6eaf85b29 100755
+--- a/plugins/tests/check_http.t
++++ b/plugins/tests/check_http.t
+@@ -13,7 +13,7 @@ use IO::Socket::INET;
+ 
+ $ENV{'LC_TIME'} = "C";
+ 
+-my $common_tests = 71;
++my $common_tests = 73;
+ my $virtual_port_tests = 8;
+ my $ssl_only_tests = 12;
+ my $chunked_encoding_special_tests = 1;
+@@ -199,6 +199,11 @@ sub run_server {
+ 					$c->send_basic_header;
+ 					$c->send_crlf;
+ 					$c->send_response(HTTP::Response->new( 200, 'OK', undef, 'redirected' ));
++			} elsif ($r->url->path eq "/redirect_rel") {
++				$c->send_basic_header(302);
++				$c->send_header("Location", "/redirect2" );
++				$c->send_crlf;
++				$c->send_response('moved to /redirect2');
+ 				} elsif ($r->url->path eq "/redir_timeout") {
+ 					$c->send_redirect( "/timeout" );
+ 				} elsif ($r->url->path eq "/timeout") {
+@@ -515,6 +520,11 @@ sub run_common_tests {
+ 	is( $result->return_code, 0, $cmd);
+ 	like( $result->output, '/^HTTP OK: HTTP/1.1 200 OK - \d+ bytes in [\d\.]+ second/', "Output correct: ".$result->output );
+ 
++	$cmd = "$command -f follow -u /redirect_rel -s redirected";
++	$result = NPTest->testCmd( $cmd );
++	is( $result->return_code, 0, $cmd);
++	like( $result->output, '/^HTTP OK: HTTP/1.1 200 OK - \d+ bytes in [\d\.]+ second/', "Output correct: ".$result->output );
++
+   # These tests may block
+ 	print "ALRM\n";
+ 
