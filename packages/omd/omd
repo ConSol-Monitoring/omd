@@ -3206,7 +3206,9 @@ def main_disable(args, options):
         sys.stderr.write("This site is already disabled.\n")
         sys.exit(0)
 
-    stop_if_not_stopped(g_sitename)
+    if not site_is_stopped(g_sitename):
+        os.system('omd stop %s' % g_sitename)
+
     unmount_tmpfs(g_sitename, options.kill)
     sys.stdout.write("Disabling Apache configuration for this site...")
     delete_apache_hook(g_sitename)
@@ -4037,7 +4039,7 @@ def main_init_action(command, args, options={}):
         sys.stdout.flush()
 
         # We need to open a subprocess, because each site must be started with the account of the
-        # site user. And after setuid() we cannot return.
+        # site user. The logic for switching to the siteuser is in the main method
         stdout = sys.stdout if not parallel else subprocess.PIPE
         stderr = sys.stderr if not parallel else subprocess.STDOUT
         bare_arg = [ "--bare" ] if bare else []
