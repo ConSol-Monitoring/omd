@@ -6,6 +6,8 @@ next:
             - check_pdu_health update to 3.0.1.1
             - check_printer_health update to 1.2.0.1
             - check_wut_health update to 4.1.0.2
+          - grafana:
+            - thruk-datasource update to 2.1.1
           - monitoring-plugins update to 2.4.0
 
 5.40     Jul 12 2024
