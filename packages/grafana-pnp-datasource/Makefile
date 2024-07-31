@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 NAME       = sni-pnp-datasource
-VERSION    = 2.0.2
+VERSION    = 2.1.0
 SRC        = $(NAME)-$(VERSION).zip
 
 .PHONY: skel

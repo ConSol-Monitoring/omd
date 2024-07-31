@@ -7,6 +7,7 @@ next:
             - check_printer_health update to 1.2.0.1
             - check_wut_health update to 4.1.0.2
           - grafana:
+            - pnp-datasource update to 2.1.0
             - thruk-datasource update to 2.1.1
           - monitoring-plugins update to 2.4.0
 
