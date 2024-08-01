@@ -3,7 +3,7 @@ Name:           omd-%{version}
 Version:        SET BY MAKEFILE
 Release:        SET BY MAKEFILE
 License:        GPL
-URL:            http://labs.consol.de/omd/
+URL:            https://omd.consol.de/docs/omd/
 Group:          Application/System
 Source:         %{name}.tar.gz
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root
@@ -25,10 +25,10 @@ BuildRequires: systemd
 
 
 %description
-Open Source Monitoring Distribution (Labs Edition),
-containing Nagios3 and Naemon, Icinga1 and Icinga 2, Shinken,
-Thruk, Mod-Gearman, Nagvis, PNP4Nagios and many more...
-Maintained by http://labs.consol.de/omd/.
+OMD Labs Edition - Open Source Monitoring Distribution (Labs Edition)
+containing Naemon, Icinga 2 (Nagios compatible), Prometheus, Grafana,
+Thruk, Mod-Gearman, PNP4Nagios and many more...
+Maintained by https://omd.consol.de/docs/omd/
 
 %package debug
 Summary:        OMD Labs Edition debug binaries

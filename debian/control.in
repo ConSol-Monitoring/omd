@@ -9,10 +9,10 @@ Homepage: http://labs.consol.de/omd/
 Package: omd-###OMD_VERSION###
 Architecture: any
 Depends:@${misc:Depends},@###OS_PACKAGES###
-Description: OMD Labs Edition - Open Source Monitoring Distribution (Labs Edition),
- containing Nagios3 and Naemon, Icinga1 and Icinga 2, Shinken,
- Thruk, Mod-Gearman, Nagvis, PNP4Nagios and many more...
- Maintained by http://labs.consol.de/omd/.
+Description: OMD Labs Edition - Open Source Monitoring Distribution (Labs Edition)
+ containing Naemon, Icinga 2 (Nagios compatible), Prometheus, Grafana,
+ Thruk, Mod-Gearman, PNP4Nagios and many more...
+ Maintained by https://omd.consol.de/docs/omd/
 
 #Package: omd-###OMD_VERSION###-debug
 #Architecture: any
