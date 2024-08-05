@@ -7,6 +7,7 @@ next:
             - check_hpasm update to 4.10
             - check_pdu_health update to 3.0.1.1
             - check_printer_health update to 1.2.0.1
+            - check_vsphere update to 0.3.11
             - check_wut_health update to 4.1.0.2
           - grafana:
             - pnp-datasource update to 2.1.0
