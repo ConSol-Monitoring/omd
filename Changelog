@@ -1,6 +1,8 @@
 This file documents the revision history for the Open Monitoring Distribution (Labs Edition)
 
 next:
+          - omd:
+            - fix dropping root privileges on omd disable command
           - plugins:
             - check_hpasm update to 4.10
             - check_pdu_health update to 3.0.1.1
