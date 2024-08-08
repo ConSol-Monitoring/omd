@@ -26,13 +26,18 @@
 
 OMD_VERSION = "5.40-labs-edition"
 
+import os
 import sys
 sys.path.append("/omd/versions/%s/lib/python" % OMD_VERSION)
+
+if not os.path.exists("/omd/versions/%s" % OMD_VERSION):
+    sys.stderr.write("Error: this binary is omd version %s, but this version is not installed: /omd/versions/%s\n"
+                     % (OMD_VERSION, OMD_VERSION))
+    sys.exit(3)
 
 import abc
 import argparse
 import grp
-import os
 import psutil
 import pwd
 import re
@@ -322,7 +327,7 @@ def getch():
     finally:
         termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
     if ord(ch) == 3:
-            raise KeyboardInterrupt()
+        raise KeyboardInterrupt()
     return ch
 
 
@@ -521,9 +526,6 @@ def switch_to_site_user():
     # Darn. The site user might have been put into further groups.
     # This is e.g. needed if you want to access the livestatus socket
     # from one site by another. We make use of the "id" command here.
-    # If you know something better, that does not rely on an external
-    # command (and that does not try to parse around /etc/group, of
-    # course), then please tell mk -> mk@mathias-kettner.de.
     os.setgroups(groups_of(g_sitename))
     os.setuid(uid)
 
@@ -548,7 +550,7 @@ def groups_of(username):
 def set_site_globals():
     global g_sitedir
     g_sitedir = site_dir(g_sitename)
-    load_site_conf()
+    load_site_conf(skipMissing=True)
 
 def site_dir(sitename):
     return "/omd/sites/" + sitename
@@ -569,9 +571,15 @@ def all_sites():
 
 # Check if site is completely stopped
 def site_is_stopped(sitename):
+    if am_root():
+        return call_as_forked_site_user(site_is_stopped, [sitename], {}) == 1
+
     return check_status(sitename, False) == 1
 
 def site_is_running(sitename):
+    if am_root():
+        return call_as_forked_site_user(site_is_stopped, [sitename], {}) == 0
+
     return check_status(sitename, False) == 0
 
 def site_is_empty(sitename):
@@ -602,10 +610,6 @@ def start_site(sitename):
     prepare_and_populate_tmpfs(sitename)
     call_init_scripts(sitename, "start")
 
-def stop_if_not_stopped(sitename):
-    if not site_is_stopped(sitename):
-        stop_site(sitename)
-
 def stop_site(sitename):
     call_init_scripts(sitename, "stop")
 
@@ -627,7 +631,7 @@ def read_skel_permissions():
     global g_skel_permissions
     g_skel_permissions = load_skel_permissions(OMD_VERSION)
     if not g_skel_permissions:
-        file_path = "/omd/versions/%s/share/omd/skel.permissions" % OMD_VERSION
+        file_path = omd_root() + "/share/omd/skel.permissions"
         bail_out(tty_error + ": %s is missing or currupted." % file_path)
 
 def load_skel_permissions(version):
@@ -703,7 +707,7 @@ def create_skeleton_files(sitename, dir):
     }
     # Hack: exclude tmp if dir is '.'
     exclude_tmp = dir == "."
-    skelroot = "/omd/versions/%s/skel" % OMD_VERSION
+    skelroot = omd_root() + "/skel"
     os.chdir(skelroot)  # make relative paths
     for dirpath, dirnames, filenames in os.walk(dir):
         if dirpath.startswith("./"):
@@ -891,7 +895,7 @@ def walk_skel(root, handler, args, kwargs, depth_first, exclude_if_in = None, re
 def patch_skeleton_files(old, new, skelroot=None):
     import traceback
     if not skelroot:
-        skelroot = "/omd/versions/%s/skel" % OMD_VERSION
+        skelroot = omd_root() + "/skel"
     os.chdir(skelroot)  # make relative paths
     for dirpath, dirnames, filenames in os.walk("."):
         if dirpath.startswith("./"):
@@ -937,7 +941,7 @@ def patch_template_file(src, dst, old, new):
     # existing - possibly user modified - file.
     patch = "%s/bin/patch" % site_dir(new)
     if not os.path.exists(patch):
-        patch = "/omd/versions/%s/bin/patch" % OMD_VERSION
+        patch = omd_root() + "/bin/patch"
     if not os.path.exists(patch):
         patch = "%s/patch" % os.path.dirname(os.path.realpath(__file__))
     if not os.path.exists(patch):
@@ -1793,15 +1797,27 @@ def unmount_tmpfs(sitename, output = True, kill = False):
 def add_to_fstab(sitename, tmpfs_size = None):
     # tmpfs                   /opt/omd/sites/b01/tmp  tmpfs   user,uid=b01,gid=b01 0 0
     mountpoint = tmp_dir(sitename)
-    sys.stdout.write("Adding %s to /etc/fstab..." % mountpoint)
 
     # No size option: using up to 50% of the RAM
     sizespec = ''
     if tmpfs_size != None and re.match('^[0-9]+(G|M|%)$', tmpfs_size):
         sizespec = ',size=%s' % tmpfs_size
 
-    open("/etc/fstab", "a+").write("tmpfs  %s tmpfs noauto,user,mode=755,uid=%s,gid=%s%s 0 0\n" % \
-        (mountpoint, sitename, sitename, sizespec))
+    entry = "tmpfs  %s tmpfs noauto,user,mode=755,uid=%s,gid=%s%s 0 0\n" % (mountpoint, sitename, sitename, sizespec)
+
+    # skip adding if already there
+    for line in open("/etc/fstab"):
+        if line.find(entry) != -1:
+            return
+
+    sys.stdout.write("Adding %s to /etc/fstab..." % mountpoint)
+
+    open("/etc/fstab", "a+").write(entry)
+
+    # avoid: (hint) your fstab has been modified, but systemd still uses
+    # the old version; use 'systemctl daemon-reload' to reload.
+    os.system("systemctl daemon-reload >/dev/null 2>&1")
+
     ok()
 
 def remove_from_fstab(sitename):
@@ -1813,6 +1829,11 @@ def remove_from_fstab(sitename):
             continue
         newtab.write(line)
     os.rename("/etc/fstab.new", "/etc/fstab")
+
+    # avoid: (hint) your fstab has been modified, but systemd still uses
+    # the old version; use 'systemctl daemon-reload' to reload.
+    os.system("systemctl daemon-reload >/dev/null 2>&1")
+
     ok()
 
 
@@ -1942,6 +1963,8 @@ def check_status(sitename, display=True, daemon=None, bare=False):
                     state = 1
 
         if state == None:
+            # make sure init scripts are not accidentally run as root user
+            bail_out_if_root("init hook '%s/%s' must not run as root user.\n" % (rc_dir, script))
             state = os.system("%s/%s status >/dev/null 2>&1" % (rc_dir, script)) >> 8
 
         if display and (state != 5 or opt_verbose):
@@ -2134,19 +2157,32 @@ def parse_site_conf(sitename):
 # CONFIG_. The reason is that this file can be sources with the shell. Puts
 # these variables into the global dict g_site_conf without the CONFIG_. Also
 # puts the variables into the environment.
-def load_site_conf():
+def load_site_conf(skipMissing = False):
     global g_site_conf
     g_site_conf = parse_site_conf(g_sitename)
+
+    if skipMissing:
+        return
 
     # Get the default values of all config hooks that are not contained
     # in the site configuration. This can happen if there are new hooks
     # after an update or when a site is being created.
-    hook_dir = g_sitedir + "/lib/omd/hooks"
+    missing = False
+    hook_dir = omd_root() + "/lib/omd/hooks"
     if os.path.exists(hook_dir):
         for hook_name in os.listdir(hook_dir):
             if hook_name[0] != '.' and hook_name not in g_site_conf:
-                content = call_hook(hook_name, ["default"])[1]
-                g_site_conf[hook_name] = content
+                missing = True
+                if not am_root():
+                    content = call_hook(hook_name, ["default"])[1]
+                    g_site_conf[hook_name] = content
+
+    if missing:
+        if am_root():
+            call_as_forked_site_user(load_site_conf, [], {"skipMissing":skipMissing})
+            g_site_conf = parse_site_conf(g_sitename)
+        else:
+            save_site_conf()
 
 
 # Put all site configuration (explicit and defaults) into environment
@@ -2247,7 +2283,11 @@ def hook_exists(hook_name):
 
 
 def call_hook(hook_name, args):
-    hook_file = g_sitedir + "/lib/omd/hooks/" + hook_name
+    hook_file = omd_root() + "/lib/omd/hooks/" + hook_name
+
+    # make sure scripts are not accidentally run as root user
+    bail_out_if_root("hook '%s %s' must not run as root user.\n" % (hook_file, " ".join(args)))
+
     putenv("OMD_ROOT", g_sitedir)
     putenv("OMD_SITE", g_sitename)
     p = subprocess.run([hook_file]+args, stdout=subprocess.PIPE, shell=False)
@@ -2357,8 +2397,12 @@ def config_set(args):
 
 
 def config_set_all():
+    if am_root():
+        call_as_forked_site_user(config_set_all,[],{})
+        return
+
     for hook_name, value in sorted(list(g_site_conf.items()), key=lambda x: x[0]):
-        # Hooks might vanish after and up- or downdate
+        # Hooks might vanish after and up- or downgrade
         if hook_exists(hook_name):
             exitcode, output = call_hook(hook_name, [ "set", value ])
             if exitcode == 0 and output and output != value:
@@ -2511,6 +2555,10 @@ def call_init_hook(command, when):
     hook = "etc/init-hooks.d/omd-%s-%s" % (command, when)
     if not os.path.exists(hook):
         return
+
+    # make sure init scripts are not accidentally run as root user
+    bail_out_if_root("init hook '%s' must not run as root user.\n" % (hook))
+
     try:
         subprocess.check_call(hook)
     except PermissionError as e:
@@ -2559,7 +2607,7 @@ def init_action(command, args, options):
 #   '----------------------------------------------------------------------'
 
 def omd_root():
-    return "/omd/versions/" + OMD_VERSION
+    return "/omd/versions/%s" % OMD_VERSION
 
 # Read distro- and version specific values
 def read_info():
@@ -2747,11 +2795,15 @@ def pipe_pager():
 
 def call_scripts(phase, prefix=None, args=None):
     if prefix is None:
-        prefix = g_sitedir
-    path = prefix + "/lib/omd/scripts/" + phase
+        prefix = omd_root()
+    path = "%s/lib/omd/scripts/%s" % (prefix, phase)
     exited_ok = True
     if not os.path.exists(path):
         return exited_ok
+
+    if not phase.endswith("-root"):
+        if am_root():
+            return call_as_forked_site_user(call_scripts, [phase], {"prefix":prefix, "args":args})
 
     if not args:
         args = []
@@ -3187,7 +3239,7 @@ def main_rm(args, options={}):
     else:
         restart_apache()
 
-    call_scripts('post-rm-root', prefix=("/omd/versions/%s" % OMD_VERSION), args=[g_sitename, OMD_VERSION])
+    call_scripts('post-rm-root', prefix=omd_root(), args=[g_sitename, OMD_VERSION])
 
 def create_site_dir(sitename):
     os.makedirs(site_dir(sitename))
@@ -3268,7 +3320,7 @@ def main_diag(args, options={}):
             sys.stdout.write(tty_bold + "Running system checks:" + tty_normal+"\n")
             sys.stdout.write(("-"*50) +"\n")
             sys.stdout.write(tty_bold + "Versions:" + tty_normal+"\n")
-            path = "/omd/versions/%s/lib/omd/scripts/diag" % OMD_VERSION
+            path = omd_root() + "/lib/omd/scripts/diag"
             scripts = os.listdir(path)
             scripts.sort()
             for f in scripts:
@@ -3368,6 +3420,9 @@ def get_exclude_patterns(options):
         excludes.append("var/mkeventd/history/*")
         excludes.append("var/check_mk/core/history")
         excludes.append("var/check_mk/core/archive/*")
+
+    if options.no_tmp or options.no_tmp:
+        excludes.append("tmp/*")
 
     # add user supplied excludes
     if options.exclude != None:
@@ -3524,7 +3579,7 @@ def main_reset(args, options={}):
     }
     for hook_name in g_site_conf:
         replacements["###CONFIG_%s###" % hook_name] = g_site_conf[hook_name]
-    skelroot = "/omd/versions/%s/skel" % OMD_VERSION
+    skelroot = omd_root() + "/skel"
     read_skel_permissions()
 
     for arg in args:
@@ -4143,10 +4198,6 @@ def backup_site_files_to_taropen(tar, options):
     import fnmatch
     exclude = get_exclude_patterns(options)
 
-    # exclude tmp/* from hot backups
-    if not site_is_stopped(g_sitename):
-        exclude.append("tmp/*")
-
     def filter_files(tarinfo):
         filename = tarinfo.name
         for glob_pattern in exclude:
@@ -4197,6 +4248,8 @@ def main_backup(args, options={}):
         bail_out(tty_error + ": This site needs to be updated with: omd update")
     if not site_is_stopped(g_sitename):
         sys.stdout.write("Warning: The site should be stopped for a backup.\n")
+        # exclude tmp/* from hot backups
+        options.no_tmp = True
 
     elif tmpfs_mounted(g_sitename):
         unmount_tmpfs(g_sitename, kill = options.kill)
@@ -4359,11 +4412,11 @@ def main_restore(args, options={}):
             tar.extract(tarinfo, path=g_sitedir)
     tar.close()
 
-    load_site_conf()
-
     # give new user all files
     if am_root:
         chown_tree(g_sitedir, g_sitename)
+
+    load_site_conf(skipMissing=True)
 
     # Change config files from old to new site (see rename_site())
     backup_skel_path = os.path.join(g_sitedir, ".backup_meta")
@@ -4407,10 +4460,17 @@ def main_restore(args, options={}):
         # Change symbolic link pointing to new version
         create_version_symlink(g_sitename, to_version)
 
+        if am_root:
+            chown_tree(g_sitedir, g_sitename)
+
         # Let hooks do their work and update configuration.
         load_site_conf()
         create_config_environment()
         config_set_all()
+
+        # Entry for tmps in /etc/fstab
+        if not reuse:
+            add_to_fstab(g_sitename, tmpfs_size = options.tmpfs_size)
 
         if from_version != to_version:
             call_scripts('post-update')
@@ -4645,6 +4705,7 @@ exclude_options = [
     ( "--no-dbs",  None,  { "help":"do not copy database data (mysql, influxdb, victoriametrics)", "action":"count", "default":0 } ),
     ( "--no-logs", None,  { "help":"do not copy log files", "action":"count", "default":0 } ),
     ( "--no-past", "-N",  { "help":"do not copy RRD file and log files", "action":"count", "default":0 } ),
+    ( "--no-tmp",  None,  { "help":"do not copy tmp files", "action":"count", "default":0 } ),
     ( "--exclude", None,  { "help":"do not copy given exclude path. Can be used multiple times. Ex.: --exclude=local/*", "action":"append" }),
 ]
 
@@ -5080,6 +5141,39 @@ def random_password():
     import random
     return ''.join(random.choice(string.ascii_letters + string.digits) for i in range(8))
 
+# returns true if this is the root user
+def am_root():
+    am_root = os.getuid() == 0
+    return am_root
+
+# fork and run handler in site context, returns true if successful
+def call_as_forked_site_user(handler, args, kwargs):
+    pid = os.fork()
+
+    if pid == 0:
+        # this is the child process
+        switch_to_site_user()
+        set_environment()
+        if handler(*args, **kwargs):
+            sys.exit(0)
+        sys.exit(1)
+
+    # this is the parent process
+    wpid, status = os.waitpid(pid, 0)
+
+    return status == 0
+
+# exits with a stack trace if this is the root
+def bail_out_if_root(msg):
+    if am_root():
+        print_stack_error(msg)
+        sys.exit(3)
+
+def print_stack_error(msg):
+    import traceback
+    traceback.print_stack(file=sys.stderr)
+    sys.stderr.write(tty_error +" "+msg)
+
 def print_usage():
     argparser.print_usage()
     sys.stdout.write("Use -h/--help to see the full description of all options and available commands. Or use 'omd help <command>' to see help for a specific command.\n")
@@ -5237,6 +5331,7 @@ if (opt_interactive or cmd_spec.confirm) and not opt_force:
     sys.stdout.flush()
     a = sys.stdin.readline().strip()
     if a.lower() != "yes":
+        sys.stdout.write(tty_red + tty_bold + "canceled " + tty_normal + " \n")
         sys.exit(0)
 
 try:
