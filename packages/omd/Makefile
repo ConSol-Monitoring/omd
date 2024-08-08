@@ -15,6 +15,7 @@ install:
 	install -m 755 merge-core-config $(DESTDIR)$(OMD_ROOT)/bin
 	install -m 755 create_site_selfsigned_cert $(DESTDIR)$(OMD_ROOT)/bin
 	install -m 755 set_admin_password $(DESTDIR)$(OMD_ROOT)/bin
+	install -m 755 sleep_while_omd_running $(DESTDIR)$(OMD_ROOT)/bin
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/omd/htdocs
 	install -m 644 index.html $(DESTDIR)$(OMD_ROOT)/share/omd/htdocs
 	install -m 644 logout.php $(DESTDIR)$(OMD_ROOT)/share/omd/htdocs

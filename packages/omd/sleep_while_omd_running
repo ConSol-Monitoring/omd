@@ -1,0 +1,22 @@
+#!/bin/bash
+#
+# sleeps given number of seconds, but abort if the site is not running
+# it will check the apache pid file and the naemon livestatus socket to
+# determine if the site is up.
+
+if [ -z "$1" ]; then
+    echo "Usage: $0 <seconds>"
+    exit 1
+fi
+
+sleep_time=$1
+
+for ((i=0; i<$sleep_time; i++)); do
+    if [ ! -f "$OMD_ROOT/tmp/run/live" ] && [ ! -f $OMD_ROOT/tmp/run/apache.pid ]; then
+        exit 1
+    fi
+    sleep 1
+done
+
+exit 0
+
