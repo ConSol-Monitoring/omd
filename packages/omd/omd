@@ -1806,9 +1806,10 @@ def add_to_fstab(sitename, tmpfs_size = None):
     entry = "tmpfs  %s tmpfs noauto,user,mode=755,uid=%s,gid=%s%s 0 0\n" % (mountpoint, sitename, sitename, sizespec)
 
     # skip adding if already there
-    for line in open("/etc/fstab"):
-        if line.find(entry) != -1:
-            return
+    if os.path.exists("/etc/fstab"):
+        for line in open("/etc/fstab"):
+            if line.find(entry) != -1:
+                return
 
     sys.stdout.write("Adding %s to /etc/fstab..." % mountpoint)
 
