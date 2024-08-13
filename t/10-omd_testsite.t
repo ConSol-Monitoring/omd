@@ -12,7 +12,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 496 );
+plan( tests => 498 );
 
 my $omd_bin = TestUtils::get_omd_bin();
 
@@ -32,9 +32,10 @@ $vtest = { cmd => $omd_bin." version -b", "exit" => undef };
 TestUtils::test_command($vtest) or TestUtils::bail_out_clean("no further testing without working omd");
 
 # print apache version
-my $atest = { cmd => "/bin/sh -c '".TestUtils::config('APACHE_INIT_NAME')." -V | grep \"Server version\"'", "exit" => undef, errlike => undef };
+my $atest = { cmd => "/bin/sh -c '".TestUtils::config('APACHE_CTL')." -V | grep \"Server version\"'", "exit" => undef, errlike => undef };
 TestUtils::test_command($atest) or TestUtils::bail_out_clean("no further testing without working omd");
 diag("Apache ".$atest->{'stdout'});
+ok($atest, "has apache version");
 
 # print perl version
 use Config;
@@ -45,6 +46,7 @@ diag(sprintf("Perl: %s - Arch: %s", $^V, $Config{'archname'}));
 my $ptest = { cmd => "/bin/sh -c 'php -v | head -n 1'", "exit" => undef, errlike => undef };
 TestUtils::test_command($ptest) or TestUtils::bail_out_clean("no further testing without working omd");
 diag($ptest->{'stdout'});
+ok($ptest, "has php version");
 
 # there should be no sbin/ folder, all binaries should be in bin/
 chomp(my $omd_version = $vtest->{'stdout'});
