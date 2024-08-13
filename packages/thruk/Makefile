@@ -45,11 +45,11 @@ skel:
 	mkdir -p $(SKEL)/var/log $(SKEL)/var/thruk $(SKEL)/etc/init.d
 	mkdir -p $(SKEL)/etc/thruk/plugins-enabled
 	# set links for enabled plugins
-	for link in `ls -1 $(DIR)/plugins/plugins-enabled/`; do cd $(SKEL)/etc/thruk/plugins-enabled && ln -sfn ../../../share/thruk/plugins/plugins-available/$$link $$link; done
+	for link in `ls -1 $(DIR)/plugins/plugins-enabled/`; do ( cd $(SKEL)/etc/thruk/plugins-enabled && ln -sfn ../../../share/thruk/plugins/plugins-available/$$link $$link ) ; done
 	rm $(SKEL)/etc/thruk/plugins-enabled/shinken_features
 	# set links for enabled themes
 	mkdir -p $(SKEL)/etc/thruk/themes-enabled
-	for link in `ls -1 $(DIR)/themes/themes-enabled/`; do cd $(SKEL)/etc/thruk/themes-enabled && ln -sfn ../../../share/thruk/themes/themes-available/$$link $$link; done
+	for link in `ls -1 $(DIR)/themes/themes-enabled/`; do ( cd $(SKEL)/etc/thruk/themes-enabled && ln -sfn ../../../share/thruk/themes/themes-available/$$link $$link ) ; done
 	install -m 0644 $(DIR)/support/thruk.init $(SKEL)/etc/init.d/thruk
 	mkdir -p $(SKEL)/etc/bash_completion.d
 	cp $(DIR)/support/thruk_bash_completion $(SKEL)/etc/bash_completion.d/thruk-base
@@ -76,6 +76,9 @@ skel:
 	sed -e 's/thrukadmin/omdadmin/g' -i $(SKEL)/etc/thruk/cgi.cfg
 	sed -e 's/^default_user_name=.*/default_user_name=/g' -i $(SKEL)/etc/thruk/cgi.cfg
 	cat dokuwiki.cgi.cfg >> $(SKEL)/etc/thruk/cgi.cfg
+	if [ "$(APACHE_HAS_3F)" -ne "1" ]; then \
+		sed -e 's/,UnsafeAllow3F//g' -i $(SKEL)/etc/thruk/apache*.conf; \
+	fi
 
 clean:
 	rm -rf $(DIR)
