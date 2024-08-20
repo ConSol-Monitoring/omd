@@ -17,7 +17,7 @@ chdir($ENV{OMD_ROOT}) or die($!);
 my $retention_file = catfile($ENV{OMD_ROOT},qw(var naemon retention.dat));
 my $dbfile = catfile($ENV{OMD_ROOT}, qw(var dacretain.db));
 my $livestatus_file = catfile($ENV{OMD_ROOT}, qw(tmp run live));
-my $db = DBI->connect("dbi:SQLite:dbname=$dbfile","","", {
+my $db = DBI->connect("dbi:SQLite:dbname=:memory:","","", {
     RaiseError => 1,
     PrintError => 0,
     AutoCommit => 1,
@@ -55,6 +55,8 @@ if($cmds{$cmd}) {
     say STDERR "no or unknown command. Known commands:";
     say STDERR $_ for sort keys %cmds;
 }
+
+close_db();
 
 
 # Call this just before stop or reload
@@ -302,8 +304,15 @@ sub restore {
 
 # this is called automatically if the db does not exist.
 sub init_db {
+    if (-f $dbfile) {
+        eval {
+            $db->sqlite_backup_from_file($dbfile);
+        };
+    }
     my $test = eval { $db->selectrow_array('select count(*) from sqlite_master') };
+
     unless($test) { # db is empty create tables
+
         trace_me();
         $db->do(q{create table comments (
             type text,
@@ -329,6 +338,12 @@ sub init_db {
             select iif(ifnull(service,'') = '', 'host', 'service') type,host,service,null,null,missing,deleteme from acks
         });
     }
+}
+
+# flush/backup the in-memory db to a file and close the handle
+sub close_db {
+    $db->sqlite_backup_to_file($dbfile);
+    $db->disconnect();
 }
 
 sub get_comments {
