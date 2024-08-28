@@ -4564,15 +4564,23 @@ def main_cleanup(args, options=None):
     if package_manager is None:
         bail_out(tty_error + ": Command is not supported on this platform")
 
+    dry_run_log = ""
+    if options.dry_run:
+        dry_run_log = tty_yellow+"*DRY RUN* "+tty_normal
+
+    keep = []
+    uninstallable = []
     for version in omd_versions():
         site_ids = [ s for s in all_sites() if site_version(s) == version ]
         if site_ids:
-            sys.stdout.write("%s%-20s%s In use (by %s). Keeping this version.\n" %
-                    (tty_bold, version, tty_normal, ", ".join(site_ids)))
+            sys.stdout.write("%s%s%-30s%s In use (by %s). Keeping this version.\n" %
+                    (dry_run_log, tty_bold, version, tty_normal, ", ".join(site_ids)))
+            keep.append(version)
             continue
         if version == OMD_VERSION and not opt_force:
-            sys.stdout.write("%s%-20s%s Default version. Keeping this version unless using --force.\n" %
-                    (tty_bold, version, tty_normal))
+            sys.stdout.write("%s%s%-30s%s Default version. Keeping this version unless using --force.\n" %
+                    (dry_run_log, tty_bold, version, tty_normal))
+            keep.append(version)
             continue
 
         version_path = os.path.join("/omd/versions", version)
@@ -4581,16 +4589,33 @@ def main_cleanup(args, options=None):
         omdpackages = list(filter(lambda pkg: b"-addons" not in pkg, packages))
         addonpackages = list(filter(lambda pkg: b"-addons" in pkg, packages))
         if len(omdpackages) != 1:
-            sys.stdout.write("%s%-35s%s Could not determine package. Keeping this version.\n" %
-                    (tty_bold, version, tty_normal))
+            sys.stdout.write("%s%s%-30s%s Could not determine package. Keeping this version.\n" %
+                    (dry_run_log, tty_bold, version, tty_normal))
+            keep.append(version)
             continue
 
-        for pkg in addonpackages:
-            sys.stdout.write("%s%-35s%s Uninstalling\n" % (tty_bold, str(pkg), tty_normal))
-            package_manager.uninstall(pkg)
+        uninstallable.append({ "version": version, "pkg": omdpackages[0], "addonpackages": addonpackages })
 
-        sys.stdout.write("%s%-35s%s Uninstalling\n" % (tty_bold, version, tty_normal))
-        package_manager.uninstall(omdpackages[0])
+    while len(keep) < options.keep and len(uninstallable) > 0:
+        k = uninstallable.pop()
+        keep.append(k["version"])
+        sys.stdout.write("%s%s%-30s%s Keeping this version so at least %d versions remain.\n" %
+                (dry_run_log, tty_bold, k["version"], tty_normal, options.keep))
+
+    for version in uninstallable:
+        version_path = os.path.join("/omd/versions", version["version"])
+
+        for pkg in version["addonpackages"]:
+            sys.stdout.write("%s%s%-30s%s Uninstalling\n" % (dry_run_log, tty_bold, str(pkg), tty_normal))
+            if not options.dry_run:
+                package_manager.uninstall(pkg)
+
+        sys.stdout.write("%s%s%-30s%s Uninstalling\n" % (dry_run_log, tty_bold, version["version"], tty_normal))
+        if not options.dry_run:
+            package_manager.uninstall(version["pkg"])
+
+        if options.dry_run:
+            continue
 
         # In case there were modifications made to the version the uninstall may leave
         # some files behind. Remove the whole version directory
@@ -4600,7 +4625,7 @@ def main_cleanup(args, options=None):
 
     # In case the last version has been removed ensure some things created globally
     # are removed.
-    if not omd_versions():
+    if not options.dry_run and not omd_versions():
         _cleanup_global_files()
 
 
@@ -5083,6 +5108,10 @@ commands = [
     description = "Uninstall all other OMD versions that are not used by any site.",
     only_root   = True,
     fn          = main_cleanup,
+    option_spec = [
+        ( "--dry-run", "-n",   { "help":"do not cleanup, but list version planned for removal.", "action": "count", "default": 0 }),
+        ( "--keep",    "-k",   { "help":"keep at least this number of versions.", "type": int, "default": 0} ),
+    ],
   ),
 
   Command(

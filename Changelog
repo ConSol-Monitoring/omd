@@ -3,6 +3,8 @@ This file documents the revision history for the Open Monitoring Distribution (L
 next:
           - omd:
             - fix dropping root privileges on omd disable command
+            - omd cleanup: add --dry-run / -n option
+            - omd cleanup: add --keep    / -k option
           - plugins:
             - check_hpasm update to 4.10
             - check_pdu_health update to 3.0.1.1
@@ -134,7 +136,7 @@ next:
             - add influxdb_vim_series script
           - Ansible 2.9.27
           - Monitoring-Plugins: update to 2.3.3
- 
+
 5.00     Nov 14 2022
           - DEPRECATION WARNING: the following components got removed
             - python 2 modules
@@ -632,7 +634,7 @@ next:
               about these files manually.
             - FIX: The nagvis URLs were not correctly linking to e.g. Check_MK
               when a site has been created with Check_MK as default GUI
-            - FIX: Fixed site not starting after "omd cp" when using 
+            - FIX: Fixed site not starting after "omd cp" when using
               the arguments --no-past, --no-rrds or --no-logs
           - Check_MK:
             - Update to 1.2.6p12
@@ -771,7 +773,7 @@ next:
           - mod_python: Fixed our sys.path patch not to destory the default
             sys.path set during interpreter initialization
           - Dokuwiki: Now supporting the new multisite cookie format
-          - rrdtool: Update to version 1.4.8 
+          - rrdtool: Update to version 1.4.8
             - compile and install Python binding
           - nagios: Changed init script to kill still running processes during
                 "stop" call after 60 seconds waiting
@@ -853,7 +855,7 @@ next:
           - OMD
             - Added 'umount' option to unmount the ramdisk of a site
             - Added 'TMPFS' config option to be able to run omd without the tmpfs filesystem
-            - Handling comments and empty lines in .info files correcty 
+            - Handling comments and empty lines in .info files correcty
             - Made 'setversion' work on broken links
             - New commands 'disable' and 'enable'. OMD does not depend on the
               home directories of disabled sites. This is useful in cluster environments.
