@@ -7,8 +7,10 @@ next:
             - omd cleanup: add --keep    / -k option
           - plugins:
             - check_hpasm update to 4.10
+            - check_nwc_health update to 11.5.0.1
             - check_pdu_health update to 3.0.1.1
             - check_printer_health update to 1.2.0.1
+            - check_ups_health update to 4.3
             - check_vsphere update to 0.3.11
             - check_wut_health update to 4.1.0.2
           - grafana:
