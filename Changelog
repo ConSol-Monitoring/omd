@@ -18,6 +18,8 @@ next:
           - grafana:
             - pnp-datasource update to 2.1.0
             - thruk-datasource update to 2.1.1
+          - apache:
+            - add UnsafeAllow3F if required
           - snmptrapd:
             - improve the trap_logger
           - monitoring-plugins update to 2.4.0
