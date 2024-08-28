@@ -71,6 +71,11 @@ sub _format_changes {
         $txt .= _format_changes_cat($changes, $cat);
     }
     for my $cat (sort keys %{$changes}) {
+        next if $cat eq '';
+        next if grep(/$cat/, @categories);
+        $txt .= _format_changes_cat($changes, $cat);
+    }
+    for my $cat (sort keys %{$changes}) {
         next if $cat ne '';
         $txt .= _format_changes_cat($changes, $cat);
     }
