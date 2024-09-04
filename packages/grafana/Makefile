@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 NAME       = grafana
-VERSION    = 10.4.2
+VERSION    = 11.1.5
 SRC        = $(NAME)-$(VERSION).tar.gz
 GOPATH     = go
 GOPKG      = 1.22
@@ -93,8 +93,6 @@ package:
 	rm $(GOPATH)/src/github.com/grafana/grafana/pkg/build/cmd/grafanacom*
 	cd $(GOPATH)/src/github.com/grafana/grafana && \
 		$(GO) mod tidy
-	cd $(GOPATH)/src/github.com/grafana/grafana && \
-		$(GO) mod vendor
 	echo "build app"
 	cd $(GOPATH)/src/github.com/grafana/grafana && \
 		$(GO) run build.go setup
