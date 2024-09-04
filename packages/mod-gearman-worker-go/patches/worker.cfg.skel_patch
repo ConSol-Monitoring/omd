@@ -1,5 +1,5 @@
---- a/etc/mod-gearman/worker.cfg	2024-03-21 17:46:35.000000000 +0100
-+++ b/etc/mod-gearman/worker.cfg	2024-04-11 13:51:41.307862385 +0200
+--- a/etc/mod-gearman/worker.cfg	2024-09-04 11:48:45.386129027 +0200
++++ b/etc/mod-gearman/worker.cfg	2024-09-04 11:48:45.390129170 +0200
 @@ -22,12 +22,12 @@
  
  
@@ -26,7 +26,7 @@
  
  
  # Path to the pidfile. Usually set by the init script
-@@ -244,4 +244,5 @@
+@@ -250,4 +250,5 @@
  
  
  # Import conf.d folders to override default settings

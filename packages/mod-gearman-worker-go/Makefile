@@ -14,7 +14,7 @@ GITBASE     = github.com/consol-monitoring
 GITURL      = $(GITBASE)/$(NAME)
 DEPS_SRC    = deps.tar.gz
 # GIT TAG is set automatically by "make upstream" or "make package"
-GIT_TAG     = v1.5.1
+GIT_TAG     = v1.5.2
 
 .PHONY: skel
 
@@ -38,6 +38,7 @@ skel:
 	    echo "applying $$p..." ; \
 	    ( cd $(SKEL) ; patch -p1 ) < $$p || exit 1; \
 	done
+	find $(SKEL)/etc/mod-gearman -name \*.orig -exec rm {} \;
 
 clean:
 	[ ! -e $(GOPATH) ] || chmod -R 777 $(GOPATH)

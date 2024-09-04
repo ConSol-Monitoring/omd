@@ -15,6 +15,7 @@ next:
             - check_wut_health update to 4.1.0.2
           - gearman:
             - mod-gearman update to 5.1.4
+            - mod-gearman-worker-go update to 1.5.2
           - grafana:
             - pnp-datasource update to 2.1.0
             - thruk-datasource update to 2.1.1
