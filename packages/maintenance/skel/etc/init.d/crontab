@@ -9,6 +9,7 @@ cd || exit 1
 if [ "$CONFIG_CRONTAB" != on ] ; then
     exit 5
 fi
+. .profile
 . lib/omd/init_profile
 
 NAME="crontab"

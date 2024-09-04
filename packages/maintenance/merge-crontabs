@@ -24,6 +24,8 @@ sys.stdout.write("OMD_ROOT=%s\n" % os.environ['OMD_ROOT'])
 sys.stdout.write("OMD_SITE=%s\n" % os.environ['OMD_SITE'])
 sys.stdout.write("PATH=%s\n" % os.environ['PATH'])
 sys.stdout.write("PYTHONPATH=%s\n" % os.environ['PYTHONPATH'])
+if "TZ" in os.environ:
+    sys.stdout.write("CRON_TZ=%s\n" % os.environ['TZ'])
 sys.stdout.write("MAILTO=\"%s\"\n" % omd_config.get('CONFIG_ADMIN_MAIL', os.environ['OMD_SITE']))
 sys.stdout.write("# ------------------------------------------------------------\n")
 
