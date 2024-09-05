@@ -111,6 +111,7 @@ OS_PACKAGES          += python3-cryptography
 OS_PACKAGES          += python3-distutils              # required for ansible
 OS_PACKAGES          += rsync
 OS_PACKAGES          += snmp
+OS_PACKAGES          += ssl-cert                       # apache ssl certificate
 OS_PACKAGES          += unzip
 OS_PACKAGES          += xinetd
 USERADD_OPTIONS       =
