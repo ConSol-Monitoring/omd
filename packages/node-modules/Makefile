@@ -9,12 +9,12 @@ NODE_PATH=$(shell realpath $$(ls -d1 ../node/node-v*/lib/node_modules/npm/node_m
 NPM=NODE_PATH=$(NODE_PATH) PATH=$(shell realpath $$(ls -d1 ../node/node-v*/bin)):$$PATH npm
 
 # use local chromium if enabled in distro file (by adding chrome dependency)
-ifneq (,$(findstring chromium,$(OS_PACKAGES)))
-export PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
-export PUPPETEER_EXECUTABLE_PATH=$(shell which chromium-browser chromium 2>/dev/null | head -n 1)
-else
+#ifneq (,$(findstring chromium,$(OS_PACKAGES)))
+#export PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
+#export PUPPETEER_EXECUTABLE_PATH=$(shell which chromium-browser chromium 2>/dev/null | head -n 1)
+#else
 export PUPPETEER_DOWNLOAD_PATH=$(shell pwd)/.local-chromium
-endif
+#endif
 
 
 .PHONY: skel
