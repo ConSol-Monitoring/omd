@@ -26,7 +26,10 @@ PACKAGER=$( make -f echo.mk FILE=$M VAR=PACKAGE_INSTALL )
 BECOME_ROOT=$( make -f echo.mk FILE=$M VAR=BECOME_ROOT )
 
 echo "Packages needed for compilation:"
-echo "$BUILD_PACS"
+for PAC in $BUILD_PACS; do
+    echo -n " $PAC"
+done
+echo
 CMD="$PACKAGER $BUILD_PACS"
 if [ $UID != 0 ]
 then
@@ -41,4 +44,3 @@ else
     echo "Problems while compiling if something is missing."
     exit 1
 fi
-
