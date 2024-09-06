@@ -78,6 +78,7 @@ OS_PACKAGES          += libboost-program-options1.74.0
 OS_PACKAGES          += libboost-regex1.74.0
 OS_PACKAGES          += libboost-system1.74.0
 OS_PACKAGES          += libboost-thread1.74.0
+OS_PACKAGES          += libcups2                       # chrome
 OS_PACKAGES          += libdbi1
 OS_PACKAGES          += libevent-2.1-7
 OS_PACKAGES          += libevent-pthreads-2.1-7
