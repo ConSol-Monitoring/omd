@@ -5,7 +5,7 @@ DIR      = node_modules
 SHELL    = /bin/bash
 DEPENDS  = node
 
-PUPPETEER=         # use latest version by default
+PUPPETEER=@latest # use latest version by default
 ifeq ($(DISTRO_CODE),el7)
   PUPPETEER=@21.11.0 # last version with node 16 support which is required for rhel7
 endif
@@ -19,6 +19,8 @@ ifneq (,$(findstring chromium,$(OS_PACKAGES)))
   export PUPPETEER_EXECUTABLE_PATH=$(shell which chromium-browser chromium 2>/dev/null | head -n 1)
 else
   export PUPPETEER_DOWNLOAD_PATH=$(shell pwd)/.local-chromium
+  # newer puppeteer versions use this folder
+  export PUPPETEER_CACHE_DIR=$(shell pwd)/.local-chromium
 endif
 
 
