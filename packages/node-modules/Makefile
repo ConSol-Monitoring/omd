@@ -5,16 +5,21 @@ DIR      = node_modules
 SHELL    = /bin/bash
 DEPENDS  = node
 
+PUPPETEER=         # use latest version by default
+ifeq ($(DISTRO_CODE),el7)
+  PUPPETEER=@21.11.0 # last version with node 16 support which is required for rhel7
+endif
+
 NODE_PATH=$(shell realpath $$(ls -d1 ../node/node-v*/lib/node_modules/npm/node_modules)):$(shell pwd)/node_modules
 NPM=NODE_PATH=$(NODE_PATH) PATH=$(shell realpath $$(ls -d1 ../node/node-v*/bin)):$$PATH npm
 
 # use local chromium if enabled in distro file (by adding chrome dependency)
-#ifneq (,$(findstring chromium,$(OS_PACKAGES)))
-#export PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
-#export PUPPETEER_EXECUTABLE_PATH=$(shell which chromium-browser chromium 2>/dev/null | head -n 1)
-#else
-export PUPPETEER_DOWNLOAD_PATH=$(shell pwd)/.local-chromium
-#endif
+ifneq (,$(findstring chromium,$(OS_PACKAGES)))
+  export PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
+  export PUPPETEER_EXECUTABLE_PATH=$(shell which chromium-browser chromium 2>/dev/null | head -n 1)
+else
+  export PUPPETEER_DOWNLOAD_PATH=$(shell pwd)/.local-chromium
+endif
 
 
 .PHONY: skel
@@ -23,7 +28,7 @@ build:
 	echo "module.exports = {}" > .puppeteerrc.cjs # install.sh trys to open .config/.puppeteerrc otherwise
 	mkdir -p node_modules
 	$(NPM) i progress
-	$(NPM) i puppeteer@21.11.0 # last version with node 16 support which is required for rhel7
+	$(NPM) i puppeteer$(PUPPETEER)
 	if [ "x$(PUPPETEER_DOWNLOAD_PATH)" != "x" ]; then \
 		rm -rf node_modules/puppeteer/.local-chromium; \
 		cp -rp $(PUPPETEER_DOWNLOAD_PATH) node_modules/puppeteer/.local-chromium; \
