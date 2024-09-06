@@ -8,7 +8,7 @@ URIPARSER=0.8.6
 GIT_TAG     = 2.4.0
 
 EXTRA_PATCHES=
-ifeq ($(DISTRO_INFO),CENTOS 7)
+ifeq ($(DISTRO_CODE),el7)
 EXTRA_PATCHES=patches/*.patch.rhel7
 endif
 
