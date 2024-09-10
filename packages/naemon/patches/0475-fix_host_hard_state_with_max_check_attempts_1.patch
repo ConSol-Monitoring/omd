@@ -1,0 +1,27 @@
+From 3ad1a5c7d30697c8dc14abd3423adcaccf8fdcf7 Mon Sep 17 00:00:00 2001
+From: Sven Nierlein <sven@consol.de>
+Date: Tue, 3 Sep 2024 15:26:01 +0200
+Subject: [PATCH] fix host not being in hard state with max_check_attempts=1
+ (fixes #473)
+
+a host should directly change into a hard state when max_check_attempts=1 is set and the host goes down.
+---
+ src/naemon/checks_host.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/src/naemon/checks_host.c b/src/naemon/checks_host.c
+index 7a6215c2..5c2588d7 100644
+--- a/src/naemon/checks_host.c
++++ b/src/naemon/checks_host.c
+@@ -830,7 +830,10 @@ static int process_host_check_result(host *hst, host *prev, int *alert_recorded)
+ 			if (hst->check_type == CHECK_TYPE_ACTIVE || passive_host_checks_are_soft == TRUE) {
+ 
+ 				/* set the state type */
+-				hst->state_type = SOFT_STATE;
++				if (hst->current_attempt == hst->max_attempts)
++					hst->state_type = HARD_STATE;
++				else
++					hst->state_type = SOFT_STATE;
+ 			}
+ 
+ 			/* by default, passive check results are treated as HARD states */
