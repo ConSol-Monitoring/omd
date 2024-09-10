@@ -5,6 +5,8 @@ next:
             - fix dropping root privileges on omd disable command
             - omd cleanup: add --dry-run / -n option
             - omd cleanup: add --keep    / -k option
+          - thruk:
+            - update to 3.18
           - plugins:
             - check_hpasm update to 4.10
             - check_nwc_health update to 11.5.1
