@@ -190,13 +190,6 @@ fi
 setsebool -P httpd_can_network_relay on   >/dev/null 2>&1
 setsebool -P httpd_can_network_connect on >/dev/null 2>&1
 
-# check apache UnsafeAllow3F flag and patch skel if not found
-# this allows installing newer OMD versions even if the httpd has not yet been upgraded
-if [ $(strings /usr/lib*/httpd/modules/mod_rewrite.so 2>/dev/null | grep -ci UnsafeAllow3F) -eq 0 ]; then
-    sed -e 's/,?UnsafeAllow3F//g' -i /omd/versions/%{version}/skel/etc/thruk/apache_*.conf
-fi
-
-
 exit 0
 
 %preun

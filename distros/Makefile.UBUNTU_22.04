@@ -138,7 +138,6 @@ APACHE_CTL            = /usr/sbin/apache2ctl
 APACHE_MODULE_DIR     = /usr/lib/apache2/modules
 APACHE_FCGID_MODULE   = /usr/lib/apache2/modules/mod_fcgid.so
 APACHE_ENMOD          = a2enmod %s
-APACHE_HAS_3F         = 0
 PHP_FCGI_BIN          = /usr/bin/php-cgi
 BECOME_ROOT           = sudo su -c
 ARCH                  = $(shell dpkg --print-architecture)

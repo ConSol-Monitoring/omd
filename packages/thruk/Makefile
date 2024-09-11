@@ -76,9 +76,6 @@ skel:
 	sed -e 's/thrukadmin/omdadmin/g' -i $(SKEL)/etc/thruk/cgi.cfg
 	sed -e 's/^default_user_name=.*/default_user_name=/g' -i $(SKEL)/etc/thruk/cgi.cfg
 	cat dokuwiki.cgi.cfg >> $(SKEL)/etc/thruk/cgi.cfg
-	if [ "$(APACHE_HAS_3F)" -ne "1" ]; then \
-		sed -e 's/,UnsafeAllow3F//g' -i $(SKEL)/etc/thruk/apache*.conf; \
-	fi
 
 clean:
 	rm -rf $(DIR)
