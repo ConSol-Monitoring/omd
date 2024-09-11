@@ -32,8 +32,18 @@ OPTS="-f $OMD_ROOT/etc/apache/apache.conf"
 STOP_TIMEOUT=15
 STOP_CALLBACK="kill_stale_php_cgis"
 CHECK_CALLBACK=verify_config
+HAS_UNSAFE_ALLOW=""
+
+if "$DAEMON" -t -f "$OMD_ROOT/share/omd/apache-test-unsafeallow.conf" >/dev/null 2>&1 ; then
+    HAS_UNSAFE_ALLOW=1
+fi
+
+has_unsafe_allow() {
+    [ -n "$HAS_UNSAFE_ALLOW" ]
+}
 
 mkdir -p $OMD_ROOT/var/log/apache
+
 
 case "$1" in start|restart|reload)
   # (nearly) reproducible problems with apache at boot-time. (alloc_listener: failed to set up sockaddr for 127.0.0.1)
@@ -93,5 +103,19 @@ verify_config() {
     fi
 }
 
-__generic_init "$*"
+copy_and_fix_config() {
+    mkdir -p "$OMD_ROOT/tmp/apache/conf.d"
+    T="$OMD_ROOT/tmp/apache/conf.d/."
+    rsync -acL --delete-after "$OMD_ROOT/etc/apache/conf.d/." "$T"
+    if has_unsafe_allow ; then
+        find "$T" -type f -print0 | xargs -0 sed -i -e 's/,@@@UNSAFEALLOW3F@@@/,UnsafeAllow3F/g'
+    else
+        find "$T" -type f -print0 | xargs -0 sed -i -e 's/,@@@UNSAFEALLOW3F@@@//g'
+    fi
+}
 
+case "$1" in start|restart|reload|checkconfig|check)
+    copy_and_fix_config
+esac
+
+__generic_init "$*"

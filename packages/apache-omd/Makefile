@@ -50,6 +50,8 @@ install: $(APACHE_MODULES_INSTALL)
 	else \
 		install -m 644 apache.conf $(DESTDIR)$(OMD_ROOT)/share/omd/apache.conf; \
 	fi
+	install -m 644 test-unsafeallow.conf $(DESTDIR)$(OMD_ROOT)/share/omd/apache-test-unsafeallow.conf
+	sed -i -e 's|###APACHE_MODULE_DIR###|$(APACHE_MODULE_DIR)|g' $(DESTDIR)$(OMD_ROOT)/share/omd/apache-test-unsafeallow.conf
 
 skel:
 	# install a custom apache configuration for apache 2.4 or later
