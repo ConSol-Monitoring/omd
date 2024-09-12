@@ -1,0 +1,45 @@
+From 78eb265e5119e06b0d1898ed9d0bd338b3feae3f Mon Sep 17 00:00:00 2001
+From: Sven Nierlein <sven@consol.de>
+Date: Thu, 12 Sep 2024 12:50:35 +0200
+Subject: [PATCH] fix typo
+
+---
+ neb_module_naemon/mod_gearman.c | 4 ++--
+ t/05-neb.c                      | 2 +-
+ 2 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/neb_module_naemon/mod_gearman.c b/neb_module_naemon/mod_gearman.c
+index 9960196..63faedb 100644
+--- a/neb_module_naemon/mod_gearman.c
++++ b/neb_module_naemon/mod_gearman.c
+@@ -45,7 +45,7 @@ extern int            service_check_timeout;
+ extern int            host_check_timeout;
+ extern int            process_performance_data;
+ extern int            log_notifications;
+-extern int            log_global_notificatons;
++extern int            log_global_notifications;
+ 
+ /* global variables */
+ static objectlist * mod_gm_result_list = NULL;
+@@ -732,7 +732,7 @@ static int handle_notifications( int event_type, void *data ) {
+     my_free(processed_command);
+ 
+     /* log the notification to program log file */
+-    if ((ds->contact_name == NULL && log_global_notificatons == TRUE) || (ds->contact_name != NULL && log_notifications == TRUE)) {
++    if ((ds->contact_name == NULL && log_global_notifications == TRUE) || (ds->contact_name != NULL && log_notifications == TRUE)) {
+         if(svc != NULL) {
+             switch(ds->reason_type) {
+                 case NOTIFICATION_CUSTOM:
+diff --git a/t/05-neb.c b/t/05-neb.c
+index e4b6136..9590295 100644
+--- a/t/05-neb.c
++++ b/t/05-neb.c
+@@ -33,7 +33,7 @@ unsigned long event_broker_options;
+ timed_event *schedule_event(__attribute__((unused)) time_t delay, __attribute__((unused)) event_callback callback, __attribute__((unused)) void *user_data) { return(NULL); }
+ int process_performance_data;
+ int log_notifications;
+-int log_global_notificatons;
++int log_global_notifications;
+ 
+ #pragma GCC diagnostic push    //Save actual diagnostics state
+ #pragma GCC diagnostic ignored "-Wpedantic"    //Disable pedantic

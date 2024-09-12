@@ -1,0 +1,765 @@
+From f813aaa65d70a0c365d493ac3627e0f078fe00ed Mon Sep 17 00:00:00 2001
+From: Sven Nierlein <sven@consol.de>
+Date: Thu, 12 Sep 2024 11:14:18 +0200
+Subject: [PATCH 1/3] add global notification handler
+
+global notification handler are like global event handler. They are fired each time
+a notification would be sent out (regardless whether there is a contact or not)
+
+    global_host_notification_handler=somecommand
+    global_service_notification_handler=somecommand
+
+global notification handler work like normal notifications, except they don't have contact
+related macros set.
+---
+ sample-config/naemon.cfg.in |  13 +++
+ src/naemon/broker.c         |  10 +-
+ src/naemon/commands.c       |   7 ++
+ src/naemon/common.h         |   1 +
+ src/naemon/configuration.c  |  35 +++++-
+ src/naemon/globals.h        |   5 +
+ src/naemon/nebstructs.h     |   2 +
+ src/naemon/notifications.c  | 209 ++++++++++++++++++++++++++++++++++--
+ src/naemon/utils.c          |  13 +++
+ src/naemon/xrddefault.c     |  25 +++++
+ src/naemon/xsddefault.c     |   2 +
+ 11 files changed, 310 insertions(+), 12 deletions(-)
+
+diff --git a/sample-config/naemon.cfg.in b/sample-config/naemon.cfg.in
+index 406fb30c..75d184dd 100644
+--- a/sample-config/naemon.cfg.in
++++ b/sample-config/naemon.cfg.in
+@@ -288,6 +288,19 @@ log_passive_checks=1
+ 
+ 
+ 
++# GLOBAL HOST AND SERVICE NOTIFICATION HANDLERS
++# These options allow you to specify a host and service notification handler
++# command that is to be run for every host or service.
++# The global notification handler is executed immediately prior to the other
++# notifications that you have optionally specified in each host or
++# service definition. The command argument is the short name of a
++# command definition that you define in your host configuration file.
++
++#global_host_notification_handler=somecommand
++#global_service_notification_handler=somecommand
++
++
++
+ # MAXIMUM CONCURRENT SERVICE CHECKS
+ # This option allows you to specify the maximum number of
+ # service checks that can be run in parallel at any given time.
+diff --git a/src/naemon/broker.c b/src/naemon/broker.c
+index dabcfdf7..593b7b78 100644
+--- a/src/naemon/broker.c
++++ b/src/naemon/broker.c
+@@ -439,6 +439,8 @@ void broker_program_status(int type, int flags, int attr)
+ 	ds.modified_service_attributes = modified_service_process_attributes;
+ 	ds.global_host_event_handler = global_host_event_handler;
+ 	ds.global_service_event_handler = global_service_event_handler;
++	ds.global_host_notification_handler = global_host_notification_handler;
++	ds.global_service_notification_handler = global_service_notification_handler;
+ 
+ 	/* make callbacks */
+ 	neb_make_callbacks(NEBCALLBACK_PROGRAM_STATUS_DATA, (void *)&ds);
+@@ -582,7 +584,9 @@ int broker_contact_notification_data(int type, int flags, int attr, int notifica
+ 	ds.start_time = start_time;
+ 	ds.end_time = end_time;
+ 	ds.reason_type = reason_type;
+-	ds.contact_name = cntct->name;
++	ds.contact_name = NULL;
++	if(cntct != NULL)
++		ds.contact_name = cntct->name;
+ 	if (notification_type == SERVICE_NOTIFICATION) {
+ 		temp_service = (service *)data;
+ 		ds.host_name = temp_service->host_name;
+@@ -640,7 +644,9 @@ int broker_contact_notification_method_data(int type, int flags, int attr, int n
+ 	ds.start_time = start_time;
+ 	ds.end_time = end_time;
+ 	ds.reason_type = reason_type;
+-	ds.contact_name = cntct->name;
++	ds.contact_name = NULL;
++	if(cntct != NULL)
++		ds.contact_name = cntct->name;
+ 	ds.command_name = command_name;
+ 	ds.command_args = command_args;
+ 	if (notification_type == SERVICE_NOTIFICATION) {
+diff --git a/src/naemon/commands.c b/src/naemon/commands.c
+index 2dd93e7b..265f4416 100644
+--- a/src/naemon/commands.c
++++ b/src/naemon/commands.c
+@@ -1680,6 +1680,13 @@ static int global_command_handler(const struct external_command *ext_command, ti
+ 	case CMD_PROCESS_FILE:
+ 		return process_external_commands_from_file(GV_STRING("file_name"), GV_BOOL("delete"));
+ 
++	case CMD_CHANGE_GLOBAL_SVC_EVENT_HANDLER:
++		/* disabled */
++		return ERROR;
++	case CMD_CHANGE_GLOBAL_HOST_EVENT_HANDLER:
++		/* disabled */
++		return ERROR;
++
+ 	default:
+ 		nm_log(NSLOG_RUNTIME_ERROR, "Unknown global command ID %d", ext_command->id);
+ 		return ERROR;
+diff --git a/src/naemon/common.h b/src/naemon/common.h
+index 98df18c3..cad32e70 100644
+--- a/src/naemon/common.h
++++ b/src/naemon/common.h
+@@ -494,4 +494,5 @@ NAGIOS_END_DECL
+ #define MODATTR_CHECK_TIMEPERIOD                16384
+ #define MODATTR_CUSTOM_VARIABLE                 32768
+ #define MODATTR_NOTIFICATION_TIMEPERIOD         65536
++#define MODATTR_NOTIFICATION_HANDLER_COMMAND   131072
+ #endif /* INCLUDE_COMMON_H */
+diff --git a/src/naemon/configuration.c b/src/naemon/configuration.c
+index 355641f3..8b8d8c61 100644
+--- a/src/naemon/configuration.c
++++ b/src/naemon/configuration.c
+@@ -228,6 +228,16 @@ read_config_file(const char *main_config_file, nagios_macros *mac)
+ 			global_service_event_handler = nm_strdup(value);
+ 		}
+ 
++		else if (!strcmp(variable, "global_host_notification_handler")) {
++			nm_free(global_host_notification_handler);
++			global_host_notification_handler = nm_strdup(value);
++		}
++
++		else if (!strcmp(variable, "global_service_notification_handler")) {
++			nm_free(global_service_notification_handler);
++			global_service_notification_handler = nm_strdup(value);
++		}
++
+ 		else if (!strcmp(variable, "ocsp_command")) {
+ 			nm_free(ocsp_command);
+ 			ocsp_command = nm_strdup(value);
+@@ -1342,6 +1352,27 @@ int pre_flight_check(void)
+ 	}
+ 
+ 
++	/********************************************/
++	/* check global notification handler commands...   */
++	/********************************************/
++	if (verify_config)
++		printf("Checking global notification handlers...\n");
++	if (global_host_notification_handler != NULL) {
++		global_host_notification_handler_ptr = find_bang_command(global_host_notification_handler);
++		if (global_host_notification_handler_ptr == NULL) {
++			nm_log(NSLOG_VERIFICATION_ERROR, "Error: Global host notification handler command '%s' is not defined anywhere!", global_host_notification_handler);
++			errors++;
++		}
++	}
++	if (global_service_notification_handler != NULL) {
++		global_service_notification_handler_ptr = find_bang_command(global_service_notification_handler);
++		if (global_service_notification_handler_ptr == NULL) {
++			nm_log(NSLOG_VERIFICATION_ERROR, "Error: Global service notification handler command '%s' is not defined anywhere!", global_service_notification_handler);
++			errors++;
++		}
++	}
++
++
+ 	/**************************************************/
+ 	/* check obsessive processor commands...          */
+ 	/**************************************************/
+@@ -1455,7 +1486,7 @@ int pre_flight_object_check(int *w, int *e)
+ 		}
+ 
+ 		/* check to see if there is at least one contact/group */
+-		if (temp_service->contacts == NULL && temp_service->contact_groups == NULL) {
++		if (temp_service->contacts == NULL && temp_service->contact_groups == NULL && global_service_event_handler == NULL) {
+ 			nm_log(NSLOG_VERIFICATION_WARNING, "Warning: Service '%s' on host '%s' has no default contacts or contactgroups defined!", temp_service->description, temp_service->host_name);
+ 			warnings++;
+ 		}
+@@ -1499,7 +1530,7 @@ int pre_flight_object_check(int *w, int *e)
+ 		}
+ 
+ 		/* check to see if there is at least one contact/group */
+-		if (temp_host->contacts == NULL && temp_host->contact_groups == NULL) {
++		if (temp_host->contacts == NULL && temp_host->contact_groups == NULL && global_host_notification_handler == NULL) {
+ 			nm_log(NSLOG_VERIFICATION_WARNING, "Warning: Host '%s' has no default contacts or contactgroups defined!", temp_host->name);
+ 			warnings++;
+ 		}
+diff --git a/src/naemon/globals.h b/src/naemon/globals.h
+index 1cfdabe3..dd160b0c 100644
+--- a/src/naemon/globals.h
++++ b/src/naemon/globals.h
+@@ -46,6 +46,11 @@ extern char *global_service_event_handler;
+ extern command *global_host_event_handler_ptr;
+ extern command *global_service_event_handler_ptr;
+ 
++extern char *global_host_notification_handler;
++extern char *global_service_notification_handler;
++extern command *global_host_notification_handler_ptr;
++extern command *global_service_notification_handler_ptr;
++
+ extern int use_regexp_matches;
+ extern int use_true_regexp_matching;
+ 
+diff --git a/src/naemon/nebstructs.h b/src/naemon/nebstructs.h
+index 76c72cc3..ecf97bd5 100644
+--- a/src/naemon/nebstructs.h
++++ b/src/naemon/nebstructs.h
+@@ -251,6 +251,8 @@ typedef struct nebstruct_program_status_struct {
+ 	unsigned long   modified_service_attributes;
+ 	char            *global_host_event_handler;
+ 	char            *global_service_event_handler;
++	char            *global_host_notification_handler;
++	char            *global_service_notification_handler;
+ } nebstruct_program_status_data;
+ 
+ 
+diff --git a/src/naemon/notifications.c b/src/naemon/notifications.c
+index adb35d62..e00a7d39 100644
+--- a/src/naemon/notifications.c
++++ b/src/naemon/notifications.c
+@@ -27,6 +27,8 @@ struct notification_job {
+ static notification *create_notification_list_from_host(nagios_macros *mac, host *hst, int options, int *escalated, int type);
+ static notification *create_notification_list_from_service(nagios_macros *mac, service *svc, int options, int *escalated, int type);
+ static int add_notification(notification **notification_list, nagios_macros *mac, contact *);						/* adds a notification instance */
++static int run_global_service_notification_handler(nagios_macros *mac, service *svc, int type, char *not_author, char *not_data, int options, int escalated);
++static int run_global_host_notification_handler(nagios_macros *mac, host *hst, int type, char *not_author, char *not_data, int options, int escalated);
+ 
+ static void free_notification_list(notification *notification_list)
+ {
+@@ -291,11 +293,11 @@ static void notification_handle_job_result(struct wproc_result *wpres, void *dat
+ 		if (wpres->early_timeout) {
+ 			if (nj->svc) {
+ 				nm_log(NSLOG_RUNTIME_WARNING, "Warning: Timeout while notifying contact '%s' of service '%s' on host '%s' by command '%s'\n",
+-				       nj->ctc->name, nj->svc->description,
++				       nj->ctc != NULL ? nj->ctc->name : "GLOBAL", nj->svc->description,
+ 				       nj->hst->name, wpres->command);
+ 			} else {
+ 				nm_log(NSLOG_RUNTIME_WARNING, "Warning: Timeout while notifying contact '%s' of host '%s' by command '%s'\n",
+-				       nj->ctc->name, nj->hst->name,
++				       nj->ctc != NULL ? nj->ctc->name : "GLOBAL", nj->hst->name,
+ 				       wpres->command);
+ 			}
+ 		} else if (!WIFEXITED(wpres->wait_status) || WEXITSTATUS(wpres->wait_status)) {
+@@ -319,7 +321,7 @@ static void notification_handle_job_result(struct wproc_result *wpres, void *dat
+ 			}
+ 			nm_log(NSLOG_RUNTIME_WARNING,
+ 			       "Warning: Notification command for contact '%s' about %s '%s' %s %i. stdout: '%s', stderr: '%s'",
+-			       nj->ctc->name,
++			       nj->ctc != NULL ? nj->ctc->name : "GLOBAL",
+ 			       objecttype,
+ 			       objectname,
+ 			       reason,
+@@ -426,7 +428,7 @@ int service_notification(service *svc, int type, char *not_author, char *not_dat
+ 	notification_list = create_notification_list_from_service(&mac, svc, options, &escalated, type);
+ 
+ 	/* we have contacts to notify... */
+-	if (notification_list != NULL) {
++	if (notification_list != NULL || global_service_notification_handler != NULL) {
+ 
+ 		/* grab the macro variables */
+ 		grab_service_macros_r(&mac, svc);
+@@ -480,6 +482,10 @@ int service_notification(service *svc, int type, char *not_author, char *not_dat
+ 		/* set the notification id macro */
+ 		nm_asprintf(&mac.x[MACRO_SERVICENOTIFICATIONID], "%s", svc->current_notification_id);
+ 
++		/* run the global service notification handler */
++		if(run_global_service_notification_handler(&mac, svc, type, not_author, not_data, options, escalated) == OK)
++			contacts_notified++;
++
+ 		/* notify each contact (duplicates have been removed) */
+ 		for (temp_notification = notification_list; temp_notification != NULL; temp_notification = temp_notification->next) {
+ 
+@@ -1308,7 +1314,7 @@ int host_notification(host *hst, int type, char *not_author, char *not_data, int
+ 	notification_list = create_notification_list_from_host(&mac, hst, options, &escalated, type);
+ 
+ 	/* there are contacts to be notified... */
+-	if (notification_list != NULL) {
++	if (notification_list != NULL || global_host_notification_handler != NULL) {
+ 
+ 		/* grab the macro variables */
+ 		grab_host_macros_r(&mac, hst);
+@@ -1363,15 +1369,16 @@ int host_notification(host *hst, int type, char *not_author, char *not_data, int
+ 		/* set the notification id macro */
+ 		nm_asprintf(&mac.x[MACRO_HOSTNOTIFICATIONID], "%s", hst->current_notification_id);
+ 
++		/* run the global service notification handler */
++		if(run_global_host_notification_handler(&mac, hst, type, not_author, not_data, options, escalated) == OK)
++			contacts_notified++;
++
+ 		/* notify each contact (duplicates have been removed) */
+ 		for (temp_notification = notification_list; temp_notification != NULL; temp_notification = temp_notification->next) {
+ 
+ 			/* grab the macro variables for this contact */
+ 			grab_contact_macros_r(&mac, temp_notification->contact);
+ 
+-			/* clear summary macros (they are customized for each contact) */
+-			clear_summary_macros_r(&mac);
+-
+ 			/* notify this contact */
+ 			result = notify_contact_of_host(&mac, temp_notification->contact, hst, type, not_author, not_data, options, escalated);
+ 
+@@ -2245,3 +2252,189 @@ int add_notification(notification **notification_list, nagios_macros *mac, conta
+ 
+ 	return OK;
+ }
++
++int run_global_service_notification_handler(nagios_macros *mac, service *svc, int type, char *not_author, char *not_data, int options, int escalated) {
++	char *command_name = NULL;
++	char *command_name_ptr = NULL;
++	char *raw_command = NULL;
++	char *processed_command = NULL;
++	char *temp_buffer = NULL;
++	char *processed_buffer = NULL;
++	struct timeval start_time, end_time;
++	int macro_options = STRIP_ILLEGAL_MACRO_CHARS | ESCAPE_MACRO_CHARS;
++	int neb_result;
++	struct notification_job *nj;
++
++	if (global_service_notification_handler == NULL)
++		return ERROR;
++
++	log_debug_info(DEBUGL_NOTIFICATIONS, 2, "** Notifying global service handler\n");
++
++	/* get start time */
++	gettimeofday(&start_time, NULL);
++
++	end_time.tv_sec = 0L;
++	end_time.tv_usec = 0L;
++	neb_result = broker_contact_notification_data(NEBTYPE_CONTACTNOTIFICATION_START, NEBFLAG_NONE, NEBATTR_NONE, SERVICE_NOTIFICATION, type, start_time, end_time, (void *)svc, NULL, not_author, not_data, escalated);
++	if (NEBERROR_CALLBACKCANCEL == neb_result)
++		return ERROR;
++	else if (NEBERROR_CALLBACKOVERRIDE == neb_result)
++		return OK;
++
++	neb_result = broker_contact_notification_method_data(NEBTYPE_CONTACTNOTIFICATIONMETHOD_START, NEBFLAG_NONE, NEBATTR_NONE, SERVICE_NOTIFICATION, type, start_time, end_time, (void *)svc, NULL, global_service_notification_handler, not_author, not_data, escalated);
++	if (NEBERROR_CALLBACKCANCEL == neb_result)
++		return ERROR;
++	else if (NEBERROR_CALLBACKOVERRIDE == neb_result)
++		return OK;
++
++	get_raw_command_line_r(mac, global_service_notification_handler_ptr, global_service_notification_handler, &raw_command, macro_options);
++	if (raw_command == NULL)
++		return ERROR;
++
++	log_debug_info(DEBUGL_NOTIFICATIONS, 2, "Raw notification command: %s\n", raw_command);
++
++	/* process any macros contained in the argument */
++	process_macros_r(mac, raw_command, &processed_command, macro_options);
++	nm_free(raw_command);
++	if (processed_command == NULL)
++		return ERROR;
++
++	/* get the command name */
++	command_name = nm_strdup(global_service_notification_handler);
++	command_name_ptr = strtok(command_name, "!");
++
++	/* run the notification command... */
++
++	log_debug_info(DEBUGL_NOTIFICATIONS, 2, "Processed notification command: %s\n", processed_command);
++
++	/* log the notification to program log file */
++	if (log_notifications == TRUE) {
++		if (type != NOTIFICATION_NORMAL) {
++			nm_asprintf(&temp_buffer, "SERVICE NOTIFICATION: %s;%s;%s;%s ($SERVICESTATE$);%s;$SERVICEOUTPUT$;$NOTIFICATIONAUTHOR$;$NOTIFICATIONCOMMENT$\n", "GLOBAL", svc->host_name, svc->description, notification_reason_name(type), command_name_ptr);
++		} else {
++			nm_asprintf(&temp_buffer, "SERVICE NOTIFICATION: %s;%s;%s;$SERVICESTATE$;%s;$SERVICEOUTPUT$\n", "GLOBAL", svc->host_name, svc->description, command_name_ptr);
++		}
++		process_macros_r(mac, temp_buffer, &processed_buffer, 0);
++		nm_log(NSLOG_SERVICE_NOTIFICATION, "%s", processed_buffer);
++
++		nm_free(temp_buffer);
++		nm_free(processed_buffer);
++	}
++
++	/* run the notification command */
++	nj = nm_calloc(1, sizeof(struct notification_job));
++	nj->ctc = NULL;
++	nj->hst = svc->host_ptr;
++	nj->svc = svc;
++	if (ERROR == wproc_run_callback(processed_command, notification_timeout, notification_handle_job_result, nj, mac)) {
++		nm_log(NSLOG_RUNTIME_ERROR, "wproc: Unable to send notification for service '%s on host '%s' to worker\n", svc->description, svc->host_ptr->name);
++		free(nj);
++	}
++
++	nm_free(command_name);
++	nm_free(processed_command);
++
++	broker_contact_notification_method_data(NEBTYPE_CONTACTNOTIFICATIONMETHOD_END, NEBFLAG_NONE, NEBATTR_NONE, SERVICE_NOTIFICATION, type, start_time, end_time, (void *)svc, NULL, global_service_notification_handler, not_author, not_data, escalated);
++
++	/* get end time */
++	gettimeofday(&end_time, NULL);
++
++	broker_contact_notification_data(NEBTYPE_CONTACTNOTIFICATION_END, NEBFLAG_NONE, NEBATTR_NONE, SERVICE_NOTIFICATION, type, start_time, end_time, (void *)svc, NULL, not_author, not_data, escalated);
++
++	return OK;
++}
++
++int run_global_host_notification_handler(nagios_macros *mac, host *hst, int type, char *not_author, char *not_data, int options, int escalated) {
++	commandsmember *temp_commandsmember = NULL;
++	char *command_name = NULL;
++	char *command_name_ptr = NULL;
++	char *temp_buffer = NULL;
++	char *processed_buffer = NULL;
++	char *raw_command = NULL;
++	char *processed_command = NULL;
++	struct timeval start_time;
++	struct timeval end_time;
++	int macro_options = STRIP_ILLEGAL_MACRO_CHARS | ESCAPE_MACRO_CHARS;
++	int neb_result;
++	struct notification_job *nj;
++
++	if (global_host_notification_handler == NULL)
++		return ERROR;
++
++	log_debug_info(DEBUGL_NOTIFICATIONS, 2, "** Notifying global host handler\n");
++
++	/* get start time */
++	gettimeofday(&start_time, NULL);
++
++	end_time.tv_sec = 0L;
++	end_time.tv_usec = 0L;
++	neb_result = broker_contact_notification_data(NEBTYPE_CONTACTNOTIFICATION_START, NEBFLAG_NONE, NEBATTR_NONE, HOST_NOTIFICATION, type, start_time, end_time, (void *)hst, NULL, not_author, not_data, escalated);
++	if (NEBERROR_CALLBACKCANCEL == neb_result)
++		return ERROR;
++	else if (NEBERROR_CALLBACKOVERRIDE == neb_result)
++		return OK;
++
++	neb_result = broker_contact_notification_method_data(NEBTYPE_CONTACTNOTIFICATIONMETHOD_START, NEBFLAG_NONE, NEBATTR_NONE, HOST_NOTIFICATION, type, start_time, end_time, (void *)hst, NULL, temp_commandsmember->command, not_author, not_data, escalated);
++	if (NEBERROR_CALLBACKCANCEL == neb_result)
++		return ERROR;
++	else if (NEBERROR_CALLBACKOVERRIDE == neb_result)
++		return OK;
++
++	get_raw_command_line_r(mac, temp_commandsmember->command_ptr, temp_commandsmember->command, &raw_command, macro_options);
++	if (raw_command == NULL)
++		return ERROR;
++
++	log_debug_info(DEBUGL_NOTIFICATIONS, 2, "Raw notification command: %s\n", raw_command);
++
++	/* process any macros contained in the argument */
++	process_macros_r(mac, raw_command, &processed_command, macro_options);
++	nm_free(raw_command);
++	if (processed_command == NULL)
++		return ERROR;
++
++	/* get the command name */
++	command_name = nm_strdup(temp_commandsmember->command);
++	command_name_ptr = strtok(command_name, "!");
++
++	/* run the notification command... */
++
++	log_debug_info(DEBUGL_NOTIFICATIONS, 2, "Processed notification command: %s\n", processed_command);
++
++	/* log the notification to program log file */
++	if (log_notifications == TRUE) {
++		if (type != NOTIFICATION_NORMAL) {
++			nm_asprintf(&temp_buffer, "HOST NOTIFICATION: %s;%s;%s ($HOSTSTATE$);%s;$HOSTOUTPUT$;$NOTIFICATIONAUTHOR$;$NOTIFICATIONCOMMENT$\n", "GLOBAL", hst->name, notification_reason_name(type), command_name_ptr);
++		} else {
++			nm_asprintf(&temp_buffer, "HOST NOTIFICATION: %s;%s;$HOSTSTATE$;%s;$HOSTOUTPUT$\n", "GLOBAL", hst->name, command_name_ptr);
++		}
++		process_macros_r(mac, temp_buffer, &processed_buffer, 0);
++		nm_log(NSLOG_HOST_NOTIFICATION, "%s", processed_buffer);
++
++		nm_free(temp_buffer);
++		nm_free(processed_buffer);
++	}
++
++	/* run the notification command */
++	nj = nm_calloc(1, sizeof(struct notification_job));
++	nj->ctc = NULL;
++	nj->hst = hst;
++	nj->svc = NULL;
++	if (ERROR == wproc_run_callback(processed_command, notification_timeout, notification_handle_job_result, nj, mac)) {
++		nm_log(NSLOG_RUNTIME_ERROR, "wproc: Unable to send notification for host '%s' to worker\n", hst->name);
++		free(nj);
++	}
++
++	/* @todo Handle nebmod stuff when getting results from workers */
++
++	nm_free(command_name);
++	nm_free(processed_command);
++
++	broker_contact_notification_method_data(NEBTYPE_CONTACTNOTIFICATIONMETHOD_END, NEBFLAG_NONE, NEBATTR_NONE, HOST_NOTIFICATION, type, start_time, end_time, (void *)hst, NULL, temp_commandsmember->command, not_author, not_data, escalated);
++
++	/* get end time */
++	gettimeofday(&end_time, NULL);
++
++	broker_contact_notification_data(NEBTYPE_CONTACTNOTIFICATION_END, NEBFLAG_NONE, NEBATTR_NONE, HOST_NOTIFICATION, type, start_time, end_time, (void *)hst, NULL, not_author, not_data, escalated);
++
++	return OK;
++}
+diff --git a/src/naemon/utils.c b/src/naemon/utils.c
+index 1c101f44..dc12895f 100644
+--- a/src/naemon/utils.c
++++ b/src/naemon/utils.c
+@@ -87,6 +87,11 @@ char *global_service_event_handler = NULL;
+ command *global_host_event_handler_ptr = NULL;
+ command *global_service_event_handler_ptr = NULL;
+ 
++char *global_host_notification_handler = NULL;
++char *global_service_notification_handler = NULL;
++command *global_host_notification_handler_ptr = NULL;
++command *global_service_notification_handler_ptr = NULL;
++
+ int check_reaper_interval = DEFAULT_CHECK_REAPER_INTERVAL;
+ int max_check_reaper_time = DEFAULT_MAX_REAPER_TIME;
+ int service_freshness_check_interval = DEFAULT_FRESHNESS_CHECK_INTERVAL;
+@@ -968,6 +973,9 @@ void free_memory(nagios_macros *mac)
+ 	nm_free(global_host_event_handler);
+ 	nm_free(global_service_event_handler);
+ 
++	nm_free(global_host_notification_handler);
++	nm_free(global_service_notification_handler);
++
+ 	/* free obsessive compulsive commands */
+ 	nm_free(ocsp_command);
+ 	nm_free(ochp_command);
+@@ -1173,6 +1181,11 @@ int reset_variables(void)
+ 	global_host_event_handler_ptr = NULL;
+ 	global_service_event_handler_ptr = NULL;
+ 
++	global_host_notification_handler = NULL;
++	global_service_notification_handler = NULL;
++	global_host_notification_handler_ptr = NULL;
++	global_service_notification_handler_ptr = NULL;
++
+ 	ocsp_command = NULL;
+ 	ochp_command = NULL;
+ 	ocsp_command_ptr = NULL;
+diff --git a/src/naemon/xrddefault.c b/src/naemon/xrddefault.c
+index 5d9823a5..e271111e 100644
+--- a/src/naemon/xrddefault.c
++++ b/src/naemon/xrddefault.c
+@@ -151,6 +151,8 @@ int xrddefault_save_state_information(void)
+ 	fprintf(fp, "process_performance_data=%d\n", process_performance_data);
+ 	fprintf(fp, "global_host_event_handler=%s\n", (global_host_event_handler == NULL) ? "" : global_host_event_handler);
+ 	fprintf(fp, "global_service_event_handler=%s\n", (global_service_event_handler == NULL) ? "" : global_service_event_handler);
++	fprintf(fp, "global_host_notification_handler=%s\n", (global_host_notification_handler == NULL) ? "" : global_host_notification_handler);
++	fprintf(fp, "global_service_notification_handler=%s\n", (global_service_notification_handler == NULL) ? "" : global_service_notification_handler);
+ 	fprintf(fp, "next_comment_id=%lu\n", next_comment_id);
+ 	fprintf(fp, "next_downtime_id=%lu\n", next_downtime_id);
+ 	fprintf(fp, "next_event_id=%lu\n", next_event_id);
+@@ -993,6 +995,29 @@ int xrddefault_read_state_information(void)
+ 								global_service_event_handler = tempval;
+ 							}
+ 						}
++					} else if (!strcmp(var, "global_host_notification_handler")) {
++						if (modified_host_process_attributes & MODATTR_NOTIFICATION_HANDLER_COMMAND) {
++
++							/* make sure the check command still exists... */
++							tempval = nm_strdup(val);
++							temp_command = find_bang_command(tempval);
++							if (temp_command && tempval) {
++								nm_free(global_host_notification_handler);
++								global_host_notification_handler = tempval;
++							}
++						}
++					} else if (!strcmp(var, "global_service_notification_handler")) {
++						if (modified_service_process_attributes & MODATTR_NOTIFICATION_HANDLER_COMMAND) {
++
++							/* make sure the check command still exists... */
++							tempval = nm_strdup(val);
++							temp_command = find_bang_command(tempval);
++
++							if (temp_command && tempval) {
++								nm_free(global_service_notification_handler);
++								global_service_notification_handler = tempval;
++							}
++						}
+ 					} else if (!strcmp(var, "next_comment_id"))
+ 						next_comment_id = strtoul(val, NULL, 10);
+ 					else if (!strcmp(var, "next_downtime_id"))
+diff --git a/src/naemon/xsddefault.c b/src/naemon/xsddefault.c
+index f338fd47..3eb5c1bc 100644
+--- a/src/naemon/xsddefault.c
++++ b/src/naemon/xsddefault.c
+@@ -158,6 +158,8 @@ int xsddefault_save_status_data(void)
+ 	fprintf(fp, "\tprocess_performance_data=%d\n", process_performance_data);
+ 	fprintf(fp, "\tglobal_host_event_handler=%s\n", (global_host_event_handler == NULL) ? "" : global_host_event_handler);
+ 	fprintf(fp, "\tglobal_service_event_handler=%s\n", (global_service_event_handler == NULL) ? "" : global_service_event_handler);
++	fprintf(fp, "\tglobal_host_notification_handler=%s\n", (global_host_notification_handler == NULL) ? "" : global_host_notification_handler);
++	fprintf(fp, "\tglobal_service_notification_handler=%s\n", (global_service_notification_handler == NULL) ? "" : global_service_notification_handler);
+ 	fprintf(fp, "\tnext_comment_id=%lu\n", next_comment_id);
+ 	fprintf(fp, "\tnext_downtime_id=%lu\n", next_downtime_id);
+ 	fprintf(fp, "\tnext_event_id=%lu\n", next_event_id);
+
+From 2db8c6fe8bc790868bd4b6bb53c5a4f4217c600a Mon Sep 17 00:00:00 2001
+From: Sven Nierlein <sven@consol.de>
+Date: Thu, 12 Sep 2024 11:33:20 +0200
+Subject: [PATCH 2/3] add log_global_notifications
+
+the global notification handler adds quite some noise to the log file, so
+make it possible to disable it.
+---
+ sample-config/naemon.cfg.in |  9 +++++++++
+ src/naemon/configuration.c  | 11 +++++++++++
+ src/naemon/defaults.h       |  1 +
+ src/naemon/globals.h        |  1 +
+ src/naemon/notifications.c  |  4 ++--
+ src/naemon/utils.c          |  2 ++
+ 6 files changed, 26 insertions(+), 2 deletions(-)
+
+diff --git a/sample-config/naemon.cfg.in b/sample-config/naemon.cfg.in
+index 75d184dd..441a33f7 100644
+--- a/sample-config/naemon.cfg.in
++++ b/sample-config/naemon.cfg.in
+@@ -274,6 +274,15 @@ log_passive_checks=1
+ 
+ 
+ 
++# GLOBAL NOTIFICATIONS LOGGING OPTION
++# If you don't want Naemon to log global notifications, set
++# this value to 0.  If they should be logged, set
++# this value to 1.
++
++log_global_notifications=1
++
++
++
+ # GLOBAL HOST AND SERVICE EVENT HANDLERS
+ # These options allow you to specify a host and service event handler
+ # command that is to be run for every host or service state change.
+diff --git a/src/naemon/configuration.c b/src/naemon/configuration.c
+index 8b8d8c61..af96451f 100644
+--- a/src/naemon/configuration.c
++++ b/src/naemon/configuration.c
+@@ -375,6 +375,17 @@ read_config_file(const char *main_config_file, nagios_macros *mac)
+ 			log_current_states = (atoi(value) > 0) ? TRUE : FALSE;
+ 		}
+ 
++		else if (!strcmp(variable, "log_global_notifications")) {
++
++			if (strlen(value) != 1 || value[0] < '0' || value[0] > '1') {
++				nm_asprintf(&error_message, "Illegal value for log_global_notifications");
++				error = TRUE;
++				break;
++			}
++
++			log_global_notifications = (atoi(value) > 0) ? TRUE : FALSE;
++		}
++
+ 		else if (!strcmp(variable, "retain_state_information")) {
+ 
+ 			if (strlen(value) != 1 || value[0] < '0' || value[0] > '1') {
+diff --git a/src/naemon/defaults.h b/src/naemon/defaults.h
+index 2bcb31f0..62dcb04d 100644
+--- a/src/naemon/defaults.h
++++ b/src/naemon/defaults.h
+@@ -47,6 +47,7 @@
+ #define DEFAULT_LOG_CURRENT_STATES				1	/* log current service and host states after rotating log */
+ #define DEFAULT_LOG_EXTERNAL_COMMANDS				1	/* log external commands */
+ #define DEFAULT_LOG_PASSIVE_CHECKS				1	/* log passive service checks */
++#define DEFAULT_log_global_notifications			1	/* log global notifications */
+ 
+ #define DEFAULT_DEBUG_LEVEL                                     0       /* don't log any debugging information */
+ #define DEFAULT_DEBUG_VERBOSITY                                 1
+diff --git a/src/naemon/globals.h b/src/naemon/globals.h
+index dd160b0c..1b96e780 100644
+--- a/src/naemon/globals.h
++++ b/src/naemon/globals.h
+@@ -64,6 +64,7 @@ extern int log_host_retries;
+ extern int log_event_handlers;
+ extern int log_external_commands;
+ extern int log_passive_checks;
++extern int log_global_notifications;
+ extern unsigned long logging_options;
+ extern unsigned long syslog_options;
+ 
+diff --git a/src/naemon/notifications.c b/src/naemon/notifications.c
+index e00a7d39..cb06c15e 100644
+--- a/src/naemon/notifications.c
++++ b/src/naemon/notifications.c
+@@ -2308,7 +2308,7 @@ int run_global_service_notification_handler(nagios_macros *mac, service *svc, in
+ 	log_debug_info(DEBUGL_NOTIFICATIONS, 2, "Processed notification command: %s\n", processed_command);
+ 
+ 	/* log the notification to program log file */
+-	if (log_notifications == TRUE) {
++	if (log_global_notifications == TRUE) {
+ 		if (type != NOTIFICATION_NORMAL) {
+ 			nm_asprintf(&temp_buffer, "SERVICE NOTIFICATION: %s;%s;%s;%s ($SERVICESTATE$);%s;$SERVICEOUTPUT$;$NOTIFICATIONAUTHOR$;$NOTIFICATIONCOMMENT$\n", "GLOBAL", svc->host_name, svc->description, notification_reason_name(type), command_name_ptr);
+ 		} else {
+@@ -2401,7 +2401,7 @@ int run_global_host_notification_handler(nagios_macros *mac, host *hst, int type
+ 	log_debug_info(DEBUGL_NOTIFICATIONS, 2, "Processed notification command: %s\n", processed_command);
+ 
+ 	/* log the notification to program log file */
+-	if (log_notifications == TRUE) {
++	if (log_global_notifications == TRUE) {
+ 		if (type != NOTIFICATION_NORMAL) {
+ 			nm_asprintf(&temp_buffer, "HOST NOTIFICATION: %s;%s;%s ($HOSTSTATE$);%s;$HOSTOUTPUT$;$NOTIFICATIONAUTHOR$;$NOTIFICATIONCOMMENT$\n", "GLOBAL", hst->name, notification_reason_name(type), command_name_ptr);
+ 		} else {
+diff --git a/src/naemon/utils.c b/src/naemon/utils.c
+index dc12895f..3b984561 100644
+--- a/src/naemon/utils.c
++++ b/src/naemon/utils.c
+@@ -70,6 +70,7 @@ int log_host_retries = DEFAULT_LOG_HOST_RETRIES;
+ int log_event_handlers = DEFAULT_LOG_EVENT_HANDLERS;
+ int log_external_commands = DEFAULT_LOG_EXTERNAL_COMMANDS;
+ int log_passive_checks = DEFAULT_LOG_PASSIVE_CHECKS;
++int log_global_notifications = DEFAULT_log_global_notifications;
+ unsigned long logging_options = 0;
+ unsigned long syslog_options = 0;
+ 
+@@ -1080,6 +1081,7 @@ int reset_variables(void)
+ 	log_event_handlers = DEFAULT_LOG_EVENT_HANDLERS;
+ 	log_external_commands = DEFAULT_LOG_EXTERNAL_COMMANDS;
+ 	log_passive_checks = DEFAULT_LOG_PASSIVE_CHECKS;
++	log_global_notifications = DEFAULT_log_global_notifications;
+ 
+ 	logging_options = NSLOG_RUNTIME_ERROR | NSLOG_RUNTIME_WARNING | NSLOG_VERIFICATION_ERROR | NSLOG_VERIFICATION_WARNING | NSLOG_CONFIG_ERROR | NSLOG_CONFIG_WARNING | NSLOG_PROCESS_INFO | NSLOG_HOST_NOTIFICATION | NSLOG_SERVICE_NOTIFICATION | NSLOG_EVENT_HANDLER | NSLOG_EXTERNAL_COMMAND | NSLOG_PASSIVE_CHECK | NSLOG_HOST_UP | NSLOG_HOST_DOWN | NSLOG_HOST_UNREACHABLE | NSLOG_SERVICE_OK | NSLOG_SERVICE_WARNING | NSLOG_SERVICE_UNKNOWN | NSLOG_SERVICE_CRITICAL | NSLOG_INFO_MESSAGE;
+ 
+
+From 08fc5e05c1f5d10ff1cc261a5363270c48a837c0 Mon Sep 17 00:00:00 2001
+From: Sven Nierlein <sven@consol.de>
+Date: Thu, 12 Sep 2024 12:09:33 +0200
+Subject: [PATCH 3/3] add external command to add log entries
+
+This generic LOG command can be used to add entries to the main logfile. It is
+useful ex.: from a global notification handler to log the actual notified contacts.
+---
+ src/naemon/commands.c | 10 ++++++++++
+ src/naemon/common.h   |  2 ++
+ 2 files changed, 12 insertions(+)
+
+diff --git a/src/naemon/commands.c b/src/naemon/commands.c
+index 265f4416..9e16401c 100644
+--- a/src/naemon/commands.c
++++ b/src/naemon/commands.c
+@@ -1687,6 +1687,10 @@ static int global_command_handler(const struct external_command *ext_command, ti
+ 		/* disabled */
+ 		return ERROR;
+ 
++	case CMD_LOG:
++		nm_log(NSLOG_INFO_MESSAGE, "%s", ext_command->raw_arguments);
++		return OK;
++
+ 	default:
+ 		nm_log(NSLOG_RUNTIME_ERROR, "Unknown global command ID %d", ext_command->id);
+ 		return ERROR;
+@@ -3293,6 +3297,10 @@ void register_core_commands(void)
+ 	core_command = command_create("CHANGE_RETRY_HOST_CHECK_INTERVAL", host_command_handler,
+ 	                              "Changes the retry check interval for a particular host.", "host=host_name;timestamp=check_interval");
+ 	command_register(core_command, CMD_CHANGE_RETRY_HOST_CHECK_INTERVAL);
++
++	core_command = command_create("LOG", global_command_handler,
++	                              "Adds custom entry to the default log file.", NULL);
++	command_register(core_command, CMD_LOG);
+ }
+ 
+ /******************************************************************/
+@@ -3434,6 +3442,8 @@ int process_external_command(char *cmd, int mode, GError **error)
+ 		/* passive checks are logged in checks.c as well, as some my bypass external commands by getting dropped in checkresults dir */
+ 		if (log_passive_checks == TRUE)
+ 			nm_log(NSLOG_PASSIVE_CHECK, "%s", temp_buffer);
++	} else if (id == CMD_LOG) {
++		/* skip loging same message twice */
+ 	} else if (log_external_commands == TRUE) {
+ 		nm_log(NSLOG_EXTERNAL_COMMAND, "%s", temp_buffer);
+ 	}
+diff --git a/src/naemon/common.h b/src/naemon/common.h
+index cad32e70..b9c65c94 100644
+--- a/src/naemon/common.h
++++ b/src/naemon/common.h
+@@ -323,6 +323,8 @@ NAGIOS_END_DECL
+ #define CMD_ACKNOWLEDGE_HOST_PROBLEM_EXPIRE             173
+ #define CMD_ACKNOWLEDGE_SVC_PROBLEM_EXPIRE              174
+ 
++#define CMD_LOG                                         175
++
+ /* custom command introduced in Nagios 3.x */
+ #define CMD_CUSTOM_COMMAND                              999
+ 

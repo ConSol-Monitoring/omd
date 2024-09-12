@@ -1,0 +1,172 @@
+From 5e868d5525a5482ad5293cabab08a933fa46bc2b Mon Sep 17 00:00:00 2001
+From: Sven Nierlein <sven@consol.de>
+Date: Thu, 12 Sep 2024 12:13:08 +0200
+Subject: [PATCH] add support for global_notificatons
+
+---
+ neb_module_naemon/mod_gearman.c | 51 ++++++++++++++++++---------------
+ t/05-neb.c                      |  1 +
+ 2 files changed, 29 insertions(+), 23 deletions(-)
+
+diff --git a/neb_module_naemon/mod_gearman.c b/neb_module_naemon/mod_gearman.c
+index 7c671fa..9960196 100644
+--- a/neb_module_naemon/mod_gearman.c
++++ b/neb_module_naemon/mod_gearman.c
+@@ -45,6 +45,7 @@ extern int            service_check_timeout;
+ extern int            host_check_timeout;
+ extern int            process_performance_data;
+ extern int            log_notifications;
++extern int            log_global_notificatons;
+ 
+ /* global variables */
+ static objectlist * mod_gm_result_list = NULL;
+@@ -538,6 +539,7 @@ static int handle_notifications( int event_type, void *data ) {
+     int macro_options = STRIP_ILLEGAL_MACRO_CHARS | ESCAPE_MACRO_CHARS;
+     nagios_macros mac;
+     char *tmp;
++    char *contact_name = NULL;
+     struct timeval core_time;
+     gettimeofday(&core_time,NULL);
+ 
+@@ -553,7 +555,9 @@ static int handle_notifications( int event_type, void *data ) {
+         return NEB_OK;
+     }
+ 
+-    /* service event handler? */
++    gm_asprintf( &contact_name, "%s", ds->contact_name != NULL ? ds->contact_name : "GLOBAL" );
++
++    /* service notification ? */
+     if(ds->service_description != NULL) {
+         if((svc=ds->object_ptr)==NULL) {
+             gm_log( GM_LOG_ERROR, "Notification handler received NULL service object pointer.\n" );
+@@ -563,14 +567,14 @@ static int handle_notifications( int event_type, void *data ) {
+             gm_log( GM_LOG_ERROR, "Notification handler received NULL host object pointer.\n" );
+             return NEB_OK;
+         }
+-        gm_log( GM_LOG_DEBUG, "got notifications event, service: %s - %s for contact %s\n", ds->host_name, ds->service_description, ds->contact_name );
++        gm_log( GM_LOG_DEBUG, "got notifications event, service: %s - %s for contact %s\n", ds->host_name, ds->service_description, contact_name );
+     }
+     else {
+         if((hst=ds->object_ptr)==NULL) {
+             gm_log( GM_LOG_ERROR, "Notification handler received NULL host object pointer.\n" );
+             return NEB_OK;
+         }
+-        gm_log( GM_LOG_DEBUG, "got notifications event, host: %s for contact %s\n", ds->host_name, ds->contact_name );
++        gm_log( GM_LOG_DEBUG, "got notifications event, host: %s for contact %s\n", ds->host_name, contact_name );
+     }
+ 
+     /* local eventhandler? */
+@@ -699,7 +703,7 @@ static int handle_notifications( int event_type, void *data ) {
+                 "type=notification\nstart_time=%Lf\ncore_time=%Lf\ncontact=%s\ncommand_line=%s\nplugin_output=%s\nlong_plugin_output=%s\n\n\n",
+                 timeval2double(&ds->start_time),
+                 timeval2double(&core_time),
+-                ds->contact_name,
++                contact_name,
+                 processed_command,
+                 ds->output,
+                 svc != NULL ? svc->long_plugin_output : hst->long_plugin_output
+@@ -728,35 +732,35 @@ static int handle_notifications( int event_type, void *data ) {
+     my_free(processed_command);
+ 
+     /* log the notification to program log file */
+-    if (log_notifications == TRUE) {
++    if ((ds->contact_name == NULL && log_global_notificatons == TRUE) || (ds->contact_name != NULL && log_notifications == TRUE)) {
+         if(svc != NULL) {
+             switch(ds->reason_type) {
+                 case NOTIFICATION_CUSTOM:
+-                    gm_asprintf(&log_buffer, "SERVICE NOTIFICATION: %s;%s;%s;CUSTOM ($SERVICESTATE$);%s;$SERVICEOUTPUT$;$NOTIFICATIONAUTHOR$;$NOTIFICATIONCOMMENT$\n", ds->contact_name, svc->host_name, svc->description, ds->command_name);
++                    gm_asprintf(&log_buffer, "SERVICE NOTIFICATION: %s;%s;%s;CUSTOM ($SERVICESTATE$);%s;$SERVICEOUTPUT$;$NOTIFICATIONAUTHOR$;$NOTIFICATIONCOMMENT$\n", contact_name, svc->host_name, svc->description, ds->command_name);
+                     break;
+                 case NOTIFICATION_ACKNOWLEDGEMENT:
+-                    gm_asprintf(&log_buffer, "SERVICE NOTIFICATION: %s;%s;%s;ACKNOWLEDGEMENT ($SERVICESTATE$);%s;$SERVICEOUTPUT$;$NOTIFICATIONAUTHOR$;$NOTIFICATIONCOMMENT$\n", ds->contact_name, svc->host_name, svc->description, ds->command_name);
++                    gm_asprintf(&log_buffer, "SERVICE NOTIFICATION: %s;%s;%s;ACKNOWLEDGEMENT ($SERVICESTATE$);%s;$SERVICEOUTPUT$;$NOTIFICATIONAUTHOR$;$NOTIFICATIONCOMMENT$\n", contact_name, svc->host_name, svc->description, ds->command_name);
+                     break;
+                 case NOTIFICATION_FLAPPINGSTART:
+-                    gm_asprintf(&log_buffer, "SERVICE NOTIFICATION: %s;%s;%s;FLAPPINGSTART ($SERVICESTATE$);%s;$SERVICEOUTPUT$\n", ds->contact_name, svc->host_name, svc->description, ds->command_name);
++                    gm_asprintf(&log_buffer, "SERVICE NOTIFICATION: %s;%s;%s;FLAPPINGSTART ($SERVICESTATE$);%s;$SERVICEOUTPUT$\n", contact_name, svc->host_name, svc->description, ds->command_name);
+                     break;
+                 case NOTIFICATION_FLAPPINGSTOP:
+-                    gm_asprintf(&log_buffer, "SERVICE NOTIFICATION: %s;%s;%s;FLAPPINGSTOP ($SERVICESTATE$);%s;$SERVICEOUTPUT$\n", ds->contact_name, svc->host_name, svc->description, ds->command_name);
++                    gm_asprintf(&log_buffer, "SERVICE NOTIFICATION: %s;%s;%s;FLAPPINGSTOP ($SERVICESTATE$);%s;$SERVICEOUTPUT$\n", contact_name, svc->host_name, svc->description, ds->command_name);
+                     break;
+                 case NOTIFICATION_FLAPPINGDISABLED:
+-                    gm_asprintf(&log_buffer, "SERVICE NOTIFICATION: %s;%s;%s;FLAPPINGDISABLED ($SERVICESTATE$);%s;$SERVICEOUTPUT$\n", ds->contact_name, svc->host_name, svc->description, ds->command_name);
++                    gm_asprintf(&log_buffer, "SERVICE NOTIFICATION: %s;%s;%s;FLAPPINGDISABLED ($SERVICESTATE$);%s;$SERVICEOUTPUT$\n", contact_name, svc->host_name, svc->description, ds->command_name);
+                     break;
+                 case NOTIFICATION_DOWNTIMESTART:
+-                    gm_asprintf(&log_buffer, "SERVICE NOTIFICATION: %s;%s;%s;DOWNTIMESTART ($SERVICESTATE$);%s;$SERVICEOUTPUT$\n", ds->contact_name, svc->host_name, svc->description, ds->command_name);
++                    gm_asprintf(&log_buffer, "SERVICE NOTIFICATION: %s;%s;%s;DOWNTIMESTART ($SERVICESTATE$);%s;$SERVICEOUTPUT$\n", contact_name, svc->host_name, svc->description, ds->command_name);
+                     break;
+                 case NOTIFICATION_DOWNTIMEEND:
+-                    gm_asprintf(&log_buffer, "SERVICE NOTIFICATION: %s;%s;%s;DOWNTIMEEND ($SERVICESTATE$);%s;$SERVICEOUTPUT$\n", ds->contact_name, svc->host_name, svc->description, ds->command_name);
++                    gm_asprintf(&log_buffer, "SERVICE NOTIFICATION: %s;%s;%s;DOWNTIMEEND ($SERVICESTATE$);%s;$SERVICEOUTPUT$\n", contact_name, svc->host_name, svc->description, ds->command_name);
+                     break;
+                 case NOTIFICATION_DOWNTIMECANCELLED:
+-                    gm_asprintf(&log_buffer, "SERVICE NOTIFICATION: %s;%s;%s;DOWNTIMECANCELLED ($SERVICESTATE$);%s;$SERVICEOUTPUT$\n", ds->contact_name, svc->host_name, svc->description, ds->command_name);
++                    gm_asprintf(&log_buffer, "SERVICE NOTIFICATION: %s;%s;%s;DOWNTIMECANCELLED ($SERVICESTATE$);%s;$SERVICEOUTPUT$\n", contact_name, svc->host_name, svc->description, ds->command_name);
+                     break;
+                 default:
+-                    gm_asprintf(&log_buffer, "SERVICE NOTIFICATION: %s;%s;%s;$SERVICESTATE$;%s;$SERVICEOUTPUT$\n", ds->contact_name, svc->host_name, svc->description, ds->command_name);
++                    gm_asprintf(&log_buffer, "SERVICE NOTIFICATION: %s;%s;%s;$SERVICESTATE$;%s;$SERVICEOUTPUT$\n", contact_name, svc->host_name, svc->description, ds->command_name);
+                     break;
+             }
+             process_macros_r(&mac, log_buffer, &processed_buffer, macro_options);
+@@ -764,36 +768,37 @@ static int handle_notifications( int event_type, void *data ) {
+         } else {
+             switch(ds->reason_type) {
+                 case NOTIFICATION_CUSTOM:
+-                    gm_asprintf(&log_buffer, "HOST NOTIFICATION: %s;%s;CUSTOM ($HOSTSTATE$);%s;$HOSTOUTPUT$;$NOTIFICATIONAUTHOR$;$NOTIFICATIONCOMMENT$\n", ds->contact_name, hst->name, ds->command_name);
++                    gm_asprintf(&log_buffer, "HOST NOTIFICATION: %s;%s;CUSTOM ($HOSTSTATE$);%s;$HOSTOUTPUT$;$NOTIFICATIONAUTHOR$;$NOTIFICATIONCOMMENT$\n", contact_name, hst->name, ds->command_name);
+                     break;
+                 case NOTIFICATION_ACKNOWLEDGEMENT:
+-                    gm_asprintf(&log_buffer, "HOST NOTIFICATION: %s;%s;ACKNOWLEDGEMENT ($HOSTSTATE$);%s;$HOSTOUTPUT$;$NOTIFICATIONAUTHOR$;$NOTIFICATIONCOMMENT$\n", ds->contact_name, hst->name, ds->command_name);
++                    gm_asprintf(&log_buffer, "HOST NOTIFICATION: %s;%s;ACKNOWLEDGEMENT ($HOSTSTATE$);%s;$HOSTOUTPUT$;$NOTIFICATIONAUTHOR$;$NOTIFICATIONCOMMENT$\n", contact_name, hst->name, ds->command_name);
+                     break;
+                 case NOTIFICATION_FLAPPINGSTART:
+-                    gm_asprintf(&log_buffer, "HOST NOTIFICATION: %s;%s;FLAPPINGSTART ($HOSTSTATE$);%s;$HOSTOUTPUT$\n", ds->contact_name, hst->name, ds->command_name);
++                    gm_asprintf(&log_buffer, "HOST NOTIFICATION: %s;%s;FLAPPINGSTART ($HOSTSTATE$);%s;$HOSTOUTPUT$\n", contact_name, hst->name, ds->command_name);
+                     break;
+                 case NOTIFICATION_FLAPPINGSTOP:
+-                    gm_asprintf(&log_buffer, "HOST NOTIFICATION: %s;%s;FLAPPINGSTOP ($HOSTSTATE$);%s;$HOSTOUTPUT$\n", ds->contact_name, hst->name, ds->command_name);
++                    gm_asprintf(&log_buffer, "HOST NOTIFICATION: %s;%s;FLAPPINGSTOP ($HOSTSTATE$);%s;$HOSTOUTPUT$\n", contact_name, hst->name, ds->command_name);
+                     break;
+                 case NOTIFICATION_FLAPPINGDISABLED:
+-                    gm_asprintf(&log_buffer, "HOST NOTIFICATION: %s;%s;FLAPPINGDISABLED ($HOSTSTATE$);%s;$HOSTOUTPUT$\n", ds->contact_name, hst->name, ds->command_name);
++                    gm_asprintf(&log_buffer, "HOST NOTIFICATION: %s;%s;FLAPPINGDISABLED ($HOSTSTATE$);%s;$HOSTOUTPUT$\n", contact_name, hst->name, ds->command_name);
+                     break;
+                 case NOTIFICATION_DOWNTIMESTART:
+-                    gm_asprintf(&log_buffer, "HOST NOTIFICATION: %s;%s;DOWNTIMESTART ($HOSTSTATE$);%s;$HOSTOUTPUT$\n", ds->contact_name, hst->name, ds->command_name);
++                    gm_asprintf(&log_buffer, "HOST NOTIFICATION: %s;%s;DOWNTIMESTART ($HOSTSTATE$);%s;$HOSTOUTPUT$\n", contact_name, hst->name, ds->command_name);
+                     break;
+                 case NOTIFICATION_DOWNTIMEEND:
+-                    gm_asprintf(&log_buffer, "HOST NOTIFICATION: %s;%s;DOWNTIMEEND ($HOSTSTATE$);%s;$HOSTOUTPUT$\n", ds->contact_name, hst->name, ds->command_name);
++                    gm_asprintf(&log_buffer, "HOST NOTIFICATION: %s;%s;DOWNTIMEEND ($HOSTSTATE$);%s;$HOSTOUTPUT$\n", contact_name, hst->name, ds->command_name);
+                     break;
+                 case NOTIFICATION_DOWNTIMECANCELLED:
+-                    gm_asprintf(&log_buffer, "HOST NOTIFICATION: %s;%s;DOWNTIMECANCELLED ($HOSTSTATE$);%s;$HOSTOUTPUT$\n", ds->contact_name, hst->name, ds->command_name);
++                    gm_asprintf(&log_buffer, "HOST NOTIFICATION: %s;%s;DOWNTIMECANCELLED ($HOSTSTATE$);%s;$HOSTOUTPUT$\n", contact_name, hst->name, ds->command_name);
+                     break;
+                 default:
+-                    gm_asprintf(&log_buffer, "HOST NOTIFICATION: %s;%s;$HOSTSTATE$;%s;$HOSTOUTPUT$\n", ds->contact_name, hst->name, ds->command_name);
++                    gm_asprintf(&log_buffer, "HOST NOTIFICATION: %s;%s;$HOSTSTATE$;%s;$HOSTOUTPUT$\n", contact_name, hst->name, ds->command_name);
+                     break;
+             }
+             process_macros_r(&mac, log_buffer, &processed_buffer, macro_options);
+             log_core(NSLOG_HOST_NOTIFICATION, processed_buffer);
+         }
++        free(contact_name);
+         free(log_buffer);
+         free(processed_buffer);
+     }
+diff --git a/t/05-neb.c b/t/05-neb.c
+index daf562f..e4b6136 100644
+--- a/t/05-neb.c
++++ b/t/05-neb.c
+@@ -33,6 +33,7 @@ unsigned long event_broker_options;
+ timed_event *schedule_event(__attribute__((unused)) time_t delay, __attribute__((unused)) event_callback callback, __attribute__((unused)) void *user_data) { return(NULL); }
+ int process_performance_data;
+ int log_notifications;
++int log_global_notificatons;
+ 
+ #pragma GCC diagnostic push    //Save actual diagnostics state
+ #pragma GCC diagnostic ignored "-Wpedantic"    //Disable pedantic

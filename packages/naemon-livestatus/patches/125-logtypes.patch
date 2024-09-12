@@ -1,0 +1,74 @@
+From 969bfe1f26f76d48492a787f5563e27d420fc88e Mon Sep 17 00:00:00 2001
+From: Sven Nierlein <sven@consol.de>
+Date: Thu, 12 Sep 2024 12:27:45 +0200
+Subject: [PATCH] add support for more log types
+
+add support for new log types:
+
+- HOST NOTE
+- SERVICE NOTE
+
+they contain general informational notes for specific hosts / services.
+---
+ src/LogEntry.cc | 23 ++++++++++++++++++++++-
+ src/LogEntry.h  |  2 +-
+ 2 files changed, 23 insertions(+), 2 deletions(-)
+
+diff --git a/src/LogEntry.cc b/src/LogEntry.cc
+index 90ff729..c3a9fea 100644
+--- a/src/LogEntry.cc
++++ b/src/LogEntry.cc
+@@ -71,7 +71,8 @@ LogEntry::LogEntry(unsigned lineno, char *line)
+     if (handleStatusEntry() ||
+         handleNotificationEntry() ||
+         handlePassiveCheckEntry() ||
+-        handleExternalCommandEntry()
++        handleExternalCommandEntry() ||
++        handleNotes()
+         )
+     {
+         updateReferences();
+@@ -351,6 +352,26 @@ inline bool LogEntry::handlePassiveCheckEntry()
+     return false;
+ }
+ 
++inline bool LogEntry::handleNotes()
++{
++    if (!strncmp(_text, "SERVICE NOTE: ", 14)
++        || !strncmp(_text, "HOST NOTE: ", 11))
++    {
++        _logclass = LOGCLASS_INFO;
++        bool svc = _text[0] == 'S';
++        char *scan = _text;
++        _text = next_token(&scan, ':');
++        scan++;
++
++        _host_name    = next_token(&scan, ';');
++        if (svc)
++            _svc_desc     = next_token(&scan, ';');
++        return true;
++    }
++
++    return false;
++}
++
+ inline bool LogEntry::handleExternalCommandEntry()
+ {
+     if (!strncmp(_text, "EXTERNAL COMMAND: ", 18))
+diff --git a/src/LogEntry.h b/src/LogEntry.h
+index 4b2034d..649de09 100644
+--- a/src/LogEntry.h
++++ b/src/LogEntry.h
+@@ -96,6 +96,7 @@ struct LogEntry
+     bool handleStatusEntryBetter();
+     bool handleNotificationEntry();
+     bool handlePassiveCheckEntry();
++    bool handleNotes();
+     bool handleExternalCommandEntry();
+     bool handleProgrammEntry();
+     bool handleLogversionEntry();
+@@ -104,4 +105,3 @@ struct LogEntry
+ };
+ 
+ #endif // LogEntry_h
+-
