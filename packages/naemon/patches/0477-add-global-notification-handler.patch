@@ -1,4 +1,4 @@
-From f813aaa65d70a0c365d493ac3627e0f078fe00ed Mon Sep 17 00:00:00 2001
+From 710c68e4aeab247775b8a03433a1784e93e6ce95 Mon Sep 17 00:00:00 2001
 From: Sven Nierlein <sven@consol.de>
 Date: Thu, 12 Sep 2024 11:14:18 +0200
 Subject: [PATCH 1/3] add global notification handler
@@ -19,11 +19,11 @@ related macros set.
  src/naemon/configuration.c  |  35 +++++-
  src/naemon/globals.h        |   5 +
  src/naemon/nebstructs.h     |   2 +
- src/naemon/notifications.c  | 209 ++++++++++++++++++++++++++++++++++--
+ src/naemon/notifications.c  | 208 ++++++++++++++++++++++++++++++++++--
  src/naemon/utils.c          |  13 +++
  src/naemon/xrddefault.c     |  25 +++++
  src/naemon/xsddefault.c     |   2 +
- 11 files changed, 310 insertions(+), 12 deletions(-)
+ 11 files changed, 309 insertions(+), 12 deletions(-)
 
 diff --git a/sample-config/naemon.cfg.in b/sample-config/naemon.cfg.in
 index 406fb30c..75d184dd 100644
@@ -209,7 +209,7 @@ index 76c72cc3..ecf97bd5 100644
  
  
 diff --git a/src/naemon/notifications.c b/src/naemon/notifications.c
-index adb35d62..e00a7d39 100644
+index adb35d62..04cb4084 100644
 --- a/src/naemon/notifications.c
 +++ b/src/naemon/notifications.c
 @@ -27,6 +27,8 @@ struct notification_job {
@@ -293,7 +293,7 @@ index adb35d62..e00a7d39 100644
  			/* notify this contact */
  			result = notify_contact_of_host(&mac, temp_notification->contact, hst, type, not_author, not_data, options, escalated);
  
-@@ -2245,3 +2252,189 @@ int add_notification(notification **notification_list, nagios_macros *mac, conta
+@@ -2245,3 +2252,188 @@ int add_notification(notification **notification_list, nagios_macros *mac, conta
  
  	return OK;
  }
@@ -390,7 +390,6 @@ index adb35d62..e00a7d39 100644
 +}
 +
 +int run_global_host_notification_handler(nagios_macros *mac, host *hst, int type, char *not_author, char *not_data, int options, int escalated) {
-+	commandsmember *temp_commandsmember = NULL;
 +	char *command_name = NULL;
 +	char *command_name_ptr = NULL;
 +	char *temp_buffer = NULL;
@@ -419,13 +418,13 @@ index adb35d62..e00a7d39 100644
 +	else if (NEBERROR_CALLBACKOVERRIDE == neb_result)
 +		return OK;
 +
-+	neb_result = broker_contact_notification_method_data(NEBTYPE_CONTACTNOTIFICATIONMETHOD_START, NEBFLAG_NONE, NEBATTR_NONE, HOST_NOTIFICATION, type, start_time, end_time, (void *)hst, NULL, temp_commandsmember->command, not_author, not_data, escalated);
++	neb_result = broker_contact_notification_method_data(NEBTYPE_CONTACTNOTIFICATIONMETHOD_START, NEBFLAG_NONE, NEBATTR_NONE, HOST_NOTIFICATION, type, start_time, end_time, (void *)hst, NULL, global_host_notification_handler, not_author, not_data, escalated);
 +	if (NEBERROR_CALLBACKCANCEL == neb_result)
 +		return ERROR;
 +	else if (NEBERROR_CALLBACKOVERRIDE == neb_result)
 +		return OK;
 +
-+	get_raw_command_line_r(mac, temp_commandsmember->command_ptr, temp_commandsmember->command, &raw_command, macro_options);
++	get_raw_command_line_r(mac, global_host_notification_handler_ptr, global_host_notification_handler, &raw_command, macro_options);
 +	if (raw_command == NULL)
 +		return ERROR;
 +
@@ -438,7 +437,7 @@ index adb35d62..e00a7d39 100644
 +		return ERROR;
 +
 +	/* get the command name */
-+	command_name = nm_strdup(temp_commandsmember->command);
++	command_name = nm_strdup(global_host_notification_handler);
 +	command_name_ptr = strtok(command_name, "!");
 +
 +	/* run the notification command... */
@@ -474,7 +473,7 @@ index adb35d62..e00a7d39 100644
 +	nm_free(command_name);
 +	nm_free(processed_command);
 +
-+	broker_contact_notification_method_data(NEBTYPE_CONTACTNOTIFICATIONMETHOD_END, NEBFLAG_NONE, NEBATTR_NONE, HOST_NOTIFICATION, type, start_time, end_time, (void *)hst, NULL, temp_commandsmember->command, not_author, not_data, escalated);
++	broker_contact_notification_method_data(NEBTYPE_CONTACTNOTIFICATIONMETHOD_END, NEBFLAG_NONE, NEBATTR_NONE, HOST_NOTIFICATION, type, start_time, end_time, (void *)hst, NULL, global_host_notification_handler, not_author, not_data, escalated);
 +
 +	/* get end time */
 +	gettimeofday(&end_time, NULL);
@@ -578,7 +577,7 @@ index f338fd47..3eb5c1bc 100644
  	fprintf(fp, "\tnext_downtime_id=%lu\n", next_downtime_id);
  	fprintf(fp, "\tnext_event_id=%lu\n", next_event_id);
 
-From 2db8c6fe8bc790868bd4b6bb53c5a4f4217c600a Mon Sep 17 00:00:00 2001
+From f384dd44f5f6b6ab9a4b8cf79b6c1bddc4f4433c Mon Sep 17 00:00:00 2001
 From: Sven Nierlein <sven@consol.de>
 Date: Thu, 12 Sep 2024 11:33:20 +0200
 Subject: [PATCH 2/3] add log_global_notifications
@@ -661,7 +660,7 @@ index dd160b0c..1b96e780 100644
  extern unsigned long syslog_options;
  
 diff --git a/src/naemon/notifications.c b/src/naemon/notifications.c
-index e00a7d39..cb06c15e 100644
+index 04cb4084..7151a8af 100644
 --- a/src/naemon/notifications.c
 +++ b/src/naemon/notifications.c
 @@ -2308,7 +2308,7 @@ int run_global_service_notification_handler(nagios_macros *mac, service *svc, in
@@ -673,7 +672,7 @@ index e00a7d39..cb06c15e 100644
  		if (type != NOTIFICATION_NORMAL) {
  			nm_asprintf(&temp_buffer, "SERVICE NOTIFICATION: %s;%s;%s;%s ($SERVICESTATE$);%s;$SERVICEOUTPUT$;$NOTIFICATIONAUTHOR$;$NOTIFICATIONCOMMENT$\n", "GLOBAL", svc->host_name, svc->description, notification_reason_name(type), command_name_ptr);
  		} else {
-@@ -2401,7 +2401,7 @@ int run_global_host_notification_handler(nagios_macros *mac, host *hst, int type
+@@ -2400,7 +2400,7 @@ int run_global_host_notification_handler(nagios_macros *mac, host *hst, int type
  	log_debug_info(DEBUGL_NOTIFICATIONS, 2, "Processed notification command: %s\n", processed_command);
  
  	/* log the notification to program log file */
@@ -703,7 +702,7 @@ index dc12895f..3b984561 100644
  	logging_options = NSLOG_RUNTIME_ERROR | NSLOG_RUNTIME_WARNING | NSLOG_VERIFICATION_ERROR | NSLOG_VERIFICATION_WARNING | NSLOG_CONFIG_ERROR | NSLOG_CONFIG_WARNING | NSLOG_PROCESS_INFO | NSLOG_HOST_NOTIFICATION | NSLOG_SERVICE_NOTIFICATION | NSLOG_EVENT_HANDLER | NSLOG_EXTERNAL_COMMAND | NSLOG_PASSIVE_CHECK | NSLOG_HOST_UP | NSLOG_HOST_DOWN | NSLOG_HOST_UNREACHABLE | NSLOG_SERVICE_OK | NSLOG_SERVICE_WARNING | NSLOG_SERVICE_UNKNOWN | NSLOG_SERVICE_CRITICAL | NSLOG_INFO_MESSAGE;
  
 
-From 08fc5e05c1f5d10ff1cc261a5363270c48a837c0 Mon Sep 17 00:00:00 2001
+From d671fe115fe042ff6e25b427e0c212dbf8de3328 Mon Sep 17 00:00:00 2001
 From: Sven Nierlein <sven@consol.de>
 Date: Thu, 12 Sep 2024 12:09:33 +0200
 Subject: [PATCH 3/3] add external command to add log entries
@@ -713,10 +712,12 @@ useful ex.: from a global notification handler to log the actual notified contac
 ---
  src/naemon/commands.c | 10 ++++++++++
  src/naemon/common.h   |  2 ++
- 2 files changed, 12 insertions(+)
+ src/naemon/logging.h  |  1 +
+ src/naemon/utils.c    |  4 ++--
+ 4 files changed, 15 insertions(+), 2 deletions(-)
 
 diff --git a/src/naemon/commands.c b/src/naemon/commands.c
-index 265f4416..9e16401c 100644
+index 265f4416..4a4d81a3 100644
 --- a/src/naemon/commands.c
 +++ b/src/naemon/commands.c
 @@ -1687,6 +1687,10 @@ static int global_command_handler(const struct external_command *ext_command, ti
@@ -724,7 +725,7 @@ index 265f4416..9e16401c 100644
  		return ERROR;
  
 +	case CMD_LOG:
-+		nm_log(NSLOG_INFO_MESSAGE, "%s", ext_command->raw_arguments);
++		nm_log(NSLOG_EXT_CUSTOM, "%s", ext_command->raw_arguments);
 +		return OK;
 +
  	default:
@@ -763,3 +764,31 @@ index cad32e70..b9c65c94 100644
  /* custom command introduced in Nagios 3.x */
  #define CMD_CUSTOM_COMMAND                              999
  
+diff --git a/src/naemon/logging.h b/src/naemon/logging.h
+index 087e4118..c9c74bdc 100644
+--- a/src/naemon/logging.h
++++ b/src/naemon/logging.h
+@@ -39,6 +39,7 @@
+ 
+ #define NSLOG_HOST_NOTIFICATION		524288
+ #define NSLOG_SERVICE_NOTIFICATION	1048576
++#define NSLOG_EXT_CUSTOM			2097152
+ 
+ /***************** DEBUGGING LEVELS *******************/
+ 
+diff --git a/src/naemon/utils.c b/src/naemon/utils.c
+index 3b984561..30fe54cd 100644
+--- a/src/naemon/utils.c
++++ b/src/naemon/utils.c
+@@ -1083,9 +1083,9 @@ int reset_variables(void)
+ 	log_passive_checks = DEFAULT_LOG_PASSIVE_CHECKS;
+ 	log_global_notifications = DEFAULT_log_global_notifications;
+ 
+-	logging_options = NSLOG_RUNTIME_ERROR | NSLOG_RUNTIME_WARNING | NSLOG_VERIFICATION_ERROR | NSLOG_VERIFICATION_WARNING | NSLOG_CONFIG_ERROR | NSLOG_CONFIG_WARNING | NSLOG_PROCESS_INFO | NSLOG_HOST_NOTIFICATION | NSLOG_SERVICE_NOTIFICATION | NSLOG_EVENT_HANDLER | NSLOG_EXTERNAL_COMMAND | NSLOG_PASSIVE_CHECK | NSLOG_HOST_UP | NSLOG_HOST_DOWN | NSLOG_HOST_UNREACHABLE | NSLOG_SERVICE_OK | NSLOG_SERVICE_WARNING | NSLOG_SERVICE_UNKNOWN | NSLOG_SERVICE_CRITICAL | NSLOG_INFO_MESSAGE;
++	logging_options = NSLOG_RUNTIME_ERROR | NSLOG_RUNTIME_WARNING | NSLOG_VERIFICATION_ERROR | NSLOG_VERIFICATION_WARNING | NSLOG_CONFIG_ERROR | NSLOG_CONFIG_WARNING | NSLOG_PROCESS_INFO | NSLOG_HOST_NOTIFICATION | NSLOG_SERVICE_NOTIFICATION | NSLOG_EVENT_HANDLER | NSLOG_EXTERNAL_COMMAND | NSLOG_PASSIVE_CHECK | NSLOG_HOST_UP | NSLOG_HOST_DOWN | NSLOG_HOST_UNREACHABLE | NSLOG_SERVICE_OK | NSLOG_SERVICE_WARNING | NSLOG_SERVICE_UNKNOWN | NSLOG_SERVICE_CRITICAL | NSLOG_INFO_MESSAGE | NSLOG_EXT_CUSTOM;
+ 
+-	syslog_options = NSLOG_RUNTIME_ERROR | NSLOG_RUNTIME_WARNING | NSLOG_VERIFICATION_ERROR | NSLOG_VERIFICATION_WARNING | NSLOG_CONFIG_ERROR | NSLOG_CONFIG_WARNING | NSLOG_PROCESS_INFO | NSLOG_HOST_NOTIFICATION | NSLOG_SERVICE_NOTIFICATION | NSLOG_EVENT_HANDLER | NSLOG_EXTERNAL_COMMAND | NSLOG_PASSIVE_CHECK | NSLOG_HOST_UP | NSLOG_HOST_DOWN | NSLOG_HOST_UNREACHABLE | NSLOG_SERVICE_OK | NSLOG_SERVICE_WARNING | NSLOG_SERVICE_UNKNOWN | NSLOG_SERVICE_CRITICAL | NSLOG_INFO_MESSAGE;
++	syslog_options = NSLOG_RUNTIME_ERROR | NSLOG_RUNTIME_WARNING | NSLOG_VERIFICATION_ERROR | NSLOG_VERIFICATION_WARNING | NSLOG_CONFIG_ERROR | NSLOG_CONFIG_WARNING | NSLOG_PROCESS_INFO | NSLOG_HOST_NOTIFICATION | NSLOG_SERVICE_NOTIFICATION | NSLOG_EVENT_HANDLER | NSLOG_EXTERNAL_COMMAND | NSLOG_PASSIVE_CHECK | NSLOG_HOST_UP | NSLOG_HOST_DOWN | NSLOG_HOST_UNREACHABLE | NSLOG_SERVICE_OK | NSLOG_SERVICE_WARNING | NSLOG_SERVICE_UNKNOWN | NSLOG_SERVICE_CRITICAL | NSLOG_INFO_MESSAGE | NSLOG_EXT_CUSTOM;
+ 
+ 	service_check_timeout = DEFAULT_SERVICE_CHECK_TIMEOUT;
+ 	host_check_timeout = DEFAULT_HOST_CHECK_TIMEOUT;
