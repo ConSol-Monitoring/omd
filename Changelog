@@ -28,7 +28,7 @@ next:
             - improve the trap_logger
           - monitoring-plugins update to 2.4.0
           - node update to 20.6.1
-          - omdnotificationforwarder update to 2.6.1.2
+          - omdnotificationforwarder update to 2.6.1.3
 
 5.40     Jul 12 2024
           - omd:
