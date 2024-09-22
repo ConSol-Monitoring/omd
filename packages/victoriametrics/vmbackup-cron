@@ -74,7 +74,7 @@ fi
 
 echo $SNAPSHOT_OUT
 
-SNAPSHOT_NAME=$(echo -n $SNAPSHOT_OUT | jsonpath.py '$.snapshot')
+SNAPSHOT_NAME=$(echo -n $SNAPSHOT_OUT | grep -oP '"snapshot": *"\K[^"]+')
 
 if [ "${SNAPSHOT_NAME}" = "" ] ; then
   echo "snapshot failed"

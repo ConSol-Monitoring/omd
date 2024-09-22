@@ -54,8 +54,8 @@ fi
 echo ">> retention at $( date +%Y-%m-%d-%H) "
 
 RC=0
-LL=$(echo -n $SNAPSHOT_OUT | jsonpath.py '$.snapshots[*]')
-for SNAPSHOT_NAME in $(echo -n $SNAPSHOT_OUT | jsonpath.py '$.snapshots[*]')
+
+for SNAPSHOT_NAME in $(echo -n $SNAPSHOT_OUT | grep -oP '"snapshots": *\[\K[^]]+' | tr -d ' "' | tr ',' ' ')
 do
   echo "snapshots: ${SNAPSHOT_NAME}"
   #du -ch -d1 $storageDataPath/snapshots/${SNAPSHOT_NAME}
