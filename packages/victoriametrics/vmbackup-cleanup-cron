@@ -2,13 +2,18 @@
 
 LOG_DIR=${OMD_ROOT}/var/victoriametrics
 DATA_PATH=${OMD_ROOT}/var/victoriametrics/data
+CONF_DIR=$OMD_ROOT/etc/victoriametrics/conf.d
 
 mkdir -p $LOG_DIR
 
 (
-. ${OMD_ROOT}/etc/victoriametrics/victoriametrics.conf
 
-if [ $? != 0 ] ; then
+for CFG in ${CONF_DIR}/*.conf; do
+  . ${CFG}
+done
+. etc/victoriametrics/backup.conf
+
+if [ -z "$vm_loggerLevel" ] ; then
   echo "source of config failed"
   exit 8
 fi
