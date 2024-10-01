@@ -12,7 +12,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 502 );
+plan( tests => 531 );
 
 my $omd_bin = TestUtils::get_omd_bin();
 
@@ -143,8 +143,8 @@ my $tests = [
   { cmd => $omd_bin." rm --reuse $site", stdin => "yes\n" },
   { cmd => "/usr/bin/id -u $site",       like => '/\d+/' },
   { cmd => "/usr/bin/id -g $site",       like => '/\d+/' },
-  { cmd => $omd_bin." create $createoptions $site2",    like => '/Created new site '.$site2.'./', errlike => '/ERROR: Failed to read config of site testsite./' },
-  { cmd => $omd_bin." mv --reuse $site2 $site", like => '/Moving site '.$site2.' to '.$site.'.../' , errlike => '/ERROR: Failed to read config of site testsite./' },
+  { cmd => $omd_bin." create $createoptions $site2",    like => '/Created new site '.$site2.'./' },
+  { cmd => $omd_bin." mv --reuse $site2 $site", like => '/Moving site '.$site2.' to '.$site.'.../' },
   { cmd => "/usr/bin/id -u $site2",      like => '/\d+/' },
   { cmd => "/usr/bin/id -g $site2",      like => '/\d+/' },
   { cmd => $omd_bin." cp --reuse $site $site2",  like => '/Copying site '.$site.' to '.$site2.'.../',
@@ -187,6 +187,18 @@ my $tests = [
   { cmd => $omd_bin." start -p", like => ["/Invoking 'start'/", '/Starting apache/'] },
   { cmd => $omd_bin." reload -p", like => ["/Invoking 'reload'/", "/Reloading apache/"] },
   { cmd => $omd_bin." restart -p", like => ["/Invoking 'restart'/", "/Starting crontab\.*OK/"] },
+
+  # port in use hook
+  { cmd => "/bin/su - $site -c 'omd stop'"  },
+  { cmd => $omd_bin." cp $site $site2",  like => '/Copying site '.$site.' to '.$site2.'.../',
+                                         errlike => '/Apache port \d+ is in use\. I\'ve choosen \d+ instead\./' },
+  { cmd => "/bin/su - $site  -c 'omd config set CRONTAB off'"  },
+  { cmd => "/bin/su - $site2 -c 'omd config set CRONTAB off'"  },
+  { cmd => "/bin/su - $site  -c 'chmod 700 /omd/sites/$site'"  },
+  { cmd => "/bin/su - $site2 -c 'omd config set CRONTAB off'", errlike => '/Failed to read config of site testsite/' },
+  { cmd => $omd_bin." rm $site2",        like => '/Restarting Apache...\s*OK/', stdin => "yes\n" },
+  { cmd => "/bin/su - $site  -c 'chmod 755 /omd/sites/$site'"  },
+  { cmd => "/bin/su - $site -c 'omd start'"  },
 ];
 
 # run tests
