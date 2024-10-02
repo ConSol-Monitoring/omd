@@ -1,0 +1,115 @@
+From 52fd39128cb919c9e4d46f0b96080029c1d231d6 Mon Sep 17 00:00:00 2001
+From: Sven Nierlein <sven@consol.de>
+Date: Wed, 2 Oct 2024 11:24:35 +0200
+Subject: [PATCH] fix check_curl: OpenSSL SSL_read: error:0A000126:SSL
+ routines::unexpected eof while reading, errno 0
+
+using check_curl on a probably embedded device responding as 'Server: GoAhead-Webs'
+
+    %> check_curl -H ... -S -vvv
+
+    > GET / HTTP/1.1
+    Host: ...
+    User-Agent: check_curl/v2.4.0 (monitoring-plugins 2.4.0, libcurl/7.76.1 OpenSSL/3.0.7 zlib/1.2.11 brotli/1.0.9 libidn2/2.3.0 libpsl/0.21.1 (+libidn2/2.3.0) libssh/0.10.4/openssl/zlib nghttp2/1.43.0)
+    Accept: */*
+    Connection: close
+
+    * Mark bundle as not supporting multiuse
+    * HTTP 1.0, assume close after body
+    < HTTP/1.0 302 Redirect
+    < Server: GoAhead-Webs
+    < Date: Tue Mar 26 17:57:16 2019
+    < Cache-Control: no-cache, no-store, must-revalidate,private
+    < Pragma: no-cache
+    < Expires: 0
+    < Content-Type: text/html
+    < X-Frame-Options: sameorigin
+    < X-XSS-Protection: 1; mode=block
+    < X-Content-Type-Options: nosniff
+    < Location: https://...
+    <
+    * OpenSSL SSL_read: error:0A000126:SSL routines::unexpected eof while reading, errno 0
+    * Closing connection 0
+
+reading the discussion on https://github.com/openssl/openssl/discussions/22690 suggest to set the option SSL_OP_IGNORE_UNEXPECTED_EOF
+which makes check_curl behave like check_http at this point.
+Since this is a rather new flag, fencing it in ifdefs.
+And since there can only be one ssl ctx function, we need to move both tasks into one function.
+---
+ plugins/check_curl.c | 27 ++++++++++++++++++++-------
+ 1 file changed, 20 insertions(+), 7 deletions(-)
+
+diff --git a/plugins/check_curl.c b/plugins/check_curl.c
+index e25d7a79a..a2e942a59 100644
+--- a/plugins/check_curl.c
++++ b/plugins/check_curl.c
+@@ -214,6 +214,7 @@ char *client_privkey = NULL;
+ char *ca_cert = NULL;
+ bool verify_peer_and_host = false;
+ bool is_openssl_callback = false;
++bool add_sslctx_verify_fun = false;
+ #if defined(HAVE_SSL) && defined(USE_OPENSSL)
+ X509 *cert = NULL;
+ #endif /* defined(HAVE_SSL) && defined(USE_OPENSSL) */
+@@ -299,7 +300,7 @@ main (int argc, char **argv)
+ 
+ int verify_callback(int preverify_ok, X509_STORE_CTX *x509_ctx)
+ {
+-	(void) preverify_ok;
++  (void) preverify_ok;
+   /* TODO: we get all certificates of the chain, so which ones
+    * should we test?
+    * TODO: is the last certificate always the server certificate?
+@@ -324,9 +325,18 @@ int verify_callback(int preverify_ok, X509_STORE_CTX *x509_ctx)
+ 
+ CURLcode sslctxfun(CURL *curl, SSL_CTX *sslctx, void *parm)
+ {
+-	(void) curl; // ignore unused parameter
+-	(void) parm; // ignore unused parameter
+-  SSL_CTX_set_verify(sslctx, SSL_VERIFY_PEER, verify_callback);
++  (void) curl; // ignore unused parameter
++  (void) parm; // ignore unused parameter
++  if(add_sslctx_verify_fun) {
++    SSL_CTX_set_verify(sslctx, SSL_VERIFY_PEER, verify_callback);
++  }
++
++  // workaround for issue:
++  // OpenSSL SSL_read: error:0A000126:SSL routines::unexpected eof while reading, errno 0
++  // see discussion https://github.com/openssl/openssl/discussions/22690
++#ifdef SSL_OP_IGNORE_UNEXPECTED_EOF
++  SSL_CTX_set_options(sslctx, SSL_OP_IGNORE_UNEXPECTED_EOF);
++#endif
+ 
+   return CURLE_OK;
+ }
+@@ -667,6 +677,10 @@ check_http (void)
+   /* detect SSL library used by libcurl */
+   ssl_library = curlhelp_get_ssl_library ();
+ 
++#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 10, 6)
++  handle_curl_option_return_code (curl_easy_setopt(curl, CURLOPT_SSL_CTX_FUNCTION, sslctxfun), "CURLOPT_SSL_CTX_FUNCTION");
++#endif
++
+   /* try hard to get a stack of certificates to verify against */
+   if (check_cert) {
+ #if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 19, 1)
+@@ -678,9 +692,8 @@ check_http (void)
+          * OpenSSL-style libraries only!) */
+ #ifdef USE_OPENSSL
+         /* libcurl and monitoring plugins built with OpenSSL, good */
+-        handle_curl_option_return_code (curl_easy_setopt(curl, CURLOPT_SSL_CTX_FUNCTION, sslctxfun), "CURLOPT_SSL_CTX_FUNCTION");
++        add_sslctx_verify_fun = true;
+         is_openssl_callback = true;
+-#else /* USE_OPENSSL */
+ #endif /* USE_OPENSSL */
+         /* libcurl is built with OpenSSL, monitoring plugins, so falling
+          * back to manually extracting certificate information */
+@@ -713,7 +726,7 @@ check_http (void)
+ #else /* LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 19, 1) */
+     /* old libcurl, our only hope is OpenSSL, otherwise we are out of luck */
+     if (ssl_library == CURLHELP_SSL_LIBRARY_OPENSSL || ssl_library == CURLHELP_SSL_LIBRARY_LIBRESSL)
+-      handle_curl_option_return_code (curl_easy_setopt(curl, CURLOPT_SSL_CTX_FUNCTION, sslctxfun), "CURLOPT_SSL_CTX_FUNCTION");
++      add_sslctx_verify_fun = true;
+     else
+       die (STATE_CRITICAL, "HTTP CRITICAL - Cannot retrieve certificates (no CURLOPT_SSL_CTX_FUNCTION, no OpenSSL library or libcurl too old and has no CURLOPT_CERTINFO)\n");
+ #endif /* LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 19, 1) */
