@@ -21,15 +21,10 @@ if ! make --version >/dev/null 2>&1; then
     exit 1
 fi
 
-BUILD_PACS=$( make -f echo.mk FILE=$M VAR=BUILD_PACKAGES )
+BUILD_PACS=$( make -f echo.mk FILE=$M VAR=BUILD_PACKAGES | sed -e 's/\ \ */ /g' -e 's/|.*$//'  )
 PACKAGER=$( make -f echo.mk FILE=$M VAR=PACKAGE_INSTALL )
 BECOME_ROOT=$( make -f echo.mk FILE=$M VAR=BECOME_ROOT )
 
-echo "Packages needed for compilation:"
-for PAC in $BUILD_PACS; do
-    echo -n " $PAC"
-done
-echo
 CMD="$PACKAGER $BUILD_PACS"
 if [ $UID != 0 ]
 then
