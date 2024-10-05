@@ -1,6 +1,6 @@
-From 52fd39128cb919c9e4d46f0b96080029c1d231d6 Mon Sep 17 00:00:00 2001
+From bcbce35c610d487e3f56d4e82053d98c3e259a48 Mon Sep 17 00:00:00 2001
 From: Sven Nierlein <sven@consol.de>
-Date: Wed, 2 Oct 2024 11:24:35 +0200
+Date: Sat, 5 Oct 2024 13:34:41 +0200
 Subject: [PATCH] fix check_curl: OpenSSL SSL_read: error:0A000126:SSL
  routines::unexpected eof while reading, errno 0
 
@@ -40,7 +40,7 @@ And since there can only be one ssl ctx function, we need to move both tasks int
  1 file changed, 20 insertions(+), 7 deletions(-)
 
 diff --git a/plugins/check_curl.c b/plugins/check_curl.c
-index e25d7a79a..a2e942a59 100644
+index e25d7a79a..79d9a27e3 100644
 --- a/plugins/check_curl.c
 +++ b/plugins/check_curl.c
 @@ -214,6 +214,7 @@ char *client_privkey = NULL;
@@ -86,7 +86,7 @@ index e25d7a79a..a2e942a59 100644
    /* detect SSL library used by libcurl */
    ssl_library = curlhelp_get_ssl_library ();
  
-+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 10, 6)
++#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 10, 6) && defined(USE_OPENSSL) && defined(CURLOPT_SSL_CTX_FUNCTION)
 +  handle_curl_option_return_code (curl_easy_setopt(curl, CURLOPT_SSL_CTX_FUNCTION, sslctxfun), "CURLOPT_SSL_CTX_FUNCTION");
 +#endif
 +
