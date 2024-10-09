@@ -1,7 +1,7 @@
 include ../../../Makefile.omd
 
 NAME = check_rittal_health
-VERSION = 4.0.0.1
+VERSION = 4.1
 DIR = $(NAME)-$(VERSION)
 
 .PHONY: skel
