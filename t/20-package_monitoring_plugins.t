@@ -12,7 +12,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 56 );
+plan( tests => 60 );
 
 ##################################################
 # create our test site
@@ -31,14 +31,19 @@ my $tests = [
   { cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_logfiles'", exit => 3, like => '/Usage: check_logfiles/' },
   { cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_http -S -H 127.0.0.1 -p 9999'", exit => 2, like => '/HTTP CRITICAL - Unable to open TCP socket/' },
   { cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_curl -S -H 127.0.0.1 -p 9999'", exit => 2, like => '/HTTP CRITICAL - Invalid HTTP response received/' },
-  #{ cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_by_ssh -V'", exit => 3, like => '/\d{4}\-\d{2}\-\d{2}_\w+/' }, # plugins should contain the date and git hash the version information
   { cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_by_ssh -V'", exit => 3, like => '/monitoring\-plugins\ \d\.\d/' }, # plugins should contain release version when build without patches
-  { cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_radius -h'", exit => 3, like => '/^check_radius.*/'}, 
+  { cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_radius -h'", exit => 3, like => '/^check_radius.*/'},
   { cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_procs -vvv'", exit => 0, like => '/CMD:.*\s+etime/'},
 ];
 for my $test (@{$tests}) {
     TestUtils::test_command($test);
 }
+
+SKIP: {
+  skip('check_curl certificate check is not available on rhel7', 4) if(TestUtils::config('DISTRO_CODE') eq 'el7');
+
+  TestUtils::test_command({ cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_curl -H 127.0.0.1 -C 1,1'", exit => 0, like => '/OK - Certificate .* will expire on/' });
+};
 
 ##################################################
 # cleanup test site
