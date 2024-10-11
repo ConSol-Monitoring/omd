@@ -42,6 +42,8 @@ __init_hook() {
 #   - $STOP_CALLBACK   function will be called for every stop retry.
 #   - $CHECK_CALLBACK  function will be called in check/checkconfig mode.
 #   - $START_CALLBACK  function will be called after successful start.
+#   - $PREDAEMON       command will be prepended to $DAEMON but not used as PSPATTERN.
+#   - $CORE_NOVERIFY   when set to 1, skips the verify step before reload/start/restart
 __generic_init() {
   __init_hook $0 $1 pre
   if [ -z "$DAEMON" ]; then
@@ -189,13 +191,13 @@ __generic_init_wait_start() {
       LOG_FILE="/dev/null"
     fi
     OPTS=$(__generic_init_trim "$OPTS")
-    STARTCMD="nohup setsid $DAEMON $OPTS"
+    STARTCMD="nohup setsid ${PRE_DAEMON}$DAEMON $OPTS"
     $STARTCMD >>$LOG_FILE 2>&1 &
     PID=$!
     disown
   else
     OPTS=$(__generic_init_trim "$OPTS")
-    STARTCMD="$DAEMON $OPTS"
+    STARTCMD="${PRE_DAEMON}$DAEMON $OPTS"
     if [ -n "$LOG_FILE" ]; then
       if ! $STARTCMD >>$LOG_FILE 2>&1; then
         __generic_init_wait_start_failed

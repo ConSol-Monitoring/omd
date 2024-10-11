@@ -43,8 +43,21 @@ case "$1" in start|restart|reload|checkconfig|check)
         echo "${CONFIG_CORE} configuration file $CFG_FILE not found. Terminating..."
         exit 1
     fi
-esac
 
+    # enabling naemon debuging mode if NAEMON_CORE_DEBUG env is set
+    if [ "$NAEMON_CORE_DEBUG" = "1" ]; then
+        # disable address space layout randomization (ASLR) which renders segfault addresses useless
+        PRE_DAEMON="setarch $(uname -m) -R "
+        # enable core files
+        ulimit -c unlimited
+
+        # enable .dbg variant of core and addons
+        DAEMON=$OMD_ROOT/bin/naemon.dbg
+        sed -i $CFG_FILE \
+            -e 's%/livestatus\.o%/livestatus.o.dbg%g' \
+            -e 's%mod_gearman_naemon\.o%mod_gearman_naemon.o.dbg%g'
+    fi
+esac
 
 verify_config() {
     if [ "$1" != "quiet" ]; then
