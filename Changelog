@@ -8,6 +8,7 @@ next:
             - add build support for ubuntu 24.04
           - thruk:
             - update to 3.18
+            - lmd update to 2.2.2
           - plugins:
             - check_hpasm update to 4.10
             - check_nwc_health update to 11.5.1
