@@ -7,7 +7,7 @@ SHELL = /bin/bash
 
 build:
 	# ftp://ftp.freetds.org/pub/freetds/stable/freetds-stable.tgz
-	tar xf freetds-$(FREETDS_VERSION).tar.gz
+	tar xf freetds-$(FREETDS_VERSION).tar.gz --no-same-owner
 	#cd $(FREETDS_DIR) && patch -p1 < ../0001-ct_connect-allow-host.patch
 	cd $(FREETDS_DIR) && \
 	./configure --prefix=$(OMD_ROOT) --libdir=$(OMD_ROOT)/lib --with-openssl && \
