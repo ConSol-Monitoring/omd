@@ -24,6 +24,10 @@ OPTS+=" -pidfile ${PID_FILE}"
 OPTS+=" -filelog $OMD_ROOT/var/log/xinetd.log"
 OPTS+=" -f $OMD_ROOT/etc/xinetd.conf"
 
+# rhel9 has a unusual high number of open files during boot and xinetd checks them all and runs into a timeout.
+# so set a sane default here.
+ulimit -n 1024
+
 case "$1" in
     start)
         # Do not use usual system daemon path. Some start script
