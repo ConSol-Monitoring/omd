@@ -13,6 +13,7 @@ BUILD_PACKAGES       += flex                           # icinga 2
 BUILD_PACKAGES       += fping
 BUILD_PACKAGES       += gcc
 BUILD_PACKAGES       += gcc-c++
+BUILD_PACKAGES       += gdb                            # used in naemon tests
 BUILD_PACKAGES       += gd-devel                       # RHEL Server Optional
 BUILD_PACKAGES       += glibc-devel
 BUILD_PACKAGES       += glibc-static

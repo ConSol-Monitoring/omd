@@ -13,6 +13,7 @@ BUILD_PACKAGES       += dpatch
 BUILD_PACKAGES       += flex                           # icinga 2
 BUILD_PACKAGES       += fping
 BUILD_PACKAGES       += gawk
+BUILD_PACKAGES       += gdb                            # used in naemon tests
 BUILD_PACKAGES       += git-buildpackage
 BUILD_PACKAGES       += gperf
 BUILD_PACKAGES       += help2man                       # required by naemon

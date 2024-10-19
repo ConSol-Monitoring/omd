@@ -13,6 +13,7 @@ BUILD_PACKAGES       += dnsutils                       # nagios-plugins check_dn
 BUILD_PACKAGES       += fakeroot
 BUILD_PACKAGES       += flex                           # icinga 2
 BUILD_PACKAGES       += fping
+BUILD_PACKAGES       += gdb                            # used in naemon tests
 BUILD_PACKAGES       += gettext                        # needed for german l10n
 BUILD_PACKAGES       += git-buildpackage
 BUILD_PACKAGES       += golang                         # required to bootstrap go
