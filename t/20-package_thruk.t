@@ -13,7 +13,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 1004 );
+plan( tests => 1007 );
 
 ##################################################
 # create our test site
@@ -29,6 +29,9 @@ TestUtils::prepare_obj_config('t/data/omd/testconf1', '/omd/sites/'.$site.'/etc/
 
 # decrease pnp interval
 TestUtils::test_command({ cmd => "/usr/bin/env sed -i -e 's/^perfdata_file_processing_interval = 15/perfdata_file_processing_interval = 2/g' -e 's/^sleep_time = 15/sleep_time = 2/g' /opt/omd/sites/$site/etc/pnp4nagios/npcd.cfg" });
+
+# increase slow page threshold to not generate warnings on busy build hosts
+TestUtils::test_command({ cmd => "/bin/su - $site -c 'echo \"slow_page_log_threshold=30\" > etc/thruk/thruk_local.d/builds.cfg'" });
 
 # set thruk as default
 TestUtils::test_command({ cmd => $omd_bin." config $site set DEFAULT_GUI thruk" });
