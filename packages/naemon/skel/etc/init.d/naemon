@@ -51,6 +51,10 @@ case "$1" in start|restart|reload|checkconfig|check)
         # enable core files
         ulimit -c unlimited
 
+        if grep bin/false /proc/sys/kernel/core_pattern >/dev/null; then
+            echo "WARNING: core files are disabled from /proc/sys/kernel/core_pattern" >&2
+        fi
+
         # enable .dbg variant of core and addons
         DAEMON=$OMD_ROOT/bin/naemon.dbg
         sed -i $CFG_FILE \
