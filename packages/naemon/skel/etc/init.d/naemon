@@ -58,6 +58,7 @@ case "$1" in start|restart|reload|checkconfig|check)
         fi
 
         # enable .dbg variant of core and addons
+        export LD_PRELOAD=$OMD_ROOT/lib/libnaemon.so.0.0.0.dbg
         DAEMON=$OMD_ROOT/bin/naemon.dbg
         sed -i $CFG_FILE \
             -e 's%/livestatus\.o%/livestatus.o.dbg%g' \
