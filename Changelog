@@ -2,21 +2,22 @@ This file documents the revision history for the Open Monitoring Distribution (L
 
 next:
           - omd:
+            - add build support for ubuntu 24.04
             - fix dropping root privileges on omd disable command
             - omd cleanup: add --dry-run / -n option
             - omd cleanup: add --keep    / -k option
-            - add build support for ubuntu 24.04
           - thruk:
             - update to 3.18
             - lmd update to 2.2.2
           - plugins:
             - check_hpasm update to 4.10
-            - check_nwc_health update to 11.5.1
-            - check_pdu_health update to 3.0.1.1
+            - check_nwc_health update to 11.7
+            - check_pdu_health update to 3.0.2
             - check_printer_health update to 1.2.0.1
-            - check_ups_health update to 4.3
+            - check_rittal_health update to 4.1
+            - check_ups_health update to 4.3.1.1
             - check_vsphere update to 0.3.11
-            - check_wut_health update to 4.1.0.2
+            - check_wut_health update to 4.1.2.1
           - gearman:
             - mod-gearman update to 5.1.4
             - mod-gearman-worker-go update to 1.5.2
@@ -28,6 +29,7 @@ next:
             - add UnsafeAllow3F if required
           - snmptrapd:
             - improve the trap_logger
+          - coshsh update to 10.2.2.1
           - monitoring-plugins update to 2.4.0
           - node update to 20.6.1
           - omdnotificationforwarder update to 2.6.1.3
