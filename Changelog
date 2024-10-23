@@ -8,7 +8,7 @@ next:
             - omd cleanup: add --keep    / -k option
           - thruk:
             - update to 3.18
-            - lmd update to 2.2.2
+            - lmd update to 2.2.3
           - plugins:
             - check_hpasm update to 4.10
             - check_nwc_health update to 11.7
