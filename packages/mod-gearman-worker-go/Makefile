@@ -12,15 +12,16 @@ GOPATH      = go
 PWD         = $(shell pwd)
 GITBASE     = github.com/consol-monitoring
 GITURL      = $(GITBASE)/$(NAME)
-DEPS_SRC    = deps.tar.gz
 # GIT TAG is set automatically by "make upstream" or "make package"
 GIT_TAG     = v1.5.2
 
 .PHONY: skel
 
 build:
-	tar zxf $(DEPS_SRC)
+	tar zxf deps-*.tar.gz
 	tar zxf $(SRC)
+	mkdir -p $(GOPATH)/src/$(GITURL)/vendor/pkg
+	cp -rp $(GOPATH)/src/$(GITURL)/pkg/modgearman $(GOPATH)/src/$(GITURL)/vendor/pkg/
 	export GO111MODULE=auto && \
 		export GOROOT=$(PWD)/../go-$(GOPKG)/go-$(GOVERSION)/ && \
 		export GOPATH=$(PWD)/$(GOPATH)/ && \
@@ -46,22 +47,26 @@ clean:
 
 deps: clean
 	mkdir -p $(GOPATH)
+	set -xe ; \
 	export GO111MODULE=auto && \
 	export GOROOT=$(PWD)/../go-$(GOPKG)/go-$(GOVERSION)/ && export GOPATH=$(PWD)/$(GOPATH)/ && PATH=$$GOROOT/bin:$$PATH && \
 		mkdir -p $(GOPATH)/src/$(GITBASE) && \
 		cd $(GOPATH)/src/$(GITBASE) && \
 		git clone --depth=1 --branch "$(BRANCH)" https://$(GITURL) && \
 		cd $(NAME) && \
-		if [ "$(GIT_TAG)" = "$$(git describe --always --tags)" ]; then \
+		DEPSFILE="$(PWD)/deps-$$(md5sum go.mod | cut -f 1 -d " ").tar.gz"; \
+		if test -e "$$DEPSFILE"; then \
 			echo "dependencies already up to date: $(GIT_TAG)"; \
 		else \
-			find -name \*_test.go -delete && \
 			make vendor && \
+			find -name \*_test.go -delete && \
 			cd $(PWD) && \
+			rm -rf $(GOPATH)/src/$(GITURL)/vendor/pkg/modgearman/ ; \
 			tar cf deps.tar --exclude=.git --exclude=*_test.go $(GOPATH)/src/$(GITURL)/vendor && \
 			chmod -R 777 $(GOPATH); \
-			rm -f $(DEPS_SRC); \
+			rm -f deps*.tar.gz; \
 			gzip -9 deps.tar; \
+			mv deps.tar.gz $$DEPSFILE; \
 		fi
 		rm -rf $(GOPATH)
 
