@@ -6,6 +6,7 @@ OMD_GIT_BASE=${OMD_GIT_BASE:=${OMD_ROOT}/var/coshsh/configs}
 OMD_GIT_BASE_STATIC=${OMD_GIT_BASE_STATIC:=${OMD_GIT_BASE}/${OMD_LANDSCAPE}}
 OMD_GIT_BASE_DYNAMIC=${OMD_GIT_BASE_DYNAMIC:=${OMD_GIT_BASE}/${OMD_SITE}}
 OMD_GIT_MAX_RUNTIME=${OMD_GIT_MAX_RUNTIME:=3600}
+OMD_GIT_BRANCH=${OMD_GIT_BRANCH:="master"}
 
 # OMD_GIT_BASE ${OMD_ROOT}/var/coshsh/configs
 # OMD_GIT_BASE ${GIT_SERVER}:var/coshsh/configs
@@ -123,10 +124,10 @@ test -d ${OMD_ROOT}/etc/${CORE}/conf.d/${OMD_LANDSCAPE}/${OMD_SITE} || mkdir -p 
 if [ -d ${OMD_ROOT}/etc/${CORE}/conf.d/${OMD_LANDSCAPE}/${OMD_SITE}/static ]; then
   pushd ${OMD_ROOT}/etc/${CORE}/conf.d/${OMD_LANDSCAPE}/${OMD_SITE}/static
   git reset --hard
-  OLDSTATICREV=$(git rev-list --max-count=1 master)
+  OLDSTATICREV=$(git rev-list --max-count=1 ${OMD_GIT_BRANCH})
   git pull
   gitexit=$?
-  NEWSTATICREV=$(git rev-list --max-count=1 master)
+  NEWSTATICREV=$(git rev-list --max-count=1 ${OMD_GIT_BRANCH})
   remove_git_index_lock $(pwd)
   popd
 else
@@ -143,17 +144,17 @@ else
   fi
   gitexit=$?
   cd static
-  NEWSTATICREV=$(git rev-list --max-count=1 master)
+  NEWSTATICREV=$(git rev-list --max-count=1 ${OMD_GIT_BRANCH})
   popd
   MUSTRELOAD=1
 fi
 if [ -d ${OMD_ROOT}/etc/${CORE}/conf.d/${OMD_LANDSCAPE}/${OMD_SITE}/dynamic ]; then
   pushd ${OMD_ROOT}/etc/${CORE}/conf.d/${OMD_LANDSCAPE}/${OMD_SITE}/dynamic
   git reset --hard
-  OLDDYNAMICREV=$(git rev-list --max-count=1 master)
+  OLDDYNAMICREV=$(git rev-list --max-count=1 ${OMD_GIT_BRANCH})
   git pull
   gitexit=$?
-  NEWDYNAMICREV=$(git rev-list --max-count=1 master)
+  NEWDYNAMICREV=$(git rev-list --max-count=1 ${OMD_GIT_BRANCH})
   remove_git_index_lock $(pwd)
   popd
 else
@@ -170,7 +171,7 @@ else
   fi
   gitexit=$?
   cd dynamic
-  NEWDYNAMICREV=$(git rev-list --max-count=1 master)
+  NEWDYNAMICREV=$(git rev-list --max-count=1 ${OMD_GIT_BRANCH})
   popd
   MUSTRELOAD=1
 fi
