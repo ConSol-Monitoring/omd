@@ -8,7 +8,9 @@ GOVERSION   = $(shell grep ^VERSION ../go-${GOPKG}/Makefile | awk '{ print $$3 }
 DEPENDS     = node
 
 NODE_PATH=$(shell realpath $$(ls -d1 ../node/node-v*/lib/node_modules/npm/node_modules)):$(shell pwd)/node_modules
-export NODE_OPTIONS=--openssl-legacy-provider
+ifneq ($(DISTRO_CODE),el7)
+  export NODE_OPTIONS=--openssl-legacy-provider
+endif
 
 .PHONY: skel
 
