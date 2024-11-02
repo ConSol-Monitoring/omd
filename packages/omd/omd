@@ -4715,15 +4715,15 @@ class PackageManagerRPM(PackageManager):
         real_path = os.path.realpath(path)
 
         p = self._execute(["rpm", "-qf", real_path])
-        output = p.communicate()[0]
+        output = p.communicate()[0].decode("utf-8").strip()
 
         if p.wait() == 1 and "not owned" in output:
             return []
 
         elif p.wait() != 0:
-            bail_out(tty_error + ": Failed to find packages: %s" % output.decode("utf-8").strip())
+            bail_out(tty_error + ": Failed to find packages: %s" % output)
 
-        return output.strip().split(b"\n")
+        return output.split("\n")
 
 
 exclude_options = [
