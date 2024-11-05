@@ -9,15 +9,18 @@ GOVERSION   = $(shell grep ^VERSION ../go-${GOPKG}/Makefile | awk '{ print $$3 }
 GOPATH      = go
 PWD         = $(shell pwd)
 CONFIG_FILE = $(DESTDIR)$(OMD_ROOT)/etc/nagflux/config.gcfg
-GITBASE     = github.com/ConSol
+GITBASE     = github.com/ConSol-Monitoring
 GITURL      = $(GITBASE)/$(NAME)
-DEPS_SRC    = deps.tar.gz
 # GIT TAG is set automatically by "make upstream" or "make package"
-GIT_TAG     = 5ac49c5
+GIT_TAG     = de398d0
+
+.PHONY: skel
 
 build:
-	tar zxf $(DEPS_SRC)
+	tar zxf deps-*.tar.gz
 	tar zxf $(SRC)
+	mkdir -p $(GOPATH)/src/$(GITURL)/vendor/pkg
+	cp -rp $(GOPATH)/src/$(GITURL)/pkg/nagflux $(GOPATH)/src/$(GITURL)/vendor/pkg/
 	export GO111MODULE=auto && \
 		export GOROOT=$(PWD)/../go-$(GOPKG)/go-$(GOVERSION)/ && \
 		export GOPATH=$(PWD)/$(GOPATH)/ && \
@@ -26,26 +29,40 @@ build:
 
 install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/bin
-	install -m 755 $(PWD)/$(GOPATH)/bin/nagflux  $(DESTDIR)$(OMD_ROOT)/bin
-	mkdir -p $(DESTDIR)$(OMD_ROOT)/var/nagflux
+	install -m 755 $(PWD)/$(GOPATH)/bin/$(NAME)  $(DESTDIR)$(OMD_ROOT)/bin
 	install -m 755 $(PWD)/migrate_pnp_to_nagflux $(DESTDIR)$(OMD_ROOT)/bin
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/var/nagflux
 
 skel:
 
 clean:
+	[ ! -e $(GOPATH) ] || chmod -R 777 $(GOPATH)
 	rm -rf $(GOPATH)
 
 deps: clean
 	mkdir -p $(GOPATH)
+	set -xe ; \
 	export GO111MODULE=auto && \
 	export GOROOT=$(PWD)/../go-$(GOPKG)/go-$(GOVERSION)/ && export GOPATH=$(PWD)/$(GOPATH)/ && PATH=$$GOROOT/bin:$$PATH && \
 		mkdir -p $(GOPATH)/src/$(GITBASE) && \
 		cd $(GOPATH)/src/$(GITBASE) && \
 		git clone --depth=1 --branch "$(BRANCH)" https://$(GITURL) && \
-		go get ./... && \
-		cd $(PWD) && \
-		rm -rf  $(GOPATH)/src/$(GITBASE)
-		tar zcf $(DEPS_SRC) --exclude=.git --exclude=*_test.go $(GOPATH)/src/
+		cd $(NAME) && \
+		DEPSFILE="$(PWD)/deps-$$(md5sum go.mod | cut -f 1 -d " ").tar.gz"; \
+		if test -e "$$DEPSFILE"; then \
+			echo "dependencies already up to date: $(GIT_TAG)"; \
+		else \
+			make vendor && \
+			find -name \*_test.go -delete && \
+			cd $(PWD) && \
+			rm -rf $(GOPATH)/src/$(GITURL)/vendor/pkg/lmd/ ; \
+			tar cf deps.tar --exclude=.git --exclude=*_test.go $(GOPATH)/src/$(GITURL)/vendor && \
+			chmod -R 777 $(GOPATH); \
+			rm -f deps*.tar.gz; \
+			gzip -9 deps.tar; \
+			mv deps.tar.gz $$DEPSFILE; \
+		fi
+		rm -rf $(GOPATH)
 
 package: clean
 	mkdir -p $(GOPATH)
@@ -55,8 +72,19 @@ package: clean
 		cd $(GOPATH)/src/$(GITBASE) && \
 		git clone --depth=1 --branch "$(BRANCH)" https://$(GITURL) && \
 		cd $(NAME) && \
-		sed -i $(PWD)/Makefile -e 's/^GIT_TAG.*$$/GIT_TAG     = '$$(git describe --always --tags)'/g' && \
-		cd $(PWD) && \
-		tar zcf $(SRC) --exclude=.git --exclude=*_test.go $(GOPATH)/src/$(GITURL)
+		if [ "$(GIT_TAG)" = "$$(git describe --always --tags)" ]; then \
+			echo "source already up to date: $(GIT_TAG)"; \
+		else \
+			sed -i $(PWD)/Makefile -e 's/^GIT_TAG.*$$/GIT_TAG     = '$$(git describe --always --tags)'/g' && \
+			cd $(PWD) && \
+			rm -rf $(GOPATH)/src/$(GITURL)/docs/ && \
+			tar cf $(NAME)-$(VERSION).tar --exclude=.git --exclude=docs/ --exclude=*_test.go $(GOPATH)/src/$(GITURL) && \
+			chmod -R 777 $(GOPATH); \
+			rm -f $(SRC); \
+			gzip -9 $(NAME)-$(VERSION).tar; \
+		fi
+		rm -rf $(GOPATH)
 
-upstream: clean deps package
+upstream: clean
+	$(MAKE) deps
+	$(MAKE) package
