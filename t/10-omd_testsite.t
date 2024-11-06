@@ -12,7 +12,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 531 );
+plan( tests => 583 );
 
 my $omd_bin = TestUtils::get_omd_bin();
 
@@ -73,6 +73,7 @@ my $tests = [
   { cmd => $omd_bin." rm $site2",    stdin => "yes\n", 'exit' => undef, errlike => undef },
   { cmd => $omd_bin." rm $site2",    stdin => "yes\n", 'exit' => undef, errlike => undef },
   { cmd => $omd_bin." create $createoptions $site", like => '/Created new site '.$site.'./' },
+  { cmd => "/bin/ls -ld /omd/sites/$site", like => '/drwxr-x---.*\s+'.$site.'\s+omd\s+/' }, # check permissions and owner
   { cmd => "/bin/su - $site -c 'omd reset etc/htpasswd'", like => '/^$/' },
   { cmd => "/bin/su - $site -c 'test -h etc/nagios/conf.d'", like => '/^$/' },
   { cmd => "/bin/su - $site -c 'test -d etc/naemon/conf.d'", like => '/^$/' },
@@ -107,11 +108,13 @@ my $tests = [
   { cmd => $omd_bin." stop $site",       like => '/Stopping naemon/' },
   { cmd => $omd_bin." cp $site $site2",  like => '/Copying site '.$site.' to '.$site2.'.../',
                                          errlike => '/Apache port \d+ is in use\. I\'ve choosen \d+ instead\./' },
+  { cmd => "/bin/ls -ld /omd/sites/$site2", like => '/drwxr-x---.*\s+'.$site2.'\s+omd\s+/' }, # check permissions and owner
   { cmd => $omd_bin." config $site2 show APACHE_TCP_PORT",  like => '/^5001$/' },
   { cmd => "/bin/su - $site2 -c 'omd -v diff'", like => ['/^$/'] },
   { cmd => "/usr/bin/find /omd/sites/$site2/ -not -user $site2 -ls",  like => '/^\s*$/' },
   { cmd => "/bin/df -k /omd/sites/$site2/tmp/.", like => $is_docker ? '/overlay/' : '/tmpfs/m' },
   { cmd => $omd_bin." mv $site2 $site3", like => '/Moving site '.$site2.' to '.$site3.'.../' },
+  { cmd => "/bin/ls -ld /omd/sites/$site3", like => '/drwxr-x---.*\s+'.$site3.'\s+omd\s+/' }, # check permissions and owner
   { cmd => $omd_bin." config $site3 show APACHE_TCP_PORT",  like => '/^5001$/' },
   { cmd => "/usr/bin/find /omd/sites/$site3/ -not -user $site3 -ls",  like => '/^\s*$/' },
   { cmd => "/bin/df -k /omd/sites/$site3/tmp/.", like => $is_docker ? '/overlay/' : '/tmpfs/m' },
@@ -121,17 +124,20 @@ my $tests = [
                                          like => '/Created new site '.$site.'./',
                                          errlike => '/^(|.*outside of the .* range.*|.*is greater than SYS_UID_MAX.*)$/',
   },
+  { cmd => "/bin/ls -ld /omd/sites/$site", like => '/drwxr-x---.*\s+'.$site.'\s+omd\s+/' }, # check permissions and owner
   { cmd => "/bin/su - $site -c 'omd reset etc/htpasswd'", like => '/^$/' },
   { cmd => "/usr/bin/id -u $site",       like => '/7017/' },
   { cmd => "/usr/bin/id -g $site",       like => '/7018/' },
   { cmd => $omd_bin." cp -u 7019 -g 7020 $site $site2",
                                          like => '/Copying site '.$site.' to '.$site2.'.../',
                                          errlike => '/Apache port \d+ is in use\. I\'ve choosen \d+ instead\./' },
+  { cmd => "/bin/ls -ld /omd/sites/$site2", like => '/drwxr-x---.*\s+'.$site2.'\s+omd\s+/' }, # check permissions and owner
   { cmd => "/usr/bin/id -u $site2",      like => '/7019/' },
   { cmd => "/usr/bin/id -g $site2",      like => '/7020/' },
   { cmd => $omd_bin." mv -u 7021 -g 7022 $site2 $site3", like => '/Moving site '.$site2.' to '.$site3.'.../',
                                          errlike => '/^(|.*outside of the .* range.*|.*is greater than SYS_UID_MAX.*)$/',
   },
+  { cmd => "/bin/ls -ld /omd/sites/$site3", like => '/drwxr-x---.*\s+'.$site3.'\s+omd\s+/' }, # check permissions and owner
   { cmd => "/usr/bin/id -u $site3",      like => '/7021/' },
   { cmd => "/usr/bin/id -g $site3",      like => '/7022/' },
   { cmd => $omd_bin." rm $site",         like => '/Restarting Apache...\s*OK/', stdin => "yes\n" },
@@ -139,16 +145,21 @@ my $tests = [
 
   # --reuse
   { cmd => $omd_bin." create $createoptions $site", like => '/Created new site '.$site.'./' },
+  { cmd => "/bin/ls -ld /omd/sites/$site", like => '/drwxr-x---.*\s+'.$site.'\s+omd\s+/' }, # check permissions and owner
   { cmd => "/bin/su - $site -c 'omd reset etc/htpasswd'", like => '/^$/' },
   { cmd => $omd_bin." rm --reuse $site", stdin => "yes\n" },
   { cmd => "/usr/bin/id -u $site",       like => '/\d+/' },
   { cmd => "/usr/bin/id -g $site",       like => '/\d+/' },
+  { cmd => "/bin/ls -ld /omd/sites/$site", like => '/drwxr-x---.*\s+'.$site.'\s+omd\s+/' }, # check permissions and owner
   { cmd => $omd_bin." create $createoptions $site2",    like => '/Created new site '.$site2.'./' },
+  { cmd => "/bin/ls -ld /omd/sites/$site2", like => '/drwxr-x---.*\s+'.$site2.'\s+omd\s+/' }, # check permissions and owner
   { cmd => $omd_bin." mv --reuse $site2 $site", like => '/Moving site '.$site2.' to '.$site.'.../' },
+  { cmd => "/bin/ls -ld /omd/sites/$site", like => '/drwxr-x---.*\s+'.$site.'\s+omd\s+/' }, # check permissions and owner
   { cmd => "/usr/bin/id -u $site2",      like => '/\d+/' },
   { cmd => "/usr/bin/id -g $site2",      like => '/\d+/' },
   { cmd => $omd_bin." cp --reuse $site $site2",  like => '/Copying site '.$site.' to '.$site2.'.../',
                                          errlike => '/Apache port \d+ is in use\. I\'ve choosen \d+ instead\./' },
+  { cmd => "/bin/ls -ld /omd/sites/$site", like => '/drwxr-x---.*\s+'.$site.'\s+omd\s+/' }, # check permissions and owner
   { cmd => $omd_bin." cp --reuse $site $site2", errlike => '/must be empty/', exit => 1 },
   { cmd => $omd_bin." rm $site2",        like => '/Restarting Apache...\s*OK/', stdin => "yes\n" },
 
@@ -160,6 +171,7 @@ my $tests = [
   { cmd => $omd_bin." restore /tmp/omd.backup.tgz", like => '/Restoring site testsite from /' },
   { cmd => "/bin/su - $site -c 'omd -f restore /tmp/omd.backup.tgz'", like => '/Restore completed/' },
   { cmd => "/bin/su - $site -c 'find . -user root -ls'", like => '/^$/' },
+  { cmd => "/bin/ls -ld /omd/sites/$site", like => '/drwxr-x---.*\s+'.$site.'\s+omd\s+/' }, # check permissions and owner
 
   # --cleanup
   { cmd => $omd_bin." cleanup -n", like => '/DRY RUN/' },
@@ -192,6 +204,7 @@ my $tests = [
   { cmd => "/bin/su - $site -c 'omd stop'"  },
   { cmd => $omd_bin." cp $site $site2",  like => '/Copying site '.$site.' to '.$site2.'.../',
                                          errlike => '/Apache port \d+ is in use\. I\'ve choosen \d+ instead\./' },
+  { cmd => "/bin/ls -ld /omd/sites/$site2", like => '/drwxr-x---.*\s+'.$site2.'\s+omd\s+/' }, # check permissions and owner
   { cmd => "/bin/su - $site  -c 'omd config set CRONTAB off'"  },
   { cmd => "/bin/su - $site2 -c 'omd config set CRONTAB off'"  },
   { cmd => "/bin/su - $site  -c 'chmod 700 /omd/sites/$site'"  },

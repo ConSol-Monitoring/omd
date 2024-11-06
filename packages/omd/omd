@@ -60,7 +60,7 @@ opt_version     = None
 # one specific site. They are set by set_site_globals()
 g_sitename      = None # "mysite"
 g_sitedir       = None # "/omd/sites/mysite"
-g_site_conf     = None # { "CORE" : "naemon", ... } (contents of etc/omd/site.conf plus defaults from hooks)
+g_site_conf     = {}   # { "CORE" : "naemon", ... } (contents of etc/omd/site.conf plus defaults from hooks)
 
 # set default file modes and mask
 g_dir_mode      = 0o755
@@ -501,8 +501,8 @@ def user_verify(name, allow_populated=False):
     if not allow_populated and os.path.exists(site_dir(name) + "/version"):
         bail_out(tty_error + ": home directory for user %s (%s) must be empty" % ( name, site_dir(name) ) )
 
-    if not file_owner_verify(site_dir(name), user.pw_uid, user.pw_gid):
-        bail_out(tty_error + ": home directory (%s) is not owned by user %s and group %s" % ( site_dir(name), name, name ) )
+    if not file_owner_verify(site_dir(name), user.pw_uid, group_id("omd")):
+        bail_out(tty_error + ": home directory (%s) is not owned by user %s and group omd" % ( site_dir(name), name ) )
 
     group = group_by_id(user.pw_gid)
     if group is None or group.gr_name != name:
@@ -3177,14 +3177,21 @@ def finalize_site(what, apache_reload):
         if status:
             bail_out(tty_error + ": Error in non-priviledged sub-process.")
 
+    # drwxr-x---. 1 <sitename> omd
+    # sites can read each other's config files (expecially for port numbers), but world can not.
+    try:
+        os.chown(g_sitedir, user_id(g_sitename), group_id("omd"))
+    except Exception as e:
+        pass
+    try:
+        os.chmod(g_sitedir, stat.S_IRWXU|stat.S_IRGRP|stat.S_IXGRP)
+    except Exception as e:
+        pass
+
     # Finally reload global apache - with root permissions - and
     # create include-hook for Apache and reload apache
-    if am_root:
-        # drwxr-x---. 1 <sitename> omd
-        # sites can read each other's config files (expecially for port numbers), but world can not.
-        os.chown(g_sitedir, user_id(g_sitename), group_id("omd"))
-        os.chmod(g_sitedir, stat.S_IRWXU|stat.S_IRGRP|stat.S_IXGRP)
 
+    if am_root:
         create_apache_hook(g_sitename)
         if apache_reload:
             reload_apache()
@@ -3244,7 +3251,9 @@ def main_rm(args, options={}):
 
 def create_site_dir(sitename):
     os.makedirs(site_dir(sitename))
-    os.chown(site_dir(sitename), user_id(sitename), group_id(sitename))
+    # drwxr-x---. 1 <sitename> omd
+    os.chown(site_dir(sitename), user_id(sitename), group_id("omd"))
+    os.chmod(site_dir(sitename), stat.S_IRWXU|stat.S_IRGRP|stat.S_IXGRP)
 
 
 def site_is_disabled(g_sitename):
