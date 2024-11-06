@@ -72,6 +72,8 @@ next:
           - victoriametrics update to 1.101.0
 
 5.30     Jan 29 2024
+          - OMD:
+            - create new sites with permissions 0750 and group omd
           - Thruk: update to 3.12
           - LMD: Update 2.1.9
           - Monitoring-Plugins: update to 2.3.5
