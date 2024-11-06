@@ -13,7 +13,7 @@ BEGIN {
     import TestUtils;
 }
 
-plan( tests => 298 );
+plan( tests => 299 );
 
 ##################################################
 # get version strings
@@ -99,10 +99,10 @@ my $tests = [
     { cmd => "/bin/grep 'mod_gearman: initialized version ".$modgearman_version." \(libgearman ".$libgearman_version."\)' /omd/sites/$site/var/$core/$core.log", like => '/initialized/' },
     { cmd => "/bin/su - $site -c 'bin/send_gearman --server=127.0.0.1:4730 --keyfile=etc/mod-gearman/secret.key --host=$host --message=test'" },
     { cmd => "/bin/su - $site -c 'bin/send_gearman --server=127.0.0.1:4730 --keyfile=etc/mod-gearman/secret.key --host=$host --service=\"$service\" --message=test'" },
+    { cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_gearman -H 127.0.0.1:4730'", like => '/check_gearman OK/' },
+    { cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_gearman -H 127.0.0.1:4730 -q host'", like => '/check_gearman OK/', sleep => 1 },
     { cmd => "/bin/grep -i 'mod_gearman: ERROR' /omd/sites/$site/var/$core/$core.log", 'exit' => 1, like => '/^\s*$/' },
     { cmd => "/bin/grep -i 'mod_gearman: WARN' /omd/sites/$site/var/$core/$core.log", 'exit' => 1, like => '/^\s*$/' },
-    { cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_gearman -H 127.0.0.1:4730'", like => '/check_gearman OK/' },
-    { cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_gearman -H 127.0.0.1:4730 -q host'", like => '/check_gearman OK/' },
 ];
 for my $test (@{$tests}) {
     TestUtils::test_command($test);
