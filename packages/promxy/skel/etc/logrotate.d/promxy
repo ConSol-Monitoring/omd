@@ -1,4 +1,4 @@
-###ROOT###/var/log/promxy.log {
+###ROOT###/var/log/promxy/promxy.log {
     daily
     rotate 7
     compress

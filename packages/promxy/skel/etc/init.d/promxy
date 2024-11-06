@@ -16,7 +16,6 @@ cd || exit 1
 DAEMON=${OMD_ROOT}/local/bin/promxy
 
 CFG_FILE=${OMD_ROOT}/etc/promxy/config.yaml
-LOG_DIR=${OMD_ROOT}/var/log/promxy
 LOG_FILE=${OMD_ROOT}/var/log/promxy/promxy.log
 PID_FILE=${OMD_ROOT}/tmp/run/promxy.pid
 
