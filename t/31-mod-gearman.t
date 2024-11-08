@@ -13,7 +13,7 @@ BEGIN {
     import TestUtils;
 }
 
-plan( tests => 299 );
+plan( tests => 316 );
 
 ##################################################
 # get version strings
@@ -40,6 +40,10 @@ TestUtils::file_contains({file => "/opt/omd/sites/$site/etc/mod-gearman/worker.c
 # increase worker loglevel
 TestUtils::test_command({ cmd => "/usr/bin/env sed -i -e 's/^debug=0/debug=2/g' /opt/omd/sites/$site/etc/mod-gearman/worker.cfg" });
 TestUtils::file_contains({file => "/opt/omd/sites/$site/etc/mod-gearman/worker.cfg", like => ['/^debug=2/mx'] });
+
+##################################################
+# decrease result worker
+TestUtils::test_command({ cmd => "/usr/bin/env sed -i -e 's/^result_workers=1/result_workers=3/g' /opt/omd/sites/$site/etc/mod-gearman/server.cfg" });
 
 # create test host/service
 TestUtils::prepare_obj_config('t/data/omd/testconf1', '/omd/sites/'.$site.'/etc/'.$core.'/conf.d', $site);
@@ -85,6 +89,9 @@ my $preps = [
     { cmd => "/bin/su - $site -c 'echo -e \"".'GET hosts\nFilter: name = '.$host.'\nColumns: plugin_output\n'."\" | lq'", waitfor => 'Please\ remove\ this\ host\ later' },
     { cmd => "/bin/su - $site -c './share/thruk/support/reschedule_all_checks.sh'", like => '/COMMAND/' },
     { cmd => "/bin/su - $site -c 'thruk r \"/services?columns=has_been_checked&has_been_checked=0\"'", like => '/^\[\]$/smx', waitfor => '\[\]', maxwait => 10 },
+    { cmd => "/bin/su - $site -c 'rm tmp/run/live'" },
+    { cmd => "/bin/su - $site -c 'omd reload $core'", like => '/Reloading '.$core.' configuration/', sleep => 1 },
+    { cmd => "/bin/su - $site -c 'ls -la tmp/run'", like => '/live/', waitfor => 'live', maxwait => 10 },
     { cmd => "/bin/su - $site -c './share/thruk/support/reschedule_all_checks.sh'", like => '/COMMAND/' }, # run again so dummy checks have the correct output
     { cmd => "/bin/su - $site -c 'echo \"GET services\nFilter: host_name = localhost\nFilter: description = check_locale.py\nColumns: state plugin_output long_plugin_output\n\n\" | lq'", like => '/^0;LANG=/' },
 ];
@@ -98,7 +105,7 @@ my $tests = [
     { cmd => "/bin/grep 'Event broker module.*$module.*initialized successfully' /omd/sites/$site/var/$core/$core.log", like => '/successfully/' },
     { cmd => "/bin/grep 'mod_gearman: initialized version ".$modgearman_version." \(libgearman ".$libgearman_version."\)' /omd/sites/$site/var/$core/$core.log", like => '/initialized/' },
     { cmd => "/bin/su - $site -c 'bin/send_gearman --server=127.0.0.1:4730 --keyfile=etc/mod-gearman/secret.key --host=$host --message=test'" },
-    { cmd => "/bin/su - $site -c 'bin/send_gearman --server=127.0.0.1:4730 --keyfile=etc/mod-gearman/secret.key --host=$host --service=\"$service\" --message=test'" },
+    { cmd => "/bin/su - $site -c 'bin/send_gearman --server=127.0.0.1:4730 --keyfile=etc/mod-gearman/secret.key --host=$host --service=\"$service\" --message=test'", sleep => 1 },
     { cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_gearman -H 127.0.0.1:4730'", like => '/check_gearman OK/' },
     { cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_gearman -H 127.0.0.1:4730 -q host'", like => '/check_gearman OK/', sleep => 1 },
     { cmd => "/bin/grep -i 'mod_gearman: ERROR' /omd/sites/$site/var/$core/$core.log", 'exit' => 1, like => '/^\s*$/' },
