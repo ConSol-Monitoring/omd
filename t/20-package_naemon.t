@@ -11,7 +11,7 @@ BEGIN {
     import TestUtils;
 }
 
-plan( tests => 171 );
+plan( tests => 175 );
 
 ##################################################
 # create our test site
@@ -28,6 +28,8 @@ my $tests = [
   { cmd => "/bin/su - $site -c 'cp share/doc/naemon/example.cfg etc/naemon/conf.d/'", like => '/^$/' },
   { cmd => "/bin/su - $site -c 'omd check naemon'", like => '/Running configuration check\.+\s*done/', errlike => '/Things look okay/', fatal => 1 },
   { cmd => $omd_bin." start $site" },
+
+  { cmd => "/bin/su - $site -c 'naemon -V'", like => '/Naemon Core.*Build: omd-/' },
 
   { cmd => "/bin/su - $site -c 'test -S tmp/run/live'", like => '/^$/' },
   { cmd => "/bin/su - $site -c 'test -p tmp/run/naemon.cmd'", like => '/^$/' },

@@ -33,6 +33,7 @@ build:
 	    ( cd $(DIR) && patch -p1 -b -F 5 ) < $$p ; \
 	done
 	cd $(DIR) && CFLAGS="$(CFLAGS)" ./configure $(CONFIGUREOPTS)
+	echo '#define OMD_VERSION "$(OMD_VERSION)"' >> $(DIR)/config.h
 	$(MAKE) -C $(DIR) all
 
 install:

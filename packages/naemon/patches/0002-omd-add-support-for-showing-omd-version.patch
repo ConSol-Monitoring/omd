@@ -1,0 +1,28 @@
+From 85a354d070ba27effdd00796442dce1fa3227b83 Mon Sep 17 00:00:00 2001
+From: Sven Nierlein <sven@consol.de>
+Date: Fri, 8 Nov 2024 10:53:12 +0100
+Subject: [PATCH] add support for showing omd version
+
+---
+ src/naemon/naemon.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/src/naemon/naemon.c b/src/naemon/naemon.c
+index 72979036..fc1a5119 100644
+--- a/src/naemon/naemon.c
++++ b/src/naemon/naemon.c
+@@ -239,7 +239,11 @@ int main(int argc, char **argv)
+ 	}
+ 
+ 	if (daemon_mode == FALSE) {
++#ifdef OMD_VERSION
++		printf("\nNaemon Core " VERSION " (Build: omd-" OMD_VERSION ")\n");
++#else
+ 		printf("\nNaemon Core " VERSION "\n");
++#endif
+ 		printf("Copyright (c) 2013-present Naemon Core Development Team and Community Contributors\n");
+ 		printf("Copyright (c) 2009-2013 Nagios Core Development Team and Community Contributors\n");
+ 		printf("Copyright (c) 1999-2009 Ethan Galstad\n");
+-- 
+2.39.5
+
