@@ -1877,7 +1877,7 @@ def call_init_scripts(sitename, command, daemon = None):
     # Restart: Do not restart each service after another,
     # but first do stop all, then start all again! This
     # preserves the order.
-    if command == "restart":
+    if command == "restart" and daemon == None:
         call_init_scripts(sitename, "stop", daemon)
         call_init_scripts(sitename, "start", daemon)
         return

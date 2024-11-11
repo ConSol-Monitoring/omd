@@ -95,6 +95,7 @@ __generic_init() {
     ;;
 
     reload|force-reload)
+      [ "$CORE_NOVERIFY" ] || __generic_init_verify_config quiet || return 1
       RELOADFN="__generic_init_reload"
       if [ "$RELOAD_RESTARTS" ]; then
         RELOADFN="__generic_init_restart"
@@ -336,7 +337,6 @@ __generic_init_reload() {
       return 1
     fi
   fi
-  [ "$CORE_NOVERIFY" ] || __generic_init_verify_config quiet || return 1
   echo -n " (PID: ${PID})... "
   if ! kill -HUP ${PID}; then
     echo "ERROR: failed to send SIGHUP"
@@ -349,7 +349,6 @@ __generic_init_reload() {
 ################################################################################
 __generic_init_restart() {
   [ "$CORE_NOVERIFY" ] || __generic_init_verify_config quiet || return 1
-  CORE_NOVERIFY=1 # no need to verify twice
   $0 stop && sleep 0.5 && $0 start && return 0
   return 1
 }
@@ -366,9 +365,19 @@ __generic_init_kill_session() {
 
 ################################################################################
 __generic_init_verify_config() {
+  export CORE_NOVERIFY=1 # no need to verify twice in one run
   if [ -n "$CHECK_CALLBACK" ]; then
+    if [ "$1" = "quiet" ]; then
+      echo -n "Running ${NAME} configuration check... "
+    fi
     if ! $CHECK_CALLBACK "$*"; then
+      if [ "$1" = "quiet" ]; then
+        echo "FAILED "
+      fi
       return 1
+    fi
+    if [ "$1" = "quiet" ]; then
+      echo "OK "
     fi
   fi
   return 0

@@ -85,7 +85,7 @@ __generic_init_reload() {
 
 verify_config() {
     if [ "$1" != "quiet" ]; then
-        echo -n "Running configuration check... "
+        echo -n "Running ${NAME} configuration check... "
     fi
     RESULT=$($DAEMON $OPTS -S 2>&1)
     if [ $? -eq 0 ]; then
@@ -96,7 +96,7 @@ verify_config() {
         return 0
     else
         if [ "$1" != "quiet" ]; then
-            echo "CONFIG ERROR! Aborted. Check your apache configuration."
+            echo "CONFIG ERROR! Aborted. Check your ${NAME} configuration."
         fi
         echo "$RESULT" >&2
         return 1
