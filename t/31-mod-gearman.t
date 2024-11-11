@@ -57,7 +57,7 @@ TestUtils::test_command({ cmd => "/bin/su - $site -c 'echo \"p test\" > etc/test
 TestUtils::test_command({ cmd => "/usr/bin/env sed -i -e 's/^status_update_interval=30/status_update_interval=3/g' /opt/omd/sites/$site/etc/$core/$core.d/tuning.cfg" });
 
 ##################################################
-TestUtils::test_command({ cmd => "/bin/su - $site -c 'omd check naemon'", like => '/Running configuration check.*?done/', errlike => '/Things look okay/'}) or TestUtils::bail_out_clean("no further testing without site");
+TestUtils::test_command({ cmd => "/bin/su - $site -c 'omd check naemon'", like => '/Running naemon configuration check.*?done/', errlike => '/Things look okay/'}) or TestUtils::bail_out_clean("no further testing without site");
 
 ##################################################
 # prepare site

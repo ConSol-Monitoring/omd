@@ -26,7 +26,7 @@ my $tests = [
   { cmd => $omd_bin." config $site set CORE naemon" },
 
   { cmd => "/bin/su - $site -c 'cp share/doc/naemon/example.cfg etc/naemon/conf.d/'", like => '/^$/' },
-  { cmd => "/bin/su - $site -c 'omd check naemon'", like => '/Running configuration check\.+\s*done/', errlike => '/Things look okay/', fatal => 1 },
+  { cmd => "/bin/su - $site -c 'omd check naemon'", like => '/Running naemon configuration check\.+\s*done/', errlike => '/Things look okay/', fatal => 1 },
   { cmd => $omd_bin." start $site" },
 
   { cmd => "/bin/su - $site -c 'naemon -V'", like => '/Naemon Core.*Build: omd-/' },
