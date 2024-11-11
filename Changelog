@@ -6,6 +6,7 @@ next:
             - fix dropping root privileges on omd disable command
             - omd cleanup: add --dry-run / -n option
             - omd cleanup: add --keep    / -k option
+            - add -y/--yes option to accept some dialogs automatically
           - thruk:
             - update to 3.18
             - lmd update to 2.2.3

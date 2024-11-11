@@ -52,6 +52,7 @@ import typing
 # Some global variables
 opt_verbose     = False
 opt_force       = False
+opt_yes         = False
 opt_help        = False
 opt_version     = None
 
@@ -237,6 +238,8 @@ def dialog_regex(title, text, regex, value, oktext, canceltext):
 
 
 def dialog_yesno(text, yeslabel = "yes", nolabel = "no"):
+    if opt_yes and yeslabel == "yes":
+        return True
     state, response = run_dialog(["--colors", "--no-collapse", "--yes-label", yeslabel, "--no-label", nolabel, "--yesno", text, "0", "0"])
     return state
 
@@ -5243,6 +5246,7 @@ argparser.add_argument('command', nargs='?')
 argparser.add_argument('-V', '--version')
 argparser.add_argument('-v', '--verbose',     action="count", default=0)
 argparser.add_argument('-f', '--force',       action="count", default=0)
+argparser.add_argument('-y', '--yes',         action="count", default=0)
 argparser.add_argument('-h', '--help',        action="count", default=0)
 args, main_args = argparser.parse_known_args(sys.argv[1:])
 
@@ -5290,6 +5294,7 @@ for spec in cmd_spec.option_spec:
 args, main_args = argparser.parse_known_args(sys.argv[1:])
 opt_verbose     = args.verbose     >= 1
 opt_force       = args.force       >= 1
+opt_yes         = args.yes         >= 1
 opt_help        = args.help        >= 1 or opt_help
 
 # check if there are any arguments left?
@@ -5364,7 +5369,7 @@ if g_sitename and command != "rm":
     clear_environment()
     set_environment()
 
-if cmd_spec.confirm and not opt_force:
+if cmd_spec.confirm and not opt_force and not opt_yes:
     sys.stdout.write("%s (yes/NO): " % cmd_spec.confirm_text)
     sys.stdout.flush()
     a = sys.stdin.readline().strip()
