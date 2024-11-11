@@ -1,0 +1,112 @@
+From 802098eac817836b3e85187201623e46f0f234a3 Mon Sep 17 00:00:00 2001
+From: Sven Nierlein <sven@consol.de>
+Date: Mon, 11 Nov 2024 15:41:22 +0100
+Subject: [PATCH] shutdown threads earlier
+
+naemon unloads modules at the end of the shutdown process, so we
+need to shutdown threads earlier already when receiving the end of
+eventloop event. After that event, we must not access objects anymore.
+---
+ src/module.c | 57 +++++++++++++++++++++++++++++++++-------------------
+ 1 file changed, 36 insertions(+), 21 deletions(-)
+
+diff --git a/src/module.c b/src/module.c
+index a0bdd7f..dbd482a 100644
+--- a/src/module.c
++++ b/src/module.c
+@@ -100,6 +100,7 @@ time_t g_last_log_rotation = -1;
+ int g_eventloopstarted = false;
+ 
+ void *client_thread(void *data __attribute__ ((__unused__)));
++void deregister_callbacks();
+ 
+ static void reap_client_threads()
+ {
+@@ -371,8 +372,10 @@ void close_socket()
+ {
+     if (!g_use_inet_socket)
+         unlink(g_socket_addr);
+-    iobroker_close(nagios_iobs, g_socket_fd);
+-    g_socket_fd = -1;
++    if (g_socket_fd != -1) {
++        iobroker_close(nagios_iobs, g_socket_fd);
++        g_socket_fd = -1;
++    }
+ }
+ 
+ int broker_host(int event_type __attribute__ ((__unused__)), void *data __attribute__ ((__unused__)))
+@@ -483,9 +486,33 @@ static void schedule_timeperiods_cache_update(struct nm_event_execution_properti
+     return;
+ }
+ 
++void shutdown_threads() {
++    size_t i;
++
++    g_should_terminate = true;
++    close_socket();
++
++    /*
++    * Make sure all client connections are terminated before
++    * returning control. Since we touch global naemon state everywhere,
++    * this is strictly mandatory.
++    */
++    if(g_client_threads != NULL) {
++        for (i = 0; i < g_num_client_threads; ++i) {
++            if (pthread_join(*(g_client_threads[i]), NULL) != 0) {
++                logger(LG_ERR, "Failed to join with client thread");
++            }
++            free(g_client_threads[i]);
++        }
++        free(g_client_threads);
++        g_client_threads = NULL;
++    }
++}
++
+ int broker_process(int event_type __attribute__ ((__unused__)), void *data)
+ {
+     int ret;
++
+     struct nebstruct_process_struct *ps = (struct nebstruct_process_struct *)data;
+     if (ps->type == NEBTYPE_PROCESS_EVENTLOOPSTART) {
+         g_eventloopstarted = true;
+@@ -498,6 +525,12 @@ int broker_process(int event_type __attribute__ ((__unused__)), void *data)
+             return ERROR;
+         }
+     }
++    if (ps->type == NEBTYPE_PROCESS_EVENTLOOPEND) {
++        logger(LG_INFO, "deinitializing");
++        g_eventloopstarted = false;
++        deregister_callbacks();
++        shutdown_threads();
++    }
+     return OK;
+ }
+ 
+@@ -810,26 +843,8 @@ int nebmodule_init(int flags __attribute__ ((__unused__)), char *args, void *han
+ 
+ int nebmodule_deinit(int flags __attribute__ ((__unused__)), int reason __attribute__ ((__unused__)))
+ {
+-    size_t i;
+-    logger(LG_INFO, "deinitializing");
+-    g_should_terminate = true;
+-    close_socket();
+-
+-    /*
+-     * Make sure all client connections are terminated before
+-     * returning control. Since we touch global naemon state everywhere,
+-     * this is strictly mandatory.
+-     */
+-    for (i = 0; i < g_num_client_threads; ++i) {
+-        if (pthread_join(*(g_client_threads[i]), NULL) != 0) {
+-            logger(LG_ERR, "Failed to join with client thread");
+-        }
+-        free(g_client_threads[i]);
+-    }
+-    free(g_client_threads);
+-
++    shutdown_threads();
+     store_deinit();
+-    deregister_callbacks();
+     close_logfile();
+     return 0;
+ }
