@@ -13,7 +13,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 1007 );
+plan( tests => 1029 );
 
 ##################################################
 # create our test site
@@ -182,6 +182,10 @@ my $urls = [
 # recurring downtimes
   { url => '/thruk/cgi-bin/extinfo.cgi', post => { 'type' => 6, 'recurring' => 'save', 'target' => 'host', 'host' => $host, 'comment' => 'automatic downtime', 'send_type_1' => 'month', 'send_day_1' => 1, 'week_day_1' => '', 'send_hour_1' => 0, 'send_minute_1' => 0, 'duration' => 120, 'childoptions' => 0, 'nr' => 999 }, like => '/recurring downtime saved/' },
   { url => '/thruk/cgi-bin/extinfo.cgi', post => { 'type' => 6, 'target' => 'host', 'recurring' => 'remove', 'nr' => 999, 'host' => $host }, like => '/recurring downtime removed/' },
+
+# rest api
+  { url => '/thruk/r/thruk/whoami', like => ['/omdadmin/', '/authorized_for_admin/'] },
+  { url => '/thruk/r/hosts?columns=name&name[regex]=^omd-'.$site.'$', like => ['/name.*omd-testsite/'] },
 
 # usercontent examples
   { url => '/thruk/usercontent/backgrounds/world.png', like => '/PNG/' },
