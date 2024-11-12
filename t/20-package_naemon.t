@@ -11,7 +11,7 @@ BEGIN {
     import TestUtils;
 }
 
-plan( tests => 175 );
+plan( tests => 179 );
 
 ##################################################
 # create our test site
@@ -81,6 +81,9 @@ for my $hst (sort keys %{$expected_plugin_outputs}) {
     TestUtils::test_plugin_output({ site => $site, host => $hst, service => $svc, %{$expected_plugin_outputs->{$hst}->{$svc}} });
   }
 }
+
+# latency should be in normal range
+TestUtils::test_command({ cmd => "/bin/su - $site -c './lib/monitoring-plugins/check_thruk_rest -o \"{STATUS} - max latency is {max%f}s - min latency is {min%f}s\" --perfunit=max:s \"/services?columns=max(latency):max,min(latency):min\" --critical=max:0:30 --warning=min:0:30'", like => '/^OK/' });
 
 ##################################################
 # cleanup test site

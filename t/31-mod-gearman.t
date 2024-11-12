@@ -13,7 +13,7 @@ BEGIN {
     import TestUtils;
 }
 
-plan( tests => 316 );
+plan( tests => 320 );
 
 ##################################################
 # get version strings
@@ -165,6 +165,9 @@ TestUtils::file_contains({file => "/opt/omd/sites/$site/var/$core/$core.log", li
 
 TestUtils::test_command({ cmd => "/bin/su - $site -c 'echo -e \"".'GET services\nFilter: description = multiline\nColumns: plugin_output long_plugin_output\n'."\" | lq'", like => '/^OK - firstline;secondline\\\nthirdline\\\nCONFIG_CORE=\''.$core.'\'/' });
 TestUtils::test_command({ cmd => "/bin/su - $site -c 'echo -e \"".'GET services\nFilter: description = multiline\nColumns: perf_data\n'."\" | lq'", like => '/^perf=1c$/' });
+
+# latency should be in normal range
+TestUtils::test_command({ cmd => "/bin/su - $site -c './lib/monitoring-plugins/check_thruk_rest -o \"{STATUS} - max latency is {max%f}s - min latency is {min%f}s\" --perfunit=max:s \"/services?columns=max(latency):max,min(latency):min\" --critical=max:0:10 --warning=min:0:10'", like => '/^OK/' });
 
 ##################################################
 # test internal checks
