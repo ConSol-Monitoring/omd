@@ -78,6 +78,7 @@ OS_PACKAGES          += libboost-context1.83.0
 OS_PACKAGES          += libboost-coroutine1.83.0
 OS_PACKAGES          += libboost-date-time1.83.0
 OS_PACKAGES          += libboost-filesystem1.83.0
+OS_PACKAGES          += libboost-iostreams1.83.0
 OS_PACKAGES          += libboost-program-options1.83.0
 OS_PACKAGES          += libboost-regex1.83.0
 OS_PACKAGES          += libboost-system1.83.0

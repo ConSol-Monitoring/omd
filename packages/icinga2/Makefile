@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 NAME = icinga2
-VERSION = 2.13.4
+VERSION = 2.13.10
 DIR = $(NAME)-$(VERSION)
 BOOSTDIR=boost_1_79_0
 BOOSTDEST=$(BOOSTDIR)-dest
@@ -55,7 +55,7 @@ build: $(EXTRA_BUILD_DEPS)
 	    ( cd $(DIR) ; patch -p1 ) < $$p || exit 1; \
 	done
 	cd $(DIR)/build && \
-		export CXXFLAGS=-O2; \
+		export CXXFLAGS="-O2 -fpermissive"; \
 		$(CMAKE) .. $(CONFIGUREOPTS) && \
 		make -j1
 	# save build artifacts and clean build dir to speed up cached builds
@@ -89,7 +89,9 @@ $(CMAKEDEST):
 $(BOOSTDEST): $(CMAKEDEST)
 	tar xJf $(BOOSTDIR).tar.xz
 	cd $(BOOSTDIR) && \
-		./bootstrap.sh --with-libraries=thread,system,program_options,regex,chrono,date_time,atomic,coroutine,filesystem,context --prefix=$(shell pwd)/$(BOOSTDEST) && \
+		./bootstrap.sh \
+			--with-libraries=iostreams,thread,system,program_options,regex,chrono,date_time,atomic,coroutine,filesystem,context \
+			--prefix=$(shell pwd)/$(BOOSTDEST) && \
 		./b2 cxxflags=-fPIC cflags=-fPIC install
 
 build_boost: $(BOOSTDEST)

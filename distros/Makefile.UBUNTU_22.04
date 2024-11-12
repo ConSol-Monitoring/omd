@@ -75,6 +75,7 @@ OS_PACKAGES          += libboost-context1.74.0
 OS_PACKAGES          += libboost-coroutine1.74.0
 OS_PACKAGES          += libboost-date-time1.74.0
 OS_PACKAGES          += libboost-filesystem1.74.0
+OS_PACKAGES          += libboost-iostreams1.74.0
 OS_PACKAGES          += libboost-program-options1.74.0
 OS_PACKAGES          += libboost-regex1.74.0
 OS_PACKAGES          += libboost-system1.74.0

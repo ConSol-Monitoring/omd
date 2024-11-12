@@ -33,6 +33,7 @@ next:
             - improve the trap_logger
           - coshsh update to 10.2.3
           - histou update to 0.5.3
+          - icinga2 update to 2.13.10
           - monitoring-plugins update to 2.4.0
           - node update to 20.6.1
           - omdnotificationforwarder update to 2.6.1.3
