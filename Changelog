@@ -9,7 +9,7 @@ next:
             - add -y/--yes option to accept some dialogs automatically
           - thruk:
             - update to 3.18
-            - lmd update to 2.2.3
+            - lmd update to 2.2.4
           - plugins:
             - check_dell_health update to 1.1.0.2
             - check_hpasm update to 4.10
