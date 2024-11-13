@@ -148,7 +148,7 @@ MODULES = \
           CPAN-Meta-2.150010.tar.gz \
           CPAN-Meta-YAML-0.018.tar.gz \
           Devel-CheckLib-1.13.tar.gz \
-          DBD-mysql-4.050.tar.gz \
+          DBD-mysql-4.052.tar.gz \
           Date-Calc-6.4.tar.gz \
           Date-Calc-XS-6.4.tar.gz \
           Devel-GlobalDestruction-0.14.tar.gz \
