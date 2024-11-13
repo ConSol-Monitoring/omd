@@ -2,18 +2,18 @@ This file documents the revision history for the Open Monitoring Distribution (L
 
 next:
           - omd:
+            - add -y/--yes option to accept some dialogs automatically
             - add build support for ubuntu 24.04
             - fix dropping root privileges on omd disable command
             - omd cleanup: add --dry-run / -n option
             - omd cleanup: add --keep    / -k option
-            - add -y/--yes option to accept some dialogs automatically
           - thruk:
             - update to 3.18
             - lmd update to 2.2.4
           - plugins:
             - check_dell_health update to 1.1.0.2
             - check_hpasm update to 4.10
-            - check_nwc_health update to 12.0.2
+            - check_nwc_health update to 12.0.3.1
             - check_pdu_health update to 3.0.2.1
             - check_printer_health update to 1.2.0.1
             - check_rittal_health update to 4.1
