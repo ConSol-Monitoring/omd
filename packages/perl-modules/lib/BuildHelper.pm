@@ -12,7 +12,7 @@ use Cwd;
 $Data::Dumper::Sortkeys = 1;
 my $verbose = 0;
 our($minimal_perl_version, $skip_missing, $skip_updates, $module_tr);
-do("./build.config") || do("../build.config") || do("../../build.config") || die("cannot read config in dir ".cwd());
+do("./build.config") || do("../build.config") || do("../../build.config") || do("./packages/perl-modules/build.config") || die("cannot read config in dir ".cwd());
 
 my $wget = 'wget --retry-connrefused --quiet ';
 
