@@ -8,9 +8,6 @@ BEGIN {
     use lib('t');
     require TestUtils;
     import TestUtils;
-    use FindBin;
-    use lib "$FindBin::Bin/lib/lib/perl5";
-    use BuildHelper;
 }
 
 ##################################################
