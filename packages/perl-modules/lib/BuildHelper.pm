@@ -11,14 +11,10 @@ use Cwd;
 # Settings
 $Data::Dumper::Sortkeys = 1;
 my $verbose = 0;
-my $additional_deps = {
-  'IO'                 => { 'ExtUtils::ParseXS' => '3.21' },
-  'Class::MethodMaker' => { 'Fatal'             => '1' },
-};
-# override which dependencies should not be considered a core module
-my $no_core_dependency = {
-  'Fatal' => 1,
-};
+our($minimal_perl_version, $skip_missing, $skip_updates, $module_tr);
+do("./build.config") || do("../build.config") || do("../../build.config") || die("cannot read config in dir ".cwd());
+
+my $wget = 'wget --retry-connrefused --quiet ';
 
 ####################################
 # is this a core module?
@@ -31,10 +27,19 @@ sub is_core_module {
     return if $@;
     my @v = split/\./, $Config{'version'};
     my $v = $perl_version || $v[0] + $v[1]/1000;
-    #my $v = "5.020000";
-    return if defined $no_core_dependency->{$module};
     if(exists $Module::CoreList::version{$v}{$module}) {
-        return($Module::CoreList::version{$v}{$module});
+        return($Module::CoreList::version{$v}{$module} // $perl_version);
+    }
+    return;
+}
+
+####################################
+sub skip_update {
+    my($mod) = @_;
+    for my $regex (sort keys %{$skip_updates}) {
+        if($mod =~ $regex) {
+            return($skip_updates->{$regex});
+        }
     }
     return;
 }
@@ -71,13 +76,15 @@ sub get_deps {
     print "." if $quiet == 1;
     my $meta = get_meta_for_tarball($file);
 
-    my $deps = get_deps_from_meta($meta);
-    add_additional_deps($file, $deps);
-    $deps_cache{$file} = $deps;
+    my $deps = get_deps_from_meta($meta, "runtime");
+    $deps_cache{$file} = {
+        runtime => $deps,
+        build   => get_deps_from_meta($meta, "build"),
+    };
     for my $dep (keys %{$deps}) {
         my $depv = $deps->{$dep};
         my $cv   = is_core_module($dep);
-        if($cv and version_compare($cv, $depv)) {
+        if($cv && version_compare($cv, $depv)) {
             print "   -> $dep ($depv) skipped core dependency\n" unless $quiet;
             next;
         }
@@ -93,7 +100,7 @@ sub get_deps {
 # download all dependencies for a tarball
 # needs a filename like: Storable-2.21.tar.gz
 sub download_deps {
-    my $file = shift;
+    my($file) = @_;
     return get_deps($file, 1);
 }
 
@@ -127,7 +134,7 @@ sub download_module {
     my $tarball=$urlpath; $tarball =~ s/^.*\///g;
 
     if( ! -f $tarball and !defined $already_downloaded{$urlpath}) {
-        cmd('wget --retry-connrefused -q "'.$urlpath.'"');
+        cmd(sprintf('%s "%s"', $wget, $urlpath));
         $already_downloaded{$urlpath} = 1;
         download_deps($tarball) unless $no_dep == 1;
         push @downloaded, $tarball;
@@ -147,8 +154,8 @@ sub download_module {
 
 ####################################
 sub download_src {
-    my $module = shift;
-    cmd('wget --retry-connrefused -q "http://thruk.org/libs/src/'.$module.'"');
+    my($module) = @_;
+    cmd(sprintf('%s "http://thruk.org/libs/src/%s"', $wget, $module));
     return;
 }
 
@@ -157,7 +164,7 @@ sub download_src {
 # needs a filename like: Storable-2.21.tar.gz
 # returns module name and version
 sub file_to_module {
-    my $file = shift;
+    my($file) = @_;
     my($module,$version) = ($file, 0);
 
     if($file =~ m/\-([0-9\.]*)(\.[\w\d]+)*(\.tar\.gz|\.tgz|\.zip)/) {
@@ -174,23 +181,9 @@ sub file_to_module {
 ####################################
 # return real module name
 sub translate_module_name {
-    my $name = shift;
-    my $tr = {
-        'Filter'                => 'Filter::exec',
-        'IO::Compress'          => 'IO::Compress::Base',
-        'IO::stringy'           => 'IO::Scalar',
-        'Scalar::List::Utils'   => 'List::Util::XS',
-        'libwww::perl'          => 'LWP',
-        'Template::Toolkit'     => 'Template',
-        'TermReadKey'           => 'Term::ReadKey',
-        'Gearman'               => 'Gearman::Client',
-        'PathTools'             => 'File::Spec',
-        'libnet'                => 'Net::Cmd',
-        'podlators'             => 'Pod::Man',
-        'Text::Tabs+Wrap'       => 'Text::Tabs',
-    };
+    my($name) = @_;
     $name =~ s/^inc::Module::Install.*?/Module::Install/g;
-    return $tr->{$name} if defined $tr->{$name};
+    return $module_tr->{$name} if defined $module_tr->{$name};
     return $name;
 }
 
@@ -258,7 +251,7 @@ sub get_all_deps {
 
 ####################################
 sub sort_by_dependency {
-    my $modules = shift;
+    my($modules) = @_;
 
     my @sorted;
 
@@ -310,15 +303,15 @@ sub version_compare {
 ####################################
 # sort dependencies
 sub sort_deps {
-    my $deps  = shift;
-    my $files = shift;
+    my($deps, $files) = @_;
     my $already_printed = {};
 
     # 1st clean up and resolve modules to files
     our $modules = {};
-    for my $file (keys %{$deps}) {
+    for my $file (sort keys %{$deps}) {
         $modules->{$file} = {};
-        for my $dep (keys %{$deps->{$file}}) {
+        my %combined_deps = (%{$deps->{$file}->{'build'}}, %{$deps->{$file}->{'runtime'}});
+        for my $dep (sort keys %combined_deps) {
             next if $dep eq 'perl';
             next if $dep eq 'strict';
             next if $dep eq 'warnings';
@@ -327,15 +320,16 @@ sub sort_deps {
             next if $dep eq 'utf8';
             next if $dep eq 'v';
             next if $dep eq 'IPC::Open'; # core module but not recognized
-            my $cv = is_core_module($dep, 5.008);
+            my $cv = is_core_module($dep, $minimal_perl_version);
             next if $cv;
-            my $fdep = module_to_file($dep, $files, $deps->{$file}->{$dep});
+            my $fdep = module_to_file($dep, $files, $combined_deps{$dep});
             if(defined $fdep) {
                 next if $fdep eq $file;
                 $modules->{$file}->{$fdep} = 1
             } else {
-                if($dep !~ m/^Test::/ and $dep !~ m/^Devel::/) {
-                    warn("cannot resolve dependency '$dep' to file, referenced by: $file\n") unless $already_printed->{$dep};
+                if(!defined $skip_missing->{$dep}) {
+                    # might happen, because we dont' install all build dependecies
+                    #warn("cannot resolve dependency '$dep' to file, referenced by: $file\n") unless $already_printed->{$dep};
                     $already_printed->{$dep} = 1;
                 }
             }
@@ -350,12 +344,12 @@ sub sort_deps {
 ####################################
 # get url for module
 sub get_url_for_module {
-    my $mod = shift;
+    my($mod) = @_;
     our %url_cache;
     $mod = translate_module_name($mod);
     return $url_cache{$mod} if exists $url_cache{$mod};
     for my $url ('https://metacpan.org/pod/'.$mod, 'https://metacpan.org/search?q='.$mod, 'https://metacpan.org/search?q='.$mod.'.pm') {
-        my $out = cmd("wget --retry-connrefused -O - '".$url."'", 1);
+        my $out = cmd(sprintf('%s -O - "%s"', $wget, $url), 1);
         if($out =~ m/href="([^\"]+\/authors\/id\/.*?\/.*?(\.tar\.gz|\.tgz|\.zip))">/) {
             $url_cache{$mod} = $1;
             return($1);
@@ -492,6 +486,9 @@ sub install_module {
     if($modname eq 'JSON::XS') {
         $ENV{'PERL_JSON_BACKEND'} = 'JSON::XS';
     }
+    if($modname eq 'Cpanel::JSON::XS') {
+        $ENV{'PERL_JSON_BACKEND'} = 'Cpanel::JSON::XS';
+    }
 
     return 1;
 }
@@ -600,14 +597,24 @@ sub get_meta_for_dir {
 ####################################
 # return dependencies from meta data
 sub get_deps_from_meta {
-    my($meta, $all) = @_;
-    my %deps = (%{$meta->{requires}},
-                %{$meta->{build_requires}},
-                %{$meta->{configure_requires}},
-                %{$meta->{prereqs}->{'build'}->{'requires'}},
-                %{$meta->{prereqs}->{'configure'}->{'requires'}},
-                %{$meta->{prereqs}->{'runtime'}->{'requires'}},
-               );
+    my($meta, $type) = @_;
+    my %deps;
+    if(!$type || $type eq 'runtime') {
+        if($meta->{prereqs}->{'runtime'}->{'requires'}) {
+            %deps = %{$meta->{prereqs}->{'runtime'}->{'requires'}};
+        }
+        elsif($meta->{requires}) {
+            %deps = %{$meta->{requires}};
+        }
+    }
+    elsif($type eq 'build') {
+        %deps = (
+            %{$meta->{build_requires}},
+            %{$meta->{configure_requires}},
+            %{$meta->{prereqs}->{'build'}->{'requires'}},
+            %{$meta->{prereqs}->{'configure'}->{'requires'}},
+        );
+    }
     my $stripped_deps = {};
     for my $dep (keys %deps) {
         my $val = $deps{$dep};
@@ -619,10 +626,12 @@ sub get_deps_from_meta {
         next if $dep eq 'strict';
         next if $dep eq 'lib';
         next if $dep eq 'v';
-        if(!$all) {
+        next if defined $skip_missing->{$dep};
+        if(!$type || $type eq 'runtime') {
             next if $dep eq 'IPC::Open'; # core module but not recognized
             next if $dep =~ m/^Test::/;
             next if $dep eq 'Test';
+            next if $dep =~ m/^Devel::/;
         }
         $stripped_deps->{$dep} = $val;
     }
@@ -630,22 +639,9 @@ sub get_deps_from_meta {
 }
 
 ####################################
-# add additional dependencies
-sub add_additional_deps {
-    my($file, $deps) = @_;
-    my($modname, $modvers) = file_to_module($file);
-    if($additional_deps->{$modname}) {
-        for my $key (keys %{$additional_deps->{$modname}}) {
-            $deps->{$key} = $additional_deps->{$modname}->{$key};
-        }
-    }
-    return $deps;
-}
-
-####################################
 # return dependencies from meta data
 sub _unpack {
-    my $file = shift;
+    my($file) = @_;
     if($file =~ m/\.zip$/gmx) {
         cmd("unzip $file");
     } else {
@@ -659,22 +655,18 @@ sub _unpack {
 }
 
 ####################################
-# find orphaned packages
+# returns files which are not referenced by other files
 sub get_orphaned {
     my($deps, $files, $verbose) = @_;
     my $orphaned = {};
-    for my $file (keys %{$deps}) {
+    for my $file (sort keys %{$deps}) {
         # verify this module is used somewhere
         my $found = 0;
-        for my $file2 (keys %{$deps}) {
+        for my $file2 (sort keys %{$deps}) {
             next if $file eq $file2;
-            for my $dep2 (keys %{$deps->{$file2}}) {
-                next if $dep2 eq 'perl';
-                next if $dep2 eq 'strict';
-                next if $dep2 eq 'warnings';
-                next if $dep2 eq 'lib';
-                next if $dep2 eq 'v';
-                my $fdep2 = module_to_file($dep2, $files, $deps->{$file2}->{$dep2});
+            my %combined_deps = (%{$deps->{$file2}->{'build'}}, %{$deps->{$file2}->{'runtime'}});
+            for my $dep2 (sort keys %combined_deps) {
+                my $fdep2 = module_to_file($dep2, $files, $combined_deps{$dep2});
                 next unless $fdep2;
                 $found = 1 if $fdep2 eq $file;
                 if($found && $verbose) { print "$file is used by $file2\n"; }
