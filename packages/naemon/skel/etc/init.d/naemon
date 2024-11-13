@@ -101,6 +101,11 @@ esac
 case "$1" in start|restart|reload)
     rm -f $OMD_ROOT/var/naemon/var/naemon/retention.dat??????
     rm -f $OMD_ROOT/var/naemon/objects.cache
+
+    # in case CORE_NOVERIFY is enabled, but not precache exists yet
+    if [ "$CORE_NOVERIFY" ] && ! test -s var/naemon/objects.precache; then
+        export CORE_NOVERIFY=
+    fi
 esac
 
 __generic_init "$*"

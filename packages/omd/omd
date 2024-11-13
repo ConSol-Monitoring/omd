@@ -2671,7 +2671,7 @@ def getenv(key, default = None):
 
 def clear_environment():
     # first remove *all* current environment variables
-    keep = [ "TERM" ]
+    keep = [ "TERM", "CORE_NOVERIFY" ]
     for key in list(os.environ.keys()):
         if key not in keep:
             del os.environ[key]
@@ -4060,6 +4060,9 @@ def main_umount(args, options = {}):
     sys.exit(exit_status)
 
 def main_init_action(command, args, options={}):
+    if options.no_verify > 0:
+        os.environ["CORE_NOVERIFY"] = "yes"
+
     if g_sitename:
         exit_status = init_action(command, args, options)
         sys.exit(exit_status)
@@ -4750,9 +4753,10 @@ exclude_options = [
 
 status_options = [
     ( "--version",  "-V",  { "help":"only affect services having version ARG" }),
-    ( "--auto",  None,  { "help":"show only sites with AUTOSTART = on", "action":"count", "default":0 }),
-    ( "--bare", "-b", { "help":"output plain text optimized for parsing", "action":"count", "default":0 } ),
+    ( "--auto",  None,     { "help":"show only sites with AUTOSTART = on", "action":"count", "default":0 }),
+    ( "--bare", "-b",      { "help":"output plain text optimized for parsing", "action":"count", "default":0 } ),
     ( "--parallel", "-p",  { "help":"Invoke action of sites in parallel", "action":"count", "default":0 }),
+    ( "--no-verify", "-N", { "help":"Sets CORE_NOVERIFY=yes to skip config check on start/reload", "action":"count", "default":0 }),
 ]
 
 class Command(typing.NamedTuple):
