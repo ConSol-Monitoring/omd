@@ -10,7 +10,7 @@ next:
             - omd start -N/--no-verify to set CORE_NOVERIFY=yes
             - add build support for ubuntu 24.04
           - thruk:
-            - update to 3.18
+            - update to 3.20
             - lmd update to 2.2.4
           - plugins:
             - check_dell_health update to 1.1.0.2
