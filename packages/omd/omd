@@ -150,7 +150,7 @@ class Log(object):
             self.orig  = sys.stderr
             sys.stderr = self
 
-        self.color_replace = re.compile("\033\[\d{1,2}m", re.UNICODE)
+        self.color_replace = re.compile(r"\033\[\d{1,2}m", re.UNICODE)
 
     def __del__(self):
         if self.fd == 1:
@@ -1359,7 +1359,7 @@ def update_file(relpath, old_version, new_version, userdir, old_perms, old_skel 
 
     # 3c) same, but user has changed it contents
     elif not new_type and user_changed_content:
-        if re.match('var/.*\.log$', relpath):
+        if re.match(r'var/.*\.log$', relpath):
             # simply keep old logs which should have never been in skel/ in first place
             pass
         elif dry_run:
@@ -1399,7 +1399,7 @@ def update_file(relpath, old_version, new_version, userdir, old_perms, old_skel 
 
     # 3e) same, but user hasn't changed anything -> silently delete
     elif not new_type:
-        if re.match('var/.*\.log$', relpath):
+        if re.match(r'var/.*\.log$', relpath):
             # simply keep old logs which should have never been in skel/ in first place
             pass
         delete_user_file(user_path)
@@ -2040,7 +2040,7 @@ def get_init_script_meta(script, site_config, processlist=None):
                     break
                 if not in_info_block:
                     continue
-                info = re.findall("^#\s*(\w+):\s(.*)$", line)
+                info = re.findall(r"^#\s*(\w+):\s(.*)$", line)
                 if len(info) == 0:
                     continue
                 match = info[0]
@@ -2051,7 +2051,7 @@ def get_init_script_meta(script, site_config, processlist=None):
                 elif match[0] == "ARGMATCH":
                     meta["argmatch"] = match[1].strip()
                 elif match[0] == "DEPENDS":
-                    depends = re.findall("CONFIG_(\w+)\s*([\!=]+)\s*(.*?)\s*$", line)
+                    depends = re.findall(r"CONFIG_(\w+)\s*([\!=]+)\s*(.*?)\s*$", line)
                     if len(depends) == 1:
                         meta["depends"].append(depends[0])
                     else:
@@ -3798,10 +3798,10 @@ def main_update(args, options={}):
     # is different from the current version of the site.
     if not options.dry_run and not opt_force and not dialog_yesno(
             "You are going to update:\n"
-            "site: \Z5%s\Z0\n"
-            "host: \Z5%s\Z0\n"
-            "from: \Z5%s\Z0\n"
-            "to:   \Z5%s\Z0\n"
+            r"site: \Z5%s\Z0\n"
+            r"host: \Z5%s\Z0\n"
+            r"from: \Z5%s\Z0\n"
+            r"to:   \Z5%s\Z0\n"
             "This will include updating all of you configuration files and merging "
             "changes in the default files with changes made by you. In case of conflicts "
             "your help will be needed." % (g_sitename, hostname(), from_version, to_version),
@@ -3817,12 +3817,12 @@ def main_update(args, options={}):
     # show one extra confirmation dialog when updating from 1.x/2.x to 3.x
     if int(version_numeric(from_version)) != int(version_numeric(to_version)):
         if not options.dry_run and not opt_force and dialog_yesno(
-            "\ZuMAJOR UPDATE\ZU\n"
+            r"\ZuMAJOR UPDATE\ZU\n"
             "You are going to update:\n"
-            "site: \Z5%s\Z0\n"
-            "host: \Z5%s\Z0\n"
-            "from: \Z5%s\Z0\n"
-            "to:   \Z5%s\Z0\n"
+            r"site: \Z5%s\Z0\n"
+            r"host: \Z5%s\Z0\n"
+            r"from: \Z5%s\Z0\n"
+            r"to:   \Z5%s\Z0\n"
             "Please read the migration guide at: https://labs.consol.de/omd/migration_%s.html "
             "and ensure you have a backup. You have been warned." % (g_sitename, hostname(), from_version, to_version, to_version[:1]),
             "Abort", "Continue"):
