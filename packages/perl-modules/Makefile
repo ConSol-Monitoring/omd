@@ -117,7 +117,7 @@ MODULES = \
           Term-Size-0.207.tar.gz \
           TermReadKey-2.37.tar.gz \
           Test-Cmd-1.09.tar.gz \
-          Test-Simple-1.302120.tar.gz \
+          Test-Simple-1.302204.tar.gz \
           Text-Abbrev-1.02.tar.gz \
           Text-Balanced-2.03.tar.gz \
           Text-Template-1.55.tar.gz \
