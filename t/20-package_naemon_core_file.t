@@ -3,6 +3,7 @@
 use warnings;
 use strict;
 use Test::More;
+use Time::HiRes qw/sleep/;
 use utf8;
 
 BEGIN {
@@ -44,25 +45,34 @@ if($core_pattern =~ m%\Q|/bin/false\E%mx) {
 my $naemonpid = `cat /omd/sites/$site/tmp/run/naemon.pid`; chomp($naemonpid);
 TestUtils::test_command({ cmd => "/bin/su - $site -c 'kill -s SIGSEGV $naemonpid'" });
 
-my $corefile;
+my $corefilepattern;
 if($core_pattern =~ m/\|.*systemd\-coredump/mx) {
   TestUtils::test_command({ cmd => "/usr/bin/coredumpctl list | grep -v missing", like => '/naemon/', waitfor => 'naemon' });
   `/usr/bin/coredumpctl dump naemon.dbg > /tmp/core.naemon 2>/dev/null`;
-  $corefile = glob("/tmp/core.naemon");
+  $corefilepattern = "/tmp/core.naemon";
 }
 elsif($core_pattern =~ m/\|.*apport/mx) {
   TestUtils::test_command({ cmd => "/bin/su - $site -c 'ls /var/crash/*naemon*.crash'", like => '/naemon/', waitfor => 'naemon' });
-  $corefile = glob("/var/lib/apport/coredump/*naemon* ");
+  $corefilepattern = "/var/lib/apport/coredump/*naemon*";
 }
 elsif($core_pattern =~ m/\|/mx) {
     fail("unsupported core pattern: ".$core_pattern);
 }
 else {
   TestUtils::test_command({ cmd => "/bin/su - $site -c 'ls core*'", like => '/core/', waitfor => 'core' });
-  $corefile = glob("/omd/sites/".$site."/core* ");
+  $corefilepattern = "/omd/sites/".$site."/core*";
 }
 
-ok($corefile, "got corefile: ".($corefile // "none")) or BAIL_OUT("cannot test without core file");
+ok($corefilepattern, "got core file pattern: ".($corefilepattern//"none"));
+# might take a few seconds...
+my $corefile;
+for (1..300) {
+    my @corefile = glob($corefilepattern);
+    $corefile = shift @corefile;
+    last if $corefile;
+    sleep 0.1;
+}
+ok($corefile, "got corefile: ".($corefile // "none")." for pattern: ".($corefilepattern//"none")) or BAIL_OUT("cannot test without core file");
 TestUtils::test_command({ cmd => "/bin/su - $site -c 'gdb /omd/sites/".$site."/bin/naemon.dbg -c $corefile -ex \"set pagination off\" -ex bt -ex quit'", like => ['/event_execution_loop/', '/naemon.c:/' ], errlike => undef });
 TestUtils::test_command({ cmd => "/bin/rm -f $corefile" });
 
