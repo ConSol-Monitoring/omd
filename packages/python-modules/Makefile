@@ -89,7 +89,7 @@ MODULES += resolvelib-0.8.1.tar.gz                   # ansible
 MODULES += decorator-4.4.0.tar.gz                    # jsonpath-ng-1.5.3
 MODULES += jsonpath-ng-1.5.3.tar.gz
 # for check_smb_copy
-MODULES += pysmbc-1.0.23.tar.gz
+MODULES += pysmbc-1.0.25.1.tar.gz
 # for check_vcenter
 MODULES += pyvmomi-8.0.3.0.1.tar.gz                  # check_vsphere
 # for check_redfish
