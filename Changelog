@@ -8,7 +8,6 @@ next:
             - omd cleanup: add --dry-run / -n option
             - omd cleanup: add --keep    / -k option
             - omd start -N/--no-verify to set CORE_NOVERIFY=yes
-            - add build support for ubuntu 24.04
           - thruk:
             - update to 3.20
             - lmd update to 2.2.4
