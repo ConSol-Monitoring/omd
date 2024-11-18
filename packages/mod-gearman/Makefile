@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 NAME         = mod_gearman
-VERSION      = 5.1.6
+VERSION      = 5.1.7
 DIR          = mod_gearman-$(VERSION)
 PROXY        = GearmanProxy
 PROXYVERSION = 2.08

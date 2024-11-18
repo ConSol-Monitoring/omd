@@ -25,7 +25,7 @@ next:
             - check_vsphere update to 0.3.11
             - check_wut_health update to 4.1.2.2
           - gearman:
-            - mod-gearman update to 5.1.6
+            - mod-gearman update to 5.1.7
             - mod-gearman-worker-go update to 1.5.2
           - grafana:
             - update to 11.1.5
