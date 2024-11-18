@@ -7,9 +7,20 @@ DIR        = $(NAME)-$(VERSION)
 
 DEPENDS    = python-modules
 
+# prefer system ansible if enabled in distro file (by adding ansible-core dependency)
+ifneq (,$(findstring ansible,$(OS_PACKAGES)))
+  BUILD_DEPS=
+  INSTALL_DEPS=
+else
+  BUILD_DEPS=build-ansible
+  INSTALL_DEPS=install-ansible
+endif
+
 .PHONY: skel
 
-build:
+build: $(BUILD_DEPS)
+
+build-ansible:
 	tar zxf $(DIR).tar.gz
 	export PYTHONPATH=$(shell pwd)/../python-modules/dest:$$PYTHONPATH; \
 		cd $(DIR) && python3 setup.py bdist_wheel
@@ -20,7 +31,9 @@ build:
 	export PYTHONPATH=$(shell pwd)/../python-modules/dest:$$PYTHONPATH; \
 		python3 -m pip install --no-cache-dir --no-index --no-deps --find-links=wheels/ --target=dest/ --upgrade wheels/*.whl
 
-install:
+install: $(INSTALL_DEPS)
+
+install-ansible:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/bin
 	rsync -a ./dest/bin/. $(DESTDIR)$(OMD_ROOT)/bin/.
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/python
