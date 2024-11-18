@@ -1,24 +1,27 @@
 #!/usr/bin/python3
 
+import warnings
+warnings.filterwarnings("ignore", category=DeprecationWarning)
 import cgi
 import os
 import time
 import sys
 import subprocess
-import urllib.request, urllib.parse, urllib.error
+import urllib.request
+import urllib.parse
+import urllib.error
 import re
 import socket
-import time
 try: import simplejson as json
 except ImportError: import json
 import logging
 
 from coshsh.util import setup_logging
 
-#cgi.enable()
 
 class CGIAbort(Exception):
     pass
+
 
 class ThrukCli(object):
 
@@ -68,16 +71,6 @@ class ThrukCli(object):
         except Exception as e:
             #logger.debug("output is not json: "+str(e))
             return ()
-
-    def set_thruk_timezone(self):
-        try:
-            thruk_config = self.get('/thruk/config')
-            tz = thruk_config.get("server_timezone", thruk_config.get("_server_timezone", thruk_config.get("use_timezone")))
-            logger.debug("thruk timezone is " + tz)
-            os.environ["TZ"] = tz.strip()
-            time.tzset()
-        except Exception as e:
-            pass
 
     def get_backends(self):
         try:
@@ -245,13 +238,15 @@ class ThrukCli(object):
                 break
         return downtimes
 
+
 def originating_ip():
     for vars in ["HTTP_CLIENT_IP", "HTTP_X_FORWARDED_FOR",
-        "HTTP_X_FORWARDED", "HTTP_FORWARDED_FOR", "HTTP_FORWARDED",
-        "REMOTE_ADDR"]:
+                 "HTTP_X_FORWARDED", "HTTP_FORWARDED_FOR", "HTTP_FORWARDED",
+                 "REMOTE_ADDR"]:
         if vars in os.environ:
             return os.environ[vars]
     return None
+
 
 result = {}
 statuus = {
@@ -263,15 +258,12 @@ statuus = {
   500: "Internal Server Error"
 }
 status = 200
-omdadmin = "omdadmin"
-
 
 try:
     os.environ["OMD_ROOT"] = os.environ["DOCUMENT_ROOT"].replace("/var/www", "")
     if not os.environ["OMD_ROOT"].startswith("/omd/sites/"):
         result["error"] = "This script must be run in an OMD environment"
         status = 400
-        #raise CGIAbort
     setup_logging(logdir=os.environ["OMD_ROOT"]+"/var/log", logfile="downtime-api.log", scrnloglevel=logging.CRITICAL, txtloglevel=logging.INFO, format="[%(asctime)s][%(process)d] - %(levelname)s - %(message)s")
     logger = logging.getLogger('downtime-api')
 
@@ -352,13 +344,12 @@ try:
         thruk.prefer_backend(backend)
 
     if not delete:
-        thruk.set_thruk_timezone()
         start_time = int(time.time())
-        comment = comment + " apiset" + urllib.parse.quote_plus(time.strftime("%s", time.localtime(start_time)))
+        comment = "%s apiset%d" % (comment, start_time)
         end_time = start_time + 60 * duration
         context = {
-            'start_time': time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(start_time)),
-            'end_time': time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(end_time)),
+            'start_time': start_time,
+            'end_time': end_time,
             'comment': comment,
             'delete': False,
             'plus_svc': plus_svc,
