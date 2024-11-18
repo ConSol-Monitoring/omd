@@ -12,6 +12,8 @@ next:
           - thruk:
             - update to 3.20
             - lmd update to 2.2.4
+          - naemon:
+            - update to 1.4.3
           - plugins:
             - check_dell_health update to 1.1.0.2
             - check_hpasm update to 4.10
