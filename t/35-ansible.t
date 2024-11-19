@@ -27,7 +27,7 @@ my $site    = TestUtils::create_test_site() or TestUtils::bail_out_clean("no fur
 my $makefile = "./distros/Makefile.".$os;
    $makefile =~ s/\ /_/gmx;
 ok(-r $makefile, "using distro file: ".$makefile);
-my $useSystemAnsible = `cat $makefile | sed -e '/\#.*//g' | grep ansible` ? 1 : 0;
+my $useSystemAnsible = `cat $makefile | sed -e 's/\#.*//g' | grep ansible` ? 1 : 0;
 if($useSystemAnsible) {
     TestUtils::test_command({ cmd => "/bin/su - $site -c 'test -x /usr/bin/ansible'", like => '/^$/' });
 } else {
