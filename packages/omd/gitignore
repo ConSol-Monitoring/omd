@@ -6,6 +6,8 @@ var/
 *.log
 *.rrd
 *.swp
+.git/
+.git-credentials
 etc/cron.d/thruk.auto
 etc/*/conf.d/thruk_bp_generated.cfg
 .bash_history
