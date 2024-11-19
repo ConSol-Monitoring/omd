@@ -233,7 +233,7 @@ install-global:
 # Create source tarball. This currently only works in a checked out GIT
 # repository.
 $(SOURCE_TGZ) dist:
-	git archive --prefix=omd-$(OMD_VERSION)/ --format=tar.gz --output=$(SOURCE_TGZ) HEAD
+	git -c tar.umask=0022 archive --prefix=omd-$(OMD_VERSION)/ --format=tar.gz --output=$(SOURCE_TGZ) HEAD
 
 # Creates source tarball. This does only work well in directories extracted
 # from a CLEAN git archive tarball.
