@@ -35,6 +35,8 @@ next:
             - add UnsafeAllow3F if required
           - snmptrapd:
             - improve the trap_logger
+          - Prometheus
+            - update mod_prometheus_status apache module 0.3.2
           - coshsh update to 10.2.3
           - histou update to 0.5.3
           - icinga2 update to 2.13.10
