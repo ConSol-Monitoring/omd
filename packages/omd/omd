@@ -5161,6 +5161,8 @@ def print_command_help(cmd_spec):
 def exec_other_omd(version):
     # Rerun with omd of other version
     omd_path = "/omd/versions/%s/bin/omd" % version
+    if version == OMD_VERSION:
+        bail_out(tty_error + ": this is already version %s." % version)
     if os.path.exists(omd_path):
         os.execv(omd_path, sys.argv)
         bail_out(tty_error + ": Cannot run bin/omd of version %s." % version)
