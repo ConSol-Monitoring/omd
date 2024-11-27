@@ -14,7 +14,7 @@ BEGIN {
 
 plan skip_all => 'Author test. Set $ENV{TEST_AUTHOR} to a true value to run.' unless $ENV{TEST_AUTHOR};
 plan skip_all => 'Root permissions required' unless $> == 0;
-plan( tests => 174 );
+plan( tests => 195 );
 
 my $omd_bin  = TestUtils::get_omd_bin();
 my $site     = TestUtils::create_test_site() or TestUtils::bail_out_clean("no further testing without site");
@@ -144,6 +144,17 @@ TestUtils::test_command({ cmd => $omd_bin." version -b $site",  like => "/^\Q$om
 TestUtils::test_command({ cmd => "/usr/bin/find /omd/sites/$site/ -user root -ls", like => '/^$/' });
 
 ##################################################
+# omd cleanup I
+TestUtils::test_command({ cmd => $omd_bin." cleanup -n 5", like => ["/DRY RUN/", "/\Q$omd_version\E.*In\ use/"], errlike => '/no path found matching pattern|^$/', exit => undef });
+
+##################################################
 # cleanup test site
 TestUtils::remove_test_site($site);
 `rm -rf /omd/versions/$omd_update`;
+
+##################################################
+# omd cleanup II
+TestUtils::test_command({ cmd => $omd_bin." cleanup -n 5",       like => ["/DRY RUN/", "/\Q$omd_version\E.*Default/"] });
+TestUtils::test_command({ cmd => $omd_bin." cleanup 2",          like => ["/\Q$omd_version\E.*Default/"] });
+TestUtils::test_command({ cmd => $omd_bin." cleanup",            like => ["/\Q$omd_version\E.*Default/"] });
+TestUtils::test_command({ cmd => $omd_bin." cleanup -n --force", like => ["/DRY RUN.*Uninstalling/"] });

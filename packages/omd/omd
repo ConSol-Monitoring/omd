@@ -4602,8 +4602,8 @@ def main_cleanup(args, options=None):
         version_path = os.path.join("/omd/versions", version)
 
         packages = package_manager.find_packages_of_path(version_path)
-        omdpackages = list(filter(lambda pkg: b"-addons" not in pkg, packages))
-        addonpackages = list(filter(lambda pkg: b"-addons" in pkg, packages))
+        omdpackages = list(filter(lambda pkg: "-addons" not in pkg, packages))
+        addonpackages = list(filter(lambda pkg: "-addons" in pkg, packages))
         if len(omdpackages) != 1:
             sys.stdout.write("%s%s%-30s%s Could not determine package. Keeping this version.\n" %
                     (dry_run_log, tty_bold, version, tty_normal))
@@ -4685,9 +4685,9 @@ class PackageManager(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def uninstall(self, cmd):
         p = self._execute(cmd)
-        output = p.communicate()[0]
+        output = p.communicate()[0].decode("utf-8").strip()
         if p.wait() != 0:
-            bail_out(tty_error + ": Failed to uninstall package: %s" % output.decode("utf-8").strip())
+            bail_out(tty_error + ": Failed to uninstall package: %s" % output)
 
 
     def _execute(self, cmd):
@@ -4709,13 +4709,13 @@ class PackageManagerDEB(PackageManager):
         real_path = os.path.realpath(path)
 
         p = self._execute(["dpkg", "-S", real_path])
-        output = p.communicate()[0]
+        output = p.communicate()[0].decode("utf-8").strip()
         if p.wait() != 0:
-            bail_out(tty_error + ": Failed to find packages: %s" % output.decode("utf-8").strip())
+            bail_out(tty_error + ": Failed to find packages: %s" % output)
 
-        for line in output.split(b"\n"):
-            if line.endswith(b": %s" % real_path.encode("UTF-8")):
-                return line.split(b": ", 1)[0].split(b", ")
+        for line in output.split("\n"):
+            if line.endswith(": %s" % real_path):
+                return line.split(": ", 1)[0].split(", ")
 
         return []
 
