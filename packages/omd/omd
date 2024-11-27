@@ -3471,12 +3471,12 @@ def main_mv_or_cp(what, args, options={}):
         else:
             bail_out(tty_error + ": Cannot %s site '%s' while it is running." % (action, old))
 
-    pids = find_processes_of_user(old)
-    if pids:
-        bail_out(tty_error + ": Cannot %s site '%s' while there are processes owned by %s.\n"
-                 "PIDs: %s" % (action, old, old, " ".join(pids)))
-
     if what == "mv":
+        pids = find_processes_of_user(old)
+        if pids:
+            bail_out(tty_error + ": Cannot %s site '%s' while there are processes owned by %s.\n"
+                    "PIDs: %s" % (action, old, old, " ".join(pids)))
+
         unmount_tmpfs(old, kill = options.kill)
         if not reuse:
             remove_from_fstab(old)
