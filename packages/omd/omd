@@ -238,7 +238,7 @@ def dialog_regex(title, text, regex, value, oktext, canceltext):
 
 
 def dialog_yesno(text, yeslabel = "yes", nolabel = "no"):
-    if opt_yes and yeslabel == "yes":
+    if opt_yes and yeslabel in [ "yes" , "Update!" ]:
         return True
     state, response = run_dialog(["--colors", "--no-collapse", "--yes-label", yeslabel, "--no-label", nolabel, "--yesno", text, "0", "0"])
     return state
@@ -603,7 +603,7 @@ def site_autostart(sitename):
 def site_version(sitename):
     version_link = site_dir(sitename) + "/version"
     try:
-        version = os.readlink(version_link).split("/")[-1]
+        version = os.readlink(version_link).rstrip("/").split("/")[-1]
         return version
     except Exception:
         return None
@@ -2576,7 +2576,9 @@ def init_action(command, args, options):
     if site_is_disabled(g_sitename):
         bail_out(tty_error + ": This site is disabled.")
     if site_needs_update(g_sitename):
-        bail_out(tty_error + ": This site needs to be updated with: omd update")
+        if command != "stop":
+            bail_out(tty_error + ": This site needs to be updated with: omd update")
+        return
 
     # restart is special, if there is a failing start-pre
     # hook but not a failing restart-pre hook `omd restart' can
@@ -3059,6 +3061,8 @@ def main_create(args, options={}):
     os.chdir(sitedir)
     call_scripts('post-create-root', args=[g_sitename, OMD_VERSION])
 
+    save_site_skel_backup(sitedir, g_sitename)
+
 def welcome_message(admin_password):
     sys.stdout.write("Created new site %s%s%s with version %s%s%s.\n\n" % (tty_bold, g_sitename, tty_normal, tty_bold, OMD_VERSION, tty_normal))
     sys.stdout.write("  The site can be started with '%somd start %s%s'.\n" % (tty_bold, g_sitename, tty_normal))
@@ -3265,7 +3269,7 @@ def site_is_disabled(g_sitename):
     return not os.path.exists(apache_conf)
 
 def site_needs_update(g_sitename):
-    return os.path.exists(os.path.join("/omd/apache/%s.conf" % g_sitename, ".backup_meta"))
+    return os.path.exists(os.path.join(site_dir(g_sitename), ".backup_meta")) or not os.path.exists(os.path.join(site_dir(g_sitename), "version"))
 
 def main_disable(args, options):
     if site_is_disabled(g_sitename):
@@ -3882,6 +3886,11 @@ def main_update(args, options={}):
         sys.stdout.write("using backup skeleton path from: '%s'\n" % backup_skel_path)
         old_perms = load_skel_permissions_for_path(backup_skel_path+'/skel.permissions')
 
+    if not os.path.exists(from_skelroot) and os.path.exists(os.path.join(g_sitedir, '.omd', 'skel')):
+        from_skelroot = os.path.join(g_sitedir, '.omd', 'skel')
+        sys.stdout.write("using fallback skeleton path from: '.omd'\n")
+        old_perms = load_skel_permissions_for_path('.omd/skel.permissions')
+
     # First walk through skeleton files of new version
     walk_skel(to_skelroot, update_file, (from_version, to_version, target_folder, old_perms, from_skelroot), { "dry_run":options.dry_run}, depth_first=False, filter=args)
 
@@ -3926,6 +3935,20 @@ def main_update(args, options={}):
             init_action("start", [], options)
         sync_apache_maint_page(g_sitename)
         stop_logging()
+
+    # save current skel folder
+    os.chdir(g_sitedir)
+    save_site_skel_backup(g_sitedir, g_sitename)
+
+
+def save_site_skel_backup(sitedir, siteuser):
+    # save skel to .omd as backup to make updates possible without having the old omd version
+    os.system("rm -rf %s/.omd/skel ; mkdir -p %s/.omd/skel" % (sitedir, sitedir))
+    os.system("rsync -a %s/version/skel/. %s/.omd/skel/."   % (sitedir, sitedir))
+    os.system("cp %s/share/omd/skel.permissions %s/.omd/skel.permissions" % (sitedir, sitedir))
+    os.system("chown -R %s: %s/.omd/skel 2>/dev/null"             % (siteuser, sitedir))
+    os.system("chown    %s: %s/.omd/skel.permissions 2>/dev/null" % (siteuser, sitedir))
+    os.system("chown    %s: %s/.omd 2>/dev/null"                  % (siteuser, sitedir))
 
 
 def prepare_dry_run_update_path(dry_run_path, from_version, to_version):

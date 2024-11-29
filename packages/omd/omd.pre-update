@@ -22,9 +22,13 @@ MINOR=${MINOR%%.*}
 OLD_VERSION=$(( $(( $MAJOR * 100 )) + $MINOR ))
 
 OLD_SKEL=version/skel
-if [ -e ".backup_meta/skel" ]; then
+if test -e ".backup_meta/skel"; then
     # when restoring from an non-installed version, skel folder is here
     OLD_SKEL=".backup_meta/skel"
+fi
+if test ! -e $OLD_SKEL && test -e .omd/skel; then
+    # current sites skel does not exist, but we have a local copy
+    OLD_SKEL=".omd/skel"
 fi
 
 # apply some fixes to versions until 2.20
