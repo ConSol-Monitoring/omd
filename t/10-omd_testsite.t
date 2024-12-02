@@ -12,7 +12,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 583 );
+plan( tests => 594 );
 
 my $omd_bin = TestUtils::get_omd_bin();
 
@@ -252,6 +252,10 @@ TestUtils::test_command({ cmd => "/bin/sh -c 'curl -sk -H \"X-Forwarded-Proto: h
 
 # bulk config change II
 TestUtils::test_command({ cmd => "/bin/sh -c 'echo \"APACHE_MODE=none\nAUTOSTART=off\" | omd config $site change'", like => ['/Stopping apache/', '/Stopping naemon/', '/Starting naemon/'] });
+
+# bash completion
+TestUtils::test_command({ cmd => "/bin/su - $site -c 'PS1=test source .bashrc; complete -p etc/init.d/rrdcached'", like => ['/_omd_service/', '/rrdcached/']  });
+TestUtils::test_command({ cmd => "/bin/su - $site -c 'PS1=test source .bashrc; COMP_CWORD=1 COMP_WORDS=etc/init.d/rrdcached _omd_service; echo \"\${COMPREPLY[\@]}\"'", like => ['/start/', '/stop/', '/flush/']  });
 
 # cleanup
 TestUtils::test_command({ cmd => $omd_bin." rm $site", like => '/Restarting Apache...\s*OK/', stdin => "yes\n" });

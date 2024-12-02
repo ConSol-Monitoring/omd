@@ -1,9 +1,19 @@
-_sysvdirs () 
+# bash auto completion for omd services
+_omd_service ()
 {
-    sysvdirs+=($OMD_ROOT/etc/init.d);
+    if [ "$COMP_CWORD" = "" ]; then
+        return
+    fi
+    if [ $COMP_CWORD -eq 0 ]; then
+        return
+    fi
+    local prev="${COMP_WORDS[COMP_CWORD-1]}"
+
+    if [ "$prev" != "" ]; then
+        COMPREPLY=($(compgen -W '`~/etc/init.d/${prev##*/} --help 2>/dev/null | sed -e "y/|/ /" -ne "s/^.*\(U\|msg_u\)sage.*{\(.*\)}.*$/\2/p"` ' -- "$cur"));
+    fi
 }
 
-complete -F _service $OMD_ROOT/etc/init.d/*
-complete -F _service ./etc/init.d/*
-complete -F _service etc/init.d/*
-
+complete -F _omd_service $OMD_ROOT/etc/init.d/*
+complete -F _omd_service ./etc/init.d/*
+complete -F _omd_service etc/init.d/*

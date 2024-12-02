@@ -44,6 +44,7 @@ __init_hook() {
 #   - $START_CALLBACK  function will be called after successful start.
 #   - $PREDAEMON       command will be prepended to $DAEMON but not used as PSPATTERN.
 #   - $CORE_NOVERIFY   when set to 1, skips the verify step before reload/start/restart
+#   - $EXTRAMODES      list available extra modes (used to list in help output)
 __generic_init() {
   __init_hook $0 $1 pre
   if [ -z "$DAEMON" ]; then
@@ -147,7 +148,10 @@ __generic_init() {
     ;;
 
     *)
-      echo "Usage: ${NAME} {start|stop|stop-gracefully|restart|reload|kill|status|try-restart}"
+      if [ "$EXTRAMODES" != "" ]; then
+        EXTRAMODES="|${EXTRAMODES}";
+      fi
+      echo "Usage: ${NAME} {start|stop|stop-gracefully|restart|reload|kill|status|try-restart${EXTRAMODES}}"
       exit 3
     ;;
   esac
