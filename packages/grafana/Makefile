@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 NAME       = grafana
-VERSION    = 11.1.5
+VERSION    = 11.3.2
 SRC        = $(NAME)-$(VERSION).tar.gz
 GOPATH     = go
 GOPKG      = 1.22
@@ -82,12 +82,8 @@ package:
 	rm $(GOPATH)/src/github.com/grafana/grafana/pkg/build/cmd/publish*
 	rm $(GOPATH)/src/github.com/grafana/grafana/pkg/build/cmd/what*
 	rm $(GOPATH)/src/github.com/grafana/grafana/pkg/build/cmd/upload*
-	rm $(GOPATH)/src/github.com/grafana/grafana/pkg/build/cmd/buildd*
-	rm $(GOPATH)/src/github.com/grafana/grafana/pkg/build/cmd/buildf*
 	rm $(GOPATH)/src/github.com/grafana/grafana/pkg/build/cmd/e2e*
-	rm $(GOPATH)/src/github.com/grafana/grafana/pkg/build/cmd/enterprisecheck*
 	rm $(GOPATH)/src/github.com/grafana/grafana/pkg/build/cmd/verify*
-	rm $(GOPATH)/src/github.com/grafana/grafana/pkg/build/cmd/export*
 	rm $(GOPATH)/src/github.com/grafana/grafana/pkg/build/cmd/store*
 	rm $(GOPATH)/src/github.com/grafana/grafana/pkg/build/cmd/fetch*
 	rm $(GOPATH)/src/github.com/grafana/grafana/pkg/build/cmd/grafanacom*
