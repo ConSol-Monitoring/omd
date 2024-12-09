@@ -1,11 +1,15 @@
 auth_enabled: false
 
 server:
-  http_listen_port: ${CONFIG_LOKI_HTTP_PORT}
+  http_listen_port: ${CONFIG_LOKI_HTTP_PORT:-3100}
   grpc_listen_port: 9096
+  log_level: info
+  log_format: logfmt
+  grpc_server_max_concurrent_streams: 1000
 
 limits_config:
-  retention_period: ${CONFIG_LOKI_RETENTION}
+  retention_period: ${CONFIG_LOKI_RETENTION:-32d}
+  allow_structured_metadata: false
 
 common:
   instance_addr: 127.0.0.1
@@ -25,6 +29,7 @@ compactor:
   retention_enabled: true
   retention_delete_delay: 5m
   retention_delete_worker_count: 150
+  delete_request_store: filesystem
 
 query_range:
   results_cache:
@@ -35,16 +40,24 @@ query_range:
 
 schema_config:
   configs:
-    - from: 2020-10-24
-      store: boltdb-shipper
+    - from: 2024-12-06
+      store: tsdb
       object_store: filesystem
-      schema: v11
+      schema: v13
       index:
         prefix: index_
         period: 24h
 
+pattern_ingester:
+  enabled: true
+  metric_aggregation:
+    loki_address: localhost:${CONFIG_LOKI_HTTP_PORT:-3100}
+
 ruler:
   alertmanager_url: http://${CONFIG_ALERTMANAGER_TCP_ADDR:-127.0.0.1}:${CONFIG_ALERTMANAGER_TCP_PORT:-9093}
+
+frontend:
+  encoding: protobuf
 
 analytics:
   reporting_enabled: false

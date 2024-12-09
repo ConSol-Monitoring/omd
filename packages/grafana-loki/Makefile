@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 NAME       = grafana-loki
-VERSION    = 2.9.3
+VERSION    = 3.3.1
 DIR        = loki-$(VERSION)
 SRC        = $(DIR).tar.gz
 GOPKG      = 1.22
@@ -32,6 +32,8 @@ install:
 	install -m 755 ./dest/promtail       $(DESTDIR)$(OMD_ROOT)/bin/promtail
 	install -m 755 ./dest/logcli         $(DESTDIR)$(OMD_ROOT)/bin/logcli
 	install -m 755 ./dest/chunks-inspect $(DESTDIR)$(OMD_ROOT)/bin/chunks-inspect
+	install -m 755 loki.pre-update       $(DESTDIR)$(OMD_ROOT)/lib/omd/scripts/pre-update/loki
+	install -m 755 loki.post-update      $(DESTDIR)$(OMD_ROOT)/lib/omd/scripts/post-update/loki
 
 skel:
 	sed -i 's/###GOPKG###/$(GOPKG)/' $(SKEL)/etc/init.d/loki $(SKEL)/etc/init.d/promtail

@@ -1,0 +1,27 @@
+#!/bin/bash
+#
+# LOKI - pre update hook
+#
+# This script safe old (pre v3) loki configuration files
+#
+
+cd $OMD_ROOT
+
+# dry run
+if [ -n "$OMD_UPDATE_DRY_RUN" ]; then
+    if [ "$CONFIG_LOKI" = "on" ] && grep -q "boltdb" etc/loki/loki.yaml 2>/dev/null; then
+        echo -e "\033[0;33mThe 'boltdb' store type for Loki is obsolete! Manual post-update steps are required.\033[0m"
+    fi
+    exit 5
+
+elif [ "$CONFIG_LOKI" = "on" ] && [ -f "etc/loki/loki.yaml" ]; then
+    if /usr/bin/grep -q "boltdb" etc/loki/loki.yaml; then
+        /usr/bin/grep -B 3 -A 5 "boltdb" etc/loki/loki.yaml > etc/loki/boltdb_store_config
+        cp -a etc/loki/loki.yaml etc/loki/loki_v2.9_backup
+    else
+        exit 5
+    fi
+
+else
+    exit 5
+fi

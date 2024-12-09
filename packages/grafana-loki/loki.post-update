@@ -1,0 +1,20 @@
+#!/bin/bash
+#
+# LOKI - post update hook
+#
+# check if old store boltdb-shipper is configured.
+#
+
+cd $OMD_ROOT
+
+if [ "$CONFIG_LOKI" = "on" ]; then
+    if [ -f "etc/loki/boltdb_store_config" ]; then
+        echo -e "\033[0;33mSince you used LOKI in the previous version of OMD:
+                 \t -> Please merge etc/loki/boltdb_store_config into your current loki.yaml and delete boltdb_store_config file afterwards
+                 \t -> Set 'from' date for tsdb store at least one day into future\033[0m"
+    else
+        exit 5
+    fi
+else
+    exit 5
+fi
