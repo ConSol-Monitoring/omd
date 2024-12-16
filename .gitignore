@@ -14,3 +14,4 @@ patch-stamp
 debian/changelog
 .DS_Store
 .vscode
+.vstags
