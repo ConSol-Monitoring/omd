@@ -21,7 +21,7 @@ my $tests = [
   { cmd => "/bin/su - $site -c 'omd start'", like => '/Starting/' },
   { cmd => "/bin/su - $site -c '/usr/bin/env node -v'", like => '/^v/' },
   { cmd => "/bin/su - $site -c '/usr/bin/env npm -v'",  like => '/^\d/' },
-  { cmd => "/bin/su - $site -c '/usr/bin/env NODE_PATH=lib/node_modules node share/thruk/script/puppeteer.js http://localhost:5000/ test.png 200 200 000'" },
+  { cmd => "/bin/su - $site -c '/usr/bin/env NODE_PATH=lib/node_modules node share/thruk/script/puppeteer.js http://localhost:5000/".$site."/thruk/cgi-bin/remote.cgi test.png 200 200 000'" },
 ];
 for my $test (@{$tests}) {
     TestUtils::test_command($test) || diag(`/usr/bin/env; /bin/su - $site -c '/usr/bin/env'`);
