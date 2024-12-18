@@ -1,12 +1,12 @@
 include ../../Makefile.omd
 
 NAME        = histou
-VERSION     = 0.5.2
+VERSION     = 0.5.4
 SRC         = $(NAME)-$(VERSION).tar.gz
 PWD         = $(shell pwd)
 DIR         = $(NAME)
 # GIT TAG is set automatically by "make upstream" or "make package"
-GIT_TAG     = v0.5.3
+GIT_TAG     = v0.5.4
 
 .PHONY: skel
 
