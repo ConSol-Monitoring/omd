@@ -10,7 +10,7 @@ next:
             - omd cleanup: add --keep    / -k option
             - omd start -N/--no-verify to set CORE_NOVERIFY=yes
           - thruk:
-            - update to 3.20
+            - update to 3.20.2
             - lmd update to 2.2.4
           - naemon:
             - update to 1.4.3
