@@ -4,11 +4,11 @@ next:
           - omd:
             - add -y/--yes option to accept some dialogs automatically
             - add build support for ubuntu 24.04
+            - fix bash completion for services
             - fix dropping root privileges on omd disable command
             - omd cleanup: add --dry-run / -n option
             - omd cleanup: add --keep    / -k option
             - omd start -N/--no-verify to set CORE_NOVERIFY=yes
-            - fix bash completion for services
           - thruk:
             - update to 3.20
             - lmd update to 2.2.4
@@ -18,6 +18,7 @@ next:
           - plugins:
             - check_dell_health update to 1.1.0.2
             - check_hpasm update to 4.10
+            - check_mssql_health update to 2.7.8
             - check_nwc_health update to 12.0.3.2
             - check_pdu_health update to 3.0.2.1
             - check_printer_health update to 1.2.0.1
@@ -30,6 +31,7 @@ next:
             - mod-gearman-worker-go update to 1.5.5
           - grafana:
             - update to 11.2.5
+            - loki update to 3.3.1
             - pnp-datasource update to 2.1.0
             - thruk-datasource update to 2.1.1
           - apache:
