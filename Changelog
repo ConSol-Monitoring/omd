@@ -28,7 +28,7 @@ next:
             - check_wut_health update to 4.1.2.2
           - gearman:
             - mod-gearman update to 5.1.7
-            - mod-gearman-worker-go update to 1.5.5
+            - mod-gearman-worker-go update to 1.5.6
           - grafana:
             - update to 11.2.5
             - loki update to 3.3.1
