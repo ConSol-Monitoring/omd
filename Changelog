@@ -46,6 +46,7 @@ next:
           - node update to 20.6.1
           - omdnotificationforwarder update to 2.6.1.3
           - update mod_prometheus_status apache module 0.3.2
+          - Go builds updated to 1.22.10
 
 5.40     Jul 12 2024
           - omd:
