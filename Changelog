@@ -11,7 +11,7 @@ next:
             - omd start -N/--no-verify to set CORE_NOVERIFY=yes
           - thruk:
             - update to 3.20.2
-            - lmd update to 2.2.4
+            - lmd update to 2.2.5
           - naemon:
             - update to 1.4.3
             - livestatus update to 1.4.3
