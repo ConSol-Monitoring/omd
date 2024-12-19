@@ -141,7 +141,7 @@ sub _extract_change_makefile_version {
     }
 
     _log("checking version from %s", $f) if $opt_verbose;
-    chomp(my $diff  = `git diff $last_tag$cur -- $f 2>/dev/null`);
+    chomp(my $diff  = `git diff -w $last_tag$cur -- $f 2>/dev/null`);
     if(!$diff) {
         _log(" -> no changes at all") if $opt_verbose;
         return;
