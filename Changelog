@@ -1,5 +1,10 @@
 This file documents the revision history for the Open Monitoring Distribution (Labs Edition)
 
+next:
+          - omd:
+            - removed build support for sles15sp4
+            - removed build support for sles15sp5
+
 5.50     Dec 18 2024
           - omd:
             - add -y/--yes option to accept some dialogs automatically
