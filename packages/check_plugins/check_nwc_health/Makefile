@@ -1,6 +1,7 @@
 include ../../../Makefile.omd
 
 NAME = check_nwc_health
+CHANGELOG   = https://github.com/lausser/check_nwc_health/blob/master/ChangeLog
 VERSION = 12.0.3.2
 DIR = $(NAME)-$(VERSION)
 

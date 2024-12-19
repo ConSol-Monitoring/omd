@@ -1,6 +1,7 @@
 include ../../../Makefile.omd
 
 NAME = check_pdu_health
+CHANGELOG   = https://github.com/lausser/check_pdu_health/blob/master/ChangeLog
 VERSION = 3.0.2.1
 DIR = $(NAME)-$(VERSION)
 

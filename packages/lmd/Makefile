@@ -1,6 +1,7 @@
 include ../../Makefile.omd
 
 NAME        = lmd
+CHANGELOG   = https://github.com/sni/lmd/blob/master/Changes
 #VERSION     = 1.2.0
 #BRANCH      = v$(VERSION)
 VERSION     = master

@@ -3,6 +3,7 @@ include ../../Makefile.omd
 .PHONY: skel
 
 NAME       = prometheus
+CHANGELOG  = https://github.com/prometheus/prometheus/blob/main/CHANGELOG.md
 VERSION    = 2.53.1
 BRANCH     = master
 SRC        = $(NAME)-$(VERSION).tar.gz

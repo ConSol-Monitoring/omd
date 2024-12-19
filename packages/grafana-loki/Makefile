@@ -1,6 +1,7 @@
 include ../../Makefile.omd
 
 NAME       = grafana-loki
+CHANGELOG  = https://github.com/grafana/loki/blob/main/CHANGELOG.md
 VERSION    = 3.3.1
 DIR        = loki-$(VERSION)
 SRC        = $(DIR).tar.gz

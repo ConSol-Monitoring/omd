@@ -1,8 +1,9 @@
 include ../../../Makefile.omd
 
-NAME = check_dell_health
-VERSION = 1.1.0.2
-DIR = $(NAME)-$(VERSION)
+NAME      = check_dell_health
+CHANGELOG = https://github.com/lausser/check_dell_health/blob/master/ChangeLog
+VERSION   = 1.1.0.2
+DIR       = $(NAME)-$(VERSION)
 
 .PHONY: skel
 

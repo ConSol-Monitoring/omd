@@ -1,6 +1,7 @@
 include ../../../Makefile.omd
 
 NAME = check_mysql_health
+CHANGELOG   = https://github.com/lausser/check_mysql_health/blob/master/ChangeLog
 VERSION = 2.2.2
 DIR = $(NAME)-$(VERSION)
 

@@ -1,6 +1,7 @@
 include ../../Makefile.omd
 
 NAME = icinga2
+CHANGELOG = https://github.com/Icinga/icinga2/blob/master/CHANGELOG.md
 VERSION = 2.13.10
 DIR = $(NAME)-$(VERSION)
 BOOSTDIR=boost_1_79_0

@@ -1,6 +1,7 @@
 include ../../../Makefile.omd
 
 NAME = check_wut_health
+CHANGELOG   = https://github.com/lausser/check_wut_health/blob/master/ChangeLog
 VERSION = 4.1.2.2
 DIR = $(NAME)-$(VERSION)
 

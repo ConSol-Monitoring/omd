@@ -1,6 +1,7 @@
 include ../../../Makefile.omd
 
 NAME = check_oracle_health
+CHANGELOG   = https://github.com/lausser/check_oracle_health/blob/master/ChangeLog
 VERSION = 3.3.3.2
 DIR = $(NAME)-$(VERSION)
 

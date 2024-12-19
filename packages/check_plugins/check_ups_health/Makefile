@@ -1,6 +1,7 @@
 include ../../../Makefile.omd
 
 NAME = check_ups_health
+CHANGELOG   = https://github.com/lausser/check_ups_health/blob/master/ChangeLog
 VERSION = 4.3.2
 DIR = $(NAME)-$(VERSION)
 

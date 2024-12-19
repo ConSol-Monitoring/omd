@@ -1,6 +1,7 @@
 include ../../Makefile.omd
 
 NAME        = nagflux
+CHANGELOG   = https://github.com/ConSol-Monitoring/nagflux/blob/master/CHANGELOG.md
 VERSION     = master
 BRANCH      = master
 SRC         = $(NAME)-$(VERSION).tar.gz

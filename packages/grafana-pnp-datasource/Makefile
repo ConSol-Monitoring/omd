@@ -1,6 +1,7 @@
 include ../../Makefile.omd
 
 NAME       = sni-pnp-datasource
+CHANGELOG  = https://github.com/sni/grafana-pnp-datasource/blob/master/CHANGELOG.md
 VERSION    = 2.1.0
 SRC        = $(NAME)-$(VERSION).zip
 

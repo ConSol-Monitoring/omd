@@ -1,8 +1,9 @@
 include ../../../Makefile.omd
 
-PLUGIN = check_mssql_health
-VERSION = 2.7.8
-DIR = $(PLUGIN)-$(VERSION)
+PLUGIN    = check_mssql_health
+CHANGELOG = https://github.com/lausser/check_mssql_health/blob/master/ChangeLog
+VERSION   = 2.7.8
+DIR       = $(PLUGIN)-$(VERSION)
 
 build:
 	tar xf $(DIR).tar.gz

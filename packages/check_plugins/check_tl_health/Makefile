@@ -1,6 +1,7 @@
 include ../../../Makefile.omd
 
 NAME = check_tl_health
+CHANGELOG   = https://github.com/lausser/check_tl_health/blob/master/ChangeLog
 VERSION = 1.8.0.1
 DIR = $(NAME)-$(VERSION)
 

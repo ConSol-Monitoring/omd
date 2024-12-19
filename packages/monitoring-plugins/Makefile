@@ -1,6 +1,7 @@
 include ../../Makefile.omd
 
 NAME = monitoring-plugins
+CHANGELOG = https://github.com/monitoring-plugins/monitoring-plugins/blob/master/NEWS
 VERSION = 2.4.0
 DIR = $(NAME)-$(VERSION)
 URIPARSER=0.8.6

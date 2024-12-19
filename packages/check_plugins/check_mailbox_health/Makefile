@@ -1,6 +1,7 @@
 include ../../../Makefile.omd
 
 NAME = check_mailbox_health
+CHANGELOG   = https://github.com/lausser/check_mailbox_health/blob/master/ChangeLog
 VERSION = 2.0.0.1
 DIR = $(NAME)-$(VERSION)
 

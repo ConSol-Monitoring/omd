@@ -1,6 +1,7 @@
 include ../../../Makefile.omd
 
 NAME = check_sap_health
+CHANGELOG   = https://github.com/lausser/check_sap_health/blob/master/ChangeLog
 VERSION = 3.1.0.1
 DIR = $(NAME)-$(VERSION)
 

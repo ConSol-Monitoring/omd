@@ -1,6 +1,7 @@
 include ../../Makefile.omd
 
 NAME = naemon
+CHANGELOG = https://github.com/naemon/naemon-core/blob/master/NEWS
 VERSION = 1.4.3
 DIR = $(NAME)-$(VERSION)
 

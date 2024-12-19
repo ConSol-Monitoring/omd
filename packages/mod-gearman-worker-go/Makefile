@@ -1,6 +1,7 @@
 include ../../Makefile.omd
 
 NAME        = mod-gearman-worker-go
+CHANGELOG   = https://github.com/ConSol-Monitoring/mod-gearman-worker-go/blob/master/Changes
 #VERSION     = 1.2.0
 #BRANCH      = v$(VERSION)
 VERSION     = master

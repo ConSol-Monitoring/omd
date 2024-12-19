@@ -1,6 +1,7 @@
 include ../../../Makefile.omd
 
 PLUGIN = check_sqlbase_health
+CHANGELOG   = https://github.com/lausser/check_sqlbase_health/blob/master/ChangeLog
 VERSION = 2.0
 DIR = $(PLUGIN)-$(VERSION)
 

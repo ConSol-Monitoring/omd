@@ -1,6 +1,7 @@
 include ../../../Makefile.omd
 
 NAME = check_video_health
+CHANGELOG   = https://github.com/lausser/check_video_health/blob/master/ChangeLog
 VERSION = 1.2
 DIR = $(NAME)-$(VERSION)
 

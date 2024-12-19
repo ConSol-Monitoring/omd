@@ -1,6 +1,7 @@
 include ../../Makefile.omd
 
 NAME       = grafana
+CHANGELOG  = https://github.com/grafana/grafana/blob/main/CHANGELOG.md
 VERSION    = 11.2.5
 SRC        = $(NAME)-$(VERSION).tar.gz
 GOPATH     = go

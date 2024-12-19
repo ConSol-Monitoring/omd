@@ -1,6 +1,7 @@
 include ../../../Makefile.omd
 
 NAME = check_printer_health
+CHANGELOG   = https://github.com/lausser/check_printer_health/blob/master/ChangeLog
 VERSION = 1.2.0.1
 DIR = $(NAME)-$(VERSION)
 

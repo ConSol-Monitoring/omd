@@ -1,6 +1,7 @@
 include ../../Makefile.omd
 
 NAME        = histou
+CHANGELOG   = https://github.com/ConSol-Monitoring/histou/blob/master/CHANGELOG.md
 VERSION     = 0.5.5
 SRC         = $(NAME)-$(VERSION).tar.gz
 PWD         = $(shell pwd)

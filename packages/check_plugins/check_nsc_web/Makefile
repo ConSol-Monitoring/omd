@@ -1,6 +1,7 @@
 include ../../../Makefile.omd
 
 NAME        = check_nsc_web
+CHANGELOG   = https://github.com/ConSol-Monitoring/check_nsc_web/blob/master/Changes
 BRANCH      = master
 VERSION     = master
 SRC         = $(NAME)-$(VERSION).tar.gz

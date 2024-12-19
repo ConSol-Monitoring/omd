@@ -1,6 +1,7 @@
 include ../../../Makefile.omd
 
 NAME = check_fujitsu_health
+CHANGELOG   = https://github.com/lausser/check_fujitsu_health/blob/master/ChangeLog
 VERSION = 1.6.0.1
 DIR = $(NAME)-$(VERSION)
 
