@@ -3,6 +3,7 @@
 use warnings;
 use strict;
 use Getopt::Long;
+use POSIX qw(strftime);
 
 ################################################################################
 my @categories = qw/omd thruk naemon plugins gearman grafana prometheus/;
@@ -17,18 +18,22 @@ my $renames = {
 my $plugin_files = {
     "check_vsphere" => "packages/python-modules/src/checkvsphere-(.*).tar.gz",
 };
+my $changelogs = {
+    "check_vsphere" => "https://github.com/ConSol-Monitoring/check_vsphere/blob/main/CHANGES.md",
+};
 
 ################################################################################
-my($opt_help, $opt_tag, $opt_verbose, $opt_write);
+my($opt_help, $opt_tag, $opt_verbose, $opt_write, $opt_release_notes);
 main();
 exit(0);
 
 ################################################################################
 sub main {
-    GetOptions ("t|tag=s"   => \$opt_tag,
-                "v|verbose" => \$opt_verbose,
-                "w|write"   => \$opt_write,
-                "h|help   " => \$opt_help)
+    GetOptions ("t|tag=s"         => \$opt_tag,
+                "v|verbose"       => \$opt_verbose,
+                "w|write"         => \$opt_write,
+                "r|release_notes" => \$opt_release_notes,
+                "h|help"          => \$opt_help)
     or die("Error in command line arguments\n");
     if($opt_help) {
         print "usage: $0 [--tag=<tag>] [-v|--verbose] [-w|--write]\n\n";
@@ -37,7 +42,11 @@ sub main {
     }
 
     if($opt_write && $opt_tag) {
-        die("write can only be used for next (without --tag)");
+        die("-w/--write can only be used for next (without --tag)");
+    }
+
+    if($opt_write && $opt_release_notes) {
+        die("-w/--write cannot be used in combination with -r/--release_notes");
     }
 
     # get last git tag
@@ -51,6 +60,10 @@ sub main {
 
     my $changes = _fetch_existing_changlog($cur);
     $changes = _apply_new_changes($changes, $cur, $last_tag);
+    if($opt_release_notes) {
+        print _format_release_notes($opt_tag, $changes);
+        return;
+    }
     my $txt = _format_changes($cur, $changes);
 
     print "################# Changelog #################\n";
@@ -64,7 +77,7 @@ sub main {
 sub _format_changes {
     my($cur, $changes) = @_;
 
-	my $txt = "";
+    my $txt = "";
     $txt .= sprintf("%s:\n", $cur eq 'HEAD' ? 'next' : $cur);
     for my $cat (@categories) {
         next unless $changes->{$cat};
@@ -243,7 +256,9 @@ sub _fetch_existing_changlog {
 
     my $head = shift @old;
     shift @old while($old[0] =~ m/^\s*$/mx); # trim empty lines
-    return unless $old[0] =~ m/^next:/mx;
+    if($cur eq 'HEAD') {
+        return unless $old[0] =~ m/^next:/mx;
+    }
     shift @old;
     my @current;
     while($old[0] !~ m/^\s*$/mx) {
@@ -276,6 +291,99 @@ sub _fetch_existing_changlog {
     }
 
     return($changes);
+}
+
+################################################################################
+sub _format_release_notes {
+    my($tag, $changes) = @_;
+    my $date = strftime("%Y-%m-%d", localtime);
+    my $omd_version = $tag;
+    $omd_version =~ s/^v//gmx;
+    $omd_version =~ s/-labs-edition//gmx;
+    my $txt = <<EOT;
+---
+date: ${date}T00:00:00.000Z
+title: "OMD $omd_version was released"
+linkTitle: "OMD $omd_version"
+tags:
+  - omd
+  - linux
+  - grafana
+  - prometheus
+  - victoriametrics
+  - thruk
+  - naemon
+  - lmd
+  - plugins
+---
+A new version of OMD was released.
+
+### Changelog
+
+EOT
+
+    for my $cat (@categories) {
+        next unless $changes->{$cat};
+        $txt .= _format_release_cat($changes, $cat);
+    }
+    for my $cat (sort keys %{$changes}) {
+        next if $cat eq '';
+        next if grep(/$cat/, @categories);
+        $txt .= _format_release_cat($changes, $cat);
+    }
+    for my $cat (sort keys %{$changes}) {
+        next if $cat ne '';
+        $txt .= _format_release_cat($changes, $cat);
+    }
+    return($txt);
+
+}
+
+################################################################################
+sub _format_release_cat {
+    my($changes, $cat) = @_;
+    my $txt = "";
+    my $indent = 0;
+    if($cat ne '') {
+        $txt .= sprintf("* %s:\n", , $cat);
+        $indent = 2;
+    }
+    for my $prj (sort keys %{$changes->{$cat}}) {
+        my $version = $changes->{$cat}->{$prj};
+        my $name = $prj || $cat;
+        if(defined $version) {
+            my $link = _get_changelog_link($cat, $name);
+            if($link) {
+                $txt .= sprintf("%s* %s: [%s](%s)\n", (" " x $indent), $name, $version, $link);
+            } else {
+                $txt .= sprintf("%s* %s: %s\n", (" " x $indent), $name, $version);
+            }
+        } else {
+            $txt .= sprintf("%s* %s\n", (" " x $indent), $name);
+        }
+    }
+    return($txt);
+}
+
+################################################################################
+sub _get_changelog_link {
+    my($cat, $name) = @_;
+    return($changelogs->{$name}) if $changelogs->{$name};
+    my $file = 'packages/'.$name.'/Makefile';
+    if($cat && $cat eq 'plugins') {
+        $file = 'packages/check_plugins/'.$name.'/Makefile';
+    }
+    if(!-f $file) {
+        $file = 'packages/'.$cat.'-'.$name.'/Makefile';
+    }
+
+    if(-f $file) {
+        my($out) = `grep CHANGELOG $file`;
+        if($out && $out =~ m/\s*=\s*(.*?)\s*$/mx) {
+            return(_trim_whitespace($1));
+        }
+    }
+    return;
 }
 
 ################################################################################

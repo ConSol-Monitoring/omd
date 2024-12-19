@@ -84,7 +84,7 @@ else
 DEFAULT_BUILD=build
 endif
 
-.PHONY: install-global Changelog
+.PHONY: install-global Changelog release_notes_blog.md
 
 omd: $(DEFAULT_BUILD)
 
@@ -315,6 +315,11 @@ version:
 changelog: Changelog
 Changelog:
 	./t/changelog.pl --write
+
+release_notes_blog: release_notes_blog.md
+release_notes_blog.md:
+	./t/changelog.pl -r --tag=$(shell git describe --tags --abbrev=0) > release_notes_blog.md
+	@echo "release_notes_blog.md written"
 
 test:
 	t/test_all.sh
