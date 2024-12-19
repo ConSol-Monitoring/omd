@@ -67,7 +67,12 @@ case "$1" in
             if test -d /opt/omd; then
                 rmdir --ignore-fail-on-non-empty /opt/omd
             fi
-      else
+            if [ -d /usr/lib/systemd/system/. ]; then
+                systemctl disable omd.service || :
+                rm -f /usr/lib/systemd/system/omd.service
+                systemctl daemon-reload || :
+            fi
+        else
         if [ -d /usr/lib/systemd/system/. ]; then
             rm -f /usr/lib/systemd/system/omd.service
             cp -fp /omd/versions/default/share/omd/omd.service /usr/lib/systemd/system/omd.service
