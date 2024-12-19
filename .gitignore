@@ -15,3 +15,4 @@ debian/changelog
 .DS_Store
 .vscode
 .vstags
+release_notes_blog.md

@@ -16,10 +16,14 @@ my $renames = {
     'mod-gearman-worker-go' => { cat => "gearman" },
 };
 my $plugin_files = {
-    "check_vsphere" => "packages/python-modules/src/checkvsphere-(.*).tar.gz",
+    "check_vsphere"                       => "packages/python-modules/src/checkvsphere-(.*).tar.gz",
+    "omdnotificationforwarder"            => "packages/python-modules/src/omdnotificationforwarder-(.*)-py3-none-any.whl",
+    "mod_prometheus_status apache module" => "packages/apache-omd/mod_prometheus_status-(.*).tar.gz",
 };
 my $changelogs = {
-    "check_vsphere" => "https://github.com/ConSol-Monitoring/check_vsphere/blob/main/CHANGES.md",
+    "check_vsphere"                       => "https://github.com/ConSol-Monitoring/check_vsphere/blob/main/CHANGES.md",
+    "omdnotificationforwarder"            => "https://github.com/lausser/noteventificationforhandlerwarder/releases",
+    "mod_prometheus_status apache module" => "https://github.com/ConSol-Monitoring/apache_mod_prometheus_status/blob/master/Changelog",
 };
 
 ################################################################################
@@ -258,8 +262,14 @@ sub _fetch_existing_changlog {
     shift @old while($old[0] =~ m/^\s*$/mx); # trim empty lines
     if($cur eq 'HEAD') {
         return unless $old[0] =~ m/^next:/mx;
+    } else {
+        my $version = $cur;
+        $version =~ s/^v//gmx;
+        $version =~ s/-labs-edition$//gmx;
+        shift @old while(scalar @old > 0 && $old[0] !~ m/^\s*$version/mx); # remove lines until our version
     }
     shift @old;
+
     my @current;
     while($old[0] !~ m/^\s*$/mx) {
         push @current, shift @old;
