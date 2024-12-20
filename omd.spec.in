@@ -78,7 +78,7 @@ find \
     \) \
     -print0 \
   | xargs -0 -n 500 strip 2>&1 \
-  | grep -ivP 'File format not recognized|File truncated' \
+  | grep -ivP 'File format not recognized|Unable to recognise the format|File truncated' \
   || :
 
 %files
