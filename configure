@@ -3,7 +3,7 @@
 # sure that all build dependencies are installed,
 # if you are running on a well known distribution.
 
-DISTRO=$(./distro _) || { \
+DISTRO=$(./build/distro _) || { \
     echo "Your linux distribution is unknown. Good luck!"
     exit 1
 }
@@ -21,9 +21,9 @@ if ! make --version >/dev/null 2>&1; then
     exit 1
 fi
 
-BUILD_PACS=$( make -f echo.mk FILE=$M VAR=BUILD_PACKAGES | sed -e 's/\ \ */ /g' -e 's/|.*$//'  )
-PACKAGER=$( make -f echo.mk FILE=$M VAR=PACKAGE_INSTALL )
-BECOME_ROOT=$( make -f echo.mk FILE=$M VAR=BECOME_ROOT )
+BUILD_PACS=$(  make -f build/echo.mk FILE=$M VAR=BUILD_PACKAGES )
+PACKAGER=$(    make -f build/echo.mk FILE=$M VAR=PACKAGE_INSTALL )
+BECOME_ROOT=$( make -f build/echo.mk FILE=$M VAR=BECOME_ROOT )
 
 CMD="$PACKAGER $BUILD_PACS"
 if [ $UID != 0 ]

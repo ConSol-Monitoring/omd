@@ -1,4 +1,4 @@
-chomp(my $os = qx(./distro));
+chomp(my $os = qx(./build/distro));
 if($os !~ /(sles 1[12])/i) {
   TestUtils::test_command({ cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_smb_copy -h'", exit => 0, like => '/show this help message and exit/' });
 } else {

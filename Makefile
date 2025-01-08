@@ -90,23 +90,23 @@ omd: $(DEFAULT_BUILD)
 
 build-cached:
 	@set -e ; cd packages ; for p in $(PACKAGES) ; do \
-        NOW=$$(date +%s); \
-        OMD_ROOT="$(OMD_ROOT)" OMD_VERSION="$(OMD_VERSION)" BUILD_CACHE="$(BUILD_CACHE)" ../build_cached "$(MAKE)" "$$p" "$(DISTRO_NAME)/$(DISTRO_VERSION)/$(shell uname -m)"; \
-        echo "build-cached: $$p (took $$(( $$(date +%s) - NOW ))s)"; \
-        done
+	    NOW=$$(date +%s); \
+	    OMD_ROOT="$(OMD_ROOT)" OMD_VERSION="$(OMD_VERSION)" BUILD_CACHE="$(BUILD_CACHE)" ../build/build_cached "$(MAKE)" "$$p" "$(DISTRO_NAME)/$(DISTRO_VERSION)/$(shell uname -m)"; \
+	    echo "build-cached: $$p (took $$(( $$(date +%s) - NOW ))s)"; \
+	done
 
 
 build:
 	@set -e ; cd packages ; for p in $(PACKAGES) ; do \
 	    $(MAKE) -C $$p build ; \
-        done
+	done
 
 speed:
 	@set -e ; cd packages ; for p in $(PACKAGES) ; do \
-            ( NOW=$$(date +%s) ; \
-              $(MAKE) -C $$p build > ../$$p.log 2>&1 \
-              && echo "$$p(ok - $$(( $$(date +%s) - NOW ))s)" \
-              || echo "$$p(ERROR - $$(( $$(date +%s) - NOW ))s)" ) & \
+	    ( NOW=$$(date +%s) ; \
+	    $(MAKE) -C $$p build > ../$$p.log 2>&1 \
+	      && echo "$$p(ok - $$(( $$(date +%s) - NOW ))s)" \
+	     || echo "$$p(ERROR - $$(( $$(date +%s) - NOW ))s)" ) & \
 	done ; wait ; echo "FINISHED."
 
 pack:
@@ -114,16 +114,16 @@ pack:
 	mkdir -p $(DESTDIR)$(OMD_PHYSICAL_BASE)
 	A="$(OMD_PHYSICAL_BASE)" ; ln -s $${A:1} $(DESTDIR)/omd
 	@set -e; MB1=0 ; cd packages ; for p in $(PACKAGES) ; do \
-            NOW=$$(date +%s); \
-            $(MAKE) -C $$p DESTDIR=$(DESTDIR) install ; \
-            for hook in $$(cd $$p ; ls *.hook 2>/dev/null) ; do \
-                mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/omd/hooks ; \
-                install -m 755 $$p/$$hook $(DESTDIR)$(OMD_ROOT)/lib/omd/hooks/$${hook%.hook} ; \
-            done ; \
-            MB2=$$(du -sm $(DESTDIR) | awk '{ print $$1 }'); \
-            echo "pack: $$p (took $$(( $$(date +%s) - NOW ))s) disk usage: $$(( MB2 - MB1 ))MB"; \
-            MB1=$$MB2; \
-        done
+	    NOW=$$(date +%s); \
+	    $(MAKE) -C $$p DESTDIR=$(DESTDIR) install ; \
+	    for hook in $$(cd $$p ; ls *.hook 2>/dev/null) ; do \
+	        mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/omd/hooks ; \
+	        install -m 755 $$p/$$hook $(DESTDIR)$(OMD_ROOT)/lib/omd/hooks/$${hook%.hook} ; \
+	    done ; \
+	    MB2=$$(du -sm $(DESTDIR) | awk '{ print $$1 }'); \
+	    echo "pack: $$p (took $$(( $$(date +%s) - NOW ))s) disk usage: $$(( MB2 - MB1 ))MB"; \
+	    MB1=$$MB2; \
+	done
 
 	sed -i -e 's|###APACHE_MODULE_DIR###|$(APACHE_MODULE_DIR)|g' $(DESTDIR)$(OMD_ROOT)/lib/omd/hooks/*
 	sed -i -e 's|###APACHE_INCLUDEOPT###|$(APACHE_INCLUDEOPT)|g' $(DESTDIR)$(OMD_ROOT)/lib/omd/hooks/*
@@ -135,13 +135,13 @@ pack:
 	# Install skeleton files (subdirs skel/ in packages' directories)
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/skel
 	@set -e ; cd packages ; for p in $(PACKAGES) ; do \
-            if [ -d "$$p/skel" ] ; then  \
-              tar cf - -C $$p/skel --exclude="*~" --exclude=".gitignore" . | tar xvf - -C $(DESTDIR)$(OMD_ROOT)/skel ; \
-            fi ;\
-            $(MAKE) DESTDIR=$(DESTDIR) SKEL=$(DESTDIR)$(OMD_ROOT)/skel -C $$p skel ;\
-        done
+	    if [ -d "$$p/skel" ] ; then  \
+	      tar cf - -C $$p/skel --exclude="*~" --exclude=".gitignore" . | tar xvf - -C $(DESTDIR)$(OMD_ROOT)/skel ; \
+	    fi ;\
+	    $(MAKE) DESTDIR=$(DESTDIR) SKEL=$(DESTDIR)$(OMD_ROOT)/skel -C $$p skel ;\
+	done
 
-        # Create permissions file for skel
+	# Create permissions file for skel
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/omd
 	@set -e ; cd packages ; for p in $(PACKAGES) ; do \
 	    if [ -e $$p/skel.permissions ] ; then \
@@ -150,27 +150,14 @@ pack:
 	    fi ; \
 	done > $(DESTDIR)$(OMD_ROOT)/share/omd/skel.permissions
 
-        # Make sure, all permissions in skel are set to 0755, 0644
-	@failed=$$(find $(DESTDIR)$(OMD_ROOT)/skel -type d -not -perm 0755) ; \
-	if [ -n "$$failed" ] ; then \
-	    echo "Invalid permissions for skeleton dirs. Must be 0755:" ; \
-            echo "I'll fix this for you this time..." ; \
-            echo "$$failed" ; \
-        fi; \
-		find $(DESTDIR)$(OMD_ROOT)/skel -type d -not -perm 0755 -exec chmod -c 755 {} \;
-	@failed=$$(find $(DESTDIR)$(OMD_ROOT)/skel -type f -not -perm 0644) ; \
-	if [ -n "$$failed" ] ; then \
-	    echo "Invalid permissions for skeleton files. Must be 0644:" ; \
-            echo "$$failed" ; \
-            echo "I'll fix this for you this time..." ; \
-        fi; \
-	    find $(DESTDIR)$(OMD_ROOT)/skel -type f -not -perm 0644 -exec chmod -c 644 {} \;
+	# Make sure, all permissions in skel are set to 0755, 0644
+	./build/check_skel_permissions $(DESTDIR)$(OMD_ROOT)/skel $(DESTDIR)$(OMD_ROOT)/share/omd/skel.permissions*
 
 	@failed=$$(find $(DESTDIR)$(OMD_ROOT)/lib64 2>/dev/null) ; \
 	if [ -n "$$failed" ] ; then \
 	    echo "ERROR: Invalid lib installpath. Library files must be installed in prefix/lib" ; \
-            echo "$$failed" ; \
-        fi
+	    echo "$$failed" ; \
+	fi
 
 	# Fix packages which did not add ###ROOT###
 	find $(DESTDIR)$(OMD_ROOT)/skel -type f -exec sed -e 's+$(OMD_ROOT)+###ROOT###+g' -i "{}" \;
@@ -193,8 +180,8 @@ pack:
 clean:
 	rm -rf $(DESTDIR)
 	@set -e ; cd packages ; for p in $(PACKAGES) ; do \
-            $(MAKE) -C $$p clean ; \
-        done
+	    $(MAKE) -C $$p clean ; \
+	done
 
 # Create installations files that do not lie beyond /omd/versions/$(OMD_VERSION)
 # and files not owned by a specific package.
@@ -301,9 +288,9 @@ deb: deb-changelog
 version:
 	@if [ -z "$(VERSION)" ] ; then \
 	    newversion=$$(dialog --stdout --inputbox "New Version:" 0 0 "$(OMD_VERSION)") ; \
-        else \
-            newversion=$(VERSION) ; \
-        fi ; \
+	else \
+	    newversion=$(VERSION) ; \
+	fi ; \
 	if [ -n "$$newversion" ] && [ "$$newversion" != "$(OMD_VERSION)" ]; then \
 	    sed -ri 's/^(OMD_VERSION[[:space:]]*= *).*/\1'"$$newversion/" Makefile.omd ; \
 	    sed -ri 's/^(OMD_SERIAL[[:space:]]*= *).*/\1'"$(NEWSERIAL)/" Makefile.omd ; \

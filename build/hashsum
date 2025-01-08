@@ -6,7 +6,7 @@ if [ "$DIR" = "" ]; then
     echo "returns md5 hashsum for folder including dependencies" >&2
     exit 3
 fi
-if ! test -x ../build_cached; then
+if ! test -x ../build/build_cached; then
     echo "ERROR: must be run from packages folder" >&2
     exit 3
 fi

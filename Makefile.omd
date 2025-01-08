@@ -16,7 +16,7 @@ P5TMPDIST          = $(shell pwd)/../perl-modules/dist
 # 'distro' script. We simply try out both paths...
 
 ROOT_DIR          := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
-DISTRO_INFO        = $(shell $(ROOT_DIR)/distro 2>/dev/null || ./distro)
+DISTRO_INFO        = $(shell $(ROOT_DIR)/build/distro 2>/dev/null || ./build/distro)
 DISTRO_NAME        = $(word 1, $(DISTRO_INFO))
 DISTRO_VERSION     = $(word 2, $(DISTRO_INFO))
 

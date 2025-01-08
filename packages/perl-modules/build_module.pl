@@ -23,7 +23,7 @@ if($ARGV[0] eq '-p') {
     $TARGET = shift @ARGV;
 }
 
-chomp($DISTRO = `./distro`) unless $DISTRO;
+chomp($DISTRO = `./build/distro`) unless $DISTRO;
 
 if(!defined $ENV{'PERL5LIB'} or $ENV{'PERL5LIB'} eq "") {
     print "dont call $0 directly, use the 'make'\n";

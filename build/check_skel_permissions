@@ -1,0 +1,70 @@
+#!/usr/bin/perl
+
+use warnings;
+use strict;
+
+my($basefolder, @permissionfiles) = @ARGV;
+my $permissions = _parse_permission_files(@permissionfiles);
+_check_permissons($basefolder, $permissions) == 0 || exit 1;
+exit 0;
+
+sub _check_permissons {
+    my($folder, $permissions) = @_;
+    my $failed = 0;
+    opendir(my $hdl, $folder) || die("failed to read folder $folder: $!");
+    while(my $f = readdir($hdl)) {
+        next if $f =~ /^\.\.?$/mx;
+        $f = $folder."/".$f;
+        my $isDir = -d $f;
+        my @stat  = stat(_);
+        next unless $stat[2];
+        my $mode  = sprintf("%o", $stat[2] & 07777);
+        my $dir   = $f;
+        $f =~ s=^$basefolder/==gmx;
+        if($isDir) {
+            my $exp = $permissions->{$f} // '755';
+            if($mode ne '755' && $exp ne $mode) {
+                printf("Invalid permission for skeleton folder %s/%s (%s) folder mode other than 755 must be set from the skel.permissions file\n", $folder, $f, _human_mode($mode));
+                $failed++;
+            }
+            $failed += _check_permissons($dir, $permissions);
+        } else {
+            my $exp = $permissions->{$f} // '644';
+            if($mode ne '644' && $exp ne $mode) {
+                printf("Invalid permission for skeleton file %s/%s (%s) file mode other than 644 must be set from the skel.permissions file\n", $folder, $f, _human_mode($mode));
+                $failed++;
+            }
+        }
+    }
+    closedir($hdl);
+    return($failed);
+}
+
+sub _human_mode {
+    my($mode) = @_;
+    my $out = "";
+    for my $c (split//mx, $mode) {
+        $out .= $c & 4 ? "r" : "-";
+        $out .= $c & 2 ? "w" : "-";
+        $out .= $c & 1 ? "x" : "-";
+    }
+    return("-".$out);
+}
+
+sub _parse_permission_files {
+    my(@files) = @_;
+    my $permissions = {};
+
+    for my $file (sort @files) {
+        open(my $fh, '<', $file) || die("failed to open $file: $!");
+        while(my $line = <$fh>) {
+            chomp($line);
+            next if $line =~ m/^\#/mx;
+            my($f, $m) = split(/\s+/mx, $line, 2);
+            $permissions->{$f} = $m;
+        }
+        close($fh);
+    }
+
+    return $permissions;
+}

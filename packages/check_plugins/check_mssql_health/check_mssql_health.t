@@ -1,4 +1,4 @@
-chomp(my $os = qx(./distro));
+chomp(my $os = qx(./build/distro));
 TestUtils::test_command({ cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_mssql_health -V'", exit => 0, like => '/^check_mssql_health/' });
 plan( skip_all => qq{ansible doesn't work on $os}) if $os =~ /SLES 11SP[12]/;
 SKIP: {

@@ -15,7 +15,7 @@ BEGIN {
 
 plan( tests => 81 );
 
-chomp(my $os = qx(./distro));
+chomp(my $os = qx(./build/distro));
 ok($os, "using os: ".$os);
 
 ##################################################

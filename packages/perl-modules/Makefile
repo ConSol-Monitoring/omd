@@ -2,7 +2,7 @@ include ../../Makefile.omd
 
 NAME     = perl-modules
 VERSION  = $(OMD_VERSION)
-DISTRO   = $(shell ../../distro)
+DISTRO   = $(shell ../../build/distro)
 DEPENDS  = freetds
 
 SYBASE   = $(shell readlink -m ../freetds/tmpinstall$(OMD_ROOT))

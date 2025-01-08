@@ -13,7 +13,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-chomp(my $os = qx(./distro));
+chomp(my $os = qx(./build/distro));
 
 plan( skip_all => "this test does not run inside docker" ) if TestUtils::is_docker();
 plan( skip_all => "this distribution does not run with systemd" ) if ! -x "/bin/systemctl";
