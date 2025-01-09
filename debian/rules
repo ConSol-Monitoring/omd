@@ -71,7 +71,7 @@ install: build
 	rm -f $(_PWD)/debian/`dh_listpackages | grep -v debug`/opt/omd/versions/default
 	rm -rf $(_PWD)/debian/`dh_listpackages | grep -v debug`/etc/apache2
 	rm -rf $(_PWD)/debian/`dh_listpackages | grep -v debug`/usr/lib
-	mv -f $(_PWD)/omd-bin-$(OMD_VERSION).tar.gz $(_PWD)/..
+	mv -f $(_PWD)/omd-$(OMD_VERSION)-bin.tar.gz $(_PWD)/..
 
 	sed -e 's/###OMD_VERSION###/$(OMD_VERSION)/g' \
 	    -e 's/###OMD_SERIAL###/$(OMD_SERIAL)/g' \

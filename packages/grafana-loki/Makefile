@@ -25,6 +25,7 @@ build:
 	install -m 755 $(DIR)/clients/cmd/promtail/promtail     ./dest/promtail
 	install -m 755 $(DIR)/cmd/logcli/logcli                 ./dest/logcli
 	install -m 755 $(DIR)/cmd/chunks-inspect/chunks-inspect ./dest/chunks-inspect
+	strip ./dest/*
 	rm -rf $(DIR)
 
 install:
