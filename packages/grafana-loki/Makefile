@@ -19,23 +19,20 @@ build:
 		make loki promtail logcli
 	$(GOENV) && \
 		cd $(DIR)/cmd/chunks-inspect/ && \
-		go build
+		CGO_ENABLED=0 go build -ldflags="-s -w"
 	mkdir -p ./dest
-	install -m 755 $(DIR)/cmd/loki/loki                     ./dest/loki
-	install -m 755 $(DIR)/clients/cmd/promtail/promtail     ./dest/promtail
-	install -m 755 $(DIR)/cmd/logcli/logcli                 ./dest/logcli
-	install -m 755 $(DIR)/cmd/chunks-inspect/chunks-inspect ./dest/chunks-inspect
-	strip ./dest/*
+	install $(DIR)/cmd/loki/loki                     ./dest/loki
+	install $(DIR)/clients/cmd/promtail/promtail     ./dest/promtail
+	install $(DIR)/cmd/logcli/logcli                 ./dest/logcli
+	install $(DIR)/cmd/chunks-inspect/chunks-inspect ./dest/chunks-inspect
+	../upx/dest/upx ./dest/*
 	rm -rf $(DIR)
 
 install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/bin
-	install -m 755 ./dest/loki           $(DESTDIR)$(OMD_ROOT)/bin/loki
-	install -m 755 ./dest/promtail       $(DESTDIR)$(OMD_ROOT)/bin/promtail
-	install -m 755 ./dest/logcli         $(DESTDIR)$(OMD_ROOT)/bin/logcli
-	install -m 755 ./dest/chunks-inspect $(DESTDIR)$(OMD_ROOT)/bin/chunks-inspect
-	install -m 755 loki.pre-update       $(DESTDIR)$(OMD_ROOT)/lib/omd/scripts/pre-update/loki
-	install -m 755 loki.post-update      $(DESTDIR)$(OMD_ROOT)/lib/omd/scripts/post-update/loki
+	install -m 755 ./dest/*          $(DESTDIR)$(OMD_ROOT)/bin/
+	install -m 755 loki.pre-update   $(DESTDIR)$(OMD_ROOT)/lib/omd/scripts/pre-update/loki
+	install -m 755 loki.post-update  $(DESTDIR)$(OMD_ROOT)/lib/omd/scripts/post-update/loki
 
 skel:
 	sed -i 's/###GOPKG###/$(GOPKG)/' $(SKEL)/etc/init.d/loki $(SKEL)/etc/init.d/promtail

@@ -28,6 +28,8 @@ build:
 	install -m 755 $(GOPATH)/src/github.com/grafana/grafana/bin/linux-$(MACHINE)/grafana-cli ./dest/grafana-cli
 	chmod -R 777 $(GOPATH)
 	rm -rf $(GOPATH)
+	strip ./dest/grafana
+	../upx/dest/upx ./dest/grafana
 
 install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/bin

@@ -30,11 +30,16 @@ build:
 		$(GOROOT)/bin/go build -a -tags netgo,builtinassets -trimpath -ldflags $(LDFLAGS) -o build/prometheus -mod=vendor github.com/prometheus/prometheus/cmd/prometheus
 	cd $(NAME)-$(VERSION) && \
 		$(GOROOT)/bin/go build -a -tags netgo -trimpath -ldflags $(LDFLAGS) -o build/promtool -mod=vendor github.com/prometheus/prometheus/cmd/promtool
+	mkdir -p ./dest
+	install -m 755 prometheus-$(VERSION)/build/prometheus ./dest/
+	install -m 755 prometheus-$(VERSION)/build/promtool   ./dest/
+	strip dest/*
+	../upx/dest/upx ./dest/*
+	rm -rf $(NAME)-$(VERSION)
 
 install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/bin
-	install -m 755 prometheus-$(VERSION)/build/prometheus $(DESTDIR)$(OMD_ROOT)/bin
-	install -m 755 prometheus-$(VERSION)/build/promtool $(DESTDIR)$(OMD_ROOT)/bin
+	install -m 755 ./dest/* $(DESTDIR)$(OMD_ROOT)/bin
 
 skel:
 	mkdir -p $(SKEL)/etc/prometheus
@@ -56,6 +61,7 @@ clean:
 	rm -rf $(NAME)-$(VERSION)
 	[ ! -e $(GOFOLDER) ] || chmod -R 777 $(GOFOLDER)
 	rm -rf $(GOFOLDER)
+	rm -rf ./dest/
 
 package: clean
 	curl -fLo prometheus-$(VERSION).tar.gz https://github.com/prometheus/prometheus/archive/v$(VERSION).tar.gz

@@ -27,14 +27,20 @@ build:
 	mkdir -p $(NAME)-$(VERSION)/build
 	cd $(NAME)-$(VERSION) && \
 	$(GOROOT)/bin/go build -mod=vendor -trimpath -ldflags $(LDFLAGS) -o build/$(NAME) github.com/prometheus/$(NAME)
+	mkdir -p ./dest
+	install -m 755 $(NAME)-$(VERSION)/build/$(NAME) ./dest/
+	strip dest/*
+	../upx/dest/upx ./dest/*
+	rm -rf $(NAME)-$(VERSION)
 
 install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/bin
-	install -m 755 $(NAME)-$(VERSION)/build/$(NAME) $(DESTDIR)$(OMD_ROOT)/bin
+	install -m 755 ./dest/* $(DESTDIR)$(OMD_ROOT)/bin
 
 skel:
 
 clean:
+	rm -rf ./dest
 	rm -rf $(NAME)-$(VERSION)
 
 package: clean

@@ -28,11 +28,16 @@ build:
 	    $(GOROOT)/bin/go build -trimpath -ldflags $(LDFLAGS) -mod=vendor -o build/alertmanager github.com/prometheus/$(NAME)/cmd/alertmanager
 	cd $(NAME)-$(VERSION) && \
 	    $(GOROOT)/bin/go build -trimpath -ldflags $(LDFLAGS) -mod=vendor -o build/amtool github.com/prometheus/$(NAME)/cmd/amtool
+	mkdir -p ./dest
+	install -m 755 $(NAME)-$(VERSION)/build/alertmanager ./dest/
+	install -m 755 $(NAME)-$(VERSION)/build/amtool       ./dest/
+	strip dest/*
+	../upx/dest/upx ./dest/*
+	rm -rf $(NAME)-$(VERSION)
 
 install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/bin
-	install -m 755 $(NAME)-$(VERSION)/build/alertmanager $(DESTDIR)$(OMD_ROOT)/bin
-	install -m 755 $(NAME)-$(VERSION)/build/amtool $(DESTDIR)$(OMD_ROOT)/bin
+	install -m 755 ./dest/* $(DESTDIR)$(OMD_ROOT)/bin
 
 skel:
 	mkdir -p $(SKEL)/etc/alertmanager

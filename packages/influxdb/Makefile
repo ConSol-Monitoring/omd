@@ -19,15 +19,20 @@ build:
 	cd influxdb-$(VERSION) && \
 		env GOPATH=$(PWD)/$(GOPATH)/ PATH=$(GOROOT)/bin:$(PATH) \
 		go install -mod vendor -ldflags "-X main.version=$(VERSION) -X main.buildTime=$(DATE) -s -w" ./...
+	mkdir -p ./dest
+	install $(PWD)/$(GOPATH)/bin/influx         ./dest/
+	install $(PWD)/$(GOPATH)/bin/influxd        ./dest/
+	install $(PWD)/$(GOPATH)/bin/influx_inspect ./dest/
+	strip ./dest/*
+	../upx/dest/upx ./dest/*
+	rm -rf influxdb-$(VERSION) $(PWD)/$(GOPATH)
 
 install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/bin
-	install -m 755 $(PWD)/$(GOPATH)/bin/influx  $(DESTDIR)$(OMD_ROOT)/bin
-	install -m 755 $(PWD)/$(GOPATH)/bin/influxd $(DESTDIR)$(OMD_ROOT)/bin
-	install -m 755 $(PWD)/$(GOPATH)/bin/influx_inspect $(DESTDIR)$(OMD_ROOT)/bin
-	install -m 755 influxdb_drop_series $(DESTDIR)$(OMD_ROOT)/bin
+	install -m 755 ./dest/*                  $(DESTDIR)$(OMD_ROOT)/bin
+	install -m 755 influxdb_drop_series      $(DESTDIR)$(OMD_ROOT)/bin
 	install -m 755 influxdb_show_cardinality $(DESTDIR)$(OMD_ROOT)/bin
-	install -m 755 influxdb_vim_series $(DESTDIR)$(OMD_ROOT)/bin
+	install -m 755 influxdb_vim_series       $(DESTDIR)$(OMD_ROOT)/bin
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/monitoring-plugins
 	install -m 755 $(PWD)/check_influxdb.pl $(DESTDIR)$(OMD_ROOT)/lib/monitoring-plugins
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/histou/templates/default/
@@ -36,6 +41,7 @@ install:
 skel:
 
 clean:
+	rm -rf ./dest
 	rm -rf influxdb-$(VERSION) $(PWD)/$(GOPATH)
 
 package: clean

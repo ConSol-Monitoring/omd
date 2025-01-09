@@ -1,2 +1,3 @@
-go
-VictoriaMetrics-?.??.?
+dest/
+go/
+VictoriaMetrics-?.??.?/

@@ -27,25 +27,26 @@ APPS = \
 
 .PHONY: skel
 
+build:
+	tar xf $(VM_SRC)
+	mkdir -p ./dest
+	for i in $(APPS) ; do \
+	    make build-app APP_NAME=$${i} || exit 1; \
+	done
+	strip ./dest/*
+	../upx/dest/upx ./dest/*
+	rm -rf $(GOPATH)
+	rm -rf VictoriaMetrics-$(VERSION)
+
 build-app:
 	cd VictoriaMetrics-$(VERSION) && \
 	  https_proxy=http://127.7.7.7:50000 http_proxy=http://127.7.7.7:50000 \
 	  PATH=$(GOROOT)/bin:$(PATH) make app-local APP_NAME=$(APP_NAME)
-
-install-app:
-	install -m 755 VictoriaMetrics-$(VERSION)/bin/$(APP_NAME) $(DESTDIR)$(OMD_ROOT)/bin/$(APP_NAME)-prod
-
-build:
-	tar xf $(VM_SRC)
-	for i in $(APPS) ; do \
-	make build-app APP_NAME=$${i} || exit 1; \
-	done
+	install -m 755 VictoriaMetrics-$(VERSION)/bin/$(APP_NAME) dest/$(APP_NAME)-prod
 
 install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/bin
-	for i in $(APPS); do \
-	make install-app APP_NAME=$${i} || exit 1; \
-	done
+	install -m 755 dest/* $(DESTDIR)$(OMD_ROOT)/bin
 	# historically this is intalled as vmctl
 	mv $(DESTDIR)$(OMD_ROOT)/bin/vmctl-prod $(DESTDIR)$(OMD_ROOT)/bin/vmctl
 	install -m 755 *cron* $(DESTDIR)$(OMD_ROOT)/bin
@@ -55,6 +56,7 @@ skel:
 	       $(SKEL)/etc/apache/conf.d/victoriametrics.conf
 
 clean:
+	rm -rf ./dest
 	rm -rf $(GOPATH)
 	rm -rf VictoriaMetrics-$(VERSION)
 
