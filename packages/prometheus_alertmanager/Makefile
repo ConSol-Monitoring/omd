@@ -68,6 +68,7 @@ skel:
 	echo "Use this folder for your hand-crafted configs." > $(SKEL)/etc/alertmanager/alertmanager.d/inhibit_rules/custom/README
 
 clean:
+	rm -rf ./dest
 	rm -rf $(NAME)-$(VERSION)
 
 package: clean
