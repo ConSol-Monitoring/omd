@@ -33,24 +33,26 @@ build:
 	    $(GOROOT)/bin/go build -mod=vendor -trimpath -ldflags $(LDFLAGS) -o build/$(NAME) github.com/prometheus/$(NAME)
 	cd $(NAME)-$(VERSION) && \
 	    $(GOROOT)/bin/go build -mod=vendor -trimpath -ldflags $(LDFLAGS) -o build/generator github.com/prometheus/$(NAME)/generator
-	mkdir -p ./dest
-	install -m 755 $(NAME)-$(VERSION)/build/$(NAME)   ./dest/
-	install -m 755 $(NAME)-$(VERSION)/build/generator ./dest/snmp_exporter_generator
-	strip dest/*
-	../upx/dest/upx ./dest/*
+	mkdir -p ./dest/bin
+	install -m 755 $(NAME)-$(VERSION)/build/$(NAME)   ./dest/bin/
+	install -m 755 $(NAME)-$(VERSION)/build/generator ./dest/bin/snmp_exporter_generator
+	strip dest/bin/*
+	../upx/dest/upx ./dest/bin/*
+	cp $(NAME)-$(VERSION)/snmp.yml                ./dest/
+	cp $(NAME)-$(VERSION)/generator/generator.yml ./dest/
 	rm -rf $(NAME)-$(VERSION)
 
 
 install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/bin
-	install -m 755 ./dest/* $(DESTDIR)$(OMD_ROOT)/bin
+	install -m 755 ./dest/bin/* $(DESTDIR)$(OMD_ROOT)/bin
 	install -m 755  create_snmp_scrape_config.py $(DESTDIR)$(OMD_ROOT)/bin/create_snmp_scrape_config
 	ln -fs create_snmp_scrape_config $(DESTDIR)$(OMD_ROOT)/bin/create_snmp_scrape_config.py
 
 skel:
 	mkdir -p $(SKEL)/etc/prometheus_snmp_exporter/generator $(SKEL)/etc/prometheus_snmp_exporter/config
-	cp $(NAME)-$(VERSION)/snmp.yml $(SKEL)/etc/prometheus_snmp_exporter/config/
-	cp $(NAME)-$(VERSION)/generator/generator.yml $(SKEL)/etc/prometheus_snmp_exporter/generator/
+	cp ./dest/snmp.yml $(SKEL)/etc/prometheus_snmp_exporter/config/
+	cp ./dest/generator.yml $(SKEL)/etc/prometheus_snmp_exporter/generator/
 
 clean:
 	rm -rf ./dest
