@@ -9,8 +9,6 @@ SRC        = $(NAME)-$(VERSION).tar.gz
 GOPKG      = 1.22
 GOVERSION  = $(shell grep ^VERSION ../go-${GOPKG}/Makefile | awk '{ print $$3 }')
 PWD        = $(shell pwd)
-GOFOLDER   = go
-GOPATH     = /dev/null
 GOROOT     = $(PWD)/../go-$(GOPKG)/go-$(GOVERSION)
 DATE       = $(shell date -u '+%FT%TZ')
 LDFLAGS    = "\
@@ -27,19 +25,20 @@ build:
 	mkdir -p $(NAME)-$(VERSION)/build
 	cd $(NAME)-$(VERSION) && \
 		$(GOROOT)/bin/go build -mod=vendor -trimpath -ldflags $(LDFLAGS) -o build/$(NAME) github.com/prometheus/$(NAME)
-	mkdir -p ./dest
-	install -m 755 $(NAME)-$(VERSION)/build/$(NAME) ./dest/
-	strip dest/*
-	../upx/dest/upx ./dest/*
+	mkdir -p ./dest/bin
+	install -m 755 $(NAME)-$(VERSION)/build/$(NAME) ./dest/bin/
+	strip dest/bin/*
+	../upx/dest/upx ./dest/bin/*
+	cp $(NAME)-$(VERSION)/blackbox.yml ./dest/
 	rm -rf $(NAME)-$(VERSION)
 
 install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/bin
-	install -m 755 ./dest/* $(DESTDIR)$(OMD_ROOT)/bin
+	install -m 755 ./dest/bin/* $(DESTDIR)$(OMD_ROOT)/bin
 
 skel:
 	mkdir -p $(SKEL)/etc/$(NAME)
-	cp $(NAME)-$(VERSION)/blackbox.yml $(SKEL)/etc/$(NAME)
+	cp ./dest/blackbox.yml $(SKEL)/etc/$(NAME)
 
 clean:
 	rm -rf ./dest/
