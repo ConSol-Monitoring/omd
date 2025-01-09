@@ -24,14 +24,14 @@ sub _check_permissons {
         if($isDir) {
             my $exp = $permissions->{$f} // '755';
             if($mode ne '755' && $exp ne $mode) {
-                printf("Invalid permission for skeleton folder %s/%s (%s) folder mode other than 755 must be set from the skel.permissions file\n", $folder, $f, _human_mode($mode));
+                printf("Invalid permission for skeleton folder %s (%s) folder mode other than 755 must be set from the skel.permissions file\n", $dir, _human_mode($mode));
                 $failed++;
             }
             $failed += _check_permissons($dir, $permissions);
         } else {
             my $exp = $permissions->{$f} // '644';
             if($mode ne '644' && $exp ne $mode) {
-                printf("Invalid permission for skeleton file %s/%s (%s) file mode other than 644 must be set from the skel.permissions file\n", $folder, $f, _human_mode($mode));
+                printf("Invalid permission for skeleton file %s (%s) file mode other than 644 must be set from the skel.permissions file\n", $dir, _human_mode($mode));
                 $failed++;
             }
         }
