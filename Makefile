@@ -74,8 +74,9 @@ include Makefile.omd
 
 DESTDIR ?=$(shell pwd)/destdir
 RPM_TOPDIR=$(shell pwd)/rpm.topdir
-SOURCE_TGZ=omd-$(OMD_VERSION).tar.gz
-BIN_TGZ=omd-bin-$(OMD_VERSION).tar.gz
+SOURCE_NAME=omd-$(OMD_VERSION)
+SOURCE_TGZ=$(SOURCE_NAME).tar.gz
+BIN_TGZ=$(SOURCE_NAME)-bin.tar.gz
 NEWSERIAL=$$(($(OMD_SERIAL) + 1))
 APACHE_NAME=$(APACHE_INIT_NAME)
 ifdef BUILD_CACHE
@@ -220,24 +221,13 @@ install-global:
 # Create source tarball. This currently only works in a checked out GIT
 # repository.
 $(SOURCE_TGZ) dist:
-	git -c tar.umask=0022 archive --prefix=omd-$(OMD_VERSION)/ --format=tar.gz --output=$(SOURCE_TGZ) HEAD
-
-# Creates source tarball. This does only work well in directories extracted
-# from a CLEAN git archive tarball.
-$(SOURCE_TGZ)-snap snap:
-	rm -rf omd-$(OMD_VERSION)
-	mkdir -p omd-$(OMD_VERSION)
-	tar cf - --exclude="rpm.topdir" --exclude="*~" --exclude=".gitignore" --exclude "omd-$(OMD_VERSION)" . | tar xf - -C omd-$(OMD_VERSION)
-	tar czf $(SOURCE_TGZ) omd-$(OMD_VERSION)
-	rm -rf omd-$(OMD_VERSION)
+	git -c tar.umask=0022 archive --prefix=$(SOURCE_NAME)/ --format=tar.gz --output=$(SOURCE_TGZ) HEAD
 
 # Build RPM from source code.
 # When called from a git repository this uses 'make dist' and thus 'git archive'
 # to create the source rpm.
-# The second choice is to call this form a CLEAN git archive directory which
-# then uses 'make snap' to use that snapshot.
 rpm: omd.spec
-	test -f $(SOURCE_TGZ) || ( test -d .git && $(MAKE) $(SOURCE_TGZ) || $(MAKE) $(SOURCE_TGZ)-snap )
+	test -f $(SOURCE_TGZ) || ( test -d .git && $(MAKE) $(SOURCE_TGZ) || $(MAKE) $(SOURCE_TGZ) )
 	mkdir -p $(RPM_TOPDIR)/{SOURCES,BUILD,RPMS,SRPMS,SPECS}
 	cp $(SOURCE_TGZ) $(RPM_TOPDIR)/SOURCES
 	# NO_BRP_STALE_LINK_ERROR ignores errors when symlinking from skel to

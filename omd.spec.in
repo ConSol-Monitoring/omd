@@ -55,7 +55,7 @@ make pack
 
 %install
 mkdir -p $RPM_BUILD_ROOT
-tar xzf omd-bin-%{version}.tar.gz -C $RPM_BUILD_ROOT
+tar xzf omd-%{version}-bin.tar.gz -C $RPM_BUILD_ROOT
 # Remove all global symbolic links from package. They are shared
 # among all versions and must be handled in %post und %postun
 # in order to avoid RPM conflicts
