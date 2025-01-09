@@ -314,7 +314,7 @@ timedtest:
 		fi; \
 	done
 
-omd.spec: omd.spec.in
+omd.spec: omd.spec.in Makefile.omd Makefile
 	sed -e 's/^Requires:.*/Requires:        $(OS_PACKAGES)/' \
 	    -e 's/%{version}/$(OMD_VERSION)/g' \
 	    -e 's/^Version:.*/Version: $(DISTRO_CODE)/' \
