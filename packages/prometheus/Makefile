@@ -30,16 +30,18 @@ build:
 		$(GOROOT)/bin/go build -a -tags netgo,builtinassets -trimpath -ldflags $(LDFLAGS) -o build/prometheus -mod=vendor github.com/prometheus/prometheus/cmd/prometheus
 	cd $(NAME)-$(VERSION) && \
 		$(GOROOT)/bin/go build -a -tags netgo -trimpath -ldflags $(LDFLAGS) -o build/promtool -mod=vendor github.com/prometheus/prometheus/cmd/promtool
-	mkdir -p ./dest
-	install -m 755 prometheus-$(VERSION)/build/prometheus ./dest/
-	install -m 755 prometheus-$(VERSION)/build/promtool   ./dest/
-	strip dest/*
-	../upx/dest/upx ./dest/*
+	mkdir -p ./dest/bin/
+	install -m 755 prometheus-$(VERSION)/build/prometheus ./dest/bin/
+	install -m 755 prometheus-$(VERSION)/build/promtool   ./dest/bin/
+	strip dest/bin/*
+	../upx/dest/upx ./dest/bin/*
+	cp -rp $(NAME)-$(VERSION)/consoles          ./dest/
+	cp -rp $(NAME)-$(VERSION)/console_libraries ./dest/
 	rm -rf $(NAME)-$(VERSION)
 
 install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/bin
-	install -m 755 ./dest/* $(DESTDIR)$(OMD_ROOT)/bin
+	install -m 755 ./dest/bin/* $(DESTDIR)$(OMD_ROOT)/bin
 
 skel:
 	mkdir -p $(SKEL)/etc/prometheus
@@ -47,8 +49,8 @@ skel:
 	echo "Use this dir for your hand-crafted configs." > $(SKEL)/etc/prometheus/conf.d/custom/README
 	mkdir -p $(SKEL)/etc/prometheus/conf.d/dynamic
 	echo "Use this dir for your automatically created configs. Use coshsh" > $(SKEL)/etc/prometheus/conf.d/dynamic/README
-	cp -rp $(NAME)-$(VERSION)/consoles $(SKEL)/etc/prometheus
-	cp -rp $(NAME)-$(VERSION)/console_libraries $(SKEL)/etc/prometheus
+	cp -rp ./dest/consoles $(SKEL)/etc/prometheus
+	cp -rp ./dest/console_libraries $(SKEL)/etc/prometheus
 	mv $(SKEL)/etc/prometheus/consoles/index.html.example $(SKEL)/etc/prometheus/consoles/index.html
 	sed -ri 's/index.html.example/index.html/g' $(SKEL)/etc/prometheus/console_libraries/menu.lib
 
