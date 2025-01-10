@@ -5,6 +5,7 @@ CHANGELOG  = https://github.com/grafana/grafana/blob/main/CHANGELOG.md
 VERSION    = 11.2.5
 SRC        = $(NAME)-$(VERSION).tar.gz
 GOPATH     = go
+# does work with newer go > 1.22 yet and cannot be updated because scripted dashboarding will break...
 GOPKG      = 1.22
 GOVERSION  = $(shell grep ^VERSION ../go-${GOPKG}/Makefile | awk '{ print $$3 }')
 PWD        = $(shell pwd)

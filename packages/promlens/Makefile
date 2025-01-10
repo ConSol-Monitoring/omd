@@ -3,7 +3,7 @@ include ../../Makefile.omd
 NAME        = promlens
 VERSION     = 0.3.0
 SRC         = $(NAME)-$(VERSION)
-GOPKG       = 1.22
+GOPKG       = 1.23
 GOVERSION   = $(shell grep ^VERSION ../go-${GOPKG}/Makefile | awk '{ print $$3 }')
 DEPENDS     = node
 
