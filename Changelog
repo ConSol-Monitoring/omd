@@ -6,6 +6,9 @@ next:
             - removed build support for sles15sp5
             - use upx to reduce binary size
           - histou update to 0.5.5
+          - plugins:
+            - check_vsphere update to 0.3.14
+          - Go builds updated to 1.23.4
 
 5.50     Dec 18 2024
           - omd:
