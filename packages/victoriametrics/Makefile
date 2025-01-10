@@ -34,7 +34,7 @@ build:
 	    make build-app APP_NAME=$${i} || exit 1; \
 	done
 	strip ./dest/*
-	../upx/dest/upx ./dest/*
+	$(UPX) ./dest/*
 	rm -rf $(GOPATH)
 	rm -rf VictoriaMetrics-$(VERSION)
 

@@ -30,7 +30,7 @@ build:
 	mkdir -p ./dest
 	install -m 755 $(NAME)-$(VERSION)/build/$(NAME) ./dest/
 	strip dest/*
-	../upx/dest/upx ./dest/*
+	$(UPX) ./dest/*
 	rm -rf $(NAME)-$(VERSION)
 
 install:

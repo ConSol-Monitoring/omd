@@ -28,7 +28,7 @@ build:
 	mkdir -p ./dest/bin
 	install -m 755 $(NAME)-$(VERSION)/build/$(NAME) ./dest/bin/
 	strip dest/bin/*
-	../upx/dest/upx ./dest/bin/*
+	$(UPX) ./dest/bin/*
 	cp $(NAME)-$(VERSION)/blackbox.yml ./dest/
 	rm -rf $(NAME)-$(VERSION)
 

@@ -29,7 +29,7 @@ build:
 	chmod -R 777 $(GOPATH)
 	rm -rf $(GOPATH)
 	strip ./dest/grafana
-	../upx/dest/upx ./dest/grafana
+	$(UPX) ./dest/grafana
 
 install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/bin

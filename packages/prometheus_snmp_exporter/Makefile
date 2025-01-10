@@ -37,7 +37,7 @@ build:
 	install -m 755 $(NAME)-$(VERSION)/build/$(NAME)   ./dest/bin/
 	install -m 755 $(NAME)-$(VERSION)/build/generator ./dest/bin/snmp_exporter_generator
 	strip dest/bin/*
-	../upx/dest/upx ./dest/bin/*
+	$(UPX) ./dest/bin/*
 	cp $(NAME)-$(VERSION)/snmp.yml                ./dest/
 	cp $(NAME)-$(VERSION)/generator/generator.yml ./dest/
 	rm -rf $(NAME)-$(VERSION)

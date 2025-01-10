@@ -25,7 +25,7 @@ build:
 	install $(DIR)/clients/cmd/promtail/promtail     ./dest/promtail
 	install $(DIR)/cmd/logcli/logcli                 ./dest/logcli
 	install $(DIR)/cmd/chunks-inspect/chunks-inspect ./dest/chunks-inspect
-	../upx/dest/upx ./dest/*
+	$(UPX) ./dest/*
 	rm -rf $(DIR)
 
 install:

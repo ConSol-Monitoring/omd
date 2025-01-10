@@ -24,7 +24,7 @@ build:
 	install $(PWD)/$(GOPATH)/bin/influxd        ./dest/
 	install $(PWD)/$(GOPATH)/bin/influx_inspect ./dest/
 	strip ./dest/*
-	../upx/dest/upx ./dest/*
+	$(UPX) ./dest/*
 	rm -rf influxdb-$(VERSION) $(PWD)/$(GOPATH)
 
 install:

@@ -22,7 +22,7 @@ build:
 		make SKIP_GOLANGCI_LINT=1 -C $(SRC) build
 	cp $(SRC)/$(NAME) ./$(NAME)
 	strip ./$(NAME)
-	../upx/dest/upx ./$(NAME)
+	$(UPX) ./$(NAME)
 	rm -rf $(SRC)
 
 install:

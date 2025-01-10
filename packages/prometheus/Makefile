@@ -34,7 +34,7 @@ build:
 	install -m 755 prometheus-$(VERSION)/build/prometheus ./dest/bin/
 	install -m 755 prometheus-$(VERSION)/build/promtool   ./dest/bin/
 	strip dest/bin/*
-	../upx/dest/upx ./dest/bin/*
+	$(UPX) ./dest/bin/*
 	cp -rp $(NAME)-$(VERSION)/consoles          ./dest/
 	cp -rp $(NAME)-$(VERSION)/console_libraries ./dest/
 	rm -rf $(NAME)-$(VERSION)

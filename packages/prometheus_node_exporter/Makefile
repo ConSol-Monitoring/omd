@@ -30,7 +30,7 @@ build:
 	mkdir -p ./dest
 	install $(NAME)-$(VERSION)/build/$(NAME) ./dest/
 	strip dest/*
-	../upx/dest/upx ./dest/*
+	$(UPX) ./dest/*
 
 install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/bin

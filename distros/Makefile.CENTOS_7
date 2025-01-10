@@ -1,4 +1,6 @@
 DISTRO_CODE           = el7
+SKIP_PACKAGES         = upx
+UPX                   = /bin/true   # upx does not work on centos7, so simply skip it
 BUILD_PACKAGES        =
 BUILD_PACKAGES       += autoconf
 BUILD_PACKAGES       += automake

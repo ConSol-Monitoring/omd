@@ -10,6 +10,8 @@ OMD_ROOT           = $(OMD_BASE)/versions/$(OMD_VERSION)
 PERL               = /usr/bin/perl
 P5TMPDIST          = $(shell pwd)/../perl-modules/dist
 
+UPX                = $(shell pwd)/../upx/dest/upx
+
 # Determine the distro we are running on and its version. Nasty here:
 # We do not known wether we are called from the main Makefile or
 # from a package Makefile. There we do not know the path to the

@@ -23,7 +23,7 @@ build:
 	tar Jxvf $(DIR).tar.xz
 	cd $(DIR)/include/node/openssl/archs/ && ls -1 | grep -v linux-$(shell uname -m) | xargs rm -rf
 	strip $(DIR)/bin/node
-	../upx/dest/upx $(DIR)/bin/node
+	$(UPX) $(DIR)/bin/node
 
 install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)

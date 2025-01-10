@@ -32,7 +32,7 @@ build:
 	install -m 755 $(NAME)-$(VERSION)/build/alertmanager ./dest/
 	install -m 755 $(NAME)-$(VERSION)/build/amtool       ./dest/
 	strip dest/*
-	../upx/dest/upx ./dest/*
+	$(UPX) ./dest/*
 	rm -rf $(NAME)-$(VERSION)
 
 install:
