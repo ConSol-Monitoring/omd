@@ -255,6 +255,8 @@ build:
 	    cd $(P5TMPDIST)/src && \
 	        ./build_module.pl -d "$(DISTRO)" -p $(P5TMPDIST)/dest $(MODULES)
 	cd $(P5TMPDIST)/dest/lib/perl5/ && rm -f utils.pm && ln -s ../../../monitoring-plugins/utils.pm .
+	rm -rf $(P5TMPDIST)/dest/lib/perl5/lib/perl5/*/auto/Encode/{CN,JP,KR,TW}
+	rm -rf $(P5TMPDIST)/dest/lib/perl5/lib/perl5/*/auto/share/dist/DBD-SQLite
 	mkdir -p $(P5TMPDIST)/dest/lib/perl5/CPAN
 	cp MyConfig.pm $(P5TMPDIST)/dest/lib/perl5/CPAN/MyConfig.skel
 
