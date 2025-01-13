@@ -17,6 +17,11 @@ build:
 		tar xzf $$p -C $(DIR)/lib/plugins ; \
 	done
 
+	# remove biggest unused fonts
+	for file in UnBatang_0613.ttf Sun-ExtA.ttf Sun-ExtB.ttf Aegyptus.otf Jomolhari.ttf Aegean.otf; do \
+	    rm $(DIR)/lib/plugins/dw2pdf/vendor/mpdf/mpdf/ttfonts/$$file; \
+	done
+
 	for p in patches/*.patch ; do \
 		echo "applying $$p..." ; \
 		( cd $(DIR) ; patch -p1 ) < $$p || exit 1; \
