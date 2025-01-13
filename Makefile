@@ -97,12 +97,30 @@ build-cached:
 	    OMD_ROOT="$(OMD_ROOT)" OMD_VERSION="$(OMD_VERSION)" BUILD_CACHE="$(BUILD_CACHE)" ../build/build_cached "$(MAKE)" "$$p" "$(DISTRO_NAME)/$(DISTRO_VERSION)/$(shell uname -m)"; \
 	    echo "build-cached: $$p (took $$(( $$(date +%s) - NOW ))s)"; \
 	done
+	$(MAKE) build-post
 
 
 build:
 	@set -e ; cd packages ; for p in $(PACKAGES) ; do \
 	    $(MAKE) -C $$p build ; \
 	done
+	$(MAKE) build-post
+
+build-post:
+	-find \
+    	$(DESTDIR)$(OMD_ROOT)/bin/ \
+    	$(DESTDIR)$(OMD_ROOT)/lib/ \
+    	-type f \
+    	\( \
+        	-not -name "*.dbg" \
+        	-not -name "waitmax" \
+        	-not -name "agent_modbus" \
+        	-not -path "*/.local-chromium/*" \
+    	\) \
+    	-print0 \
+  	| xargs -0 -n 500 strip 2>&1 \
+  	| grep -ivP 'File format not recognized|Unable to recognise the format|File truncated'
+
 
 speed:
 	@set -e ; cd packages ; for p in $(PACKAGES) ; do \

@@ -66,20 +66,6 @@ rm -f $RPM_BUILD_ROOT/usr/share/man/man8/omd.8.gz
 rm -f $RPM_BUILD_ROOT/@APACHE_CONFDIR@/*
 rm -f $RPM_BUILD_ROOT/etc/init.d/omd
 rm -rf $RPM_BUILD_ROOT/usr/lib/systemd
-find \
-    $RPM_BUILD_ROOT/opt/omd/versions/%{version}/bin/ \
-    $RPM_BUILD_ROOT/opt/omd/versions/%{version}/lib/ \
-    -type f \
-    \( \
-        -not -name "*.dbg" \
-        -not -name "waitmax" \
-        -not -name "agent_modbus" \
-        -not -path "*/.local-chromium/*" \
-    \) \
-    -print0 \
-  | xargs -0 -n 500 strip 2>&1 \
-  | grep -ivP 'File format not recognized|Unable to recognise the format|File truncated' \
-  || :
 
 %files
 %defattr(-,root,root)
