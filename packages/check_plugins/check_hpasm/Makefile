@@ -2,7 +2,7 @@ include ../../../Makefile.omd
 
 NAME      = check_hpasm
 CHANGELOG = https://github.com/lausser/check_hpasm/blob/master/ChangeLog
-VERSION   = 4.10
+VERSION   = 4.10.1
 DIR       = $(NAME)-$(VERSION)
 
 .PHONY: skel
