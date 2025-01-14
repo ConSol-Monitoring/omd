@@ -16,7 +16,7 @@ set -e
 # for details, see http://www.debian.org/doc/debian-policy/ or
 # the debian-policy package
 
-OMD="omd-###OMD_VERSION###"
+OMD="###OMD_VERSION###"
 
 case "$1" in
     remove)
@@ -25,7 +25,7 @@ case "$1" in
       do
           target=$(readlink $link 2>/dev/null) || continue
           version=${target##*/}
-          if [ "$version" = "###OMD_VERSION###" ]
+          if [ "$version" = "$OMD" ]
           then
               site=${link#/omd/sites/}
               site=${site%/version}
@@ -38,6 +38,8 @@ case "$1" in
               chown -R $site:$site /omd/sites/$site/.backup_meta
           fi
       done
+      # remove python cache folder created when omd is run as root
+      find /omd/versions/$OMD -name __pycache__ -print0 | xargs -0 -n 500 rm -rf >/dev/null 2>&1
     ;;
 
     upgrade|deconfigure)
@@ -57,6 +59,6 @@ esac
 
 #DEBHELPER#
 
-update-alternatives --remove  omd /omd/versions/###OMD_VERSION###
+update-alternatives --remove  omd /omd/versions/$OMD
 
 exit 0
