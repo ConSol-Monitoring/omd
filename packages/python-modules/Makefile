@@ -120,6 +120,7 @@ OVERRIDES += setuptools_rust-1.10.2.tar.gz
 OVERRIDES += cython-3.0.11.tar.gz
 OVERRIDES += pyyaml-6.0.2.tar.gz
 OVERRIDES += pymssql-2.3.1.tar.gz
+OVERRIDES += paramiko-3.5.0.tar.gz
 endif
 
 build:
