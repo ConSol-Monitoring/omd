@@ -5,12 +5,15 @@ next:
             - removed build support for sles15sp4
             - removed build support for sles15sp5
             - use upx to reduce binary size
-          - histou update to 0.5.5
           - plugins:
+            - check_hpasm update to 4.10.1
+            - check_rittal_health update to 4.1.1
             - check_vsphere update to 0.3.14
-          - Go builds updated to 1.23.4
           - ansible:
             - replace shiped ansible with dependency on systems ansible-core
+          - Go builds updated to 1.23.4
+          - histou update to 0.5.5
+          - upx update to 4.2.4
 
 5.50     Dec 18 2024
           - omd:
