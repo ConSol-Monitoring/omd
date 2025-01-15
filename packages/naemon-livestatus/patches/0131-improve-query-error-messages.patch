@@ -1,0 +1,194 @@
+From fcdd9ce174c724baf5420e101d1f3d41550afb37 Mon Sep 17 00:00:00 2001
+From: Sven Nierlein <sven@consol.de>
+Date: Wed, 15 Jan 2025 13:19:44 +0100
+Subject: [PATCH 1/2] return specific error to user instead of generic error
+
+before:
+
+  error: cannot create filter on table services
+
+after:
+
+  error: error in And header: Cannot combine 2 filters with 'AND': only 1 are on stack
+---
+ src/AndingFilter.cc |  3 ++-
+ src/Query.cc        | 11 +++++++++--
+ 2 files changed, 11 insertions(+), 3 deletions(-)
+
+diff --git a/src/AndingFilter.cc b/src/AndingFilter.cc
+index d7bcf14..c598279 100644
+--- a/src/AndingFilter.cc
++++ b/src/AndingFilter.cc
+@@ -112,6 +112,8 @@ void AndingFilter::combineFilters(int count, int andor)
+     if (count > (int)_subfilters.size()) {
+         logger(LG_INFO, "Cannot combine %d filters with '%s': only %d are on stack",
+                 count, andor == ANDOR_AND ? "AND" : "OR", _subfilters.size());
++        this->setError(400, "Cannot combine %d filters with '%s': only %d are on stack",
++                count, andor == ANDOR_AND ? "AND" : "OR", _subfilters.size());
+         return;
+     }
+ 
+@@ -126,4 +128,3 @@ void AndingFilter::combineFilters(int count, int andor)
+     }
+     addSubfilter(andorfilter);
+ }
+-
+diff --git a/src/Query.cc b/src/Query.cc
+index e6580a7..2a9abd0 100644
+--- a/src/Query.cc
++++ b/src/Query.cc
+@@ -290,10 +290,17 @@ void Query::parseAndOrLine(char *line, int andor, bool filter)
+                 andor == ANDOR_OR ? "Or" : "And");
+         return;
+     }
+-    if (filter)
++    if (filter) {
+         _filter.combineFilters(number, andor);
+-    else
++        if (_filter.hasError()) {
++            _output->setError(_filter.errorCode(), "error in %s header: %s", andor == ANDOR_OR ? "Or" : "And", _filter.errorMessage().c_str());
++        }
++    } else {
+         _wait_condition.combineFilters(number, andor);
++        if (_wait_condition.hasError()) {
++            _output->setError(_wait_condition.errorCode(), "error in WaitCondition%s header: %s", andor == ANDOR_OR ? "Or" : "And", _filter.errorMessage().c_str());
++        }
++    }
+ }
+ 
+ void Query::parseNegateLine(char *line, bool filter)
+
+From f9945253a07b6f65e9e45f2c879e6df628b874ee Mon Sep 17 00:00:00 2001
+From: Sven Nierlein <sven@consol.de>
+Date: Wed, 15 Jan 2025 14:04:10 +0100
+Subject: [PATCH 2/2] add empty filter
+
+leads to confusing error messages otherwise
+
+ex.: using a filter like:
+
+    Filter: host_name = test
+    Filter: non-existing = 1
+    And 2
+
+would result in 'Cannot combine 2 filters with 'AND': only 1 are on stack' error because the second filter would had been skipped.
+---
+ src/EmptyColumn.cc  |  6 ++++++
+ src/EmptyColumn.h   |  1 +
+ src/EmptyFilter.cc  | 28 ++++++++++++++++++++++++++++
+ src/EmptyFilter.h   | 24 ++++++++++++++++++++++++
+ src/Makefile.am     |  2 +-
+ src/Makefile.manual | 10 ++++------
+ 6 files changed, 64 insertions(+), 7 deletions(-)
+ create mode 100644 src/EmptyFilter.cc
+ create mode 100644 src/EmptyFilter.h
+
+diff --git a/src/EmptyColumn.cc b/src/EmptyColumn.cc
+index bc1df88..4b05b04 100644
+--- a/src/EmptyColumn.cc
++++ b/src/EmptyColumn.cc
+@@ -23,9 +23,15 @@
+ // Boston, MA 02110-1301 USA.
+ 
+ #include "EmptyColumn.h"
++#include "EmptyFilter.h"
+ #include "Query.h"
+ 
+ void EmptyColumn::output(void *data __attribute__ ((__unused__)), Query *query)
+ {
+     query->outputString("");
+ }
++
++Filter *EmptyColumn::createFilter(int operator_id, char *value)
++{
++    return new EmptyFilter(this, operator_id, value);
++}
+diff --git a/src/EmptyColumn.h b/src/EmptyColumn.h
+index f1c4e97..2b3209c 100644
+--- a/src/EmptyColumn.h
++++ b/src/EmptyColumn.h
+@@ -36,6 +36,7 @@ class EmptyColumn : public Column
+         Column(name, description, -1) {}
+     int type() { return COLTYPE_STRING; }
+     void output(void *data, Query *);
++    Filter *createFilter(int operator_id, char *value);
+ };
+ 
+ #endif // EmptyColumn_h
+diff --git a/src/EmptyFilter.cc b/src/EmptyFilter.cc
+new file mode 100644
+index 0000000..03dc1f0
+--- /dev/null
++++ b/src/EmptyFilter.cc
+@@ -0,0 +1,28 @@
++#include <stdlib.h>
++#include "EmptyFilter.h"
++#include "EmptyColumn.h"
++#include "opids.h"
++#include "logger.h"
++#include "OutputBuffer.h"
++    EmptyFilter::EmptyFilter(Column *column, int opid, char *value)
++    : _column(column)
++    , _opid(abs(opid))
++{
++}
++
++EmptyFilter::~EmptyFilter()
++{
++}
++
++
++bool EmptyFilter::accepts(void *data)
++{
++    bool pass = false;
++
++    return pass != _negate;
++}
++
++void *EmptyFilter::indexFilter(const char *column)
++{
++    return 0;
++}
+diff --git a/src/EmptyFilter.h b/src/EmptyFilter.h
+new file mode 100644
+index 0000000..4add7eb
+--- /dev/null
++++ b/src/EmptyFilter.h
+@@ -0,0 +1,24 @@
++#ifndef EmptyFilter_h
++#define EmptyFilter_h
++
++#include "config.h"
++
++using namespace std;
++
++#include "Filter.h"
++class EmptyColumn;
++
++class EmptyFilter : public Filter
++{
++    Column *_column;
++    int _opid;
++    bool _negate;
++public:
++    EmptyFilter(Column *_column, int opid, char *value);
++    ~EmptyFilter();
++    bool accepts(void *data);
++    void *indexFilter(const char *column);
++};
++
++
++#endif // EmptyFilter_h
+diff --git a/src/Makefile.am b/src/Makefile.am
+index ff8630c..901fa0a 100644
+--- a/src/Makefile.am
++++ b/src/Makefile.am
+@@ -56,7 +56,7 @@ livestatus_la_SOURCES = \
+ 	HostlistDependencyColumn.cc HostlistDependencyColumnFilter.cc \
+ 	ServicelistDependencyColumn.cc ServicelistDependencyColumnFilter.cc \
+ 	ContactgroupsColumn.cc RowSortedSet.cc HostServiceState.cc opids.cc auth.cc \
+-	ContactgroupsObjectlistColumn.cc CommandsMemberColumn.cc
++	ContactgroupsObjectlistColumn.cc CommandsMemberColumn.cc EmptyFilter.cc
+ 
+ if HAVE_DIET
+ 	diet -v $(CC) -x c -Wno-deprecated-declarations $(CFLAGS) $(LDFLAGS) -I.. -s -o $@ $^
