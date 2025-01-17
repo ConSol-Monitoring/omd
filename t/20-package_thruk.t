@@ -13,7 +13,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 1029 );
+plan( tests => 1074 );
 
 ##################################################
 # create our test site
@@ -242,6 +242,17 @@ for my $core (qw/naemon/) {
     if($core eq 'naemon') {
         for my $test (@{$naemon_tests}) {
             TestUtils::test_command($test);
+        }
+
+        my @timestamps = (time()+60, 2147483649, 4294967297, 10000000000);
+        for my $ts (@timestamps) {
+            my $tsstr = (scalar localtime($ts));
+            ok(1, "adding downtime till: ".$tsstr);
+            TestUtils::test_command({ cmd => "/bin/su - $site -c './bin/thruk r -d \"comment_data=dt:$ts:$tsstr\" -d \"end_time=$ts\" /hosts/$host/cmd/schedule_host_downtime'", like => ["/Command successfully submitted/"] });
+        }
+        TestUtils::test_command({ cmd => "/bin/su - $site -c './bin/thruk r \"/csv/downtimes?columns=count(*):num&headers=0\"'", like => ["/^num;4\$/"], waitfor => '^num;4$' });
+        for my $ts (@timestamps) {
+            TestUtils::test_command({ cmd => "/bin/su - $site -c './bin/thruk r \"/csv/downtimes?columns=end_time,comment&comment[like]=dt:$ts:&headers=0\"'", like => ["/dt:$ts:/", "/^$ts;/"] });
         }
     }
     for my $test (@{$own_tests}) {
