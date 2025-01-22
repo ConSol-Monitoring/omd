@@ -11,7 +11,7 @@ start() {
 
 inventory() {
   PORTS=""
-  TARGETS_FILE="$RUNTIME_DIRECTORY/samplicate_targets.env"
+  TARGETS_FILE="/var/tmp/samplicate_targets.env"
   ACTIVE_PORTS=$(ps -ef | grep /opt/omd/versions/default/bin/samplicate | grep samplicate.pid | sed -e 's/.*-f //g')
   if [ -x /usr/bin/omd ]; then
     for conf in /omd/sites/*/etc/omd/site.conf; do
@@ -30,7 +30,6 @@ inventory() {
       logger samplicate_watch changes from ${ACTIVE_PORTS:--} to ${PORTS:--} and restarts samplicate
       printf "SAMPLICATE_TARGETS=\"%s\"\n" "$PORTS" > $TARGETS_FILE
       systemctl restart samplicate
-      rm $TARGETS_FILE
     else
       :
       #logger samplicate_watch ignores samplicate

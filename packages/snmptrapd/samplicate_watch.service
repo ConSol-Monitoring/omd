@@ -4,7 +4,6 @@ Description=Watch the OMD sites for changing SNMPTRAPD settings
 
 [Service]
 #Type=oneshot
-RuntimeDirectory=samplicate
 ExecStart=/opt/omd/versions/default/bin/samplicate_watch start
 ExecStop=/opt/omd/versions/default/bin/samplicate_watch stop
 

@@ -4,8 +4,7 @@ After=samplicate_watch
 Requires=samplicate_watch
 
 [Service]
-RuntimeDirectory=samplicate
-EnvironmentFile=/run/samplicate/samplicate_targets.env
+EnvironmentFile=/var/tmp/samplicate_targets.env
 ExecStart=/opt/omd/versions/default/bin/samplicate -m /run/samplicate.pid -S -p 162 -f $SAMPLICATE_TARGETS
 Type=forking
 PIDFile=/run/samplicate.pid
