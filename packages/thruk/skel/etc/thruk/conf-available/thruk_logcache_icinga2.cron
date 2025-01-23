@@ -1,6 +1,8 @@
 #
 # this file will be managed by the THRUK_LOGCACHE hook
 #
+THRUK_CRON=1
+
 # update logcache data
 * * * * *    /usr/bin/env thruk logcache update           var/icinga2/log/icinga2/compat/icinga.log      >>$OMD_ROOT/var/log/thruk.log 2>&1
 5 0 * * *    /usr/bin/env thruk logcache update $(ls -1tr var/icinga2/log/icinga2/compat/archives/*.log) >>$OMD_ROOT/var/log/thruk.log 2>&1
@@ -16,3 +18,6 @@
 
 # compact old entries, set duration by `logcache_compact_duration`
 0  19 * * *  /usr/bin/env thruk logcache compact        >>$OMD_ROOT/var/log/thruk.log 2>&1
+
+THRUK_CRON=0
+
