@@ -33,18 +33,11 @@ Thruk:
 	ln -fns $$(realpath Thruk/themes/base.css) base.css
 
 node_modules:
-	N_PREFIX=$(N_PREFIX) \
-		npm i -D \
-		tailwindcss@latest \
-		postcss@latest \
-		autoprefixer@latest \
-		postcss-import@latest \
-		@tailwindcss/forms@latest \
+	N_PREFIX=$(N_PREFIX) npm i -D
 
 clean:
 	rm -rf \
 		node_modules \
-		package.json \
 		package-lock.json \
 		base.css \
 		stylesheets
