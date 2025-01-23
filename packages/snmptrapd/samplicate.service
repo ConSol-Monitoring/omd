@@ -1,12 +1,15 @@
 [Unit]
 Description=Samplicate snmptrapd forwarder
-After=samplicate_watch
-Requires=samplicate_watch
+After=samplicate_watch.service
+Requires=samplicate_watch.service
 
 [Service]
-EnvironmentFile=/var/tmp/samplicate_targets.env
+EnvironmentFile=/var/lib/samplicate_watch/targets.env
 ExecStart=/opt/omd/versions/default/bin/samplicate -m /run/samplicate.pid -S -p 162 -f $SAMPLICATE_TARGETS
 Type=forking
+Restart=always
+RestartSec=5
+TimeoutSec=5min
 PIDFile=/run/samplicate.pid
 
 [Install]

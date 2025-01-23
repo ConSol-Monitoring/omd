@@ -1,6 +1,6 @@
 [Unit]
 Description=Watch the OMD sites for changing SNMPTRAPD settings
-# writes /run/samplicate/samplicate_targets.env
+# writes /var/lib/samplicate_watch/targets.env
 
 [Service]
 #Type=oneshot
