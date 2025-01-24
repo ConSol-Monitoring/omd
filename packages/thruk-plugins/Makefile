@@ -1,8 +1,7 @@
 include ../../Makefile.omd
 
 NAME     = thruk-plugins
-PLUGINS  = omd \
-           woshsh \
+PLUGINS  = woshsh \
 
 CONSOLPLUGINS  = pansnaps \
 
