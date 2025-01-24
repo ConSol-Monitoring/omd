@@ -1,0 +1,103 @@
+From 909f20b17e2a19faf3797ff7392afc320d675d09 Mon Sep 17 00:00:00 2001
+From: Sven Nierlein <sven@consol.de>
+Date: Fri, 24 Jan 2025 09:50:13 +0100
+Subject: [PATCH] add remaining columns to downtimes_with_info and
+ comments_with_info
+
+downtimes_with_info now consists of:
+
+- id
+- author_name
+- comment
+- entry_time
+- start_time
+- end_time
+- fixed
+- duration
+- triggered_by
+
+comments_with_info now consists of:
+
+- id
+- author_name
+- comment
+- entry_time
+- entry_type
+- expires
+- expire_time
+---
+ src/DownCommColumn.cc | 23 +++++++++++++++++++++++
+ src/TableHosts.cc     |  4 ++--
+ src/TableServices.cc  |  4 ++--
+ 3 files changed, 27 insertions(+), 4 deletions(-)
+
+diff --git a/src/DownCommColumn.cc b/src/DownCommColumn.cc
+index 7ce12a9..3b212d1 100644
+--- a/src/DownCommColumn.cc
++++ b/src/DownCommColumn.cc
+@@ -40,6 +40,29 @@ void DownCommColumn::output(void *data, Query *query)
+                     query->outputString(dt->_author_name);
+                     query->outputSublistSeparator();
+                     query->outputString(dt->_comment);
++                    query->outputSublistSeparator();
++                    query->outputTime(dt->_entry_time);
++                    if(_is_downtime) {
++                        Downtime *d = (Downtime*) dt;
++                        query->outputSublistSeparator();
++                        query->outputTime(d->_start_time);
++                        query->outputSublistSeparator();
++                        query->outputTime(d->_end_time);
++                        query->outputSublistSeparator();
++                        query->outputInteger(d->_fixed);
++                        query->outputSublistSeparator();
++                        query->outputInteger64(d->_duration);
++                        query->outputSublistSeparator();
++                        query->outputInteger(d->_triggered_by);
++                    } else {
++                        Comment *c = (Comment*) dt;
++                        query->outputSublistSeparator();
++                        query->outputInteger(c->_entry_type);
++                        query->outputSublistSeparator();
++                        query->outputInteger(c->_expires);
++                        query->outputSublistSeparator();
++                        query->outputTime(c->_expire_time);
++                    }
+                     query->outputEndSublist();
+                 }
+                 else
+diff --git a/src/TableHosts.cc b/src/TableHosts.cc
+index 70f9a8e..0d45f7f 100644
+--- a/src/TableHosts.cc
++++ b/src/TableHosts.cc
+@@ -238,11 +238,11 @@ void TableHosts::addColumns(Table *table, string prefix, int indirect_offset)
+     table->addColumn(new DownCommColumn(prefix + "downtimes",
+                 "A list of the ids of all scheduled downtimes of this host", indirect_offset, true, false));
+     table->addColumn(new DownCommColumn(prefix + "downtimes_with_info",
+-                "A list of the all scheduled downtimes of the host with id, author and comment", indirect_offset, true, true));
++                "A list of all downtimes of the host with id, author, comment, start_time, end_time, fixed, duration and triggered_by", indirect_offset, true, true));
+     table->addColumn(new DownCommColumn(prefix + "comments",
+                 "A list of the ids of all comments of this host", indirect_offset, false, false));
+     table->addColumn(new DownCommColumn(prefix + "comments_with_info",
+-                "A list of all comments of the host with id, author and comment", indirect_offset, false, true));
++                "A list of all comments of the host with id, author, comment, entry_type, expires and expire_time", indirect_offset, false, true));
+ 
+     table->addColumn(new CustomVarsColumn(prefix + "custom_variable_names",
+                 "A list of the names of all custom variables", (char *)(&hst.custom_variables) - ref, indirect_offset, CVT_VARNAMES));
+diff --git a/src/TableServices.cc b/src/TableServices.cc
+index 4153e67..82cdd0e 100644
+--- a/src/TableServices.cc
++++ b/src/TableServices.cc
+@@ -379,11 +379,11 @@ void TableServices::addColumns(Table *table, string prefix, int indirect_offset,
+     table->addColumn(new DownCommColumn(prefix + "downtimes",
+                 "A list of all downtime ids of the service", indirect_offset, true, false));
+     table->addColumn(new DownCommColumn(prefix + "downtimes_with_info",
+-                "A list of all downtimes of the service with id, author and comment", indirect_offset, true, true));
++                "A list of all downtimes of the service with id, author, comment, start_time, end_time, fixed, duration and triggered_by", indirect_offset, true, true));
+     table->addColumn(new DownCommColumn(prefix + "comments",
+                 "A list of all comment ids of the service", indirect_offset, false, false));
+     table->addColumn(new DownCommColumn(prefix + "comments_with_info",
+-                "A list of all comments of the service with id, author and comment", indirect_offset, false, true));
++                "A list of all comments of the service with id, author, comment, entry_type, expires and expire_time", indirect_offset, false, true));
+ 
+     if (add_hosts)
+         g_table_hosts->addColumns(this, "host_", (char *)(&svc.host_ptr) - ref);
