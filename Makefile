@@ -191,7 +191,7 @@ pack:
     	\) \
     	-print0 \
   	| xargs -0 -n 500 strip 2>&1 \
-  	| grep -ivP 'File format not recognized|Unable to recognise the format|File truncated'
+  	| grep -ivP 'File format not recognized|Unable to recognise the format|File truncated|has no sections'
 
 	# Pack the whole stuff into a tarball
 	tar czf $(BIN_TGZ) --owner=root --group=root -C $(DESTDIR) .
