@@ -87,7 +87,7 @@ else
 DEFAULT_BUILD=build
 endif
 
-.PHONY: install-global Changelog release_notes_blog.md
+.PHONY: install-global Changelog release_notes_blog.md build
 
 omd: $(DEFAULT_BUILD)
 
