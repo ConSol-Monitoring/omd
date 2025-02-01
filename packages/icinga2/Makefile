@@ -50,6 +50,8 @@ endif
 
 build: $(EXTRA_BUILD_DEPS)
 	tar xzf $(DIR).tar.gz
+	echo ===664DBG=== after unpacking $(DIR).tar.gz
+	find . -path '*/zones.d/README' -ls
 	mkdir -p $(DIR)/build
 	for p in patches/*.patch ; do \
 	    echo "applying $$p..." ; \
@@ -59,9 +61,13 @@ build: $(EXTRA_BUILD_DEPS)
 		export CXXFLAGS="-O2 -fpermissive"; \
 		$(CMAKE) .. $(CONFIGUREOPTS) && \
 		make -j1
+	echo ===664DBG=== after make
+	find . -path '*/zones.d/README' -ls
 	# save build artifacts and clean build dir to speed up cached builds
 	rm -rf ./dest
 	$(MAKE) DESTDIR=$(shell pwd)/dest -C $(DIR)/build install
+	echo ===664DBG=== after make install
+	find . -path '*/zones.d/README' -ls
 	mv ./dest/$(OMD_ROOT)/* ./dest/.
 	rm -rf ./dest/omd
 	mkdir -p ./dest/bin
@@ -70,8 +76,12 @@ build: $(EXTRA_BUILD_DEPS)
 	mkdir -p ./dest/lib
 	mv ./dest/lib*/icinga2/* ./dest/lib/
 	rm -rf ./dest/lib*/icinga2
+	echo ===664DBG=== after moving
+	find . -path '*/zones.d/README' -ls
 	mkdir -p ./dest/etc/icinga2
 	rsync -a $(DIR)/etc/icinga2/. ./dest/etc/icinga2/.
+	echo ===664DBG=== after rsyncing
+	find . -path '*/zones.d/README' -ls
 	mkdir -p ./dest/etc/bash_completion.d
 	install -m 0644 $(DIR)/etc/bash_completion.d/icinga2 ./dest/etc/bash_completion.d
 	rm -rf $(DIR)
@@ -86,6 +96,8 @@ $(CMAKEDEST):
 		./configure --prefix=$(shell pwd)/$(CMAKEDEST) && \
 		make -j 4 && \
 		make install
+	echo ===664DBG=== after CMAKEDEST
+	find . -path '*/zones.d/README' -ls
 
 $(BOOSTDEST): $(CMAKEDEST)
 	tar xJf $(BOOSTDIR).tar.xz
@@ -99,6 +111,8 @@ build_boost: $(BOOSTDEST)
 
 install:
 	rsync -a ./dest/. $(DESTDIR)$(OMD_ROOT)/.
+	echo ===664DBG=== after rsync in install
+	find . -path '*/zones.d/README' -ls
 	sed   -e "s#/lib/icinga2/sbin/icinga2#/lib/sbin/icinga2#g" -i $(DESTDIR)$(OMD_ROOT)/bin/icinga2
 	sed -e "s#/lib64/icinga2/sbin/icinga2#/lib/sbin/icinga2#g" -i $(DESTDIR)$(OMD_ROOT)/bin/icinga2
 	strip $(DESTDIR)$(OMD_ROOT)/lib/monitoring-plugins/check_nscp_api
@@ -109,6 +123,8 @@ skel:
 	mkdir -p $(SKEL)/etc/icinga2
 	cp -rp ./dest/etc/icinga2/* $(SKEL)/etc/icinga2/
 	chmod 644 $(SKEL)/etc/icinga2/scripts/*
+	echo ===664DBG=== after chmod in skel
+	find . -path '*/zones.d/README' -ls
 	rm -rf $(SKEL)/etc/icinga2/conf.d/win32
 	rm -f $(SKEL)/etc/icinga2/features-*/windowseventlog.conf
 	mv $(SKEL)/etc/icinga2/constants.conf.cmake $(SKEL)/etc/icinga2/constants.conf
