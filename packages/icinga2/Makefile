@@ -108,7 +108,9 @@ install:
 skel:
 	mkdir -p $(SKEL)/etc/icinga2
 	cp -rp ./dest/etc/icinga2/* $(SKEL)/etc/icinga2/
-	chmod 644 $(SKEL)/etc/icinga2/scripts/*
+	# unpacking as root creates etc/icinga/* with 664 and 775, fix it.
+	find $(SKEL)/etc/icinga2/ -type d -exec chmod 755 {} \;
+	find $(SKEL)/etc/icinga2/ -type f -exec chmod 644 {} \;
 	rm -rf $(SKEL)/etc/icinga2/conf.d/win32
 	rm -f $(SKEL)/etc/icinga2/features-*/windowseventlog.conf
 	mv $(SKEL)/etc/icinga2/constants.conf.cmake $(SKEL)/etc/icinga2/constants.conf
