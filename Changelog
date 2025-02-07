@@ -9,6 +9,7 @@ next:
             - lmd update to 2.3.0
           - naemon:
             - fix timestamps beyond 2038
+            - change relative paths base to site folder
           - plugins:
             - check_hpasm update to 4.10.1
             - check_rittal_health update to 4.1.1
