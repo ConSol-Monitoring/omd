@@ -2,7 +2,7 @@ include ../../../Makefile.omd
 
 NAME = check_printer_health
 CHANGELOG   = https://github.com/lausser/check_printer_health/blob/master/ChangeLog
-VERSION = 1.2.0.1
+VERSION = 1.2.0.2
 DIR = $(NAME)-$(VERSION)
 
 .PHONY: skel
