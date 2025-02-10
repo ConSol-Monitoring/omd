@@ -32,6 +32,8 @@ RELOAD_STARTS=1
 
 # OMD: create configuration file out of fragments
 case "$1" in start|restart|reload|checkconfig|check)
+    mkdir -p $OMD_ROOT/tmp/naemon/checkresults \
+             $OMD_ROOT/tmp/naemon/tmp
     ln -sfn $OMD_ROOT/tmp/naemon $OMD_ROOT/tmp/core
     rm -f $CFG_FILE
     merge-core-config \
