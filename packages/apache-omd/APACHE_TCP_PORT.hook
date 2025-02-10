@@ -39,15 +39,6 @@ EOF
   LoadModule ssl_module         ###APACHE_MODULE_DIR###/mod_ssl.so
 </IfModule>
 SSLProxyEngine on
-EOF
-# known problem with sles11 sp1
-if [ "x$(apache2ctl -v 2>&1 | grep "Server version:" | sed -e 's%.*Apache/\([0-9\.]*\).*%\1%')" != "x2.2.10" ]; then
-            cat <<EOF >> $OMD_ROOT/etc/apache/proxy-port.conf
-SSLProxyCheckPeerExpire off
-SSLProxyCheckPeerCN off
-EOF
-fi
-            cat <<EOF >> $OMD_ROOT/etc/apache/proxy-port.conf
 # apache 2.4 only
 <IfModule mod_authz_core.c>
   SSLProxyCheckPeerName off
@@ -56,6 +47,7 @@ fi
   # redirect all http traffic to https
   RewriteEngine On
   RewriteCond %{HTTPS} off
+  RewriteCond %{REQUEST_URI} !^/$OMD_SITE/thruk/cgi-bin/remote.cgi
   RewriteRule (.*) https://%{HTTP_HOST}%{REQUEST_URI}
 </Location>
 EOF

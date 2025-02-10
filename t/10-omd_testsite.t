@@ -12,7 +12,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 598 );
+plan( tests => 606 );
 
 my $omd_bin = TestUtils::get_omd_bin();
 
@@ -250,6 +250,8 @@ TestUtils::test_command({ cmd => "/bin/sh -c 'curl -sk -H \"X-Forwarded-Proto: h
 TestUtils::test_command({ cmd => "/bin/sh -c 'curl -sk -H \"X-Forwarded-Proto: https\" -H \"X-Forwarded-Port: 1234\" https://localhost/$site/'", like => [qr%\Qhttps://localhost:1234/$site/omd/\E%] }) or BAIL_OUT("broken");
 TestUtils::test_command({ cmd => "/bin/sh -c 'curl -sk -H \"X-Forwarded-Proto: https\" -H \"X-Forwarded-Port: 1234\" -H \"X-Forwarded-Host: vhost.com\" https://localhost/$site/'", like => [qr%\Qhttps://vhost.com:1234/$site/omd/\E%] }) or BAIL_OUT("broken");
 TestUtils::test_command({ cmd => "/bin/sh -c 'curl -sk https://localhost:5000'", like => [qr%\Qhttps://localhost:5000/$site/\E%] }) or BAIL_OUT("broken");
+TestUtils::test_command({ cmd => "/omd/sites/$site/lib/monitoring-plugins/check_http    -t 60 -H localhost -u '/$site/thruk/cgi-bin/remote.cgi?lb_ping' -s 'OK'", like => '/HTTP OK/' });
+TestUtils::test_command({ cmd => "/omd/sites/$site/lib/monitoring-plugins/check_http -S -t 60 -H localhost -u '/$site/thruk/cgi-bin/remote.cgi?lb_ping' -s 'OK'", like => '/HTTP OK/' });
 
 # bulk config change II
 TestUtils::test_command({ cmd => "/bin/sh -c 'echo \"APACHE_MODE=none\nAUTOSTART=off\" | omd config $site change'", like => ['/Stopping apache/', '/Stopping naemon/', '/Starting naemon/'] });
