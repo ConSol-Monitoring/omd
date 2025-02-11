@@ -33,5 +33,5 @@ sys.stdout.write("# ------------------------------------------------------------
 for fn in sys.argv[1:]:
     sys.stdout.write("# %s\n" % (fn))
     for line in open(fn, "r"):
-        sys.stdout.write(line)
+        sys.stdout.write(line.strip() + "\n")
     sys.stdout.write("# ------------------------------------------------------------\n")
