@@ -8,21 +8,22 @@ next:
           - thruk:
             - lmd update to 2.3.0
           - naemon:
-            - fix timestamps beyond 2038
             - change relative paths base to site folder
+            - fix timestamps beyond 2038
           - plugins:
             - check_hpasm update to 4.10.1
+            - check_printer_health update to 1.2.0.2
             - check_rittal_health update to 4.1.1
             - check_vsphere update to 0.3.14
           - grafana:
             - thruk-datasource update to 2.1.2
           - ansible:
             - replace shiped ansible with dependency on ansible
+          - snmptrapd:
+            - improve the samplicate_watch units
           - Go builds updated to 1.23.4
           - histou update to 0.5.6
           - upx update to 4.2.4
-          - snmptrapd:
-            - improve the samplicate_watch units
 
 5.50     Dec 18 2024
           - omd:
