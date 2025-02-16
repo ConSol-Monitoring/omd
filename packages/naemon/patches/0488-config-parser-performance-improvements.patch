@@ -18,14 +18,6 @@ diff --git a/src/naemon/naemon.c b/src/naemon/naemon.c
 index 02a7ecc9..a601eb34 100644
 --- a/src/naemon/naemon.c
 +++ b/src/naemon/naemon.c
-@@ -571,6 +571,7 @@ int main(int argc, char **argv)
- 
- 		/* read in all object config data */
- 		if (result == OK) {
-+			nm_log(NSLOG_INFO_MESSAGE, "Reading all config object data\n");
- 			timing_point("Reading all object data\n");
- 			result = read_all_object_data(config_file);
- 			timing_point("Read all object data\n");
 @@ -587,6 +588,7 @@ int main(int argc, char **argv)
  		timing_point("Initialized Event queue\n");
  
