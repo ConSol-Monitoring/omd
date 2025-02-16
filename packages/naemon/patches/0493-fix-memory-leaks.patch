@@ -1,0 +1,139 @@
+From d8f2ef60df52166b1b2d334514fb6b0c81061f21 Mon Sep 17 00:00:00 2001
+From: Sven Nierlein <sven@consol.de>
+Date: Sun, 16 Feb 2025 22:00:53 +0100
+Subject: [PATCH 1/2] free notification suppression map
+
+the object ids might change during reloads, so it's better to free the list. Also it does not
+pops up as potential memory leak.
+
+Signed-off-by: Sven Nierlein <sven@consol.de>
+---
+ src/naemon/notifications.c | 23 ++++++++++++-----------
+ src/naemon/notifications.h |  1 +
+ src/naemon/utils.c         |  2 ++
+ 3 files changed, 15 insertions(+), 11 deletions(-)
+
+diff --git a/src/naemon/notifications.c b/src/naemon/notifications.c
+index 5720554c..ca11f227 100644
+--- a/src/naemon/notifications.c
++++ b/src/naemon/notifications.c
+@@ -24,6 +24,11 @@ struct notification_job {
+ 	contact *ctc;
+ };
+ 
++static struct {
++	unsigned int count;
++	enum NotificationSuppressionReason *reasons;
++} nsr_map[NS_TYPE__COUNT];
++
+ static notification *create_notification_list_from_host(nagios_macros *mac, host *hst, int options, int *escalated, int type);
+ static notification *create_notification_list_from_service(nagios_macros *mac, service *svc, int options, int *escalated, int type);
+ static int add_notification(notification **notification_list, nagios_macros *mac, contact *);						/* adds a notification instance */
+@@ -101,17 +106,6 @@ const char *notification_reason_name(enum NotificationReason reason)
+ static int update_notification_suppression_reason(enum NotificationSuppressionType type, unsigned int obj_id,
+         enum NotificationSuppressionReason reason)
+ {
+-	/*
+-	 * NOTE:
+-	 * This map only ever grows currently, since we never delete objects. It
+-	 * doesn't allocate everything at once (based on whatever the highest ID
+-	 * is, for example), since this way makes it easier to accommodate dynamic
+-	 * object configuration. At least it doesn't make it significantly harder.
+-	 */
+-	static struct {
+-		unsigned int count;
+-		enum NotificationSuppressionReason *reasons;
+-	} nsr_map[NS_TYPE__COUNT];
+ 	unsigned int new_count;
+ 
+ 	/* object id:s start at zero */
+@@ -132,6 +126,13 @@ static int update_notification_suppression_reason(enum NotificationSuppressionTy
+ 	return FALSE;
+ }
+ 
++void free_notification_suppression_map() {
++	for(int x = 0; x < NS_TYPE__COUNT; x++) {
++		nm_free(nsr_map[x].reasons);
++		nsr_map[x].count = 0;
++	}
++}
++
+ #define _log_nsr(S) if (enable_notification_suppression_reason_logging) { \
+ 	if (update_notification_suppression_reason(type, objid, reason)) { \
+ 		nm_log(log_level, "%s NOTIFICATION SUPPRESSED: %s;%s", type_name, objname, S); \
+diff --git a/src/naemon/notifications.h b/src/naemon/notifications.h
+index fade769e..29ea5c4a 100644
+--- a/src/naemon/notifications.h
++++ b/src/naemon/notifications.h
+@@ -98,6 +98,7 @@ int check_contact_host_notification_viability(contact *, host *, int, int);	/* c
+ int notify_contact_of_host(nagios_macros *mac, contact *, host *, int, char *, char *, int, int);        	/* notify a single contact about a host */
+ time_t get_next_host_notification_time(host *, time_t);				/* calculates next acceptable re-notification time for a host */
+ time_t get_next_service_notification_time(service *, time_t);			/* calculates next acceptable re-notification time for a service */
++void free_notification_suppression_map(void);
+ 
+ NAGIOS_END_DECL
+ 
+diff --git a/src/naemon/utils.c b/src/naemon/utils.c
+index 73c34c52..c55dc66f 100644
+--- a/src/naemon/utils.c
++++ b/src/naemon/utils.c
+@@ -945,6 +945,8 @@ void cleanup(void)
+ 		neb_deinit_modules();
+ 	}
+ 
++	free_notification_suppression_map();
++
+ 	/* free all allocated memory - including macros */
+ 	free_memory(get_global_macros());
+ 	close_log_file();
+
+From c000c5446bcbc74a7d756c79950c45c8fb4cca2f Mon Sep 17 00:00:00 2001
+From: Sven Nierlein <sven@consol.de>
+Date: Mon, 17 Feb 2025 01:16:26 +0100
+Subject: [PATCH 2/2] fix potential memory leak
+
+free the previous problem id before overwriting it.
+---
+ src/naemon/checks_host.c    | 1 +
+ src/naemon/checks_service.c | 1 +
+ src/naemon/notifications.c  | 3 ++-
+ 3 files changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/src/naemon/checks_host.c b/src/naemon/checks_host.c
+index d04e9e6d..21abf9c7 100644
+--- a/src/naemon/checks_host.c
++++ b/src/naemon/checks_host.c
+@@ -1035,6 +1035,7 @@ static int handle_host_state(host *hst, int *alert_recorded)
+ 
+ 		/* clear the problem id when transitioning from a problem state to an UP state */
+ 		if (hst->current_state == STATE_UP) {
++			nm_free(hst->last_problem_id);
+ 			hst->last_problem_id = hst->current_problem_id;
+ 			hst->current_problem_id = NULL;
+ 			if(hst->problem_start > 0)
+diff --git a/src/naemon/checks_service.c b/src/naemon/checks_service.c
+index 79f3f2f7..e0d40e08 100644
+--- a/src/naemon/checks_service.c
++++ b/src/naemon/checks_service.c
+@@ -764,6 +764,7 @@ int handle_async_service_check_result(service *temp_service, check_result *queue
+ 
+ 		/* clear the problem id when transitioning from a problem state to an OK state */
+ 		if (temp_service->current_state == STATE_OK) {
++			nm_free(temp_service->last_problem_id);
+ 			temp_service->last_problem_id = temp_service->current_problem_id;
+ 			temp_service->current_problem_id = NULL;
+ 			if(temp_service->problem_start > 0)
+diff --git a/src/naemon/notifications.c b/src/naemon/notifications.c
+index ca11f227..e2e6cb43 100644
+--- a/src/naemon/notifications.c
++++ b/src/naemon/notifications.c
+@@ -127,7 +127,8 @@ static int update_notification_suppression_reason(enum NotificationSuppressionTy
+ }
+ 
+ void free_notification_suppression_map() {
+-	for(int x = 0; x < NS_TYPE__COUNT; x++) {
++	int x;
++	for(x = 0; x < NS_TYPE__COUNT; x++) {
+ 		nm_free(nsr_map[x].reasons);
+ 		nsr_map[x].count = 0;
+ 	}
