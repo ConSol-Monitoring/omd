@@ -230,7 +230,7 @@ else
     rm -f /usr/share/man/man8/omd.8.gz
     rm -f /etc/init.d/omd
     rm -f /etc/bash_completion.d/omd
-    rmdir /opt/omd/versions
+    rmdir /opt/omd/versions >/dev/null 2>&1
     rm -f @APACHE_CONFDIR@/zzz_omd.conf
     rm -f /etc/apache2/vhosts.d/vhost-ssl-omd.conf
     rm -f /omd
