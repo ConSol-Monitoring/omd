@@ -19,6 +19,7 @@ next:
           - gearman:
             - mod-gearman update to 5.1.8
           - grafana:
+            - update to 11.5.2
             - thruk-datasource update to 2.1.2
           - ansible:
             - replace shiped ansible with dependency on ansible
