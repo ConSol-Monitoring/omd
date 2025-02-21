@@ -21,6 +21,8 @@ next:
             - replace shiped ansible with dependency on ansible
           - snmptrapd:
             - improve the samplicate_watch units
+          - python-modules:
+            - omdnotificationforwarder update to 2..2.2
           - Go builds updated to 1.23.4
           - histou update to 0.5.7
           - upx update to 4.2.4
