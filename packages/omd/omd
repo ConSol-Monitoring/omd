@@ -3600,11 +3600,41 @@ def main_reset(args, options={}):
     skelroot = omd_root() + "/skel"
     read_skel_permissions()
 
+    # Prepare paths:
+    # orig_path: this was specified by the user
+    # rel_path:  path relative to the site's dir
+    # abs_path:  absolute path
+
+    # Get absolute path to site dir. This can be (/opt/omd/sites/XXX)
+    # due to the symbolic link /omd
+    old_dir = os.getcwd()
+    os.chdir(g_sitedir)
+    abs_sitedir = os.getcwd()
+    os.chdir(old_dir)
+
     for arg in args:
-        if not os.path.exists(skelroot + '/' + arg):
-            bail_out(tty_error + ": file %s does not exist in skeleton"  % (arg))
-        if os.path.isdir(skelroot + '/' +arg) and not os.path.islink(skelroot + '/' + arg):
-            for dirpath, dirnames, filenames in os.walk(skelroot + '/' +arg):
+        # Create absolute paths first
+        abs_path = arg
+        if not abs_path.startswith("/"):
+            if abs_path == ".":
+                abs_path = ""
+            elif abs_path.startswith("./"):
+                abs_path = abs_path[2:]
+            abs_path = os.getcwd() + "/" + abs_path
+        abs_path = abs_path.rstrip("/")
+
+        # Make sure that path does not lie outside the OMD site
+        if abs_path.startswith(g_sitedir):
+            rel_path = abs_path[len(g_sitedir) + 1:]
+        elif abs_path.startswith(abs_sitedir):
+            rel_path = abs_path[len(abs_sitedir) + 1:]
+        else:
+            bail_out(tty_error + ": Sorry, 'omd reset' only works for files in the site's directory.")
+
+        if not os.path.exists(skelroot + '/' + rel_path):
+            bail_out(tty_error + ": file %s does not exist in skeleton"  % (rel_path))
+        if os.path.isdir(skelroot + '/' +rel_path) and not os.path.islink(skelroot + '/' + rel_path):
+            for dirpath, dirnames, filenames in os.walk(skelroot + '/' +rel_path):
                 localpath = dirpath.replace(skelroot, sitedir).replace(sitedir+"/", "")
                 for entry in dirnames:
                     if os.path.exists(localpath + '/' + entry) and not os.path.isdir(localpath + '/' + entry):
@@ -3621,10 +3651,10 @@ def main_reset(args, options={}):
                     create_skeleton_file(skelroot, sitedir, localpath + '/' + entry, replacements)
         else:
             try:
-                os.remove(arg)
+                os.remove(rel_path)
             except Exception:
                 pass
-            create_skeleton_file(skelroot, sitedir, arg, replacements)
+            create_skeleton_file(skelroot, sitedir, rel_path, replacements)
 
     config_set_all()
 
