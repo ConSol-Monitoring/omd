@@ -24,14 +24,13 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 1,
-  "id": 199668,
+  "id": 8052382,
   "links": [],
-  "liveNow": false,
   "panels": [
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "P1809F7CD0C75ACF3"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -92,12 +91,12 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "11.1.5",
+      "pluginVersion": "11.5.1",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "P1809F7CD0C75ACF3"
+            "uid": "${datasource}"
           },
           "expr": "sum(modgearmanworker_workers_total{instance=~\"$instance\"})",
           "format": "time_series",
@@ -143,7 +142,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "P1809F7CD0C75ACF3"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -205,12 +204,12 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "11.1.5",
+      "pluginVersion": "11.5.1",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "P1809F7CD0C75ACF3"
+            "uid": "${datasource}"
           },
           "expr": "sum(rate(modgearmanworker_tasks_completed_total{instance=~\"$instance\"}[1m]))",
           "format": "time_series",
@@ -256,7 +255,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "P1809F7CD0C75ACF3"
+        "uid": "${datasource}"
       },
       "description": "Each plugin not exiting with exit code = 0 is counted as error.",
       "fieldConfig": {
@@ -319,12 +318,12 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "11.1.5",
+      "pluginVersion": "11.5.1",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "P1809F7CD0C75ACF3"
+            "uid": "${datasource}"
           },
           "expr": "sum(rate(modgearmanworker_tasks_errors_total{instance=~\"$instance\"}[1m])) / sum(rate(modgearmanworker_tasks_completed_total{instance=~\"$instance\"}[1m])) * 100",
           "format": "time_series",
@@ -370,11 +369,12 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "P1809F7CD0C75ACF3"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
           "custom": {
+            "align": "auto",
             "cellOptions": {
               "type": "auto"
             },
@@ -439,12 +439,12 @@
         },
         "showHeader": true
       },
-      "pluginVersion": "11.1.5",
+      "pluginVersion": "11.5.1",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "P1809F7CD0C75ACF3"
+            "uid": "${datasource}"
           },
           "expr": "modgearmanworker_info{instance=~\"$instance\"}",
           "format": "table",
@@ -486,6 +486,7 @@
           "tags": []
         }
       ],
+      "title": "",
       "transformations": [
         {
           "id": "merge",
@@ -499,7 +500,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "P1809F7CD0C75ACF3"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -513,6 +514,7 @@
             "axisLabel": "",
             "axisPlacement": "auto",
             "barAlignment": 0,
+            "barWidthFactor": 0.6,
             "drawStyle": "line",
             "fillOpacity": 10,
             "gradientMode": "none",
@@ -585,16 +587,17 @@
           "showLegend": true
         },
         "tooltip": {
+          "hideZeros": false,
           "mode": "multi",
           "sort": "none"
         }
       },
-      "pluginVersion": "9.3.6",
+      "pluginVersion": "11.5.1",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "P1809F7CD0C75ACF3"
+            "uid": "${datasource}"
           },
           "dsType": "influxdb",
           "expr": "sum(go_goroutines{instance=~\"$instance\"})",
@@ -640,7 +643,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "P1809F7CD0C75ACF3"
+            "uid": "${datasource}"
           },
           "dsType": "influxdb",
           "expr": "sum(avg by(job)(rate(process_cpu_seconds_total{instance=~\"$instance\"}[5m])))",
@@ -686,7 +689,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "P1809F7CD0C75ACF3"
+            "uid": "${datasource}"
           },
           "expr": "sum(process_open_fds{instance=~\"$instance\"})",
           "format": "time_series",
@@ -699,7 +702,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "P1809F7CD0C75ACF3"
+            "uid": "${datasource}"
           },
           "expr": "sum(process_resident_memory_bytes{instance=~\"$instance\"})",
           "format": "time_series",
@@ -712,7 +715,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "P1809F7CD0C75ACF3"
+            "uid": "${datasource}"
           },
           "expr": "sum(process_virtual_memory_bytes{instance=~\"$instance\"})",
           "format": "time_series",
@@ -729,7 +732,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "P1809F7CD0C75ACF3"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -743,6 +746,7 @@
             "axisLabel": "",
             "axisPlacement": "auto",
             "barAlignment": 0,
+            "barWidthFactor": 0.6,
             "drawStyle": "line",
             "fillOpacity": 30,
             "gradientMode": "none",
@@ -923,16 +927,17 @@
           "sortDesc": true
         },
         "tooltip": {
+          "hideZeros": false,
           "mode": "multi",
           "sort": "none"
         }
       },
-      "pluginVersion": "9.3.6",
+      "pluginVersion": "11.5.1",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "P1809F7CD0C75ACF3"
+            "uid": "${datasource}"
           },
           "dsType": "influxdb",
           "expr": "sum(modgearmanworker_workers_total{instance=~\"$instance\"})",
@@ -978,7 +983,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "P1809F7CD0C75ACF3"
+            "uid": "${datasource}"
           },
           "dsType": "influxdb",
           "editorMode": "code",
@@ -1026,7 +1031,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "P1809F7CD0C75ACF3"
+            "uid": "${datasource}"
           },
           "dsType": "influxdb",
           "editorMode": "code",
@@ -1074,7 +1079,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "P1809F7CD0C75ACF3"
+            "uid": "${datasource}"
           },
           "dsType": "influxdb",
           "editorMode": "code",
@@ -1122,7 +1127,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "P1809F7CD0C75ACF3"
+            "uid": "${datasource}"
           },
           "dsType": "influxdb",
           "editorMode": "code",
@@ -1174,7 +1179,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "P1809F7CD0C75ACF3"
+        "uid": "${datasource}"
       },
       "description": "Shows how often a plugin has been run.",
       "fieldConfig": {
@@ -1189,6 +1194,7 @@
             "axisLabel": "exec/s",
             "axisPlacement": "auto",
             "barAlignment": 0,
+            "barWidthFactor": 0.6,
             "drawStyle": "line",
             "fillOpacity": 30,
             "gradientMode": "none",
@@ -1252,16 +1258,17 @@
           "width": 300
         },
         "tooltip": {
+          "hideZeros": false,
           "mode": "multi",
           "sort": "none"
         }
       },
-      "pluginVersion": "9.3.6",
+      "pluginVersion": "11.5.1",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "P1809F7CD0C75ACF3"
+            "uid": "${datasource}"
           },
           "editorMode": "code",
           "expr": "topk(10, sum(rate(modgearmanworker_plugin_system_cpu_time_seconds_count{instance=~\"$instance\"}[5m])) by (description))",
@@ -1310,7 +1317,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "P1809F7CD0C75ACF3"
+        "uid": "${datasource}"
       },
       "description": "Plots the total sum of cpu usage by plugin.",
       "fieldConfig": {
@@ -1325,6 +1332,7 @@
             "axisLabel": "",
             "axisPlacement": "auto",
             "barAlignment": 0,
+            "barWidthFactor": 0.6,
             "drawStyle": "line",
             "fillOpacity": 30,
             "gradientMode": "none",
@@ -1388,16 +1396,17 @@
           "width": 300
         },
         "tooltip": {
+          "hideZeros": false,
           "mode": "multi",
           "sort": "none"
         }
       },
-      "pluginVersion": "9.3.6",
+      "pluginVersion": "11.5.1",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "P1809F7CD0C75ACF3"
+            "uid": "${datasource}"
           },
           "editorMode": "code",
           "expr": "topk(10, sum(rate(modgearmanworker_plugin_system_cpu_time_seconds_sum{instance=~\"$instance\"}[5m])+rate(modgearmanworker_plugin_user_cpu_time_seconds_sum{instance=~\"$instance\"}[5m])) by (description))",
@@ -1446,7 +1455,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "P1809F7CD0C75ACF3"
+        "uid": "${datasource}"
       },
       "description": "Plots the average cpu usage grouped by plugin.",
       "fieldConfig": {
@@ -1461,6 +1470,7 @@
             "axisLabel": "",
             "axisPlacement": "auto",
             "barAlignment": 0,
+            "barWidthFactor": 0.6,
             "drawStyle": "line",
             "fillOpacity": 30,
             "gradientMode": "none",
@@ -1524,16 +1534,17 @@
           "width": 300
         },
         "tooltip": {
+          "hideZeros": false,
           "mode": "multi",
           "sort": "none"
         }
       },
-      "pluginVersion": "9.3.6",
+      "pluginVersion": "11.5.1",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "P1809F7CD0C75ACF3"
+            "uid": "${datasource}"
           },
           "editorMode": "code",
           "expr": "topk(\n    10, \n    sum(\n        (rate(modgearmanworker_plugin_system_cpu_time_seconds_sum{instance=~\"$instance\"}[5m])\n        +rate(modgearmanworker_plugin_user_cpu_time_seconds_sum{instance=~\"$instance\"}[5m])\n        )\n        / \n        rate(modgearmanworker_plugin_system_cpu_time_seconds_count{instance=~\"$instance\"}[5m])\n    ) by (description)    \n)",
@@ -1582,7 +1593,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "P1809F7CD0C75ACF3"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -1596,6 +1607,7 @@
             "axisLabel": "",
             "axisPlacement": "auto",
             "barAlignment": 0,
+            "barWidthFactor": 0.6,
             "drawStyle": "line",
             "fillOpacity": 30,
             "gradientMode": "none",
@@ -1655,16 +1667,17 @@
           "showLegend": true
         },
         "tooltip": {
+          "hideZeros": false,
           "mode": "multi",
           "sort": "none"
         }
       },
-      "pluginVersion": "9.3.6",
+      "pluginVersion": "11.5.1",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "P1809F7CD0C75ACF3"
+            "uid": "${datasource}"
           },
           "dsType": "influxdb",
           "editorMode": "code",
@@ -1716,7 +1729,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "P1809F7CD0C75ACF3"
+        "uid": "${datasource}"
       },
       "description": "Each plugin not exiting with exit code = 0 is counted as error.",
       "fieldConfig": {
@@ -1731,6 +1744,7 @@
             "axisLabel": "",
             "axisPlacement": "auto",
             "barAlignment": 0,
+            "barWidthFactor": 0.6,
             "drawStyle": "line",
             "fillOpacity": 30,
             "gradientMode": "none",
@@ -1822,16 +1836,17 @@
           "showLegend": true
         },
         "tooltip": {
+          "hideZeros": false,
           "mode": "multi",
           "sort": "none"
         }
       },
-      "pluginVersion": "9.3.6",
+      "pluginVersion": "11.5.1",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "P1809F7CD0C75ACF3"
+            "uid": "${datasource}"
           },
           "dsType": "influxdb",
           "editorMode": "code",
@@ -1880,7 +1895,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "P1809F7CD0C75ACF3"
+            "uid": "${datasource}"
           },
           "dsType": "influxdb",
           "editorMode": "coe",
@@ -1933,7 +1948,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "P1809F7CD0C75ACF3"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -1947,6 +1962,7 @@
             "axisLabel": "",
             "axisPlacement": "auto",
             "barAlignment": 0,
+            "barWidthFactor": 0.6,
             "drawStyle": "line",
             "fillOpacity": 30,
             "gradientMode": "none",
@@ -2006,16 +2022,17 @@
           "showLegend": true
         },
         "tooltip": {
+          "hideZeros": false,
           "mode": "multi",
           "sort": "none"
         }
       },
-      "pluginVersion": "9.3.6",
+      "pluginVersion": "11.5.1",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "P1809F7CD0C75ACF3"
+            "uid": "${datasource}"
           },
           "dsType": "influxdb",
           "editorMode": "code",
@@ -2065,16 +2082,29 @@
       "type": "timeseries"
     }
   ],
+  "preload": false,
   "refresh": "10s",
-  "schemaVersion": 39,
+  "schemaVersion": 40,
   "tags": [
     "prometheus"
   ],
   "templating": {
     "list": [
       {
+        "allowCustomValue": false,
         "current": {
-          "selected": true,
+          "text": "prometheus",
+          "value": "P1809F7CD0C75ACF3"
+        },
+        "name": "datasource",
+        "options": [],
+        "query": "prometheus",
+        "refresh": 1,
+        "regex": "",
+        "type": "datasource"
+      },
+      {
+        "current": {
           "text": [
             "All"
           ],
@@ -2084,10 +2114,9 @@
         },
         "datasource": {
           "type": "prometheus",
-          "uid": "P1809F7CD0C75ACF3"
+          "uid": "${datasource}"
         },
         "definition": "",
-        "hide": 0,
         "includeAll": true,
         "label": "Worker",
         "multi": true,
@@ -2099,16 +2128,11 @@
         },
         "refresh": 2,
         "regex": "",
-        "skipUrlSync": false,
         "sort": 1,
-        "tagValuesQuery": "",
-        "tagsQuery": "",
-        "type": "query",
-        "useTags": false
+        "type": "query"
       },
       {
         "current": {
-          "selected": true,
           "text": [
             "All"
           ],
@@ -2118,12 +2142,11 @@
         },
         "datasource": {
           "type": "prometheus",
-          "uid": "P1809F7CD0C75ACF3"
+          "uid": "${datasource}"
         },
         "definition": "",
         "hide": 2,
         "includeAll": true,
-        "label": "",
         "multi": true,
         "name": "instance",
         "options": [],
@@ -2133,12 +2156,8 @@
         },
         "refresh": 2,
         "regex": "",
-        "skipUrlSync": false,
         "sort": 1,
-        "tagValuesQuery": "",
-        "tagsQuery": "",
-        "type": "query",
-        "useTags": false
+        "type": "query"
       }
     ]
   },
@@ -2146,34 +2165,10 @@
     "from": "now-30m",
     "to": "now"
   },
-  "timepicker": {
-    "refresh_intervals": [
-      "5s",
-      "10s",
-      "30s",
-      "1m",
-      "5m",
-      "15m",
-      "30m",
-      "1h",
-      "2h",
-      "1d"
-    ],
-    "time_options": [
-      "5m",
-      "15m",
-      "1h",
-      "6h",
-      "12h",
-      "24h",
-      "2d",
-      "7d",
-      "30d"
-    ]
-  },
+  "timepicker": {},
   "timezone": "browser",
   "title": "Mod-Gearman Worker",
   "uid": "u2qAFJ1mk",
-  "version": 4,
+  "version": 68,
   "weekStart": ""
 }
