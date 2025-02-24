@@ -18,14 +18,11 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
+  "id": 8052381,
   "links": [],
   "panels": [
     {
       "collapsed": false,
-      "datasource": {
-        "type": "influxdb",
-        "uid": "000000001"
-      },
       "gridPos": {
         "h": 1,
         "w": 24,
@@ -34,22 +31,13 @@
       },
       "id": 19,
       "panels": [],
-      "targets": [
-        {
-          "datasource": {
-            "type": "influxdb",
-            "uid": "000000001"
-          },
-          "refId": "A"
-        }
-      ],
       "title": "Overview",
       "type": "row"
     },
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "P1809F7CD0C75ACF3"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -109,12 +97,12 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "11.1.5",
+      "pluginVersion": "11.5.1",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "P1809F7CD0C75ACF3"
+            "uid": "${datasource}"
           },
           "expr": "sum(count by(instance) (lmd_peer_backend_connections{instance=~\"$instance\"}))",
           "format": "time_series",
@@ -128,7 +116,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "P1809F7CD0C75ACF3"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -188,12 +176,12 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "11.1.5",
+      "pluginVersion": "11.5.1",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "P1809F7CD0C75ACF3"
+            "uid": "${datasource}"
           },
           "expr": "sum(process_resident_memory_bytes{instance=~\"$instance\"})",
           "format": "time_series",
@@ -207,7 +195,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "P1809F7CD0C75ACF3"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -267,12 +255,12 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "11.1.5",
+      "pluginVersion": "11.5.1",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "P1809F7CD0C75ACF3"
+            "uid": "${datasource}"
           },
           "expr": "sum(lmd_peer_object_count{instance=~\"$instance\"})",
           "format": "time_series",
@@ -286,7 +274,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "P1809F7CD0C75ACF3"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -343,7 +331,7 @@
       },
       "gridPos": {
         "h": 4,
-        "w": 6,
+        "w": 15,
         "x": 9,
         "y": 1
       },
@@ -361,12 +349,12 @@
         },
         "showHeader": true
       },
-      "pluginVersion": "11.1.5",
+      "pluginVersion": "11.5.1",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "P1809F7CD0C75ACF3"
+            "uid": "${datasource}"
           },
           "expr": "lmd_info{instance=~\"$instance\"}",
           "format": "table",
@@ -375,6 +363,7 @@
           "refId": "A"
         }
       ],
+      "title": "",
       "transformations": [
         {
           "id": "merge",
@@ -388,7 +377,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "P1809F7CD0C75ACF3"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -402,6 +391,7 @@
             "axisLabel": "",
             "axisPlacement": "auto",
             "barAlignment": 0,
+            "barWidthFactor": 0.6,
             "drawStyle": "line",
             "fillOpacity": 10,
             "gradientMode": "none",
@@ -478,16 +468,17 @@
           "showLegend": true
         },
         "tooltip": {
+          "hideZeros": false,
           "mode": "multi",
           "sort": "none"
         }
       },
-      "pluginVersion": "11.1.5",
+      "pluginVersion": "11.5.1",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "P1809F7CD0C75ACF3"
+            "uid": "${datasource}"
           },
           "dsType": "influxdb",
           "expr": "sum(go_goroutines{instance=~\"$instance\"})",
@@ -533,7 +524,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "P1809F7CD0C75ACF3"
+            "uid": "${datasource}"
           },
           "dsType": "influxdb",
           "expr": "sum(rate(process_cpu_seconds_total{instance=~\"$instance\"}[5m]))",
@@ -579,7 +570,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "P1809F7CD0C75ACF3"
+            "uid": "${datasource}"
           },
           "expr": "sum(process_open_fds{instance=~\"$instance\"})",
           "format": "time_series",
@@ -592,7 +583,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "P1809F7CD0C75ACF3"
+            "uid": "${datasource}"
           },
           "expr": "sum(process_resident_memory_bytes{instance=~\"$instance\"})",
           "format": "time_series",
@@ -605,7 +596,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "P1809F7CD0C75ACF3"
+            "uid": "${datasource}"
           },
           "expr": "sum(process_virtual_memory_bytes{instance=~\"$instance\"})",
           "format": "time_series",
@@ -622,7 +613,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "P1809F7CD0C75ACF3"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -636,6 +627,7 @@
             "axisLabel": "objects",
             "axisPlacement": "auto",
             "barAlignment": 0,
+            "barWidthFactor": 0.6,
             "drawStyle": "line",
             "fillOpacity": 10,
             "gradientMode": "none",
@@ -694,18 +686,20 @@
           "showLegend": true
         },
         "tooltip": {
+          "hideZeros": false,
           "mode": "multi",
           "sort": "none"
         }
       },
-      "pluginVersion": "11.1.5",
+      "pluginVersion": "11.5.1",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "P1809F7CD0C75ACF3"
+            "uid": "${datasource}"
           },
           "dsType": "influxdb",
+          "editorMode": "code",
           "expr": "sum by(peer)(lmd_peer_object_count{instance=~\"$instance\"})",
           "format": "time_series",
           "groupBy": [
@@ -727,6 +721,7 @@
           "legendFormat": "{{peer}}",
           "metric": "lmd_peer_host_num",
           "policy": "default",
+          "range": true,
           "refId": "A",
           "resultFormat": "time_series",
           "select": [
@@ -753,7 +748,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "P1809F7CD0C75ACF3"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -767,6 +762,7 @@
             "axisLabel": "",
             "axisPlacement": "auto",
             "barAlignment": 0,
+            "barWidthFactor": 0.6,
             "drawStyle": "line",
             "fillOpacity": 10,
             "gradientMode": "none",
@@ -826,16 +822,17 @@
           "showLegend": true
         },
         "tooltip": {
+          "hideZeros": false,
           "mode": "multi",
           "sort": "none"
         }
       },
-      "pluginVersion": "11.1.5",
+      "pluginVersion": "11.5.1",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "P1809F7CD0C75ACF3"
+            "uid": "${datasource}"
           },
           "dsType": "influxdb",
           "expr": "sum(go_memstats_heap_inuse_bytes{instance=~\"$instance\"})/(sum(lmd_peer_object_count{instance=~\"$instance\"}))",
@@ -884,10 +881,6 @@
     },
     {
       "collapsed": true,
-      "datasource": {
-        "type": "influxdb",
-        "uid": "000000001"
-      },
       "gridPos": {
         "h": 1,
         "w": 24,
@@ -899,7 +892,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "P1809F7CD0C75ACF3"
+            "uid": "${datasource}"
           },
           "fieldConfig": {
             "defaults": {
@@ -913,6 +906,7 @@
                 "axisLabel": "",
                 "axisPlacement": "auto",
                 "barAlignment": 0,
+                "barWidthFactor": 0.6,
                 "drawStyle": "line",
                 "fillOpacity": 10,
                 "gradientMode": "none",
@@ -984,16 +978,17 @@
               "showLegend": true
             },
             "tooltip": {
+              "hideZeros": false,
               "mode": "multi",
               "sort": "none"
             }
           },
-          "pluginVersion": "11.1.5",
+          "pluginVersion": "11.5.1",
           "targets": [
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "P1809F7CD0C75ACF3"
+                "uid": "${datasource}"
               },
               "expr": "avg by(listen)(rate(lmd_frontend_send_bytes{instance=~\"$instance\"}[1m]))",
               "format": "time_series",
@@ -1007,7 +1002,7 @@
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "P1809F7CD0C75ACF3"
+                "uid": "${datasource}"
               },
               "expr": "avg by(listen)(rate(lmd_frontend_received_bytes{instance=~\"$instance\"}[1m]))",
               "format": "time_series",
@@ -1025,7 +1020,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "P1809F7CD0C75ACF3"
+            "uid": "${datasource}"
           },
           "fieldConfig": {
             "defaults": {
@@ -1039,6 +1034,7 @@
                 "axisLabel": "queries/s",
                 "axisPlacement": "auto",
                 "barAlignment": 0,
+                "barWidthFactor": 0.6,
                 "drawStyle": "line",
                 "fillOpacity": 10,
                 "gradientMode": "none",
@@ -1097,16 +1093,17 @@
               "showLegend": true
             },
             "tooltip": {
+              "hideZeros": false,
               "mode": "multi",
               "sort": "none"
             }
           },
-          "pluginVersion": "11.1.5",
+          "pluginVersion": "11.5.1",
           "targets": [
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "P1809F7CD0C75ACF3"
+                "uid": "${datasource}"
               },
               "dsType": "influxdb",
               "expr": "avg by(listen)(rate(lmd_frontend_queries{instance=~\"$instance\"}[1m]))",
@@ -1156,7 +1153,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "P1809F7CD0C75ACF3"
+            "uid": "${datasource}"
           },
           "fieldConfig": {
             "defaults": {
@@ -1170,6 +1167,7 @@
                 "axisLabel": "connections/s",
                 "axisPlacement": "auto",
                 "barAlignment": 0,
+                "barWidthFactor": 0.6,
                 "drawStyle": "line",
                 "fillOpacity": 10,
                 "gradientMode": "none",
@@ -1228,16 +1226,17 @@
               "showLegend": true
             },
             "tooltip": {
+              "hideZeros": false,
               "mode": "multi",
               "sort": "none"
             }
           },
-          "pluginVersion": "11.1.5",
+          "pluginVersion": "11.5.1",
           "targets": [
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "P1809F7CD0C75ACF3"
+                "uid": "${datasource}"
               },
               "dsType": "influxdb",
               "expr": "avg by(listen)(rate(lmd_frontend_connections{instance=~\"$instance\"}[1m]))",
@@ -1287,7 +1286,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "P1809F7CD0C75ACF3"
+            "uid": "${datasource}"
           },
           "fieldConfig": {
             "defaults": {
@@ -1301,6 +1300,7 @@
                 "axisLabel": "",
                 "axisPlacement": "auto",
                 "barAlignment": 0,
+                "barWidthFactor": 0.6,
                 "drawStyle": "line",
                 "fillOpacity": 10,
                 "gradientMode": "none",
@@ -1418,16 +1418,17 @@
               "showLegend": true
             },
             "tooltip": {
+              "hideZeros": false,
               "mode": "multi",
               "sort": "none"
             }
           },
-          "pluginVersion": "11.1.5",
+          "pluginVersion": "11.5.1",
           "targets": [
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "P1809F7CD0C75ACF3"
+                "uid": "${datasource}"
               },
               "dsType": "influxdb",
               "expr": "avg by(peer)(rate(lmd_peer_received_bytes{instance=~\"$instance\"}[1m]))",
@@ -1473,7 +1474,7 @@
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "P1809F7CD0C75ACF3"
+                "uid": "${datasource}"
               },
               "dsType": "influxdb",
               "expr": "avg by(peer)(rate(lmd_peer_sent_bytes{instance=~\"$instance\"}[1m]))",
@@ -1518,7 +1519,7 @@
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "P1809F7CD0C75ACF3"
+                "uid": "${datasource}"
               },
               "dsType": "influxdb",
               "expr": "lmd_peer_update_interval{instance=~\"$instance\"}",
@@ -1568,7 +1569,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "P1809F7CD0C75ACF3"
+            "uid": "${datasource}"
           },
           "fieldConfig": {
             "defaults": {
@@ -1582,6 +1583,7 @@
                 "axisLabel": "queries /s",
                 "axisPlacement": "auto",
                 "barAlignment": 0,
+                "barWidthFactor": 0.6,
                 "drawStyle": "line",
                 "fillOpacity": 10,
                 "gradientMode": "none",
@@ -1640,18 +1642,20 @@
               "showLegend": true
             },
             "tooltip": {
+              "hideZeros": false,
               "mode": "multi",
               "sort": "none"
             }
           },
-          "pluginVersion": "11.1.5",
+          "pluginVersion": "11.5.1",
           "targets": [
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "P1809F7CD0C75ACF3"
+                "uid": "${datasource}"
               },
               "dsType": "influxdb",
+              "editorMode": "code",
               "expr": "avg by(peer)(rate(lmd_peer_backend_queries{instance=~\"$instance\"}[1m]))",
               "format": "time_series",
               "groupBy": [
@@ -1673,6 +1677,7 @@
               "legendFormat": "Queries {{peer}}",
               "metric": "peer_backend_connections",
               "policy": "default",
+              "range": true,
               "refId": "A",
               "resultFormat": "time_series",
               "select": [
@@ -1699,7 +1704,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "P1809F7CD0C75ACF3"
+            "uid": "${datasource}"
           },
           "fieldConfig": {
             "defaults": {
@@ -1713,6 +1718,7 @@
                 "axisLabel": "connections /s",
                 "axisPlacement": "auto",
                 "barAlignment": 0,
+                "barWidthFactor": 0.6,
                 "drawStyle": "line",
                 "fillOpacity": 10,
                 "gradientMode": "none",
@@ -1806,16 +1812,17 @@
               "showLegend": true
             },
             "tooltip": {
+              "hideZeros": false,
               "mode": "multi",
               "sort": "none"
             }
           },
-          "pluginVersion": "11.1.5",
+          "pluginVersion": "11.5.1",
           "targets": [
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "P1809F7CD0C75ACF3"
+                "uid": "${datasource}"
               },
               "dsType": "influxdb",
               "expr": "avg by(peer)(rate(lmd_peer_backend_connections{instance=~\"$instance\"}[1m]))",
@@ -1861,7 +1868,7 @@
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "P1809F7CD0C75ACF3"
+                "uid": "${datasource}"
               },
               "dsType": "influxdb",
               "expr": "avg by(peer)(rate(lmd_peer_backend_failed_connections{instance=~\"$instance\"}[1m]))",
@@ -1910,7 +1917,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "P1809F7CD0C75ACF3"
+            "uid": "${datasource}"
           },
           "fieldConfig": {
             "defaults": {
@@ -1924,6 +1931,7 @@
                 "axisLabel": "",
                 "axisPlacement": "auto",
                 "barAlignment": 0,
+                "barWidthFactor": 0.6,
                 "drawStyle": "line",
                 "fillOpacity": 10,
                 "gradientMode": "none",
@@ -1982,16 +1990,17 @@
               "showLegend": true
             },
             "tooltip": {
+              "hideZeros": false,
               "mode": "multi",
               "sort": "none"
             }
           },
-          "pluginVersion": "11.1.5",
+          "pluginVersion": "11.5.1",
           "targets": [
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "P1809F7CD0C75ACF3"
+                "uid": "${datasource}"
               },
               "dsType": "influxdb",
               "expr": "avg by(peer)(lmd_peer_update_duration_seconds{instance=~\"$instance\"})",
@@ -2037,15 +2046,141 @@
           ],
           "title": "Backend Response Time",
           "type": "timeseries"
-        }
-      ],
-      "targets": [
+        },
         {
           "datasource": {
-            "type": "influxdb",
-            "uid": "000000001"
+            "type": "prometheus",
+            "uid": "${datasource}"
           },
-          "refId": "A"
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "barWidthFactor": 0.6,
+                "drawStyle": "line",
+                "fillOpacity": 10,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "insertNulls": false,
+                "lineInterpolation": "linear",
+                "lineWidth": 2,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "never",
+                "spanNulls": true,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              },
+              "unit": "rowsps"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 7,
+            "w": 12,
+            "x": 12,
+            "y": 41
+          },
+          "id": 42,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "hideZeros": false,
+              "mode": "multi",
+              "sort": "none"
+            }
+          },
+          "pluginVersion": "11.5.1",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "dsType": "influxdb",
+              "editorMode": "code",
+              "expr": "avg by(peer)(rate(lmd_peer_updated_objects{instance=~\"$instance\"}[1m]))",
+              "format": "time_series",
+              "groupBy": [
+                {
+                  "params": [
+                    "$interval"
+                  ],
+                  "type": "time"
+                },
+                {
+                  "params": [
+                    "null"
+                  ],
+                  "type": "fill"
+                }
+              ],
+              "hide": false,
+              "intervalFactor": 2,
+              "legendFormat": "{{peer}}",
+              "metric": "",
+              "policy": "default",
+              "range": true,
+              "refId": "A",
+              "resultFormat": "time_series",
+              "select": [
+                [
+                  {
+                    "params": [
+                      "value"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "mean"
+                  }
+                ]
+              ],
+              "step": 2,
+              "tags": []
+            }
+          ],
+          "title": "Updated Objects Rate",
+          "type": "timeseries"
         }
       ],
       "title": "Traffic Details",
@@ -2053,10 +2188,6 @@
     },
     {
       "collapsed": true,
-      "datasource": {
-        "type": "influxdb",
-        "uid": "000000001"
-      },
       "gridPos": {
         "h": 1,
         "w": 24,
@@ -2068,7 +2199,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "P1809F7CD0C75ACF3"
+            "uid": "${datasource}"
           },
           "fieldConfig": {
             "defaults": {
@@ -2082,6 +2213,7 @@
                 "axisLabel": "objects",
                 "axisPlacement": "auto",
                 "barAlignment": 0,
+                "barWidthFactor": 0.6,
                 "drawStyle": "line",
                 "fillOpacity": 10,
                 "gradientMode": "none",
@@ -2130,7 +2262,7 @@
             "h": 7,
             "w": 24,
             "x": 0,
-            "y": 28
+            "y": 147
           },
           "id": 8,
           "options": {
@@ -2143,18 +2275,19 @@
               "showLegend": true
             },
             "tooltip": {
+              "hideZeros": false,
               "mode": "multi",
               "sort": "none"
             }
           },
-          "pluginVersion": "11.1.5",
+          "pluginVersion": "11.5.1",
           "repeat": "types",
           "repeatDirection": "v",
           "targets": [
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "P1809F7CD0C75ACF3"
+                "uid": "${datasource}"
               },
               "dsType": "influxdb",
               "expr": "sum by(peer)(lmd_peer_object_count{instance=~\"$instance\",type=\"$types\"})",
@@ -2203,24 +2336,11 @@
           "type": "timeseries"
         }
       ],
-      "targets": [
-        {
-          "datasource": {
-            "type": "influxdb",
-            "uid": "000000001"
-          },
-          "refId": "A"
-        }
-      ],
       "title": "Object Details",
       "type": "row"
     },
     {
       "collapsed": true,
-      "datasource": {
-        "type": "influxdb",
-        "uid": "000000001"
-      },
       "gridPos": {
         "h": 1,
         "w": 24,
@@ -2232,7 +2352,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "P1809F7CD0C75ACF3"
+            "uid": "${datasource}"
           },
           "fieldConfig": {
             "defaults": {
@@ -2246,6 +2366,7 @@
                 "axisLabel": "",
                 "axisPlacement": "auto",
                 "barAlignment": 0,
+                "barWidthFactor": 0.6,
                 "drawStyle": "line",
                 "fillOpacity": 10,
                 "gradientMode": "none",
@@ -2311,7 +2432,7 @@
             "h": 7,
             "w": 24,
             "x": 0,
-            "y": 29
+            "y": 148
           },
           "id": 23,
           "options": {
@@ -2322,16 +2443,17 @@
               "showLegend": true
             },
             "tooltip": {
+              "hideZeros": false,
               "mode": "multi",
               "sort": "none"
             }
           },
-          "pluginVersion": "11.1.5",
+          "pluginVersion": "11.5.1",
           "targets": [
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "P1809F7CD0C75ACF3"
+                "uid": "${datasource}"
               },
               "expr": "sum(process_resident_memory_bytes{instance=~\"$instance\"})",
               "format": "time_series",
@@ -2344,7 +2466,7 @@
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "P1809F7CD0C75ACF3"
+                "uid": "${datasource}"
               },
               "expr": "sum(process_virtual_memory_bytes{instance=~\"$instance\"})",
               "format": "time_series",
@@ -2361,7 +2483,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "P1809F7CD0C75ACF3"
+            "uid": "${datasource}"
           },
           "fieldConfig": {
             "defaults": {
@@ -2375,6 +2497,7 @@
                 "axisLabel": "",
                 "axisPlacement": "auto",
                 "barAlignment": 0,
+                "barWidthFactor": 0.6,
                 "drawStyle": "line",
                 "fillOpacity": 10,
                 "gradientMode": "none",
@@ -2439,7 +2562,7 @@
             "h": 7,
             "w": 24,
             "x": 0,
-            "y": 36
+            "y": 155
           },
           "id": 25,
           "options": {
@@ -2450,16 +2573,17 @@
               "showLegend": true
             },
             "tooltip": {
+              "hideZeros": false,
               "mode": "multi",
               "sort": "none"
             }
           },
-          "pluginVersion": "11.1.5",
+          "pluginVersion": "11.5.1",
           "targets": [
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "P1809F7CD0C75ACF3"
+                "uid": "${datasource}"
               },
               "expr": "sum(go_memstats_alloc_bytes{instance=~\"$instance\"})",
               "format": "time_series",
@@ -2472,7 +2596,7 @@
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "P1809F7CD0C75ACF3"
+                "uid": "${datasource}"
               },
               "expr": "sum(rate(go_memstats_alloc_bytes_total{instance=~\"$instance\"}[30s]))",
               "format": "time_series",
@@ -2485,7 +2609,7 @@
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "P1809F7CD0C75ACF3"
+                "uid": "${datasource}"
               },
               "expr": "sum(go_memstats_stack_inuse_bytes{instance=~\"$instance\"})",
               "format": "time_series",
@@ -2498,7 +2622,7 @@
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "P1809F7CD0C75ACF3"
+                "uid": "${datasource}"
               },
               "expr": "sum(go_memstats_heap_inuse_bytes{instance=~\"$instance\"})",
               "format": "time_series",
@@ -2516,7 +2640,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "P1809F7CD0C75ACF3"
+            "uid": "${datasource}"
           },
           "fieldConfig": {
             "defaults": {
@@ -2530,6 +2654,7 @@
                 "axisLabel": "cache size",
                 "axisPlacement": "auto",
                 "barAlignment": 0,
+                "barWidthFactor": 0.6,
                 "drawStyle": "line",
                 "fillOpacity": 10,
                 "gradientMode": "none",
@@ -2599,7 +2724,7 @@
             "h": 7,
             "w": 24,
             "x": 0,
-            "y": 43
+            "y": 162
           },
           "id": 41,
           "options": {
@@ -2610,16 +2735,17 @@
               "showLegend": true
             },
             "tooltip": {
+              "hideZeros": false,
               "mode": "multi",
               "sort": "none"
             }
           },
-          "pluginVersion": "11.1.5",
+          "pluginVersion": "11.5.1",
           "targets": [
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "P1809F7CD0C75ACF3"
+                "uid": "${datasource}"
               },
               "expr": "sum(lmd_string_dedup_bytes{instance=~\"$instance\"})",
               "format": "time_series",
@@ -2632,7 +2758,7 @@
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "P1809F7CD0C75ACF3"
+                "uid": "${datasource}"
               },
               "expr": "sum(lmd_string_dedup_count{instance=~\"$instance\"})",
               "format": "time_series",
@@ -2647,27 +2773,31 @@
           "type": "timeseries"
         }
       ],
-      "targets": [
-        {
-          "datasource": {
-            "type": "influxdb",
-            "uid": "000000001"
-          },
-          "refId": "A"
-        }
-      ],
       "title": "Memory Details",
       "type": "row"
     }
   ],
+  "preload": false,
   "refresh": "10s",
-  "schemaVersion": 39,
+  "schemaVersion": 40,
   "tags": [],
   "templating": {
     "list": [
       {
+        "allowCustomValue": false,
         "current": {
-          "selected": true,
+          "text": "prometheus",
+          "value": "P1809F7CD0C75ACF3"
+        },
+        "name": "datasource",
+        "options": [],
+        "query": "prometheus",
+        "refresh": 1,
+        "regex": "",
+        "type": "datasource"
+      },
+      {
+        "current": {
           "text": [
             "All"
           ],
@@ -2677,10 +2807,9 @@
         },
         "datasource": {
           "type": "prometheus",
-          "uid": "P1809F7CD0C75ACF3"
+          "uid": "${datasource}"
         },
         "definition": "",
-        "hide": 0,
         "includeAll": true,
         "multi": true,
         "name": "instance",
@@ -2688,38 +2817,27 @@
         "query": "label_values(lmd_info, instance)",
         "refresh": 1,
         "regex": "",
-        "skipUrlSync": false,
-        "sort": 0,
-        "tagValuesQuery": "",
-        "tagsQuery": "",
-        "type": "query",
-        "useTags": false
+        "type": "query"
       },
       {
         "current": {
-          "selected": false,
           "text": "All",
           "value": "$__all"
         },
         "datasource": {
           "type": "prometheus",
-          "uid": "P1809F7CD0C75ACF3"
+          "uid": "${datasource}"
         },
         "definition": "label_values(lmd_peer_object_count,type)",
         "hide": 2,
         "includeAll": true,
-        "multi": false,
         "name": "types",
         "options": [],
         "query": "label_values(lmd_peer_object_count,type)",
         "refresh": 1,
         "regex": "",
-        "skipUrlSync": false,
         "sort": 1,
-        "tagValuesQuery": "",
-        "tagsQuery": "",
-        "type": "query",
-        "useTags": false
+        "type": "query"
       }
     ]
   },
@@ -2727,34 +2845,10 @@
     "from": "now-30m",
     "to": "now"
   },
-  "timepicker": {
-    "refresh_intervals": [
-      "5s",
-      "10s",
-      "30s",
-      "1m",
-      "5m",
-      "15m",
-      "30m",
-      "1h",
-      "2h",
-      "1d"
-    ],
-    "time_options": [
-      "5m",
-      "15m",
-      "1h",
-      "6h",
-      "12h",
-      "24h",
-      "2d",
-      "7d",
-      "30d"
-    ]
-  },
+  "timepicker": {},
   "timezone": "browser",
   "title": "LMD",
   "uid": "L7Gn2LnZk",
-  "version": 4,
+  "version": 66,
   "weekStart": ""
 }
