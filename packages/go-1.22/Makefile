@@ -13,7 +13,7 @@ build: clean
 	mkdir -p $(DIR)
 	tar xzf go$(VERSION).src.tar.gz -C $(DIR)
 	mv $(DIR)/go/* $(DIR) && rm -rf $(DIR)/go
-	cd $(DIR)/src/ && ./make.bash
+	export GOFLAGS="-buildvcs=false" && cd $(DIR)/src/ && ./make.bash
 
 install:
 
