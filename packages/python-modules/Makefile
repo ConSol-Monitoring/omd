@@ -3,7 +3,6 @@ include ../../Makefile.omd
 NAME       = python-modules
 SHELL      = /bin/bash
 FREETDS    = $(shell readlink -m ../freetds/tmpinstall$(OMD_ROOT))
-HAS_CYTHON = $(shell python3 has_cython.py)
 PYTHON_V   = $(shell python3 --version 2>&1 | cut -d' ' -f2)
 
 DEPENDS  = freetds
