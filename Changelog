@@ -6,7 +6,7 @@ next:
             - removed build support for sles15sp5
             - use upx to reduce binary size
           - thruk:
-            - lmd update to 2.3.0
+            - lmd update to 2.4.0
           - naemon:
             - change relative paths base to site folder
             - fix timestamps beyond 2038
