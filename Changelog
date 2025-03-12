@@ -12,10 +12,11 @@ next:
             - fix timestamps beyond 2038
           - plugins:
             - check_hpasm update to 4.10.1
+            - check_nwc_health update to 12.3
             - check_printer_health update to 1.2.0.2
             - check_rittal_health update to 4.1.1
-            - check_vsphere update to 0.3.14
-            - check_nwc_health update to 12.2
+            - check_vsphere update to 0.3.15
+            - omdnotificationforwarder update to 2.6.2.2
           - gearman:
             - mod-gearman update to 5.1.8
           - grafana:
@@ -25,8 +26,6 @@ next:
             - replace shiped ansible with dependency on ansible
           - snmptrapd:
             - improve the samplicate_watch units
-          - python-modules:
-            - omdnotificationforwarder update to 2..2.2
           - Go builds updated to 1.23.4
           - histou update to 0.5.7
           - upx update to 4.2.4
