@@ -1,0 +1,134 @@
+From 0f87ada259a1e8c639ea4a9417fa1152b5aee8d5 Mon Sep 17 00:00:00 2001
+From: Sven Nierlein <sven@consol.de>
+Date: Wed, 26 Mar 2025 10:44:48 +0100
+Subject: [PATCH] trim spaces from list of templates
+
+right now an object like this:
+
+  defined host {
+    use template1, template2
+  }
+
+would fail, because of the space character. This patch trims the list elements.
+
+Signed-off-by: Sven Nierlein <sven@consol.de>
+---
+ src/naemon/xodtemplate.c | 14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
+
+diff --git a/src/naemon/xodtemplate.c b/src/naemon/xodtemplate.c
+index 4c5a642a..ec1665ee 100644
+--- a/src/naemon/xodtemplate.c
++++ b/src/naemon/xodtemplate.c
+@@ -3132,6 +3132,7 @@ static int xodtemplate_resolve_timeperiod(xodtemplate_timeperiod *this_timeperio
+ 	/* apply all templates */
+ 	template_name_ptr = template_names;
+ 	for (temp_ptr = my_strsep(&template_name_ptr, ","); temp_ptr != NULL; temp_ptr = my_strsep(&template_name_ptr, ",")) {
++		temp_ptr = trim(temp_ptr);
+ 
+ 		template_timeperiod = xodtemplate_find_timeperiod(temp_ptr);
+ 		if (template_timeperiod == NULL) {
+@@ -3219,6 +3220,7 @@ static int xodtemplate_resolve_command(xodtemplate_command *this_command)
+ 	/* apply all templates */
+ 	template_name_ptr = template_names;
+ 	for (temp_ptr = my_strsep(&template_name_ptr, ","); temp_ptr != NULL; temp_ptr = my_strsep(&template_name_ptr, ",")) {
++		temp_ptr = trim(temp_ptr);
+ 
+ 		template_command = xodtemplate_find_command(temp_ptr);
+ 		if (template_command == NULL) {
+@@ -3265,6 +3267,7 @@ static int xodtemplate_resolve_contactgroup(xodtemplate_contactgroup *this_conta
+ 	/* apply all templates */
+ 	template_name_ptr = template_names;
+ 	for (temp_ptr = my_strsep(&template_name_ptr, ","); temp_ptr != NULL; temp_ptr = my_strsep(&template_name_ptr, ",")) {
++		temp_ptr = trim(temp_ptr);
+ 
+ 		template_contactgroup = xodtemplate_find_contactgroup(temp_ptr);
+ 		if (template_contactgroup == NULL) {
+@@ -3315,6 +3318,7 @@ static int xodtemplate_resolve_hostgroup(xodtemplate_hostgroup *this_hostgroup)
+ 	/* apply all templates */
+ 	template_name_ptr = template_names;
+ 	for (temp_ptr = my_strsep(&template_name_ptr, ","); temp_ptr != NULL; temp_ptr = my_strsep(&template_name_ptr, ",")) {
++		temp_ptr = trim(temp_ptr);
+ 
+ 		template_hostgroup = xodtemplate_find_hostgroup(temp_ptr);
+ 		if (template_hostgroup == NULL) {
+@@ -3368,6 +3372,7 @@ static int xodtemplate_resolve_servicegroup(xodtemplate_servicegroup *this_servi
+ 	/* apply all templates */
+ 	template_name_ptr = template_names;
+ 	for (temp_ptr = my_strsep(&template_name_ptr, ","); temp_ptr != NULL; temp_ptr = my_strsep(&template_name_ptr, ",")) {
++		temp_ptr = trim(temp_ptr);
+ 
+ 		template_servicegroup = xodtemplate_find_servicegroup(temp_ptr);
+ 		if (template_servicegroup == NULL) {
+@@ -3421,6 +3426,7 @@ static int xodtemplate_resolve_servicedependency(xodtemplate_servicedependency *
+ 	/* apply all templates */
+ 	template_name_ptr = template_names;
+ 	for (temp_ptr = my_strsep(&template_name_ptr, ","); temp_ptr != NULL; temp_ptr = my_strsep(&template_name_ptr, ",")) {
++		temp_ptr = trim(temp_ptr);
+ 
+ 		template_servicedependency = xodtemplate_find_servicedependency(temp_ptr);
+ 		if (template_servicedependency == NULL) {
+@@ -3490,6 +3496,7 @@ static int xodtemplate_resolve_serviceescalation(xodtemplate_serviceescalation *
+ 	/* apply all templates */
+ 	template_name_ptr = template_names;
+ 	for (temp_ptr = my_strsep(&template_name_ptr, ","); temp_ptr != NULL; temp_ptr = my_strsep(&template_name_ptr, ",")) {
++		temp_ptr = trim(temp_ptr);
+ 
+ 		template_serviceescalation = xodtemplate_find_serviceescalation(temp_ptr);
+ 		if (template_serviceescalation == NULL) {
+@@ -3565,6 +3572,7 @@ static int xodtemplate_resolve_contact(xodtemplate_contact *this_contact)
+ 	/* apply all templates */
+ 	template_name_ptr = template_names;
+ 	for (temp_ptr = my_strsep(&template_name_ptr, ","); temp_ptr != NULL; temp_ptr = my_strsep(&template_name_ptr, ",")) {
++		temp_ptr = trim(temp_ptr);
+ 
+ 		template_contact = xodtemplate_find_contact(temp_ptr);
+ 		if (template_contact == NULL) {
+@@ -3647,6 +3655,7 @@ static int xodtemplate_resolve_host(xodtemplate_host *this_host)
+ 	/* apply all templates */
+ 	template_name_ptr = template_names;
+ 	for (temp_ptr = my_strsep(&template_name_ptr, ","); temp_ptr != NULL; temp_ptr = my_strsep(&template_name_ptr, ",")) {
++		temp_ptr = trim(temp_ptr);
+ 
+ 		template_host = xodtemplate_find_host(temp_ptr);
+ 		if (template_host == NULL) {
+@@ -3765,6 +3774,7 @@ static int xodtemplate_resolve_service(xodtemplate_service *this_service)
+ 	/* apply all templates */
+ 	template_name_ptr = template_names;
+ 	for (temp_ptr = my_strsep(&template_name_ptr, ","); temp_ptr != NULL; temp_ptr = my_strsep(&template_name_ptr, ",")) {
++		temp_ptr = trim(temp_ptr);
+ 
+ 		template_service = xodtemplate_find_service(temp_ptr);
+ 		if (template_service == NULL) {
+@@ -3874,6 +3884,7 @@ static int xodtemplate_resolve_hostdependency(xodtemplate_hostdependency *this_h
+ 	/* apply all templates */
+ 	template_name_ptr = template_names;
+ 	for (temp_ptr = my_strsep(&template_name_ptr, ","); temp_ptr != NULL; temp_ptr = my_strsep(&template_name_ptr, ",")) {
++		temp_ptr = trim(temp_ptr);
+ 
+ 		template_hostdependency = xodtemplate_find_hostdependency(temp_ptr);
+ 		if (template_hostdependency == NULL) {
+@@ -3928,6 +3939,7 @@ static int xodtemplate_resolve_hostescalation(xodtemplate_hostescalation *this_h
+ 	/* apply all templates */
+ 	template_name_ptr = template_names;
+ 	for (temp_ptr = my_strsep(&template_name_ptr, ","); temp_ptr != NULL; temp_ptr = my_strsep(&template_name_ptr, ",")) {
++		temp_ptr = trim(temp_ptr);
+ 
+ 		template_hostescalation = xodtemplate_find_hostescalation(temp_ptr);
+ 		if (template_hostescalation == NULL) {
+@@ -3982,6 +3994,7 @@ static int xodtemplate_resolve_hostextinfo(xodtemplate_hostextinfo *this_hostext
+ 	/* apply all templates */
+ 	template_name_ptr = template_names;
+ 	for (temp_ptr = my_strsep(&template_name_ptr, ","); temp_ptr != NULL; temp_ptr = my_strsep(&template_name_ptr, ",")) {
++		temp_ptr = trim(temp_ptr);
+ 
+ 		template_hostextinfo = xodtemplate_find_hostextinfo(temp_ptr);
+ 		if (template_hostextinfo == NULL) {
+@@ -4047,6 +4060,7 @@ static int xodtemplate_resolve_serviceextinfo(xodtemplate_serviceextinfo *this_s
+ 	/* apply all templates */
+ 	template_name_ptr = template_names;
+ 	for (temp_ptr = my_strsep(&template_name_ptr, ","); temp_ptr != NULL; temp_ptr = my_strsep(&template_name_ptr, ",")) {
++		temp_ptr = trim(temp_ptr);
+ 
+ 		template_serviceextinfo = xodtemplate_find_serviceextinfo(temp_ptr);
+ 		if (template_serviceextinfo == NULL) {

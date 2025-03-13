@@ -1,0 +1,154 @@
+From 2b22c4d3d169a06ce080eefc16453d0844250f21 Mon Sep 17 00:00:00 2001
+From: Sven Nierlein <sven@consol.de>
+Date: Thu, 27 Mar 2025 11:39:53 +0100
+Subject: [PATCH] make ascii control characters in object names illegal
+
+It is a bad idea to create objects containing newlines or tabs but it's not that
+easy to add those characters to the illegal_object_name_chars list.
+So make them illegal by default.
+Also add a usefull log message help debugging the issue.
+
+Signed-off-by: Sven Nierlein <sven@consol.de>
+---
+ src/naemon/objects_common.c      | 12 +++++++++--
+ tests/configs/tabs/host.cfg      |  5 +++++
+ tests/configs/tabs/naemon.cfg    |  2 ++
+ tests/configs/umlauts/host.cfg   |  5 +++++
+ tests/configs/umlauts/naemon.cfg |  2 ++
+ tests/test-config.c              | 36 ++++++++++++++++++++++++++++++++
+ 6 files changed, 60 insertions(+), 2 deletions(-)
+ create mode 100644 tests/configs/tabs/host.cfg
+ create mode 100644 tests/configs/tabs/naemon.cfg
+ create mode 100644 tests/configs/umlauts/host.cfg
+ create mode 100644 tests/configs/umlauts/naemon.cfg
+
+diff --git a/src/naemon/objects_common.c b/src/naemon/objects_common.c
+index 4f66e4d95..516b0ab8b 100644
+--- a/src/naemon/objects_common.c
++++ b/src/naemon/objects_common.c
+@@ -3,6 +3,7 @@
+ #include "nm_alloc.h"
+ #include "xodtemplate.h"
+ #include <string.h>
++#include <ctype.h>
+ 
+ char *illegal_object_chars = NULL;
+ 
+@@ -94,7 +95,7 @@ int contains_illegal_object_chars(const char *name)
+ 	register int x = 0;
+ 	register int y = 0;
+ 
+-	if (name == NULL || illegal_object_chars == NULL)
++	if (name == NULL)
+ 		return FALSE;
+ 
+ 	x = (int)strlen(name) - 1;
+@@ -103,8 +104,15 @@ int contains_illegal_object_chars(const char *name)
+ 		/* illegal user-specified characters */
+ 		if (illegal_object_chars != NULL)
+ 			for (y = 0; illegal_object_chars[y]; y++)
+-				if (name[x] == illegal_object_chars[y])
++				if (name[x] == illegal_object_chars[y]) {
++					nm_log(NSLOG_CONFIG_ERROR, "Error: illegal ascii character dec(%d) at pos %d in '%s'\n", (unsigned int)name[x], x, name);
+ 					return TRUE;
++				}
++		/* ascii control codes are illegal */
++		if (iscntrl(name[x])) {
++			nm_log(NSLOG_CONFIG_ERROR, "Error: illegal ascii character dec(%d) at pos %d in '%s'\n", (unsigned int)name[x], x, name);
++			return TRUE;
++		}
+ 	}
+ 
+ 	return FALSE;
+diff --git a/tests/configs/tabs/host.cfg b/tests/configs/tabs/host.cfg
+new file mode 100644
+index 000000000..d6686665e
+--- /dev/null
++++ b/tests/configs/tabs/host.cfg
+@@ -0,0 +1,5 @@
++define host {
++ host_name		H	stname
++ max_check_attempts 	1
++}
++
+diff --git a/tests/configs/tabs/naemon.cfg b/tests/configs/tabs/naemon.cfg
+new file mode 100644
+index 000000000..80ab28f7c
+--- /dev/null
++++ b/tests/configs/tabs/naemon.cfg
+@@ -0,0 +1,2 @@
++log_file=foo
++cfg_file=host.cfg
+diff --git a/tests/configs/umlauts/host.cfg b/tests/configs/umlauts/host.cfg
+new file mode 100644
+index 000000000..32d837ee6
+--- /dev/null
++++ b/tests/configs/umlauts/host.cfg
+@@ -0,0 +1,5 @@
++define host {
++ host_name		Höstname
++ max_check_attempts 	1
++}
++
+diff --git a/tests/configs/umlauts/naemon.cfg b/tests/configs/umlauts/naemon.cfg
+new file mode 100644
+index 000000000..80ab28f7c
+--- /dev/null
++++ b/tests/configs/umlauts/naemon.cfg
+@@ -0,0 +1,2 @@
++log_file=foo
++cfg_file=host.cfg
+diff --git a/tests/test-config.c b/tests/test-config.c
+index bbba52fa9..4fa09f59e 100644
+--- a/tests/test-config.c
++++ b/tests/test-config.c
+@@ -102,6 +102,40 @@ START_TEST(main_include)
+ }
+ END_TEST
+ 
++START_TEST(umlauts)
++{
++	int res;
++	objcfg_files = NULL;
++	objcfg_dirs = NULL;
++	config_file_dir = nspath_absolute_dirname(TESTDIR "umlauts/naemon.cfg", NULL);
++	config_rel_path = nm_strdup(config_file_dir);
++	res = read_main_config_file(TESTDIR "umlauts/naemon.cfg");
++	ck_assert_int_eq(OK, res);
++	ck_assert(NULL != objcfg_files);
++	res = read_all_object_data(TESTDIR "umlauts/naemon.cfg");
++	ck_assert_int_eq(OK, res);
++	nm_free(config_file_dir);
++	nm_free(config_rel_path);
++}
++END_TEST
++
++START_TEST(tabs)
++{
++	int res;
++	objcfg_files = NULL;
++	objcfg_dirs = NULL;
++	config_file_dir = nspath_absolute_dirname(TESTDIR "tabs/naemon.cfg", NULL);
++	config_rel_path = nm_strdup(config_file_dir);
++	res = read_main_config_file(TESTDIR "tabs/naemon.cfg");
++	ck_assert_int_eq(OK, res);
++	ck_assert(NULL != objcfg_files);
++	res = read_all_object_data(TESTDIR "tabs/naemon.cfg");
++	ck_assert_int_eq(ERROR, res);
++	nm_free(config_file_dir);
++	nm_free(config_rel_path);
++}
++END_TEST
++
+ Suite *
+ config_suite(void)
+ {
+@@ -110,6 +144,8 @@ config_suite(void)
+ 	tcase_add_test(parse, recursive);
+ 	tcase_add_test(parse, services);
+ 	tcase_add_test(parse, main_include);
++	tcase_add_test(parse, umlauts);
++	tcase_add_test(parse, tabs);
+ 	suite_add_tcase(s, parse);
+ 	return s;
+ }
