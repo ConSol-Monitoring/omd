@@ -23,6 +23,16 @@ else
   export PUPPETEER_CACHE_DIR=$(shell pwd)/.local-chromium
 endif
 
+# puppeteer is currently broken on rhel9 with chromium 134, but only on x86
+ifeq ($(DISTRO_CODE),el9)
+ifeq ($(shell uname -m),x86_64)
+  export PUPPETEER_EXECUTABLE_PATH=
+  unexport PUPPETEER_SKIP_CHROMIUM_DOWNLOAD
+  unexport PUPPETEER_EXECUTABLE_PATH
+  export PUPPETEER_DOWNLOAD_PATH=$(shell pwd)/.local-chromium
+  export PUPPETEER_CACHE_DIR=$(shell pwd)/.local-chromium
+endif
+endif
 
 .PHONY: skel
 
@@ -32,9 +42,12 @@ build:
 	$(NPM) i progress
 	$(NPM) i puppeteer$(PUPPETEER)
 	if [ "x$(PUPPETEER_DOWNLOAD_PATH)" != "x" ]; then \
+		echo "downloaded chromium along with puppeteer"; \
 		rm -rf node_modules/puppeteer/.local-chromium; \
 		cp -rp $(PUPPETEER_DOWNLOAD_PATH) node_modules/puppeteer/.local-chromium; \
 		rm -rf $(PUPPETEER_DOWNLOAD_PATH); \
+	else \
+		echo "using system chromium from $(PUPPETEER_EXECUTABLE_PATH)"; \
 	fi
 
 install:
