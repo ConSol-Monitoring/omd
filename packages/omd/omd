@@ -2698,7 +2698,7 @@ def set_environment():
             line = line.strip()
             if line == "" or line[0] == "#":
                 continue # allow empty lines and comments
-            parts = line.split("=")
+            parts = line.split("=", 1)
             if len(parts) != 2:
                 bail_out(tty_error + ": %s: syntax error in line %d" % (envfile, lineno))
             varname = parts[0]
