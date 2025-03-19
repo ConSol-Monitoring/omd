@@ -5150,7 +5150,7 @@ commands = [
     no_suid     = True,
     needs_site  = 1,
     must_exist  = True,
-    args        = "[-|ARCHIVE_PATH]",
+    args        = "[ARCHIVE_PATH]",
     option_spec = [
         ( "--kill",      None, { "help":"kill processes using the tmpfs before unmounting it", "action":"count", "default":0 }),
     ] + exclude_options,
@@ -5161,7 +5161,7 @@ commands = [
     description = "Restores the backup of a site to an existing site or creates a new site",
     fn          = main_restore,
     no_suid     = True,
-    args        = "[SITE] [-|ARCHIVE_PATH]",
+    args        = "[SITE] [ARCHIVE_PATH]",
     option_spec = [
         ( "--uid",           "-u",  { "help":"create site user with UID ARG" } ),
         ( "--gid",           "-g",  { "help":"create site group with GID ARG"} ),
