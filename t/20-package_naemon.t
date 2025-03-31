@@ -11,7 +11,7 @@ BEGIN {
     import TestUtils;
 }
 
-plan( tests => 179 );
+plan( tests => 195 );
 
 ##################################################
 # create our test site
@@ -84,6 +84,13 @@ for my $hst (sort keys %{$expected_plugin_outputs}) {
 
 # latency should be in normal range
 TestUtils::test_command({ cmd => "/bin/su - $site -c './lib/monitoring-plugins/check_thruk_rest -o \"{STATUS} - max latency is {max%f}s - min latency is {min%f}s\" --perfunit=max:s \"/services?columns=max(latency):max,min(latency):min\" --critical=max:0:30 --warning=min:0:30'", like => '/^OK/' });
+
+##################################################
+# check logfile rotation
+TestUtils::test_command({ cmd => "/bin/su - $site -c 'grep naemon.log tmp/run/logrotate.state'", like => '/\/omd\/sites\/'.$site.'\/var\/naemon\/naemon\.log/' });
+TestUtils::test_command({ cmd => "/bin/su - $site -c 'crontab -l | grep logrotate'", like => '/\/bin\/logrotate/' });
+TestUtils::test_command({ cmd => "/bin/su - $site -c './bin/logrotate -v -s ./tmp/run/logrotate.state ./etc/logrotate.conf 2>&1'", like => '/naemon\.log/' });
+TestUtils::test_command({ cmd => "/bin/su - $site -c 'ls -l1 var/naemon/archive/*.log-*'", like => '/naemon.log-2/' });
 
 ##################################################
 # cleanup test site

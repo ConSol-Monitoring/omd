@@ -1,0 +1,5 @@
+logrotate state -- version 2
+"###ROOT###/var/log/apache/error_log" 2020-1-1-0:0:0
+"###ROOT###/var/log/apache/access_log" 2020-1-1-0:0:0
+"###ROOT###/var/naemon/naemon.log" 2020-1-1-0:0:0
+"###ROOT###/var/log/thruk.log" 2020-1-1-0:0:0
