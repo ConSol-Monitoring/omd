@@ -5,6 +5,7 @@ next:
             - removed build support for sles15sp4
             - removed build support for sles15sp5
             - use upx to reduce binary size
+            - enable apache systemd service on first installation
           - thruk:
             - lmd update to 2.4.0
           - naemon:

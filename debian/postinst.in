@@ -70,6 +70,11 @@ case "$1" in
   configure)
     ln -sfn /opt/omd /omd
     mkdir -p /etc/bash_completion.d
+
+    if [ ! -e /omd/versions/default ] ; then
+        systemctl enable apache2.service || :
+    fi
+
     update-alternatives --install /omd/versions/default \
        omd "$OMD_ROOT" ###OMD_SERIAL### \
        --slave /usr/bin/omd omd.bin $OMD_ROOT/bin/omd \

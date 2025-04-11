@@ -169,7 +169,8 @@ if [ $ACTIVATE_INIT -eq 1 ]; then
     chkconfig @APACHE_NAME@ on    >/dev/null 2>&1
 
     # ensure apache is running
-    service @APACHE_NAME@ start >/dev/null 2>&1
+    service @APACHE_NAME@ start            >/dev/null 2>&1
+    systemctl enable @APACHE_NAME@.service >/dev/null 2>&1
 fi
 
 # enable required selinux booleans
