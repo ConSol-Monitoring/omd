@@ -226,6 +226,8 @@ MODULES = \
           namespace-autoclean-0.28.tar.gz \
           File-Tail-1.3.tar.gz \
           UUID-0.28.tar.gz \
+          CryptX-0.085.tar.gz \
+          Crypt-JWT-0.036.tar.gz \
           Thruk-Utils-XS-0.02.tar.gz \
           Monitoring-TT-1.0.3.tar.gz \
           Monitoring-GLPlugin-5.41.tar.gz
