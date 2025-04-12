@@ -2,11 +2,12 @@ This file documents the revision history for the Open Monitoring Distribution (L
 
 next:
           - omd:
+            - enable apache systemd service on first installation
             - removed build support for sles15sp4
             - removed build support for sles15sp5
             - use upx to reduce binary size
-            - enable apache systemd service on first installation
           - thruk:
+            - update to 3.22
             - lmd update to 2.4.0
           - naemon:
             - change relative paths base to site folder
