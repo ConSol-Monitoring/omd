@@ -14,7 +14,7 @@ next:
             - fix timestamps beyond 2038
           - plugins:
             - check_hpasm update to 4.10.1
-            - check_nwc_health update to 12.3
+            - check_nwc_health update to 12.4
             - check_printer_health update to 1.2.0.2
             - check_rittal_health update to 4.1.1
             - check_ups_health update to 4.3.2.1
