@@ -34,6 +34,7 @@ next:
           - Go builds updated to 1.23.7
           - histou update to 0.5.9
           - upx update to 4.2.4
+          - victoriametrics update to 1.115.0
 
 5.50     Dec 18 2024
           - omd:
