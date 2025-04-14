@@ -49,7 +49,6 @@ install:
 	# Download from https://grafana.com/grafana/plugins
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/grafana/plugins-available
 	tar zxf clock-panel-plugin-2.1.5.tar.gz -C $(DESTDIR)$(OMD_ROOT)/share/grafana/plugins-available
-	tar zxf piechart-panel-plugin-1.6.2.tar.gz -C $(DESTDIR)$(OMD_ROOT)/share/grafana/plugins-available
 	tar zxf snuids-trafficlights-panel-1.5.1.tar.gz -C $(DESTDIR)$(OMD_ROOT)/share/grafana/plugins-available
 
 skel:
