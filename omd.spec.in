@@ -15,8 +15,6 @@ Requires:
 BuildRequires: systemd
 %endif
 
-#%define _missing_doc_files_terminate_build 0
-#%define _unpackaged_files_terminate_build 0
 # disable binary striping
 %global __os_install_post %{nil}
 # disable creating debug packages
