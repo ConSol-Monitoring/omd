@@ -28,6 +28,8 @@ build-stamp:
 	$(MAKE) -j 4 $(DEFAULT_BUILD)
 
 	touch build-stamp
+	rm -f README
+	cp README.md README
 
 clean: clean-patched
 	dh_testdir
