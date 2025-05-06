@@ -8,7 +8,7 @@ next:
             - use upx to reduce binary size
           - thruk:
             - update to 3.22
-            - lmd update to 2.4.1
+            - lmd update to 2.4.2
           - naemon:
             - change relative paths base to site folder
             - fix timestamps beyond 2038
