@@ -79,7 +79,7 @@ function release_lock {
   rm -f $lockfile
 }
 
-function remove_git_index_lock() {
+function repair_broken_repo() {
   dir=$1
   cd $dir
   if [ -f .git/index.lock ]; then
@@ -93,6 +93,10 @@ function remove_git_index_lock() {
     gitstatus=$(git status 2>&1)
     if [[ "$gitstatus" =~ index.file.corrupt ]]; then
       logger_info repair a corrupt index file in $dir
+      rm -r .git/index
+      git reset
+    elif [[ "$gitstatus" =~ index.file.smaller.than.expected ]]; then
+      logger_info repair "$gitstatus" in $dir
       rm -r .git/index
       git reset
     fi
@@ -128,7 +132,7 @@ if [ -d ${OMD_ROOT}/etc/${CORE}/conf.d/${OMD_LANDSCAPE}/${OMD_SITE}/static ]; th
   git pull
   gitexit=$?
   NEWSTATICREV=$(git rev-list --max-count=1 ${OMD_GIT_BRANCH})
-  remove_git_index_lock $(pwd)
+  repair_broken_repo $(pwd)
   popd
 else
   pushd ${OMD_ROOT}/etc/${CORE}/conf.d/${OMD_LANDSCAPE}/${OMD_SITE}
@@ -155,7 +159,7 @@ if [ -d ${OMD_ROOT}/etc/${CORE}/conf.d/${OMD_LANDSCAPE}/${OMD_SITE}/dynamic ]; t
   git pull
   gitexit=$?
   NEWDYNAMICREV=$(git rev-list --max-count=1 ${OMD_GIT_BRANCH})
-  remove_git_index_lock $(pwd)
+  repair_broken_repo $(pwd)
   popd
 else
   pushd ${OMD_ROOT}/etc/${CORE}/conf.d/${OMD_LANDSCAPE}/${OMD_SITE}
