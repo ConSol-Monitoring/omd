@@ -25,7 +25,6 @@
 # Boston, MA 02110-1301 USA.
 
 OMD_VERSION = "5.50-labs-edition"
-OMD_VERSION = "5.51.20250331-labs-edition"
 
 import os
 import sys
