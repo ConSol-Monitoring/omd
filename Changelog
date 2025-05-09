@@ -15,6 +15,7 @@ next:
           - plugins:
             - check_hpasm update to 4.10.1
             - check_nwc_health update to 12.4
+            - check_pdu_health update to 3.0.2.2
             - check_printer_health update to 1.2.0.2
             - check_rittal_health update to 4.1.1
             - check_ups_health update to 4.3.2.1
@@ -27,6 +28,8 @@ next:
             - update to 11.5.2
             - pnp-datasource update to 2.2.0
             - thruk-datasource update to 2.2.0
+          - prometheus:
+            - update to 2.53.4
           - ansible:
             - replace shiped ansible with dependency on ansible
           - snmptrapd:

@@ -4,7 +4,7 @@ include ../../Makefile.omd
 
 NAME       = prometheus
 CHANGELOG  = https://github.com/prometheus/prometheus/blob/main/CHANGELOG.md
-VERSION    = 2.53.1
+VERSION    = 2.53.4
 BRANCH     = master
 SRC        = $(NAME)-$(VERSION).tar.gz
 GOPKG      = 1.23
