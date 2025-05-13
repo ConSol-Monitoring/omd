@@ -7,7 +7,7 @@ SRC         = $(NAME)-$(VERSION).tar.gz
 PWD         = $(shell pwd)
 DIR         = $(NAME)
 # GIT TAG is set automatically by "make upstream" or "make package"
-GIT_TAG     = v0.5.9
+GIT_TAG     = v0.6.0
 
 .PHONY: skel
 
