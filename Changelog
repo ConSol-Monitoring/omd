@@ -35,7 +35,7 @@ next:
           - snmptrapd:
             - improve the samplicate_watch units
           - Go builds updated to 1.23.7
-          - histou update to 0.6.0
+          - histou update to 0.6.1
           - upx update to 4.2.4
           - victoriametrics update to 1.116.0
 

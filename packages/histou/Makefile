@@ -2,21 +2,17 @@ include ../../Makefile.omd
 
 NAME        = histou
 CHANGELOG   = https://github.com/ConSol-Monitoring/histou/blob/master/CHANGELOG.md
-VERSION     = 0.5.9
+VERSION     = 0.6.1
 SRC         = $(NAME)-$(VERSION).tar.gz
 PWD         = $(shell pwd)
 DIR         = $(NAME)
 # GIT TAG is set automatically by "make upstream" or "make package"
-GIT_TAG     = v0.6.0
+GIT_TAG     = v0.6.1
 
 .PHONY: skel
 
 build:
 	tar zxf $(SRC) --exclude=.git
-	#set -e ; for p in patches/*.patch ; do \
-	#    echo "applying $$p..." ; \
-	#    ( cd $(DIR) && patch -p1 -b -F 5 ) < $$p ; \
-	#done
 
 install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/$(DIR)
@@ -33,9 +29,11 @@ clean:
 	rm -rf histou
 
 package:
+	rm -f $(NAME)-*.gz
 	git clone  --depth=1 --branch "master" https://github.com/ConSol/histou
 	cd histou && sed -i $(PWD)/Makefile -e 's/^GIT_TAG.*$$/GIT_TAG     = '$$(git describe --always --tags)'/g'
-	tar zcf $(SRC) \
+	cd histou && sed -i $(PWD)/Makefile -e 's/^VERSION.*$$/VERSION     = '$$(git tag -l | tail -n 1 | sed -e 's/^v//')'/g'
+	tar zcf $(NAME)-$$(cd histou && git tag -l | tail -n 1 | sed -e 's/^v//').tar.gz \
 		--exclude=.git \
 		--exclude=histou/tests \
 		--exclude=histou/conf \
