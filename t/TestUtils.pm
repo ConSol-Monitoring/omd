@@ -608,6 +608,7 @@ sub test_url {
             $x++;
             next if $x%2==1;
             next if $match =~ m/^http/;
+            next if $match =~ m/^\/\//;
             next if $match =~ m/^mailto:/;
             next if $match =~ m/^#/;
             next if $match =~ m/^javascript:/;
@@ -877,6 +878,11 @@ sub _diag_lint_errors_and_remove_some_exceptions {
             "Unknown\ attribute\ \"placeholder\"\ for\ tag\ <textarea>",
             "Unknown\ attribute\ \"autocomplete\"\ for\ tag\ <form>",
             "Unknown\ attribute\ \"autocomplete\"\ for\ tag\ <input>",
+            "Unknown\ attribute\ \"height\"\ for\ tag\ <tr>",
+            "should be written as &uuml",
+            "should be written as &ldquo",
+            "should be written as &rdquo",
+            "Unknown\ attribute\ \"data\-",
             "Unknown\ attribute\ \"sizes\"\ for\ tag\ <link>",
             "Unknown\ attribute\ \"required\"\ for\ tag\ <input>",
             "Entity\ .*\ is\ unknown",
