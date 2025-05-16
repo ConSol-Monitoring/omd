@@ -9,6 +9,7 @@ PACKAGES += go-1.19
 PACKAGES += go-1.21
 PACKAGES += go-1.22
 PACKAGES += go-1.23
+PACKAGES += go-1.24
 PACKAGES += upx
 PACKAGES += node
 PACKAGES += node-modules
@@ -75,6 +76,7 @@ PACKAGE_DEPS += go-1.19:go-1.4
 PACKAGE_DEPS += go-1.21:go-1.19
 PACKAGE_DEPS += go-1.22:go-1.21
 PACKAGE_DEPS += go-1.23:go-1.21
+PACKAGE_DEPS += go-1.24:go-1.23
 PACKAGE_DEPS += node:upx
 PACKAGE_DEPS += node-modules:node
 PACKAGE_DEPS += influxdb:go-1.23
@@ -103,7 +105,7 @@ PACKAGE_DEPS += mod-gearman:gearmand
 PACKAGE_DEPS += mod-gearman-worker-go:go-1.23
 PACKAGE_DEPS += ansible:python-modules
 PACKAGE_DEPS += coshsh:python-modules
-PACKAGE_DEPS += lmd:go-1.23
+PACKAGE_DEPS += lmd:go-1.24
 PACKAGE_DEPS += prometheus:go-1.23
 PACKAGE_DEPS += prometheus:upx
 PACKAGE_DEPS += prometheus_snmp_exporter:go-1.23
@@ -123,7 +125,7 @@ PACKAGE_DEPS += promxy:go-1.23
 PACKAGE_DEPS += telegraf:go-1.23
 PACKAGE_DEPS += grafana-pnp-datasource:go-1.23
 PACKAGE_DEPS += grafana-thruk-datasource:go-1.23
-PACKAGE_DEPS += victoriametrics:go-1.23
+PACKAGE_DEPS += victoriametrics:go-1.24
 PACKAGE_DEPS += victoriametrics:upx
 
 include Makefile.omd
@@ -144,11 +146,22 @@ else
 DEFAULT_BUILD=build
 endif
 
-.PHONY: install-global Changelog release_notes_blog.md build packages
-
-
+.PHONY: install-global Changelog release_notes_blog.md build
 
 omdbuild: $(PACKAGES)
+
+build-cached:
+	@set -e ; cd packages ; for p in $(PACKAGES) ; do \
+	    NOW=$$(date +%s); \
+	    OMD_ROOT="$(OMD_ROOT)" OMD_VERSION="$(OMD_VERSION)" BUILD_CACHE="$(BUILD_CACHE)" ../build/build_cached "$(MAKE)" "$$p" "$(DISTRO_NAME)/$(DISTRO_VERSION)/$(shell uname -m)"; \
+	    echo "build-cached: $$p (took $$(( $$(date +%s) - NOW ))s)"; \
+	done
+
+
+build:
+	@set -e ; cd packages ; for p in $(PACKAGES) ; do \
+	    $(MAKE) -C $$p build ; \
+	done
 
 speed:
 	@set -e ; cd packages ; for p in $(PACKAGES) ; do \
@@ -279,8 +292,9 @@ install-global:
 
 	# README files and license information
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/doc
-	install -m 644 README COPYING TEAM $(DESTDIR)$(OMD_ROOT)/share/doc
-	install -m 644 Changelog $(DESTDIR)$(OMD_ROOT)/share/doc/CHANGELOG
+	install -m 644 README.md    $(DESTDIR)$(OMD_ROOT)/share/doc/README
+	install -m 644 Changelog    $(DESTDIR)$(OMD_ROOT)/share/doc/CHANGELOG
+	install -m 644 COPYING TEAM $(DESTDIR)$(OMD_ROOT)/share/doc
 
 # Create source tarball. This currently only works in a checked out GIT
 # repository.
@@ -387,12 +401,11 @@ omd.spec: omd.spec.in Makefile.omd Makefile
 	    -e 's#@APACHE_INCLUDEOPT@#$(APACHE_INCLUDEOPT)#g' \
 	    omd.spec.in > omd.spec
 
-
 # create a target which will build the packages/$1
 define create-target
 $(1):
 	@set -e ; cd packages ; NOW=$$$$(date +%s); \
-	echo "build-cached: $(1) start" >> /tmp/buildlog.log; \
+	echo "build: $(1) start" >> /tmp/buildlog.log; \
 	if [[ "$(DEFAULT_BUILD)" == "build-cached" ]]; then \
 	OMD_ROOT="$(OMD_ROOT)" OMD_VERSION="$(OMD_VERSION)" BUILD_CACHE="$(BUILD_CACHE)" ../build/build_cached "$(MAKE)" "$(1)" "$(DISTRO_NAME)/$(DISTRO_VERSION)/$(shell uname -m)"; \
 	echo "build-cached: $(1) (took $$$$(( $$$$(date +%s) - $$$$NOW ))s)"; \
@@ -420,7 +433,3 @@ $(foreach pkg,$(PACKAGES),$(eval $(call create-target,$(pkg))))
 
 # apply the dependencies
 $(call define-deps)
-
-
-
-
