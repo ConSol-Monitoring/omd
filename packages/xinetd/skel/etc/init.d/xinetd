@@ -34,6 +34,7 @@ case "$1" in
         # (e.g. SLES) will think that the system xinetd is already
         # running and do not start it if the OMD xinetd is running.
         mkdir -p $OMD_ROOT/var/tmp
+        rm -f $OMD_ROOT/var/tmp/xinetd
         cp $DAEMON $OMD_ROOT/var/tmp/xinetd
         DAEMON=$OMD_ROOT/var/tmp/xinetd
     ;;
