@@ -5,8 +5,8 @@ After=network-online.target local-fs.target remote-fs.target
 
 [Service]
 Type=oneshot
-ExecStart=/usr/bin/omd start
-ExecStop=/usr/bin/omd stop
+ExecStart=-/usr/bin/omd start
+ExecStopPost=/usr/bin/omd stop
 ExecReload=/usr/bin/omd reload
 RemainAfterExit=yes
 Restart=no
