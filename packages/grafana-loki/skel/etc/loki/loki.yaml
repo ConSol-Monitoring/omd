@@ -2,7 +2,7 @@ auth_enabled: false
 
 server:
   http_listen_port: ${CONFIG_LOKI_HTTP_PORT:-3100}
-  grpc_listen_port: 9096
+  grpc_listen_port: ${CONFIG_LOKI_GRPC_PORT:-9096}
   log_level: info
   log_format: logfmt
   grpc_server_max_concurrent_streams: 1000

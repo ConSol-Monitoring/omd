@@ -1,0 +1,24 @@
+#!/bin/bash
+
+# Alias: GRPC Port for the Grafana Loki Daemon
+# Menu: Addons
+# Description:
+#  Set the grpc listen port for loki.
+
+case "$1" in
+   default)
+       echo "9096"
+   ;;
+   choices)
+       echo "[0-9]{1,4}"
+   ;;
+   set)
+        PORT=$($OMD_ROOT/lib/omd/port_is_used LOKI_GRPC_PORT $2)
+        if [ "$PORT" != "$2" ] ; then
+            echo "$PORT"
+        fi
+   ;;
+    depends)
+       [ "$CONFIG_LOKI" = "on" ]
+    ;;
+esac
