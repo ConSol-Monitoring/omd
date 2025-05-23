@@ -12,12 +12,13 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 606 );
+plan( tests => 613 );
 
 my $omd_bin = TestUtils::get_omd_bin();
 
 my $is_docker     = TestUtils::is_docker();
 my $createoptions = $is_docker ? " --no-tmpfs " : "";
+my $systemctl     = "/bin/systemctl";
 
 # print omd version
 my $vtest = { cmd => $omd_bin." version", "exit" => undef };
@@ -52,6 +53,13 @@ ok($ptest, "has php version");
 chomp(my $omd_version = $vtest->{'stdout'});
 $omd_version =~ s/^.*\s+(\S+)$/$1/gmx;
 TestUtils::test_command({ cmd => "/bin/sh -c 'test -e /omd/versions/$omd_version/sbin && ls -la /omd/versions/$omd_version/sbin'", like => ['/^$/'], exit => 1 });
+
+# omd systemd service should always be started (unless using docker)
+SKIP: {
+  skip('systemd is not available on docker', 7) if $is_docker;
+
+  TestUtils::test_command({ cmd => "$systemctl status omd.service", like => ['/active/', '/SUCCESS/', '/loaded/', '/enabled/'], exit => 0 });
+};
 
 ########################################
 # execute some commands

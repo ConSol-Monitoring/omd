@@ -71,7 +71,10 @@ case "$1" in
     ln -sfn /opt/omd /omd
     mkdir -p /etc/bash_completion.d
 
+    ACTIVATE_INIT=0
     if [ ! -e /omd/versions/default ] ; then
+        echo "Activating omd systemd service"
+        ACTIVATE_INIT=1
         systemctl enable apache2.service || :
     fi
 
@@ -159,6 +162,11 @@ case "$1" in
         cp -fp /omd/versions/default/share/omd/omd.service /usr/lib/systemd/system/omd.service
         systemctl daemon-reload || :
         systemctl enable omd.service || :
+    fi
+
+    if [ $ACTIVATE_INIT -eq 1 ]; then
+        # there are no sites yet, but make sure omd service is set to running
+        systemctl start omd.service >/dev/null 2>&1 || :
     fi
 
     ;;

@@ -169,6 +169,9 @@ if [ $ACTIVATE_INIT -eq 1 ]; then
     # ensure apache is running
     service @APACHE_NAME@ start            >/dev/null 2>&1
     systemctl enable @APACHE_NAME@.service >/dev/null 2>&1
+
+    # there are no sites yet, but make sure omd service is set to running
+    systemctl start omd.service            >/dev/null 2>&1
 fi
 
 # enable required selinux booleans
