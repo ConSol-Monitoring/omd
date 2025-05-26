@@ -646,7 +646,8 @@
             "uid": "${datasource}"
           },
           "dsType": "influxdb",
-          "expr": "sum(avg by(job)(rate(process_cpu_seconds_total{instance=~\"$instance\"}[5m])))",
+          "editorMode": "code",
+          "expr": "sum(avg by(job)(rate(process_cpu_seconds_total{instance=~\"$instance\"}[30s]))) * 100",
           "format": "time_series",
           "groupBy": [
             {
@@ -664,9 +665,10 @@
           ],
           "hide": false,
           "intervalFactor": 2,
-          "legendFormat": "cpu seconds",
+          "legendFormat": "cpu %",
           "metric": "process_cpu_seconds_total",
           "policy": "default",
+          "range": true,
           "refId": "B",
           "resultFormat": "time_series",
           "select": [
@@ -2169,6 +2171,6 @@
   "timezone": "browser",
   "title": "Mod-Gearman Worker",
   "uid": "u2qAFJ1mk",
-  "version": 68,
+  "version": 69,
   "weekStart": ""
 }
