@@ -293,7 +293,7 @@ for my $test (@{$naemon_tests}) {
     TestUtils::test_command($test);
 }
 is(-S "/omd/sites/$site/tmp/thruk/lmd/live.sock", 1, "lmd socket exists");
-my $log  = "/omd/sites/$site/tmp/thruk/lmd/lmd.log";
+my $log  = "/omd/sites/$site/var/log/lmd.log";
 my $tlog = '/tmp/thruk_test_error.log';
 is(-f $log, 1, "lmd log exists");
 # grep out commands

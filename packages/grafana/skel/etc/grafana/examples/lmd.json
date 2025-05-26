@@ -11,6 +11,12 @@
         "hide": true,
         "iconColor": "rgba(0, 211, 255, 1)",
         "name": "Annotations & Alerts",
+        "target": {
+          "limit": 100,
+          "matchAny": false,
+          "tags": [],
+          "type": "dashboard"
+        },
         "type": "dashboard"
       }
     ]
@@ -481,6 +487,7 @@
             "uid": "${datasource}"
           },
           "dsType": "influxdb",
+          "editorMode": "code",
           "expr": "sum(go_goroutines{instance=~\"$instance\"})",
           "format": "time_series",
           "groupBy": [
@@ -498,10 +505,11 @@
             }
           ],
           "hide": false,
-          "intervalFactor": 2,
+          "intervalFactor": 1,
           "legendFormat": "go routines",
           "metric": "process_resident_memory_bytes",
           "policy": "default",
+          "range": true,
           "refId": "A",
           "resultFormat": "time_series",
           "select": [
@@ -527,7 +535,8 @@
             "uid": "${datasource}"
           },
           "dsType": "influxdb",
-          "expr": "sum(rate(process_cpu_seconds_total{instance=~\"$instance\"}[5m]))",
+          "editorMode": "code",
+          "expr": "sum(rate(process_cpu_seconds_total{instance=~\"$instance\"}[15s])) * 100",
           "format": "time_series",
           "groupBy": [
             {
@@ -544,10 +553,11 @@
             }
           ],
           "hide": false,
-          "intervalFactor": 2,
-          "legendFormat": "cpu seconds",
+          "intervalFactor": 1,
+          "legendFormat": "cpu %",
           "metric": "process_cpu_seconds_total",
           "policy": "default",
+          "range": true,
           "refId": "B",
           "resultFormat": "time_series",
           "select": [
@@ -572,11 +582,13 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
+          "editorMode": "code",
           "expr": "sum(process_open_fds{instance=~\"$instance\"})",
           "format": "time_series",
-          "intervalFactor": 2,
+          "intervalFactor": 1,
           "legendFormat": "open fd",
           "metric": "process_open_fds",
+          "range": true,
           "refId": "C",
           "step": 2
         },
@@ -585,11 +597,13 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
+          "editorMode": "code",
           "expr": "sum(process_resident_memory_bytes{instance=~\"$instance\"})",
           "format": "time_series",
-          "intervalFactor": 2,
+          "intervalFactor": 1,
           "legendFormat": "res memory",
           "metric": "process_open_fds",
+          "range": true,
           "refId": "D",
           "step": 2
         },
@@ -598,11 +612,13 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
+          "editorMode": "code",
           "expr": "sum(process_virtual_memory_bytes{instance=~\"$instance\"})",
           "format": "time_series",
-          "intervalFactor": 2,
+          "intervalFactor": 1,
           "legendFormat": "virt memory",
           "metric": "process_virtual_memory_bytes",
+          "range": true,
           "refId": "E",
           "step": 2
         }
@@ -937,8 +953,7 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green",
-                    "value": null
+                    "color": "green"
                   },
                   {
                     "color": "red",
@@ -1065,8 +1080,7 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green",
-                    "value": null
+                    "color": "green"
                   },
                   {
                     "color": "red",
@@ -1198,8 +1212,7 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green",
-                    "value": null
+                    "color": "green"
                   },
                   {
                     "color": "red",
@@ -1331,8 +1344,7 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green",
-                    "value": null
+                    "color": "green"
                   },
                   {
                     "color": "red",
@@ -1407,7 +1419,7 @@
             "h": 7,
             "w": 8,
             "x": 0,
-            "y": 34
+            "y": 55
           },
           "id": 2,
           "options": {
@@ -1614,8 +1626,7 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green",
-                    "value": null
+                    "color": "green"
                   },
                   {
                     "color": "red",
@@ -1631,7 +1642,7 @@
             "h": 7,
             "w": 8,
             "x": 8,
-            "y": 34
+            "y": 55
           },
           "id": 15,
           "options": {
@@ -1749,8 +1760,7 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green",
-                    "value": null
+                    "color": "green"
                   },
                   {
                     "color": "red",
@@ -1801,7 +1811,7 @@
             "h": 7,
             "w": 8,
             "x": 16,
-            "y": 34
+            "y": 55
           },
           "id": 3,
           "options": {
@@ -1962,8 +1972,7 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green",
-                    "value": null
+                    "color": "green"
                   },
                   {
                     "color": "red",
@@ -1979,7 +1988,7 @@
             "h": 7,
             "w": 12,
             "x": 0,
-            "y": 41
+            "y": 62
           },
           "id": 4,
           "options": {
@@ -2095,8 +2104,7 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green",
-                    "value": null
+                    "color": "green"
                   },
                   {
                     "color": "red",
@@ -2112,7 +2120,7 @@
             "h": 7,
             "w": 12,
             "x": 12,
-            "y": 41
+            "y": 62
           },
           "id": 42,
           "options": {
@@ -2245,8 +2253,7 @@
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green",
-                    "value": null
+                    "color": "green"
                   },
                   {
                     "color": "red",
@@ -2262,7 +2269,7 @@
             "h": 7,
             "w": 24,
             "x": 0,
-            "y": 147
+            "y": 168
           },
           "id": 8,
           "options": {
@@ -2432,7 +2439,7 @@
             "h": 7,
             "w": 24,
             "x": 0,
-            "y": 148
+            "y": 29
           },
           "id": 23,
           "options": {
@@ -2562,7 +2569,7 @@
             "h": 7,
             "w": 24,
             "x": 0,
-            "y": 155
+            "y": 36
           },
           "id": 25,
           "options": {
@@ -2598,11 +2605,13 @@
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "sum(rate(go_memstats_alloc_bytes_total{instance=~\"$instance\"}[30s]))",
+              "editorMode": "code",
+              "expr": "sum(rate(go_memstats_alloc_bytes_total{instance=~\"$instance\"}[$__rate_interval]))",
               "format": "time_series",
-              "intervalFactor": 2,
+              "intervalFactor": 1,
               "legendFormat": "alloc rate",
               "metric": "go_memstats_alloc_bytes_total",
+              "range": true,
               "refId": "B",
               "step": 4
             },
@@ -2724,7 +2733,7 @@
             "h": 7,
             "w": 24,
             "x": 0,
-            "y": 162
+            "y": 43
           },
           "id": 41,
           "options": {
@@ -2849,6 +2858,6 @@
   "timezone": "browser",
   "title": "LMD",
   "uid": "L7Gn2LnZk",
-  "version": 66,
+  "version": 67,
   "weekStart": ""
 }

@@ -1,0 +1,96 @@
+--- a/skel/etc/thruk/lmd.ini	2025-05-20 13:28:37.000000000 +0200
++++ b/skel/etc/thruk/lmd.ini	2025-05-20 14:52:55.388765936 +0200
+@@ -1,7 +1,9 @@
+-# Listen for incoming livestatus requests here
+-# TCP or unix sockets are allowed. Multiple entries are also valid.
+-# An http address can be defined as well.
+-Listen          = ["127.0.0.1:3333", "/tmp/lmd.sock", "http://*:8080", "https://*:8443", "tls://127.0.0.1:3334"]
++# Manual LMD configuration for OMD
++#
++# The automatically generated backends are stored in
++# ~/tmp/thruk/lmd/lmd.ini
++# all config files will be used when using lmd along with
++# ~/etc/thruk/lmd.ini.d/*.ini
+ 
+ # List of cluster nodes (cluster mode).
+ # All cluster nodes must have their http server enabled (see Listen).
+@@ -30,10 +32,10 @@
+ # - "stdout-journal"
+ #    same as stdout, but does not colorize the output and does not print the date/time prefix.
+ #    this is more suitable if you connect stdout to a log shipping service like systemd-journald, which will supply the timestamp itself
+-#LogFile         = "lmd.log"
++LogFile = "./var/log/lmd.log"
+ 
+ # May be Error, Warn, Info, Debug and Trace
+-LogLevel        = "Info"
++LogLevel = "Warn"
+ 
+ # LogSlowQueryThreshold sets the maximum amount of seconds before logging a query as slow query
+ LogSlowQueryThreshold = 5
+@@ -90,7 +92,10 @@
+ 
+ # Skip ssl certificate verification on https remote backends.
+ # Set to 1 to disabled any ssl verification checks.
+-SkipSSLCheck = 0
++# The check is enabled by default, but since this file overrides settings from the
++# generated file, it needs to commented in order for Thruk to set this from its
++# `ssl_verify_hostnames` setting.
++#SkipSSLCheck = 0
+ 
+ # Use keepalive for backend peer connections.
+ BackendKeepAlive = true
+@@ -123,52 +128,5 @@
+ # to go off. Set to zero to disable this check.
+ MaxClockDelta = 10.0
+ 
+-# use tcp connections
+-[[Connections]]
+-name   = "Monitoring Site A"
+-id     = "id1"
+-source = ["192.168.33.10:6557"]
+-
+-# use tcp connections with multiple sources for clusters
+-[[Connections]]
+-name   = "Monitoring Site A"
+-id     = "id1"
+-source = ["192.168.33.10:6557", "192.168.33.20:6557"]
+-
+-# or local unix sockets as remote sites
+-[[Connections]]
+-name   = "Local Site"
+-id     = "id2"
+-source = ["/var/tmp/nagios/run/live.sock"]
+-
+-# use tcp connections with ipv6 address
+-[[Connections]]
+-name   = "Monitoring Site A IPv6"
+-id     = "id3"
+-source = ["[::1]:6557"]
+-
+-# tcp connection to icinga2 with explicit flag set in case of autodetection fails
+-[[Connections]]
+-name   = "Icinga2 Backend"
+-id     = "icinga2"
+-source = ["[::1]:6557"]
+-flags  = ["icinga2"]
+-
+-# connect to thruk http(s) api
+-[[Connections]]
+-name   = "Thruk HTTP"
+-id     = "id4"
+-source = ["http://thruk.monitoring/omdsite/"]
+-auth   = "authkey..."
+-
+-# use tcp connections with tls encryption
+-[[Connections]]
+-name           = "Monitoring Site A TLS"
+-id             = "id5"
+-tlsCertificate = "client.pem"          # if key and cert is set, client cert authentication will be done
+-tlsKey         = "client.key"
+-tlsCA          = "optional_server.crt" # used to verify server certificate
+-tlsSkipVerify  = 0                     # if set to 1, no common name verification will be done
+-source         = ["tls://192.168.33.10:6557"]
+-
+-# add more connections as you like...
++# backend connections are automatically generated in
++# ~/tmp/thruk/lmd/lmd.ini
