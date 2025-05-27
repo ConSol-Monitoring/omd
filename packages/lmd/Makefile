@@ -86,6 +86,7 @@ package: clean
 		cp $(GOPATH)/src/$(GITURL)/lmd.ini.example skel/etc/thruk/lmd.ini ; \
 		patch -p1 < patches/lmd.ini.skel_patch ; \
 		rm -rf $(GOPATH)
+	rm -f skel/etc/thruk/lmd.ini.*
 
 upstream: clean
 	$(MAKE) deps
