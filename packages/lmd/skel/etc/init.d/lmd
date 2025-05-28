@@ -19,6 +19,6 @@ OPTS="lmd start"
 PID_FILE=$OMD_ROOT/tmp/thruk/lmd/pid
 LOG_FILE=$OMD_ROOT/var/log/lmd.log
 STOP_TIMEOUT=30
+SILENT_ALREADY_RUNNING=1
 
 __generic_init "$*"
-
