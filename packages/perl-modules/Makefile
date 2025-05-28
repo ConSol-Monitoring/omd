@@ -230,7 +230,7 @@ MODULES = \
           Crypt-JWT-0.036.tar.gz \
           Thruk-Utils-XS-0.02.tar.gz \
           Monitoring-TT-1.0.3.tar.gz \
-          Monitoring-GLPlugin-5.43.tar.gz
+          Monitoring-GLPlugin-5.44.tar.gz
 
 
 
