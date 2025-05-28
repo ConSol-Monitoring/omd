@@ -1,6 +1,6 @@
 This file documents the revision history for the Open Monitoring Distribution (Labs Edition)
 
-next:
+5.60     May 28 2025
           - omd:
             - enable apache systemd service on first installation
             - removed build support for sles15sp4
