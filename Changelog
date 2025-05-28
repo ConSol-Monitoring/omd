@@ -18,7 +18,7 @@ next:
             - check_pdu_health update to 3.0.2.2
             - check_printer_health update to 1.2.0.2
             - check_rittal_health update to 4.1.1
-            - check_ups_health update to 4.3.2.2
+            - check_ups_health update to 4.3.2.3
             - check_vsphere update to 0.3.18
             - omdnotificationforwarder update to 2.7.1.3
           - gearman:
