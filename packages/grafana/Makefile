@@ -2,11 +2,11 @@ include ../../Makefile.omd
 
 NAME       = grafana
 CHANGELOG  = https://github.com/grafana/grafana/blob/main/CHANGELOG.md
-VERSION    = 11.5.2
+VERSION    = 11.6.2
 SRC        = $(NAME)-$(VERSION).tar.gz
 GOPATH     = go
 # does work with newer go > 1.22 yet and cannot be updated because scripted dashboarding will break...
-GOPKG      = 1.23
+GOPKG      = 1.24
 GOVERSION  = $(shell grep ^VERSION ../go-${GOPKG}/Makefile | awk '{ print $$3 }')
 PWD        = $(shell pwd)
 GO         = export GOROOT=$(PWD)/../go-$(GOPKG)/go-$(GOVERSION) && export GOPATH=$(PWD)/$(GOPATH)/ && export PATH=$(PWD)/build_bin:$$GOROOT/bin:$$PATH && export GOFLAGS=-buildvcs=false && go
@@ -70,8 +70,6 @@ package:
 	mkdir -p $(GOPATH)/src/github.com/grafana/
 	cd $(GOPATH)/src/github.com/grafana && \
 		git clone --depth=1 --branch="v$(VERSION)" https://github.com/grafana/grafana.git
-	cd $(GOPATH)/src/github.com/grafana/grafana && \
-		$(GO) fmt ./...
 	echo "run make gen-go"
 	cd $(GOPATH)/src/github.com/grafana/grafana && \
 		export GOROOT=$(PWD)/../go-$(GOPKG)/go-$(GOVERSION); \
