@@ -64,6 +64,11 @@ TestUtils::test_command({ cmd => "/bin/su - $site -c 'omd reload alertmanager'" 
 TestUtils::test_command({ cmd => "/bin/su - $site -c 'tail -5 var/alertmanager/alertmanager.log| grep loading'", like => '/Completed loading of configuration file/', errlike => '/^$/' });
 TestUtils::test_command({ cmd => "/bin/su - $site -c 'tail -5 var/alertmanager/alertmanager.log| grep -v -q SIGTERM'"  });
 
+TestUtils::test_command({ cmd => $omd_bin." stop $site" });
+TestUtils::test_command({ cmd => $omd_bin." config $site set PROMETHEUS_AGENT_MODE on" });
+TestUtils::test_command({ cmd => $omd_bin." start $site" });
+TestUtils::test_command({ cmd => qq[ /bin/su - $site -c 'lib/monitoring-plugins/check_http -t 5 -H 127.0.0.1 -a omdadmin:omd -u "/$site/prometheus/agent" -s "<title>Prometheus Time Series Collection and Processing Server</title>"'], like => '/HTTP OK:/', waitfor => 'OK:', maxwait => 20 });
+
 # test removed datasource for grafana:
 TestUtils::test_command({ cmd => $omd_bin." stop $site" });
 TestUtils::test_command({ cmd => "/bin/su - $site -c 'mv etc/prometheus/grafana_datasources.yml etc/prometheus/grafana_datasources_ignore.yml'", errlike => '/^$/' });
