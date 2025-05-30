@@ -1,0 +1,24 @@
+#!/bin/bash
+
+# Alias: Run Prometheus in agent mode
+# Menu: Addons
+# Description:
+#  In agent mode prometheus does not maintain a database.
+#  Use remote_write in the prometheus.yml to send the gathered
+#  metrics to a storage system. Recording and alerting rules
+#  are disabled in this mode.
+#
+
+case "$1" in
+    default)
+        echo "off"
+    ;;
+    choices)
+        echo on: enable
+        echo off: disable
+    ;;
+    depends)
+        [ "$CONFIG_PROMETHEUS" == "on" ]
+    ;;
+esac
+

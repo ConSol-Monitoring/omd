@@ -26,6 +26,8 @@ NOHUP=1
 STORE_PID=1
 CHECK_CALLBACK=verify_config
 
+prometheus_agent_mode() { [ "${CONFIG_PROMETHEUS_AGENT_MODE:-off}" = "on" ]; }
+
 # You can set the environment variable CORE_NOVERIFY=yes
 # in order to supress a verification of the prometheus configuration
 # in case of start, restart or reload. This is in order to
@@ -38,14 +40,21 @@ EXTERNAL_FQDN=${OMD_EXTERNAL_FQDN:-$(hostname --fqdn)}
 OPTIONS=()
 # The following two are needed to be at the beginning
 # They are used to identify the process in prometheus_proc()
-OPTIONS+=(--config.file="$CFG_FILE")
-OPTIONS+=(--storage.tsdb.path="$DATA_DIR")
 
+if prometheus_agent_mode ; then
+    OPTIONS+=(--enable-feature agent)
+    OPTIONS+=(--storage.agent.path="${DATA_DIR}-agent")
+else
+    OPTIONS+=(--storage.tsdb.path="$DATA_DIR")
+    OPTIONS+=(--storage.tsdb.retention.time=${CONFIG_PROMETHEUS_RETENTION}d)
+fi
+
+OPTIONS+=(--config.file="$CFG_FILE")
 OPTIONS+=(--web.listen-address=$CONFIG_PROMETHEUS_TCP_ADDR:$CONFIG_PROMETHEUS_TCP_PORT)
 OPTIONS+=(--web.external-url=http://${EXTERNAL_FQDN}/$OMD_SITE/prometheus)
 OPTIONS+=(--web.console.libraries=/omd/sites/$OMD_SITE/etc/prometheus/console_libraries)
 OPTIONS+=(--web.console.templates=/omd/sites/$OMD_SITE/etc/prometheus/consoles)
-OPTIONS+=(--storage.tsdb.retention.time=${CONFIG_PROMETHEUS_RETENTION}d)
+
 
 if [ -r $OMD_ROOT/etc/prometheus/webconfig.yml ]; then
     # https://prometheus.io/docs/prometheus/latest/configuration/https/
@@ -58,7 +67,7 @@ OPTS="${OPTIONS[@]}"
 rebuild_config() {
     cp $OMD_ROOT/etc/prometheus/prometheus.yml $CFG_FILE
     WORK_CFG=$OMD_ROOT/tmp/prometheus.yml.$$
-    if grep -q "# - start of rule files" $CFG_FILE && grep -q "# - end of rule files" $CFG_FILE; then
+    if ! prometheus_agent_mode && grep -q "# - start of rule files" $CFG_FILE && grep -q "# - end of rule files" $CFG_FILE; then
         cat $CFG_FILE |\
             sed -n '1,/# - start of rule files/p' > $WORK_CFG
         # all files in etc/prometheus/prometheus.d/rules/*/*.yml
