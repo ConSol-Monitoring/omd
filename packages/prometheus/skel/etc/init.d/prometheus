@@ -113,7 +113,7 @@ rebuild_config() {
     fi
 
     if ! grep -q "alertmanagers:" $CFG_FILE; then
-        if [ "$CONFIG_ALERTMANAGER" = "on" ]; then
+        if ! prometheus_agent_mode && [ "$CONFIG_ALERTMANAGER" = "on" ]; then
             echo >> $CFG_FILE
             echo '# Alertmanager configuration' >> $CFG_FILE
             echo 'alerting:' >> $CFG_FILE
