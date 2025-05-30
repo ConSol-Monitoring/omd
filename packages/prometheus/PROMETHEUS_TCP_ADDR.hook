@@ -5,8 +5,6 @@
 # Description:
 #  Configure the bind address used for the Prometheus
 #  process of this site.
-#  After changing this variable, the Prometheus daemon
-#  must be restarted.
 #
 
 case "$1" in
