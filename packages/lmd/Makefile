@@ -14,7 +14,7 @@ PWD         = $(shell pwd)
 GITBASE     = github.com/sni
 GITURL      = $(GITBASE)/$(NAME)
 # GIT TAG is set automatically by "make upstream" or "make package"
-GIT_TAG     = v2.5.0
+GIT_TAG     = v2.5.1
 
 .PHONY: skel
 

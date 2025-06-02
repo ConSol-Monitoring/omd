@@ -1,8 +1,11 @@
 This file documents the revision history for the Open Monitoring Distribution (Labs Edition)
 
 next:
+          - thruk:
+            - lmd update to 2.5.1
           - grafana:
             - update to 11.6.2
+          - nagflux update to 0.5.3
 
 5.60     May 28 2025
           - omd:
