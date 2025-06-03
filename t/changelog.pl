@@ -15,6 +15,10 @@ my $renames = {
     'mod-gearman-worker'    => { cat => "gearman" },
     'mod-gearman-worker-go' => { cat => "gearman" },
 };
+my $prj_renames = {
+    'naemon'                => { name => "naemon-core" },
+    'naemon-plugins'        => { name => "naemon-vimvault" },
+};
 my $plugin_files = {
     "check_vsphere"                       => "packages/python-modules/src/checkvsphere-(.*).tar.gz",
     "omdnotificationforwarder"            => "packages/python-modules/src/omdnotificationforwarder-(.*)-py3-none-any.whl",
@@ -173,6 +177,7 @@ sub _extract_change_makefile_version {
         $prj =~ s/^.*packages\/([^\/]+)\/.*/$1/gmx;
     }
     return if $prj =~ m/^go\-/gmx;
+    $prj = _rename_project($prj);
     $cat = _get_category($prj) unless $cat;
     $prj =~ s/^$cat[\-_]+//gmx;
     if($prj eq $cat) { $prj = ""; }
@@ -219,6 +224,12 @@ sub _get_category {
         }
     }
     return("");
+}
+
+################################################################################
+sub _rename_project {
+    my($prj) = @_;
+    return ($prj_renames->{$prj} ? $prj_renames->{$prj}->{'name'} : $prj)
 }
 
 ################################################################################

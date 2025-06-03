@@ -2,7 +2,7 @@ include ../../Makefile.omd
 
 NAME    = naemon-vimvault
 CHANGELOG = https://github.com/naemon/naemon-vimcrypt-vault-broker/blob/master/ChangeLog
-VERSION = 1.4.0
+VERSION = 1.4.4
 DIR     = $(NAME)-$(VERSION)
 DEPENDS = naemon
 
