@@ -5,6 +5,7 @@ next:
             - lmd update to 2.5.1
           - naemon:
             - update to 1.4.4
+            - livestatus update to 1.4.4
           - grafana:
             - update to 11.6.2
           - nagflux update to 0.5.3
