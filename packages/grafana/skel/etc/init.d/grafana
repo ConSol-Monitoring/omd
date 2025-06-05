@@ -15,6 +15,7 @@ fi
 . lib/omd/init_profile
 . .profile
 
+
 # allow the setting of enviroment variable for customization
 # e.g. for AWS sigv4 auth see https://docs.aws.amazon.com/prometheus/latest/userguide/AMP-onboard-query-standalone-grafana.html
 
@@ -32,6 +33,10 @@ OPTS="server --homepath=${GRAFANA_HOME} --pidfile=${PID_FILE} --config=${CONF_FI
 NOHUP=1
 KILL_SESSION=1
 START_TIMEOUT=60
+
+set -a
+[ -r $CONF_DIR/environment ] && . $CONF_DIR/environment
+set +a
 
 mkdir -p "$LOG_DIR" "$DATA_DIR"
 
