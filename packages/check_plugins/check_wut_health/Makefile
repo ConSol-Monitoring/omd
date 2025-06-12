@@ -2,7 +2,7 @@ include ../../../Makefile.omd
 
 NAME = check_wut_health
 CHANGELOG   = https://github.com/lausser/check_wut_health/blob/master/ChangeLog
-VERSION = 4.2.0.1
+VERSION = 4.3
 DIR = $(NAME)-$(VERSION)
 
 .PHONY: skel
