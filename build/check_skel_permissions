@@ -14,6 +14,8 @@ sub _check_permissons {
     opendir(my $hdl, $folder) || die("failed to read folder $folder: $!");
     while(my $f = readdir($hdl)) {
         next if $f =~ /^\.\.?$/mx;
+        next if -l $f;   # skip symlinks
+        next if ! -e $f; # skip broken symlinks
         $f = $folder."/".$f;
         my $isDir = -d $f;
         my @stat  = stat(_);
