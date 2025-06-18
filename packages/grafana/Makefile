@@ -2,7 +2,7 @@ include ../../Makefile.omd
 
 NAME       = grafana
 CHANGELOG  = https://github.com/grafana/grafana/blob/main/CHANGELOG.md
-VERSION    = 11.6.2
+VERSION    = 11.6.3
 SRC        = $(NAME)-$(VERSION).tar.gz
 GOPATH     = go
 # does work with newer go > 1.22 yet and cannot be updated because scripted dashboarding will break...
