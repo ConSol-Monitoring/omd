@@ -170,4 +170,11 @@ if [ $OLD_VERSION -le 512 ]; then
     fi
 fi
 
+if [ $OLD_VERSION -le 570 ]; then
+  if [ -e etc/histou/histou.ini ]; then
+    # breaks updates and will be set correctly again by the config hook after the update
+    sed -e 's%^databaseType.*%databaseType = "influxdb"%' -i etc/histou/histou.ini
+  fi
+fi
+
 exit 0
