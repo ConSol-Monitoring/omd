@@ -31,7 +31,7 @@ if [ ! -z "$OMD_PACKAGE" ]; then
 
     # Suse (needs to be first, there is a apt-get on opensuse as well)
     if [ -x /usr/bin/zypper  ]; then
-        # remove version if alread installed
+        # remove version if already installed
         /usr/bin/zypper --quiet --non-interactive --no-gpg-checks install $OMD_PACKAGE
 
     # Debian / Ubuntu
@@ -41,7 +41,7 @@ if [ ! -z "$OMD_PACKAGE" ]; then
 
     # Centos
     elif [ -x /usr/bin/yum  ]; then
-        # remove version if alread installed
+        # remove version if already installed
         /usr/bin/yum install -y --nogpgcheck $OMD_PACKAGE
     fi
 

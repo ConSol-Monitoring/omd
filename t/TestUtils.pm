@@ -227,6 +227,8 @@ sub test_command {
     $test->{'stderr'} = $t->stderr;
     $test->{'exit'}   = $rc;
 
+    $t->cleanup();
+
     return $return;
 }
 
@@ -373,7 +375,8 @@ sub file_contains {
 
 =cut
 sub create_test_site {
-    my $site = $_[0] || "testsite";
+    my($site, $version) = @_;
+    $site = "testsite" unless defined $site;
     my $errlike = '/^\s*$/';
     if(scalar @{[glob('/omd/sites/*/.')]} >= 1) {
         $errlike = '/is in use/';
@@ -381,6 +384,9 @@ sub create_test_site {
     my $createoptions = "";
     if(is_docker()) {
         $createoptions = " --no-tmpfs ";
+    }
+    if($version) {
+        $createoptions = " -V ".$version;
     }
     if(test_command({ cmd => TestUtils::get_omd_bin()." create $createoptions $site", errlike => $errlike })) {
         # disable cookie auth for tests
@@ -1047,8 +1053,8 @@ sub _clean_stderr {
 sub _diag_cmd {
     my($test) = @_;
     my $cmd = $test->{'test_cmd'};
-    my $stdout = $cmd->stdout || '';
-    my $stderr = $cmd->stderr || '';
+    my $stdout = $cmd->stdout // '';
+    my $stderr = $cmd->stderr // '';
     diag("\ncmd: '".$test->{'cmd'}."' failed\n");
     diag("stdout: ".$stdout."\n");
     diag("stderr: ".$stderr."\n");
