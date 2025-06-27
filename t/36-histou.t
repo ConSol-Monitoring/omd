@@ -54,7 +54,7 @@ if($page->{'content'} !~ m/$host-$service/mx) {
     TestUtils::bail_out_clean("histou did not work");
 }
 
-# wait untill grafana is up & running
+# wait until grafana is up & running
 TestUtils::test_command({ cmd => "/bin/su - $site -c 'cat var/log/grafana/grafana.log'", like => '/HTTP Server Listen/', waitfor => 'HTTP\ Server\ Listen', maxwait => 180 });
 TestUtils::test_url({ url => 'http://localhost/'.$site.'/grafana/', waitfor => '<title>Grafana<\/title>', auth => $auth, maxwait => 180 });
 
@@ -106,4 +106,3 @@ TestUtils::test_url({
 
 TestUtils::test_command({ cmd => $omd_bin." stop $site" });
 TestUtils::remove_test_site($site);
-
