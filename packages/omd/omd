@@ -2904,7 +2904,8 @@ def main_setversion(args, options={}):
     if version != 'auto' and not version_exists(version):
         bail_out(tty_error + ": The given version does not exist.")
     if version == default_version():
-        bail_out(tty_error + ": The given version is already default.")
+        sys.stdout.write(tty_ok + ": The given version is already default.\n")
+        sys.exit(0)
 
     # Special handling for debian based distros which use update-alternatives
     # to control the path to the omd binary, manpage and so on
