@@ -4016,7 +4016,7 @@ def prepare_dry_run_update_path(dry_run_path, from_version, to_version):
         # skip folders which are neither in old or new skel to avoid deep recursion into custom folder
         if not os.path.lexists(os.path.join(from_skel_path, root)) and not os.path.lexists(os.path.join(to_skel_path, root)):
             continue
-        for dir in dirs:
+        for dir in list(dirs):
             if not os.path.lexists(os.path.join(from_skel_path,root, dir)) and not os.path.lexists(os.path.join(to_skel_path, root, dir)):
                 dirs.remove(dir)
         for dir in dirs:
