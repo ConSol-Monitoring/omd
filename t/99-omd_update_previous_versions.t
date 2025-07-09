@@ -48,6 +48,9 @@ for my $old_version (@old_versions) {
 
     my $site = TestUtils::create_test_site(undef, $old_version) or TestUtils::bail_out_clean("no further testing without site");
 
+    TestUtils::test_command({ cmd => $omd_bin." start $site", like => '/Starting naemon\.+OK/' });
+    TestUtils::test_command({ cmd => "/bin/su - $site -c 'omd stop'", like => '/Stopping naemon.*OK/' });
+
     ##############################################
     # does a update from the previous version work without conflicts?
     TestUtils::test_command({
@@ -58,13 +61,16 @@ for my $old_version (@old_versions) {
 
     ##############################################
     # test a few settings if they produces conflicts during updates
-    TestUtils::test_command({ cmd => "/bin/su - $site -c 'omd stop'", like => '/Stopping naemon.*OK/' });
     TestUtils::test_command({ cmd => $omd_bin." config $site set INFLUXDB on" });
     TestUtils::test_command({ cmd => $omd_bin." config $site set NAGFLUX on" });
     TestUtils::test_command({ cmd => $omd_bin." config $site set PNP4NAGIOS off" });
     TestUtils::test_command({ cmd => $omd_bin." config $site set GRAFANA on" });
     TestUtils::test_command({ cmd => $omd_bin." config $site set PROMETHEUS on" });
     TestUtils::test_command({ cmd => $omd_bin." config $site set CORE icinga2" });
+
+    TestUtils::test_command({ cmd => $omd_bin." start $site", like => '/Starting nagflux\.+OK/' });
+    TestUtils::test_command({ cmd => "/bin/su - $site -c 'omd stop'", like => '/Stopping grafana.*OK/' });
+
     TestUtils::test_command({
         cmd    => $omd_bin." -V $omd_version -n update $site",
         like   => ['/DRY RUN/', '/0 conflicts/'],
@@ -74,6 +80,10 @@ for my $old_version (@old_versions) {
     ##############################################
     TestUtils::test_command({ cmd => $omd_bin." config $site set INFLUXDB off" });
     TestUtils::test_command({ cmd => $omd_bin." config $site set VICTORIAMETRICS on" });
+
+    TestUtils::test_command({ cmd => $omd_bin." start $site", like => '/Starting victoriametrics\.+OK/' });
+    TestUtils::test_command({ cmd => "/bin/su - $site -c 'omd stop'", like => '/Stopping victoriametrics.*OK/' });
+
     TestUtils::test_command({
         cmd    => $omd_bin." -V $omd_version -n update $site",
         like   => ['/DRY RUN/', '/0 conflicts/'],
