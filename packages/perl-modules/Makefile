@@ -25,7 +25,7 @@ PREMODULES += \
 	      Cpanel-JSON-*.tar.gz
 
 MODULES = \
-          App-cpanminus-1.7043.tar.gz \
+          App-cpanminus-1.7048.tar.gz \
           AppConfig-1.71.tar.gz \
           Capture-Tiny-0.46.tar.gz \
           Carp-Clan-6.06.tar.gz \
@@ -34,16 +34,16 @@ MODULES = \
           Class-Singleton-1.5.tar.gz \
           Clone-0.39.tar.gz \
           Compress-Raw-Bzip2-2.101.tar.gz \
-          Compress-Raw-Zlib-2.101.tar.gz \
+          Compress-Raw-Zlib-2.213.tar.gz \
           Config-General-2.63.tar.gz \
           Config-Tiny-2.23.tgz \
           Crypt-Blowfish_PP-1.12.tar.gz \
           Crypt-DES-2.07.tar.gz \
           Crypt-RC4-2.02.tar.gz \
           Crypt-Rijndael-1.14.tar.gz \
-          DBI-1.639.tar.gz \
+          DBI-1.647.tgz \
           DBD-Sybase-1.24.tar.gz \
-          DBD-SQLite-1.70.tar.gz \
+          DBD-SQLite-1.76.tar.gz \
           Data-Dumper-2.161.tar.gz \
           Date-Manip-6.60.tar.gz \
           Devel-GlobalDestruction-XS-0.03.tar.gz \
@@ -53,9 +53,9 @@ MODULES = \
           Digest-Perl-MD5-1.9.tar.gz \
           Digest-SHA-6.02.tar.gz \
           Digest-SHA1-2.13.tar.gz \
-          Email-Address-1.908.tar.gz \
+          Email-Address-1.913.tar.gz \
           Email-Date-Format-1.005.tar.gz \
-          Email-MIME-ContentType-1.022.tar.gz \
+          Email-MIME-ContentType-1.028.tar.gz \
           Email-MIME-Encodings-1.315.tar.gz \
           Email-MessageID-1.406.tar.gz \
           Email-Simple-2.214.tar.gz \
@@ -67,12 +67,14 @@ MODULES = \
           ExtUtils-Helpers-0.026.tar.gz \
           ExtUtils-InstallPaths-0.011.tar.gz \
           ExtUtils-Manifest-1.70.tar.gz \
-          FCGI-0.78.tar.gz \
+          FCGI-0.82.tar.gz \
           File-Copy-Recursive-0.40.tar.gz \
           File-Path-2.15.tar.gz \
           File-Remove-1.57.tar.gz \
           File-Slurp-9999.27.tar.gz \
-          GD-2.50.tar.gz \
+          File-Which-1.27.tar.gz \
+          ExtUtils-PkgConfig-1.16.tar.gz \
+          GD-2.83.tar.gz \
           Getopt-Long-2.50.tar.gz \
           HTML-Tagset-3.20.tar.gz \
           HTTP-Date-6.02.tar.gz \
@@ -133,7 +135,7 @@ MODULES = \
           Variable-Magic-0.62.tar.gz \
           XML-NamespaceSupport-1.12.tar.gz \
           XML-SAX-Base-1.09.tar.gz \
-          YAML-1.24.tar.gz \
+          YAML-1.31.tar.gz \
           YAML-Tiny-1.70.tar.gz \
           base-2.23.tar.gz \
           constant-1.33.tar.gz \
@@ -141,8 +143,8 @@ MODULES = \
           podlators-4.10.tar.gz \
           threads-2.21.tar.gz \
           threads-shared-1.58.tar.gz \
-          Archive-Tar-2.26.tar.gz \
-          Archive-Zip-1.60.tar.gz \
+          Archive-Tar-3.04.tar.gz \
+          Archive-Zip-1.68.tar.gz \
           Attribute-Handlers-0.99.tar.gz \
           Bit-Vector-7.4.tar.gz \
           CPAN-Meta-2.150010.tar.gz \
@@ -156,13 +158,13 @@ MODULES = \
           File-Listing-6.04.tar.gz \
           HTML-Parser-3.72.tar.gz \
           Module-Metadata-1.000033.tar.gz \
-          Module-ScanDeps-1.24.tar.gz \
+          Module-ScanDeps-1.37.tar.gz \
           Term-Clui-1.71.tar.gz \
           Time-Local-1.25.tar.gz \
           URI-1.73.tar.gz \
           WWW-RobotRules-6.02.tar.gz \
           XML-SAX-0.99.tar.gz \
-          XML-Simple-2.24.tar.gz \
+          XML-Simple-2.25.tar.gz \
           autodie-2.29.tar.gz \
           HTML-Lint-2.30.tar.gz \
           HTTP-Message-6.14.tar.gz \
@@ -171,9 +173,9 @@ MODULES = \
           Monitoring-Livestatus-0.78.tar.gz \
           Net-HTTP-6.17.tar.gz \
           XML-LibXML-2.0132.tar.gz \
-          HTTP-Body-1.22.tar.gz \
+          HTTP-Body-1.23.tar.gz \
           HTTP-Cookies-6.04.tar.gz \
-          HTTP-Daemon-6.01.tar.gz \
+          HTTP-Daemon-6.16.tar.gz \
           IPC-Cmd-0.98.tar.gz \
           libwww-perl-6.31.tar.gz \
           ExtUtils-CBuilder-0.280230.tar.gz \
@@ -197,7 +199,7 @@ MODULES = \
           CPAN-2.16.tar.gz \
           Cookie-Baker-0.11.tar.gz \
           Dist-CheckConflicts-0.11.tar.gz \
-          Email-MIME-1.946.tar.gz \
+          Email-MIME-1.954.tar.gz \
           Error-0.17025.tar.gz \
           Excel-Template-0.34.tar.gz \
           File-BOM-0.14.tar.gz \
@@ -226,7 +228,7 @@ MODULES = \
           namespace-autoclean-0.28.tar.gz \
           File-Tail-1.3.tar.gz \
           UUID-0.28.tar.gz \
-          CryptX-0.085.tar.gz \
+          CryptX-0.087.tar.gz \
           Crypt-JWT-0.036.tar.gz \
           Thruk-Utils-XS-0.02.tar.gz \
           Monitoring-TT-1.0.3.tar.gz \
