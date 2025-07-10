@@ -478,7 +478,8 @@ sub remove_test_site {
     # testsite 28669 28609  0 07:49 ?        00:00:00 [systemctl]
     `if [ \$(ps -fu $site | wc -l) -gt 0 ]; then /usr/bin/pkill -2 -U $site; sleep 1; fi`;
     `if [ \$(ps -fu $site | wc -l) -gt 0 ]; then /usr/bin/pkill -9 -U $site; sleep 1; fi`;
-    test_command({ cmd => TestUtils::get_omd_bin()." rm $site", stdin => "yes\n" });
+    my $errlike = is_docker() ? '/(^\s*$|^AH00558: apache2: Could not reliably determine the server\'s fully qualified domain name, using.*$)/' : '/^\s*$/';
+    test_command({ cmd => TestUtils::get_omd_bin()." rm $site", stdin => "yes\n", errlike => $errlike  });
     return;
 }
 
@@ -1178,7 +1179,8 @@ sub restart_system_apache {
     my $cmd  = $init;
     $cmd     =~ s/\Q%(name)s\E/$name/mx;
     $cmd     =~ s/\Q%(action)s\E/$action/mx;
-    TestUtils::test_command({ cmd => $cmd });
+    my $errlike = is_docker() ? '/(^\s*$|^AH00558: apache2: Could not reliably determine the server\'s fully qualified domain name, using.*$)/' : '/^\s*$/';
+    TestUtils::test_command({ cmd => $cmd, errlike => $errlike });
 }
 
 ##################################################
