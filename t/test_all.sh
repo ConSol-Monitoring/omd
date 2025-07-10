@@ -65,8 +65,12 @@ echo "running tests..."
 TESTS=t/*.t
 VERBOSE="0"
 if [ ! -z $1 ]; then
-  TESTS=$*
   VERBOSE="1"
+  if [ "$1" = "-q" ]; then
+    VERBOSE="0"
+    shift
+  fi
+  TESTS=$*
 fi
 
 if [ "x$TEST_TIMER" != "x" ]; then
