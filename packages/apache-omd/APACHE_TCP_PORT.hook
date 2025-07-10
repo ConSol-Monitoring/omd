@@ -41,6 +41,7 @@ EOF
 SSLProxyEngine on
 # apache 2.4 only
 <IfModule mod_authz_core.c>
+  SSLProxyCheckPeerCN off
   SSLProxyCheckPeerName off
 </IfModule>
 <Location /$OMD_SITE>
