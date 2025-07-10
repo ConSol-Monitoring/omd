@@ -14,6 +14,14 @@ WHEELSDIR=$(shell pwd)/wheels
 
 PIP=python3 -m pip
 
+HAS_PYTHON_307_OR_NEWER := $(shell \
+    required_version="3.7.0"; \
+    if [ $$(echo -e "$(PYTHON_V)\n$$required_version" | sort -V | head -n1) = "$$required_version" ]; then \
+        echo "true"; \
+    else \
+        echo "false"; \
+    fi \
+)
 HAS_PYTHON_312_OR_NEWER := $(shell \
     required_version="3.12.0"; \
     if [ $$(echo -e "$(PYTHON_V)\n$$required_version" | sort -V | head -n1) = "$$required_version" ]; then \
@@ -44,7 +52,7 @@ MODULES += ply-3.11.tar.gz                           # jsonpath-ng-1.5.3, pysmi-
 MODULES += charset-normalizer-2.1.1.tar.gz           #  requests-2.28.1
 MODULES += idna-3.4.tar.gz                           #  requests-2.28.1
 MODULES += urllib3-1.26.13.tar.gz                    #  requests-2.28.1(<1.27,>=1.21.1)
-MODULES += certifi-2022.12.7.tar.gz                  #  requests-2.28.1
+MODULES += certifi-2025.1.31.tar.gz                  #  requests-2.28.1
 MODULES += chardet-3.0.4.tar.gz                      #  requests-2.28.1
 MODULES += requests-2.27.1.tar.gz                    # pywbem-1.5.0
 
@@ -107,8 +115,13 @@ MODULES += omdeventhandler-1.2.0.1-py3-none-any.whl
 MODULES += monplugin-0.6.3.tar.gz                    # check_vsphere
 MODULES += checkvsphere-0.3.18.tar.gz
 
-# override some module for python 3.12, list could be reevaluated once rhel7 support got removed
+# override some module for python 3.07, list could be reevaluated once rhel7-rhel8 support got removed
 OVERRIDES=""
+ifeq ($(HAS_PYTHON_307_OR_NEWER),true)
+OVERRIDES += certifi-2025.7.14.tar.gz
+endif
+
+# override some module for python 3.12, list could be reevaluated once rhel7 support got removed
 ifeq ($(HAS_PYTHON_312_OR_NEWER),true)
 OVERRIDES += setuptools-70.3.0.tar.gz
 OVERRIDES += wheel-0.44.0.tar.gz
