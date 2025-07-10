@@ -22,10 +22,12 @@ for my $file (@modules) {
     printf "%-55s", $file;
 
     if(!-f $file) {
+        $file =~ s/\-/::/gmx;
         my $newfile = BuildHelper::module_to_file($file, $files);
         if($newfile) {
             $file = $newfile;
         } else {
+            print "\n";
             die("no idea how to handle $file");
         }
     }

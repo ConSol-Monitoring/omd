@@ -348,6 +348,17 @@ sub get_url_for_module {
     our %url_cache;
     $mod = translate_module_name($mod);
     return $url_cache{$mod} if exists $url_cache{$mod};
+    # try cpanm first
+    my $out = cmd(sprintf('cpanm --sudo --quiet --info "%s"', $mod), 1);
+    if($out =~ m/^(\S+\.(tar.gz|tgz))/gmx) {
+        my $tarball = $1;
+        my $l1 = substr($tarball, 0, 1);
+        my $l2 = substr($tarball, 0, 2);
+        my $url = sprintf("https://cpan.metacpan.org/authors/id/%s/%s/%s", $l1, $l2, $tarball);
+        $url_cache{$mod} = $url;
+        return($url);
+    }
+
     for my $url ('https://metacpan.org/pod/'.$mod, 'https://metacpan.org/search?q='.$mod, 'https://metacpan.org/search?q='.$mod.'.pm') {
         my $out = cmd(sprintf('%s -O - "%s"', $wget, $url), 1);
         if($out =~ m/href="([^\"]+\/authors\/id\/.*?\/.*?(\.tar\.gz|\.tgz|\.zip))">/) {
