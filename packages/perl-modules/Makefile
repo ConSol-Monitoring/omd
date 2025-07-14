@@ -173,6 +173,9 @@ MODULES = \
           Monitoring-Livestatus-0.78.tar.gz \
           Net-HTTP-6.17.tar.gz \
           XML-LibXML-2.0132.tar.gz \
+          Module-Build-0.4007.tar.gz \
+          Module-Build-Tiny-0.052.tar.gz \
+          Module-Install-1.19.tar.gz \
           HTTP-Body-1.23.tar.gz \
           HTTP-Cookies-6.04.tar.gz \
           HTTP-Daemon-6.16.tar.gz \
@@ -182,9 +185,6 @@ MODULES = \
           ExtUtils-ParseXS-3.35.tar.gz \
           IO-1.25.tar.gz \
           LWP-Protocol-https-6.07.tar.gz \
-          Module-Build-0.4007.tar.gz \
-          Module-Build-Tiny-0.039.tar.gz \
-          Module-Install-1.19.tar.gz \
           Module-Runtime-0.016.tar.gz \
           Params-Util-1.07.tar.gz \
           Parse-RecDescent-1.967015.tar.gz \
@@ -199,6 +199,7 @@ MODULES = \
           CPAN-2.16.tar.gz \
           Cookie-Baker-0.11.tar.gz \
           Dist-CheckConflicts-0.11.tar.gz \
+          Text-Unidecode-1.30.tar.gz \
           Email-MIME-1.954.tar.gz \
           Error-0.17025.tar.gz \
           Excel-Template-0.34.tar.gz \
