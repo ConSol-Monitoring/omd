@@ -42,7 +42,7 @@ OPTIONS=()
 # They are used to identify the process in prometheus_proc()
 
 if prometheus_agent_mode ; then
-    OPTIONS+=(--enable-feature agent)
+    OPTIONS+=(--agent)
     OPTIONS+=(--storage.agent.path="${DATA_DIR}-agent")
 else
     OPTIONS+=(--storage.tsdb.path="$DATA_DIR")
@@ -52,9 +52,6 @@ fi
 OPTIONS+=(--config.file="$CFG_FILE")
 OPTIONS+=(--web.listen-address=$CONFIG_PROMETHEUS_TCP_ADDR:$CONFIG_PROMETHEUS_TCP_PORT)
 OPTIONS+=(--web.external-url=http://${EXTERNAL_FQDN}/$OMD_SITE/prometheus)
-OPTIONS+=(--web.console.libraries=/omd/sites/$OMD_SITE/etc/prometheus/console_libraries)
-OPTIONS+=(--web.console.templates=/omd/sites/$OMD_SITE/etc/prometheus/consoles)
-
 
 if [ -r $OMD_ROOT/etc/prometheus/webconfig.yml ]; then
     # https://prometheus.io/docs/prometheus/latest/configuration/https/

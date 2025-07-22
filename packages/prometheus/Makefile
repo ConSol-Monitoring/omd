@@ -4,7 +4,7 @@ include ../../Makefile.omd
 
 NAME       = prometheus
 CHANGELOG  = https://github.com/prometheus/prometheus/blob/main/CHANGELOG.md
-VERSION    = 2.53.4
+VERSION    = 3.5.0
 BRANCH     = master
 SRC        = $(NAME)-$(VERSION).tar.gz
 GOPKG      = 1.23
@@ -35,8 +35,6 @@ build:
 	install -m 755 prometheus-$(VERSION)/build/promtool   ./dest/bin/
 	strip dest/bin/*
 	$(UPX) ./dest/bin/*
-	cp -rp $(NAME)-$(VERSION)/consoles          ./dest/
-	cp -rp $(NAME)-$(VERSION)/console_libraries ./dest/
 	rm -rf $(NAME)-$(VERSION)
 
 install:
@@ -49,15 +47,6 @@ skel:
 	echo "Use this dir for your hand-crafted configs." > $(SKEL)/etc/prometheus/conf.d/custom/README
 	mkdir -p $(SKEL)/etc/prometheus/conf.d/dynamic
 	echo "Use this dir for your automatically created configs. Use coshsh" > $(SKEL)/etc/prometheus/conf.d/dynamic/README
-	cp -rp ./dest/consoles $(SKEL)/etc/prometheus
-	cp -rp ./dest/console_libraries $(SKEL)/etc/prometheus
-	mv $(SKEL)/etc/prometheus/consoles/index.html.example $(SKEL)/etc/prometheus/consoles/index.html
-	sed -ri 's/index.html.example/index.html/g' $(SKEL)/etc/prometheus/console_libraries/menu.lib
-
-	for p in patches/*.skel_patch ; do \
-		echo "applying $$p..." ; \
-		( cd $(SKEL) ; patch -p1 ) < $$p || exit 1; \
-	done
 
 clean:
 	rm -rf $(NAME)-$(VERSION)
