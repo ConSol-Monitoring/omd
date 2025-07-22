@@ -10,6 +10,12 @@ ExecStopPost=/usr/bin/omd stop
 ExecReload=/usr/bin/omd reload
 RemainAfterExit=yes
 Restart=no
+OOMScoreAdjust=-900
+KillMode=process
+
+# Uncomment TasksMax if your systemd version supports it.
+# Only systemd 243 and above support this property.
+#OOMPolicy=continue
 
 # Not limited by systemd as default
 LimitCORE=infinity

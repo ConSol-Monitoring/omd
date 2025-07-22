@@ -29,6 +29,10 @@ install:
 	if test -x /usr/bin/systemctl && [ $$(systemctl --version | head -n1 | awk {'print $$2'}) -ge 226 ]; then \
 		sed -i $(DESTDIR)$(OMD_ROOT)/share/omd/omd.service -e 's/^#TasksMax=/TasksMax=/g'; \
 	fi
+	# OOMPolicy has been introduced with systemd 243
+	if test -x /usr/bin/systemctl && [ $$(systemctl --version | head -n1 | awk {'print $$2'}) -ge 243 ]; then \
+		sed -i $(DESTDIR)$(OMD_ROOT)/share/omd/omd.service -e 's/^#OOMPolicy=/OOMPolicy=/g'; \
+	fi
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/doc/$(NAME)
 	install -m 644 COPYING AUTHORS $(DESTDIR)$(OMD_ROOT)/share/doc/$(NAME)
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/omd
