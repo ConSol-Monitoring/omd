@@ -48,7 +48,7 @@ mv omd-%{version} omd
 cd omd
 
 %build
-make -j 4
+make
 make pack
 
 %install

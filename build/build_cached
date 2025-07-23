@@ -174,7 +174,7 @@ rm $EXCLUDES_FILE
 $MAKE -C "$SRC" clean >/dev/null
 MD5_CHECK=$(../build/hashsum $SRC)
 if [ "$MD5" != "$MD5_CHECK" ]; then
-  echo "ERROR: make clean is broken and did not clean everything"
+  echo "ERROR: make clean is broken and did not clean everything in $SRC"
   exit 1
 fi
 
