@@ -2,7 +2,7 @@ include ../../Makefile.omd
 
 NAME       = sni-thruk-datasource
 CHANGELOG  = https://github.com/sni/grafana-thruk-datasource/blob/master/CHANGELOG.md
-VERSION    = 2.2.0
+VERSION    = 2.2.1
 SRC        = $(NAME)-$(VERSION).zip
 
 .PHONY: skel

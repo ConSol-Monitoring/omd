@@ -13,6 +13,7 @@ next:
           - grafana:
             - update to 11.6.3
             - pnp-datasource update to 2.2.2
+            - thruk-datasource update to 2.2.1
           - prometheus:
             - update to 3.5.0
             - all assets (css/js/templates) for prometheus console where removed from upstream
