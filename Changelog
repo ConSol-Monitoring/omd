@@ -16,7 +16,7 @@ next:
             - update to 3.5.0
             - all assets (css/js/templates) for prometheus console where removed from upstream
             - as a result the SNMP console was also removed
-          - coshsh update to 11.0
+          - coshsh update to 11.0.0.1
           - nagflux update to 0.5.3
           - telegraf update to 1.35.1
 
