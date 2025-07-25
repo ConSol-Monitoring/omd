@@ -369,7 +369,7 @@ sub grafana_set_user_is_admin {
 ################################################################################
 sub grafana_get_users {
     my $ua = shift;
-    my $j = _parse_json($ua->get("${API_URL}/users"));
+    my $j = _parse_json($ua->get("${API_URL}/users?perpage=1000000"));
     my $users = {};
     for my $u (@$j) {
         $users->{$u->{login}} = $u;
