@@ -11,7 +11,7 @@ next:
             - check_nwc_health update to 12.5
             - check_wut_health update to 4.3.1
           - grafana:
-            - update to 11.6.3
+            - update to 11.6.4
             - pnp-datasource update to 2.2.2
             - thruk-datasource update to 2.2.1
           - prometheus:
