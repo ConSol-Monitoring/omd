@@ -10,6 +10,8 @@ next:
           - plugins:
             - check_nwc_health update to 12.5
             - check_wut_health update to 4.3.1
+          - gearman:
+            - mod-gearman-worker-go update to 1.5.8
           - grafana:
             - update to 11.6.4
             - pnp-datasource update to 2.2.2
