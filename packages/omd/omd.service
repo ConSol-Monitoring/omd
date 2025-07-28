@@ -13,7 +13,7 @@ Restart=no
 OOMScoreAdjust=-900
 KillMode=process
 
-# Uncomment TasksMax if your systemd version supports it.
+# Uncomment OOMPolicy if your systemd version supports it.
 # Only systemd 243 and above support this property.
 #OOMPolicy=continue
 
