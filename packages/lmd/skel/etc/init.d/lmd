@@ -19,6 +19,15 @@ OPTS="lmd start"
 PID_FILE=$OMD_ROOT/tmp/thruk/lmd/pid
 LOG_FILE=$OMD_ROOT/var/log/lmd.log
 STOP_TIMEOUT=30
+STOP_CALLBACK="save_thread_dump"
 SILENT_ALREADY_RUNNING=1
+
+# save thread dump if counter is almost zero
+save_thread_dump() {
+  local COUNTER=$1
+  if [ $COUNTER -eq 10 ]; then
+    kill -USR1 $(cat $PID_FILE 2>/dev/null) 2>/dev/null
+  fi
+}       
 
 __generic_init "$*"
