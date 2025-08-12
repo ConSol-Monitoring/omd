@@ -33,6 +33,9 @@ OPTS="server --homepath=${GRAFANA_HOME} --pidfile=${PID_FILE} --config=${CONF_FI
 NOHUP=1
 KILL_SESSION=1
 START_TIMEOUT=60
+# domain gets used in the share dashboard menu
+DOMAIN=$(hostname -f)
+export GF_SERVER_DOMAIN="$DOMAIN"
 
 set -a
 [ -r $CONF_DIR/environment ] && . $CONF_DIR/environment
