@@ -3227,7 +3227,7 @@ def main_rm(args, options={}):
         if not kill:
             bail_out(tty_error + ": User '%s' still logged in or running processes." % g_sitename)
         else:
-            kill_site_user_processes(exclude_current_and_parents=True)
+            kill_site_user_processes(g_sitename, exclude_current_and_parents=True)
 
     if tmpfs_mounted(g_sitename):
         unmount_tmpfs(g_sitename, kill=kill)
@@ -4608,14 +4608,14 @@ def site_user_processes(site, exclude_current_and_parents):
     if exclude_current_and_parents:
         exclude = get_current_and_parent_pids()
 
-    p = subprocess.Popen(["ps", "-U", site.name, "-o", "pid", "--no-headers"],
+    p = subprocess.Popen(["ps", "-U", site, "-o", "pid", "--no-headers"],
                          close_fds=True,
                          stdin=open(os.devnull),
                          stdout=subprocess.PIPE)
     exclude.append(p.pid)
 
     pids = []
-    for l in p.communicate()[0].split("\n"):
+    for l in p.communicate()[0].decode("utf-8").split("\n"):
         line = l.strip()
         if not line:
             continue
