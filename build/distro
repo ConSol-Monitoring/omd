@@ -25,6 +25,7 @@ if [ -e /etc/debian_version ]; then
     if [ $VERSION = 'buster/sid'   ]; then VERSION="10"; fi
     if [ $VERSION = 'bullseye/sid' ]; then VERSION="11"; fi
     if [ $VERSION = 'bookworm/sid' ]; then VERSION="12"; fi
+    if [ $VERSION = 'trixie/sid' ];   then VERSION="12"; fi
     echo "DEBIAN$SEP$VERSION"
     exit 0
 fi
