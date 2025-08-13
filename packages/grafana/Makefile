@@ -18,6 +18,9 @@ else
 $(error arch $(shell uname -m ) not supported)
 endif
 
+# there is usually more space here, and /tmp is a tmpfs on most machines nowadays
+export TMPDIR=/var/tmp
+
 .PHONY: skel
 
 build:
@@ -31,6 +34,7 @@ build:
 	rm -rf $(GOPATH)
 	strip ./dest/grafana
 	$(UPX) ./dest/grafana
+	rm -rf /var/tmp/go-build*
 
 install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/bin
