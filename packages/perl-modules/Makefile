@@ -7,6 +7,16 @@ DEPENDS  = freetds
 
 SYBASE   = $(shell readlink -m ../freetds/tmpinstall$(OMD_ROOT))
 
+PERL_VERSION = $(shell perl -e 'print $$]')
+HAS_PERL_5_40_OR_NEWER := $(shell \
+    required_version="5.040000"; \
+    if [ $$(echo -e "$(PERL_VERSION)\n$$required_version" | sort -V | head -n1) = "$$required_version" ]; then \
+        echo "true"; \
+    else \
+        echo "false"; \
+    fi \
+)
+
 # ubuntu (=> 22.04 breaks with archdir perl-base)
 EXTUTILSPATCHED=$(shell perl -V 2>&1 | grep extutils_set_libperl_path)
 ifeq ($(EXTUTILSPATCHED),)
@@ -141,7 +151,6 @@ MODULES = \
           constant-1.33.tar.gz \
           libnet-3.11.tar.gz \
           podlators-4.10.tar.gz \
-          threads-2.21.tar.gz \
           threads-shared-1.58.tar.gz \
           Archive-Tar-3.04.tar.gz \
           Archive-Zip-1.68.tar.gz \
@@ -172,7 +181,7 @@ MODULES = \
           Module-Load-Conditional-0.68.tar.gz \
           Monitoring-Livestatus-0.78.tar.gz \
           Net-HTTP-6.17.tar.gz \
-          XML-LibXML-2.0132.tar.gz \
+          XML-LibXML-2.0134.tar.gz \
           Module-Build-0.4007.tar.gz \
           Module-Build-Tiny-0.052.tar.gz \
           Module-Install-1.19.tar.gz \
@@ -236,6 +245,14 @@ MODULES = \
           Monitoring-GLPlugin-5.44.1.1.tar.gz
 
 
+# newer perl can use system threads
+
+ifeq ($(HAS_PERL_5_40_OR_NEWER),true)
+# no additional module with 5.40 or newer
+else
+MODULES += \
+          threads-2.21.tar.gz
+endif
 
 
 build:
