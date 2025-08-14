@@ -205,7 +205,6 @@ MODULES = \
           WWW-Form-UrlEncoded-0.24.tar.gz \
           XML-Parser-2.44.tar.gz \
           XML-Twig-3.52.tar.gz \
-          CPAN-2.16.tar.gz \
           Cookie-Baker-0.11.tar.gz \
           Dist-CheckConflicts-0.11.tar.gz \
           Text-Unidecode-1.30.tar.gz \
@@ -250,7 +249,9 @@ MODULES = \
 ifeq ($(HAS_PERL_5_40_OR_NEWER),true)
 # no additional module with 5.40 or newer
 else
+# some additional modules for < 5.40
 MODULES += \
+          CPAN-2.16.tar.gz \
           threads-2.21.tar.gz
 endif
 
