@@ -3389,7 +3389,7 @@ def call_diag_script(script):
             sys.stdout.write("  " + tty_error + " %s\n" % line[6:])
             errors += 1
         elif line.startswith("VERSION"):
-            info = re.split(r'\s+', line[8:], 1)
+            info = re.split(r'\s+', line[8:], maxsplit=1)
             sys.stdout.write('     %-7s %s\n' % (info[0].strip(), info[1].strip()))
         elif exitcode == 0:
             sys.stdout.write("  " + tty_ok + " %s\n" % line)
