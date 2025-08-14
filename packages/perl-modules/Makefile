@@ -191,7 +191,7 @@ MODULES = \
           IPC-Cmd-0.98.tar.gz \
           libwww-perl-6.31.tar.gz \
           ExtUtils-CBuilder-0.280230.tar.gz \
-          ExtUtils-ParseXS-3.35.tar.gz \
+          ExtUtils-ParseXS-3.58.tar.gz \
           IO-1.25.tar.gz \
           LWP-Protocol-https-6.07.tar.gz \
           Module-Runtime-0.016.tar.gz \
