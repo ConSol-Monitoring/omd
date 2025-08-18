@@ -2813,6 +2813,10 @@ def call_scripts(phase, prefix=None, args=None):
         if am_root():
             return call_as_forked_site_user(call_scripts, [phase], {"prefix":prefix, "args":args})
 
+    cwd = g_sitedir
+    if not os.path.exists(cwd):
+        cwd = "/"
+
     if not args:
         args = []
     putenv("OMD_ROOT", g_sitedir)
@@ -2822,7 +2826,7 @@ def call_scripts(phase, prefix=None, args=None):
             continue
         sys.stdout.write('Executing %s script "%s"...' % (phase, f))
         sys.stdout.flush()
-        p = subprocess.Popen(['%s/%s' % (path, f)]+args)
+        p = subprocess.Popen(['%s/%s' % (path, f)]+args, cwd=cwd)
         exitcode = p.wait()
         if exitcode == 0:
             sys.stdout.write(tty_ok + '\n')
