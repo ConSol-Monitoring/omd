@@ -14,7 +14,6 @@ GOVERSION   = $(shell grep ^VERSION ../go-${GOPKG}/Makefile | awk '{ print $$3 }
 GOPATH      = $(PWD)/go
 GOROOT=$(PWD)/../go-$(GOPKG)/go-$(GOVERSION)/
 PKG_PREFIX=github.com/VictoriaMetrics/VictoriaMetrics
-GO_BUILDINFO = -X '$(PKG_PREFIX)/lib/buildinfo.Version=$(APP_NAME)-$(shell date -u +'%Y%m%d-%H%M%S')-$(VVERSION)-omd-$(OMD_VERSION)'
 
 APPS = \
         victoria-metrics \
@@ -41,7 +40,8 @@ build:
 build-app:
 	cd VictoriaMetrics-$(VERSION) && \
 	  https_proxy=http://127.7.7.7:50000 http_proxy=http://127.7.7.7:50000 \
-	  PATH=$(GOROOT)/bin:$(PATH) make app-local APP_NAME=$(APP_NAME)
+	  PATH=$(GOROOT)/bin:$(PATH) make app-local \
+	    APP_NAME=$(APP_NAME) BUILDINFO_TAG=$(VVERSION)-omd-$(OMD_VERSION) PKG_TAG=
 	install -m 755 VictoriaMetrics-$(VERSION)/bin/$(APP_NAME) dest/$(APP_NAME)-prod
 
 install:
