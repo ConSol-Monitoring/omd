@@ -24,11 +24,17 @@ TestUtils::test_command({ cmd => $omd_bin." config $site set VICTORIAMETRICS on"
 TestUtils::test_command({ cmd => $omd_bin." start $site", like => ['/Starting victoriametrics\.+OK/',
                                                                   ]});
 
-TestUtils::test_command({ cmd => qq[/bin/su - $site -c 'victoria-metrics-prod --version'],  like => '/^victoria-metrics/' });
-TestUtils::test_command({ cmd => qq[/bin/su - $site -c 'vmagent-prod --version'],  like => '/^vmagent/' });
-TestUtils::test_command({ cmd => qq[/bin/su - $site -c 'vmauth-prod --version'],  like => '/^vmauth/' });
-TestUtils::test_command({ cmd => qq[/bin/su - $site -c 'vmbackup-prod --version'],  like => '/^vmbackup/' });
-TestUtils::test_command({ cmd => qq[/bin/su - $site -c 'vmalert-prod --version'],  like => '/^vmalert/' });
+my $errlike = qr!(?:
+  \A\s*\z # empty stderr is ok
+  |
+  \A.*ERROR:.metrics:.disable.exposing.PSI.metrics.because.of.failed.init:.*\n\z # this error is actually just a warning
+)!ix;
+
+TestUtils::test_command({ cmd => qq[/bin/su - $site -c 'victoria-metrics-prod --version'],  like => '/^victoria-metrics.*-omd-/', errlike => $errlike });
+TestUtils::test_command({ cmd => qq[/bin/su - $site -c 'vmagent-prod --version'],  like => '/^vmagent.*-omd-/', errlike => $errlike });
+TestUtils::test_command({ cmd => qq[/bin/su - $site -c 'vmauth-prod --version'],  like => '/^vmauth.*-omd-/', errlike => $errlike });
+TestUtils::test_command({ cmd => qq[/bin/su - $site -c 'vmbackup-prod --version'],  like => '/^vmbackup.*-omd-/', errlike => $errlike });
+TestUtils::test_command({ cmd => qq[/bin/su - $site -c 'vmalert-prod --version'],  like => '/^vmalert.*-omd-/', errlike => $errlike });
 TestUtils::test_command({ cmd => qq[/bin/su - $site -c 'vmctl'],  like => '/VictoriaMetrics command-line tool/', errlike => '/.*/' });
 TestUtils::test_command({
   cmd => qq[/bin/su - $site -c 'lib/monitoring-plugins/check_http ].
