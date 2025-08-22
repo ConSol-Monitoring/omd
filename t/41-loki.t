@@ -13,7 +13,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 68 );
+plan( tests => 72 );
 
 ##################################################
 # create our test site
@@ -30,6 +30,9 @@ TestUtils::test_command({ cmd => $omd_bin." start $site", like => ['/Starting lo
 TestUtils::test_command({ cmd => $omd_bin." status $site", like => ['/loki:\s+running/',
                                                                     '/promtail:\s+running/',
                                                                   ]});
+
+# make sure lmd is started
+TestUtils::test_command({ cmd => "/bin/su - $site -c 'curl -s -u omdadmin:omd \"http://127.0.0.1/$site/thruk/cgi-bin/tac.cgi\"'", like => '/Tactical Monitoring Overview/' });
 
 # trigger error in thruk.log
 TestUtils::test_command({ cmd => "/bin/su - $site -c 'curl -s -u omdadmin:omd \"http://127.0.0.1/$site/thruk/cgi-bin/test.cgi\"'", like => '/Stacktrace:/' });
