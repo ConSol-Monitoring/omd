@@ -13,9 +13,9 @@ next:
             - livestatus update to 1.4.4
             - vimvault update to 1.4.4
           - plugins:
-            - check_nwc_health update to 12.5
+            - check_nwc_health update to 12.6
             - check_pdu_health update to 3.1
-            - check_wut_health update to 4.3.2
+            - check_wut_health update to 4.4
             - omdnotificationforwarder update to 2.8
           - gearman:
             - mod-gearman-worker-go update to 1.5.8
@@ -27,10 +27,12 @@ next:
             - update to 3.5.0
             - all assets (css/js/templates) for prometheus console where removed from upstream
             - as a result the SNMP console was also removed
+          - Go builds updated to 1.24.6
           - coshsh update to 11.1.0.1
           - nagflux update to 0.5.3
           - rrdtool update to 1.9.0
           - telegraf update to 1.35.1
+          - victoriametrics update to 1.124.0
 
 5.60     May 28 2025
           - omd:
