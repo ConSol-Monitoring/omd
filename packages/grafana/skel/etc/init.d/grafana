@@ -99,4 +99,18 @@ grafana_post_start() {
     echo $PID > $PID_FILE
 }
 
+case "$1" in start|restart|reload)
+    # remove auto installed previous versions which are shipped with grafana
+    # and previously updated automatically
+    PLUGINS_REMOVE="
+        var/grafana/plugins/grafana-lokiexplore-app
+        var/grafana/plugins/grafana-pyroscope-app
+    "
+    for REM in $PLUGINS_REMOVE; do
+        if [ "$REM" -ot "$OMD_ROOT/version" ]; then
+            rm -rf "$REM"
+        fi
+    done
+esac
+
 __generic_init "$*"
