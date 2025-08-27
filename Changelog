@@ -4,7 +4,6 @@ next:
           - omd:
             - add build support for debian 13 / trixie
             - drop build support for debian 11
-            - drop build support for rhel 7
             - drop build support for ubuntu 20.04
           - thruk:
             - lmd update to 2.6.2
