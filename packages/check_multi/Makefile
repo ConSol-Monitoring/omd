@@ -78,8 +78,12 @@ CONFIGUREOPTS = \
 	--with-tmp_dir_permissions=01777 \
 	--with-tmp_etc="$(ROOTDIR)/tmp/check_multi/etc" \
 
+# fix Use of uninitialized value $ENV{"PROGRAMFILES"} in concatenation (.) or string at (eval 1) line 11.
+export PROGRAMFILES=""
+
 build:
 	tar zxf $(NAME)-$(BRANCH).tar.gz
+	mkdir -p $(SRCDIR)/.git/hooks
 	cd $(SRCDIR) ; ./configure $(CONFIGUREOPTS)
 	$(MAKE) -C $(SRCDIR) all
 
