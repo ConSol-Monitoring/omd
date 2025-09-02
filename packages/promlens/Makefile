@@ -19,7 +19,7 @@ build:
 	export GOROOT=$(shell pwd)/../go-$(GOPKG)/go-$(GOVERSION)/ && \
 	export PATH=$$GOROOT/bin:$(shell realpath $$(ls -d1 ../node/node-v*/bin)):$$PATH && \
 	export NODE_PATH=$(NODE_PATH) && \
-		make SKIP_GOLANGCI_LINT=1 -C $(SRC) build
+		make -j 1 SKIP_GOLANGCI_LINT=1 -C $(SRC) build
 	cp $(SRC)/$(NAME) ./$(NAME)
 	strip ./$(NAME)
 	$(UPX) ./$(NAME)
