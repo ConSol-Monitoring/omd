@@ -1,5 +1,5 @@
 set -a
-. "$OMD_ROOT/etc/omd/site.conf"
+test -r "$OMD_ROOT/etc/omd/site.conf" && . "$OMD_ROOT/etc/omd/site.conf"
 set +a
 
 case "$-" in
@@ -12,7 +12,7 @@ case "$-" in
       fi
 
       set -a
-      . "$OMD_ROOT/etc/omd/site.conf"
+      test -r "$OMD_ROOT/etc/omd/site.conf" && . "$OMD_ROOT/etc/omd/site.conf"
       eval "$defer"
     }
 
@@ -22,4 +22,3 @@ case "$-" in
     esac
 ;;
 esac
-
