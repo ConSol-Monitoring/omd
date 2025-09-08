@@ -2160,7 +2160,7 @@ def parse_site_conf(sitename):
 
 
 # Load all variables from omd/sites.conf. These variables always begin with
-# CONFIG_. The reason is that this file can be sources with the shell. Puts
+# CONFIG_. The reason is that this file can be sourced with a shell. Put
 # these variables into the global dict g_site_conf without the CONFIG_. Also
 # puts the variables into the environment.
 def load_site_conf(skipMissing = False):
@@ -2453,6 +2453,10 @@ omd config change        - change multiple at once. Provide newline separated
 
 def config_show(args):
     load_hook_dependencies()
+
+    # load all missing config variables along with their defaults
+    load_site_conf()
+
     if len(args) == 0:
         hook_names = list(g_config_hooks.keys())
         hook_names.sort()
@@ -2483,6 +2487,9 @@ def config_configure():
 
     # force certain order in main menu
     menu_choices = [ "Basic", "Web GUI", "Addons", "Distributed Monitoring" ]
+
+    # load all missing config variables along with their defaults
+    load_site_conf()
 
     while True:
         # Rebuild hook information (values possible changed)
