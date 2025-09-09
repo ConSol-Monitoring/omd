@@ -12,7 +12,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 613 );
+plan( tests => 624 );
 
 my $omd_bin = TestUtils::get_omd_bin();
 
@@ -20,6 +20,7 @@ my $is_docker     = TestUtils::is_docker();
 my $createoptions = $is_docker ? " --no-tmpfs " : "";
 my $systemctl     = "/bin/systemctl";
 
+########################################
 # print omd version
 my $vtest = { cmd => $omd_bin." version", "exit" => undef };
 TestUtils::test_command($vtest) or TestUtils::bail_out_clean("no further testing without working omd");
@@ -227,10 +228,12 @@ for my $test (@{$tests}) {
     TestUtils::test_command($test) || TestUtils::bail_out_clean("no further testing without working omd", $test);
 }
 
+########################################
 # bulk config change I
 TestUtils::test_command({ cmd => "/bin/sh -c 'echo \"APACHE_MODE=ssl\nWEB_REDIRECT=on\nWEB_ALIAS=sitealias\" | omd config $site change'", like => ['/Stopping apache/', '/Stopping naemon/', '/Starting naemon/'] });
 TestUtils::restart_system_apache();
 
+########################################
 # WEB_REDIRECT
 TestUtils::test_command({ cmd => "/omd/sites/$site/lib/monitoring-plugins/check_http    -t 60 -H localhost -u '/' -s 'http://localhost/$site/'", like => '/HTTP OK:/' });
 TestUtils::test_command({ cmd => "/omd/sites/$site/lib/monitoring-plugins/check_http -S -t 60 -H localhost -u '/' -s 'https://localhost/$site/'", like => '/HTTP OK:/' });
@@ -239,6 +242,7 @@ TestUtils::test_command({ cmd => "/omd/sites/$site/lib/monitoring-plugins/check_
 TestUtils::test_command({ cmd => "/omd/sites/$site/lib/monitoring-plugins/check_http    -t 60 -H localhost -u '/' -f follow -s 'login.cgi'", like => '/HTTP WARN/', exit => 1 });
 TestUtils::test_command({ cmd => "/omd/sites/$site/lib/monitoring-plugins/check_http -S -t 60 -H localhost -u '/' -f follow -s 'login.cgi'", like => '/HTTP WARN/', exit => 1 });
 
+########################################
 # redirects with custom ports (http mode)
 TestUtils::test_command({ cmd => "/bin/sh -c 'echo \"APACHE_MODE=own\nWEB_REDIRECT=off\nWEB_ALIAS=\n\" | omd config $site change'", like => ['/Stopping apache/'] });
 TestUtils::restart_system_apache();
@@ -248,6 +252,7 @@ TestUtils::test_command({ cmd => "/bin/sh -c 'curl -sk -H \"X-Forwarded-Proto: h
 TestUtils::test_command({ cmd => "/bin/sh -c 'curl -sk -H \"X-Forwarded-Proto: https\" -H \"X-Forwarded-Port: 1234\" http://localhost/$site/'", like => [qr%\Qhttps://localhost:1234/$site/omd/\E%] }) or BAIL_OUT("broken");
 TestUtils::test_command({ cmd => "/bin/sh -c 'curl -sk -H \"X-Forwarded-Proto: https\" -H \"X-Forwarded-Port: 1234\" -H \"X-Forwarded-Host: vhost.com\" http://localhost/$site/'", like => [qr%\Qhttps://vhost.com:1234/$site/omd/\E%] }) or BAIL_OUT("broken");
 
+########################################
 # redirects with custom ports (https mode)
 TestUtils::test_command({ cmd => "/bin/sh -c 'echo \"APACHE_MODE=ssl\n\" | omd config $site change'", like => ['/Stopping apache/'] }) or BAIL_OUT("broken");
 TestUtils::restart_system_apache();
@@ -261,12 +266,20 @@ TestUtils::test_command({ cmd => "/bin/sh -c 'curl -sk https://localhost:5000'",
 TestUtils::test_command({ cmd => "/omd/sites/$site/lib/monitoring-plugins/check_http    -t 60 -H localhost -u '/$site/thruk/cgi-bin/remote.cgi?lb_ping' -s 'OK'", like => '/HTTP OK/' });
 TestUtils::test_command({ cmd => "/omd/sites/$site/lib/monitoring-plugins/check_http -S -t 60 -H localhost -u '/$site/thruk/cgi-bin/remote.cgi?lb_ping' -s 'OK'", like => '/HTTP OK/' });
 
+########################################
 # bulk config change II
 TestUtils::test_command({ cmd => "/bin/sh -c 'echo \"APACHE_MODE=none\nAUTOSTART=off\" | omd config $site change'", like => ['/Stopping apache/', '/Stopping naemon/', '/Starting naemon/'] });
 
+########################################
 # bash completion
 TestUtils::test_command({ cmd => "/bin/su - $site -c 'PS1=test source .bashrc; complete -p etc/init.d/rrdcached'", like => ['/_omd_service/', '/rrdcached/']  });
 TestUtils::test_command({ cmd => "/bin/su - $site -c 'PS1=test source .bashrc; COMP_CWORD=1 COMP_WORDS=etc/init.d/rrdcached _omd_service; echo \"\${COMPREPLY[\@]}\"'", like => ['/start/', '/stop/', '/flush/']  });
+
+########################################
+# omd reset on complete etc/
+TestUtils::test_command({ cmd => "/bin/sh -c 'rm -rf /omd/sites/$site/etc/*'" });
+TestUtils::test_command({ cmd => "/bin/su - $site -c 'omd reset etc/'", like => '/^$/' });
+TestUtils::test_command({ cmd => "/bin/su - $site -c 'omd diff etc/'", like => '/^$/' });
 
 # cleanup
 TestUtils::test_command({ cmd => $omd_bin." rm $site", like => '/Restarting Apache...\s*OK/', stdin => "yes\n" });

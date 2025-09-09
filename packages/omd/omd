@@ -707,6 +707,9 @@ def create_skeleton_files(sitename, dir):
         "###SITE###" : sitename,
         "###ROOT###" : sitedir,
     }
+    for hook_name in g_site_conf:
+        replacements["###CONFIG_%s###" % hook_name] = g_site_conf[hook_name]
+
     # Hack: exclude tmp if dir is '.'
     exclude_tmp = dir == "."
     skelroot = omd_root() + "/skel"
@@ -2490,6 +2493,7 @@ def config_configure():
 
     # load all missing config variables along with their defaults
     load_site_conf()
+    create_config_environment()
 
     while True:
         # Rebuild hook information (values possible changed)
@@ -3566,6 +3570,9 @@ def main_diff(args, options={}):
     # one file is specified, we directly show the unified diff.
     # This behaviour can also be forced by the OMD option -v.
 
+    load_site_conf()
+    create_config_environment()
+
     if len(args) == 0:
         args = ["."]
     elif len(args) == 1 and os.path.isfile(args[0]):
@@ -3586,6 +3593,9 @@ def main_vimdiff(args, options={}):
     from_version  = site_version(g_sitename)
     from_skelroot = "/omd/versions/%s/skel" % from_version
 
+    load_site_conf()
+    create_config_environment()
+
     global bare
     bare = "" # sorry for the global variable here
     global opt_verbose
@@ -3602,6 +3612,9 @@ def main_reset(args, options={}):
 
     if len(args) == 0:
         bail_out(tty_error + ": Sorry, 'omd reset' requires a filename as argument.")
+
+    load_site_conf()
+    create_config_environment()
 
     replacements = {
         "###SITE###" : g_sitename,
@@ -3649,11 +3662,14 @@ def main_reset(args, options={}):
             for dirpath, dirnames, filenames in os.walk(skelroot + '/' +rel_path):
                 localpath = dirpath.replace(skelroot, sitedir).replace(sitedir+"/", "")
                 for entry in dirnames:
+                    # remove local symlink if skel is actually a folder
                     if os.path.exists(localpath + '/' + entry) and not os.path.isdir(localpath + '/' + entry):
                         try:
                             os.remove(localpath + '/' + entry)
                         except Exception:
                             pass
+                    os.makedirs(localpath + '/' + entry, exist_ok=True)
+                    create_skeleton_file(skelroot, sitedir, localpath + '/' + entry, replacements)
                 for entry in filenames:
                     try:
                         os.remove(localpath + '/' + entry)
@@ -4499,6 +4515,7 @@ def main_restore(args, options={}):
         chown_tree(g_sitedir, g_sitename)
 
     load_site_conf(skipMissing=True)
+    create_config_environment()
 
     # Change config files from old to new site (see rename_site())
     backup_skel_path = os.path.join(g_sitedir, ".backup_meta")
