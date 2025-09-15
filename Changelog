@@ -31,7 +31,7 @@ next:
           - nagflux update to 0.5.3
           - rrdtool update to 1.9.0
           - telegraf update to 1.35.1
-          - victoriametrics update to 1.124.0
+          - victoriametrics update to 1.125.1
 
 5.60     May 28 2025
           - omd:
