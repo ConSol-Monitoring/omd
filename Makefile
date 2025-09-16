@@ -10,6 +10,7 @@ PACKAGES += go-1.21
 PACKAGES += go-1.22
 PACKAGES += go-1.23
 PACKAGES += go-1.24
+PACKAGES += go-1.25
 PACKAGES += upx
 PACKAGES += node
 PACKAGES += node-modules
