@@ -3,10 +3,10 @@ include ../../Makefile.omd
 .PHONY: skel
 
 NAME       = alertmanager
-VERSION    = 0.26.0
+VERSION    = 0.28.1
 BRANCH     = master
 SRC        = $(NAME)-$(VERSION).tar.gz
-GOPKG      = 1.23
+GOPKG      = 1.25
 GOVERSION  = $(shell grep ^VERSION ../go-${GOPKG}/Makefile | awk '{ print $$3 }')
 PWD        = $(shell pwd)
 GOFOLDER   = go
