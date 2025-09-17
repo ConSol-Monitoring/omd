@@ -113,7 +113,7 @@ MODULES += omdeventhandler-1.2.0.1-py3-none-any.whl
 
 # check_vsphere
 MODULES += monplugin-0.6.3.tar.gz                    # check_vsphere
-MODULES += checkvsphere-0.3.18.tar.gz
+MODULES += checkvsphere-0.3.20.tar.gz
 
 # override some module for python 3.07, list could be reevaluated once rhel7-rhel8 support got removed
 OVERRIDES=""
