@@ -1205,6 +1205,10 @@ sub get_external_ip {
 
 =cut
 sub is_docker {
+    `/usr/bin/systemd-detect-virt --container >/dev/null 2>&1`;
+    if($? eq 0) {
+        return 1;
+    }
     if(`grep containers /proc/1/mountinfo 2>/dev/null | grep -c etc/hosts` > 0) {
         return 1;
     }

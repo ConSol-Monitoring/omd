@@ -10,7 +10,12 @@
 
 case "$1" in
     default)
-        echo "on"
+        DEFAULT="on"
+        # mounts won't work inside containers, so disable by default
+        if /usr/bin/systemd-detect-virt --container >/dev/null 2>&1; then
+            DEFAULT="off"
+        fi
+        echo "$DEFAULT"
     ;;
     choices)
         echo "on: Use a ramdisk for temporary files"
