@@ -40,6 +40,7 @@ build:
 build-app:
 	cd VictoriaMetrics-$(VERSION) && \
 	  https_proxy=http://127.7.7.7:50000 http_proxy=http://127.7.7.7:50000 \
+	  CGO_ENABLED=0 \
 	  PATH=$(GOROOT)/bin:$(PATH) make app-local \
 	    APP_NAME=$(APP_NAME) BUILDINFO_TAG=$(VVERSION)-omd-$(OMD_VERSION) PKG_TAG=
 	install -m 755 VictoriaMetrics-$(VERSION)/bin/$(APP_NAME) dest/$(APP_NAME)-prod
