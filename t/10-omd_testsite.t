@@ -12,7 +12,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 624 );
+plan( tests => 638 );
 
 my $omd_bin = TestUtils::get_omd_bin();
 
@@ -280,6 +280,10 @@ TestUtils::test_command({ cmd => "/bin/su - $site -c 'PS1=test source .bashrc; C
 TestUtils::test_command({ cmd => "/bin/sh -c 'rm -rf /omd/sites/$site/etc/*'" });
 TestUtils::test_command({ cmd => "/bin/su - $site -c 'omd reset etc/'", like => '/^$/' });
 TestUtils::test_command({ cmd => "/bin/su - $site -c 'omd diff etc/'", like => '/^$/' });
+TestUtils::test_command({ cmd => "/bin/su - $site  -c 'omd stop'"  });
+TestUtils::test_command({ cmd => "/bin/su - $site  -c 'omd config set CRONTAB off'"  });
+TestUtils::test_command({ cmd => "/bin/su - $site -c 'omd reset etc/'", like => '/^$/' });
+TestUtils::test_command({ cmd => "/bin/su - $site  -c 'omd config show CRONTAB'", like => '/off/'  });
 
 # cleanup
 TestUtils::test_command({ cmd => $omd_bin." rm $site", like => '/Restarting Apache...\s*OK/', stdin => "yes\n" });

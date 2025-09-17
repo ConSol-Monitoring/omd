@@ -743,15 +743,16 @@ def create_skeleton_file(skelbase, userbase, relpath, replacements):
 
     # Remove old version, if existing (needed during update)
     if (os.path.islink(user_path) and os.path.lexists(user_path)) or os.path.exists(user_path):
-        if relpath in [ './bin', './include', './lib', './share', './version' ]:
+        if relpath in ['./bin', './include', './lib', './share', './version']:
             bail_out(tty_error + " %s would overwrite base symlink %s, check your skeleton folder." % (skel_path, user_path))
-        delete_user_file(user_path)
+        if not os.path.isdir(skel_path) or os.path.islink(skel_path):
+            delete_user_file(user_path)
 
     # Create directories, symlinks and files
     if os.path.islink(skel_path):
         os.symlink(os.readlink(skel_path), user_path)
     elif os.path.isdir(skel_path):
-        os.makedirs(user_path)
+        os.makedirs(user_path, exist_ok=True)
     else:
         open(user_path, "wb").write(replace_tags(open(skel_path, "rb").read(), replacements))
 
@@ -2204,8 +2205,7 @@ def create_config_environment():
 def save_site_conf():
     confdir = g_sitedir + "/etc/omd"
 
-    if not os.path.exists(confdir):
-        os.mkdir(confdir)
+    os.makedirs(confdir, exist_ok=True)
 
     f = open(g_sitedir + "/etc/omd/site.conf", "w")
 
@@ -3663,7 +3663,7 @@ def main_reset(args, options={}):
                 localpath = dirpath.replace(skelroot, sitedir).replace(sitedir+"/", "")
                 for entry in dirnames:
                     # remove local symlink if skel is actually a folder
-                    if os.path.exists(localpath + '/' + entry) and not os.path.isdir(localpath + '/' + entry):
+                    if os.path.lexists(localpath + '/' + entry) and not os.path.isdir(localpath + '/' + entry):
                         try:
                             os.remove(localpath + '/' + entry)
                         except Exception:
