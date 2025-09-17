@@ -9,7 +9,6 @@ use POSIX qw(strftime);
 my @categories = qw/omd thruk naemon plugins gearman grafana prometheus/;
 my $renames = {
     'gearmand'              => { cat => "gearman" },
-    'promlens'              => { cat => "prometheus" },
     'lmd'                   => { cat => "thruk" },
     'mod-gearman'           => { cat => "gearman" },
     'mod-gearman-worker'    => { cat => "gearman" },

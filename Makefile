@@ -58,7 +58,6 @@ PACKAGES += prometheus_node_exporter
 PACKAGES += prometheus_alertmanager
 PACKAGES += prometheus_blackbox_exporter
 PACKAGES += prometheus_pushgateway
-PACKAGES += promlens
 PACKAGES += promxy
 PACKAGES += telegraf
 PACKAGES += snmptrapd
