@@ -3,10 +3,10 @@ include ../../Makefile.omd
 .PHONY: skel
 
 NAME       = pushgateway
-VERSION    = 1.6.0
+VERSION    = 1.11.1
 BRANCH     = master
 SRC        = $(NAME)-$(VERSION).tar.gz
-GOPKG      = 1.23
+GOPKG      = 1.25
 GOVERSION  = $(shell grep ^VERSION ../go-${GOPKG}/Makefile | awk '{ print $$3 }')
 PWD        = $(shell pwd)
 GOFOLDER   = go
