@@ -7,7 +7,7 @@ CHANGELOG   = https://github.com/sni/lmd/blob/master/Changes
 VERSION     = master
 BRANCH      = master
 SRC         = $(NAME)-$(VERSION).tar.gz
-GOPKG       = 1.24
+GOPKG       = 1.25
 GOVERSION   = $(shell grep ^VERSION ../go-${GOPKG}/Makefile | awk '{ print $$3 }')
 GOPATH      = go
 PWD         = $(shell pwd)
@@ -52,6 +52,7 @@ deps: clean
 		if test -e "$$DEPSFILE"; then \
 			echo "dependencies already up to date: $(GIT_TAG)"; \
 		else \
+			sed -i '/^toolchain /d' go.mod pkg/lmd/go.mod && \
 			make vendor && \
 			find -name \*_test.go -delete && \
 			cd $(PWD) && \
@@ -72,6 +73,7 @@ package: clean
 		cd $(GOPATH)/src/$(GITBASE) && \
 		git clone --depth=1 --branch "$(BRANCH)" https://$(GITURL) && \
 		cd $(NAME) && \
+		sed -i '/^toolchain /d' go.mod pkg/lmd/go.mod && \
 		if [ "$(GIT_TAG)" = "$$(git describe --always --tags)" ]; then \
 			echo "source already up to date: $(GIT_TAG)"; \
 		else \
