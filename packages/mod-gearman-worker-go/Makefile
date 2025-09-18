@@ -7,7 +7,7 @@ CHANGELOG   = https://github.com/ConSol-Monitoring/mod-gearman-worker-go/blob/ma
 VERSION     = master
 BRANCH      = master
 SRC         = $(NAME)-$(VERSION).tar.gz
-GOPKG       = 1.23
+GOPKG       = 1.25
 GOVERSION   = $(shell grep ^VERSION ../go-${GOPKG}/Makefile | awk '{ print $$3 }')
 GOPATH      = go
 PWD         = $(shell pwd)
@@ -55,6 +55,7 @@ deps: clean
 		cd $(GOPATH)/src/$(GITBASE) && \
 		git clone --depth=1 --branch "$(BRANCH)" https://$(GITURL) && \
 		cd $(NAME) && \
+		sed -i '/^toolchain /d' go.mod ./buildtools/go.mod && \
 		DEPSFILE="$(PWD)/deps-$$(md5sum go.mod | cut -f 1 -d " ").tar.gz"; \
 		if test -e "$$DEPSFILE"; then \
 			echo "dependencies already up to date: $(GIT_TAG)"; \
@@ -79,6 +80,7 @@ package: clean
 		cd $(GOPATH)/src/$(GITBASE) && \
 		git clone --depth=1 --branch "$(BRANCH)" https://$(GITURL) && \
 		cd $(NAME) && \
+		sed -i '/^toolchain /d' go.mod ./buildtools/go.mod && \
 		if [ "$(GIT_TAG)" = "$$(git describe --always --tags)" ]; then \
 			echo "source already up to date: $(GIT_TAG)"; \
 		else \
