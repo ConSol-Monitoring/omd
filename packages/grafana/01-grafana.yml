@@ -5,7 +5,7 @@
 
     # metrics_path defaults to '/metrics', but here we use the omd-prefix
     # scheme defaults to 'http'.
-    metrics_path: /metrics
+    metrics_path: /###SITE###/grafana/metrics
 
     static_configs:
       - targets: ['127.0.0.1:###GRAFANA_TCP_PORT###']

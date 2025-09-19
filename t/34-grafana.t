@@ -14,7 +14,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 161 );
+plan( tests => 169 );
 
 ##################################################
 # create our test site
@@ -40,7 +40,7 @@ TestUtils::test_command({ cmd => $omd_bin." start $site", like => '/Starting gra
 TestUtils::test_command({ cmd => "/bin/su - $site -c './lib/monitoring-plugins/check_http -H localhost -a omdadmin:omd -u /$site/thruk/cgi-bin/cmd.cgi -e 200 -P \"cmd_typ=96&cmd_mod=2&host=omd-$site&start_time=2010-11-06+09%3A46%3A02&force_check=on&btnSubmit=Commit\" -r \"Your command request was successfully submitted\"'", like => '/HTTP OK:/' });
 TestUtils::wait_for_file("/omd/sites/$site/var/pnp4nagios/perfdata/omd-$site/_HOST_.xml");
 
-# wait untill grafana is up & running
+# wait until grafana is up & running
 TestUtils::test_command({ cmd => "/bin/su - $site -c 'cat var/log/grafana/grafana.log'", like => '/HTTP Server Listen/', waitfor => 'HTTP\ Server\ Listen', maxwait => 180 });
 TestUtils::test_url({ url => 'http://localhost/'.$site.'/grafana/', waitfor => '<title>Grafana<\/title>', auth => $auth, maxwait => 180 });
 
@@ -124,12 +124,29 @@ TestUtils::test_command({ cmd => "/bin/su - $site -c '$curl \"http://127.0.0.1:8
                           errlike => ['/200 OK/'],
                           like  => ['/"login":"omdadmin"/'],
                        });
-# then test external ip and make sure it doesnt work
+# then test external ip and make sure it doesn't work
 TestUtils::test_command({ cmd => "/bin/su - $site -c '$curl \"http://$ip:8003/\" -H \"X-WEBAUTH-USER: omdadmin\" '",
                           errlike => ['/(Failed to connect|Connection refused)/'],
                           unlike  => ['/"login":"omdadmin"/'],
                           exit    => undef,
                        });
 
+##################################################
+# grafana metrics
+{
+    my $test = {
+        cmd  => "/bin/su - $site -c 'grep metrics_path: share/grafana/01-grafana.yml'",
+        like => ['/metrics/'],
+    };
+    TestUtils::test_command($test);
+    $test->{'stdout'} =~ s/^\s*//gmx;
+    my(undef, $metrics_url) = split(/\s+/, $test->{'stdout'});
+    ok($metrics_url, "got metrics url: ".($metrics_url || "none"));
+    $metrics_url =~ s|###SITE###|$site|g;
+    TestUtils::test_url({ url => 'http://127.0.0.1:8003'.$metrics_url, like => ['/process_open_fds/', '/grafana_stat_totals_dashboard/'] });
+};
+
+##################################################
+# cleanup
 TestUtils::test_command({ cmd => $omd_bin." stop $site" });
 TestUtils::remove_test_site($site);
