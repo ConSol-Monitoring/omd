@@ -36,4 +36,6 @@ PID_FILE=$OMD_ROOT/tmp/run/pnp_gearman_worker.pid
 OPTS="--pidfile=$PID_FILE --config=$CFG $GM_PORT --daemon"
 RELOAD_RESTARTS=1
 
+mkdir -p tmp/pnp4nagios/{stats,lock,run}
+
 __generic_init "$*"
