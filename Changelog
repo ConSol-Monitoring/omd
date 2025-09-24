@@ -22,7 +22,7 @@ next:
           - grafana:
             - update to 12.1.1
             - pnp-datasource update to 2.2.2
-            - thruk-datasource update to 2.2.2
+            - thruk-datasource update to 2.2.3
           - prometheus:
             - update to 3.5.0
             - alertmanager update to 0.28.1
