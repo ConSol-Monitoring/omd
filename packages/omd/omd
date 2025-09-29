@@ -3991,6 +3991,7 @@ def main_update(args, options={}):
         if hot_update :
             sys.stdout.write('starting all services after update.\n')
             init_action("start", [], options)
+        os.chdir(g_sitedir)
         sync_apache_maint_page(g_sitename)
         stop_logging()
 
