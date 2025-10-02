@@ -103,7 +103,7 @@ for my $test (@{$preps}) {
 # execute some checks
 my $tests = [
     { cmd => "/bin/grep 'Event broker module.*$module.*initialized successfully' /omd/sites/$site/var/$core/$core.log", like => '/successfully/' },
-    { cmd => "/bin/grep 'mod_gearman: initialized version ".$modgearman_version." \(libgearman ".$libgearman_version."\)' /omd/sites/$site/var/$core/$core.log", like => '/initialized/' },
+    { cmd => "/bin/grep 'mod_gearman: initialized version ".$modgearman_version.".* \(libgearman ".$libgearman_version."\)' /omd/sites/$site/var/$core/$core.log", like => '/initialized/' },
     { cmd => "/bin/su - $site -c 'bin/send_gearman --server=127.0.0.1:4730 --keyfile=etc/mod-gearman/secret.key --host=$host --message=test'" },
     { cmd => "/bin/su - $site -c 'bin/send_gearman --server=127.0.0.1:4730 --keyfile=etc/mod-gearman/secret.key --host=$host --service=\"$service\" --message=test'", sleep => 1 },
     { cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_gearman -H 127.0.0.1:4730'", like => '/check_gearman OK/' },
