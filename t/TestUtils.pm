@@ -1041,6 +1041,7 @@ sub _clean_stderr {
     $text =~ s/\[warn\] module \w+ is already loaded, skipping//g;
     $text =~ s/Syntax OK//g;
     $text =~ s/no crontab for \w+//g;
+    $text =~ s/mysql\w*: Deprecated program name\. It will be removed in a future release.*//g;
     return $text;
 }
 
