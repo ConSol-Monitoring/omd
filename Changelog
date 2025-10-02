@@ -6,6 +6,7 @@ next:
             - drop build support for debian 11
             - drop build support for ubuntu 20.04
           - thruk:
+            - update to 3.24
             - lmd update to 2.6.3
           - naemon:
             - core update to 1.4.4
