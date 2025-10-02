@@ -13,7 +13,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 72 );
+plan( tests => 81 );
 
 ##################################################
 # create our test site
@@ -48,6 +48,15 @@ TestUtils::test_command({
 TestUtils::test_command({
     cmd     => "/bin/su - $site -c 'lib/monitoring-plugins/check_http -t 60 -H 127.0.0.1 -p 3100 -u \"/loki/api/v1/label/filename/values\" -s \"error_log\" -vv'",
     waitfor => 'HTTP\ OK',
+    like    => ['/HTTP OK:/'],
+});
+TestUtils::test_command({
+    cmd     => "/bin/su - $site -c 'lib/monitoring-plugins/check_http -t 60 -H 127.0.0.1 -p 3100 -u \"/loki/api/v1/label/filename/values\" -s \"error_log\" -vv'",
+    waitfor => 'lmd.log',
+    like    => ['/lmd.log/'],
+});
+TestUtils::test_command({
+    cmd     => "/bin/su - $site -c 'lib/monitoring-plugins/check_http -t 60 -H 127.0.0.1 -p 3100 -u \"/loki/api/v1/label/filename/values\" -s \"error_log\" -vv'",
     like    => ['/HTTP OK:/',
                 '/naemon.log/',
                 '/apache\/access_log/',
@@ -55,6 +64,7 @@ TestUtils::test_command({
                 '/thruk.log/',
                ],
 });
+
 # check naemon expression parser
 TestUtils::test_command({
     cmd     => "/bin/su - $site -c 'lib/monitoring-plugins/check_http -t 60 -H 127.0.0.1 -p 3100 -u \"/loki/api/v1/label/type/values\" -s \"nerd\" -vv'",
