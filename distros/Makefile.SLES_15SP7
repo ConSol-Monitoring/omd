@@ -1,4 +1,15 @@
 DISTRO_CODE           = sles15sp7
+# In order to reach all required repositories,
+# subscribing to these products may be necessary.
+# SUSEConnect -p sle-module-basesystem/15.7/x86_64
+# SUSEConnect -p sle-module-desktop-applications/15.7/x86_64
+# SUSEConnect -p sle-module-development-tools/15.7/x86_64
+# SUSEConnect -p sle-module-public-cloud/15.7/x86_64
+# SUSEConnect -p sle-module-python3/15.7/x86_64
+# SUSEConnect -p sle-module-server-applications/15.7/x86_64
+# SUSEConnect -p sle-module-systems-management/15.7/x86_64
+# SUSEConnect -p sle-module-web-scripting/15.7/x86_64
+# SUSEConnect -p PackageHub/15.7/x86_64
 BUILD_PACKAGES        =
 BUILD_PACKAGES       += apache2-devel
 BUILD_PACKAGES       += automake
