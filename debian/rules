@@ -23,9 +23,7 @@ build: build-stamp
 build-stamp:
 	dh_testdir
 
-	# Add here commands to compile the package.
-	# ./configure
-	$(MAKE) -j 4 $(DEFAULT_BUILD)
+	$(MAKE) $(DEFAULT_BUILD)
 
 	touch build-stamp
 	rm -f README
@@ -36,9 +34,7 @@ clean: clean-patched
 	dh_testroot
 	rm -f build-stamp
 
-	# Add here commands to clean up after the build process.
 	$(MAKE) clean
-	#$(MAKE) distclean
 	rm -f $(_PWD)/debian/postinst
 	rm -f $(_PWD)/debian/preinst
 	rm -f $(_PWD)/debian/prerm
