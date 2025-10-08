@@ -73,7 +73,7 @@ sub process_template {
 		$data .= "$_";
 	}
 	close FILE;
-	my $template = Template->new({PRE_CHOMP => 1, POST_CHOMP => 0, EVAL_PERL => 1, ABSOLUTE => 1, ENCODING => 'utf8'});
+	my $template = Template->new({INCLUDE_PATH => [$macro{'OMD_ROOT'}.'/etc/mail-templates'], RELATIVE => 1, PRE_CHOMP => 1, POST_CHOMP => 0, EVAL_PERL => 1, ABSOLUTE => 1, ENCODING => 'utf8'});
 	$template->process(\$data, \%macro, \$output) or die Template->error;
 	print STDERR $output if $verbose;
 	send_mail();
