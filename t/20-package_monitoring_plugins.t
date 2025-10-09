@@ -12,8 +12,6 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 60 );
-
 ##################################################
 # create our test site
 my $omd_bin = TestUtils::get_omd_bin();
@@ -46,5 +44,19 @@ SKIP: {
 };
 
 ##################################################
+# do simple syntax check for perl plugins
+my @files = glob('/omd/versions/default/lib/monitoring-plugins/*');
+for my $file (@files) {
+    next if -d $file;
+    system("head -n 20 $file | grep 'bin/perl' >/dev/null 2>&1");
+    if($?>>8 == 0) {
+        ok($file, $file);
+        TestUtils::test_command({ cmd => "/bin/su - $site -c 'perl -wc $file 2>&1'", like => '/syntax OK/', exit => 0 });
+    }
+}
+
+##################################################
 # cleanup test site
 TestUtils::remove_test_site($site);
+
+done_testing();
