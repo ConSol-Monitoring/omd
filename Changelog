@@ -13,8 +13,9 @@ next:
             - livestatus update to 1.4.4
             - vimvault update to 1.4.4
           - plugins:
-            - check_nwc_health update to 12.6
+            - check_nwc_health update to 12.9
             - check_pdu_health update to 3.1
+            - check_rittal_health update to 4.1.2
             - check_vsphere update to 0.3.20
             - check_wut_health update to 4.4
             - omdnotificationforwarder update to 2.8
