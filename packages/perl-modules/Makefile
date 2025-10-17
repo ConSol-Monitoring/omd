@@ -57,7 +57,7 @@ MODULES = \
           Data-Dumper-2.161.tar.gz \
           Date-Manip-6.60.tar.gz \
           Devel-GlobalDestruction-XS-0.03.tar.gz \
-          Digest-1.17.tar.gz \
+          Digest-1.20.tar.gz \
           Digest-HMAC-1.03.tar.gz \
           Digest-MD5-2.55.tar.gz \
           Digest-Perl-MD5-1.9.tar.gz \
@@ -109,7 +109,7 @@ MODULES = \
           OLE-Storage_Lite-0.19.tar.gz \
           Package-Stash-XS-0.28.tar.gz \
           Params-Check-0.38.tar.gz \
-          PathTools-3.62.tar.gz \
+          PathTools-3.75.tar.gz \
           Perl-OSType-1.010.tar.gz \
           Pod-Escapes-1.07.tar.gz \
           Pod-Simple-3.35.tar.gz \
