@@ -33,6 +33,7 @@ OPTS="server --homepath=${GRAFANA_HOME} --pidfile=${PID_FILE} --config=${CONF_FI
 NOHUP=1
 KILL_SESSION=1
 START_TIMEOUT=60
+STOP_CALLBACK="kill_stale_plugins_callback"
 # domain gets used in the share dashboard menu
 DOMAIN=$(hostname -f)
 export GF_SERVER_DOMAIN="$DOMAIN"
@@ -99,6 +100,21 @@ grafana_post_start() {
     echo $PID > $PID_FILE
 }
 
+# kill stale grafana plugins after shutdown
+kill_stale_plugins_callback() {
+  local COUNTER=$1
+  if [ $COUNTER -ne 50 -a $COUNTER -ne 0 ]; then
+    return
+  fi
+
+  kill_stale_plugins
+}
+
+# kill stale grafana plugins datasource daemons
+kill_stale_plugins() {
+  pkill -u $OMD_SITE -P 1 -f "/share/grafana/plugins" >/dev/null 2>&1
+}
+
 case "$1" in start|restart|reload)
     # remove auto installed previous versions which are shipped with grafana
     # and previously updated automatically
@@ -111,6 +127,11 @@ case "$1" in start|restart|reload)
             rm -rf "$REM"
         fi
     done
+esac
+
+case "$1" in start|restart|reload|stop)
+  # kill stale grafana plugins datasource daemons
+  kill_stale_plugins
 esac
 
 __generic_init "$*"

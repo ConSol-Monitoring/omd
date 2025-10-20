@@ -318,6 +318,9 @@ __generic_init_wait_stop() {
     if ! __generic_init_pid >/dev/null; then
       rm -f "$PID_FILE"
       echo "OK"
+      if [ -n "$STOP_CALLBACK" ]; then
+        $STOP_CALLBACK 0
+      fi
       return 0
     fi
 
