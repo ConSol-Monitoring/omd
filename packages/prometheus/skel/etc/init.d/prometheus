@@ -9,7 +9,7 @@
 
 cd || exit 1
 . etc/omd/site.conf
-[ "$CONFIG_PROMETHEUS" = "on" ] || exit 5
+[ "$CONFIG_PROMETHEUS" = "on" ] || [ "$1" = "rebuildconfig" ] || exit 5
 . .profile
 . lib/omd/init_profile
 
@@ -155,6 +155,11 @@ verify_config() {
         return 1
     fi
 }
+
+if [ "$1" = "rebuildconfig" ] ; then
+    rebuild_config
+    exit
+fi
 
 # OMD: create configuration file out of fragments
 case "$1" in start|restart|reload|checkconfig|check)
