@@ -22,7 +22,7 @@ next:
           - gearman:
             - mod-gearman-worker-go update to 1.5.8
           - grafana:
-            - update to 12.1.1
+            - update to 12.3.0
             - pnp-datasource update to 2.2.2
             - thruk-datasource update to 2.2.3
           - prometheus:

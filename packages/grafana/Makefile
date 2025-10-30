@@ -2,7 +2,7 @@ include ../../Makefile.omd
 
 NAME       = grafana
 CHANGELOG  = https://github.com/grafana/grafana/blob/main/CHANGELOG.md
-VERSION    = 12.1.1
+VERSION    = 12.3.0
 SRC        = $(NAME)-$(VERSION).tar.gz
 GOPATH     = go
 # does work with newer go > 1.22 yet and cannot be updated because scripted dashboarding will break...
@@ -52,8 +52,8 @@ install:
 	# Take care of path and format of plugin zip/tgz files
 	# Download from https://grafana.com/grafana/plugins
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/grafana/plugins-available
-	unzip clock-panel-plugin-2.1.8.zip -d $(DESTDIR)$(OMD_ROOT)/share/grafana/plugins-available
-	unzip heywesty-trafficlight-panel-0.5.2.zip -d $(DESTDIR)$(OMD_ROOT)/share/grafana/plugins-available
+	unzip grafana-clock-panel-3.0.0.zip -d $(DESTDIR)$(OMD_ROOT)/share/grafana/plugins-available
+	unzip heywesty-trafficlight-panel-1.0.0.zip -d $(DESTDIR)$(OMD_ROOT)/share/grafana/plugins-available
 
 skel:
 	sed -i -e 's|###APACHE_MODULE_DIR###|$(APACHE_MODULE_DIR)|g' \
@@ -82,15 +82,7 @@ package:
 		make gen-go
 	# clean up to reduce dependencies
 	find $(GOPATH)/src/github.com/grafana/grafana -type f | grep _test.go | xargs rm -f
-	rm $(GOPATH)/src/github.com/grafana/grafana/pkg/build/cmd/verifydrone.go # avoid dependency on drone-cli
-	rm $(GOPATH)/src/github.com/grafana/grafana/pkg/build/cmd/npm.go
-	rm $(GOPATH)/src/github.com/grafana/grafana/pkg/build/cmd/publish*
-	rm $(GOPATH)/src/github.com/grafana/grafana/pkg/build/cmd/upload*
 	rm $(GOPATH)/src/github.com/grafana/grafana/pkg/build/cmd/e2e*
-	rm $(GOPATH)/src/github.com/grafana/grafana/pkg/build/cmd/verify*
-	rm $(GOPATH)/src/github.com/grafana/grafana/pkg/build/cmd/store*
-	rm $(GOPATH)/src/github.com/grafana/grafana/pkg/build/cmd/fetch*
-	rm $(GOPATH)/src/github.com/grafana/grafana/pkg/build/cmd/grafanacom*
 	cd $(GOPATH)/src/github.com/grafana/grafana && \
 		$(GO) mod tidy
 	echo "build app"
