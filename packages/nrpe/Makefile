@@ -17,7 +17,7 @@ build:
 	    echo "applying $$p..." ; \
 	    ( cd $(DIR) ; patch -p1 -b ) < $$p ; \
 	done
-	cd $(DIR) ; CFLAGS=-DOPENSSL_NO_SSL2 ./configure $(CONFIGUREOPTS)
+	cd $(DIR) ; CFLAGS="${CFLAGS} -DOPENSSL_NO_SSL2" ./configure $(CONFIGUREOPTS)
 	$(MAKE) -C $(DIR) check_nrpe
 
 install:

@@ -1,0 +1,11 @@
+--- a/src/npcdmod.c
++++ b/src/npcdmod.c
+@@ -52,7 +52,7 @@ int npcdmod_process_module_args(char *args);
+ 
+ /* for backwards compatibilty */
+ static void write_to_all_logs(char *buffer, int level) {
+-       nm_log(level, buffer);
++       nm_log(level, "%s", buffer);
+ }
+ 
+ /* this function gets called when the module is loaded by the event broker */

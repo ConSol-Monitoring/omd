@@ -18,7 +18,6 @@ CONFIGUREOPTS = \
 CC = gcc
 GCCVERSIONGTEQ7 := $(shell expr `gcc -dumpversion | cut -f1 -d.` \>= 7)
 
-CFLAGS  =
 CFLAGS += -g3
 
 ifeq "$(GCCVERSIONGTEQ7)" "1"

@@ -19,7 +19,7 @@ build:
 	-if [ "x$(RUN_AUTOMAKE)" = "x1" ]; then cd $(DIR) && automake -af; fi
 	cd $(DIR) ; \
 		LIBS="$(shell PKG_CONFIG_PATH="`ls -d1 ../naemon/naemon-*/.`" pkg-config --libs-only-L naemon-uninstalled)" \
-		CFLAGS="$(shell PKG_CONFIG_PATH="`ls -d1 ../naemon/naemon-*/.`" pkg-config --cflags naemon-uninstalled)" \
+		CFLAGS="${CFLAGS} $(shell PKG_CONFIG_PATH="`ls -d1 ../naemon/naemon-*/.`" pkg-config --cflags naemon-uninstalled)" \
 		./configure $(CONFIGUREOPTS)
 	cd $(DIR) && mv include include.orig && cp -rp ../../naemon/naemon-*/src/naemon include
 	cd $(DIR) && cp -rp ../../naemon/naemon-*/lib include/

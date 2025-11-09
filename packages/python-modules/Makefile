@@ -143,7 +143,7 @@ build:
 	export http_proxy=http://external_dependencies_must_be_included_in_omd; \
 	export https_proxy=http://external_dependencies_must_be_included_in_omd; \
 	export ftp_proxy=http://external_dependencies_must_be_included_in_omd; \
-	export CFLAGS="-std=c99"; \
+	export CFLAGS="${CFLAGS} -std=c99"; \
 	set -e ; \
 	shopt -s nocaseglob; \
 	for M in $(BASE); do \
@@ -188,7 +188,7 @@ build:
 				export PYMSSQL_BUILD_WITH_BUNDLED_FREETDS=0 ; \
 			fi; \
 			LINK_KRB5=NO \
-			CFLAGS="-I $(FREETDS)/include -L $(FREETDS)/lib" \
+			CFLAGS="${CFLAGS} -I $(FREETDS)/include -L $(FREETDS)/lib" \
 			$(PIP) wheel --no-cache-dir --wheel-dir=$(WHEELSDIR) --find-links=$(WHEELSDIR) ./src/$$M ; \
 		elif [[ $$M =~ .*mysql_connector_python.* ]]; then \
 			if [[ "$$(printf '%s\n' "3.8" "$(PYTHON_V)" | sort -V | head -n 1)" != "3.8" ]]; then \
