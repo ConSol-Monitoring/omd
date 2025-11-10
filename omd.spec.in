@@ -48,6 +48,7 @@ mv omd-%{version} omd
 cd omd
 
 %build
+export PATH="/usr/local/bin:$PATH"
 make
 make pack
 

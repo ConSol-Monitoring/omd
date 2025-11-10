@@ -22,7 +22,7 @@ endif
 build: build-stamp
 build-stamp:
 	dh_testdir
-
+	export PATH="/usr/local/bin:$$PATH"; \
 	$(MAKE) $(DEFAULT_BUILD)
 
 	touch build-stamp
