@@ -1,6 +1,6 @@
---- pnp4nagios-0.6.42.orig/src/npcdmod.c	2025-11-10 07:43:40.457772077 +0000
-+++ pnp4nagios-0.6.42/src/npcdmod.c	2025-11-10 07:53:57.351591941 +0000
-@@ -52,7 +52,7 @@
+--- a/src/npcdmod.c
++++ b/src/npcdmod.c
+@@ -54,7 +54,7 @@ int npcdmod_process_module_args(char *args);
  
  /* for backwards compatibilty */
  static void write_to_all_logs(char *buffer, int level) {
