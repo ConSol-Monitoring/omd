@@ -1,0 +1,60 @@
+--- a/src/nrpe.c
++++ b/src/nrpe.c
+@@ -289,12 +289,16 @@ static int init_ssl(void)
+        if (sslprm.log_opts & SSL_LogStartup)
+                log_ssl_startup();
+
++#if OPENSSL_VERSION_NUMBER < 0x30000000L
+        /* initialize SSL */
+        SSL_load_error_strings();
+        SSL_library_init();
+        ENGINE_load_builtin_engines();
+        RAND_set_rand_engine(NULL);
+        ENGINE_register_all_complete();
++#else
++       /* OpenSSL 3.0+ - ENGINE API is deprecated and not needed */
++#endif
+
+        meth = SSLv23_server_method();
+
+[root@build nrpe]# more patches/0001-openssl3-compatibility.patch ^C
+[root@build nrpe]# ls patches/
+0000-reduce-syslog-loglevels.patch  0001-openssl3-compatibility.patch
+[root@build nrpe]# more patches/0001-openssl3-compatibility.patch 
+--- a/src/nrpe.c
++++ b/src/nrpe.c
+@@ -289,12 +289,16 @@ static int init_ssl(void)
+        if (sslprm.log_opts & SSL_LogStartup)
+                log_ssl_startup();
+
++#if OPENSSL_VERSION_NUMBER < 0x30000000L
+        /* initialize SSL */
+        SSL_load_error_strings();
+        SSL_library_init();
+        ENGINE_load_builtin_engines();
+        RAND_set_rand_engine(NULL);
+        ENGINE_register_all_complete();
++#else
++       /* OpenSSL 3.0+ - ENGINE API is deprecated and not needed */
++#endif
+
+        meth = SSLv23_server_method();
+
+--- a/src/check_nrpe.c
++++ b/src/check_nrpe.c
+@@ -855,11 +855,15 @@ static int setup_ssl(void)
+        /* initialize SSL */
+        if (use_ssl == TRUE) {
+                SSL_load_error_strings();
+                SSL_library_init();
++#if OPENSSL_VERSION_NUMBER < 0x30000000L
+                ENGINE_load_builtin_engines();
+                RAND_set_rand_engine(NULL);
+                ENGINE_register_all_complete();
++#else
++               /* OpenSSL 3.0+ - ENGINE API is deprecated and not needed */
++#endif
+
+ #if OPENSSL_VERSION_NUMBER >= 0x10100000
+
+                meth = TLS_method();
