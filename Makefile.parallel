@@ -10,6 +10,7 @@ PACKAGES += go-1.21
 PACKAGES += go-1.22
 PACKAGES += go-1.23
 PACKAGES += go-1.24
+PACKAGES += go-1.25
 PACKAGES += upx
 PACKAGES += node
 PACKAGES += node-modules
@@ -76,6 +77,7 @@ PACKAGE_DEPS += go-1.21:go-1.19
 PACKAGE_DEPS += go-1.22:go-1.21
 PACKAGE_DEPS += go-1.23:go-1.21
 PACKAGE_DEPS += go-1.24:go-1.23
+PACKAGE_DEPS += go-1.25:go-1.24
 PACKAGE_DEPS += node:upx
 PACKAGE_DEPS += node-modules:node
 PACKAGE_DEPS += influxdb:go-1.23
@@ -95,33 +97,33 @@ PACKAGE_DEPS += pnp4nagios4:naemon
 PACKAGE_DEPS += pnp4nagios4:pnp4nagios
 PACKAGE_DEPS += thruk-consol-theme:thruk
 PACKAGE_DEPS += thruk-consol-theme:node
-PACKAGE_DEPS += grafana:go-1.22
+PACKAGE_DEPS += grafana:go-1.25
 PACKAGE_DEPS += grafana:upx
 PACKAGE_DEPS += grafana-loki:go-1.23
 PACKAGE_DEPS += grafana-loki:upx
 PACKAGE_DEPS += mod-gearman:naemon
 PACKAGE_DEPS += mod-gearman:gearmand
-PACKAGE_DEPS += mod-gearman-worker-go:go-1.23
+PACKAGE_DEPS += mod-gearman-worker-go:go-1.25
 PACKAGE_DEPS += ansible:python-modules
 PACKAGE_DEPS += coshsh:python-modules
-PACKAGE_DEPS += lmd:go-1.24
+PACKAGE_DEPS += lmd:go-1.25
 PACKAGE_DEPS += prometheus:go-1.23
 PACKAGE_DEPS += prometheus:upx
 PACKAGE_DEPS += prometheus_snmp_exporter:go-1.23
 PACKAGE_DEPS += prometheus_snmp_exporter:upx
-PACKAGE_DEPS += prometheus_node_exporter:go-1.23
+PACKAGE_DEPS += prometheus_node_exporter:go-1.25
 PACKAGE_DEPS += prometheus_node_exporter:upx
-PACKAGE_DEPS += prometheus_alertmanager:go-1.23
+PACKAGE_DEPS += prometheus_alertmanager:go-1.25
 PACKAGE_DEPS += prometheus_alertmanager:upx
-PACKAGE_DEPS += prometheus_blackbox_exporter:go-1.23
+PACKAGE_DEPS += prometheus_blackbox_exporter:go-1.25
 PACKAGE_DEPS += prometheus_blackbox_exporter:upx
-PACKAGE_DEPS += prometheus_pushgateway:go-1.23
+PACKAGE_DEPS += prometheus_pushgateway:go-1.25
 PACKAGE_DEPS += prometheus_pushgateway:upx
 PACKAGE_DEPS += promxy:go-1.23
 PACKAGE_DEPS += telegraf:go-1.23
 PACKAGE_DEPS += grafana-pnp-datasource:go-1.23
 PACKAGE_DEPS += grafana-thruk-datasource:go-1.23
-PACKAGE_DEPS += victoriametrics:go-1.24
+PACKAGE_DEPS += victoriametrics:go-1.25
 PACKAGE_DEPS += victoriametrics:upx
 
 include Makefile.omd
@@ -142,7 +144,39 @@ else
 DEFAULT_BUILD=build
 endif
 
-.PHONY: install-global Changelog release_notes_blog.md build
+.PHONY: install-global Changelog release_notes_blog.md build omdbuild help
+
+# Default target for parallel builds
+.DEFAULT_GOAL := omdbuild
+
+help:
+	@echo "OMD Build System - Parallel Build Support"
+	@echo ""
+	@echo "Common targets:"
+	@echo "  make              - Build all packages in parallel (default, uses all cores)"
+	@echo "  make -j4          - Build with exactly 4 parallel jobs"
+	@echo "  make -j2          - Build with exactly 2 parallel jobs"
+	@echo "  make pack         - Install packages to destdir"
+	@echo "  make rpm          - Build RPM package"
+	@echo "  make deb          - Build DEB package"
+	@echo "  make clean        - Clean build artifacts"
+	@echo ""
+	@echo "Controlling parallelism for package builds:"
+	@echo "  RPM builds:"
+	@echo "    make rpm                    - Use all CPU cores (default)"
+	@echo "    JOBS=4 make rpm             - Use exactly 4 cores"
+	@echo "    JOBS=1 make rpm             - Serial build (no parallelism)"
+	@echo "    RPM_BUILD_NCPUS=2 make rpm  - Use exactly 2 cores (alternative)"
+	@echo "    WARNING: Do NOT use 'make -j N rpm' - use JOBS or RPM_BUILD_NCPUS"
+	@echo ""
+	@echo "  DEB builds:"
+	@echo "    make deb                    - Use all CPU cores (default)"
+	@echo "    JOBS=4 make deb             - Use exactly 4 cores"
+	@echo "    JOBS=1 make deb             - Serial build (no parallelism)"
+	@echo "    DEB_BUILD_OPTIONS=parallel=2 make deb  - Use exactly 2 cores (alternative)"
+	@echo ""
+	@echo "Package dependencies are defined in PACKAGE_DEPS"
+	@echo "Individual packages can be built: make <package-name>"
 
 omdbuild: $(PACKAGES)
 
@@ -300,12 +334,28 @@ $(SOURCE_TGZ) dist:
 # Build RPM from source code.
 # When called from a git repository this uses 'make dist' and thus 'git archive'
 # to create the source rpm.
+#
+# Parallelism Control:
+#   make rpm                      - Use all available CPU cores (default)
+#   RPM_BUILD_NCPUS=4 make rpm   - Use exactly 4 cores
+#   RPM_BUILD_NCPUS=2 make rpm   - Use exactly 2 cores
+#   RPM_BUILD_NCPUS=1 make rpm   - Serial build (no parallelism)
+#   JOBS=4 make rpm              - Convenience alias for RPM_BUILD_NCPUS
+#
+# The %make_build macro in omd.spec respects RPM_BUILD_NCPUS environment variable
+# IMPORTANT: Do NOT use 'make -j N rpm' - it won't work correctly. Use RPM_BUILD_NCPUS or JOBS instead.
 rpm: omd.spec
+ifdef JOBS
+	$(eval export RPM_BUILD_NCPUS=$(JOBS))
+endif
 	test -f $(SOURCE_TGZ) || ( test -d .git && $(MAKE) $(SOURCE_TGZ) || $(MAKE) $(SOURCE_TGZ) )
 	mkdir -p $(RPM_TOPDIR)/{SOURCES,BUILD,RPMS,SRPMS,SPECS}
 	cp $(SOURCE_TGZ) $(RPM_TOPDIR)/SOURCES
 	# NO_BRP_STALE_LINK_ERROR ignores errors when symlinking from skel to
 	# share,lib,bin because the link has a invalid target until the site is created
+	# Unset MAKEFLAGS to prevent outer make's -j from interfering with rpmbuild
+	# rpmbuild will use RPM_BUILD_NCPUS if set, otherwise defaults to all cores
+	unset MAKEFLAGS; \
 	NO_BRP_STALE_LINK_ERROR="yes" \
 		rpmbuild -bb \
 		--define "_topdir $(RPM_TOPDIR)" \
@@ -331,6 +381,9 @@ deb-changelog: deb-environment
 	dch --release "releasing ...."
 
 deb: deb-changelog
+ifdef JOBS
+	$(eval export DEB_BUILD_OPTIONS=parallel=$(JOBS))
+endif
 	sed -e 's/###OMD_VERSION###/$(OMD_VERSION)/' \
 	    -e 's/###BUILD_PACKAGES###/$(BUILD_PACKAGES)/' \
 	    -e 's/###OS_PACKAGES###/$(OS_PACKAGES)/' \
@@ -400,17 +453,14 @@ omd.spec: omd.spec.in Makefile.omd Makefile
 # create a target which will build the packages/$1
 define create-target
 $(1):
-	@set -e ; cd packages ; NOW=$$$$(date +%s); \
-	echo "build: $(1) start" >> /tmp/buildlog.log; \
-	if [[ "$(DEFAULT_BUILD)" == "build-cached" ]]; then \
-	OMD_ROOT="$(OMD_ROOT)" OMD_VERSION="$(OMD_VERSION)" BUILD_CACHE="$(BUILD_CACHE)" ../build/build_cached "$(MAKE)" "$(1)" "$(DISTRO_NAME)/$(DISTRO_VERSION)/$(shell uname -m)"; \
-	echo "build-cached: $(1) (took $$$$(( $$$$(date +%s) - $$$$NOW ))s)"; \
-	echo "build-cached: $(1) $$$$? (took $$$$(( $$$$(date +%s) - $$$$NOW ))s)" >> /tmp/buildlog.log; \
-	else \
-	$(MAKE) -C $$(notdir $$@) build; \
-	echo "build: $(1) (took $$$$(( $$$$(date +%s) - $$$$NOW ))s)"; \
-	echo "build: $(1) (took $$$$(( $$$$(date +%s) - $$$$NOW ))s)" >> /tmp/buildlog.log; \
-	fi
+	@mkdir -p /tmp/buildlog-times
+	@date +%s > /tmp/buildlog-times/$(1).start
+	@echo "build: $(1) start" >> /tmp/buildlog.log
+	+$(MAKE) -C packages/$(1) build
+	@START=$$$$(cat /tmp/buildlog-times/$(1).start 2>/dev/null || echo 0); \
+	ELAPSED=$$$$(( $$$$(date +%s) - $$$$START )); \
+	echo "build: $(1) (took $$$${ELAPSED}s)"; \
+	echo "build: $(1) (took $$$${ELAPSED}s)" >> /tmp/buildlog.log
 endef
 
 # a function, which creates a dependency from a "goal:prerequisite" string
