@@ -74,7 +74,6 @@ BUILD_PACKAGES       += which
 BUILD_PACKAGES       += zlib-devel
 OS_PACKAGES           =
 OS_PACKAGES          += alsa-lib                       # chrome
-OS_PACKAGES          += ansible
 OS_PACKAGES          += ansible-core
 OS_PACKAGES          += atk                            # chrome
 OS_PACKAGES          += at-spi2-atk                    # chrome
