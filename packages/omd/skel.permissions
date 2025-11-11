@@ -1,4 +1,3 @@
 etc/init.d/xinetd 755
 etc/htpasswd 664
 var/www/503.php 755
-.cache/crontab 755
