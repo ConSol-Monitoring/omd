@@ -47,8 +47,8 @@ TestUtils::test_command({ cmd => "/bin/su - $site -c 'kill -s SIGSEGV $naemonpid
 
 my $corefilepattern;
 if($core_pattern =~ m/\|.*systemd\-coredump/mx) {
-  TestUtils::test_command({ cmd => "/usr/bin/coredumpctl list | grep -v missing", like => '/naemon/', waitfor => 'naemon' });
-  `/usr/bin/coredumpctl dump naemon.dbg > /tmp/core.naemon 2>/dev/null`;
+  TestUtils::test_command({ cmd => "/usr/bin/coredumpctl -1 list | grep -v missing", like => '/naemon/', waitfor => 'naemon' });
+  `/usr/bin/coredumpctl -1 dump naemon.dbg > /tmp/core.naemon 2>/dev/null`;
   $corefilepattern = "/tmp/core.naemon";
 }
 elsif($core_pattern =~ m/\|.*apport/mx) {
@@ -73,7 +73,7 @@ for (1..300) {
     sleep 0.1;
 }
 ok($corefile, "got corefile: ".($corefile // "none")." for pattern: ".($corefilepattern//"none")) or BAIL_OUT("cannot test without core file");
-TestUtils::test_command({ cmd => "/bin/su - $site -c 'gdb /omd/sites/".$site."/bin/naemon.dbg -c $corefile -ex \"set pagination off\" -ex bt -ex quit'", like => ['/event_execution_loop/', '/naemon.c:/' ], errlike => undef });
+TestUtils::test_command({ cmd => "/bin/su - $site -c 'DEBUGINFOD_URLS= gdb /omd/sites/".$site."/bin/naemon.dbg -c $corefile -ex \"set pagination off\" -ex bt -ex quit'", like => ['/event_execution_loop/', '/naemon.c:/' ], errlike => undef });
 TestUtils::test_command({ cmd => "/bin/rm -f $corefile" });
 
 ##################################################

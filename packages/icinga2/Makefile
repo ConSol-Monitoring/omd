@@ -56,7 +56,7 @@ build: $(EXTRA_BUILD_DEPS)
 	    ( cd $(DIR) ; patch -p1 ) < $$p || exit 1; \
 	done
 	cd $(DIR)/build && \
-		export CXXFLAGS="-O2 -fpermissive"; \
+		export CXXFLAGS="${CXXFLAGS} -O2 -fpermissive"; \
 		$(CMAKE) .. $(CONFIGUREOPTS) && \
 		make -j1
 	# save build artifacts and clean build dir to speed up cached builds

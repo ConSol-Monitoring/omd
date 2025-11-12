@@ -10,7 +10,6 @@ CONFIGUREOPTS = \
     --libdir=$(OMD_ROOT)/lib \
     --prefix=$(OMD_ROOT)
 
-CFLAGS  =
 CFLAGS += -g3
 CFLAGS += -fsigned-char
 

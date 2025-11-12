@@ -52,5 +52,6 @@ skel:
 	install -m 644 gitignore $(SKEL)/.gitignore
 	mkdir -p $(SKEL)/etc/bash_completion.d
 	install -m 644 omd_bash_completion $(SKEL)/etc/bash_completion.d
+	mkdir -p $(SKEL)/.cache/crontab
 
 clean:

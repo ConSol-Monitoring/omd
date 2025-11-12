@@ -27,7 +27,7 @@ build: clean
 	    ( cd $(DIR) ; patch -p1 ) < $$p || exit 1; \
 	done
 	cd $(DIR) && \
-	CFLAGS="-g3" ./configure $(CONFIGUREOPTS)
+	CFLAGS="${CFLAGS} -g3" ./configure $(CONFIGUREOPTS)
 	$(MAKE) -C $(DIR)
 	$(MAKE) DESTDIR=$(TMPDEST) -C $(DIR) install
 	rm -rf $(DIR)

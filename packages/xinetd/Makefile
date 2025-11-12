@@ -6,10 +6,10 @@ HAS_XINETD=$(shell grep -c "= xinetd" $(DISTRO_FILE) )
 USE_TIRPC = $(shell grep -c 'tirpc' $(DISTRO_FILE) )
 
 ifneq ($(USE_TIRPC), 0)
-LDFLAGS=$(shell pkg-config --libs libtirpc)
-CFLAGS=$(shell pkg-config --cflags libtirpc)
+LDFLAGS+=$(shell pkg-config --libs libtirpc)
+CFLAGS+=$(shell pkg-config --cflags libtirpc)
 else
-LDFLAGS=
+LDFLAGS?=
 C_INCLUDE_PATH=
 endif
 
@@ -19,7 +19,7 @@ ifeq ($(HAS_XINETD), 0)
 	cd xinetd-$(XINETD) && \
 	    ./autogen.sh; \
 	    ./configure --without-libwrap; \
-	    make LDFLAGS=$(LDFLAGS) CFLAGS=$(CFLAGS); \
+	    make LDFLAGS="$(LDFLAGS)" CFLAGS="$(CFLAGS)"; \
 	    strip ./xinetd
 endif
 
