@@ -120,13 +120,15 @@ OVERRIDES=""
 ifeq ($(HAS_PYTHON_307_OR_NEWER),true)
 OVERRIDES += certifi-2025.8.3.tar.gz
 OVERRIDES += jinja2-3.1.6.tar.gz
+OVERRIDES += pycryptodomex-3.23.0.tar.gz
 endif
 
 # override some module for python 3.12, list could be reevaluated once rhel7 support got removed
 ifeq ($(HAS_PYTHON_312_OR_NEWER),true)
 OVERRIDES += setuptools-70.3.0.tar.gz
 OVERRIDES += wheel-0.44.0.tar.gz
-OVERRIDES += pip-23.3.2.tar.gz
+OVERRIDES += pip-23.3.2.tar.gz         # use this pip to bootstrap
+MODULES   += pip-25.3-py3-none-any.whl # then update pip to the final version for python 3.12
 
 OVERRIDES += setuptools_scm-8.1.0.tar.gz
 OVERRIDES += setuptools_rust-1.10.2.tar.gz
@@ -134,6 +136,11 @@ OVERRIDES += cython-3.0.11.tar.gz
 OVERRIDES += pyyaml-6.0.2.tar.gz
 OVERRIDES += pymssql-2.3.1.tar.gz
 OVERRIDES += paramiko-3.5.0.tar.gz
+
+OVERRIDES += requests-2.32.5-py3-none-any.whl
+OVERRIDES += urllib3-2.5.0-py3-none-any.whl
+OVERRIDES += mysql_connector_python-9.5.0-py2.py3-none-any.whl
+OVERRIDES += idna-3.11-py3-none-any.whl
 endif
 
 build:
@@ -148,8 +155,6 @@ build:
 	shopt -s nocaseglob; \
 	for M in $(BASE); do \
 		MBASE=$$(echo $$M | sed -E -e 's/.tar.gz//g' -e 's/.zip//g' -e 's/-(py2\.)*py3-.*whl//g' -e 's/-/\*/g') ; \
-		WHEEL=$$(ls $(WHEELSDIR)/$${MBASE}-* 2>/dev/null | head -1) ; \
-		[[ -n "$$WHEEL" ]] && [[ -f "$$WHEEL" ]] && continue ; \
 		for O in $(OVERRIDES); do \
 			if [[ $$O =~ $$(echo $${MBASE%%\**} | tr A-Z a-z)- ]]; then \
 				echo "using $$O instead of $$M"; \
@@ -157,6 +162,8 @@ build:
 				MBASE=$$(echo $$M | sed -E -e 's/.tar.gz//g' -e 's/.zip//g' -e 's/-(py2\.)*py3-.*whl//g' -e 's/-/\*/g') ; \
 			fi; \
 		done; \
+		WHEEL=$$(ls $(WHEELSDIR)/$${MBASE}-* 2>/dev/null | head -1) ; \
+		[[ -n "$$WHEEL" ]] && [[ -f "$$WHEEL" ]] && continue ; \
 		( \
 			cd src && \
 			( tar zxf $$M --no-same-owner || : ) && \
@@ -173,14 +180,16 @@ build:
 		WHEEL=$$(ls $(WHEELSDIR)/$${MBASE}-* 2>/dev/null | head -1) ; \
 		SWHEEL=$$(ls src/$${MBASE}-* 2>/dev/null | head -1 | sed -e 's/^src.//g') ; \
 		echo "** $$M **" ; \
-		[[ -n "$$WHEEL" ]] && [[ -f "$$WHEEL" ]] && continue ; \
 		for O in $(OVERRIDES); do \
 			if [[ $$O =~ $$(echo $${MBASE%%\**} | tr A-Z a-z)- ]]; then \
 				echo "using $$O instead of $$M"; \
 				M="$$O"; \
 				MBASE=$$(echo $$M | sed -E -e 's/.tar.gz//g' -e 's/.zip//g' -e 's/-(py2\.)*py3-.*whl//g' -e 's/-/\*/g') ; \
+				WHEEL=$$(ls $(WHEELSDIR)/$${MBASE}-* 2>/dev/null | head -1) ; \
+				SWHEEL=$$(ls src/$${MBASE}-* 2>/dev/null | head -1 | sed -e 's/^src.//g') ; \
 			fi; \
 		done; \
+		[[ -n "$$WHEEL" ]] && [[ -f "$$WHEEL" ]] && continue ; \
 		if [[ $$M =~ .*pymssql.* ]]; then \
 			if [ `uname -m` = 'armv7l' ]; then \
 				export PYMSSQL_BUILD_WITH_BUNDLED_FREETDS=1 \
