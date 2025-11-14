@@ -1,0 +1,25 @@
+From d95cab01e16efed552c1066098ab818cef6c9853 Mon Sep 17 00:00:00 2001
+From: Sven Nierlein <sven@consol.de>
+Date: Fri, 14 Nov 2025 14:57:58 +0100
+Subject: [PATCH] fix pending service dependencies
+
+Having a new host with all services pending 'service_skip_check_dependency_status' does not work as expected.
+The idea was to keep services running until they fail to not break reporting. But only if they ever worked
+before. So we need to check the 'has_been_checked' flag as well.
+---
+ src/naemon/checks_service.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/naemon/checks_service.c b/src/naemon/checks_service.c
+index ad06da08..55202b4c 100644
+--- a/src/naemon/checks_service.c
++++ b/src/naemon/checks_service.c
+@@ -204,7 +204,7 @@ static void handle_service_check_event(struct nm_event_execution_properties *evp
+ 				int keep_running = FALSE;
+ 				switch(service_skip_check_dependency_status) {
+ 					case SKIP_KEEP_RUNNING_WHEN_UP:
+-						if (temp_service->current_state <= STATE_WARNING) {
++						if (temp_service->current_state <= STATE_WARNING && temp_service->has_been_checked == TRUE) {
+ 							keep_running = TRUE;
+ 						}
+ 						break;
