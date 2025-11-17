@@ -1,0 +1,34 @@
+#!/bin/bash
+
+# Alias: vmauth access mode to use
+# Menu: Addons
+# Description:
+#  Here you can choose wether vmauth speaks http or https.
+
+case "$1" in
+    default)
+        echo "http"
+    ;;
+    choices)
+            echo "http: Run vmauth in http mode"
+            echo "ssl: Run vmauth with ssl encryption"
+    ;;
+    set)
+        if [ "$2" == "ssl" ] && ! test -f $OMD_ROOT/etc/apache/site.key; then
+            $OMD_ROOT/bin/create_site_selfsigned_cert
+            if [ $? -ne 0 ]; then
+                echo "failed to create ssl certificates"
+                exit 1
+            fi
+        fi
+        # note: Parameter switch implemented in 00_main.conf
+        #  -tls
+        #     Whether to enable TLS (aka HTTPS) for incoming requests. -tlsCertFile and -tlsKeyFile must be set if -tls is set
+        # -tlsCertFile string
+        #      Path to file with TLS certificate. Used only if -tls is set. Prefer ECDSA certs instead of RSA certs, since RSA certs are slow
+        # -tlsKeyFile string
+    ;;
+    depends)
+    [ "$CONFIG_VMAUTH" = "on" ]
+    ;;
+esac

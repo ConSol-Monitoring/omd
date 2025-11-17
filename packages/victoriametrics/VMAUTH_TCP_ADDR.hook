@@ -1,0 +1,26 @@
+#!/bin/bash
+
+# Alias: Listening address for Vmauth
+# Menu: Addons
+# Description:
+#  Configure the bind address used for the Vmauth
+#  process of this site.
+#  After changing this variable, the Vmauth daemon
+#  must be restarted.
+#
+
+case "$1" in
+    default)
+        echo "127.0.0.1"
+    ;;
+    choices)
+        echo "([a-z0-9-]+|(?:[\d]{1,3})\.(?:[\d]{1,3})\.(?:[\d]{1,3})\.(?:[\d]{1,3}))"
+    ;;
+    depends)
+        [ "$CONFIG_VMAUTH" == "on" ]
+    ;;
+    set)
+        true
+    ;;
+esac
+

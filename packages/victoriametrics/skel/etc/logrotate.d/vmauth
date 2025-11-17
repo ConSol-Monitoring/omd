@@ -1,0 +1,8 @@
+###ROOT###/var/log/vmauth*.log {
+        missingok
+        rotate 7
+        compress
+        delaycompress
+        create 40 ###SITE### ###SITE###
+        copytruncate
+}

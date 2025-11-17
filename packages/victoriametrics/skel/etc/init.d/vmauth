@@ -1,0 +1,58 @@
+#!/bin/bash
+
+### OMD INIT INFO
+# PIDFILE:  tmp/run/vmauth.pid
+# BINARY:   bin/vmauth-prod
+# ARGMATCH: envflag.prefix=vmauth_
+### END INIT INFO
+
+cd || exit 1
+. etc/omd/site.conf
+[ "$CONFIG_VMAUTH" = "on" ] || exit 5
+. .profile
+. lib/omd/init_profile
+
+
+NAME=vmauth
+DAEMON=$OMD_ROOT/bin/vmauth-prod
+NOHUP=1
+RELOAD_RESTARTS=1
+STORE_PID=1
+LOG_FILE=$OMD_ROOT/var/log/vmauth.log
+PID_FILE=$OMD_ROOT/tmp/run/vmauth.pid
+CONF_DIR=$OMD_ROOT/etc/victoriametrics/vmauth
+
+export LC_ALL=C
+
+# export every parameter that is set after this line
+set -a
+# default parameters maybe overwritten
+# the following parameter cannot be overwritten:
+# - retentionPeriod, httpListenAddr (from omd config) and
+# - storageDataPath (fix)
+
+for CFG in ${CONF_DIR}/*.conf; do
+  . ${CFG}
+done
+
+# base options to identify instance
+OPTS=""
+OPTS+=" -envflag.enable"
+OPTS+=" -envflag.prefix=vmauth_"
+OPTS+=" -httpListenAddr=$CONFIG_VMAUTH_TCP_ADDR:$CONFIG_VMAUTH_PORT"
+
+if [ "${CONFIG_VMAUTH_MODE}" = "ssl" ] ; then
+  if [  -z "$vmauth_tlsCertFile" ] ; then echo "vmauth_tlsCertFile missing"; exit 8; fi
+  if [  -z "$vmauth_tlsKeyFile" ] ; then echo "vmauth_tlsKeyFile missing"; exit 8; fi
+  if [ ! -f $vmauth_tlsCertFile ] ; then echo $vmauth_tlsCertFile does not exist; exit 8; fi
+  if [ ! -f $vmauth_tlsKeyFile ] ; then echo $vmauth_tlsKeyFile does not exist; exit 8; fi
+  export vmauth_tls=1
+else
+  unset vmauth_tls
+  unset vmauth_tlsCertFile
+  unset vmauth_tlsKeyFile
+fi
+
+set +a # stop that behavior again
+
+__generic_init "$*"

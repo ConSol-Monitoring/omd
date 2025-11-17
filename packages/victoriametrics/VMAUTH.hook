@@ -1,0 +1,28 @@
+#!/bin/bash
+
+# Alias: Vmauth Daemon
+# Menu: Addons
+# Description:
+#  Vmauth is an open-source, gatekeeper for victoriametrics.
+
+case "$1" in
+    default)
+        echo "off"
+    ;;
+    choices)
+        echo "on: enable vmauth"
+        echo "off: disable vmauth"
+    ;;
+    set)
+       if [ "$2" = "on" -o "$CONFIG_VMAUTH" = "on" ]; then
+           # Set SecretKeys for own API endpoints
+           if [ -f $OMD_ROOT/etc/victoriametrics/vmauth/00_main.conf ]; then
+               SecretKey=$( tr -cd A-Za-z0-9 < /dev/urandom | head -c 16 )
+               sed -Ei "s/(AuthKey=)SecretKey/\1${SecretKey}/g" $OMD_ROOT/etc/victoriametrics/vmauth/00_main.conf
+           fi
+        fi
+    ;;
+    depends)
+        [ "$CONFIG_VMAUTH" = "on" ]
+    ;;
+esac

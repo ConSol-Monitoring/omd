@@ -1,0 +1,27 @@
+#!/bin/bash
+
+# Alias: TCP port the vmauth daemon listens on api call for remote_write etc.
+# Menu: Addons
+# Description:
+#  If you enabled vmauth, this is the listening http port.
+
+case "$1" in
+    default)
+        echo 8528
+    ;;
+    choices)
+        echo "[1-9][0-9]{0,4}"
+    ;;
+    set)
+        # Scan for a free port number by looking at the
+        # configuration of the other sites...
+        PORT=$($OMD_ROOT/lib/omd/port_is_used VMAUTH_PORT $2)
+        if [ "$PORT" != "$2" ] ; then
+            [ "$CONFIG_VMAUTH" = on ] && echo "vmauth port $2 is in use. I've choosen $PORT instead." >&2
+            echo "$PORT"
+        fi
+    ;;
+    depends)
+    [ "$CONFIG_VMAUTH" = "on" ]
+    ;;
+esac

@@ -1,0 +1,41 @@
+#
+# OMD default VMAUTH config file
+# Please change Authorization header according to your backend setup.
+#
+users:
+  - username: "test"
+    password: "test"
+    url_map:
+    - src_paths:
+      - "/api/v1/query"
+      - "/api/v1/query_range"
+      - "/api/v1/labels"
+      - "/api/v1/label/[^/]+/vales"
+      - "/api/v1/metadata"
+      - "/api/v1/query_exemplars"
+      - "/api/v1/status/.*"
+      - "/api/v1/export"
+      - "/api/v1/export/native"
+      url_prefix: "https://localhost:8428"
+      retry_status_codes: [500,502]
+      headers:
+      - " Authorization: Basic dGVzdDp0ZXN0Cg"
+    tls_insecure_skip_verify: true
+
+  - bearer_token: "DasistderToken"
+    url_map:
+    - src_paths:
+      - "/api/v1/query"
+      - "/api/v1/query_range"
+      - "/api/v1/labels"
+      - "/api/v1/label/[^/]+/vales"
+      - "/api/v1/metadata"
+      - "/api/v1/query_exemplars"
+      - "/api/v1/status/.*"
+      - "/api/v1/export"
+      - "/api/v1/export/native"
+      url_prefix: "https://localhost:8428"
+      retry_status_codes: [500,502]
+      headers:
+      - " Authorization: Basic dGVzdDp0ZXN0Cg"
+    tls_insecure_skip_verify: true
