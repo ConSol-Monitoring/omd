@@ -2,7 +2,7 @@ include ../../Makefile.omd
 
 NAME         = mod_gearman
 CHANGELOG    = https://github.com/sni/mod_gearman/blob/master/Changes
-VERSION      = 5.1.8
+VERSION      = 5.2.0
 DIR          = mod_gearman-$(VERSION)
 PROXY        = GearmanProxy
 PROXYVERSION = 2.08
@@ -17,6 +17,7 @@ build:
 	#    echo "applying $$p..." ; \
 	#    ( cd $(DIR) ; patch -p1 ) < $$p || exit 1; \
 	#done
+	sed -i mod_gearman-$(VERSION)/configure -e 's/-Wdate-time//g'
 	cd $(DIR) && \
 	  export PKG_CONFIG_PATH=$(shell ls -d1 $$(pwd)/../naemon/naemon-*/.) C_INCLUDE_PATH=$(shell pwd)/$(DIR)/include:$(shell ls -d1 $$(pwd)/../naemon/naemon-*/.)/src; \
 	  ./configure --prefix=$(OMD_ROOT) --libdir=$(OMD_ROOT)/lib --enable-debug --enable-embedded-perl --with-gearman=$(shell pwd)/../gearmand/dest && \

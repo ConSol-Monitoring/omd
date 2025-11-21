@@ -20,7 +20,7 @@ next:
             - check_wut_health update to 4.4
             - omdnotificationforwarder update to 2.8
           - gearman:
-            - mod-gearman update to 5.1.9
+            - mod-gearman update to 5.2.0
             - mod-gearman-worker-go update to 1.5.8
           - grafana:
             - update to 12.3.0
