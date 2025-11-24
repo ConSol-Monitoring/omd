@@ -5,7 +5,7 @@ CHANGELOG   = https://github.com/ConSol-Monitoring/nagflux/blob/master/CHANGELOG
 VERSION     = master
 BRANCH      = master
 SRC         = $(NAME)-$(VERSION).tar.gz
-GOPKG       = 1.23
+GOPKG       = 1.25
 GOVERSION   = $(shell grep ^VERSION ../go-${GOPKG}/Makefile | awk '{ print $$3 }')
 GOPATH      = go
 PWD         = $(shell pwd)
@@ -13,7 +13,7 @@ CONFIG_FILE = $(DESTDIR)$(OMD_ROOT)/etc/nagflux/config.gcfg
 GITBASE     = github.com/ConSol-Monitoring
 GITURL      = $(GITBASE)/$(NAME)
 # GIT TAG is set automatically by "make upstream" or "make package"
-GIT_TAG     = v0.5.3
+GIT_TAG     = v0.5.4
 
 .PHONY: skel
 
