@@ -18,6 +18,8 @@ CROND="$OMD_ROOT/etc/cron.d/*[^~]"
 CRONTAB=`which crontab`
 CRONTAB_OPTS=""
 
+mkdir -p $OMD_ROOT/.cache/crontab
+
 __init_hook $0 $1 pre
 case "$1" in
     start)
