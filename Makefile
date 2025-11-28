@@ -242,6 +242,15 @@ install-global:
 # repository.
 $(SOURCE_TGZ) dist:
 	git -c tar.umask=0022 archive --prefix=$(SOURCE_NAME)/ --format=tar.gz --output=$(SOURCE_TGZ) HEAD
+	@DUPS=$$(tar tvfz $(SOURCE_TGZ) | grep '/skel/' | cut -d '/' -f 4- | sort | uniq -d | grep -v '/$$' | grep -v '^\s*$$'); \
+	if [ "$$DUPS" != "" ]; then \
+		echo "******************"; \
+		echo "ERROR: found duplicate skel files:"; \
+		echo "$$DUPS"; \
+		echo "******************"; \
+		exit 1; \
+	fi;
+
 
 # Build RPM from source code.
 # When called from a git repository this uses 'make dist' and thus 'git archive'
