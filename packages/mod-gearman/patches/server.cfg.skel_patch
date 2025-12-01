@@ -1,5 +1,5 @@
---- a/etc/mod-gearman/server.cfg	2011-12-29 22:19:49.281089611 +0100
-+++ b/etc/mod-gearman/server.cfg	2011-12-29 22:21:54.745094683 +0100
+--- a/etc/mod-gearman/server.cfg	2025-11-24 16:14:55.000000000 +0100
++++ b/etc/mod-gearman/server.cfg	2025-12-01 11:07:53.848809301 +0100
 @@ -18,12 +18,11 @@
  debug=0
  
@@ -17,7 +17,7 @@
  
  # sets the address of your 2nd (duplicate) gearman job server. Can
  # be specified more than once o add more servers.
-@@ -80,13 +79,13 @@
+@@ -90,13 +89,13 @@
  # A shared password which will be used for
  # encryption of data pakets. Should be at least 8
  # bytes long. Maximum length is 32 characters.
@@ -32,12 +32,21 @@
 +keyfile=###ROOT###/etc/mod-gearman/secret.key
  
  
- ###############################################################################
-@@ -125,6 +124,6 @@
- # Performance data is just written to the gearman
- # queue.
+ # use_uniq_jobs
+@@ -160,7 +159,7 @@
+ # queue and not further processed.
+ # You can specify multiple queues by comma separated list.
  # Default: no
 -perfdata=no
 +config=###ROOT###/etc/mod-gearman/perfdata.conf
  
- 
+ # Set perfdata_send_all=yes to submit all performance data
+ # of all hosts and services regardless of if they
+@@ -220,3 +219,7 @@
+ # gearmand server
+ # Default is -1(no timeout)
+ # gearman_connection_timeout=-1
++
++# Import server.cfg.d/*.cfg folders to override default settings
++# the etc/mod-gearman/server.cfg.d is already included in OMD, put custom configs there.
++

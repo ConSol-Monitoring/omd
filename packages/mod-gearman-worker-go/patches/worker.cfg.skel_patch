@@ -1,5 +1,5 @@
---- a/etc/mod-gearman/worker.cfg	2024-09-04 11:48:45.386129027 +0200
-+++ b/etc/mod-gearman/worker.cfg	2024-09-04 11:48:45.390129170 +0200
+--- a/etc/mod-gearman/worker.cfg	2025-07-28 21:43:00.000000000 +0200
++++ b/etc/mod-gearman/worker.cfg	2025-12-01 11:12:14.886545251 +0100
 @@ -22,12 +22,12 @@
  
  
@@ -26,10 +26,12 @@
  
  
  # Path to the pidfile. Usually set by the init script
-@@ -250,4 +250,5 @@
+@@ -249,5 +249,6 @@
+ #prometheus_server=127.0.0.1:9050
  
  
- # Import conf.d folders to override default settings
+-# Import conf.d folders to override default settings
 -#config=/etc/mod-gearman/worker.d/
++# Import worker.cfg.d/*.cfg folders to override default settings
 +# the etc/mod-gearman/worker.cfg.d is already included in OMD, put custom configs there.
 +
