@@ -7,7 +7,7 @@ next:
             - drop build support for ubuntu 20.04
           - thruk:
             - update to 3.24
-            - lmd update to 2.6.4
+            - lmd update to 2.7.0
           - naemon:
             - core update to 1.4.4
             - livestatus update to 1.4.4
