@@ -13,12 +13,12 @@ case "$1" in
     ;;
     choices)
             echo "welcome: Welcome page which lists all available GUIs"
-            [ -e $OMD_ROOT/share/nagios/htdocs ]        && echo "nagios: Classic Nagios webinterface"
             [ -e $OMD_ROOT/share/thruk ]                && echo "thruk: Thruk Monitoring Webinterface"
             [ -e $OMD_ROOT/share/pnp4nagios/htdocs ]    && echo "pnp4nagios: RRD based performance data analyzer"
             [ -e $OMD_ROOT/share/grafana/public/views ] && echo "grafana: Visualize timeseries based metrics"
             [ -e $OMD_ROOT/etc/prometheus ]             && echo "prometheus: Prometheus timeseries database Webinterface"
             [ -e $OMD_ROOT/etc/alertmanager ]           && echo "alertmanager: Prometheus Alertmanager Webinterface"
+            [ -e $OMD_ROOT/bin/victoria-metrics-prod ]  && echo "vmui: Victoriametrics Webinterface"
 
             echo "none: No default webinterface"
     ;;
@@ -26,7 +26,10 @@ case "$1" in
         [ "$CONFIG_APACHE_MODE" != none ]
     ;;
     set)
-        conf_file=$OMD_ROOT/etc/apache/conf.d/default_gui.conf
+        # old file name was default_gui.conf
+        # new one is omd_default_gui.conf so the file will be read after omd.conf which sets a lot all the variables used in the redirect
+        rm -f $OMD_ROOT/etc/apache/conf.d/default_gui.conf
+        conf_file=$OMD_ROOT/etc/apache/conf.d/omd_default_gui.conf
         case "$2" in
             welcome)
                 rm -f "$conf_file"
@@ -34,6 +37,8 @@ case "$1" in
             *)
                 printf > "$conf_file" '%s\n' \
                   "# File handled by DEFAULT_GUI hook" \
+                  "RewriteRule   ^/$OMD_SITE/omd/?$ %{ENV:OMD_PROTO}://%{ENV:OMD_SERVER_NAME}:%{ENV:OMD_PORT}/$OMD_SITE/$2/ [R=302]" \
+                  "# keep this fallback, apache shared mode does not support mod_rewrite" \
                   "RedirectMatch ^/$OMD_SITE/omd/?$ /$OMD_SITE/$2/"
                 ;;
         esac
