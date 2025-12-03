@@ -21,6 +21,8 @@ use File::Basename;
 use Test::Cmd;
 use Encode qw/encode_utf8/;
 
+use constant SSL_verify_mode_NONE => 0; # Net::SSLeay::VERIFY_NONE(),
+
 if($> != 0) {
     plan( skip_all => "creating testsites requires root permission" );
 }
@@ -542,7 +544,7 @@ sub test_url {
         ok( $page->{'response'}->is_redirect, 'Request '.$test->{'url'}.' should redirect' ) or diag(Dumper($test, $page->{'response'}));
         if(defined $test->{'location'}) {
             if(defined $page->{'response'}->{'_headers'}->{'location'}) {
-                _match($page->{'response'}->{'_headers'}->{'location'}, qr/$test->{'location'}/, "Content should redirect: ".$test->{'location'}) or _diag_request($test, $page);;
+                _match($page->{'response'}->{'_headers'}->{'location'}, qr/$test->{'location'}/, "Content should redirect: ".$page->{'response'}->{'_headers'}->{'location'}." must match ".$test->{'location'}) or _diag_request($test, $page);;
             } else {
                 fail('no redirect header found');
             }
@@ -931,10 +933,15 @@ sub _request {
                                        );
     }
 
+    $ENV{'PERL_LWP_SSL_VERIFY_HOSTNAME'} = 0;
     my $ua = LWP::UserAgent->new(
         keep_alive   => 1,
         max_redirect => 10,
         timeout      => 60,
+        ssl_opts     => {
+            verify_hostname => 0,
+            SSL_verify_mode => SSL_verify_mode_NONE,
+        },
         requests_redirectable => ['GET', 'POST'],
     );
     $ua->timeout(60);

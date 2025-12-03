@@ -247,7 +247,7 @@ TestUtils::test_command({ cmd => "/omd/sites/$site/lib/monitoring-plugins/check_
 TestUtils::test_command({ cmd => "/bin/sh -c 'echo \"APACHE_MODE=own\nWEB_REDIRECT=off\nWEB_ALIAS=\n\" | omd config $site change'", like => ['/Stopping apache/'] });
 TestUtils::restart_system_apache();
 TestUtils::test_command({ cmd => "/bin/sh -c 'curl -sk http://localhost/$site/'", like => [qr%\Qhttp://localhost:80/$site/\E%] }) or BAIL_OUT("broken");
-TestUtils::test_command({ cmd => "/bin/sh -c 'curl -sk http://localhost/$site/omd/'", like => [qr%\Qhttp://localhost:80/$site/thruk/cgi-bin/login.cgi\E%] }) or BAIL_OUT("broken");
+TestUtils::test_command({ cmd => "/bin/sh -c 'curl -sk http://localhost/$site/omd/'", like => [qr%\Qhttp://localhost:80/$site/thruk/\E%] }) or BAIL_OUT("broken");
 TestUtils::test_command({ cmd => "/bin/sh -c 'curl -sk -H \"X-Forwarded-Proto: http\" -H \"X-Forwarded-Port: 1234\" http://localhost/$site/'", like => [qr%\Qhttp://localhost:1234/$site/omd/\E%] }) or BAIL_OUT("broken");
 TestUtils::test_command({ cmd => "/bin/sh -c 'curl -sk -H \"X-Forwarded-Proto: https\" -H \"X-Forwarded-Port: 1234\" http://localhost/$site/'", like => [qr%\Qhttps://localhost:1234/$site/omd/\E%] }) or BAIL_OUT("broken");
 TestUtils::test_command({ cmd => "/bin/sh -c 'curl -sk -H \"X-Forwarded-Proto: https\" -H \"X-Forwarded-Port: 1234\" -H \"X-Forwarded-Host: vhost.com\" http://localhost/$site/'", like => [qr%\Qhttps://vhost.com:1234/$site/omd/\E%] }) or BAIL_OUT("broken");
@@ -258,7 +258,7 @@ TestUtils::test_command({ cmd => "/bin/sh -c 'echo \"APACHE_MODE=ssl\n\" | omd c
 TestUtils::restart_system_apache();
 TestUtils::test_command({ cmd => "/bin/sh -c 'curl -sk http://localhost/$site/'", like => [qr%\Qhttps://localhost/$site/\E%] }) or BAIL_OUT("broken");
 TestUtils::test_command({ cmd => "/bin/sh -c 'curl -sk https://localhost/$site/'", like => [qr%\Qhttps://localhost:443/$site/omd/\E%] }) or BAIL_OUT("broken");
-TestUtils::test_command({ cmd => "/bin/sh -c 'curl -sk https://localhost/$site/omd/'", like => [qr%\Qhttps://localhost:443/$site/thruk/cgi-bin/login.cgi\E%] }) or BAIL_OUT("broken");
+TestUtils::test_command({ cmd => "/bin/sh -c 'curl -sk https://localhost/$site/omd/'", like => [qr%\Qhttps://localhost:443/$site/thruk/\E%] }) or BAIL_OUT("broken");
 TestUtils::test_command({ cmd => "/bin/sh -c 'curl -sk -H \"X-Forwarded-Proto: http\" -H \"X-Forwarded-Port: 1234\" https://localhost/$site/'", like => [qr%\Qhttp://localhost:1234/$site/omd/\E%] }) or BAIL_OUT("broken");
 TestUtils::test_command({ cmd => "/bin/sh -c 'curl -sk -H \"X-Forwarded-Proto: https\" -H \"X-Forwarded-Port: 1234\" https://localhost/$site/'", like => [qr%\Qhttps://localhost:1234/$site/omd/\E%] }) or BAIL_OUT("broken");
 TestUtils::test_command({ cmd => "/bin/sh -c 'curl -sk -H \"X-Forwarded-Proto: https\" -H \"X-Forwarded-Port: 1234\" -H \"X-Forwarded-Host: vhost.com\" https://localhost/$site/'", like => [qr%\Qhttps://vhost.com:1234/$site/omd/\E%] }) or BAIL_OUT("broken");

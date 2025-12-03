@@ -12,12 +12,13 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 104 );
+plan( tests => 128 );
 
 ##################################################
 # create our test site
 my $omd_bin = TestUtils::get_omd_bin();
 my $site    = TestUtils::create_test_site() or TestUtils::bail_out_clean("no further testing without site");
+my $auth    = 'OMD Monitoring Site '.$site.':omdadmin:omd';
 
 # not started site should give a nice error
 TestUtils::test_command({ cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_http -H localhost -u /$site -e 503 -r \"OMD: Site Not Started\"'",  like => '/HTTP OK:/' });
@@ -35,17 +36,41 @@ my $tests = [
   { cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_http -H localhost -a omdadmin:omd -u /$site/omd/ -e 302'", like => '/HTTP OK:/' },
   { cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_http -H localhost -a omdadmin:omd -u /$site/omd/vierhundertvier -e 404'", like => '/HTTP OK:/' },
   { cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_http -H localhost -u /$site/omd/vierhunderteins -e 401'", like => '/HTTP OK:/' },
-
-  { cmd => $omd_bin." stop $site" },
 ];
 for my $test (@{$tests}) {
     TestUtils::test_command($test);
 }
 
+##################################################
+# test redirects with APACHE_MODE=own
+_test_redirects([
+    [ "http://localhost/$site/",      'http://localhost(:80|)/testsite/omd/' ],
+    [ "http://localhost/$site/omd",   'http://localhost(:80|)/testsite/thruk/' ],
+    [ "http://localhost/$site/omd/",  'http://localhost(:80|)/testsite/thruk/' ],
+    [ "https://localhost/$site/",     'https://localhost(:443|)/testsite/omd/' ],
+    [ "https://localhost/$site/omd",  'https://localhost(:443|)/testsite/thruk/' ],
+    [ "https://localhost/$site/omd/", 'https://localhost(:443|)/testsite/thruk/' ],
+]);
+
+##################################################
+TestUtils::test_command({ cmd => $omd_bin." stop $site" });
 TestUtils::test_command({ cmd => "/bin/su - $site -c 'omd config set APACHE_MODE ssl'",  like => '/^$/' });
 TestUtils::restart_system_apache();
 TestUtils::test_command({ cmd => "/bin/su - $site -c 'omd start'",  like => '/Starting apache.*?OK/' });
 TestUtils::test_command({ cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_http -H localhost -S -a omdadmin:omd -u /$site/thruk/index.html -e 200 -vvv'", like => ['/HTTP OK:/', '/Thruk Monitoring Webinterface/'] });
+
+##################################################
+# test redirects with APACHE_MODE=ssl
+_test_redirects([
+    [ "http://localhost/$site/",      'https://localhost(:443|)/testsite/' ],
+    [ "http://localhost/$site/omd",   'https://localhost(:443|)/testsite/omd' ],
+    [ "http://localhost/$site/omd/",  'https://localhost(:443|)/testsite/omd/' ],
+    [ "https://localhost/$site/",     'https://localhost(:443|)/testsite/omd/' ],
+    [ "https://localhost/$site/omd",  'https://localhost(:443|)/testsite/thruk/' ],
+    [ "https://localhost/$site/omd/", 'https://localhost(:443|)/testsite/thruk/' ],
+]);
+
+##################################################
 
 TestUtils::test_command({ cmd => "/bin/su - $site -c 'omd stop'",  like => '/Stopping apache/' });
 TestUtils::test_command({ cmd => "/bin/su - $site -c 'omd config set THRUK_COOKIE_AUTH on'",  like => '/^$/' });
@@ -80,3 +105,17 @@ TestUtils::test_command({ cmd => "/bin/su - $site -c 'omd stop'",  like => '/Sto
 ##################################################
 # cleanup test site
 TestUtils::remove_test_site($site);
+
+
+##################################################
+sub _test_redirects {
+    my($redirects) = @_;
+    for my $redir (@{$redirects}) {
+        TestUtils::test_url({
+            url            => $redir->[0],
+            auth           => $auth,
+            redirect       => 1,
+            location       => $redir->[1],
+        });
+    }
+}
