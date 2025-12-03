@@ -5461,8 +5461,12 @@ if g_sitename and command != "rm":
 if cmd_spec.confirm and not opt_force and not opt_yes:
     sys.stdout.write("%s (yes/NO): " % cmd_spec.confirm_text)
     sys.stdout.flush()
-    a = sys.stdin.readline().strip()
-    if a.lower() != "yes":
+    try:
+        a = sys.stdin.readline().strip()
+        if a.lower() != "yes":
+            sys.stdout.write(tty_red + tty_bold + "canceled " + tty_normal + " \n")
+            sys.exit(0)
+    except KeyboardInterrupt:
         sys.stdout.write(tty_red + tty_bold + "canceled " + tty_normal + " \n")
         sys.exit(0)
 
