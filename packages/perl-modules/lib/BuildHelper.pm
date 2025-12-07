@@ -456,8 +456,26 @@ sub install_module {
             `sed -i -e 's/auto_install;//g' Makefile.PL`;
             my $rc;
             # retry because sometimes Makefile.PL will be rebuild due to broken time
+
+	    # Some modules are sensitive to parallel make and must be built sequentially.
+	    # Use -j1 flag to cut jobserver inheritance (clearing MAKEFLAGS is not sufficient).
+	    my @sequential_only = (
+	        'XML::SAX',
+	        'XML::LibXML',
+	    );
+
+	    my $needs_sequential = 0;
+	    foreach my $seq_mod (@sequential_only) {
+	        if ($modname =~ /^\Q$seq_mod\E/) {
+	            $needs_sequential = 1;
+	            last;
+	        }
+	    }
+
+	    my $make = $needs_sequential ? 'make -j1' : ($ENV{'MAKE'} || 'make');
+
             for my $retry (1..3) {
-                `echo "\n\n\n" | $PERL Makefile.PL $makefile_opts >> $LOG 2>&1 && make -j 5 >> $LOG 2>&1 && make install >> $LOG 2>&1`;
+                `echo "\n\n\n" | $PERL Makefile.PL $makefile_opts >> $LOG 2>&1 && $make >> $LOG 2>&1 && $make install >> $LOG 2>&1`;
                 $rc = $?;
                 last if $rc == 0;
             }

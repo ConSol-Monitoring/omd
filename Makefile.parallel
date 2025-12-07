@@ -82,7 +82,7 @@ PACKAGE_DEPS += node:upx
 PACKAGE_DEPS += node-modules:node
 PACKAGE_DEPS += influxdb:go-1.23
 PACKAGE_DEPS += influxdb:upx
-PACKAGE_DEPS += nagflux:go-1.23
+PACKAGE_DEPS += nagflux:go-1.25
 PACKAGE_DEPS += python-modules:freetds
 PACKAGE_DEPS += apache-omd:go-1.23
 PACKAGE_DEPS += icinga2:monitoring-plugins
@@ -131,6 +131,32 @@ include Makefile.omd
 # This file may override the list of packages
 -include .config
 
+# Export MAKE_JOBS to child processes (rpmbuild, debuild, sub-makes)
+# This enables parallelism control via: MAKE_JOBS=16 make rpm
+export MAKE_JOBS
+
+# Filter PACKAGE_DEPS to remove dependencies on skipped packages
+# This prevents build errors when a package depends on a skipped package
+ifdef SKIP_PACKAGES
+  PACKAGE_DEPS := $(shell \
+    for dep in $(PACKAGE_DEPS); do \
+      skip=0; \
+      goal=$$(echo "$$dep" | cut -d: -f1); \
+      prereqs=$$(echo "$$dep" | cut -d: -f2- | tr ' ' '\n'); \
+      for prereq in $$prereqs; do \
+        for s in $(SKIP_PACKAGES); do \
+          if [ "$$s" = "$$prereq" ]; then \
+            skip=1; \
+            break 2; \
+          fi; \
+        done; \
+      done; \
+      if [ $$skip -eq 0 ]; then \
+        echo "$$dep"; \
+      fi; \
+    done)
+endif
+
 DESTDIR ?=$(shell pwd)/destdir
 RPM_TOPDIR=$(shell pwd)/rpm.topdir
 SOURCE_NAME=omd-$(OMD_VERSION)
@@ -140,45 +166,61 @@ NEWSERIAL=$$(($(OMD_SERIAL) + 1))
 APACHE_NAME=$(APACHE_INIT_NAME)
 ifdef BUILD_CACHE
 DEFAULT_BUILD=build-cached
+else ifdef MAKE_JOBS
+DEFAULT_BUILD=build-parallel
 else
 DEFAULT_BUILD=build
 endif
 
-.PHONY: install-global Changelog release_notes_blog.md build omdbuild help
+.PHONY: install-global Changelog release_notes_blog.md build build-parallel build-parallel-internal help omd
 
-# Default target for parallel builds
-.DEFAULT_GOAL := omdbuild
+# Default target - serial unless MAKE_JOBS is set
+.DEFAULT_GOAL := $(DEFAULT_BUILD)
+
+# Convenience target - builds using DEFAULT_BUILD setting
+omd: $(DEFAULT_BUILD)
 
 help:
 	@echo "OMD Build System - Parallel Build Support"
 	@echo ""
 	@echo "Common targets:"
-	@echo "  make              - Build all packages in parallel (default, uses all cores)"
-	@echo "  make -j4          - Build with exactly 4 parallel jobs"
-	@echo "  make -j2          - Build with exactly 2 parallel jobs"
+	@echo "  make              - Build all packages (serial, default)"
 	@echo "  make pack         - Install packages to destdir"
 	@echo "  make rpm          - Build RPM package"
 	@echo "  make deb          - Build DEB package"
 	@echo "  make clean        - Clean build artifacts"
 	@echo ""
-	@echo "Controlling parallelism for package builds:"
-	@echo "  RPM builds:"
-	@echo "    make rpm                    - Use all CPU cores (default)"
-	@echo "    JOBS=4 make rpm             - Use exactly 4 cores"
-	@echo "    JOBS=1 make rpm             - Serial build (no parallelism)"
-	@echo "    RPM_BUILD_NCPUS=2 make rpm  - Use exactly 2 cores (alternative)"
-	@echo "    WARNING: Do NOT use 'make -j N rpm' - use JOBS or RPM_BUILD_NCPUS"
+	@echo "Controlling parallelism:"
 	@echo ""
-	@echo "  DEB builds:"
-	@echo "    make deb                    - Use all CPU cores (default)"
-	@echo "    JOBS=4 make deb             - Use exactly 4 cores"
-	@echo "    JOBS=1 make deb             - Serial build (no parallelism)"
-	@echo "    DEB_BUILD_OPTIONS=parallel=2 make deb  - Use exactly 2 cores (alternative)"
+	@echo "  MAKE_JOBS - Shared job pool parallelism control:"
+	@echo "    MAKE_JOBS=16 make           - Build with 16 jobs (shared across all packages)"
+	@echo "    MAKE_JOBS=16 make rpm       - Build RPM with 16 jobs"
+	@echo "    MAKE_JOBS=16 make deb       - Build DEB with 16 jobs"
+	@echo "    MAKE_JOBS=1 make            - Serial build (no parallelism)"
+	@echo "    make                        - Serial build (default)"
+	@echo ""
+	@echo "  How it works:"
+	@echo "    - All packages share a global job pool managed by Make's job server"
+	@echo "    - Automatically balances load across packages based on available work"
+	@echo "    - More efficient than fixed per-package CPU allocation"
+	@echo ""
+	@echo "Examples on 16-core machine:"
+	@echo "  MAKE_JOBS=16 make           → Use all 16 cores optimally"
+	@echo "  MAKE_JOBS=8 make rpm        → Build RPM using 8 cores"
+	@echo "  make                        → Serial build (safe but slow)"
 	@echo ""
 	@echo "Package dependencies are defined in PACKAGE_DEPS"
-	@echo "Individual packages can be built: make <package-name>"
+	@echo "Individual packages: make <package-name>"
 
-omdbuild: $(PACKAGES)
+build-parallel:
+	@. ./track-functions.sh; track_root_start "omd" "build-parallel"
+	TOTAL_CPUS=$$(nproc 2>/dev/null || getconf _NPROCESSORS_ONLN 2>/dev/null || echo 4); \
+	echo "Building with $${MAKE_JOBS} total jobs (shared pool across all packages)"; \
+	$(MAKE) -j$${MAKE_JOBS} build-parallel-internal; \
+	STATUS=$$?; \
+	HOST=$$(uname -n); \
+	. ./track-functions.sh; track_root_end "omd" "build-parallel" $$STATUS \
+		"$(DISTRO_CODE)" "$(OMD_VERSION)" "$${MAKE_JOBS}" "$$TOTAL_CPUS" "$$HOST"
 
 build-cached:
 	@set -e ; cd packages ; for p in $(PACKAGES) ; do \
@@ -336,31 +378,30 @@ $(SOURCE_TGZ) dist:
 # to create the source rpm.
 #
 # Parallelism Control:
-#   make rpm                      - Use all available CPU cores (default)
-#   RPM_BUILD_NCPUS=4 make rpm   - Use exactly 4 cores
-#   RPM_BUILD_NCPUS=2 make rpm   - Use exactly 2 cores
-#   RPM_BUILD_NCPUS=1 make rpm   - Serial build (no parallelism)
-#   JOBS=4 make rpm              - Convenience alias for RPM_BUILD_NCPUS
+#   make rpm             - Serial build (default)
+#   MAKE_JOBS=16 make rpm - Use 16 jobs (shared pool)
+#   MAKE_JOBS=1 make rpm  - Explicit serial build
 #
-# The %make_build macro in omd.spec respects RPM_BUILD_NCPUS environment variable
-# IMPORTANT: Do NOT use 'make -j N rpm' - it won't work correctly. Use RPM_BUILD_NCPUS or JOBS instead.
+# MAKE_JOBS is exported and automatically available in omd.spec %build section
+# IMPORTANT: Do NOT use 'make -j N rpm' - it won't work correctly. Use MAKE_JOBS instead.
 rpm: omd.spec
-ifdef JOBS
-	$(eval export RPM_BUILD_NCPUS=$(JOBS))
-endif
 	test -f $(SOURCE_TGZ) || ( test -d .git && $(MAKE) $(SOURCE_TGZ) || $(MAKE) $(SOURCE_TGZ) )
 	mkdir -p $(RPM_TOPDIR)/{SOURCES,BUILD,RPMS,SRPMS,SPECS}
 	cp $(SOURCE_TGZ) $(RPM_TOPDIR)/SOURCES
 	# NO_BRP_STALE_LINK_ERROR ignores errors when symlinking from skel to
 	# share,lib,bin because the link has a invalid target until the site is created
 	# Unset MAKEFLAGS to prevent outer make's -j from interfering with rpmbuild
-	# rpmbuild will use RPM_BUILD_NCPUS if set, otherwise defaults to all cores
+	# MAKE_JOBS environment variable is used by the %build section in omd.spec
+	@. ./track-functions.sh; track_start "omd" "packaging"; \
 	unset MAKEFLAGS; \
 	NO_BRP_STALE_LINK_ERROR="yes" \
 		rpmbuild -bb \
 		--define "_topdir $(RPM_TOPDIR)" \
 		--buildroot=$$(pwd)/rpm.buildroot \
-		omd.spec
+		omd.spec; \
+	STATUS=$$?; \
+	. ./track-functions.sh; track_end "omd" "packaging" $$STATUS; \
+	exit $$STATUS
 	mv -v $(RPM_TOPDIR)/RPMS/*/*.rpm .
 	rm -rf $(RPM_TOPDIR) rpm.buildroot
 
@@ -381,9 +422,6 @@ deb-changelog: deb-environment
 	dch --release "releasing ...."
 
 deb: deb-changelog
-ifdef JOBS
-	$(eval export DEB_BUILD_OPTIONS=parallel=$(JOBS))
-endif
 	sed -e 's/###OMD_VERSION###/$(OMD_VERSION)/' \
 	    -e 's/###BUILD_PACKAGES###/$(BUILD_PACKAGES)/' \
 	    -e 's/###OS_PACKAGES###/$(OS_PACKAGES)/' \
@@ -396,11 +434,15 @@ endif
 	#echo "/opt/omd/versions/$(OMD_VERSION)/lib/mod_gearman/*.dbg" > `pwd`/debian/omd-$(OMD_VERSION)-debug.install
 	#echo "/opt/omd/versions/$(OMD_VERSION)/lib/naemon/*.dbg" > `pwd`/debian/omd-$(OMD_VERSION)-debug.install
 	fakeroot debian/rules clean
+	@. ./track-functions.sh; track_start "omd" "packaging"; \
 	debuild --no-lintian -i\.git -I\.git \
 			-iomd-bin-$(OMD_VERSION).tar.gz \
 			-Iomd-bin-$(OMD_VERSION).tar.gz \
 			-i.gitignore -I.gitignore \
-			-uc -us -rfakeroot -b
+			-uc -us -rfakeroot -b; \
+	STATUS=$$?; \
+	. ./track-functions.sh; track_end "omd" "packaging" $$STATUS; \
+	exit $$STATUS
 
 version:
 	@if [ -z "$(VERSION)" ] ; then \
@@ -453,14 +495,11 @@ omd.spec: omd.spec.in Makefile.omd Makefile
 # create a target which will build the packages/$1
 define create-target
 $(1):
-	@mkdir -p /tmp/buildlog-times
-	@date +%s > /tmp/buildlog-times/$(1).start
-	@echo "build: $(1) start" >> /tmp/buildlog.log
-	+$(MAKE) -C packages/$(1) build
-	@START=$$$$(cat /tmp/buildlog-times/$(1).start 2>/dev/null || echo 0); \
-	ELAPSED=$$$$(( $$$$(date +%s) - $$$$START )); \
-	echo "build: $(1) (took $$$${ELAPSED}s)"; \
-	echo "build: $(1) (took $$$${ELAPSED}s)" >> /tmp/buildlog.log
+	@. ./track-functions.sh; track_start "omd" "$(1)"
+	+$(MAKE) -C packages/$$(notdir $(1)) build; \
+	STATUS=$$$$?; \
+	. ./track-functions.sh; track_end "omd" "$(1)" $$$$STATUS; \
+	exit $$$$STATUS
 endef
 
 # a function, which creates a dependency from a "goal:prerequisite" string
@@ -479,3 +518,6 @@ $(foreach pkg,$(PACKAGES),$(eval $(call create-target,$(pkg))))
 
 # apply the dependencies
 $(call define-deps)
+
+# Internal target to avoid infinite recursion - defined after package targets
+build-parallel-internal: $(PACKAGES)

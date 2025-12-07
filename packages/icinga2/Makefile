@@ -55,10 +55,8 @@ build: $(EXTRA_BUILD_DEPS)
 	    echo "applying $$p..." ; \
 	    ( cd $(DIR) ; patch -p1 ) < $$p || exit 1; \
 	done
-	cd $(DIR)/build && \
-		export CXXFLAGS="${CXXFLAGS} -O2 -fpermissive"; \
-		$(CMAKE) .. $(CONFIGUREOPTS) && \
-		make -j1
+	cd $(DIR)/build && CXXFLAGS="$${CXXFLAGS} -O2 -fpermissive" $(CMAKE) .. $(CONFIGUREOPTS)
+	+env CXXFLAGS="$${CXXFLAGS} -O2 -fpermissive" $(MAKE) -C $(DIR)/build
 	# save build artifacts and clean build dir to speed up cached builds
 	rm -rf ./dest
 	$(MAKE) DESTDIR=$(shell pwd)/dest -C $(DIR)/build install
@@ -85,10 +83,9 @@ build: $(EXTRA_BUILD_DEPS)
 
 $(CMAKEDEST):
 	tar xzf $(CMAKEDIR).tar.gz
-	cd $(CMAKEDIR) && \
-		./configure --prefix=$(shell pwd)/$(CMAKEDEST) && \
-		make -j 4 && \
-		make install
+	cd $(CMAKEDIR) && ./bootstrap --prefix=$(shell pwd)/$(CMAKEDEST)
+	+$(MAKE) -C $(CMAKEDIR)
+	+$(MAKE) -C $(CMAKEDIR) install
 
 $(BOOSTDEST): $(CMAKEDEST)
 	tar xJf $(BOOSTDIR).tar.xz
