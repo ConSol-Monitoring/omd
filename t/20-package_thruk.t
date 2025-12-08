@@ -13,7 +13,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 1074 );
+plan( tests => 1081 );
 
 ##################################################
 # create our test site
@@ -324,6 +324,7 @@ for my $url ( @{$cookie_urls} ) {
 ##################################################
 # other tools
 TestUtils::test_command({ cmd => "/bin/su - $site -c './lib/monitoring-plugins/check_thruk_rest /hosts/totals'", like => '/total/'});
+TestUtils::test_command({ cmd => "/bin/su - $site -c './bin/mod_gearman_worker_epn.pl -v --run -- ./lib/monitoring-plugins/check_thruk_rest /hosts/totals'", like => ['/total/', '/exit:\s*0/', '/compile:/', '/runtime:/']});
 TestUtils::test_command({ cmd => "/bin/su - $site -c './share/thruk/support/convert_old_datafile.pl'", like => '/^$/', errlike => '/usage:/', exit => 3});
 
 ##################################################
