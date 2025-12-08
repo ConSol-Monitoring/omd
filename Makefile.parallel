@@ -392,16 +392,12 @@ rpm: omd.spec
 	# share,lib,bin because the link has a invalid target until the site is created
 	# Unset MAKEFLAGS to prevent outer make's -j from interfering with rpmbuild
 	# MAKE_JOBS environment variable is used by the %build section in omd.spec
-	@. ./track-functions.sh; track_start "omd" "packaging"; \
-	unset MAKEFLAGS; \
+	@unset MAKEFLAGS; \
 	NO_BRP_STALE_LINK_ERROR="yes" \
 		rpmbuild -bb \
 		--define "_topdir $(RPM_TOPDIR)" \
 		--buildroot=$$(pwd)/rpm.buildroot \
-		omd.spec; \
-	STATUS=$$?; \
-	. ./track-functions.sh; track_end "omd" "packaging" $$STATUS; \
-	exit $$STATUS
+		omd.spec
 	mv -v $(RPM_TOPDIR)/RPMS/*/*.rpm .
 	rm -rf $(RPM_TOPDIR) rpm.buildroot
 
@@ -434,15 +430,12 @@ deb: deb-changelog
 	#echo "/opt/omd/versions/$(OMD_VERSION)/lib/mod_gearman/*.dbg" > `pwd`/debian/omd-$(OMD_VERSION)-debug.install
 	#echo "/opt/omd/versions/$(OMD_VERSION)/lib/naemon/*.dbg" > `pwd`/debian/omd-$(OMD_VERSION)-debug.install
 	fakeroot debian/rules clean
-	@. ./track-functions.sh; track_start "omd" "packaging"; \
+	@unset MAKEFLAGS; \
 	debuild --no-lintian -i\.git -I\.git \
 			-iomd-bin-$(OMD_VERSION).tar.gz \
 			-Iomd-bin-$(OMD_VERSION).tar.gz \
 			-i.gitignore -I.gitignore \
-			-uc -us -rfakeroot -b; \
-	STATUS=$$?; \
-	. ./track-functions.sh; track_end "omd" "packaging" $$STATUS; \
-	exit $$STATUS
+			-uc -us -rfakeroot -b
 
 version:
 	@if [ -z "$(VERSION)" ] ; then \
