@@ -179,7 +179,7 @@ MODULES = \
           HTTP-Message-6.14.tar.gz \
           HTTP-Negotiate-6.01.tar.gz \
           Module-Load-Conditional-0.68.tar.gz \
-          Monitoring-Livestatus-0.78.tar.gz \
+          Monitoring-Livestatus-0.86.tar.gz \
           Net-HTTP-6.17.tar.gz \
           XML-LibXML-2.0134.tar.gz \
           Module-Build-0.4007.tar.gz \
