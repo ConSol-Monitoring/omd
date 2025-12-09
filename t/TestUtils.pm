@@ -1062,11 +1062,11 @@ sub _clean_stderr {
 sub _diag_cmd {
     my($test) = @_;
     my $cmd = $test->{'test_cmd'};
-    my $stdout = $cmd->stdout // '';
-    my $stderr = $cmd->stderr // '';
+    my $stdout = $cmd->stdout // ''; chomp($stdout);
+    my $stderr = $cmd->stderr // ''; chomp($stderr);
     diag("\ncmd: '".$test->{'cmd'}."' failed\n");
-    diag("stdout: ".$stdout."\n");
-    diag("stderr: ".$stderr."\n");
+    diag(sprintf("stdout: %s%s\n", $stdout =~ m/\n.*\n/ ? "\n" : "", $stdout));
+    diag(sprintf("stderr: %s%s\n", $stderr =~ m/\n.*\n/ ? "\n" : "", $stderr));
 
     # check logfiles on apache errors
     if(   $stdout =~ m/Starting dedicated Apache for site (\w+)[\.\ ]*ERROR/
