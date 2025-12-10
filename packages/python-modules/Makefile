@@ -129,6 +129,7 @@ OVERRIDES += setuptools-70.3.0.tar.gz
 OVERRIDES += wheel-0.44.0.tar.gz
 OVERRIDES += pip-23.3.2.tar.gz         # use this pip to bootstrap
 MODULES   += pip-25.3-py3-none-any.whl # then update pip to the final version for python 3.12
+MODULES   += setuptools-78.1.1.tar.gz  # same here, old modules do not build with new setup tools anymore
 
 OVERRIDES += setuptools_scm-8.1.0.tar.gz
 OVERRIDES += setuptools_rust-1.10.2.tar.gz
@@ -138,7 +139,7 @@ OVERRIDES += pymssql-2.3.1.tar.gz
 OVERRIDES += paramiko-3.5.0.tar.gz
 
 OVERRIDES += requests-2.32.5-py3-none-any.whl
-OVERRIDES += urllib3-2.5.0-py3-none-any.whl
+OVERRIDES += urllib3-2.6.1-py3-none-any.whl
 OVERRIDES += mysql_connector_python-9.5.0-py2.py3-none-any.whl
 OVERRIDES += idna-3.11-py3-none-any.whl
 endif
