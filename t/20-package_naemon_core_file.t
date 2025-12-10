@@ -42,6 +42,7 @@ if($core_pattern =~ m%\Q|/bin/false\E%mx) {
     $core_pattern = `cat /proc/sys/kernel/core_pattern`;
 }
 
+clean_dumps();
 my $naemonpid = `cat /omd/sites/$site/tmp/run/naemon.pid`; chomp($naemonpid);
 TestUtils::test_command({ cmd => "/bin/su - $site -c 'kill -s SIGSEGV $naemonpid'" });
 
