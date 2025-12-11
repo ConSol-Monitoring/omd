@@ -7,24 +7,29 @@ USE_TIRPC = $(shell grep -c 'tirpc' $(DISTRO_FILE) )
 
 ifneq ($(USE_TIRPC), 0)
 LDFLAGS+=$(shell pkg-config --libs libtirpc)
-CFLAGS+= -O2 -std=gnu90 -Wno-strict-prototypes -Wno-error=incompatible-pointer-types $(shell pkg-config --cflags libtirpc)
+CFLAGS+=$(shell pkg-config --cflags libtirpc)
 else
 LDFLAGS?=
-CFLAGS+= -O2 -std=gnu90 -Wno-strict-prototypes -Wno-error=incompatible-pointer-types
+C_INCLUDE_PATH=
+endif
+
+# Fall back to GNU89 C standard and allow incompatible pointer types for
+# compilers supporting this flag.
+# From gcc >= 15 onwards (which has c23 as default)
+# this old code will not compile without this flag anyway.
+GCC_VERSION := $(shell $(CC) -dumpversion 2>/dev/null)
+GCC_MAJOR := $(shell echo $(GCC_VERSION) | cut -d. -f1)
+ifeq ($(shell test $(GCC_MAJOR) -ge 5 2>/dev/null && echo yes),yes)
+CFLAGS+=-std=gnu89 -Wno-error=incompatible-pointer-types
 endif
 
 build:
 ifeq ($(HAS_XINETD), 0)
 	tar xvzf xinetd-$(XINETD).tar.gz
-	for p in patches/*.patch ; do \
-	    echo "applying $$p..." ; \
-	    ( cd xinetd-$(XINETD) ; patch -p1 ) < $$p || exit 1; \
-	done
-	find xinetd-$(XINETD) -name \*.orig -exec rm {} \;
 	cd xinetd-$(XINETD) && \
 	    ./autogen.sh; \
 	    ./configure --without-libwrap; \
-	    make LDFLAGS="$(LDFLAGS)" CFLAGS="$(CFLAGS)"; \
+	    $(MAKE) LDFLAGS="$(LDFLAGS)" CFLAGS="$(CFLAGS)"; \
 	    strip ./xinetd
 endif
 
