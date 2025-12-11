@@ -124,7 +124,7 @@ MODULES = \
           Sub-Name-0.21.tar.gz \
           Sys-SigAction-0.23.tar.gz \
           Template-Toolkit-2.27.tar.gz \
-          Term-ReadLine-Gnu-1.35.tar.gz \
+          Term-ReadLine-Gnu-1.47.tar.gz \
           Term-ShellUI-0.92.tar.gz \
           Term-Size-0.207.tar.gz \
           TermReadKey-2.37.tar.gz \
