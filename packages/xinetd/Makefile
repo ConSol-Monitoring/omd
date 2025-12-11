@@ -7,15 +7,20 @@ USE_TIRPC = $(shell grep -c 'tirpc' $(DISTRO_FILE) )
 
 ifneq ($(USE_TIRPC), 0)
 LDFLAGS+=$(shell pkg-config --libs libtirpc)
-CFLAGS+=$(shell pkg-config --cflags libtirpc)
+CFLAGS+= -O2 -std=gnu90 -Wno-strict-prototypes -Wno-error=incompatible-pointer-types $(shell pkg-config --cflags libtirpc)
 else
 LDFLAGS?=
-C_INCLUDE_PATH=
+CFLAGS+= -O2 -std=gnu90 -Wno-strict-prototypes -Wno-error=incompatible-pointer-types
 endif
 
 build:
 ifeq ($(HAS_XINETD), 0)
 	tar xvzf xinetd-$(XINETD).tar.gz
+	for p in patches/*.patch ; do \
+	    echo "applying $$p..." ; \
+	    ( cd xinetd-$(XINETD) ; patch -p1 ) < $$p || exit 1; \
+	done
+	find xinetd-$(XINETD) -name \*.orig -exec rm {} \;
 	cd xinetd-$(XINETD) && \
 	    ./autogen.sh; \
 	    ./configure --without-libwrap; \
@@ -26,8 +31,7 @@ endif
 install:
 ifeq ($(HAS_XINETD), 0)
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/bin
-	cp xinetd-$(XINETD)/xinetd \
-	    $(DESTDIR)$(OMD_ROOT)/bin
+	cp xinetd-$(XINETD)/xinetd $(DESTDIR)$(OMD_ROOT)/bin
 endif
 
 skel:
