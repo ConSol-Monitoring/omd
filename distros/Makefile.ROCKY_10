@@ -84,6 +84,7 @@ OS_PACKAGES          += boost-context                  # icinga 2
 OS_PACKAGES          += boost-coroutine                # icinga 2
 OS_PACKAGES          += boost-date-time                # icinga 2
 OS_PACKAGES          += boost-filesystem               # icinga 2
+OS_PACKAGES          += boost-iostreams                # icinga 2
 OS_PACKAGES          += boost-program-options
 OS_PACKAGES          += boost-regex                    # icinga 2
 OS_PACKAGES          += boost-system                   # mod-gearman
