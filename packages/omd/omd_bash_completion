@@ -99,8 +99,8 @@ _omd()
             opts="$(_omd_cmd_options $subcmd) $(omd diff -b | awk '{print $2}')"
         fi
 
-    # omd start|stop|restart|reload|status  ...
-    elif [[ $subcmd =~ start|stop|restart|reload|status ]]; then
+    # omd start|stop|restart|reload|status|check  ...
+    elif [[ $subcmd =~ start|stop|restart|reload|status|check ]]; then
         opts="$(_omd_cmd_options $subcmd) $(env ls -1 /omd/sites/$site/etc/init.d/ 2>/dev/null)"
 
     # omd config ...
