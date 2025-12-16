@@ -178,7 +178,11 @@ endif
 .DEFAULT_GOAL := $(DEFAULT_BUILD)
 
 # Convenience target - builds using DEFAULT_BUILD setting
+# Only define when MAKE_JOBS is not set to avoid circular dependency:
+#   build-parallel → build-parallel-internal → omd (package) → omd (target) → build-parallel
+ifndef MAKE_JOBS
 omd: $(DEFAULT_BUILD)
+endif
 
 help:
 	@echo "OMD Build System - Parallel Build Support"
