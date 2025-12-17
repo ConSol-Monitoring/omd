@@ -26,6 +26,7 @@
 .ssh/
 .viminfo
 .vnc
+.wget-hsts
 .Xauthority
 *.gz
 *.log
