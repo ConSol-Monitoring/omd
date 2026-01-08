@@ -23,7 +23,7 @@ next:
             - omdnotificationforwarder update to 4.0
           - gearman:
             - mod-gearman update to 5.2.1
-            - mod-gearman-worker-go update to 1.5.8
+            - mod-gearman-worker-go update to 1.5.9
           - grafana:
             - update to 12.3.0
             - pnp-datasource update to 2.2.2
