@@ -33,6 +33,7 @@ HAS_PYTHON_312_OR_NEWER := $(shell \
 
 # install toolchain required to build wheels
 BASE =
+BASE += packaging-21.3.tar.gz
 BASE += setuptools-59.6.0.tar.gz
 BASE += wheel-0.37.1.tar.gz
 BASE += pip-21.3.1.tar.gz
@@ -42,7 +43,6 @@ MODULES += semantic_version-2.10.0.tar.gz            # setuptools-rust-1.5.2
 MODULES += tomli-1.2.3.tar.gz                        # setuptools_scm-7.0.5 (last version that works with python 3.6)
 MODULES += flit_core-3.5.1.tar.gz                    #  typing_extensions-4.4.0
 MODULES += typing_extensions-3.10.0.2.tar.gz         # setuptools-rust-1.5.2 (last version that works with python 3.6)
-MODULES += packaging-21.3.tar.gz                     # setuptools_scm-7.0.5 (last version that works with python 3.6)
 MODULES += pyparsing-3.0.8.tar.gz                    # setuptools_scm-7.0.5 (last version that works with python 3.6)
 MODULES += setuptools_scm-6.4.2.tar.gz               # pymssql-2.2.7(<7.0,>=5.0)
 MODULES += setuptools-rust-1.1.2.tar.gz              # paramiko-2.12.0 deps (last version that works with python 3.6)
@@ -125,11 +125,10 @@ endif
 
 # override some module for python 3.12, list could be reevaluated once rhel7 support got removed
 ifeq ($(HAS_PYTHON_312_OR_NEWER),true)
-OVERRIDES += setuptools-70.3.0.tar.gz
+OVERRIDES += setuptools-80.9.0.tar.gz
 OVERRIDES += wheel-0.44.0.tar.gz
-OVERRIDES += pip-23.3.2.tar.gz         # use this pip to bootstrap
-MODULES   += pip-25.3-py3-none-any.whl # then update pip to the final version for python 3.12
-MODULES   += setuptools-78.1.1.tar.gz  # same here, old modules do not build with new setup tools anymore
+OVERRIDES += pip-25.3.tar.gz
+OVERRIDES += packaging-25.0-py3-none-any.whl
 
 OVERRIDES += setuptools_scm-8.1.0.tar.gz
 OVERRIDES += setuptools_rust-1.10.2.tar.gz
@@ -155,37 +154,42 @@ build:
 	set -e ; \
 	shopt -s nocaseglob; \
 	for M in $(BASE); do \
-		MBASE=$$(echo $$M | sed -E -e 's/.tar.gz//g' -e 's/.zip//g' -e 's/-(py2\.)*py3-.*whl//g' -e 's/-/\*/g') ; \
+		MBASE=$$(echo $$M | sed -E -e 's/.tar.gz//g' -e 's/.zip//g' -e 's/-(py2\.)*py3-.*whl//g' -e 's/[-_]/\*/g') ; \
 		for O in $(OVERRIDES); do \
-			if [[ $$O =~ $$(echo $${MBASE%%\**} | tr A-Z a-z)- ]]; then \
+			if [[ $$O =~ $$(echo $${MBASE%\**} | tr A-Z a-z | sed -e 's/\*/.*/g')- ]]; then \
 				echo "using $$O instead of $$M"; \
 				M="$$O"; \
-				MBASE=$$(echo $$M | sed -E -e 's/.tar.gz//g' -e 's/.zip//g' -e 's/-(py2\.)*py3-.*whl//g' -e 's/-/\*/g') ; \
+				MBASE=$$(echo $$M | sed -E -e 's/.tar.gz//g' -e 's/.zip//g' -e 's/-(py2\.)*py3-.*whl//g' -e 's/[-_]/\*/g') ; \
 			fi; \
 		done; \
 		WHEEL=$$(ls $(WHEELSDIR)/$${MBASE}-* 2>/dev/null | head -1) ; \
+		SWHEEL=$$(ls src/$${MBASE}-* 2>/dev/null | head -1 | sed -e 's/^src.//g') ; \
 		[[ -n "$$WHEEL" ]] && [[ -f "$$WHEEL" ]] && continue ; \
-		( \
-			cd src && \
-			( tar zxf $$M --no-same-owner || : ) && \
-			cd ./$$MBASE/ && \
-			python3 setup.py bdist_wheel; \
-		); \
-		mv  ./src/$$MBASE/dist/*.whl $(WHEELSDIR); \
-		rm -rf ./src/$$MBASE/; \
+		if [[ -n "$$SWHEEL" ]]; then \
+			cp src/$$SWHEEL $(WHEELSDIR) ; \
+		else \
+			( \
+				cd src && \
+				( tar zxf $$M --no-same-owner || : ) && \
+				cd ./$$MBASE/ && \
+				python3 setup.py bdist_wheel; \
+			); \
+			mv  ./src/$$MBASE/dist/*.whl $(WHEELSDIR); \
+			rm -rf ./src/$$MBASE/; \
+		fi; \
 		WHEEL=$$(ls $(WHEELSDIR)/$${MBASE}-* 2>/dev/null | head -1) ; \
 		$(PIP) install --no-cache-dir --no-index --no-deps --find-links=$(WHEELSDIR) --target=$(BUILDDEST) --upgrade $$WHEEL ; \
 	done; \
 	for M in $(MODULES); do \
-		MBASE=$$(echo $$M | sed -E -e 's/.tar.gz//g' -e 's/.zip//g' -e 's/-(py2\.)*py3-.*whl//g' -e 's/-/\*/g') ; \
+		MBASE=$$(echo $$M | sed -E -e 's/.tar.gz//g' -e 's/.zip//g' -e 's/-(py2\.)*py3-.*whl//g' -e 's/[-_]/\*/g') ; \
 		WHEEL=$$(ls $(WHEELSDIR)/$${MBASE}-* 2>/dev/null | head -1) ; \
 		SWHEEL=$$(ls src/$${MBASE}-* 2>/dev/null | head -1 | sed -e 's/^src.//g') ; \
 		echo "** $$M **" ; \
 		for O in $(OVERRIDES); do \
-			if [[ $$O =~ $$(echo $${MBASE%%\**} | tr A-Z a-z)- ]]; then \
+			if [[ $$O =~ $$(echo $${MBASE%\**} | tr A-Z a-z | sed -e 's/\*/.*/g')- ]]; then \
 				echo "using $$O instead of $$M"; \
 				M="$$O"; \
-				MBASE=$$(echo $$M | sed -E -e 's/.tar.gz//g' -e 's/.zip//g' -e 's/-(py2\.)*py3-.*whl//g' -e 's/-/\*/g') ; \
+				MBASE=$$(echo $$M | sed -E -e 's/.tar.gz//g' -e 's/.zip//g' -e 's/-(py2\.)*py3-.*whl//g' -e 's/[-_]/\*/g') ; \
 				WHEEL=$$(ls $(WHEELSDIR)/$${MBASE}-* 2>/dev/null | head -1) ; \
 				SWHEEL=$$(ls src/$${MBASE}-* 2>/dev/null | head -1 | sed -e 's/^src.//g') ; \
 			fi; \

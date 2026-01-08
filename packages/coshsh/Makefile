@@ -6,9 +6,9 @@ VERSION=11.1.0.1
 COSHSH=$(NAME)-$(VERSION)
 
 build:
-	tar xvzf $(COSHSH).tar.gz
+	tar xzf $(COSHSH).tar.gz --no-same-owner
 	cd $(COSHSH) && \
-	    export PYTHONPATH=$$PYTHONPATH:$(DESTDIR)$(OMD_ROOT)/lib/python ; \
+	    export PYTHONPATH=$(shell pwd)/../python-modules/dest ; \
 	    python3 setup.py build
 
 install:
@@ -17,7 +17,7 @@ install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/coshsh
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/var/coshsh
 	cd $(COSHSH) && \
-	    export PYTHONPATH=$$PYTHONPATH:$(DESTDIR)$(OMD_ROOT)/lib/python ; \
+	    export PYTHONPATH=$(shell pwd)/../python-modules/dest ; \
 	    python3 setup.py install \
 	        --prefix= \
 	        --home=$(DESTDIR)$(OMD_ROOT) \
