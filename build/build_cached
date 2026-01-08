@@ -25,7 +25,7 @@ replace_strings_in_binary() {
         # Create the new string with a simple bash-replacement
         NEW_STRING=${OLD_STRING//${PATTERN}/${REPLACEMENT}}
 
-        # newlines will not be printed from "strings --all" so try to replace null byte termined strings and newline + null byte
+        # newlines will not be printed from "strings --all" so try to replace null byte terminated strings and newline + null byte
         for ENDING in 00 0A00; do
             # Create null terminated ASCII HEX representations of the strings
             OLD_STRING_HEX=$(echo -n "${OLD_STRING}" | $XXD | tr -d '\n')$ENDING
@@ -98,7 +98,7 @@ CACHE_PATTERN="$BUILD_CACHE/${SRC}_${MD5}_v*.tgz"
 CACHED_FILE=$(ls -1 $CACHE_PATTERN 2>/dev/null)
 if [ "x$CACHED_FILE" != "x" ] && test -s "$CACHED_FILE"; then
     echo "md5sum matched, trying cache from $CACHED_FILE"
-    tar zxf "$CACHED_FILE" || exit 1
+    tar zxf "$CACHED_FILE" --no-same-owner || exit 1
 
     OLD_VERSION=$(echo $CACHED_FILE | sed -e 's/.*_v\(.*\)\.tgz/\1/')
     if [ ${OMD_VERSION} = ${OLD_VERSION} ] ; then
@@ -128,7 +128,7 @@ if [ "x$CACHED_FILE" != "x" ] && test -s "$CACHED_FILE"; then
                 replace_strings_in_binary "$FILE" "$OLD_VERSION" "$OMD_VERSION"
             done
 
-        # make sure we got all occurences
+        # make sure we got all occurrences
         MISSED=$(grep -rla "$OLD_VERSION" "$SRC/")
         if [ "x$MISSED" != "x" ]; then
             echo "ERROR: replace did not work, files $MISSED still contains old version."
@@ -136,10 +136,7 @@ if [ "x$CACHED_FILE" != "x" ] && test -s "$CACHED_FILE"; then
         fi
         # update timestamps, so make does not rebuild everything
         touch .
-        find "$SRC/" | \
-            while read FILE; do
-                touch -h -c -r . $FILE
-            done
+        find "$SRC/" -print0 | xargs -0 -n 100 touch -h -c -r .
 
         exit 0
     else
@@ -178,5 +175,5 @@ if [ "$MD5" != "$MD5_CHECK" ]; then
   exit 1
 fi
 
-tar zxf "$CACHE_FILE" || exit 1
+tar zxf "$CACHE_FILE" --no-same-owner || exit 1
 exit 0
