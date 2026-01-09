@@ -1,2 +1,0 @@
-MAILTO=""
-#00 12 * * * $OMD_ROOT/local/bin/mysql_purge.sh 90 > /dev/null 2>&1

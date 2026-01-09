@@ -44,6 +44,7 @@ next:
           - rrdtool update to 1.9.0
           - telegraf update to 1.35.1
           - victoriametrics update to 1.125.1
+          - remove sakuli helper files
 
 5.60     May 28 2025
           - omd:

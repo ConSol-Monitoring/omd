@@ -64,7 +64,6 @@ PACKAGES += downtime-api
 PACKAGES += dacretain
 PACKAGES += grafana-pnp-datasource
 PACKAGES += grafana-thruk-datasource
-PACKAGES += sakuli
 PACKAGES += victoriametrics
 PACKAGES += xinetd
 PACKAGES += shellinabox
