@@ -17,13 +17,13 @@ my $site    = TestUtils::create_test_site() or TestUtils::bail_out_clean("no fur
 ##################################################
 # install pip-audit
 TestUtils::test_command({
-    cmd     => "/bin/su - $site -c 'pip install pip-audit'",
+    cmd     => "/bin/su - $site -c 'pip install --upgrade pip-audit'",
     errlike => '/.*/',
 });
 
 ##################################################
 TestUtils::test_command({
-    cmd     => "/bin/su - $site -c './local/lib/python/bin/pip-audit --progress-spinner=off --path=lib/python/'",
+    cmd     => "/bin/su - $site -c './local/lib/python/bin/pip-audit --progress-spinner=off --path=lib/python/ 2>&1 '",
     like    => '/No known vulnerabilities found/',
     errlike => '/.*/',
     exit    => undef,
