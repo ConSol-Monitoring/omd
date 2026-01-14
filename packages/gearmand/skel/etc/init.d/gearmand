@@ -32,6 +32,7 @@ OPTS+=" -q libsqlite3 --libsqlite3-db=$OMD_ROOT/var/gearmand.db"
 OPTS+=" --store-queue-on-shutdown"
 OPTS+=" --log-file=$LOG_FILE"
 OPTS+=" --verbose=$LOGLEVEL"
+OPTS+=" --round-robin"
 OPTS+=" ${LISTEN:+--listen=$LISTEN}"
 RELOAD_RESTARTS=1
 
