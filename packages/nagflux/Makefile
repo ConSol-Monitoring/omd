@@ -56,7 +56,7 @@ deps: clean
 			make vendor && \
 			find -name \*_test.go -delete && \
 			cd $(PWD) && \
-			rm -rf $(GOPATH)/src/$(GITURL)/vendor/pkg/lmd/ ; \
+			rm -rf $(GOPATH)/src/$(GITURL)/vendor/pkg/nagflux/ ; \
 			tar cf deps.tar --exclude=.git --exclude=*_test.go $(GOPATH)/src/$(GITURL)/vendor && \
 			chmod -R 777 $(GOPATH); \
 			rm -f deps*.tar.gz; \
