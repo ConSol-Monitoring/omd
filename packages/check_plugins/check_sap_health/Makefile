@@ -2,7 +2,7 @@ include ../../../Makefile.omd
 
 NAME = check_sap_health
 CHANGELOG   = https://github.com/lausser/check_sap_health/blob/master/ChangeLog
-VERSION = 4.0.0.1
+VERSION = 4.0.0.3
 DIR = $(NAME)-$(VERSION)
 
 .PHONY: skel
