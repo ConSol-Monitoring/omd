@@ -1,0 +1,58 @@
+From e75eba71af0eda404e3b510c767a353fd97e031c Mon Sep 17 00:00:00 2001
+From: Sven Nierlein <sven@consol.de>
+Date: Mon, 19 Jan 2026 10:05:38 +0100
+Subject: [PATCH] fix memory leak when using service parents
+
+---
+ src/naemon/objects_service.c | 11 ++++++++++-
+ src/naemon/xodtemplate.c     |  1 +
+ 2 files changed, 11 insertions(+), 1 deletion(-)
+
+diff --git a/src/naemon/objects_service.c b/src/naemon/objects_service.c
+index d1e8e3ed..3129b5b9 100644
+--- a/src/naemon/objects_service.c
++++ b/src/naemon/objects_service.c
+@@ -25,7 +25,7 @@ int init_objects_service(int elems)
+ }
+ 
+ /* destroy a single service object, set truncate_lists to TRUE when lists should be simply emptied instead of removing item by item.
+- * Enable truncate_list when removing all objects and disble when removing a specific one. */
++ * Enable truncate_list when removing all objects and disable when removing a specific one. */
+ void destroy_objects_service(int truncate_lists)
+ {
+ 	unsigned int i;
+@@ -273,6 +273,7 @@ void destroy_service(service *this_service, int truncate_lists)
+ 	struct contactgroupsmember *this_contactgroupsmember, *next_contactgroupsmember;
+ 	struct contactsmember *this_contactsmember, *next_contactsmember;
+ 	struct customvariablesmember *this_customvariablesmember, *next_customvariablesmember;
++	struct servicesmember *this_servicesmember, *next_servicesmember;
+ 	struct objectlist *slavelist;
+ 
+ 	if (!this_service)
+@@ -304,6 +305,14 @@ void destroy_service(service *this_service, int truncate_lists)
+ 		this_customvariablesmember = next_customvariablesmember;
+ 	}
+ 
++	/* free memory for service parents */
++	this_servicesmember = this_service->parents;
++	while (this_servicesmember != NULL) {
++		next_servicesmember = this_servicesmember->next;
++		nm_free(this_servicesmember);
++		this_servicesmember = next_servicesmember;
++	}
++
+ 	/* free memory for service groups */
+ 	if(!truncate_lists) {
+ 		/* remove them one by one */
+diff --git a/src/naemon/xodtemplate.c b/src/naemon/xodtemplate.c
+index ec1665ee..91d090ed 100644
+--- a/src/naemon/xodtemplate.c
++++ b/src/naemon/xodtemplate.c
+@@ -460,6 +460,7 @@ static void xodtemplate_free_memory(void)
+ 			nm_free(this_service->icon_image_alt);
+ 			nm_free(this_service->hostgroup_name);
+ 			nm_free(this_service->service_description);
++			nm_free(this_service->parents);
+ 		}
+ 		nm_free(this_service);
+ 	}

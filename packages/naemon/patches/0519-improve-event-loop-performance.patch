@@ -1,0 +1,41 @@
+From 816430ccf025e2ad0e9d411ec9f8c9cf40032891 Mon Sep 17 00:00:00 2001
+From: Sven Nierlein <sven@consol.de>
+Date: Mon, 26 Jan 2026 15:54:00 +0100
+Subject: [PATCH] improve eventloop runtime performance
+
+naemon is basically a endless loop in its core. It fetches the next event from
+the queue and uses poll to wait until the event time. In every loop iteration
+naemon checks iobroker in/output. For this it iterated from 0 to max_fd. But
+max_fd can be quite large, internally it is limited to 100k. But it is still
+totally useless to iterate until max_fd when iterating up to num_fd is sufficient.
+num_fd is the number of used fds.
+---
+ lib/iobroker.c | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/lib/iobroker.c b/lib/iobroker.c
+index da09eb9c..3196793d 100644
+--- a/lib/iobroker.c
++++ b/lib/iobroker.c
+@@ -465,6 +465,7 @@ int iobroker_poll(iobroker_set *iobs, int timeout)
+ int iobroker_push(iobroker_set *iobs)
+ {
+ 	int i, result = 1;
++	int num_fds = 0;
+ 
+ 	if (!iobs)
+ 		return 1;
+@@ -472,9 +473,13 @@ int iobroker_push(iobroker_set *iobs)
+ 	for (i = 0; i < iobs->max_fds; i++) {
+ 		iobroker_fd *s = NULL;
+ 
++		if (num_fds == iobs->num_fds)
++			break;
++
+ 		if (!iobs->iobroker_fds[i])
+ 			continue;
+ 
++		num_fds++;
+ 		s = iobs->iobroker_fds[i];
+ 		if (s->fd > 0 && nm_bufferqueue_get_available(s->bq_out)) {
+ 			int ret;
