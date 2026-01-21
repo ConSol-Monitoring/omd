@@ -27,7 +27,7 @@ TestUtils::test_command({ cmd => $omd_bin." start $site", like => ['/Starting vi
 my $errlike = qr!(?:
   \A\s*\z # empty stderr is ok
   |
-  \A.*ERROR:.metrics:.disable.exposing.PSI.metrics.because.of.failed.init:.*\n\z # this error is actually just a warning
+  \A.*:.metrics:.disable.exposing.PSI.metrics.because.of.failed.init:.*\n\z # this error is actually just a warning
 )!ix;
 
 TestUtils::test_command({ cmd => qq[/bin/su - $site -c 'victoria-metrics-prod --version'],  like => '/^victoria-metrics.*-omd-/', errlike => $errlike });
