@@ -15,10 +15,10 @@ next:
             - vimvault update to 1.4.4
           - plugins:
             - check_logfiles update to 4.2
-            - check_nwc_health update to 12.10.1
+            - check_nwc_health update to 12.11
             - check_pdu_health update to 3.3
             - check_rittal_health update to 4.1.2
-            - check_sap_health update to 4.0.0.1
+            - check_sap_health update to 4.0.0.3
             - check_storage_health update to 2.1
             - check_vsphere update to 0.3.20
             - check_wut_health update to 4.4.0.2
@@ -41,10 +41,10 @@ next:
           - Go builds updated to 1.25.6
           - coshsh update to 11.1.0.1
           - nagflux update to 0.5.4
+          - remove sakuli helper files
           - rrdtool update to 1.9.0
           - telegraf update to 1.35.1
-          - victoriametrics update to 1.125.1
-          - remove sakuli helper files
+          - victoriametrics update to 1.134.0
 
 5.60     May 28 2025
           - omd:
