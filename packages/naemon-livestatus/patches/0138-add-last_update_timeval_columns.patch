@@ -1,0 +1,501 @@
+From 28255250816baa1204af3db647e690d0a24b2396 Mon Sep 17 00:00:00 2001
+From: Sven Nierlein <sven@consol.de>
+Date: Thu, 22 Jan 2026 17:31:02 +0100
+Subject: [PATCH] add support for timeval columns
+
+---
+ src/Makefile.am            |  1 +
+ src/OffsetTimeValColumn.cc | 19 +++++++++++
+ src/OffsetTimeValColumn.h  | 29 +++++++++++++++++
+ src/Query.cc               |  6 ++++
+ src/Query.h                |  1 +
+ src/TableHosts.cc          |  5 +--
+ src/TableServices.cc       |  5 +--
+ src/TimeColumnFilter.cc    | 43 ++++++++++++-------------
+ src/TimeColumnFilter.h     |  4 +--
+ src/TimeValColumn.cc       | 33 +++++++++++++++++++
+ src/TimeValColumn.h        | 27 ++++++++++++++++
+ src/TimeValColumnFilter.cc | 66 ++++++++++++++++++++++++++++++++++++++
+ src/TimeValColumnFilter.h  | 24 ++++++++++++++
+ src/TimeValPointerColumn.h | 20 ++++++++++++
+ 14 files changed, 254 insertions(+), 29 deletions(-)
+ create mode 100644 src/OffsetTimeValColumn.cc
+ create mode 100644 src/OffsetTimeValColumn.h
+ create mode 100644 src/TimeValColumn.cc
+ create mode 100644 src/TimeValColumn.h
+ create mode 100644 src/TimeValColumnFilter.cc
+ create mode 100644 src/TimeValColumnFilter.h
+ create mode 100644 src/TimeValPointerColumn.h
+
+diff --git a/src/Makefile.am b/src/Makefile.am
+index c86d6bd..7313594 100644
+--- a/src/Makefile.am
++++ b/src/Makefile.am
+@@ -18,6 +18,7 @@ livestatus_la_SOURCES = \
+ 	ListColumn.cc ListColumnFilter.cc OffsetDoubleColumn.cc OffsetIntColumn.cc \
+ 	OffsetStringColumn.cc OffsetTimeperiodColumn.cc OringFilter.cc OutputBuffer.cc \
+ 	OffsetTimeColumn.cc TimeColumn.cc TimeColumnFilter.cc PerfdataAggregator.cc \
++	OffsetTimeValColumn.cc TimeValColumn.cc TimeValColumnFilter.cc \
+ 	Query.cc ServiceContactsColumn.cc ServicegroupsColumn.cc ServicelistColumn.cc \
+ 	ServicelistColumnFilter.cc ServicelistStateColumn.cc store.cc Store.cc \
+ 	StringColumn.cc StringColumnFilter.cc strutil.cc Table.cc TableColumns.cc \
+diff --git a/src/OffsetTimeValColumn.cc b/src/OffsetTimeValColumn.cc
+new file mode 100644
+index 0000000..6e3152c
+--- /dev/null
++++ b/src/OffsetTimeValColumn.cc
+@@ -0,0 +1,19 @@
++// Copyright (c) 2026 Naemon team - license: GPL-2.0
++// This file is part of the naemon project: https://www.naemon.io
++// See LICENSE file in the project root for details.
++
++#include "nagios.h"
++#include <stdint.h>
++#include "OffsetTimeValColumn.h"
++
++struct timeval OffsetTimeValColumn::getValue(void *data, Query *)
++{
++    if (!data)
++        return {0, 0};
++
++    char *p = (char *)shiftPointer(data);
++    if (p)
++        return *(struct timeval *)(p + _offset);
++    else
++        return {0, 0};
++}
+diff --git a/src/OffsetTimeValColumn.h b/src/OffsetTimeValColumn.h
+new file mode 100644
+index 0000000..d5d119c
+--- /dev/null
++++ b/src/OffsetTimeValColumn.h
+@@ -0,0 +1,29 @@
++// Copyright (c) 2026 Naemon team - license: GPL-2.0
++// This file is part of the naemon project: https://www.naemon.io
++// See LICENSE file in the project root for details.
++
++#ifndef OffsetTimeValColumn_h
++#define OffsetTimeValColumn_h
++
++#include "config.h"
++
++#include <stdlib.h>
++#include "TimeValColumn.h"
++
++
++/* This does almost the same as the time column,
++   but applies a timezone offset stored in the Query. */
++
++class OffsetTimeValColumn : public TimeValColumn
++{
++    int _offset;
++public:
++    OffsetTimeValColumn(string name, string description, int offset, int indirect_offset = -1)
++        : TimeValColumn(name, description, indirect_offset), _offset(offset) {}
++    struct timeval getValue(void *data, Query *);
++protected:
++    int offset() { return _offset; }
++};
++
++
++#endif // OffsetTimeValColumn_h
+diff --git a/src/Query.cc b/src/Query.cc
+index 61434d1..faf46ba 100644
+--- a/src/Query.cc
++++ b/src/Query.cc
+@@ -1182,6 +1182,12 @@ void Query::outputTime(time_t value)
+     outputInteger64((int64_t)value);
+ }
+ 
++void Query::outputTimeVal(timeval value)
++{
++    char buf[64];
++    int l = snprintf(buf, sizeof(buf), "%lu.%06lu", value.tv_sec + _timezone_offset, value.tv_usec);
++    _output->addBuffer(buf, l);
++}
+ 
+ void Query::outputUnsignedLong(unsigned long value)
+ {
+diff --git a/src/Query.h b/src/Query.h
+index b28f9dd..5750a87 100644
+--- a/src/Query.h
++++ b/src/Query.h
+@@ -100,6 +100,7 @@ class Query
+     void outputInteger(int32_t);
+     void outputInteger64(int64_t);
+     void outputTime(time_t);
++    void outputTimeVal(timeval);
+     void outputUnsignedLong(unsigned long);
+     void outputCounter(counter_t);
+     void outputDouble(double);
+diff --git a/src/TableHosts.cc b/src/TableHosts.cc
+index 0d45f7f..3c9e67a 100644
+--- a/src/TableHosts.cc
++++ b/src/TableHosts.cc
+@@ -12,6 +12,7 @@
+ #include "OffsetStringColumn.h"
+ #include "OffsetIntColumn.h"
+ #include "OffsetTimeColumn.h"
++#include "OffsetTimeValColumn.h"
+ #include "OffsetDoubleColumn.h"
+ #include "OffsetTimeperiodColumn.h"
+ #include "OffsetStringHostMacroColumn.h"
+@@ -140,8 +141,8 @@ void TableHosts::addColumns(Table *table, string prefix, int indirect_offset)
+                 "Scheduled time for the next check (Unix timestamp)", (char *)(&hst.next_check) - ref, indirect_offset));
+     table->addColumn(new OffsetTimeColumn(prefix + "last_hard_state_change",
+                 "Time of the last hard state change (Unix timestamp)", (char *)(&hst.last_hard_state_change) - ref, indirect_offset));
+-    table->addColumn(new OffsetTimeColumn(prefix + "last_update",
+-                "Time of the last update of this host (Unix timestamp)", (char *)(&hst.last_update) - ref, indirect_offset));
++    table->addColumn(new OffsetTimeValColumn(prefix + "last_update",
++                "Time of the last update of this host (Unix timestamp Microsecond Precision)", (char *)(&hst.last_update) - ref, indirect_offset));
+     table->addColumn(new OffsetIntColumn(prefix + "has_been_checked",
+                 "Whether the host has already been checked (0/1)", (char *)(&hst.has_been_checked) - ref, indirect_offset));
+     /* FIXME: hourly_value is an unsigned int... */
+diff --git a/src/TableServices.cc b/src/TableServices.cc
+index 82cdd0e..245bfe1 100644
+--- a/src/TableServices.cc
++++ b/src/TableServices.cc
+@@ -12,6 +12,7 @@
+ #include "OffsetStringColumn.h"
+ #include "OffsetIntColumn.h"
+ #include "OffsetTimeColumn.h"
++#include "OffsetTimeValColumn.h"
+ #include "OffsetDoubleColumn.h"
+ #include "OffsetTimeperiodColumn.h"
+ #include "OffsetStringServiceMacroColumn.h"
+@@ -295,8 +296,8 @@ void TableServices::addColumns(Table *table, string prefix, int indirect_offset,
+                 "The time of the last state change - soft or hard (Unix timestamp)", (char *)&svc.last_state_change - ref, indirect_offset));
+     table->addColumn(new OffsetTimeColumn(prefix + "last_hard_state_change",
+                 "The time of the last hard state change (Unix timestamp)", (char *)&svc.last_hard_state_change - ref, indirect_offset));
+-    table->addColumn(new OffsetTimeColumn(prefix + "last_update",
+-                "Time of the last update of this service (Unix timestamp)", (char *)(&svc.last_update) - ref, indirect_offset));
++    table->addColumn(new OffsetTimeValColumn(prefix + "last_update",
++                "Time of the last update of this service (Unix timestamp Microsecond Precision)", (char *)(&svc.last_update) - ref, indirect_offset));
+     table->addColumn(new OffsetIntColumn(prefix + "scheduled_downtime_depth",
+                 "The number of scheduled downtimes the service is currently in", (char *)(&svc.scheduled_downtime_depth) - ref, indirect_offset));
+     table->addColumn(new OffsetIntColumn(prefix + "is_flapping",
+diff --git a/src/TimeColumnFilter.cc b/src/TimeColumnFilter.cc
+index 6ed116f..3655d4d 100644
+--- a/src/TimeColumnFilter.cc
++++ b/src/TimeColumnFilter.cc
+@@ -9,18 +9,18 @@
+ #include "logger.h"
+ #include "opids.h"
+ 
+-    TimeColumnFilter::TimeColumnFilter(TimeColumn *column, int opid, char *value)
++TimeColumnFilter::TimeColumnFilter(TimeColumn *column, int opid, char *value)
+     : _column(column)
+     , _opid(abs(opid))
+     , _negate(opid < 0)
+-      , _ref_string(value)
++    , _ref_value(convertRefValue(value))
+ {
+ }
+ 
+ // offset from Localtime: header
+-time_t TimeColumnFilter::convertRefValue()
++time_t TimeColumnFilter::convertRefValue(const char *value)
+ {
+-    time_t ref_remote = atoi(_ref_string.c_str());
++    time_t ref_remote = atoi(value);
+     if (_query) {
+         time_t timezone_offset = _query->timezoneOffset();
+         return ref_remote - timezone_offset;
+@@ -33,14 +33,13 @@ bool TimeColumnFilter::accepts(void *data)
+ {
+     bool pass = true;
+     time_t act_value = _column->getValue(data, _query);
+-    time_t ref_value = convertRefValue();
+     switch (_opid) {
+         case OP_EQUAL:
+-            pass = act_value == ref_value; break;
++            pass = act_value == _ref_value; break;
+         case OP_GREATER:
+-            pass = act_value > ref_value; break;
++            pass = act_value > _ref_value; break;
+         case OP_LESS:
+-            pass = act_value < ref_value; break;
++            pass = act_value < _ref_value; break;
+         default:
+             logger(LG_INFO, "Sorry. Operator %s for time_t not implemented.", op_names_plus_8[_opid]);
+             break;
+@@ -57,49 +56,47 @@ void TimeColumnFilter::findTimeLimits(const char *columnname, time_t *lower, tim
+         return; // already empty interval
+     }
+ 
+-    time_t ref_value = convertRefValue();
+-
+     /* [lower, upper[ is some interval. This filter might restrict
+        that interval to a smaller interval.
+      */
+     int opref = _opid * (_negate != false ? -1 : 1);
+     switch (opref) {
+         case OP_EQUAL:
+-            if (ref_value >= *lower && ref_value < *upper) {
+-                *lower = ref_value;
+-                *upper = ref_value + 1;
++            if (_ref_value >= *lower && _ref_value < *upper) {
++                *lower = _ref_value;
++                *upper = _ref_value + 1;
+             }
+             else
+                 *lower = *upper;
+             return;
+ 
+         case -OP_EQUAL:
+-            if (ref_value == *lower)
++            if (_ref_value == *lower)
+                 *lower = *lower + 1;
+-            else if (ref_value == *upper - 1)
++            else if (_ref_value == *upper - 1)
+                 *upper = *upper - 1;
+             return;
+ 
+         case OP_GREATER:
+-            if (ref_value >= *lower) {
+-                *lower = ref_value + 1;
++            if (_ref_value >= *lower) {
++                *lower = _ref_value + 1;
+             }
+ 
+             return;
+ 
+         case OP_LESS:
+-            if (ref_value < *upper)
+-                *upper = ref_value;
++            if (_ref_value < *upper)
++                *upper = _ref_value;
+             return;
+ 
+         case -OP_GREATER: // LESS OR EQUAL
+-            if (ref_value < *upper - 1)
+-                *upper = ref_value + 1;
++            if (_ref_value < *upper - 1)
++                *upper = _ref_value + 1;
+             return;
+ 
+         case -OP_LESS: // GREATER OR EQUAL
+-            if (ref_value > *lower)
+-                *lower = ref_value;
++            if (_ref_value > *lower)
++                *lower = _ref_value;
+             return;
+     }
+ }
+diff --git a/src/TimeColumnFilter.h b/src/TimeColumnFilter.h
+index 0292313..40d7a29 100644
+--- a/src/TimeColumnFilter.h
++++ b/src/TimeColumnFilter.h
+@@ -13,10 +13,10 @@ class TimeColumnFilter : public Filter
+     TimeColumn *_column;
+     int _opid;
+     bool _negate;
+-    string _ref_string;
++    time_t _ref_value;
+ public:
+     TimeColumnFilter(TimeColumn *column, int opid, char *value);
+-    time_t convertRefValue();
++    time_t convertRefValue(const char *value);
+     bool accepts(void *data);
+     void findTimeLimits(const char *columnname, time_t *lower, time_t *upper);
+ };
+diff --git a/src/TimeValColumn.cc b/src/TimeValColumn.cc
+new file mode 100644
+index 0000000..5474929
+--- /dev/null
++++ b/src/TimeValColumn.cc
+@@ -0,0 +1,33 @@
++// Copyright (c) 2025 Naemon team - license: GPL-2.0
++// This file is part of the naemon project: https://www.naemon.io
++// See LICENSE file in the project root for details.
++
++#include "TimeValColumn.h"
++#include "TimeValColumnFilter.h"
++#include "Query.h"
++
++void TimeValColumn::output(void *data, Query *query)
++{
++    query->outputTimeVal(getValue(data, query));
++}
++
++Filter *TimeValColumn::createFilter(int operator_id, char *value)
++{
++    return new TimeValColumnFilter(this, operator_id, value);
++}
++
++
++string TimeValColumn::valueAsString(void *data, Query *query)
++{
++    char i[64];
++    struct timeval value = (struct timeval)getValue(data, query);
++    snprintf(i, sizeof(i), "%lu.%06lu", value.tv_sec, value.tv_usec);
++    return i;
++}
++
++int TimeValColumn::compare(void *dataa, void*datab, Query *query) {
++    struct timeval a = getValue(dataa, query);
++    struct timeval b = getValue(datab, query);
++    if( a.tv_sec==b.tv_sec && a.tv_usec==b.tv_usec ) return 0;
++    return (a.tv_sec > b.tv_sec || (a.tv_sec == b.tv_sec && a.tv_usec > b.tv_usec)) ? 1 : -1;
++}
+diff --git a/src/TimeValColumn.h b/src/TimeValColumn.h
+new file mode 100644
+index 0000000..c05d343
+--- /dev/null
++++ b/src/TimeValColumn.h
+@@ -0,0 +1,27 @@
++// Copyright (c) 2025 Naemon team - license: GPL-2.0
++// This file is part of the naemon project: https://www.naemon.io
++// See LICENSE file in the project root for details.
++
++#ifndef TimeValColumn_h
++#define TimeValColumn_h
++
++#include "config.h"
++
++#include <stdint.h>
++
++#include "Column.h"
++
++class TimeValColumn : public Column
++{
++public:
++    TimeValColumn(string name, string description, int indirect_offset)
++        : Column(name, description, indirect_offset) {}
++    virtual struct timeval getValue(void *data, Query *) = 0;
++    void output(void *, Query *);
++    int type() { return COLTYPE_INT; }
++    string valueAsString(void *data, Query *);
++    Filter *createFilter(int operator_id, char *value);
++    int compare(void *dataa, void*datab, Query *query);
++};
++
++#endif // TimeValColumn_h
+diff --git a/src/TimeValColumnFilter.cc b/src/TimeValColumnFilter.cc
+new file mode 100644
+index 0000000..4213ae6
+--- /dev/null
++++ b/src/TimeValColumnFilter.cc
+@@ -0,0 +1,66 @@
++// Copyright (c) 2025 Naemon team - license: GPL-2.0
++// This file is part of the naemon project: https://www.naemon.io
++// See LICENSE file in the project root for details.
++
++#include <stdlib.h>
++#include <string.h>
++#include "TimeValColumnFilter.h"
++#include "Query.h"
++#include "logger.h"
++#include "opids.h"
++
++TimeValColumnFilter::TimeValColumnFilter(TimeValColumn *column, int opid, char *value)
++    : _column(column)
++    , _opid(abs(opid))
++    , _negate(opid < 0)
++    , _ref_value(convertRefValue(value))
++{
++}
++
++// offset from Localtime: header
++struct timeval TimeValColumnFilter::convertRefValue(const char *value)
++{
++    struct timeval ref_remote = {0, 0};
++    str2timeval(value, &ref_remote);
++    if (_query) {
++        time_t timezone_offset = _query->timezoneOffset();
++        return { ref_remote.tv_sec - timezone_offset, ref_remote.tv_usec };
++    }
++    else
++        return ref_remote; // should never happen
++}
++
++bool TimeValColumnFilter::accepts(void *data)
++{
++    bool pass = true;
++    struct timeval act_value = _column->getValue(data, _query);
++    switch (_opid) {
++        case OP_EQUAL:
++            pass = act_value.tv_sec == _ref_value.tv_sec && act_value.tv_usec == _ref_value.tv_usec; break;
++        case OP_GREATER:
++            pass = act_value.tv_sec > _ref_value.tv_sec || (act_value.tv_sec == _ref_value.tv_sec && act_value.tv_usec > _ref_value.tv_usec); break;
++        case OP_LESS:
++            pass = act_value.tv_sec < _ref_value.tv_sec || (act_value.tv_sec == _ref_value.tv_sec && act_value.tv_usec < _ref_value.tv_usec); break;
++        default:
++            logger(LG_INFO, "Sorry. Operator %s for timeval not implemented.", op_names_plus_8[_opid]);
++            break;
++    }
++    return pass != _negate;
++}
++
++/* Convert string to timeval */
++int TimeValColumnFilter::str2timeval(const char *str, struct timeval *tv)
++{
++	char *ptr, *ptr2;
++
++	tv->tv_sec = strtoul(str, &ptr, 10);
++	if (ptr == str) {
++		tv->tv_sec = tv->tv_usec = 0;
++		return -1;
++	}
++	if (*ptr == '.' || *ptr == ',') {
++		ptr2 = ptr + 1;
++		tv->tv_usec = strtoul(ptr2, &ptr, 10);
++	}
++	return 0;
++}
+diff --git a/src/TimeValColumnFilter.h b/src/TimeValColumnFilter.h
+new file mode 100644
+index 0000000..8d40a29
+--- /dev/null
++++ b/src/TimeValColumnFilter.h
+@@ -0,0 +1,24 @@
++// Copyright (c) 2025 Naemon team - license: GPL-2.0
++// This file is part of the naemon project: https://www.naemon.io
++// See LICENSE file in the project root for details.
++
++#ifndef TimeValColumnFilter_h
++#define TimeValColumnFilter_h
++
++#include "TimeValColumn.h"
++#include "Filter.h"
++
++class TimeValColumnFilter : public Filter
++{
++    TimeValColumn *_column;
++    int _opid;
++    bool _negate;
++    struct timeval _ref_value;
++public:
++    TimeValColumnFilter(TimeValColumn *column, int opid, char *value);
++    struct timeval convertRefValue(const char *value);
++    bool accepts(void *data);
++    int str2timeval(const char *str, struct timeval *tv);
++};
++
++#endif // TimeValColumnFilter_h
+diff --git a/src/TimeValPointerColumn.h b/src/TimeValPointerColumn.h
+new file mode 100644
+index 0000000..8afbb6c
+--- /dev/null
++++ b/src/TimeValPointerColumn.h
+@@ -0,0 +1,20 @@
++// Copyright (c) 2025 Naemon team - license: GPL-2.0
++// This file is part of the naemon project: https://www.naemon.io
++// See LICENSE file in the project root for details.
++
++#ifndef TimeValPointerColumn_h
++#define TimeValPointerColumn_h
++
++#include "TimeValColumn.h"
++
++class TimeValPointerColumn : public TimeValColumn
++{
++    struct timeval *_time;
++public:
++    TimeValPointerColumn(string name, string description, struct timeval* time)
++        : TimeValColumn(name, description, -1), _time(time) {}
++    struct timeval getValue(void *, Query *) { return *_time; }
++};
++
++
++#endif // TimeValPointerColumn_h
