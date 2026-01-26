@@ -37,7 +37,7 @@ next:
             - as a result the SNMP console was also removed
             - blackbox_exporter update to 0.27.0
             - node_exporter update to 1.9.1
-            - pushgateway update to 1.11.1
+            - pushgateway update to 1.11.2
           - Go builds updated to 1.25.6
           - coshsh update to 11.1.0.1
           - nagflux update to 0.5.4
