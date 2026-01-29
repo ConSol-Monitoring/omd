@@ -22,7 +22,4 @@ case "$1" in
            fi
         fi
     ;;
-    depends)
-        [ "$CONFIG_VMAUTH" = "on" ]
-    ;;
 esac
