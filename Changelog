@@ -21,7 +21,7 @@ next:
             - check_sap_health update to 4.0.0.3
             - check_storage_health update to 2.1
             - check_vsphere update to 0.3.20
-            - check_wut_health update to 4.4.0.2
+            - check_wut_health update to 4.4.0.3
             - omdnotificationforwarder update to 4.0
           - gearman:
             - mod-gearman update to 5.2.1
@@ -36,7 +36,7 @@ next:
             - all assets (css/js/templates) for prometheus console where removed from upstream
             - as a result the SNMP console was also removed
             - blackbox_exporter update to 0.27.0
-            - node_exporter update to 1.9.1
+            - node_exporter update to 1.10.2
             - pushgateway update to 1.11.2
           - Go builds updated to 1.25.6
           - coshsh update to 11.1.0.1
