@@ -1,15 +1,20 @@
 #!/bin/bash
 
+set -u
 LOG_DIR=${OMD_ROOT}/var/victoriametrics
 DATA_PATH=${OMD_ROOT}/var/victoriametrics/data
+CONF_DIR=$OMD_ROOT/etc/victoriametrics/conf.d
 
+doit() {
 mkdir -p $LOG_DIR
+cd "$OMD_ROOT" || exit 1
 
-(
+for CFG in ${CONF_DIR}/*.conf; do
+  . ${CFG} || exit 9
+done
+. etc/victoriametrics/backup.conf || exit 9
 
-. ${OMD_ROOT}/etc/victoriametrics/victoriametrics.conf
-
-if [ $? != 0 ] ; then
+if [ -z "$vm_loggerLevel" ] ; then
   echo "source of config failed"
   exit 8
 fi
@@ -60,7 +65,7 @@ else
   URITYPE=http
 fi
 
-SNAPSHOT_OUT=$(curl -k -H "Authorization: Basic ${AUTH_ENCODED}" $URITYPE://${httpListenAddr}/snapshot/create?authKey=$vm_snapshotAuthKey)
+SNAPSHOT_OUT=$(curl -sk -H "Authorization: Basic ${AUTH_ENCODED}" $URITYPE://${httpListenAddr}/snapshot/create?authKey=$vm_snapshotAuthKey)
 
 if [ $? != 0 ] ; then
   echo "snaphot failed"
@@ -70,7 +75,7 @@ fi
 
 echo $SNAPSHOT_OUT
 
-SNAPSHOT_NAME=$(echo -n $SNAPSHOT_OUT | jsonpath.py '$.snapshot')
+SNAPSHOT_NAME=$( echo -n $SNAPSHOT_OUT | perl -MJSON::PP -0777 -e 'print JSON::PP->new->decode(<STDIN>)->{snapshot}' )
 
 if [ "${SNAPSHOT_NAME}" = "" ] ; then
   echo "snapshot failed"
@@ -96,9 +101,9 @@ if [[  $(date +%H) -ge 2 && -f ${BACKUP_HOURLY}/backup_complete.ignore ]] ; then
 
    fi
 fi
+}
 
-
-) >> ${LOG_DIR}/vmbackup.log 2>&1
-
+doit >> ${LOG_DIR}/vmbackup.log 2>&1
+RC=$?
 echo "RC = $?"
-
+exit $RC

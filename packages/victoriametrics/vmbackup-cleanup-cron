@@ -2,13 +2,19 @@
 
 LOG_DIR=${OMD_ROOT}/var/victoriametrics
 DATA_PATH=${OMD_ROOT}/var/victoriametrics/data
+CONF_DIR=$OMD_ROOT/etc/victoriametrics/conf.d
 
+doit() {
+set -u
 mkdir -p $LOG_DIR
+cd "$OMD_ROOT" || exit 1
 
-(
-. ${OMD_ROOT}/etc/victoriametrics/victoriametrics.conf
+for CFG in ${CONF_DIR}/*.conf; do
+  . ${CFG} || exit 9
+done
+. etc/victoriametrics/backup.conf || exit 9
 
-if [ $? != 0 ] ; then
+if [ -z "$vm_loggerLevel" ] ; then
   echo "source of config failed"
   exit 8
 fi
@@ -38,7 +44,7 @@ else
   URITYPE=http
 fi
 
-SNAPSHOT_OUT=$(curl -k -H "Authorization: Basic ${AUTH_ENCODED}" $URITYPE://${httpListenAddr}/snapshot/list?authKey=$vm_snapshotAuthKey)
+SNAPSHOT_OUT=$(curl -sk -H "Authorization: Basic ${AUTH_ENCODED}" $URITYPE://${httpListenAddr}/snapshot/list?authKey=$vm_snapshotAuthKey)
 
 if [ $? != 0 ] ; then
   echo "snaphot failed"
@@ -49,15 +55,14 @@ fi
 echo ">> retention at $( date +%Y-%m-%d-%H) "
 
 RC=0
-LL=$(echo -n $SNAPSHOT_OUT | jsonpath.py '$.snapshots[*]')
-for SNAPSHOT_NAME in $(echo -n $SNAPSHOT_OUT | jsonpath.py '$.snapshots[*]')
+for SNAPSHOT_NAME in $(echo -n "$SNAPSHOT_OUT" | perl -MJSON::PP -0777 -E 'say for @{ JSON::PP->new->decode(<STDIN>)->{snapshots} // [] }' )
 do
   echo "snapshots: ${SNAPSHOT_NAME}"
   #du -ch -d1 $storageDataPath/snapshots/${SNAPSHOT_NAME}
   #du -ch -d1 $storageDataPath/indexdb/snapshots/${SNAPSHOT_NAME}
 
   if [[ $(date --universal -d "${SNAPSHOT_RETENTION_HOURS} hour ago" +%Y%m%d%H00-) > "${SNAPSHOT_NAME}" ]] ; then
-     curl -i -k -H "Authorization: Basic ${AUTH_ENCODED}" "${URITYPE}://${httpListenAddr}/snapshot/delete?snapshot=${SNAPSHOT_NAME}&authKey=$vm_snapshotAuthKey"
+     curl -i -sk -H "Authorization: Basic ${AUTH_ENCODED}" "${URITYPE}://${httpListenAddr}/snapshot/delete?snapshot=${SNAPSHOT_NAME}&authKey=$vm_snapshotAuthKey"
      #echo "${SNAPSHOT_NAME} deleted"
   fi
 done
@@ -72,8 +77,9 @@ do
   echo "${backup_dir} deleted"
 
 done
+}
 
-) >> ${LOG_DIR}/vmbackup_cleanup.log 2>&1
-
+doit >> ${LOG_DIR}/vmbackup_cleanup.log 2>&1
+RC=$?
 echo "RC = $?"
-
+exit $RC
