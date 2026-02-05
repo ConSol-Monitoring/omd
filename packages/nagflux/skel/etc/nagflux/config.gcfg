@@ -6,7 +6,7 @@
 	DumpFile = "###ROOT###/var/log/nagflux/nagflux.dump"
 	NagfluxSpoolfileFolder = "###ROOT###/var/nagflux"
 	FieldSeparator = "&"
-	BufferSize = 1000
+	BufferSize = 10000
 	FileBufferSize = 65536
 	# If the performancedata does not have a certain target set with NAGFLUX:TARGET.
 	# The following field will define the target for this data.
@@ -20,10 +20,38 @@
 	#List of Severities https://godoc.org/github.com/kdar/factorlog#Severity
 	MinSeverity = "INFO"
 
+[Filter]
+	# apply filter on spool file lines (raw perfdata) if not empty. Can be used multiple times.
+	#SpoolFileLineTerms  = "_PERF=1"    # ex.: added "\t_PERF=$_HOSTPERF$" to 'host_perfdata_template'
+
+	# apply filter on livestatus log results if not empty. Can be used multiple times.
+	#LivestatusLineTerms = ""
+
+	# append filter on livestatus notifications log queries if not empty. Must be in Livestatus format. Can be used multiple times.
+	#LivestatusNotificationsFilter = "Filter: current_host_custom_variables = PERF 1\nFilter: current_service_custom_variables = PERF 1\nOr: 2\n"
+
+	# append filter on livestatus comments queries if not empty. Must be in Livestatus format. Can be used multiple times.
+	#LivestatusCommentsFilter = "Filter: host_custom_variables = PERF_ENABLED 1\nFilter: service_custom_variables = PERF_ENABLED 1\nOr: 2\n"
+
+	# append filter on livestatus downtimes queries if not empty. Must be in Livestatus format. Can be used multiple times.
+	#LivestatusDowntimesFilter = "Filter: host_custom_variables = PERF 1\nFilter: service_custom_variables = PERF 1\nOr: 2\n"
+
+	# append filter on livestatus hosts queries if not empty. Must be in Livestatus format. Can be used multiple times.
+	#LivestatusHostsFilter = "Filter: custom_variables = PERF 1"
+
+	# append filter on livestatus service queries if not empty. Must be in Livestatus format. Can be used multiple times.
+	#LivestatusServicesFilter = "Filter: custom_variables = PERF 1"
+
 [Monitoring]
 	#leave empty to disable
 	#PrometheusAddress = "127.0.0.1:8080"
 	PrometheusAddress = ""
+
+[NagiosSpoolfile]
+	Enabled = true
+
+[NagfluxSpoolfile]
+	Enabled = true
 
 [ModGearman "example"] #copy this block and rename it to add a second ModGearman queue
 	Enabled = false
@@ -44,6 +72,7 @@
 	NastyString = ""
 	NastyStringToReplace = ""
 	HostcheckAlias = "hostcheck"
+	ClientTimeout  = 5
 
 [InfluxDB "nagflux"]
 	Enabled = true
@@ -82,6 +111,7 @@
 	HealthUrl = "/health"
 
 [Livestatus]
+	Enabled = true
 	#tcp or file
 	Type = "file"
 	#tcp: 127.0.0.1:6557 or file /var/run/live
