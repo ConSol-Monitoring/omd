@@ -127,7 +127,7 @@ endif
 ifeq ($(HAS_PYTHON_312_OR_NEWER),true)
 OVERRIDES += setuptools-80.9.0.tar.gz
 OVERRIDES += wheel-0.46.3.tar.gz
-OVERRIDES += pip-25.3-py3-none-any.whl
+OVERRIDES += pip-26.0.1-py3-none-any.whl
 OVERRIDES += packaging-25.0-py3-none-any.whl
 
 OVERRIDES += setuptools_scm-8.1.0.tar.gz
