@@ -14,13 +14,17 @@ build: clean
 	tar xzf go$(VERSION).src.tar.gz -C $(DIR)
 	mv $(DIR)/go/* $(DIR) && rm -rf $(DIR)/go
 	export GOFLAGS="-buildvcs=false" && cd $(DIR)/src/ && ./make.bash
+	export GOBIN="$(shell pwd)/." && export PATH=$(shell pwd)/$(DIR)/bin:$$PATH && $(shell pwd)/$(DIR)/bin/go install golang.org/x/vuln/cmd/govulncheck@latest
 
 install:
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/bin
+	install -m 755 ./govulncheck $(DESTDIR)$(OMD_ROOT)/bin
 
 skel:
 
 clean:
 	rm -rf $(DIR)
+	rm -f govulncheck
 
 upstream:
 	$(MAKE) clean

@@ -231,6 +231,7 @@ sub test_command {
 
     $t->cleanup();
 
+    return($return, $rc, $test->{'stdout'}, $test->{'stderr'}) if wantarray;
     return $return;
 }
 
