@@ -2,7 +2,7 @@ include ../../Makefile.omd
 
 NAME      = thruk
 CHANGELOG = https://github.com/sni/Thruk/blob/master/Changes
-VERSION   = 3.24
+VERSION   = 3.26
 DIR       = $(NAME)-$(VERSION)
 PERLARCH  = $(shell $(PERL) -e 'use Config; print $$Config{archname}')
 
