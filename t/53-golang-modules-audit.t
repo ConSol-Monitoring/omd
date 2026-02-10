@@ -62,8 +62,8 @@ for my $make (@makefiles) {
 }
 
 ##################################################
-# check binaries
-for my $file (glob("/omd/sites/$site/bin/*")) {
+# check binaries and check plugins
+for my $file (glob("/omd/sites/$site/bin/* /omd/sites/$site/lib/monitoring-plugins/*")) {
     my $out = `strings $file | grep -E '^go[0-9]+\.[0-9]+(\.[0-9]+)?\$' | head -n1`;
     next unless $out;
 
