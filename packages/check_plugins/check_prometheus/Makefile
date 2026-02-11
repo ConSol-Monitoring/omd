@@ -1,45 +1,69 @@
 include ../../../Makefile.omd
 
 NAME        = check_prometheus
+CHANGELOG   = https://github.com/ConSol-Monitoring/check_prometheus/blob/master/Changelog.md
+BRANCH      = main
 VERSION     = main
-DIR         = $(NAME)-$(VERSION)
-SRC         = $(DIR).tar.gz
-GOPKG       = 1.23
+SRC         = $(NAME)-$(VERSION).tar.gz
+GOPKG       = 1.25
 GOVERSION   = $(shell grep ^VERSION ../../go-${GOPKG}/Makefile | awk '{ print $$3 }')
-GITURL      = github.com/consol-monitoring/$(NAME)
+GOPATH      = go
+PWD         = $(shell pwd)
+GITBASE     = github.com/consol-monitoring
+GITURL      = $(GITBASE)/$(NAME)
+DEPS_SRC    = deps.tar.gz
 # GIT TAG is set automatically by "make upstream" or "make package"
-GIT_TAG     = bdaf23e
+GIT_TAG     = 7975b0b
 
 build:
+	tar ozxf $(DEPS_SRC)
 	tar ozxf $(SRC)
-	cd $(DIR) && tar ozxf ../dependencies.tar.gz
-	export PATH=$(shell pwd)/../../go-$(GOPKG)/go-$(GOVERSION)/bin:$$PATH && \
-		cd $(DIR) && go build -ldflags "-s -w -X main.Build=$(OMD_VERSION)-$(GIT_TAG)"
-	mv $(DIR)/check_prometheus .
-	rm -rf $(DIR)
+	export GO111MODULE=auto && \
+		export GOROOT=$(PWD)/../../go-$(GOPKG)/go-$(GOVERSION)/ && \
+		export GOPATH=$(PWD)/$(GOPATH)/ && \
+		export PATH=$$GOROOT/bin:$$PATH && \
+		go install -ldflags "-s -w -X main.Build=$(OMD_VERSION)-$(GIT_TAG)" $(GITURL)/cmd/$(NAME) && \
+		mv $(GOPATH)/bin/$(NAME) .
+	chmod -R 777 $(GOPATH)
+	rm -rf $(GOPATH)
 
 install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/monitoring-plugins
-	install -m 755 check_prometheus $(DESTDIR)$(OMD_ROOT)/lib/monitoring-plugins
+	install -m 755 ./$(NAME) $(DESTDIR)$(OMD_ROOT)/lib/monitoring-plugins
 
 skel:
 
 clean:
-	rm -rf $(DIR)
-	rm -f check_prometheus
-
-package: clean
-	git clone --depth=1 --branch "$(VERSION)" https://$(GITURL) $(DIR)
-	tar zcf $(SRC) --exclude=.git --exclude=*_test.go $(DIR)
-	cd $(DIR) && sed -i ../Makefile -e 's/^GIT_TAG.*$$/GIT_TAG     = '$$(git describe --always --tags)'/g'
-	rm -rf $(DIR)
+	[ ! -e $(GOPATH) ] || chmod -R 777 $(GOPATH)
+	rm -rf $(GOPATH) $(NAME)
 
 deps: clean
-	git clone --depth=1 --branch "$(VERSION)" https://$(GITURL) $(DIR)
-	export PATH=$(shell pwd)/../../go-$(GOPKG)/go-$(GOVERSION)/bin:$$PATH && \
-		cd $(DIR) && go mod vendor
-	cd $(DIR) && tar zcf ../dependencies.tar.gz vendor
-	rm -rf $(DIR)
+	mkdir -p $(GOPATH)
+	export GO111MODULE=auto && \
+	export GOROOT=$(PWD)/../../go-$(GOPKG)/go-$(GOVERSION)/ && export GOPATH=$(PWD)/$(GOPATH)/ && PATH=$$GOROOT/bin:$$PATH && \
+		mkdir -p $(GOPATH)/src/$(GITBASE) && \
+		cd $(GOPATH)/src/$(GITBASE) && \
+		git clone --depth=1 --branch "$(BRANCH)" https://$(GITURL) && \
+		cd $(NAME) && \
+		make vendor
+		cd $(PWD) && \
+		tar zcf $(DEPS_SRC) --exclude=.git --exclude=*_test.go $(GOPATH)/src/$(GITURL)/vendor && \
+		chmod -R 777 $(GOPATH) && \
+		rm -rf $(GOPATH)
+
+package: clean
+	mkdir -p $(GOPATH)
+	export GO111MODULE=auto && \
+	export GOROOT=$(PWD)/../../go-$(GOPKG)/go-$(GOVERSION)/ && export GOPATH=$(PWD)/$(GOPATH)/ && PATH=$$GOROOT/bin:$$PATH && \
+		mkdir -p $(GOPATH)/src/$(GITBASE) && \
+		cd $(GOPATH)/src/$(GITBASE) && \
+		git clone --depth=1 --branch "$(BRANCH)" https://$(GITURL) && \
+		cd $(NAME) && \
+		sed -i $(PWD)/Makefile -e 's/^GIT_TAG.*$$/GIT_TAG     = '$$(git describe --always --tags)'/g' && \
+		cd $(PWD) && \
+		tar zcf $(SRC) --exclude=.git --exclude=*_test.go $(GOPATH)/src/$(GITURL) && \
+		chmod -R 777 $(GOPATH) && \
+		rm -rf $(GOPATH)
 
 upstream: clean
 	$(MAKE) deps
