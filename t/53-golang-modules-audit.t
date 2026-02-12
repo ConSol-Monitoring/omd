@@ -73,14 +73,17 @@ for my $file (glob("/omd/sites/$site/bin/* /omd/sites/$site/lib/monitoring-plugi
     ok(1, "checking binary: $file");
     my($return, $rc, $stdout, $stderr) = TestUtils::test_command({
         cmd     => "/bin/su - $site -c './bin/govulncheck -mode binary $file 2>&1'",
-        like    => ['/No vulnerabilities found|govulncheck: unrecognized binary format/'],
+        #like    => ['/No vulnerabilities found|govulncheck: unrecognized binary format/'],
         #unlike  => ['/Your code is affected/'],
         exit    => undef,
     });
 
     if($stdout !~ /govulncheck: unrecognized binary format/) {
-        #diag($stdout) if($rc != 0 && $stdout);
-        #diag($stderr) if($rc != 0 && $stderr);
+        if($stdout !~ /\QNo vulnerabilities found\E/mx) {
+            fail("govulncheck issues found in: $file");
+            diag($stdout) if($stdout);
+            diag($stderr) if($stderr);
+        }
         next;
     }
 
@@ -91,12 +94,15 @@ for my $file (glob("/omd/sites/$site/bin/* /omd/sites/$site/lib/monitoring-plugi
 
     ($return, $rc, $stdout, $stderr) = TestUtils::test_command({
         cmd     => "/bin/su - $site -c './bin/govulncheck -mode binary /var/tmp/$basename 2>&1'",
-        like    => ['/No vulnerabilities found/'],
+        #like    => ['/No vulnerabilities found/'],
         #unlike  => ['/Your code is affected/'],
         exit    => undef,
     });
-    #diag($stdout) if($rc != 0 && $stdout);
-    #diag($stderr) if($rc != 0 && $stderr);
+    if($stdout !~ /\QNo vulnerabilities found\E/mx) {
+        fail("govulncheck issues found in: $file");
+        diag($stdout) if($stdout);
+        diag($stderr) if($stderr);
+    }
 
     unlink("/var/tmp/".$basename);
 }
