@@ -21,6 +21,8 @@ install:
 	sed -i s/'\x27histou.ini'/\$$_SERVER[\'OMD_ROOT\'].\'"\/etc\/histou\/histou.ini"/ $(DESTDIR)$(OMD_ROOT)/share/$(DIR)/rule_examinant.php
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/grafana/public/dashboards/
 	cp $(DIR)/histou.js $(DESTDIR)$(OMD_ROOT)/share/grafana/public/dashboards/histou.js
+	# install remaining templates
+	install templates/*.php $(DESTDIR)$(OMD_ROOT)/share/histou/templates/default/
 
 skel:
 	sed -i 's#phpCommand = .*#phpCommand = "$(PHP_FCGI_BIN)"#' $(SKEL)/etc/histou/histou.ini
