@@ -70,7 +70,7 @@ grafana_post_start() {
         tail $LOG_FILE
         echo -n " failed, trying again..."
         START_CALLBACK=
-        rm -f $PID_FILE $LOG_FILE $OMD_ROOT/var/grafana/data/grafana.db*
+        rm -f $PID_FILE $OMD_ROOT/var/grafana/data/grafana.db*
         __generic_init_wait_start
     fi
     for x in $(seq 600); do
