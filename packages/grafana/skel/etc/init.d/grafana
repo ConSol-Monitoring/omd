@@ -55,7 +55,7 @@ grafana_post_start() {
     for x in $(seq 600); do
         grep -c "$COMPLETED_PATTERN" $LOG_FILE >/dev/null 2>&1 && break
         [ $((x%10)) -eq 0 ] && echo -n "."
-        if [ $x -gt 30 ]; then
+        if [ $x -gt 50 ]; then
             if !__generic_init_pid >/dev/null 2>&1; then
                 echo "grafana pid disapeared"
                 ps -fu $USER
@@ -70,13 +70,18 @@ grafana_post_start() {
         tail $LOG_FILE
         echo -n " failed, trying again..."
         START_CALLBACK=
+        PID=$(pgrep -u $OMD_SITE -o -f "$PSPATTERN")
+        if [ -n $PID ]; then
+            # make sure no leftover process is running
+            kill $PID >/dev/null 2>&1
+        fi
         rm -f $PID_FILE $OMD_ROOT/var/grafana/data/grafana.db*
         __generic_init_wait_start
     fi
     for x in $(seq 600); do
         grep -c "$COMPLETED_PATTERN" $LOG_FILE >/dev/null 2>&1 && break
         [ $((x%10)) -eq 0 ] && echo -n "."
-        if [ $x -gt 30 ]; then
+        if [ $x -gt 50 ]; then
             __generic_init_pid >/dev/null 2>&1 || break # stop if pid disapears
         fi
         sleep 0.1
