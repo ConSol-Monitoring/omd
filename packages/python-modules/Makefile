@@ -118,7 +118,7 @@ MODULES += checkvsphere-0.3.20.tar.gz
 # override some module for python 3.07, list could be reevaluated once rhel7-rhel8 support got removed
 OVERRIDES=""
 ifeq ($(HAS_PYTHON_307_OR_NEWER),true)
-OVERRIDES += certifi-2026.1.4.tar.gz
+OVERRIDES += certifi-2026.2.25.tar.gz
 OVERRIDES += jinja2-3.1.6.tar.gz
 OVERRIDES += pycryptodomex-3.23.0.tar.gz
 endif
