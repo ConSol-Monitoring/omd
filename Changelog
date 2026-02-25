@@ -27,7 +27,8 @@ next:
             - mod-gearman update to 5.2.2
             - mod-gearman-worker-go update to 1.5.9
           - grafana:
-            - update to 12.3.2
+            - update to 12.4.1
+            - loki update to 3.6.7
             - pnp-datasource update to 2.2.2
             - thruk-datasource update to 2.2.3
           - prometheus:
