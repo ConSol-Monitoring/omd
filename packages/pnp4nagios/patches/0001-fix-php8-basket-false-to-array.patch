@@ -1,0 +1,28 @@
+Fix PHP 8 "Automatic conversion of false to array" in basket actions.
+
+On PHP 8.x, $this->session->get("basket") returns false when no basket
+exists in the session.  PHP 8 no longer silently converts false to an
+empty array when the [] operator is used, causing the basket add/remove
+actions to fail.  Initialise $basket to an empty array with ?: array().
+
+--- a/share/pnp/application/controllers/ajax.php
++++ b/share/pnp/application/controllers/ajax.php
+@@ -73,7 +73,7 @@
+             }
+         }elseif($action == "add"){
+             $item = $_POST['item'];
+-            $basket = $this->session->get("basket");
++            $basket = $this->session->get("basket") ?: array();
+             if(!is_array($basket)){
+                 $basket[] = "$item";
+             }else{
+@@ -108,7 +108,7 @@
+                       );
+             }
+         }elseif($action == "remove"){
+-            $basket = $this->session->get("basket");
++            $basket = $this->session->get("basket") ?: array();
+             $item_to_remove = $_POST['item'];
+             $new_basket = array();
+             foreach($basket as $item){
+
