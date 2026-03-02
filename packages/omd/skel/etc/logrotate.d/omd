@@ -1,0 +1,7 @@
+###ROOT###/var/log/omd.log {
+        missingok
+        rotate 14
+        compress
+        delaycompress
+        create 640 ###SITE### ###SITE### 
+}

@@ -27,19 +27,16 @@ case "$1" in
                    sed -e 's%^databaseType.*%databaseType = "influxdb"%' -i $OMD_ROOT/etc/histou/histou.ini
                fi
            fi
+       fi
 
-           # disable influxdb in nagflux if victoriametrics is enabled, but influx disabled
-           # otherwise nagflux won't start
-           if [ -f $OMD_ROOT/etc/nagflux/config.gcfg ] ; then
-               enabled="true"
-               if [ "$CONFIG_VICTORIAMETRICS" = on ] && [ "$CONFIG_INFLUXDB" = off ]; then
-                   enabled="false"
-               fi
-               if [ "$CONFIG_VICTORIAMETRICS" = off ] && [ "$CONFIG_INFLUXDB" = off ]; then
-                   enabled="false"
-               fi
-               sed -e '/^\[InfluxDB \"nagflux\"\]/,/^\[/{s%^\s*Enabled = .*$%\tEnabled = '$enabled'%}' -i $OMD_ROOT/etc/nagflux/config.gcfg
+       # disable influxdb in nagflux if victoriametrics is enabled, but influx disabled
+       # otherwise nagflux won't start
+       if [ -f $OMD_ROOT/etc/nagflux/config.gcfg ] ; then
+           enabled="true"
+           if [ "$CONFIG_VICTORIAMETRICS" = on ] && [ "$2" = off ]; then
+               enabled="false"
            fi
+           sed -e '/^\[InfluxDB \"nagflux\"\]/,/^\[/{s%^\s*Enabled = .*$%\tEnabled = '$enabled'%}' -i $OMD_ROOT/etc/nagflux/config.gcfg
        fi
     ;;
 esac

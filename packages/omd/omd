@@ -38,6 +38,7 @@ if not os.path.exists("/omd/versions/%s" % OMD_VERSION):
 import abc
 import argparse
 import grp
+import logging
 import psutil
 import pwd
 import re
@@ -1870,6 +1871,8 @@ def call_init_script(scriptpath, command):
         sys.stderr.write('ERROR: This daemon does not exist.\n')
         return False
     try:
+        audit_log("info", "msg=\"%s %s\" unit=\"init\" action=\"%s\" daemon=\"%s\"" % (scriptpath, command, command, os.path.basename(scriptpath)))
+
         return subprocess.call([scriptpath, command]) in [ 0, 5 ]
     except OSError as e:
         sys.stderr.write("ERROR: Failed to run '%s': %s\n" % (scriptpath, e))
@@ -2425,6 +2428,8 @@ def config_set_value(hook_name, value, save = True):
     if os.getuid() == 0:
         sys.stderr.write("I am root. This should never happen!\n")
         sys.exit(1)
+
+    audit_log("info", "msg=\"set %s %s\" unit=\"config\" action=\"set\" item=\"%s\" value=\"%s\"" % (hook_name, value, hook_name, value))
 
     # Call hook with 'set'. If it outputs something, that will
     # be our new value (i.e. hook disagrees with the new setting!)
@@ -5309,6 +5314,26 @@ def print_stack_error(msg):
 def print_usage():
     argparser.print_usage()
     sys.stdout.write("Use -h/--help to see the full description of all options and available commands. Or use 'omd help <command>' to see help for a specific command.\n")
+
+# log a strucuted message to the omd.log
+def audit_log(lvl, msg):
+    logger = logging.getLogger(__name__)
+    logging.basicConfig(
+        filename=os.path.join(g_sitedir, "var/log/omd.log"),
+        level=logging.INFO,
+        format="%(asctime)s.%(msecs)03d level=\"%(levelname)s\" %(message)s",
+        datefmt='%Y-%m-%d %H:%M:%S'
+    )
+
+    if lvl == "info":
+        logger.info(msg)
+    elif lvl == "warning":
+        logger.warning(msg)
+    elif lvl == "error":
+        logger.error(msg)
+    else:
+        logger.debug(msg)
+
 
 #.
 #   .--Main----------------------------------------------------------------.
