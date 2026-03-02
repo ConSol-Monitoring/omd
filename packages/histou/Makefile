@@ -2,12 +2,12 @@ include ../../Makefile.omd
 
 NAME        = histou
 CHANGELOG   = https://github.com/ConSol-Monitoring/histou/blob/master/CHANGELOG.md
-VERSION     = 0.6.1
+VERSION     = 0.6.2
 SRC         = $(NAME)-$(VERSION).tar.gz
 PWD         = $(shell pwd)
 DIR         = $(NAME)
 # GIT TAG is set automatically by "make upstream" or "make package"
-GIT_TAG     = v0.6.1
+GIT_TAG     = v0.6.2
 
 .PHONY: skel
 
@@ -33,6 +33,7 @@ clean:
 package:
 	rm -f $(NAME)-*.gz
 	git clone  --depth=1 --branch "master" https://github.com/ConSol/histou
+	cd histou && git fetch -q --tags --depth=1
 	cd histou && sed -i $(PWD)/Makefile -e 's/^GIT_TAG.*$$/GIT_TAG     = '$$(git describe --always --tags)'/g'
 	cd histou && sed -i $(PWD)/Makefile -e 's/^VERSION.*$$/VERSION     = '$$(git tag -l | tail -n 1 | sed -e 's/^v//')'/g'
 	tar zcf $(NAME)-$$(cd histou && git tag -l | tail -n 1 | sed -e 's/^v//').tar.gz \
