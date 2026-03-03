@@ -1,10 +1,12 @@
 include ../../Makefile.omd
 
 NAME      = thruk
-CHANGELOG = https://github.com/sni/Thruk/blob/master/Changes
+CHANGELOG = https://github.com/sni/thruk/blob/master/Changes
 VERSION   = 3.26
 DIR       = $(NAME)-$(VERSION)
 PERLARCH  = $(shell $(PERL) -e 'use Config; print $$Config{archname}')
+GITURL    = github.com/sni/thruk
+BRANCH    = master
 
 .PHONY: skel
 
@@ -80,3 +82,14 @@ skel:
 
 clean:
 	rm -rf $(DIR)
+
+upstream:
+	rm -rf thruk
+	git clone --depth=1 --branch "$(BRANCH)" https://$(GITURL)
+	cd thruk && git fetch -q --tags --depth=1
+	cd thruk && perl Makefile.PL
+	cd thruk && make dailydist
+	rm -f thruk-*.gz
+	mv thruk/thruk-*.gz .
+	NEWVERS=$$(ls -1 *.tar.gz | sed -e 's/\.tar\.gz//' -e 's/thruk-//i') && sed -i Makefile -e "s/^VERSION\ *=.*/VERSION   = $$NEWVERS/g"
+	rm -rf thruk
