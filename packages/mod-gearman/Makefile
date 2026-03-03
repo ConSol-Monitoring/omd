@@ -13,10 +13,10 @@ DEPENDS      = naemon gearmand
 
 build:
 	tar xzf mod_gearman-$(VERSION).tar.gz
-	#for p in patches/*.patch ; do \
-	#    echo "applying $$p..." ; \
-	#    ( cd $(DIR) ; patch -p1 ) < $$p || exit 1; \
-	#done
+	for p in patches/*.patch ; do \
+	    echo "applying $$p..." ; \
+	    ( cd $(DIR) ; patch -p1 ) < $$p || exit 1; \
+	done
 	sed -i mod_gearman-$(VERSION)/configure -e 's/-Wdate-time//g'
 	cd $(DIR) && \
 	  export PKG_CONFIG_PATH=$(shell ls -d1 $$(pwd)/../naemon/naemon-*/.) C_INCLUDE_PATH=$(shell pwd)/$(DIR)/include:$(shell ls -d1 $$(pwd)/../naemon/naemon-*/.)/src; \
