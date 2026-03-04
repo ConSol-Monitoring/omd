@@ -4,32 +4,19 @@ server:
   http_listen_port: ${CONFIG_LOKI_HTTP_PORT:-3100}
   grpc_listen_port: ${CONFIG_LOKI_GRPC_PORT:-9096}
   log_level: info
-  log_format: logfmt
   grpc_server_max_concurrent_streams: 1000
-
-limits_config:
-  retention_period: ${CONFIG_LOKI_RETENTION:-32d}
-  allow_structured_metadata: false
 
 common:
   instance_addr: 127.0.0.1
   path_prefix: var/loki
   storage:
     filesystem:
-      chunks_directory: var/loki/chunks
-      rules_directory: var/loki/rules
+      chunks_directory: var/lokichunks
+      rules_directory: var/lokirules
   replication_factor: 1
   ring:
     kvstore:
       store: inmemory
-
-compactor:
-  working_directory: var/loki/retention
-  compaction_interval: 10m
-  retention_enabled: true
-  retention_delete_delay: 5m
-  retention_delete_worker_count: 150
-  delete_request_store: filesystem
 
 query_range:
   results_cache:
@@ -38,9 +25,13 @@ query_range:
         enabled: true
         max_size_mb: 100
 
+limits_config:
+  metric_aggregation_enabled: true
+  enable_multi_variant_queries: true
+
 schema_config:
   configs:
-    - from: 2024-12-06
+    - from: 2020-10-24
       store: tsdb
       object_store: filesystem
       schema: v13
@@ -59,5 +50,16 @@ ruler:
 frontend:
   encoding: protobuf
 
+
+# By default, Loki will send anonymous, but uniquely-identifiable usage and configuration
+# analytics to Grafana Labs. These statistics are sent to https://stats.grafana.org/
+#
+# Statistics help us better understand how Loki is used, and they show us performance
+# levels for most users. This helps us prioritize features and documentation.
+# For more information on what's sent, look at
+# https://github.com/grafana/loki/blob/main/pkg/analytics/stats.go
+# Refer to the buildReport method to see what goes into a report.
+#
+# If you would like to disable reporting, uncomment the following lines:
 analytics:
   reporting_enabled: false
