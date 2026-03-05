@@ -40,13 +40,17 @@ install:
 	install -m 755 port_is_used $(DESTDIR)$(OMD_ROOT)/lib/omd/
 	install -m 644 omd_bash_completion $(DESTDIR)$(OMD_ROOT)/lib/omd/
 	install -m 600 openssl.cnf $(DESTDIR)$(OMD_ROOT)/share/omd/
-	
+
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/omd/scripts/post-create
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/omd/scripts/pre-update
 	install -m 755 omd.pre-update $(DESTDIR)$(OMD_ROOT)/lib/omd/scripts/pre-update/omd
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/omd/scripts/diag
 	rsync -a diag-scripts/. $(DESTDIR)$(OMD_ROOT)/lib/omd/scripts/diag/.
 	chmod 755 $(DESTDIR)$(OMD_ROOT)/lib/omd/scripts/diag/*
+
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib
+	rsync -a --exclude="__pycache__" --exclude=".gitignore" lib/. $(DESTDIR)$(OMD_ROOT)/lib/.
+	cd $(DESTDIR)$(OMD_ROOT)/lib/python/omd/. && python3 -m compileall .
 
 skel:
 	install -m 644 gitignore $(SKEL)/.gitignore
