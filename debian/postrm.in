@@ -20,13 +20,17 @@ set -e
 
 APACHE_OMD_CONF="/etc/apache2/conf.d/zzz_omd.conf"
 SYSCTL_OMD_CONF="/etc/sysctl.d/01-omd.conf"
-OMD="omd-###OMD_VERSION###"
+OMD_ROOT="/omd/versions/###OMD_VERSION###"
 
 case "$1" in
     upgrade)
     ;;
 
-    remove|failed-upgrade|abort-install|abort-upgrade|disappear)
+    remove|disappear)
+        rm -rf ${OMD_ROOT}
+    ;;
+
+    failed-upgrade|abort-install|abort-upgrade)
       # update-alternatives --remove  omd /omd/versions/###OMD_VERSION###
     ;;
 

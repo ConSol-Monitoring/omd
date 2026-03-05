@@ -202,8 +202,6 @@ if [ $1 = 0 ] ; then
         fi
     done
 fi
-# remove python cache folder created when omd is run as root
-find /omd/versions/%{version} -name __pycache__ -print0 | xargs -0 -n 500 rm -rf >/dev/null 2>&1
 exit 0
 
 

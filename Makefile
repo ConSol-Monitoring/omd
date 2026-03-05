@@ -176,8 +176,6 @@ pack:
 	    exit 1; \
 	fi
 
-	find $(DESTDIR)$(OMD_ROOT)/ -type f -name \*.pyc -delete
-	find $(DESTDIR)$(OMD_ROOT)/ -type d -name __pycache__ -print0 | xargs -0 -n 500 rm -rf
 	-find \
     	$(DESTDIR)$(OMD_ROOT)/bin/ \
     	$(DESTDIR)$(OMD_ROOT)/lib/ \
