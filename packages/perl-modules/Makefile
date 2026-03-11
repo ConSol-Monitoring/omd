@@ -44,7 +44,7 @@ MODULES = \
           Class-Singleton-1.5.tar.gz \
           Clone-0.39.tar.gz \
           Compress-Raw-Bzip2-2.101.tar.gz \
-          Compress-Raw-Zlib-2.213.tar.gz \
+          Compress-Raw-Zlib-2.222.tar.gz \
           Config-General-2.63.tar.gz \
           Config-Tiny-2.23.tgz \
           Crypt-Blowfish_PP-1.12.tar.gz \
