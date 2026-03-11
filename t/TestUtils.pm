@@ -611,10 +611,11 @@ sub test_url {
       ) {
         my $content = $page->{'content'};
         $content =~ s/<\!\-\-.*?\-\->//gsmx;
-        my @matches = $content =~ m/(src|href)=['|"](.*?)['|"]/gi;
+        my @matches1 = $content =~ m/<(?:[^>]+)\s+(src|href)='(.*?)'/gio;
+        my @matches2 = $content =~ m/<(?:[^>]+)\s+(src|href)="(.*?)"/gio;
         my $links_to_check;
         my $x=0;
-        for my $match (@matches) {
+        for my $match (@matches1, @matches2) {
             $x++;
             next if $x%2==1;
             next if $match =~ m/^http/;
