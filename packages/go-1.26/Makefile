@@ -5,8 +5,8 @@ VERSION      = 1.26.1
 PACKAGE_ROOT = $(shell cd .. && pwd)
 DIR          = $(NAME)-$(VERSION)
 
-ifneq ("$(shell ls -d1 $(PACKAGE_ROOT)/go-1.23/go-1.23*/bin 2>/dev/null)","")
-export GOROOT_BOOTSTRAP=$(shell ls -d1 $(PACKAGE_ROOT)/go-1.23/go-1.23*/)
+ifneq ("$(shell ls -d1 $(PACKAGE_ROOT)/go-1.25/go-1.25*/bin 2>/dev/null)","")
+export GOROOT_BOOTSTRAP=$(shell ls -d1 $(PACKAGE_ROOT)/go-1.25/go-1.25*/)
 endif
 
 build: clean
