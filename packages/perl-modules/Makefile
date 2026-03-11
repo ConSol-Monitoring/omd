@@ -31,6 +31,7 @@ PREMODULES += \
 	      Module-CoreList-*.tar.gz \
 	      common-sense-*.tar.gz \
 	      Types-Serialiser-*.tar.gz \
+	      Canary-Stability-*.tar.gz \
 	      JSON-*.tar.gz \
 	      Cpanel-JSON-*.tar.gz
 
