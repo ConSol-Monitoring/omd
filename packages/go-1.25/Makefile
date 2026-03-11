@@ -9,22 +9,34 @@ ifneq ("$(shell ls -d1 $(PACKAGE_ROOT)/go-1.23/go-1.23*/bin 2>/dev/null)","")
 export GOROOT_BOOTSTRAP=$(shell ls -d1 $(PACKAGE_ROOT)/go-1.23/go-1.23*/)
 endif
 
-build: clean
+# build this go version if no system go is found or system is older than this version
+SYSTEM_GO_EXISTS := $(shell test -x /usr/bin/go && echo yes || echo no)
+GO=
+ifeq ($(SYSTEM_GO_EXISTS),no)
+	# No system go found, need to build
+	GO=go
+else
+	SYSTEM_GO_VERSION := $(shell /usr/bin/go version 2>/dev/null | awk '{print $$3}' | sed 's/go//')
+	OLDER_VERSION := $(shell printf '%s\n%s\n' "$(SYSTEM_GO_VERSION)" "$(VERSION)" | sort -V | head -n1)
+	ifneq ($(OLDER_VERSION),$(VERSION))
+		GO=go
+	endif
+endif
+
+build: $(GO)
+
+go: clean
 	mkdir -p $(DIR)
 	tar xzf go$(VERSION).src.tar.gz -C $(DIR)
 	mv $(DIR)/go/* $(DIR) && rm -rf $(DIR)/go
 	export GOFLAGS="-buildvcs=false" && cd $(DIR)/src/ && ./make.bash
-	export GOBIN="$(shell pwd)/." && export PATH=$(shell pwd)/$(DIR)/bin:$$PATH && $(shell pwd)/$(DIR)/bin/go install golang.org/x/vuln/cmd/govulncheck@latest
 
 install:
-	mkdir -p $(DESTDIR)$(OMD_ROOT)/bin
-	install -m 755 ./govulncheck $(DESTDIR)$(OMD_ROOT)/bin
 
 skel:
 
 clean:
 	rm -rf $(DIR)
-	rm -f govulncheck
 
 upstream:
 	$(MAKE) clean
