@@ -9,7 +9,7 @@ VVERSION=v$(VERSION)
 
 GITBASE     = github.com/VictoriaMetrics
 VM_SRC      = VictoriaMetrics-$(VVERSION).tar.gz
-GOPKG       = 1.25
+GOPKG       = 1.26
 GOVERSION   = $(shell grep ^VERSION ../go-${GOPKG}/Makefile | awk '{ print $$3 }')
 GOPATH      = $(PWD)/go
 GOROOT=$(PWD)/../go-$(GOPKG)/go-$(GOVERSION)/

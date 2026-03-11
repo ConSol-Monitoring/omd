@@ -5,8 +5,7 @@ CHANGELOG  = https://github.com/grafana/grafana/blob/main/CHANGELOG.md
 VERSION    = 12.3.2
 SRC        = $(NAME)-$(VERSION).tar.gz
 GOPATH     = go
-# does work with newer go > 1.22 yet and cannot be updated because scripted dashboarding will break...
-GOPKG      = 1.25
+GOPKG      = 1.26
 GOVERSION  = $(shell grep ^VERSION ../go-${GOPKG}/Makefile | awk '{ print $$3 }')
 PWD        = $(shell pwd)
 GO         = export GOROOT=$(PWD)/../go-$(GOPKG)/go-$(GOVERSION) && export GOPATH=$(PWD)/$(GOPATH)/ && export PATH=$(PWD)/build_bin:$$GOROOT/bin:$$PATH && export GOFLAGS=-buildvcs=false && go
