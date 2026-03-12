@@ -19,6 +19,7 @@ my $site    = TestUtils::create_test_site() or TestUtils::bail_out_clean("no fur
 my @skip_files = qw/
     influxd
     blackbox_exporter
+    grafana
     logcli
     loki
     promtail
