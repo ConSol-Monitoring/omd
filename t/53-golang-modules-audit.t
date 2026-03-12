@@ -90,6 +90,7 @@ for my $file (glob("/omd/sites/$site/bin/* /omd/sites/$site/lib/monitoring-plugi
         }
     }
 
+    diag("TODO: $file") if $skipped;
     TODO: {
         local $TODO = "$file " if $skipped;
 
@@ -112,7 +113,7 @@ for my $file (glob("/omd/sites/$site/bin/* /omd/sites/$site/lib/monitoring-plugi
 
         my $basename = $file;
         $basename =~ s/.*\///mx;
-        `cp $file /var/tmp/ && upx -d /var/tmp/$basename && chmod 644 /var/tmp/$basename`;
+        `cp $file /var/tmp/ && upx -d /var/tmp/$basename 2>&1 && chmod 644 /var/tmp/$basename`;
         ok(-f "/var/tmp/".$basename, "unpacked with upx $file");
 
         ($return, $rc, $stdout, $stderr) = TestUtils::test_command({
