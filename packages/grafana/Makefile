@@ -51,7 +51,7 @@ install:
 	# Take care of path and format of plugin zip/tgz files
 	# Download from https://grafana.com/grafana/plugins
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/grafana/plugins-available
-	unzip grafana-clock-panel-3.0.0.zip -d $(DESTDIR)$(OMD_ROOT)/share/grafana/plugins-available
+	unzip grafana-clock-panel-3.2.2.zip -d $(DESTDIR)$(OMD_ROOT)/share/grafana/plugins-available
 	unzip heywesty-trafficlight-panel-1.0.0.zip -d $(DESTDIR)$(OMD_ROOT)/share/grafana/plugins-available
 
 skel:
