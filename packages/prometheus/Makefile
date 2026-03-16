@@ -4,9 +4,10 @@ include ../../Makefile.omd
 
 NAME       = prometheus
 CHANGELOG  = https://github.com/prometheus/prometheus/blob/main/CHANGELOG.md
-VERSION    = 3.5.0
+VERSION    = 3.5.1
 BRANCH     = master
-SRC        = $(NAME)-$(VERSION).tar.gz
+DIR        = $(NAME)-$(VERSION)
+SRC        = $(DIR).tar.xz
 GOPKG      = 1.26
 GOVERSION  = $(shell grep ^VERSION ../go-${GOPKG}/Makefile | awk '{ print $$3 }')
 PWD        = $(shell pwd)
@@ -14,6 +15,7 @@ GOFOLDER   = go
 GOPATH     = /dev/null # should not be used on vendor build
 GOROOT     = $(PWD)/../go-$(GOPKG)/go-$(GOVERSION)
 DATE       = $(shell TZ=UTC date -u '+%FT%TZ')
+NODEPATH   = $(shell ls -d1 ../node/node-v20*/bin)
 LDFLAGS    = "\
 -X github.com/prometheus/common/version.Version=$(VERSION) \
 -X github.com/prometheus/common/version.Revision=release-tar-ball \
@@ -24,18 +26,18 @@ LDFLAGS    = "\
 "
 
 build:
-	tar zxf $(SRC)
-	mkdir -p prometheus-$(VERSION)/build
-	cd $(NAME)-$(VERSION) && \
+	tar xfJ $(SRC)
+	mkdir -p $(DIR)/build
+	cd $(DIR) && \
 		$(GOROOT)/bin/go build -a -tags netgo,builtinassets -trimpath -ldflags $(LDFLAGS) -o build/prometheus -mod=vendor github.com/prometheus/prometheus/cmd/prometheus
-	cd $(NAME)-$(VERSION) && \
+	cd $(DIR) && \
 		$(GOROOT)/bin/go build -a -tags netgo -trimpath -ldflags $(LDFLAGS) -o build/promtool -mod=vendor github.com/prometheus/prometheus/cmd/promtool
 	mkdir -p ./dest/bin/
-	install -m 755 prometheus-$(VERSION)/build/prometheus ./dest/bin/
-	install -m 755 prometheus-$(VERSION)/build/promtool   ./dest/bin/
+	install -m 755 $(DIR)/build/prometheus ./dest/bin/
+	install -m 755 $(DIR)/build/promtool   ./dest/bin/
 	strip dest/bin/*
 	$(UPX) ./dest/bin/*
-	rm -rf $(NAME)-$(VERSION)
+	rm -rf $(DIR)
 
 install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/bin
@@ -49,17 +51,22 @@ skel:
 	echo "Use this dir for your automatically created configs. Use coshsh" > $(SKEL)/etc/prometheus/conf.d/dynamic/README
 
 clean:
-	rm -rf $(NAME)-$(VERSION)
+	rm -rf $(DIR)
 	[ ! -e $(GOFOLDER) ] || chmod -R 777 $(GOFOLDER)
 	rm -rf $(GOFOLDER)
 	rm -rf ./dest/
 
 package: clean
-	curl -fLo prometheus-$(VERSION).tar.gz https://github.com/prometheus/prometheus/archive/v$(VERSION).tar.gz
-	tar xf prometheus-$(VERSION).tar.gz
-	cd prometheus-$(VERSION)/web/ui && env PATH=/opt/node20/bin:$(GOROOT)/bin:$(PATH) npm install
-	cd prometheus-$(VERSION) && env PATH=/opt/node20/bin:$(GOROOT)/bin:$(PATH) make assets npm_licenses assets-compress
-	cd prometheus-$(VERSION)/web/ui && rm -r node_modules react-app/node_modules
-	cd prometheus-$(VERSION) && env PATH=$(GOROOT)/bin:$(PATH) go mod vendor
-	tar czf prometheus-$(VERSION).tar.gz prometheus-$(VERSION)
-	rm -rf prometheus-$(VERSION)
+	curl -fLo $(DIR).tar.gz https://github.com/prometheus/prometheus/archive/v$(VERSION).tar.gz
+	tar xf $(DIR).tar.gz
+	rm -f $(DIR).tar.gz
+	cd $(DIR)/web/ui && env PATH=$(NODEPATH):$(GOROOT)/bin:$(PATH) npm install
+	cd $(DIR)        && env PATH=$(NODEPATH):$(GOROOT)/bin:$(PATH) make assets npm_licenses assets-compress
+	cd $(DIR)/web/ui && rm -r node_modules react-app/node_modules
+	cd $(DIR)        && env PATH=$(GOROOT)/bin:$(PATH) go mod vendor
+	# remove some heavy but unused files to reduce the tarball size
+	find $(DIR)/tsdb -type d -name testdata | xargs -r rm -rf
+	XZ_OPT=-8 tar cfJ $(SRC) $(DIR)
+	rm -rf $(DIR)
+
+upstream: package

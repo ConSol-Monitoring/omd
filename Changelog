@@ -32,7 +32,7 @@ next:
             - pnp-datasource update to 2.2.2
             - thruk-datasource update to 2.2.3
           - prometheus:
-            - update to 3.5.0
+            - update to 3.5.1
             - alertmanager update to 0.30.1
             - all assets (css/js/templates) for prometheus console where removed from upstream
             - as a result the SNMP console was also removed
