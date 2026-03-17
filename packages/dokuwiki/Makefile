@@ -14,12 +14,11 @@ build:
 
 	for p in plugins/*.tgz ; do \
 		echo "add plugin $$p..." ; \
-		tar xzf $$p -C $(DIR)/lib/plugins ; \
+		tar xfz $$p -C $(DIR)/lib/plugins ; \
 	done
-
-	# remove biggest unused fonts
-	for file in UnBatang_0613.ttf Sun-ExtA.ttf Sun-ExtB.ttf Aegyptus.otf Jomolhari.ttf Aegean.otf; do \
-	    rm $(DIR)/lib/plugins/dw2pdf/vendor/mpdf/mpdf/ttfonts/$$file; \
+	for p in plugins/*.xz ; do \
+		echo "add plugin $$p..." ; \
+		tar xfJ $$p -C $(DIR)/lib/plugins ; \
 	done
 
 	for p in patches/*.patch ; do \
@@ -35,11 +34,6 @@ install:
 	install -m 644 $(DIR)/README $(DESTDIR)$(OMD_ROOT)/share/doc/dokuwiki
 	install -m 644 $(DIR)/COPYING $(DESTDIR)$(OMD_ROOT)/share/doc/dokuwiki
 	install -m 644 $(DIR)/VERSION $(DESTDIR)$(OMD_ROOT)/share/doc/dokuwiki
-	# remove the biggest 4 fonts
-	rm -f $(DESTDIR)$(OMD_ROOT)/share/dokuwiki/htdocs/lib/plugins/dw2pdf/vendor/mpdf/mpdf/ttfonts/Aegyptus.otf
-	rm -f $(DESTDIR)$(OMD_ROOT)/share/dokuwiki/htdocs/lib/plugins/dw2pdf/vendor/mpdf/mpdf/ttfonts/UnBatang_0613.ttf
-	rm -f $(DESTDIR)$(OMD_ROOT)/share/dokuwiki/htdocs/lib/plugins/dw2pdf/vendor/mpdf/mpdf/ttfonts/Sun-ExtB.ttf
-	rm -f $(DESTDIR)$(OMD_ROOT)/share/dokuwiki/htdocs/lib/plugins/dw2pdf/vendor/mpdf/mpdf/ttfonts/Sun-ExtA.ttf
 
 skel:
 	mkdir -p $(SKEL)/etc/dokuwiki
@@ -62,3 +56,16 @@ skel:
 clean:
 	# Remove files created by build/install
 	rm -rf $(DIR)
+
+# remove huge unused files from plugins
+repack_plugins:
+	cd plugins && tar xfz plugin-dw2pdf.tgz
+	rm -f plugins/dw2pdf/vendor/mpdf/mpdf/ttfonts/Aegean.otf
+	rm -f plugins/dw2pdf/vendor/mpdf/mpdf/ttfonts/Aegyptus.otf
+	rm -f plugins/dw2pdf/vendor/mpdf/mpdf/ttfonts/Jomolhari.ttf
+	rm -f plugins/dw2pdf/vendor/mpdf/mpdf/ttfonts/Sun-ExtA.ttf
+	rm -f plugins/dw2pdf/vendor/mpdf/mpdf/ttfonts/Sun-ExtB.ttf
+	rm -f plugins/dw2pdf/vendor/mpdf/mpdf/ttfonts/UnBatang_0613.ttf
+	cd plugins && XZ_OPT=-8 tar cfJ plugin-dw2pdf.tar.xz dw2pdf
+	rm -rf plugins/dw2pdf
+	rm -rf plugins/plugin-dw2pdf.tgz
