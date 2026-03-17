@@ -41,6 +41,8 @@ next:
             - pushgateway update to 1.11.2
           - Go builds updated to 1.26.1
           - histou update to 0.6.2
+          - icinga2 update to 2.15.2
+            - disable deprecated check result writer
           - coshsh update to 11.1.0.1
           - nagflux update to 0.5.7
           - remove sakuli helper files
