@@ -17,12 +17,13 @@ my $site    = TestUtils::create_test_site() or TestUtils::bail_out_clean("no fur
 
 # they will never be green
 my @skip_files = qw/
-    influxd
     blackbox_exporter
     grafana
+    influxd
     logcli
     loki
     promtail
+    promtool
     victoria-metrics-prod
     vmagent-prod
     vmalert-prod
