@@ -141,6 +141,7 @@ OVERRIDES += requests-2.32.5-py3-none-any.whl
 OVERRIDES += urllib3-2.6.3-py3-none-any.whl
 OVERRIDES += mysql_connector_python-9.5.0-py2.py3-none-any.whl
 OVERRIDES += idna-3.11-py3-none-any.whl
+OVERRIDES += pyasn1-0.6.3-py3-none-any.whl
 endif
 
 build:
