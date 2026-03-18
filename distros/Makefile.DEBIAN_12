@@ -17,7 +17,6 @@ BUILD_PACKAGES       += gawk
 BUILD_PACKAGES       += gdb                            # used in naemon tests
 BUILD_PACKAGES       += gettext                        # needed for german l10n
 BUILD_PACKAGES       += git-buildpackage
-BUILD_PACKAGES       += golang                         # required to bootstrap go
 BUILD_PACKAGES       += gperf
 BUILD_PACKAGES       += help2man                       # required by naemon
 BUILD_PACKAGES       += iputils-ping                   # required by monitoring-plugins
