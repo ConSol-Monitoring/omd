@@ -14,7 +14,9 @@ build:
 install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/bin
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/python
-	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/coshsh
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/coshsh/recipes/default/classes
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/coshsh/recipes/default/templates
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/coshsh/contrib
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/var/coshsh
 	cd $(COSHSH) && \
 	    export PYTHONPATH=$(shell pwd)/../python-modules/dest ; \
@@ -55,7 +57,6 @@ install:
 	cp check_snex_updates \
 	    $(DESTDIR)$(OMD_ROOT)/bin
 	chmod 755 $(DESTDIR)$(OMD_ROOT)/bin/check_snex_updates
-	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/coshsh/contrib
 	cp coshsh-prepare-landscape \
 	    $(DESTDIR)$(OMD_ROOT)/share/coshsh/contrib
 	chmod 755 $(DESTDIR)$(OMD_ROOT)/share/coshsh/contrib/coshsh-prepare-landscape
