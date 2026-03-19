@@ -78,7 +78,6 @@ verify_config() {
             echo "done."
             echo "$RESULT" >&2
         fi
-        return 0
     else
         if [ "$1" != "quiet" ]; then
             echo "CONFIG ERROR! Aborted. Check your ${NAME} configuration."
@@ -86,6 +85,8 @@ verify_config() {
         echo "$RESULT" >&2
         return 1
     fi
+
+    __init_hook naemon processobjectprecache pre
 }
 
 save_retention() {

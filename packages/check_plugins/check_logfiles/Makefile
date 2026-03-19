@@ -27,7 +27,7 @@ install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/monitoring-plugins
 	install -m 755 $(DIR)/plugins-scripts/check_logfiles $(DESTDIR)$(OMD_ROOT)/lib/monitoring-plugins/
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/check_logfiles
-	cp check_logfiles.exe \
+	cp README.md \
 	    $(DESTDIR)$(OMD_ROOT)/share/check_logfiles
 
 skel:

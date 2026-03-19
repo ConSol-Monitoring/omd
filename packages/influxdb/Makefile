@@ -2,7 +2,8 @@ include ../../Makefile.omd
 
 NAME       = influxdb
 VERSION    = 1.8.10
-SRC        = $(NAME)-$(VERSION).tar.gz
+DIR        = $(NAME)-$(VERSION)
+SRC        = $(DIR).tar.xz
 GOPATH     = go
 GOPKG      = 1.26
 GOVERSION  = $(shell grep ^VERSION ../go-${GOPKG}/Makefile | awk '{ print $$3 }')
@@ -11,12 +12,12 @@ PWD        = $(shell pwd)
 DATE       = $(shell date -u '+%Y-%m-%d_%I:%M:%S%p')
 
 build:
-	tar zxf $(SRC)
-	set -e ; cd influxdb-$(VERSION); for p in ../patches/*.patch ; do \
+	tar xfJ $(SRC)
+	set -e ; cd $(DIR); for p in ../patches/*.patch ; do \
 	    echo "applying $$p..." ; \
 	    patch -p1 < $$p ; \
 	done
-	cd influxdb-$(VERSION) && \
+	cd $(DIR) && \
 		env GOPATH=$(PWD)/$(GOPATH)/ PATH=$(GOROOT)/bin:$(PATH) \
 		go install -mod vendor -ldflags "-X main.version=$(VERSION) -X main.buildTime=$(DATE) -s -w" ./...
 	mkdir -p ./dest
@@ -25,7 +26,7 @@ build:
 	install $(PWD)/$(GOPATH)/bin/influx_inspect ./dest/
 	strip ./dest/*
 	$(UPX) ./dest/*
-	rm -rf influxdb-$(VERSION) $(PWD)/$(GOPATH)
+	rm -rf $(DIR) $(PWD)/$(GOPATH)
 
 install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/bin
@@ -42,11 +43,16 @@ skel:
 
 clean:
 	rm -rf ./dest
-	rm -rf influxdb-$(VERSION) $(PWD)/$(GOPATH)
+	rm -rf $(DIR)
+	rm -rf $(PWD)/$(GOPATH)
 
 package: clean
-	curl -fLo influxdb-$(VERSION).tar.gz https://github.com/influxdata/influxdb/archive/v$(VERSION).tar.gz
-	tar xf influxdb-$(VERSION).tar.gz
+	test -f $(DIR).tar.gz || curl -fLo $(DIR).tar.gz https://github.com/influxdata/influxdb/archive/v$(VERSION).tar.gz
+	tar xf $(DIR).tar.gz
+	rm -f $(DIR).tar.gz
 	cd influxdb-$(VERSION) && env PATH=$(GOROOT)/bin:$(PATH) go mod vendor
-	tar czf influxdb-$(VERSION).tar.gz influxdb-$(VERSION)
-	rm -rf influxdb-$(VERSION)
+	find $(DIR)/ -type d -name testdata | xargs -r rm -rf
+	XZ_OPT=-8 tar cfJ $(SRC) $(DIR)
+	rm -rf $(DIR)
+
+upstream: package

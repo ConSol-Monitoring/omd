@@ -2,7 +2,7 @@ include ../../Makefile.omd
 
 NAME    = naemon-livestatus
 CHANGELOG = https://github.com/naemon/naemon-livestatus/releases
-VERSION = 1.5.0
+VERSION = 1.5.1
 DIR     = $(NAME)-$(VERSION)
 DEPENDS = naemon
 

@@ -2,8 +2,8 @@ include ../../Makefile.omd
 
 NAME       = grafana
 CHANGELOG  = https://github.com/grafana/grafana/blob/main/CHANGELOG.md
-VERSION    = 12.3.2
-SRC        = $(NAME)-$(VERSION).tar.gz
+VERSION    = 12.4.1
+SRC        = $(NAME)-$(VERSION).tar.xz
 GOPATH     = go
 GOPKG      = 1.26
 GOVERSION  = $(shell grep ^VERSION ../go-${GOPKG}/Makefile | awk '{ print $$3 }')
@@ -23,8 +23,8 @@ export TMPDIR=/var/tmp
 .PHONY: skel
 
 build:
-	tar zxf $(SRC)
-	cd $(GOPATH)/src/github.com/grafana/grafana && tar xvf $(PWD)/public.tar.gz
+	tar xfJ $(SRC)
+	cd $(GOPATH)/src/github.com/grafana/grafana && tar xfJ $(PWD)/public.tar.xz
 	cd $(GOPATH)/src/github.com/grafana/grafana && $(GO) run build.go build
 	mkdir -p ./dest/
 	install -m 755 $(GOPATH)/src/github.com/grafana/grafana/bin/linux-$(MACHINE)/grafana     ./dest/grafana
@@ -40,7 +40,7 @@ install:
 	install -m 755 ./dest/grafana     $(DESTDIR)$(OMD_ROOT)/bin/grafana
 	install -m 755 ./dest/grafana-cli $(DESTDIR)$(OMD_ROOT)/bin/grafana-cli
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/grafana
-	tar zxf public.tar.gz -C $(DESTDIR)$(OMD_ROOT)/share/grafana
+	tar xfJ public.tar.xz -C $(DESTDIR)$(OMD_ROOT)/share/grafana
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/grafana/conf
 	install -m 644 defaults.ini $(DESTDIR)$(OMD_ROOT)/share/grafana/conf/
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/grafana/tools/
@@ -51,7 +51,7 @@ install:
 	# Take care of path and format of plugin zip/tgz files
 	# Download from https://grafana.com/grafana/plugins
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/grafana/plugins-available
-	unzip grafana-clock-panel-3.0.0.zip -d $(DESTDIR)$(OMD_ROOT)/share/grafana/plugins-available
+	unzip grafana-clock-panel-3.2.2.zip -d $(DESTDIR)$(OMD_ROOT)/share/grafana/plugins-available
 	unzip heywesty-trafficlight-panel-1.0.0.zip -d $(DESTDIR)$(OMD_ROOT)/share/grafana/plugins-available
 
 skel:
@@ -80,7 +80,7 @@ package:
 		export PATH=$$GOROOT/bin:$$PATH; \
 		make gen-go
 	# clean up to reduce dependencies
-	find $(GOPATH)/src/github.com/grafana/grafana -type f | grep _test.go | xargs rm -f
+	find $(GOPATH)/src/github.com/grafana/grafana -type f | grep _test.go | xargs -r rm -f
 	rm $(GOPATH)/src/github.com/grafana/grafana/pkg/build/cmd/e2e*
 	cd $(GOPATH)/src/github.com/grafana/grafana && \
 		$(GO) mod tidy
@@ -92,9 +92,10 @@ package:
 	rm -rf $(GOPATH)/src/github.com/grafana/grafana/.yarn
 	rm -rf $(GOPATH)/src/github.com/grafana/grafana/docs
 	rm -rf $(GOPATH)/src/github.com/grafana/grafana/public
+	find $(GOPATH) -type d -name dockerenv | xargs -r rm -rf
 	echo "packaging"
-	rm -f grafana-*.tar.gz
-	tar zcf $(SRC) --exclude=.git $(GOPATH)/src/
+	rm -f grafana-*.tar.xz
+	XZ_OPT=-8 tar cfJ $(SRC) --exclude=.git $(GOPATH)/src/
 	$(MAKE) clean
 
 public:
@@ -103,10 +104,10 @@ public:
 	# clean up
 	rm -rf grafana-*/public/test
 	rm -rf grafana-*/public/sass
-	find grafana-*/public/ -type f | grep '.ts$$' | xargs rm -f
-	find grafana-*/public/ -type f | grep '.map$$' | xargs rm -f
-	find grafana-*/public/ -type d -name demo | xargs rm -rf
-	cd grafana-*/. && tar cfz ../public.tar.gz public
+	find grafana-*/public/ -type f | grep '.ts$$' | xargs -r rm -f
+	find grafana-*/public/ -type f | grep '.map$$' | xargs -r rm -f
+	find grafana-*/public/ -type d -name demo | xargs -r rm -rf
+	cd grafana-*/. && XZ_OPT=-8 tar cfJ ../public.tar.xz public
 	rm grafana-$(VERSION).linux-amd64.tar.gz
 	rm -rf grafana-*/
 	wget "https://raw.githubusercontent.com/grafana/grafana/v$(VERSION)/conf/defaults.ini" -O defaults.ini

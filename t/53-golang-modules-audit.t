@@ -17,12 +17,13 @@ my $site    = TestUtils::create_test_site() or TestUtils::bail_out_clean("no fur
 
 # they will never be green
 my @skip_files = qw/
-    influxd
     blackbox_exporter
     grafana
+    influxd
     logcli
     loki
     promtail
+    promtool
     victoria-metrics-prod
     vmagent-prod
     vmalert-prod
@@ -42,15 +43,16 @@ for my $make (@makefiles) {
     my($pkg) = split(/:/mx, $make);
     $pkg =~ s/\/Makefile$//mx;
     ok($pkg, "scanning: $pkg");
-    my @tarballs = glob("$pkg/*.tgz $pkg/*.tar.gz");
+    my @tarballs = glob("$pkg/*.tgz $pkg/*.tar.gz $pkg/*.tar.xz");
     ok(scalar @tarballs, "scanning ".(scalar @tarballs)." tarballs in $pkg");
     for my $tarball (@tarballs) {
+        my $tar_compress = $tarball =~ m/\.xz$/mx ? 'J' : 'z';
         next if $tarball =~ m/deps\-/;
-        my $has_go_mods = `tar tvfz $tarball | grep go.mod`;
+        my $has_go_mods = `tar tvf$tar_compress $tarball | grep go.mod`;
         next unless $has_go_mods;
         ok(-f $tarball, "found tarball with go.mod: $tarball");
         TestUtils::test_command({
-            cmd  => "/bin/su - $site -c 'mkdir -p var/tmp/govul && cd var/tmp/govul && tar xfz $tarball'",
+            cmd  => "/bin/su - $site -c 'mkdir -p var/tmp/govul && cd var/tmp/govul && tar xf$tar_compress $tarball'",
         });
         my($return, $rc, $stdout, $stderr) = TestUtils::test_command({
             cmd  => "/bin/su - $site -c 'find var/tmp/govul -name go.mod'",

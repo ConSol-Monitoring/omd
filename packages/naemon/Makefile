@@ -2,7 +2,7 @@ include ../../Makefile.omd
 
 NAME = naemon
 CHANGELOG = https://github.com/naemon/naemon-core/blob/master/NEWS
-VERSION = 1.5.0
+VERSION = 1.5.1
 DIR = $(NAME)-$(VERSION)
 
 # Configure options for Naemon. Since we want to compile

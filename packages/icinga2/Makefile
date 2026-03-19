@@ -1,14 +1,22 @@
 include ../../Makefile.omd
 
-NAME = icinga2
+NAME      = icinga2
 CHANGELOG = https://github.com/Icinga/icinga2/blob/master/CHANGELOG.md
-VERSION = 2.13.10
-DIR = $(NAME)-$(VERSION)
-BOOSTDIR=boost_1_79_0
-BOOSTDEST=$(BOOSTDIR)-dest
-CMAKE=cmake
-CMAKEDIR=cmake-3.16.5
-CMAKEDEST=$(CMAKEDIR)-dest
+VERSION   = 2.15.2
+# use last version that builds on rhel7...
+ifeq ($(DISTRO_CODE),el7)
+VERSION   = 2.13.10
+endif
+DIR       = $(NAME)-$(VERSION)
+SRC       = $(NAME)-$(VERSION).tar.xz
+BOOSTDIR  = boost_1_79_0
+BOOSTDEST = $(BOOSTDIR)-dest
+CMAKE     = cmake
+CMAKEVER  = 3.31.11
+CMAKEDIR  = cmake-$(CMAKEVER)
+CMAKEDEST = $(CMAKEDIR)-dest
+CMAKEMINVER = 3.17 # use shipped cmake if system cmake is older than this
+SHELL     = bash
 
 .PHONY: skel
 
@@ -28,14 +36,26 @@ CONFIGUREOPTS = \
     -DICINGA2_GROUP=root
 
 EXTRA_BUILD_DEPS=
+
+# build boost if older than shipped version
 BOOST_MINOR_VERSION=$(shell grep BOOST_LIB_VERSION /usr/include/boost/version.hpp | grep ^\# | awk -F _ '{ print $$4 }' | tr -d '"')
 BUILD_BOOST=0
 ifeq ($(shell test $(BOOST_MINOR_VERSION) -lt 79; echo $$?),0)
   BUILD_BOOST=1
 endif
 
+# build cmake if older than shipped version
+BUILD_CMAKE := $(shell \
+cmake_ver="$$( $(CMAKE) --version 2>/dev/null | sed -n '1s/.* //p' )"; \
+if [ -z "$$cmake_ver" ]; then \
+	echo 1; \
+elif [ "$$cmake_ver" != "$(CMAKEVER)" ] && \
+		[ "$$(printf '%s\n%s\n' "$$cmake_ver" "$(CMAKEMINVER)" | sort -V | head -n1)" = "$$cmake_ver" ]; then \
+	echo 1; \
+fi)
+
 ifeq ($(BUILD_BOOST),1)
-  EXTRA_BUILD_DEPS=$(BOOSTDEST)
+  EXTRA_BUILD_DEPS+=$(BOOSTDEST)
   CONFIGUREOPTS+=-DCMAKE_EXE_LINKER_FLAGS=-lrt
   # workaround for https://bugzilla.redhat.com/show_bug.cgi?id=849791#c8
   CONFIGUREOPTS+=-DBoost_NO_BOOST_CMAKE=ON
@@ -45,11 +65,16 @@ ifeq ($(BUILD_BOOST),1)
   CONFIGUREOPTS+=-DBOOST_INCLUDEDIR=$(shell pwd)/$(BOOSTDEST)/include
   CONFIGUREOPTS+=-DBOOST_LIBRARYDIR=$(shell pwd)/$(BOOSTDEST)/lib
   #CONFIGUREOPTS+=-DBoost_DEBUG=ON
+  BUILD_CMAKE=1
+endif
+
+ifeq ($(BUILD_CMAKE),1)
   CMAKE=$(shell pwd)/$(CMAKEDEST)/bin/cmake
+  EXTRA_BUILD_DEPS+=$(CMAKEDEST)
 endif
 
 build: $(EXTRA_BUILD_DEPS)
-	tar xzf $(DIR).tar.gz
+	tar xfJ $(SRC)
 	mkdir -p $(DIR)/build
 	for p in patches/*.patch ; do \
 	    echo "applying $$p..." ; \
@@ -81,11 +106,15 @@ build: $(EXTRA_BUILD_DEPS)
 	rm -rf $(CMAKEDIR)
 	rm -rf $(CMAKEDEST)
 
+build_cmake: $(CMAKEDEST)
+
 $(CMAKEDEST):
-	tar xzf $(CMAKEDIR).tar.gz
+	tar xfJ $(CMAKEDIR).tar.xz
 	cd $(CMAKEDIR) && ./bootstrap --prefix=$(shell pwd)/$(CMAKEDEST)
 	+$(MAKE) -C $(CMAKEDIR)
 	+$(MAKE) -C $(CMAKEDIR) install
+
+build_boost: $(BOOSTDEST)
 
 $(BOOSTDEST): $(CMAKEDEST)
 	tar xJf $(BOOSTDIR).tar.xz
@@ -94,8 +123,6 @@ $(BOOSTDEST): $(CMAKEDEST)
 			--with-libraries=iostreams,thread,system,program_options,regex,chrono,date_time,atomic,coroutine,filesystem,context \
 			--prefix=$(shell pwd)/$(BOOSTDEST) && \
 		./b2 cxxflags=-fPIC cflags=-fPIC install
-
-build_boost: $(BOOSTDEST)
 
 install:
 	rsync -a ./dest/. $(DESTDIR)$(OMD_ROOT)/.
@@ -166,16 +193,31 @@ clean:
 	rm -rf $(CMAKEDEST)
 	rm -rf dest/
 
-upstream:
-	rm -rf icinga2 icinga2-master
-	git clone --depth=1 https://github.com/Icinga/icinga2.git
-	mv icinga2 icinga2-master
-	cd icinga2-master && echo 'set(GIT_VERSION "'$$(git tag -l | tail -n 1)'-git-'$$(git log --format=%h -1 | tr v r)'")' >> CMakeLists.txt
-	tar cfz icinga2-master.tar.gz icinga2-master
-	rm -rf icinga2-master
+package:
+	test -f v$(VERSION).tar.gz || wget "https://github.com/Icinga/icinga2/archive/v$(VERSION).tar.gz"
+	tar xfz v$(VERSION).tar.gz
+	rm -rf $(DIR)/{doc,icinga-installer,agent}
+	rm -rf $(DIR)/CHANGELOG.md
+	rm -rf $(DIR)/{CONTRIBUTING.md,README.md,CHANGELOG.md}
+	sed -e 's/CONTRIBUTING.md//' -i $(DIR)/CMakeLists.txt
+	sed -e 's/README.md//' -i $(DIR)/CMakeLists.txt
+	sed -e 's/CHANGELOG.md//' -i $(DIR)/CMakeLists.txt
+	sed -e '/add_subdirectory(doc)/d' -i $(DIR)/CMakeLists.txt
+	sed -e '/add_subdirectory(agent)/d' -i $(DIR)/CMakeLists.txt
+	rm -f v$(VERSION).tar.gz
+	XZ_OPT=-8 tar cfJ $(SRC) $(DIR)
+	rm -rf $(DIR)
 
-githubrelease:
-	git rm icinga2-*.tar.gz
-	wget "https://github.com/Icinga/icinga2/archive/v$(VERSION).tar.gz"
-	mv v$(VERSION).tar.gz icinga2-$(VERSION).tar.gz
-	git add *.gz
+upstream: package
+
+# repack boost library tarball and remove unused stuff to make the tarball much smaller
+repack_boost:
+	test -f $(BOOSTDIR)-orig.tar.xz || cp $(BOOSTDIR).tar.xz $(BOOSTDIR)-orig.tar.xz
+	tar xfJ $(BOOSTDIR)-orig.tar.xz
+	rm -rf $(BOOSTDIR)/doc
+	rm -rf $(BOOSTDIR)/*/*/doc
+	rm -rf $(BOOSTDIR)/*/*/test/
+	rm -f $(BOOSTDIR).tar.xz
+	XZ_OPT=-8 tar cfJ $(BOOSTDIR).tar.xz $(BOOSTDIR)
+	rm -rf $(BOOSTDIR)
+	ls -la $(BOOSTDIR)-orig.tar.xz $(BOOSTDIR).tar.xz

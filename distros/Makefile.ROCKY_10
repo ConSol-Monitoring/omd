@@ -18,7 +18,6 @@ BUILD_PACKAGES       += gdb                            # used in naemon tests
 BUILD_PACKAGES       += gd-devel                       # RHEL Server Optional
 BUILD_PACKAGES       += glibc-devel
 BUILD_PACKAGES       += glibc-static
-BUILD_PACKAGES       += golang                         # go 1.4 does not build on arm, so use packaged one to bootstrap
 BUILD_PACKAGES       += gperf
 BUILD_PACKAGES       += help2man                       # required by naemon
 BUILD_PACKAGES       += httpd-devel
