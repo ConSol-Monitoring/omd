@@ -2,7 +2,7 @@ include ../../Makefile.omd
 
 NAME    = naemon-livestatus
 CHANGELOG = https://github.com/naemon/naemon-livestatus/releases
-VERSION = 1.5.0
+VERSION = 1.5.1
 DIR     = $(NAME)-$(VERSION)
 DEPENDS = naemon
 
@@ -15,10 +15,10 @@ CFLAGS += -fsigned-char
 
 build:
 	tar xzf $(NAME)-$(VERSION).tar.gz
-	set -e ; for p in patches/*.patch ; do \
-	    echo "applying $$p..." ; \
-	    ( cd $(DIR) ; patch -p1 -b ) < $$p ; \
-	done
+	#set -e ; for p in patches/*.patch ; do \
+	#    echo "applying $$p..." ; \
+	#    ( cd $(DIR) ; patch -p1 -b ) < $$p ; \
+	#done
 	touch $(DIR)/.naemon.official
 	cd $(DIR); \
 		autoreconf -s; \
