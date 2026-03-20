@@ -2,10 +2,7 @@ include ../../Makefile.omd
 
 NAME=coshsh
 CHANGELOG = https://github.com/lausser/coshsh/blob/master/Changelog
-VERSION=12.2.1.1
-ifeq ($(DISTRO_CODE),el7)
-  VERSION  = 11.1.0.1
-endif
+VERSION=11.1.0.1
 COSHSH=$(NAME)-$(VERSION)
 
 build:
