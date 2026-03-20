@@ -2,7 +2,7 @@ include ../../Makefile.omd
 
 NAME         = mod_gearman
 CHANGELOG    = https://github.com/sni/mod_gearman/blob/master/Changes
-VERSION      = 5.2.2
+VERSION      = 5.2.3
 DIR          = mod_gearman-$(VERSION)
 PROXY        = GearmanProxy
 PROXYVERSION = 2.08
