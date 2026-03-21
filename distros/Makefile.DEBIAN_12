@@ -59,6 +59,7 @@ BUILD_PACKAGES       += smbclient                      # otherwise missing path 
 BUILD_PACKAGES       += snmp
 BUILD_PACKAGES       += snmptrapd
 BUILD_PACKAGES       += uuid-dev
+BUILD_PACKAGES       += xxd
 BUILD_PACKAGES       += zlib1g-dev
 OS_PACKAGES           =
 OS_PACKAGES          += ansible
