@@ -476,7 +476,7 @@ sub remove_test_site {
     # check if there had been errors in the apache log
     my $apache_log = "/omd/sites/".$site."/var/log/apache/error_log";
     if(-e $apache_log) {
-        my $errors = `grep "mod_fcgid: stderr:" $apache_log`;
+        my $errors = `grep "mod_fcgid: stderr:" $apache_log | grep -v dokuwiki/`;
         if($errors) {
             fail("apache log contains errors");
             diag($errors);

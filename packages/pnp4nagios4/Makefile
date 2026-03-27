@@ -5,7 +5,7 @@ DEPENDS = naemon pnp4nagios
 .PHONY: skel
 
 build:
-	tar xzf ../pnp4nagios/$(DIR).tar.gz
+	tar xfJ ../pnp4nagios/$(DIR).tar.xz
 	set -e; \
 	! test -e ../pnp4nagios/patches/ || for p in ../pnp4nagios/patches/*.patch ; do \
 	    echo "applying $$p..." ; \
