@@ -471,7 +471,18 @@ sub delete_cookie_store {
 
 =cut
 sub remove_test_site {
-    my $site = shift;
+    my($site) = @_;
+
+    # check if there had been errors in the apache log
+    my $apache_log = "/omd/sites/".$site."/var/log/apache/error_log";
+    if(-e $apache_log) {
+        my $errors = `grep "mod_fcgid: stderr:" $apache_log`;
+        if($errors) {
+            fail("apache log contains errors");
+            diag($errors);
+        }
+    }
+
     `PATH=/bin:/usr/bin crontab -u $site -r >/dev/null 2>&1`; # remove crontab first, so no new processes get started
     # kill all processes, sometimes checks are still running and prevent us from removing the site
     # sometimes systemd is still running:

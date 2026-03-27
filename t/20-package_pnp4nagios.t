@@ -13,7 +13,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 208 );
+plan( tests => 218 );
 
 ##################################################
 # create our test site
@@ -69,7 +69,6 @@ my $tests = [
   { cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_http -H localhost -a omdadmin:omd -u /$site/pnp4nagios/page?page=pages-regex-ok -e 200'", like => '/HTTP OK:/' },
   { cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_http -H localhost -a omdadmin:omd -vvv -u /$site/pnp4nagios/page?page=pages-static-err -e 200'", like => '/ERROR:/' },
   { cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_http -H localhost -a omdadmin:omd -vvv -u /$site/pnp4nagios/page?page=pages-regex-err -e 200'", like => '/ERROR:/' },
-  { cmd => $omd_bin." stop $site" },
 ];
 for my $test (@{$tests}) {
     TestUtils::test_command($test);
@@ -121,8 +120,9 @@ for my $test (@{$tests}) {
 ##################################################
 TestUtils::test_url({ url => 'http://localhost/'.$site.'/pnp4nagios/', like => ['/Service overview for/', '/Datasource:/'], auth => $auth, skip_html_lint => 1 });
 TestUtils::test_url({ url => 'http://localhost/'.$site.'/pnp4nagios/index.php/graph?host=omd-'.$site.'&srv=_HOST_', like => ['/Host Perfdata/', '/Host Perfdata Datasource: omd-dummy/'], auth => $auth, skip_html_lint => 1 });
+TestUtils::test_url({ url => 'http://localhost/'.$site.'/pnp4nagios/index.php/popup?host=omd-'.$site.'&srv=Dummy%20Service', like => ['/index.php\/image/'], auth => $auth, skip_html_lint => 1, unlike => ['/Deprecated/', '/Kohana.php/', '/lib\/kohana/', '/omd\/versions/']  });
+TestUtils::test_url({ url => 'http://localhost/'.$site.'/pnp4nagios/index.php/image?host=omd-'.$site.'&srv=Dummy%20Service&view=1&graph_width=550&start=-90000&end=&source=0', like => ['/PNG/'], auth => $auth, skip_html_lint => 1, unlike => ['/Deprecated/', '/Kohana.php/', '/lib\/kohana/', '/omd\/versions/']  });
 
 ##################################################
 # cleanup test site
 TestUtils::remove_test_site($site);
-
