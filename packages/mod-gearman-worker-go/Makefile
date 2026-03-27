@@ -6,7 +6,7 @@ CHANGELOG   = https://github.com/ConSol-Monitoring/mod-gearman-worker-go/blob/ma
 #BRANCH      = v$(VERSION)
 VERSION     = master
 BRANCH      = master
-SRC         = $(NAME)-$(VERSION).tar.gz
+SRC         = $(NAME)-$(VERSION).tar.xz
 GOPKG       = 1.26
 GOVERSION   = $(shell grep ^VERSION ../go-${GOPKG}/Makefile | awk '{ print $$3 }')
 GOPATH      = go
@@ -14,13 +14,13 @@ PWD         = $(shell pwd)
 GITBASE     = github.com/consol-monitoring
 GITURL      = $(GITBASE)/$(NAME)
 # GIT TAG is set automatically by "make upstream" or "make package"
-GIT_TAG     = v1.5.9
+GIT_TAG     = v1.6.0
 
 .PHONY: skel
 
 build:
-	tar zxf deps-*.tar.gz
-	tar zxf $(SRC)
+	tar xfJ deps-*.tar.xz
+	tar xfJ $(SRC)
 	mkdir -p $(GOPATH)/src/$(GITURL)/vendor/pkg
 	cp -rp $(GOPATH)/src/$(GITURL)/pkg/modgearman $(GOPATH)/src/$(GITURL)/vendor/pkg/
 	export GO111MODULE=auto && \
@@ -56,7 +56,7 @@ deps: clean
 		git clone --depth=1 --branch "$(BRANCH)" https://$(GITURL) && \
 		cd $(NAME) && \
 		sed -i '/^toolchain /d' go.mod ./buildtools/go.mod && \
-		DEPSFILE="$(PWD)/deps-$$(md5sum go.mod | cut -f 1 -d " ").tar.gz"; \
+		DEPSFILE="$(PWD)/deps-$$(md5sum go.mod | cut -f 1 -d " ").tar.xz"; \
 		if test -e "$$DEPSFILE"; then \
 			echo "dependencies already up to date: $(GIT_TAG)"; \
 		else \
@@ -66,9 +66,9 @@ deps: clean
 			rm -rf $(GOPATH)/src/$(GITURL)/vendor/pkg/modgearman/ ; \
 			tar cf deps.tar --exclude=.git --exclude=*_test.go $(GOPATH)/src/$(GITURL)/vendor && \
 			chmod -R 777 $(GOPATH); \
-			rm -f deps*.tar.gz; \
-			gzip -9 deps.tar; \
-			mv deps.tar.gz $$DEPSFILE; \
+			rm -f deps*.tar.xz; \
+			xz -9 deps.tar; \
+			mv deps.tar.xz $$DEPSFILE; \
 		fi
 		rm -rf $(GOPATH)
 
@@ -89,7 +89,7 @@ package: clean
 			tar cf $(NAME)-$(VERSION).tar --exclude=.git --exclude=*_test.go $(GOPATH)/src/$(GITURL) && \
 			chmod -R 777 $(GOPATH); \
 			rm -f $(SRC); \
-			gzip -9 $(NAME)-$(VERSION).tar; \
+			xz -9 $(NAME)-$(VERSION).tar; \
 		fi
 		rm -rf $(GOPATH)
 
