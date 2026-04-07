@@ -4,4 +4,5 @@ stylesheets/
 fonts/
 !Makefile
 Thruk
+thruk/
 base.css
