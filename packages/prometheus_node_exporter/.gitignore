@@ -1,3 +1,4 @@
 dest/
 go/
 node_exporter-?.?.?
+node_exporter-?.??.?
