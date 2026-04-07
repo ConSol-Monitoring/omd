@@ -204,8 +204,7 @@ MODULES = \
           Spreadsheet-WriteExcel-2.40.tar.gz \
           Tie-IxHash-1.23.tar.gz \
           WWW-Form-UrlEncoded-0.24.tar.gz \
-          XML-Parser-2.44.tar.gz \
-          XML-Twig-3.52.tar.gz \
+          File-ShareDir-1.104.tar.gz \
           Cookie-Baker-0.11.tar.gz \
           Dist-CheckConflicts-0.11.tar.gz \
           Text-Unidecode-1.30.tar.gz \
@@ -225,8 +224,9 @@ MODULES = \
           Package-Stash-0.37.tar.gz \
           Params-Validate-1.29.tar.gz \
           B-Hooks-EndOfScope-0.21.tar.gz \
-          File-ShareDir-1.104.tar.gz \
           Gearman-2.004.015.tar.gz \
+          XML-Parser-2.56.tar.gz \
+          XML-Twig-3.52.tar.gz \
           List-SomeUtils-0.56.tar.gz \
           Log-Dispatch-2.44.tar.gz \
           Monitoring-Plugin-0.40.tar.gz \
