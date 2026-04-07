@@ -520,6 +520,8 @@ def switch_to_site_user():
     os.setgroups(groups_of(g_sitename))
     os.setuid(uid)
 
+    set_environment()
+
 def groups_of(username):
     return list(map(int, os.popen("id -G '%s'" % username).read().split()))
 
@@ -723,6 +725,10 @@ def delete_user_file(user_path):
         os.remove(user_path)
 
 def delete_directory_contents(d):
+    # refuse to operate when directory is a symlink.
+    if os.path.islink(d):
+        sys.stderr.write("WARNING: %s is a symlink — refusing to clean its contents as root.\n" % d)
+        return
     for f in os.listdir(d):
         delete_user_file(d + '/' + f)
 
@@ -754,22 +760,40 @@ def create_skeleton_file(skelbase, userbase, relpath, replacements):
                 mode = g_file_mode
         os.chmod(user_path, mode)
 
+def chown_tree_fd(dirpath, user, uid, gid):
+    try:
+        # TODO: check os.O_RDONLY and fchown
+        dir_fd = os.open(dirpath, os.O_RDONLY | os.O_NOFOLLOW | os.O_DIRECTORY)
+    except Exception as e:
+        sys.stderr.write("Cannot chown %s to %s: %s\n" % (dirpath, user, e))
+        return
+    try:
+        os.fchown(dir_fd, uid, gid)
+        for entry in os.scandir(dirpath):
+            if entry.is_dir(follow_symlinks=False):
+                chown_tree_fd(entry.path, user, uid, gid)
+            else:
+                os.lchown(entry.path, uid, gid)
+    except Exception as e:
+        sys.stderr.write("Cannot chown %s to %s: %s\n" % (dirpath, user, e))
+        return
+    finally:
+        os.close(dir_fd)
+
 
 def chown_tree(dir, user):
     uid = pwd.getpwnam(user).pw_uid
     gid = pwd.getpwnam(user).pw_gid
-    os.chown(dir, uid, gid)
-    for dirpath, dirnames, filenames in os.walk(dir):
-        for entry in dirnames + filenames:
-            os.lchown(dirpath + "/" + entry, uid, gid)
+    os.lchown(dir, uid, gid)
+    chown_tree_fd(dir, user, uid, gid)
 
 
 def try_chown(filename, user):
-    if os.path.exists(filename):
+    if os.path.lexists(filename):
         try:
             uid = pwd.getpwnam(user).pw_uid
             gid = pwd.getpwnam(user).pw_gid
-            os.chown(filename, uid, gid)
+            os.lchown(filename, uid, gid)
         except Exception as e:
             sys.stderr.write("Cannot chown %s to %s: %s\n" % (filename, user, e))
 
@@ -934,16 +958,8 @@ def patch_template_file(src, dst, old, new):
 
     # Now create a patch from old to new and immediately apply on
     # existing - possibly user modified - file.
-    patch = "%s/bin/patch" % site_dir(new)
-    if not os.path.exists(patch):
-        patch = omd_root() + "/bin/patch"
-    if not os.path.exists(patch):
-        patch = "%s/patch" % os.path.dirname(os.path.realpath(__file__))
-    if not os.path.exists(patch):
-        patch = "patch"
-
-    result = os.system("diff -u %s %s | %s --force --backup --forward --silent %s" %
-            (old_orig_path, new_orig_path, patch, dst))
+    result = os.system("/usr/bin/diff -u %s %s | /usr/bin/patch --force --backup --forward --silent %s" %
+            (old_orig_path, new_orig_path, dst))
     try_chown(dst, new)
     try_chown(dst + ".rej", new)
     try_chown(dst + ".orig", new)
@@ -1091,7 +1107,7 @@ def merge_update_file(relpath, userdir, old_version, new_version, skel_path, dry
         version_patch = os.popen("diff -u %s-%s %s-%s" % (user_path, old_version, user_path, new_version)).read()
 
         # First try to merge the changes in the version into the users' file
-        p = subprocess.Popen("PATH=/omd/versions/default/bin:$PATH patch --force --backup --forward --silent --merge --ignore-whitespace %s" % (user_path), shell=True, stdin = subprocess.PIPE, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+        p = subprocess.Popen("/usr/bin/patch --force --backup --forward --silent --merge --ignore-whitespace %s" % (user_path), shell=True, stdin = subprocess.PIPE, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
         out, errs = p.communicate(str.encode(version_patch), timeout=30)
         status = p.wait()
         if status:
@@ -2414,7 +2430,7 @@ def config_set_all():
 
 
 def config_set_value(hook_name, value, save = True):
-    if os.getuid() == 0:
+    if am_root():
         sys.stderr.write("I am root. This should never happen!\n")
         sys.exit(1)
 
@@ -2678,14 +2694,26 @@ def getenv(key, default = None):
 
 def clear_environment():
     # first remove *all* current environment variables
-    keep = [ "TERM", "CORE_NOVERIFY" ]
+    keep = [ "TERM", "CORE_NOVERIFY", "HOME" ]
     for key in list(os.environ.keys()):
         if key not in keep:
             del os.environ[key]
 
 def set_environment():
+    clear_environment()
+
+    if am_root():
+        putenv("PATH", "/usr/local/bin:/bin:/usr/bin:/sbin:/usr/sbin")
+        if g_sitename:
+            putenv("OMD_SITE", g_sitename)
+        if g_sitedir:
+            putenv("OMD_ROOT", g_sitedir)
+        return
+
+    set_site_globals()
     putenv("OMD_SITE", g_sitename)
     putenv("OMD_ROOT", g_sitedir)
+
     putenv("PATH", "%s/local/bin:%s/bin:/usr/local/bin:/bin:/usr/bin:/sbin:/usr/sbin" %
                                                                   (g_sitedir, g_sitedir))
     putenv("USER", g_sitename)
@@ -2708,6 +2736,7 @@ def set_environment():
                 bail_out(tty_error + ": %s: syntax error in line %d" % (envfile, lineno))
             varname = parts[0]
             value = parts[1]
+
             if value.startswith('"'):
                 value = value.strip('"')
 
@@ -2739,11 +2768,10 @@ def create_apache_hook(sitename):
 def sync_apache_maint_page(sitename):
     maint_file  = '%s/var/www/maint.html' % site_dir(sitename)
     target_file = '/omd/apache/maint_%s.html' % sitename
-    am_root = os.getuid() == 0
-    if not am_root and not os.path.exists(target_file):
+    if not am_root() and not os.path.exists(target_file):
         return
     if os.path.exists(maint_file):
-        os.system("rsync -a --inplace --chmod='F0644' --chown='%s:%s' '%s' '%s'" % (sitename, sitename, maint_file, target_file))
+        os.system("/usr/bin/rsync -a --inplace --chmod='F0644' --chown='%s:%s' '%s' '%s'" % (sitename, sitename, maint_file, target_file))
 
 def delete_apache_hook(sitename):
     hook_path = "/omd/apache/%s.conf" % sitename
@@ -2784,6 +2812,9 @@ def restart_apache():
         sys.stdout.write("Restarting Apache...")
         sys.stdout.flush()
         show_success(os.system(init_cmd(g_info['APACHE_INIT_NAME'], 'restart') + ' >/dev/null') >> 8)
+    else:
+        print("restart apache failed")
+        print(init_cmd(g_info['APACHE_INIT_NAME'], 'status'))
 
 def replace_tags(content, replacements):
     for var, value in list(replacements.items()):
@@ -2845,7 +2876,7 @@ def call_scripts(phase, prefix=None, args=None):
 
 def check_site_user(site_must_exist):
     if g_sitename != None and site_must_exist and not site_exists(g_sitename):
-        if os.getuid() == 0:
+        if am_root():
             bail_out(tty_error + ": omd: no such site: %s" % g_sitename)
         else:
             bail_out(tty_error + ": omd: You need to execute omd as root or site user. %s is not a omd site." % g_sitename)
@@ -2864,23 +2895,22 @@ def check_site_user(site_must_exist):
 #   '----------------------------------------------------------------------'
 
 def main_help(args=[], options={}):
-    am_root = os.getuid() == 0
-    if am_root:
+    if am_root():
         sys.stdout.write("Usage (called as root):\n\n")
     else:
         sys.stdout.write("Usage (called as site user):\n\n")
 
     for cmd_spec in commands:
         synopsis = cmd_spec.args
-        if cmd_spec.only_root and not am_root:
+        if cmd_spec.only_root and not am_root():
             continue
-        if am_root:
+        if am_root():
             if cmd_spec.needs_site == 2:
                 synopsis = "[SITE] " + synopsis
             elif cmd_spec.needs_site == 1:
                 synopsis = "SITE " + synopsis
 
-        synopsis_width = am_root and '23' or '16'
+        synopsis_width = am_root() and '23' or '16'
         sys.stdout.write((" omd %-10s %-"+synopsis_width+"s %s\n") % (cmd_spec.command, synopsis, cmd_spec.description))
     print_general_options()
     sys.stdout.write(" omd COMMAND -h, --help          show available options of COMMAND\n")
@@ -3138,14 +3168,15 @@ def init_site(config_settings = None, options={}):
     # Change ownership of all files and dirs to site user
     chown_tree(g_sitedir, g_sitename)
 
-    load_site_conf() # load default values from all hooks
+    if am_root():
+        call_as_forked_site_user(load_site_conf, [], {})
+    else:
+        load_site_conf() # load default values from all hooks
+
     if config_settings: # add specific settings
         for hook_name, value in list(config_settings.items()):
             g_site_conf[hook_name] = value
     create_config_environment()
-
-    # Change the few files that config save as created as root
-    chown_tree(g_sitedir, g_sitename)
 
     finalize_site("create", apache_reload)
 
@@ -3156,8 +3187,6 @@ def init_site(config_settings = None, options={}):
 # What is "create", "mv" or "cp". It is used for
 # running the appropriate hooks.
 def finalize_site(what, apache_reload):
-
-    am_root = os.getuid() == 0
 
     # Now we need to do a few things as site user. Note:
     # - We cannot use setuid() here, since we need to get back to root.
@@ -3170,7 +3199,7 @@ def finalize_site(what, apache_reload):
     if pid == 0:
         try:
             # From now on we run as normal site user!
-            if am_root:
+            if am_root():
                 switch_to_site_user()
 
             # Mount and create contents of tmpfs. This must be done as normal
@@ -3209,7 +3238,7 @@ def finalize_site(what, apache_reload):
     # Finally reload global apache - with root permissions - and
     # create include-hook for Apache and reload apache
 
-    if am_root:
+    if am_root():
         create_apache_hook(g_sitename)
         if apache_reload:
             reload_apache()
@@ -3227,7 +3256,7 @@ def main_rm(args, options={}):
         sys.stdout.write("update canceled by pre-rm script\n\n")
         sys.exit(1)
 
-    os.system('omd stop %s' % g_sitename)
+    os.system('/usr/bin/omd stop %s' % g_sitename)
 
     reuse = options.reuse
     kill = options.kill
@@ -3287,7 +3316,7 @@ def main_disable(args, options):
         sys.exit(0)
 
     if not site_is_stopped(g_sitename):
-        os.system('omd stop %s' % g_sitename)
+        os.system('/usr/bin/omd stop %s' % g_sitename)
 
     unmount_tmpfs(g_sitename, options.kill)
     sys.stdout.write("Disabling Apache configuration for this site...")
@@ -3334,12 +3363,10 @@ def main_diag(args, options={}):
                 'Here you find some support options.',
                 options
             )
-        if os.getuid() != 0:
+        if not am_root():
             g_sitename = site_name()
             g_sitedir = site_dir(g_sitename)
         if g_sitename and site_exists(g_sitename):
-            clear_environment()
-            set_site_globals()
             set_environment()
         if choice == 'exit':
             ask_again = False
@@ -3522,7 +3549,7 @@ def main_mv_or_cp(what, args, options={}):
         if opt_verbose:
             addopts += " -v"
 
-        os.system("rsync -ax %s '%s/' '%s/'" %
+        os.system("/usr/bin/rsync -ax %s '%s/' '%s/'" %
                 (addopts, site_dir(g_sitename), site_dir(new)))
 
     # give new user all files
@@ -3545,7 +3572,6 @@ def main_mv_or_cp(what, args, options={}):
     # Now switch over to the new site as currently active site
     g_sitename = new
     set_site_globals()
-    set_environment()
 
     # Entry for tmps in /etc/fstab
     if not reuse:
@@ -3997,12 +4023,12 @@ def main_update(args, options={}):
 
 def save_site_skel_backup(sitedir, siteuser):
     # save skel to .omd as backup to make updates possible without having the old omd version
-    os.system("rm -rf %s/.omd/skel ; mkdir -p %s/.omd/skel" % (sitedir, sitedir))
-    os.system("rsync -a %s/version/skel/. %s/.omd/skel/."   % (sitedir, sitedir))
-    os.system("cp %s/share/omd/skel.permissions %s/.omd/skel.permissions" % (sitedir, sitedir))
-    os.system("chown -R %s: %s/.omd/skel 2>/dev/null"             % (siteuser, sitedir))
-    os.system("chown    %s: %s/.omd/skel.permissions 2>/dev/null" % (siteuser, sitedir))
-    os.system("chown    %s: %s/.omd 2>/dev/null"                  % (siteuser, sitedir))
+    os.system("/bin/rm -rf %s/.omd/skel ; /bin/mkdir -p %s/.omd/skel" % (sitedir, sitedir))
+    os.system("/usr/bin/rsync -a %s/version/skel/. %s/.omd/skel/."    % (sitedir, sitedir))
+    os.system("/bin/cp %s/share/omd/skel.permissions %s/.omd/skel.permissions" % (sitedir, sitedir))
+    os.system("/bin/chown -R %s: %s/.omd/skel 2>/dev/null"             % (siteuser, sitedir))
+    os.system("/bin/chown    %s: %s/.omd/skel.permissions 2>/dev/null" % (siteuser, sitedir))
+    os.system("/bin/chown    %s: %s/.omd 2>/dev/null"                  % (siteuser, sitedir))
 
 
 def prepare_dry_run_update_path(dry_run_path, from_version, to_version):
@@ -4412,8 +4438,11 @@ def main_restore(args, options={}):
     if len(args) == 2:
         new_sitename = args[0]
 
-    am_root = os.getuid() == 0
-    if not am_root:
+    if am_root():
+        # root needs at least a PATH
+        set_environment()
+
+    if not am_root():
         if new_sitename != sitename:
             bail_out(tty_error + ": Only root can restore to a new site!")
         reuse = True
@@ -4454,10 +4483,10 @@ def main_restore(args, options={}):
             if not options.kill:
                 bail_out(tty_error + ": Cannot restore '%s' while it is running." % (g_sitename))
             else:
-                if am_root:
-                    os.system('omd stop %s' % g_sitename)
+                if am_root():
+                    os.system('/usr/bin/omd stop %s' % g_sitename)
                 else:
-                    os.system('omd stop')
+                    os.system('/usr/bin/omd stop')
         unmount_tmpfs(g_sitename, kill = options.kill)
 
     sys.stdout.write("Restoring site %s from %s...\n" %
@@ -4471,7 +4500,7 @@ def main_restore(args, options={}):
     else:
         sys.stdout.write("Deleting existing site data...")
         # remove site folder (when doing this as user, skip only on errors below the sitefolder itself)
-        shutil.rmtree(g_sitedir, onerror=lambda f,p,e: p != g_sitedir and not am_root and bail_out(tty_error + ": %s" % e[1]))
+        shutil.rmtree(g_sitedir, onerror=lambda f,p,e: p != g_sitedir and not am_root() and bail_out(tty_error + ": %s" % e[1]))
         ok()
 
     if not os.path.exists(g_sitedir):
@@ -4507,7 +4536,7 @@ def main_restore(args, options={}):
     tar.close()
 
     # give new user all files
-    if am_root:
+    if am_root():
         chown_tree(g_sitedir, g_sitename)
 
     load_site_conf(skipMissing=True)
@@ -4555,7 +4584,7 @@ def main_restore(args, options={}):
         # Change symbolic link pointing to new version
         create_version_symlink(g_sitename, to_version)
 
-        if am_root:
+        if am_root():
             chown_tree(g_sitedir, g_sitename)
 
         # Let hooks do their work and update configuration.
@@ -4584,12 +4613,12 @@ def main_restore(args, options={}):
         add_to_fstab(g_sitename, tmpfs_size = options.tmpfs_size)
 
     # give new user all files
-    if am_root:
+    if am_root():
         chown_tree(g_sitedir, g_sitename)
 
     finalize_site("restore", options.apache_reload)
 
-    if not am_root:
+    if not am_root():
         sys.stdout.write("Restore completed as site user. "
                          "You may have to manually restart Apache...\n")
 
@@ -5236,6 +5265,13 @@ def print_command_help(cmd_spec):
     if len(cmd_spec.option_spec) == 0:
         sys.stdout.write("  no specific options for this command.\n")
 
+def pop_first_occurrence(list, word):
+    try:
+        list.remove(word)
+        found = True
+    except ValueError:                  # word not in the list
+        found = False
+    return list, found
 
 def exec_other_omd(version):
     # Rerun with omd of other version
@@ -5243,8 +5279,21 @@ def exec_other_omd(version):
     if version == OMD_VERSION:
         bail_out(tty_error + ": this is already version %s." % version)
     if os.path.exists(omd_path):
-        os.execv(omd_path, sys.argv)
-        bail_out(tty_error + ": Cannot run bin/omd of version %s." % version)
+        args = sys.argv
+        if not opt_force:
+            # switch early to site user to avoid issues with root permissions
+            if g_sitename and am_root():
+                switch_to_site_user()
+                # remove site name from args
+                args, found = pop_first_occurrence(args, g_sitename)
+                if not found:
+                    bail_out(tty_error + ": Cannot run omd of version %s as user %s. Site not part of arguments.\n" % (version, g_sitename))
+
+            # refuse to exec other (older) OMD versions as root
+            bail_out_if_root("Refusing to execute OMD version %s as root.\n" % (version))
+
+        os.execv(omd_path, args)
+        bail_out(tty_error + ": Cannot run omd of version %s." % version)
     else:
         bail_out(tty_error + ": Site %s uses version %s which is not installed.\n"
                 "Please reinstall that version and retry this command.\n"
@@ -5271,8 +5320,7 @@ def random_password():
 
 # returns true if this is the root user
 def am_root():
-    am_root = os.getuid() == 0
-    return am_root
+    return os.getuid() == 0
 
 # fork and run handler in site context, returns true if successful
 def call_as_forked_site_user(handler, args, kwargs):
@@ -5281,7 +5329,6 @@ def call_as_forked_site_user(handler, args, kwargs):
     if pid == 0:
         # this is the child process
         switch_to_site_user()
-        set_environment()
         if handler(*args, **kwargs):
             sys.exit(0)
         sys.exit(1)
@@ -5372,6 +5419,9 @@ def run(version):
 
     command     = args.command
     opt_version = args.version
+    opt_verbose = args.verbose     >= 1
+    opt_force   = args.force       >= 1
+    opt_yes     = args.yes         >= 1
 
     # switch to other version (except update/restore which switch later)
     if args.version != None and args.version != OMD_VERSION and command != "update" and command != "restore":
@@ -5401,7 +5451,7 @@ def run(version):
         print_usage(argparser)
         sys.exit(1)
 
-    if os.getuid() != 0 and cmd_spec.only_root:
+    if not am_root() and cmd_spec.only_root:
         bail_out(tty_error + ": omd: root permissions are needed for this command.")
 
     # Parse command options. Parse again all options with additional arguments
@@ -5433,7 +5483,7 @@ def run(version):
     # are site user, the site name is our user name
     g_sitename = None
     if cmd_spec.needs_site > 0:
-        if os.getuid() != 0:
+        if not am_root():
             g_sitename = site_name()
 
         if g_sitename == None and len(main_args) >= 1:
@@ -5447,13 +5497,10 @@ def run(version):
     # Commands operating on an existing site *must* run omd in
     # the same version as the site has! Sole exception: update.
     # That command must be run in the target version
-    if g_sitename and not args.version and cmd_spec.must_exist and command != "update" and command != "restore":
+    if g_sitename and not args.version and cmd_spec.must_exist and command != "update" and command != "restore" and command != "rm":
         v = site_version(g_sitename)
         if v is None: # Site has no homedirectory
-            if command == "rm":
-                sys.stdout.write("WARNING: This site has an empty home directory and is not\n"
-                                "assigned to any OMD version. You are running version %s.\n" % OMD_VERSION)
-            elif command != "init":
+            if command != "init":
                 bail_out(tty_error + ": This site has an empty home directory /omd/sites/%s.\n"
                         "If you have created that site with 'omd create --no-init %s'\n"
                         "then please first do an 'omd init %s'." % (3*(g_sitename,)))
@@ -5471,7 +5518,7 @@ def run(version):
     # we are sure that new files and processes are created under the
     # site user and never as root.
     g_orig_wd = os.getcwd()
-    if not cmd_spec.no_suid and g_sitename and os.getuid() == 0 and not cmd_spec.only_root:
+    if not cmd_spec.no_suid and g_sitename and am_root() and not cmd_spec.only_root:
         switch_to_site_user()
 
         # strip off sitename from arguments, it would end of as additional argument after changing omd version, ex.: on update
@@ -5484,9 +5531,9 @@ def run(version):
                 sys.argv.remove(a)
                 break
 
-    # Make sure environment is in a defined state
-    if g_sitename and command != "rm":
-        clear_environment()
+    # Make sure environment is in a defined state.
+    clear_environment()
+    if g_sitename:
         set_environment()
 
     if cmd_spec.confirm and not opt_force and not opt_yes:

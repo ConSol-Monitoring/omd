@@ -386,10 +386,10 @@ sub create_test_site {
     }
     my $createoptions = "";
     if(is_docker()) {
-        $createoptions = " --no-tmpfs ";
+        $createoptions .= " --no-tmpfs ";
     }
     if($version) {
-        $createoptions = " -V ".$version;
+        $createoptions .= " -f -V ".$version;
     }
     if(test_command({ cmd => TestUtils::get_omd_bin()." create $createoptions $site", errlike => $errlike })) {
         # disable cookie auth for tests
