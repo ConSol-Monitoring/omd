@@ -119,7 +119,7 @@ MODULES += checkvsphere-0.3.20.tar.gz
 OVERRIDES=""
 ifeq ($(HAS_PYTHON_307_OR_NEWER),true)
 OVERRIDES += certifi-2026.2.25.tar.gz
-OVERRIDES += jinja2-3.1.6.tar.gz
+OVERRIDES += jinja2-3.1.6-py3-none-any.whl
 OVERRIDES += pycryptodomex-3.23.0.tar.gz
 endif
 
@@ -142,7 +142,11 @@ OVERRIDES += urllib3-2.6.3-py3-none-any.whl
 OVERRIDES += mysql_connector_python-9.5.0-py2.py3-none-any.whl
 OVERRIDES += idna-3.11-py3-none-any.whl
 OVERRIDES += pyasn1-0.6.3-py3-none-any.whl
+OVERRIDES += pyparsing-3.3.2-py3-none-any.whl
+OVERRIDES += flit_core-3.12.0-py3-none-any.whl
 endif
+
+export PIP_ROOT_USER_ACTION=ignore
 
 build:
 	mkdir -p wheels
