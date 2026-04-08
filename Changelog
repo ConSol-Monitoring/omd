@@ -52,6 +52,7 @@ next:
           - rrdtool update to 1.9.0
           - telegraf update to 1.35.1
           - victoriametrics update to 1.138.0
+          - mod_prometheus_status apache module update to 0.3.4
 
 5.60     May 28 2025
           - omd:
