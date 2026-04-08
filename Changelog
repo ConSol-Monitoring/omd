@@ -43,7 +43,7 @@ next:
           - icinga2:
             - update to 2.15.2
             - disable deprecated check result writer
-          - Go builds updated to 1.26.1
+          - Go builds updated to 1.26.2
           - coshsh update to 11.1.0.1
           - histou update to 0.6.2
           - icinga2 update to 2.15.2
