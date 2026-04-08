@@ -3,6 +3,7 @@ This file documents the revision history for the Open Monitoring Distribution (L
 next:
           - omd:
             - add build support for debian 13 / trixie
+            - add build support for ubuntu 26.04 / resolute raccoon
             - drop build support for debian 11
             - drop build support for ubuntu 20.04
             - fix initial redirects when site apache does not use https
