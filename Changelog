@@ -7,7 +7,7 @@ next:
             - drop build support for ubuntu 20.04
             - fix initial redirects when site apache does not use https
           - thruk:
-            - update to 3.26
+            - update to 3.28
             - lmd update to 2.7.1
           - naemon:
             - core update to 1.5.1
