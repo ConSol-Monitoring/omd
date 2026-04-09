@@ -53,6 +53,12 @@ install: $(APACHE_MODULES_INSTALL)
 	install -m 644 test-unsafeallow.conf $(DESTDIR)$(OMD_ROOT)/share/omd/apache-test-unsafeallow.conf
 	sed -i -e 's|###APACHE_MODULE_DIR###|$(APACHE_MODULE_DIR)|g' $(DESTDIR)$(OMD_ROOT)/share/omd/apache-test-unsafeallow.conf
 
+	# SLES12 and later has apache 2.4 but does not have the prefork module to be loaded,
+	# so remove this load line for this distro from the apache config
+	if [ ! -e $(APACHE_MODULE_DIR)/mod_mpm_prefork.so ]; then \
+	    sed -i '/^LoadModule mpm_prefork_module/d' $(DESTDIR)$(OMD_ROOT)/share/omd/apache-test-unsafeallow.conf ; \
+	fi
+
 skel:
 	# install a custom apache configuration for apache 2.4 or later
 	if [ $(APACHE_24_OR_NEWER) -eq 1 ]; then \
