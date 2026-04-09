@@ -176,4 +176,5 @@ if [ "$MD5" != "$MD5_CHECK" ]; then
 fi
 
 tar zxf "$CACHE_FILE" --no-same-owner || exit 1
+chmod 644 $CACHE_FILE
 exit 0
