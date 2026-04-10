@@ -1,0 +1,94 @@
+From 71c969ece340d85e3c17212b2e135a85d539b405 Mon Sep 17 00:00:00 2001
+From: nook24 <info@nook24.eu>
+Date: Sun, 29 Mar 2026 15:51:00 +0200
+Subject: [PATCH] Fix: Discarded-qualifiers errors in string searching
+ functions
+
+Currently Naemon uses a mix of (char *) and (const char *) as input
+for different string functions such as strpbrk() or strchr().
+Modern compilers and stricter build flags (-Werror)
+throw errors when the result of string searching functions like
+strpbrk() or strchr() is assigned to a non-const pointer,
+especially when the input was cast to const char*.
+
+This commit adds explicit (char *) casts to the return values of
+strpbrk and strchr to ensure compatibility across different
+compiler versions and to satisfy -Werror=discarded-qualifiers.
+
+Affected functions:
+- strpbrk
+- strchr
+
+Issues:
+- #530
+- #522
+
+Signed-off-by: nook24 <info@nook24.eu>
+---
+ lib/nspath.c                 | 2 +-
+ src/naemon/checks.c          | 4 ++--
+ src/naemon/objects_command.c | 2 +-
+ src/naemon/workers.c         | 2 +-
+ 4 files changed, 5 insertions(+), 5 deletions(-)
+
+diff --git a/lib/nspath.c b/lib/nspath.c
+index 9f7f11e63..c59afc2e0 100644
+--- a/lib/nspath.c
++++ b/lib/nspath.c
+@@ -29,7 +29,7 @@ static inline int path_components(const char *path)
+ 	int comps = 1;
+ 	if (!path)
+ 		return 0;
+-	for (slash = strchr(path, '/'); slash; slash = strchr(slash + 1, '/'))
++	for (slash = (char *)strchr(path, '/'); slash; slash = strchr(slash + 1, '/'))
+ 		comps++;
+ 	return comps;
+ }
+diff --git a/src/naemon/checks.c b/src/naemon/checks.c
+index b33fa4a30..aa28833ba 100644
+--- a/src/naemon/checks.c
++++ b/src/naemon/checks.c
+@@ -111,7 +111,7 @@ struct check_output *parse_output(const char *buf, struct check_output *check_ou
+ 	perf_data_string = g_string_new(NULL);
+ 	tmp = strtok_r(tmpbuf, "\n", &saveptr);
+ 	if (tmp != NULL) {
+-		p = strpbrk((const char *) tmp, "|");
++		p = (char *)strpbrk((const char *) tmp, "|");
+ 	}
+ 	if (p == NULL) {
+ 		/* No perfdata in first line of output. */
+@@ -138,7 +138,7 @@ struct check_output *parse_output(const char *buf, struct check_output *check_ou
+ 	if ((tmp = strtok_r(NULL, "", &saveptr))) {
+ 
+ 		/* Is there a perf data delimiter somewhere in the long output? */
+-		p = strpbrk((const char *) tmp, "|");
++		p = (char *)strpbrk((const char *) tmp, "|");
+ 		if (p == NULL) {
+ 			/* No more perfdata, rest is long output*/
+ 			check_output->long_output = nm_strdup(tmp);
+diff --git a/src/naemon/objects_command.c b/src/naemon/objects_command.c
+index 7c9d0b4da..90975f4a1 100644
+--- a/src/naemon/objects_command.c
++++ b/src/naemon/objects_command.c
+@@ -97,7 +97,7 @@ command *find_bang_command(const char *name)
+ 	if (!name)
+ 		return NULL;
+ 
+-	bang = strchr(name, '!');
++	bang = (char *)strchr(name, '!');
+ 	if (!bang)
+ 		return find_command(name);
+ 	*bang = 0;
+diff --git a/src/naemon/workers.c b/src/naemon/workers.c
+index d9a0ffbda..d6da573a6 100644
+--- a/src/naemon/workers.c
++++ b/src/naemon/workers.c
+@@ -110,7 +110,7 @@ static struct wproc_list *get_wproc_list(const char *cmd)
+ 		return &workers;
+ 
+ 	/* first, look for a specialized worker for this command */
+-	if ((space = strchr(cmd, ' ')) != NULL) {
++	if ((space = (char *)strchr(cmd, ' ')) != NULL) {
+ 		int namelen = (unsigned long)space - (unsigned long)cmd;
+ 		cmd_name = nm_calloc(1, namelen + 1);
+ 		memcpy(cmd_name, cmd, namelen);
