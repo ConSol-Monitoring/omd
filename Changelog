@@ -10,7 +10,7 @@ next:
             - fix initial redirects when site apache does not use https
           - thruk:
             - update to 3.28
-            - lmd update to 2.7.1
+            - lmd update to 2.8.0
           - naemon:
             - core update to 1.5.1
             - livestatus update to 1.5.1
