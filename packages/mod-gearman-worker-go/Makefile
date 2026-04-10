@@ -14,7 +14,7 @@ PWD         = $(shell pwd)
 GITBASE     = github.com/consol-monitoring
 GITURL      = $(GITBASE)/$(NAME)
 # GIT TAG is set automatically by "make upstream" or "make package"
-GIT_TAG     = v1.6.0
+GIT_TAG     = v1.7.0
 
 .PHONY: skel
 
