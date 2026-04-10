@@ -2,6 +2,9 @@
 # This is no real configure script. But it makes
 # sure that all build dependencies are installed,
 # if you are running on a well known distribution.
+# Use --all parameter to also install os dependencies
+# which are usually installed as dependency from the
+# package. But for testing this is useful.
 
 DISTRO=$(./build/distro _) || { \
     echo "Your linux distribution is unknown. Good luck!"
@@ -26,6 +29,10 @@ PACKAGER=$(    make -f build/echo.mk FILE=$M VAR=PACKAGE_INSTALL )
 BECOME_ROOT=$( make -f build/echo.mk FILE=$M VAR=BECOME_ROOT )
 
 CMD="$PACKAGER $BUILD_PACS"
+if [ "$1" = "--all" ]; then
+    DISTRO_PACS=$( make -f build/echo.mk FILE=$M VAR=OS_PACKAGES | sed 's/|[^[:space:]]\+//g' )
+    CMD="$CMD $DISTRO_PACS"
+fi
 if [ $UID != 0 ]
 then
     CMD="$BECOME_ROOT '$CMD'"
