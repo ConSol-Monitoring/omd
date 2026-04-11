@@ -56,7 +56,7 @@ MODULES = \
           DBD-Sybase-1.24.tar.gz \
           DBD-SQLite-1.76.tar.gz \
           Data-Dumper-2.161.tar.gz \
-          Date-Manip-6.60.tar.gz \
+          Date-Manip-6.99.tar.gz \
           Devel-GlobalDestruction-XS-0.03.tar.gz \
           Digest-1.20.tar.gz \
           Digest-HMAC-1.03.tar.gz \
@@ -226,7 +226,7 @@ MODULES = \
           B-Hooks-EndOfScope-0.21.tar.gz \
           Gearman-2.004.015.tar.gz \
           XML-Parser-2.56.tar.gz \
-          XML-Twig-3.52.tar.gz \
+          XML-Twig-3.54.tar.gz \
           List-SomeUtils-0.56.tar.gz \
           Log-Dispatch-2.44.tar.gz \
           Monitoring-Plugin-0.40.tar.gz \
