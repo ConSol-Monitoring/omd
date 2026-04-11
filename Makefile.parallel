@@ -41,7 +41,6 @@ PACKAGES += maintenance
 PACKAGES += gearmand
 PACKAGES += mod-gearman
 PACKAGES += mod-gearman-worker-go
-PACKAGES += patch
 PACKAGES += nail
 PACKAGES += notifications-tt
 PACKAGES += ansible
