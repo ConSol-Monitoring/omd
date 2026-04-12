@@ -157,7 +157,7 @@ sub test_command {
                     last;
                 }
             }
-            elsif($t->stdout =~ m/$waitfor/mx) {
+            elsif(defined $t->stdout &&  $t->stdout =~ m/$waitfor/mx) {
                 ok(1, "content ".$expr." found after ".($now - $start)."seconds");
                 $found = 1;
                 last;
