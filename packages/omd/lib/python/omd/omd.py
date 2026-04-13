@@ -4939,7 +4939,7 @@ commands = [
         ( "--no-autostart",  "-A",   { "help":"set AUTOSTART to off (useful for test sites)", "action":"count", "default":0 }),
         ( "--apache-reload",  None,  { "help":"Issue a reload of the system apache instead of a restart", "action":"count", "default":0 }),
         ( "--no-tmpfs",       None,  { "help":"set TMPFS to off", "action":"count", "default":0 }),
-        ( "--tmpfs-size",    "-t",   { "help":"specify the maximum size of the tmpfs (defaults to 50% of RAM), examples: 500M, 20G, 60%"} ),
+        ( "--tmpfs-size",    "-t",   { "help":"specify the maximum size of the tmpfs (defaults to 50%% of RAM), examples: 500M, 20G, 60%%"} ),
     ],
     confirm_text =
         "This command performs the following actions on your system:\n"
@@ -5029,7 +5029,7 @@ commands = [
         ] + exclude_options + [
         ( "--conflict",       None,  { "help":"non-interactive conflict resolution. ARG is install, keepold, abort or ask"}),
         ( "--apache-reload",  None,  { "help":"Issue a reload of the system apache instead of a restart", "action":"count", "default":0 }),
-        ( "--tmpfs-size",    "-t",   { "help":"specify the maximum size of the tmpfs (defaults to 50% of RAM), examples: 500M, 20G, 60%"} ),
+        ( "--tmpfs-size",    "-t",   { "help":"specify the maximum size of the tmpfs (defaults to 50%% of RAM), examples: 500M, 20G, 60%%"} ),
         ( "--kill", None, { "help":"kill processes using tmpfs before unmounting it", "action":"count", "default":0 }),
     ],
   ),
@@ -5049,7 +5049,7 @@ commands = [
         ] + exclude_options + [
         ( "--conflict",       None,  { "help":"non-interactive conflict resolution. ARG is install, keepold, abort or ask"}),
         ( "--apache-reload",  None,  { "help":"Issue a reload of the system apache instead of a restart", "action":"count", "default":0 }),
-        ( "--tmpfs-size",    "-t",   { "help":"specify the maximum size of the tmpfs (defaults to 50% of RAM), examples: 500M, 20G, 60%"} ),
+        ( "--tmpfs-size",    "-t",   { "help":"specify the maximum size of the tmpfs (defaults to 50%% of RAM), examples: 500M, 20G, 60%%"} ),
         ( "--kill", None, { "help":"kill processes using tmpfs before unmounting it", "action":"count", "default":0 }),
     ],
   ),
@@ -5224,7 +5224,7 @@ commands = [
         ( "--kill",           None, { "help":"kill processes of site when reusing an existing one before restoring", "action":"count", "default":0 }),
         ( "--apache-reload",  None, { "help":"Issue a reload of the system apache instead of a restart", "action":"count", "default":0 }),
         ( "--conflict",       None, { "help":"non-interactive conflict resolution. ARG is install, keepold, abort or ask"}),
-        ( "--tmpfs-size",    "-t",  { "help":"specify the maximum size of the tmpfs (defaults to 50% of RAM), examples: 500M, 20G, 60%"} ),
+        ( "--tmpfs-size",    "-t",  { "help":"specify the maximum size of the tmpfs (defaults to 50%% of RAM), examples: 500M, 20G, 60%%"} ),
     ],
   ),
 
@@ -5261,7 +5261,7 @@ def print_command_help(cmd_spec):
         need_arg = True
         if "action" in spec[2] and spec[2]["action"] == "count":
             need_arg = False
-        sys.stdout.write(" %-26s %3s  %s\n" %(args_text, need_arg and "ARG" or "", spec[2]["help"]))
+        sys.stdout.write(" %-26s %3s  %s\n" %(args_text, need_arg and "ARG" or "", spec[2]["help"] % ()))
     if len(cmd_spec.option_spec) == 0:
         sys.stdout.write("  no specific options for this command.\n")
 
