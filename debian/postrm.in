@@ -76,6 +76,10 @@ case "$1" in
                 rm -f /usr/lib/systemd/system/omd.service
                 systemctl daemon-reload || :
             fi
+            if [ -f /etc/apparmor.d/local/mariadbd  ]; then
+                sed '%^/opt/omd/%d' -i /etc/apparmor.d/local/mariadbd
+                service apparmor reload || :
+            fi
         else
         if [ -d /usr/lib/systemd/system/. ]; then
             rm -f /usr/lib/systemd/system/omd.service

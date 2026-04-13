@@ -1,0 +1,7 @@
+/opt/omd/sites/*/.my.cnf r,
+/opt/omd/sites/*/etc/mysql/** r,
+/opt/omd/sites/*/var/mysql/ r,
+/opt/omd/sites/*/var/mysql/** rwk,
+/opt/omd/sites/*/var/tmp/ r,
+/opt/omd/sites/*/var/tmp/** rwk,
+/opt/omd/sites/*/tmp/run/** rwk,

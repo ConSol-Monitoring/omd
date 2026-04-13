@@ -12,6 +12,8 @@ build:
 
 install:
 	# Install software below $(DESTDIR)$(OMD_ROOT)/{bin,lib,share}
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/omd
+	install mariadb.apparmor $(DESTDIR)$(OMD_ROOT)/share/omd/mariadb.apparmor
 
 skel: $(SKEL_OPT)
 	! test -e /usr/share/mariadb/english || sed -e 's|/usr/share/mysql/english|/usr/share/mariadb/english|' -i ${SKEL}/.my.cnf

@@ -164,6 +164,13 @@ case "$1" in
         systemctl enable omd.service || :
     fi
 
+    # extend mariadb apparmor rules so a user daemon can be started
+    if [ -f /etc/apparmor.d/local/mariadbd  ]; then
+        sed '%^/opt/omd/%d' -i /etc/apparmor.d/local/mariadbd
+        cat /omd/versions/default/share/omd/mariadb.apparmor >> /etc/apparmor.d/local/mariadbd
+        service apparmor reload || :
+    fi
+
     if [ $ACTIVATE_INIT -eq 1 ]; then
         # there are no sites yet, but make sure omd service is set to running
         systemctl start omd.service >/dev/null 2>&1 || :
