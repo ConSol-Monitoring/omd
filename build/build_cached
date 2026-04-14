@@ -151,6 +151,9 @@ echo "no cached file found building from source and creating $CACHE_FILE"
 EXCLUDES_FILE=$(mktemp)
 find "./$SRC" -type f > $EXCLUDES_FILE
 
+# avoid adding FDO_PACKAGING_METADATA build info elf note in binaries
+unset ELF_PACKAGE_METADATA
+
 # no cache hit - rebuild package and create cache tarball
 set -e
 $MAKE -C "$SRC" build
