@@ -166,7 +166,7 @@ case "$1" in
 
     # extend mariadb apparmor rules so a user daemon can be started
     if [ -f /etc/apparmor.d/local/mariadbd  ]; then
-        sed '%^/opt/omd/%d' -i /etc/apparmor.d/local/mariadbd
+        sed '/^\/opt\/omd\//d' -i /etc/apparmor.d/local/mariadbd
         cat /omd/versions/default/share/omd/mariadb.apparmor >> /etc/apparmor.d/local/mariadbd
         service apparmor reload || :
     fi

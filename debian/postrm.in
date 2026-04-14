@@ -77,7 +77,7 @@ case "$1" in
                 systemctl daemon-reload || :
             fi
             if [ -f /etc/apparmor.d/local/mariadbd  ]; then
-                sed '%^/opt/omd/%d' -i /etc/apparmor.d/local/mariadbd
+                sed '/^\/opt\/omd\//d' -i /etc/apparmor.d/local/mariadbd
                 service apparmor reload || :
             fi
         else
