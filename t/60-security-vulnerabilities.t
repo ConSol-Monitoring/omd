@@ -527,8 +527,7 @@ LDAUDIT_C
 
     system("mkdir -p $sitedir/local/vuln5");
     symlink($victim_dir, "$sitedir/local/vuln5/escape");
-    system("chown -h $site:$site $sitedir/local/vuln5/escape 2>/dev/null");
-
+    system("chown -Rh $site:$site $sitedir/local/vuln5 2>/dev/null");
     TestUtils::test_command({ cmd => "$omd_bin cp $site $site_cp 2>&1", exit => undef, errlike => undef });
 
     my @st = stat($victim_dir);
