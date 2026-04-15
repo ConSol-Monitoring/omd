@@ -691,6 +691,7 @@ def file_owner_verify(path, user_id, group_id):
         return False
     return True
 
+
 def create_skeleton_files(sitename, dir):
     read_skel_permissions()
     sitedir = site_dir(sitename)
@@ -718,11 +719,13 @@ def create_skeleton_files(sitename, dir):
                 create_skeleton_file(skelroot, sitedir, dirpath, replacements)
             create_skeleton_file(skelroot, sitedir, dirpath + "/" + entry, replacements)
 
+
 def delete_user_file(user_path):
     if not os.path.islink(user_path) and os.path.isdir(user_path):
         shutil.rmtree(user_path)
     else:
         os.remove(user_path)
+
 
 def delete_directory_contents(d):
     # refuse to operate when directory is a symlink.
@@ -731,6 +734,7 @@ def delete_directory_contents(d):
         return
     for f in os.listdir(d):
         delete_user_file(d + '/' + f)
+
 
 def create_skeleton_file(skelbase, userbase, relpath, replacements):
     skel_path = skelbase + "/" + relpath
@@ -760,9 +764,9 @@ def create_skeleton_file(skelbase, userbase, relpath, replacements):
                 mode = g_file_mode
         os.chmod(user_path, mode)
 
+
 def chown_tree_fd(dirpath, user, uid, gid):
     try:
-        # TODO: check os.O_RDONLY and fchown
         dir_fd = os.open(dirpath, os.O_RDONLY | os.O_NOFOLLOW | os.O_DIRECTORY)
     except Exception as e:
         sys.stderr.write("Cannot chown %s to %s: %s\n" % (dirpath, user, e))
@@ -897,7 +901,6 @@ def walk_skel(root, handler, args, kwargs, depth_first, exclude_if_in = None, re
                                 todo = True # Try again
 
 
-#.
 #   .--omd update----------------------------------------------------------.
 #   |                           _                   _       _              |
 #   |        ___  _ __ ___   __| |  _   _ _ __   __| | __ _| |_ ___        |
