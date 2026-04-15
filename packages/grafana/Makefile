@@ -2,7 +2,7 @@ include ../../Makefile.omd
 
 NAME       = grafana
 CHANGELOG  = https://github.com/grafana/grafana/blob/main/CHANGELOG.md
-VERSION    = 12.4.2
+VERSION    = 12.4.3
 SRC        = $(NAME)-$(VERSION).tar.xz
 GOPATH     = go
 GOPKG      = 1.26
