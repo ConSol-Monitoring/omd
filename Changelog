@@ -8,6 +8,7 @@ This file documents the revision history for the Open Monitoring Distribution (L
             - drop build support for debian 11
             - drop build support for ubuntu 20.04
             - fix initial redirects when site apache does not use https
+            - fix security issue in omd command: GHSA-4vqw-mw3h-4gwh / CVE-2025-39666
           - thruk:
             - update to 3.28
             - lmd update to 2.8.0
@@ -46,10 +47,9 @@ This file documents the revision history for the Open Monitoring Distribution (L
           - icinga2:
             - update to 2.15.2
             - disable deprecated check result writer
-          - Go builds updated to 1.26.2
+          - golang builds updated to 1.26.2
           - coshsh update to 11.1.0.1
           - histou update to 0.6.2
-          - icinga2 update to 2.15.2
           - nagflux update to 0.5.7
           - remove sakuli helper files
           - rrdtool update to 1.9.0
@@ -91,7 +91,7 @@ This file documents the revision history for the Open Monitoring Distribution (L
             - replace shiped ansible with dependency on ansible
           - snmptrapd:
             - improve the samplicate_watch units
-          - Go builds updated to 1.23.7
+          - golang builds updated to 1.23.7
           - histou update to 0.6.1
           - upx update to 4.2.4
           - victoriametrics update to 1.116.0
