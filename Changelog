@@ -1,5 +1,9 @@
 This file documents the revision history for the Open Monitoring Distribution (Labs Edition)
 
+next:
+          - livestatus:
+            - install lq from lmd
+
 5.70     Apr 16 2026
           - omd:
             - add build support for debian 13 / trixie
