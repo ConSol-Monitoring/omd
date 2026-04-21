@@ -36,7 +36,7 @@ build:
 install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/bin
 	install -m 755 $(PWD)/$(GOPATH)/bin/lmd $(DESTDIR)$(OMD_ROOT)/bin
-	install -m 755 $(PWD)/$(GOPATH)/bin/lq  $(DESTDIR)$(OMD_ROOT)/bin
+	install -m 755 $(PWD)/$(GOPATH)/bin/lq  $(DESTDIR)$(OMD_ROOT)/bin/lq_lmd
 
 skel:
 
