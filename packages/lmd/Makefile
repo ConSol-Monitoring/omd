@@ -22,16 +22,21 @@ build:
 	tar zxf deps-*.tar.gz
 	tar zxf $(SRC)
 	mkdir -p $(GOPATH)/src/$(GITURL)/vendor/pkg
-	cp -rp $(GOPATH)/src/$(GITURL)/pkg/lmd $(GOPATH)/src/$(GITURL)/vendor/pkg/
+	mkdir -p $(GOPATH)/src/$(GITURL)/vendor/cmd
+	rsync -a $(GOPATH)/src/$(GITURL)/pkg/. $(GOPATH)/src/$(GITURL)/vendor/pkg/.
+	rsync -a $(GOPATH)/src/$(GITURL)/cmd/. $(GOPATH)/src/$(GITURL)/vendor/cmd/.
 	export GO111MODULE=auto && \
 		export GOROOT=$(PWD)/../go-$(GOPKG)/go-$(GOVERSION)/ && \
 		export GOPATH=$(PWD)/$(GOPATH)/ && \
 		export PATH=$$GOROOT/bin:$$PATH && \
-		go install -ldflags "-s -w -X main.Build=$(OMD_VERSION)-$(GIT_TAG)" $(GITURL)/cmd/lmd
+		cd $(GOPATH)/src/$(GITURL) && \
+		go install -ldflags "-s -w -X main.Build=$(OMD_VERSION)-$(GIT_TAG)" ./cmd/lmd && \
+		go install -ldflags "-s -w -X main.Build=$(OMD_VERSION)-$(GIT_TAG)" ./cmd/lq
 
 install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/bin
-	install -m 755 $(PWD)/$(GOPATH)/bin/$(NAME)  $(DESTDIR)$(OMD_ROOT)/bin
+	install -m 755 $(PWD)/$(GOPATH)/bin/lmd $(DESTDIR)$(OMD_ROOT)/bin
+	install -m 755 $(PWD)/$(GOPATH)/bin/lq  $(DESTDIR)$(OMD_ROOT)/bin
 
 skel:
 
