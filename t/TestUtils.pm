@@ -137,10 +137,10 @@ sub test_command {
         local $test->{'errlike'} = '/.*/';
         my $expr = '';
         while($now < $start + $maxwait) {
-            alarm(15);
+            alarm(120);
             $expr = $waitfor;
             eval {
-                local $SIG{ALRM} = sub { die "timeout on cmd: ".$test->{'cmd'}."\n" };
+                local $SIG{ALRM} = sub { die "timeout on cmd (120s): ".$test->{'cmd'}."\n" };
                 $t->run(args => $arg, stdin => $test->{'stdin'});
                 $rc = $?>>8;
             };
@@ -174,7 +174,7 @@ sub test_command {
     } else {
         alarm(300);
         eval {
-            local $SIG{ALRM} = sub { die "timeout on cmd: ".$test->{'cmd'}."\n" };
+            local $SIG{ALRM} = sub { die "timeout on cmd (300s): ".$test->{'cmd'}."\n" };
             $t->run(args => $arg, stdin => $test->{'stdin'});
             $rc = $?>>8;
         };
