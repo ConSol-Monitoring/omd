@@ -47,12 +47,12 @@ mkdir -p "$LOG_DIR" "$DATA_DIR"
 # add post hook for first start
 if ! test -s $OMD_ROOT/var/grafana/data/grafana.db; then
     START_CALLBACK=grafana_post_start
-    START_TIMEOUT=150
+    START_TIMEOUT=180
 fi
 grafana_post_start() {
     COMPLETED_PATTERN="migrations completed"
     echo -n "first run, waiting for initial database creation"
-    for x in $(seq 600); do
+    for x in $(seq 1500); do
         grep -c "$COMPLETED_PATTERN" $LOG_FILE >/dev/null 2>&1 && break
         [ $((x%10)) -eq 0 ] && echo -n "."
         if [ $x -gt 50 ]; then
