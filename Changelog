@@ -3,6 +3,7 @@ This file documents the revision history for the Open Monitoring Distribution (L
 next:
           - livestatus:
             - install lq from lmd
+          - nagflux update to 0.5.8
 
 5.70     Apr 16 2026
           - omd:
