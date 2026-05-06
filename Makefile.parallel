@@ -419,7 +419,7 @@ deb: deb-changelog
 	#echo "/opt/omd/versions/$(OMD_VERSION)/lib/naemon/*.dbg" > `pwd`/debian/omd-$(OMD_VERSION)-debug.install
 	fakeroot debian/rules clean
 	@unset MAKEFLAGS; \
-	debuild --no-lintian -i\.git -I\.git \
+	debuild --preserve-envvar=MAKE_JOBS --no-lintian -i\.git -I\.git \
 			-iomd-bin-$(OMD_VERSION).tar.gz \
 			-Iomd-bin-$(OMD_VERSION).tar.gz \
 			-i.gitignore -I.gitignore \
