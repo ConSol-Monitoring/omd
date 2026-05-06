@@ -14,7 +14,7 @@ include Makefile.omd
 
 ifdef BUILD_CACHE
 DEFAULT_BUILD=build-cached
-ifdef MAKE_JOBS
+else ifdef MAKE_JOBS
 DEFAULT_BUILD=build-parallel
 else
 DEFAULT_BUILD=build
