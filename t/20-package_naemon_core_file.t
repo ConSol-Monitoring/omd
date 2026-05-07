@@ -69,7 +69,14 @@ ok($corefilepattern, "got core file pattern: ".($corefilepattern//"none"));
 my $corefile;
 for (1..300) {
     my @corefile = glob($corefilepattern);
-    $corefile = shift @corefile;
+    # clean core files not from naemon
+    my @filtered;
+    for my $f (@corefile) {
+        my $test = "".`file $f 2>&1`;
+        next if $test !~ m/naemon\.dbg/mx;
+        push @filtered, $f;
+    }
+    $corefile = shift @filtered;
     last if $corefile;
     sleep 0.1;
 }
