@@ -55,8 +55,8 @@ for my $tarball (glob("packages/perl-modules/src/*.gz packages/perl-modules/src/
     if($mod eq 'TimeDate')                    { $mod = "Date::Parse"; }
 
     my $check = "use $mod";
-    # Use with version doesnt work here, because of weird version numbers
-    $check .= " $version" unless $mod =~ /^(Math::BaseCnv|XML::Tidy)$/;
+    # Use with version doesnt work here, because of weird version numbers (in case of cryptx, we ship different versions)
+    $check .= " $version" unless $mod =~ /^(Math::BaseCnv|XML::Tidy|CryptX)$/;
 
     TestUtils::test_command({ cmd => "/bin/su - $site -c 'perl -e \"$check;\"'" });
 }

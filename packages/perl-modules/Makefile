@@ -17,6 +17,12 @@ HAS_PERL_5_40_OR_NEWER := $(shell \
     fi \
 )
 
+# rhel7 cannot build the current CryptX
+CRYPTX = CryptX-0.088.tar.gz
+ifeq ($(DISTRO_CODE),el7)
+CRYPTX = CryptX-0.087.tar.gz
+endif
+
 # ubuntu (=> 22.04 breaks with archdir perl-base)
 EXTUTILSPATCHED=$(shell perl -V 2>&1 | grep extutils_set_libperl_path)
 ifeq ($(EXTUTILSPATCHED),)
@@ -238,7 +244,7 @@ MODULES = \
           namespace-autoclean-0.28.tar.gz \
           File-Tail-1.3.tar.gz \
           UUID-0.28.tar.gz \
-          CryptX-0.087.tar.gz \
+          $(CRYPTX) \
           Crypt-JWT-0.036.tar.gz \
           Thruk-Utils-XS-0.03.tar.gz \
           Monitoring-TT-1.0.3.tar.gz \
@@ -255,7 +261,6 @@ MODULES += \
           CPAN-2.16.tar.gz \
           threads-2.21.tar.gz
 endif
-
 
 build:
 	mkdir -p $(P5TMPDIST)/dest
