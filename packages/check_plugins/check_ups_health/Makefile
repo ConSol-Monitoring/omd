@@ -2,7 +2,7 @@ include ../../../Makefile.omd
 
 NAME = check_ups_health
 CHANGELOG   = https://github.com/lausser/check_ups_health/blob/master/ChangeLog
-VERSION = 4.4.0.1
+VERSION = 4.4.0.2
 DIR = $(NAME)-$(VERSION)
 
 .PHONY: skel
