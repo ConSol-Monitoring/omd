@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 NAME         = go
-VERSION      = 1.26.2
+VERSION      = 1.26.3
 PACKAGE_ROOT = $(shell cd .. && pwd)
 DIR          = $(NAME)-$(VERSION)
 
@@ -26,6 +26,7 @@ clean:
 
 upstream:
 	$(MAKE) clean
+	rm -fr go-*
 	rm -f *.xz
 	test -f go$(VERSION).src.tar.gz || wget "https://go.dev/dl/go$(VERSION).src.tar.gz"
 	tar xfz go$(VERSION).src.tar.gz
