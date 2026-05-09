@@ -14,7 +14,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 93 );
+plan( tests => 94 );
 
 ##################################################
 # create our test site
@@ -130,8 +130,10 @@ TestUtils::test_url({
 });
 
 TestUtils::test_command({
-    cmd => q(/bin/su - ) . $site . q( -c "influx -host 127.0.0.1 -port 8086 -username omdadmin -password omd -database nagflux -execute \"SELECT * FROM metrics WHERE command='perfdataLengthCheckBegin'\" | grep perfdataLengthCheckBegin"),
-    like => qr/perfdataLengthCheckBegin/
+    cmd     => q(/bin/su - ) . $site . q( -c "influx -host 127.0.0.1 -port 8086 -username omdadmin -password omd -database nagflux -execute \"SELECT * FROM metrics WHERE command='perfdataLengthCheckBegin'\" | grep perfdataLengthCheckBegin"),
+    like    => qr/perfdataLengthCheckBegin/,
+    waitfor => "perfdataLengthCheckBegin",
+    maxwait => "120",
 });
 
 TestUtils::test_command({
