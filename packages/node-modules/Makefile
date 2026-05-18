@@ -40,6 +40,7 @@ build:
 	echo "module.exports = {}" > .puppeteerrc.cjs # install.sh trys to open .config/.puppeteerrc otherwise
 	mkdir -p node_modules
 	$(NPM) i progress
+	$(NPM) i fix-esm
 	$(NPM) i puppeteer$(PUPPETEER)
 	if [ "x$(PUPPETEER_DOWNLOAD_PATH)" != "x" ]; then \
 		echo "downloaded chromium along with puppeteer"; \
