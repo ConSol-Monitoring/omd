@@ -4,6 +4,8 @@ next:
           - plugins:
             - check_nwc_health update to 12.12.2.5
             - check_pdu_health update to 3.4
+          - thruk:
+            - lmd update to 2.8.1
           - livestatus:
             - install lq from lmd
           - nagflux update to 0.5.8
