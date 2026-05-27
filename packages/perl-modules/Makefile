@@ -248,7 +248,7 @@ MODULES = \
           Crypt-JWT-0.036.tar.gz \
           Thruk-Utils-XS-0.03.tar.gz \
           Monitoring-TT-1.0.3.tar.gz \
-          Monitoring-GLPlugin-6.5.tar.gz
+          Monitoring-GLPlugin-6.5.0.1.tar.gz
 
 
 # newer perl can use system threads
