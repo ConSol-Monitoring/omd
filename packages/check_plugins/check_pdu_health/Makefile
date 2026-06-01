@@ -2,7 +2,7 @@ include ../../../Makefile.omd
 
 NAME = check_pdu_health
 CHANGELOG   = https://github.com/lausser/check_pdu_health/blob/master/ChangeLog
-VERSION = 3.4
+VERSION = 3.4.1.1
 DIR = $(NAME)-$(VERSION)
 
 .PHONY: skel
