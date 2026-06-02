@@ -2,7 +2,7 @@ include ../../../Makefile.omd
 
 NAME = check_rittal_health
 CHANGELOG   = https://github.com/lausser/check_rittal_health/blob/master/ChangeLog
-VERSION = 4.1.2
+VERSION = 4.1.2.1
 DIR = $(NAME)-$(VERSION)
 
 .PHONY: skel
