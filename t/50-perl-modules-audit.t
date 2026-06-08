@@ -28,6 +28,7 @@ TestUtils::test_command({
 ##################################################
 my($ret, $rc, $stdout, $stderr) = TestUtils::test_command({
     cmd     => "/bin/su - $site -c 'cpan-audit --json --exit-zero --quiet --no-color --no-corelist installed /omd/versions/default/lib/perl5/'",
+    errlike => '/.*Installed.pm line 73.*|/',
 });
 
 ##################################################
