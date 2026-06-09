@@ -53,6 +53,10 @@ for my $tarball (glob("packages/perl-modules/src/*.gz packages/perl-modules/src/
     if($mod eq 'Plack::Middleware::RemoveRedundantBody') { $version = ""; } # has broken version
     if($mod eq 'YAML::LibYAML')               { $mod = "YAML::XS"; $version = ""; }
     if($mod eq 'TimeDate')                    { $mod = "Date::Parse"; }
+    if($mod =~ m/^Alien/imx)                  { next; } # not installed on all systems
+    if($mod =~ m/^Path::Tiny/imx)             { next; } # not installed on all systems
+    if($mod =~ m/^File::chdir/imx)            { next; } # not installed on all systems
+    if($mod eq 'XML::LibXML')                 { $version = ""; } # installed with different versions
 
     my $check = "use $mod";
     # Use with version doesnt work here, because of weird version numbers (in case of cryptx, we ship different versions)

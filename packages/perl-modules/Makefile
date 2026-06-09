@@ -17,10 +17,17 @@ HAS_PERL_5_40_OR_NEWER := $(shell \
     fi \
 )
 
-# rhel7 cannot build the current CryptX
+# rhel7 cannot build some newer modules
+LIBXML = Path-Tiny-0.150.tar.gz \
+         File-chdir-0.1011.tar.gz \
+         Alien-Build-2.84.tar.gz \
+         Alien-Build-Plugin-Download-GitLab-0.01.tar.gz \
+         Alien-Libxml2-0.20.tar.gz \
+         XML-LibXML-2.0213.tar.gz
 CRYPTX = CryptX-0.088.tar.gz
 ifeq ($(DISTRO_CODE),el7)
 CRYPTX = CryptX-0.087.tar.gz
+LIBXML = XML-LibXML-2.0134.tar.gz
 endif
 
 # ubuntu (=> 22.04 breaks with archdir perl-base)
@@ -159,7 +166,7 @@ MODULES = \
           libnet-3.11.tar.gz \
           podlators-4.10.tar.gz \
           threads-shared-1.58.tar.gz \
-          Archive-Tar-3.04.tar.gz \
+          Archive-Tar-3.12.tar.gz \
           Archive-Zip-1.68.tar.gz \
           Attribute-Handlers-0.99.tar.gz \
           Bit-Vector-7.4.tar.gz \
@@ -188,15 +195,15 @@ MODULES = \
           Module-Load-Conditional-0.68.tar.gz \
           Monitoring-Livestatus-0.86.tar.gz \
           Net-HTTP-6.17.tar.gz \
-          XML-LibXML-2.0134.tar.gz \
+          $(LIBXML) \
           Module-Build-0.4007.tar.gz \
           Module-Build-Tiny-0.052.tar.gz \
           Module-Install-1.19.tar.gz \
           HTTP-Body-1.23.tar.gz \
           HTTP-Cookies-6.04.tar.gz \
-          HTTP-Daemon-6.16.tar.gz \
+          HTTP-Daemon-6.17.tar.gz \
           IPC-Cmd-0.98.tar.gz \
-          libwww-perl-6.31.tar.gz \
+          libwww-perl-6.83.tar.gz \
           ExtUtils-CBuilder-0.280230.tar.gz \
           ExtUtils-ParseXS-3.58.tar.gz \
           IO-1.25.tar.gz \
