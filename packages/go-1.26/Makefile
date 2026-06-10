@@ -16,7 +16,6 @@ build:
 
 install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/bin
-	install -m 755 ./govulncheck $(DESTDIR)$(OMD_ROOT)/bin
 
 skel:
 
