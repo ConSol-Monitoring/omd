@@ -13,7 +13,7 @@ GITBASE     = github.com/consol-monitoring
 GITURL      = $(GITBASE)/$(NAME)
 DEPS_SRC    = deps.tar.gz
 # GIT TAG is set automatically by "make upstream" or "make package"
-GIT_TAG     = 0.0.6
+GIT_TAG     = 069b04a
 
 build:
 	tar ozxf $(DEPS_SRC)
