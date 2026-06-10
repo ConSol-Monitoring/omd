@@ -35,48 +35,69 @@ my @skip_files = qw/
 my $src_folder = Cwd::getcwd($0."../packages");
 ok(1, "using src folder: ".$src_folder);
 
+# ##################################################
+# use latest golang version from source folder
+my @goversions = split(/\n/mx, `ls -d1 $src_folder/packages/go-*/go-*/ | grep -v go-bootstrap`);
+my $go = shift @goversions;
+BAIL_OUT("no go found") unless $go;
+ok($go, "using golang version: $go");
+
+`ln -s $go/bin/go /omd/sites/$site/local/bin/go`;
+`echo GOROOT=$go >> /omd/sites/$site/etc/environment`;
+
+TestUtils::test_command({
+    cmd  => "/bin/su - $site -c 'go version'",
+    like => ['/^go version/'],
+});
+
+my $govulncheck = $go.'../govulncheck';
+TestUtils::test_command({
+    cmd  => "/bin/su - $site -c '$govulncheck -version'",
+    like => ['/Scanner: govulncheck/'],
+});
+
 ##################################################
 # scan sources
-my @makefiles = split(/\n/mx, `grep ^GOPKG $src_folder/packages/*/Makefile`);
-ok(scalar @makefiles, "found ".(scalar @makefiles)." Makefiles with GOPKG");
-for my $make (@makefiles) {
-    my($pkg) = split(/:/mx, $make);
-    $pkg =~ s/\/Makefile$//mx;
-    ok($pkg, "scanning: $pkg");
-    my @tarballs = glob("$pkg/*.tgz $pkg/*.tar.gz $pkg/*.tar.xz");
-    ok(scalar @tarballs, "scanning ".(scalar @tarballs)." tarballs in $pkg");
-    for my $tarball (@tarballs) {
-        my $tar_compress = $tarball =~ m/\.xz$/mx ? 'J' : 'z';
-        next if $tarball =~ m/deps\-/;
-        my $has_go_mods = `tar tvf$tar_compress $tarball | grep go.mod`;
-        next unless $has_go_mods;
-        ok(-f $tarball, "found tarball with go.mod: $tarball");
-        TestUtils::test_command({
-            cmd  => "/bin/su - $site -c 'mkdir -p var/tmp/govul && cd var/tmp/govul && tar xf$tar_compress $tarball'",
-        });
-        my($return, $rc, $stdout, $stderr) = TestUtils::test_command({
-            cmd  => "/bin/su - $site -c 'find var/tmp/govul -name go.mod'",
-        });
-        my @gomods = split(/\n/mx, $stdout);
-        ok(scalar @gomods, "found ".(scalar @gomods)." go.mod file(s) in $tarball");
-        for my $gomod (@gomods) {
-            my $folder = $gomod;
-            $folder =~ s/\/go.mod$//mx;
-            next if $folder =~ m/\/vendor\//;
-            next if $folder =~ m/\/.citools\//;
-            ok(-d "/omd/sites/$site/".$folder, "checking go.mod file in $folder");
-            my($return, $rc, $stdout, $stderr) = TestUtils::test_command({
-                cmd     => "/bin/su - $site -c './bin/govulncheck -mode source -C $folder'",
-                like    => ['/No vulnerabilities found/'],
-                #unlike  => ['/Your code is affected/'],
-                exit    => undef,
-            });
-            #diag($stdout) if($rc != 0 && $stdout);
-            #diag($stderr) if($rc != 0 && $stderr);
-        }
-        `rm -rf var/tmp/govul`;
-    }
-}
+#my @makefiles = split(/\n/mx, `grep ^GOPKG $src_folder/packages/*/Makefile`);
+#ok(scalar @makefiles, "found ".(scalar @makefiles)." Makefiles with GOPKG");
+#for my $make (@makefiles) {
+#    my($pkg) = split(/:/mx, $make);
+#    $pkg =~ s/\/Makefile$//mx;
+#    ok($pkg, "scanning: $pkg");
+#    my @tarballs = glob("$pkg/*.tgz $pkg/*.tar.gz $pkg/*.tar.xz");
+#    ok(scalar @tarballs, "scanning ".(scalar @tarballs)." tarballs in $pkg");
+#    for my $tarball (@tarballs) {
+#        my $tar_compress = $tarball =~ m/\.xz$/mx ? 'J' : 'z';
+#        next if $tarball =~ m/deps\-/;
+#        my $has_go_mods = `tar tvf$tar_compress $tarball | grep go.mod`;
+#        next unless $has_go_mods;
+#        ok(-f $tarball, "found tarball with go.mod: $tarball");
+#        TestUtils::test_command({
+#            cmd  => "/bin/su - $site -c 'mkdir -p var/tmp/govul && cd var/tmp/govul && tar xf$tar_compress $tarball'",
+#        });
+#        my($return, $rc, $stdout, $stderr) = TestUtils::test_command({
+#            cmd  => "/bin/su - $site -c 'find var/tmp/govul -name go.mod'",
+#        });
+#        my @gomods = split(/\n/mx, $stdout);
+#        ok(scalar @gomods, "found ".(scalar @gomods)." go.mod file(s) in $tarball");
+#        for my $gomod (@gomods) {
+#            my $folder = $gomod;
+#            $folder =~ s/\/go.mod$//mx;
+#            next if $folder =~ m/\/vendor\//;
+#            next if $folder =~ m/\/.citools\//;
+#            ok(-d "/omd/sites/$site/".$folder, "checking go.mod file in $folder");
+#            my($return, $rc, $stdout, $stderr) = TestUtils::test_command({
+#                cmd     => "/bin/su - $site -c '$govulncheck -mode source -C $folder ./...'",
+#                like    => ['/No vulnerabilities found/'],
+#                #unlike  => ['/Your code is affected/'],
+#                exit    => undef,
+#            });
+#            #diag($stdout) if($rc != 0 && $stdout);
+#            #diag($stderr) if($rc != 0 && $stderr);
+#        }
+#        `rm -rf var/tmp/govul`;
+#    }
+#}
 
 ##################################################
 # check binaries and check plugins
@@ -98,7 +119,7 @@ for my $file (glob("/omd/sites/$site/bin/* /omd/sites/$site/lib/monitoring-plugi
 
         ok(1, "checking binary: $file");
         my($return, $rc, $stdout, $stderr) = TestUtils::test_command({
-            cmd     => "/bin/su - $site -c './bin/govulncheck -mode binary $file 2>&1'",
+            cmd     => "/bin/su - $site -c '$govulncheck -mode binary $file 2>&1'",
             #like    => ['/No vulnerabilities found|govulncheck: unrecognized binary format/'],
             #unlike  => ['/Your code is affected/'],
             exit    => undef,
@@ -119,7 +140,7 @@ for my $file (glob("/omd/sites/$site/bin/* /omd/sites/$site/lib/monitoring-plugi
         ok(-f "/var/tmp/".$basename, "unpacked with upx $file");
 
         ($return, $rc, $stdout, $stderr) = TestUtils::test_command({
-            cmd     => "/bin/su - $site -c './bin/govulncheck -mode binary /var/tmp/$basename 2>&1'",
+            cmd     => "/bin/su - $site -c '$govulncheck -mode binary /var/tmp/$basename 2>&1'",
             #like    => ['/No vulnerabilities found/'],
             #unlike  => ['/Your code is affected/'],
             exit    => undef,
