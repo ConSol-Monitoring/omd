@@ -65,7 +65,7 @@ MODULES = \
           Crypt-DES-2.07.tar.gz \
           Crypt-RC4-2.02.tar.gz \
           Crypt-Rijndael-1.14.tar.gz \
-          DBI-1.647.tgz \
+          DBI-1.648.tgz \
           DBD-Sybase-1.24.tar.gz \
           DBD-SQLite-1.76.tar.gz \
           Data-Dumper-2.161.tar.gz \
@@ -179,7 +179,7 @@ MODULES = \
           Devel-GlobalDestruction-0.14.tar.gz \
           Encode-3.19.tar.gz \
           File-Listing-6.04.tar.gz \
-          HTML-Parser-3.72.tar.gz \
+          HTML-Parser-3.85.tar.gz \
           Module-Metadata-1.000033.tar.gz \
           Module-ScanDeps-1.37.tar.gz \
           Term-Clui-1.71.tar.gz \
