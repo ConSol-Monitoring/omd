@@ -29,6 +29,9 @@ ifeq ($(DISTRO_CODE),el7)
 CRYPTX = CryptX-0.087.tar.gz
 LIBXML = XML-LibXML-2.0134.tar.gz
 endif
+ifeq ($(DISTRO_CODE),el10)
+LIBXML =
+endif
 
 # ubuntu (=> 22.04 breaks with archdir perl-base)
 EXTUTILSPATCHED=$(shell perl -V 2>&1 | grep extutils_set_libperl_path)
