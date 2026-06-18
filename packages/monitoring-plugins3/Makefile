@@ -2,52 +2,54 @@ include ../../Makefile.omd
 
 NAME = monitoring-plugins
 CHANGELOG = https://github.com/monitoring-plugins/monitoring-plugins/blob/master/NEWS
-VERSION = 2.4.0
+VERSION = master
 DIR = $(NAME)-$(VERSION)
 URIPARSER=0.8.6
 # GIT TAG is set automatically by "make upstream"
-GIT_TAG     = 2.4.0
+GIT_TAG     = 9bf8c49
 
-EXTRA_PATCHES=
+BUILD=build-plugins
+INSTALL=install-plugins
 ifeq ($(DISTRO_CODE),el7)
-EXTRA_PATCHES=patches/*.patch.rhel7
+BUILD=build-skip
+INSTALL=install-skip
 endif
 
 CONFIGUREOPTS = \
     --prefix=$(OMD_ROOT) \
-    --libexecdir=$(OMD_ROOT)/lib/monitoring-plugins
+    --without-radius \
+    --libexecdir=$(OMD_ROOT)/lib/monitoring-plugins/v3
 
-build: uriparser-$(URIPARSER)
+CFLAGS += -fpie
+
+build: $(BUILD)
+
+build-skip:
+
+build-plugins: uriparser-$(URIPARSER)
 	rm -rf $(DIR)
 	tar xzf $(DIR).tar.gz --no-same-owner
-	set -e ; for p in patches/*.patch $(EXTRA_PATCHES); do \
-	    echo "applying $$p..." ; \
-	    ( cd $(DIR) ; patch -p1 -b ) < $$p ; \
-	done
+	#set -e ; for p in patches/*.patch $(EXTRA_PATCHES); do \
+	#    echo "applying $$p..." ; \
+	#    ( cd $(DIR) ; patch -p1 -b ) < $$p ; \
+	#done
 	sed -e 's/\.git/_$(shell date +%F)_$(GIT_TAG)/g' -i $(DIR)/NP-VERSION-GEN
 	rm -f $(DIR)/release
 	cd $(DIR) && \
 		URIPARSER="$(shell pwd)/uriparser-$(URIPARSER)/.libs/liburiparser.a" \
 		URIPARSER_CPPFLAGS="-I$(shell pwd)/uriparser-$(URIPARSER)/include" \
-		./configure $(CONFIGUREOPTS)
-	$(MAKE) -C $(DIR) all
+		CFLAGS="$(CFLAGS)" ./configure $(CONFIGUREOPTS)
+	CFLAGS="$(CFLAGS)" $(MAKE) -C $(DIR) all
 
-install:
+install: $(INSTALL)
+
+install-skip:
+
+install-plugins:
 	$(MAKE) DESTDIR=$(DESTDIR) -C $(DIR) install
-	# FIXME: pack these with SUID root
-	install -m 755 $(DIR)/plugins-root/check_icmp $(DESTDIR)$(OMD_ROOT)/lib/monitoring-plugins
-	install -m 755 $(DIR)/plugins-root/check_dhcp $(DESTDIR)$(OMD_ROOT)/lib/monitoring-plugins
-	ln -s check_icmp $(DESTDIR)$(OMD_ROOT)/lib/monitoring-plugins/check_host
-
-	# Copy package documentations to have these information in the binary packages
-	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/doc/$(NAME)
-	set -e; for file in ACKNOWLEDGEMENTS AUTHORS CODING COPYING FAQ NEWS README REQUIREMENTS SUPPORT; do \
-	   install -m 644 $(DIR)/$$file $(DESTDIR)$(OMD_ROOT)/share/doc/$(NAME); \
-	done
-
-	# link lib/monitoring-plugins to lib/nagios/plugins
-	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/nagios
-	cd $(DESTDIR)$(OMD_ROOT)/lib/nagios && ln -s ../monitoring-plugins plugins
+	install -m 755 $(DIR)/plugins-root/check_icmp $(DESTDIR)$(OMD_ROOT)/lib/monitoring-plugins/v3
+	install -m 755 $(DIR)/plugins-root/check_dhcp $(DESTDIR)$(OMD_ROOT)/lib/monitoring-plugins/v3
+	ln -s check_icmp $(DESTDIR)$(OMD_ROOT)/lib/monitoring-plugins/v3/check_host
 
 uriparser-$(URIPARSER):
 	tar jxf uriparser-$(URIPARSER).tar.bz2 --no-same-owner

@@ -27,6 +27,7 @@ PACKAGES += nrpe
 PACKAGES += nsca
 PACKAGES += omd
 PACKAGES += monitoring-plugins
+PACKAGES += monitoring-plugins3
 PACKAGES += check_plugins
 PACKAGES += pnp4nagios
 PACKAGES += pnp4nagios4
