@@ -2,8 +2,8 @@ include ../../../Makefile.omd
 
 NAME        = check_prometheus
 CHANGELOG   = https://github.com/ConSol-Monitoring/check_prometheus/blob/master/Changelog.md
-BRANCH      = main
-VERSION     = main
+BRANCH      = 0.0.7
+VERSION     = $(BRANCH)
 SRC         = $(NAME)-$(VERSION).tar.gz
 GOPKG       = 1.26
 GOVERSION   = $(shell grep ^VERSION ../../go-${GOPKG}/Makefile | awk '{ print $$3 }')
@@ -13,7 +13,7 @@ GITBASE     = github.com/consol-monitoring
 GITURL      = $(GITBASE)/$(NAME)
 DEPS_SRC    = deps.tar.gz
 # GIT TAG is set automatically by "make upstream" or "make package"
-GIT_TAG     = 069b04a
+GIT_TAG     = 0.0.7
 
 build:
 	tar ozxf $(DEPS_SRC)
