@@ -1,15 +1,24 @@
 This file documents the revision history for the Open Monitoring Distribution (Labs Edition)
 
 next:
-          - plugins:
-            - check_nwc_health update to 12.12.2.5
-            - check_pdu_health update to 3.4
           - thruk:
             - lmd update to 2.8.1
+          - plugins:
+            - check_nwc_health update to 12.12.2.5
+            - check_pdu_health update to 3.4.1.1
+            - check_prometheus update to 069b04a
+            - check_rittal_health update to 4.1.2.1
+            - check_ups_health update to 4.4.1
+            - check_vsphere update to 0.3.30
+            - omdnotificationforwarder update to 4.4
+          - grafana:
+            - update to 12.4.3+security-02
           - livestatus:
             - install lq from lmd
-          - nagflux update to 0.5.8
           - golang builds updated to 1.26.4
+          - monitoring-plugins3 update to 9bf8c49
+          - nagflux update to 0.5.8
+          - victoriametrics update to 1.146.0
 
 5.70     Apr 16 2026
           - omd:
