@@ -49,7 +49,7 @@
 
 [NagiosSpoolfile]
 	Enabled = true
-	PerfdataLabelMaxLength = 32
+	PerfdataLabelMaxLength = 64
     PerfdataUOMMaxLength = 16
     PerfdataNumericValuesMaxLength = 32
     PerfdataThresholdsMaxLength = 64
