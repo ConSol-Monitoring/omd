@@ -6,6 +6,8 @@ export PATH := $(shell ls -d1 ../../node/node-*/bin 2>/dev/null):$(PATH)
 
 .PHONY: thruk
 
+export UV_USE_IO_URING := 0
+
 build: stylesheets/$(NAME).css
 
 stylesheets/$(NAME).css: thruk node_modules src/$(NAME).css

@@ -13,6 +13,9 @@ endif
 NODE_PATH=$(shell realpath $$(ls -d1 ../node/node-v*/lib/node_modules/npm/node_modules)):$(shell pwd)/node_modules
 NPM=NODE_PATH=$(NODE_PATH) PATH=$(shell realpath $$(ls -d1 ../node/node-v*/bin)):$$PATH npm
 
+# prevents hanging npm install
+export UV_USE_IO_URING := 0
+
 # use local chromium if enabled in distro file (by adding chrome dependency)
 ifneq (,$(findstring chromium,$(OS_PACKAGES)))
   export PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
