@@ -2,7 +2,7 @@ include ../../Makefile.omd
 
 NAME=coshsh
 CHANGELOG = https://github.com/lausser/coshsh/blob/master/Changelog
-VERSION=11.1.0.1
+VERSION=13.0
 COSHSH=$(NAME)-$(VERSION)
 
 build:
@@ -21,12 +21,14 @@ install:
 	cd $(COSHSH) && \
 	    export PYTHONPATH=$(shell pwd)/../python-modules/dest ; \
 	    python3 setup.py install \
-	        --prefix= \
-	        --home=$(DESTDIR)$(OMD_ROOT) \
-                --install-platlib=$(DESTDIR)$(OMD_ROOT)/lib/python \
-                --install-purelib=$(DESTDIR)$(OMD_ROOT)/lib/python \
-                --install-scripts=$(DESTDIR)$(OMD_ROOT)/bin \
-                --install-data=$(DESTDIR)$(OMD_ROOT)/share/coshsh
+		--root=$(DESTDIR)$(OMD_ROOT) \
+		--prefix=/ \
+		--install-platlib=/lib/python \
+		--install-purelib=/lib/python \
+		--install-scripts=/bin \
+		--install-data=/share/coshsh
+	python3 -c "import sys; exit(0 if sys.version_info >= (3,8) else 1)" && \
+	    rm -f $(DESTDIR)$(OMD_ROOT)/lib/python/coshsh_pycompat.py
 	cp datasource_snmptt.py \
 	    $(DESTDIR)$(OMD_ROOT)/share/coshsh/recipes/default/classes
 	cp datarecipient_atomic.py \
