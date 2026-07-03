@@ -28,7 +28,7 @@ install:
 		--install-scripts=/bin \
 		--install-data=/share/coshsh
 	python3 -c "import sys; exit(0 if sys.version_info >= (3,8) else 1)" && \
-	    rm -f $(DESTDIR)$(OMD_ROOT)/lib/python/coshsh_pycompat.py
+	    rm -f $(DESTDIR)$(OMD_ROOT)/lib/python/coshsh_pycompat.py || true
 	cp datasource_snmptt.py \
 	    $(DESTDIR)$(OMD_ROOT)/share/coshsh/recipes/default/classes
 	cp datarecipient_atomic.py \
