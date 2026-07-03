@@ -13,6 +13,8 @@ next:
             - omdnotificationforwarder update to 4.4
           - grafana:
             - update to 12.4.3+security-02
+          - prometheus:
+            - update to 3.13.0
           - livestatus:
             - install lq from lmd
           - golang builds updated to 1.26.4

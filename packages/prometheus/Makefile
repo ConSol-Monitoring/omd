@@ -4,8 +4,8 @@ include ../../Makefile.omd
 
 NAME       = prometheus
 CHANGELOG  = https://github.com/prometheus/prometheus/blob/main/CHANGELOG.md
-VERSION    = 3.5.2
-BRANCH     = master
+VERSION    = 3.13.0
+BRANCH     = non-git
 DIR        = $(NAME)-$(VERSION)
 SRC        = $(DIR).tar.xz
 GOPKG      = 1.26
@@ -15,7 +15,6 @@ GOFOLDER   = go
 GOPATH     = /dev/null # should not be used on vendor build
 GOROOT     = $(PWD)/../go-$(GOPKG)/go-$(GOVERSION)
 DATE       = $(shell TZ=UTC date -u '+%FT%TZ')
-NODEPATH   = $(shell ls -d1 ../node/node-v20*/bin)
 LDFLAGS    = "\
 -X github.com/prometheus/common/version.Version=$(VERSION) \
 -X github.com/prometheus/common/version.Revision=release-tar-ball \
@@ -58,12 +57,13 @@ clean:
 
 package: clean
 	curl -fLo $(DIR).tar.gz https://github.com/prometheus/prometheus/archive/v$(VERSION).tar.gz
-	tar xf $(DIR).tar.gz
+	curl -fLo $(DIR)-webui.tar.gz https://github.com/prometheus/prometheus/releases/download/v$(VERSION)/prometheus-web-ui-$(VERSION).tar.gz
+	tar xzf $(DIR).tar.gz
+	tar -C $(DIR)/web/ui -xzf $(DIR)-webui.tar.gz
 	rm -f $(DIR).tar.gz
-	cd $(DIR)/web/ui && env PATH=$(NODEPATH):$(GOROOT)/bin:$(PATH) npm install
-	cd $(DIR)        && env PATH=$(NODEPATH):$(GOROOT)/bin:$(PATH) make assets npm_licenses assets-compress
-	cd $(DIR)/web/ui && rm -r node_modules react-app/node_modules
-	cd $(DIR)        && env PATH=$(GOROOT)/bin:$(PATH) go mod vendor
+	rm -f $(DIR)-webui.tar.gz
+	cd $(DIR)        && env PATH=$(GOROOT)/bin:$(PATH) go work vendor
+	cd $(DIR)        && env PATH=$(GOROOT)/bin:$(PATH) make assets-compress SKIP_UI_BUILD=1
 	# remove some heavy but unused files to reduce the tarball size
 	find $(DIR)/tsdb -type d -name testdata | xargs -r rm -rf
 	XZ_OPT=-8 tar cfJ $(SRC) $(DIR)
