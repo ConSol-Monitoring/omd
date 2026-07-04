@@ -1,10 +1,10 @@
 #! /usr/bin/python3
 
-from coshsh.util import setup_logging
 from http import HTTPStatus
 import os
 import time
 import logging
+from logging.handlers import RotatingFileHandler
 import argparse
 import sys
 import re
@@ -414,6 +414,30 @@ class Service(object):
 
     def token_matches(self, token):
         return self.dtauthtoken and self.dtauthtoken == token or not self.dtauthtoken and self.hdtauthtoken and self.hdtauthtoken == token
+
+
+def setup_logging(logdir, logfile, scrnloglevel, txtloglevel, format):
+    logger = logging.getLogger("downtime_api")
+    if logger.hasHandlers():
+        for handler in list(logger.handlers):
+            handler.close()
+            logger.removeHandler(handler)
+    logger.setLevel(logging.DEBUG)
+    log_formatter = logging.Formatter(format)
+
+    if not os.path.exists(logdir):
+        os.makedirs(logdir, 0o755)
+    txt_handler = RotatingFileHandler(os.path.join(logdir, logfile),
+                                      maxBytes=20*1024*1024, backupCount=3, delay=True)
+    txt_handler.setFormatter(log_formatter)
+    txt_handler.setLevel(txtloglevel)
+    logger.addHandler(txt_handler)
+
+    console_handler = logging.StreamHandler(sys.stderr)
+    console_handler.setFormatter(log_formatter)
+    console_handler.setLevel(scrnloglevel)
+    logger.addHandler(console_handler)
+    return logger
 
 
 def originating_ip(environ):
@@ -881,9 +905,8 @@ if __name__ == "__main__":
     if not os.environ["OMD_ROOT"].startswith("/omd/sites/"):
         print("This script must be run in an OMD environment")
         sys.exit(1)
-    logger = logging.getLogger("downtime_api")
-    setup_logging(logdir=os.environ["OMD_ROOT"]+"/var/log", logfile="downtime_api.log", scrnloglevel=logging.INFO,
-                  txtloglevel=logging.INFO, format="[%(asctime)s][%(process)d] - %(levelname)s - %(message)s")
+    logger = setup_logging(logdir=os.environ["OMD_ROOT"]+"/var/log", logfile="downtime_api.log", scrnloglevel=logging.INFO,
+                           txtloglevel=logging.INFO, format="[%(asctime)s][%(process)d] - %(levelname)s - %(message)s")
     if "HTTP_USER_AGENT" in os.environ.keys():
         wsgiref.handlers.CGIHandler().run(main_web)
     else:

@@ -15,7 +15,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 100 );
+plan( tests => 110 );
 
 ##################################################
 # create our test site
@@ -60,6 +60,7 @@ my $query = $ml->selectall_arrayref("GET hosts\nFilter: host_name = down1\nColum
 is($query->[0]->[0], 0, "host: down1 downtime does not yet exist");
 my $dturl = "/$site/api/downtime?host=down1&comment=bla1&duration=1";
 TestUtils::test_command({ cmd => sprintf("/bin/su - %s -c \"lib/monitoring-plugins/check_http -t 60 -H %s --onredirect=follow -u '%s' --ssl\"", $site, $this_ip, $dturl), like => '/HTTP OK:/' });
+ok(-f "/omd/sites/$site/var/log/downtime_api.log", "downtime_api.log exists");
 $query = $ml->selectall_arrayref("GET hosts\nFilter: host_name = down1\nColumns: scheduled_downtime_depth host_name\n");
 is($query->[0]->[0], 1, "host: down1 downtime exists");
 $query = $ml->selectall_arrayref("GET downtimes\nFilter: host_name = down1\nColumns: duration comment\n");
@@ -131,6 +132,19 @@ $dturl = "/$site/api/downtime?host=down3&service=downsvc3b&dtauthtoken=a62932a27
 TestUtils::test_command({ cmd => sprintf("/bin/su - %s -c \"lib/monitoring-plugins/check_http -t 60 -H %s --onredirect=follow -u '%s' --ssl\"", $site, $this_ip, $dturl), like => '/HTTP OK:/' });
 $query = $ml->selectall_arrayref("GET services\nFilter: host_name = down3\nFilter: description = downsvc3b\nColumns: scheduled_downtime_depth host_name description\n");
 is($query->[0]->[0], 0, "service: down3 - downsvc3b downtime must not exist");
+
+##################################################
+# verify logging
+my $log = `/bin/su - $site -c 'cat var/log/downtime_api.log'`;
+like($log, qr/Downtime request received: host=down1.*comment=bla1.*duration=1/, "log: down1 host downtime requested");
+like($log, qr/Downtime request received: host=down2.*comment=bla1.*duration=1/, "log: down2 host downtime requested");
+like($log, qr/Downtime request received: host=down3.*comment=bla1.*duration=10/, "log: down3 host downtime requested");
+like($log, qr/Downtime request received: host=down1.*service=downsvc1.*comment=bla1.*duration=1/, "log: down1/downsvc1 service downtime requested");
+like($log, qr/Downtime request received: host=down2.*service=downsvc2.*comment=bla1.*duration=1/, "log: down2/downsvc2 service downtime requested");
+like($log, qr/Downtime request received: host=down3.*service=downsvc3a.*comment=bla1.*duration=1/, "log: down3/downsvc3a service downtime requested");
+like($log, qr/Downtime request received: host=down3.*service=downsvc3b.*delete=True/, "log: down3/downsvc3b service downtime deleted");
+like($log, qr/CRITICAL.*Address mismatch/, "log: address mismatch error");
+like($log, qr/CRITICAL.*dtauthtoken is not valid for host down3/, "log: invalid dtauthtoken error");
 
 ##################################################
 # cleanup test site
