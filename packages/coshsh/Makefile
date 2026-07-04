@@ -2,7 +2,7 @@ include ../../Makefile.omd
 
 NAME=coshsh
 CHANGELOG = https://github.com/lausser/coshsh/blob/master/Changelog
-VERSION=13.0
+VERSION=13.0.0.1
 COSHSH=$(NAME)-$(VERSION)
 
 build:
