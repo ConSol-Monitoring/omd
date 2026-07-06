@@ -4321,16 +4321,13 @@ def backup_site_files_to_taropen(tar, options):
     import fnmatch
     exclude = get_exclude_patterns(options)
 
-    def filter_files(tarinfo):
+    def check_files(tarinfo):
         filename = tarinfo.name
-        for glob_pattern in exclude:
-            # patterns are relative to g_sitedir, filename is relative to /omd/site
-            # strip of the g_sitename/ prefix from filename
-            if fnmatch.fnmatch(filename[len(g_sitename)+1:], glob_pattern):
-                return None # exclude this file
-        if options.verbose:
-            sys.stderr.write("adding %s\n" % filename[len(g_sitename)+1:])
-        return tarinfo
+        real_path = os.path.join("/omd/sites/", tarinfo.name)
+        if not os.access(real_path, os.R_OK, follow_symlinks=False):
+            sys.stdout.write((tty_yellow + 'WARNING: skipping %s (permission denied)' + tty_normal + '\n') % real_path)
+            return None # skip this entry
+        return print_files(tarinfo)
 
     def print_files(tarinfo):
         filename = tarinfo.name
@@ -4338,11 +4335,20 @@ def backup_site_files_to_taropen(tar, options):
             sys.stderr.write("adding %s\n" % filename[len(g_sitename)+1:])
         return tarinfo
 
+    def filter_files(tarinfo):
+        filename = tarinfo.name
+        for glob_pattern in exclude:
+            # patterns are relative to g_sitedir, filename is relative to /omd/site
+            # strip of the g_sitename/ prefix from filename
+            if fnmatch.fnmatch(filename[len(g_sitename)+1:], glob_pattern):
+                return None # exclude this file
+        return check_files(tarinfo)
+
     # add skel, it doesn't take much space and we can restore to any version with that information
     tar.add(os.path.join(g_sitedir, 'version', 'skel'), g_sitename+"/.backup_meta/skel", filter=print_files)
     tar.add(os.path.join(g_sitedir, 'share', 'omd', 'skel.permissions'), g_sitename+"/.backup_meta/skel.permissions", filter=print_files)
     if not exclude:
-        tar.add(g_sitedir, g_sitename, filter=print_files)
+        tar.add(g_sitedir, g_sitename, filter=check_files)
     else:
         tar.add(g_sitedir, g_sitename, filter=filter_files)
 
