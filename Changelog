@@ -2,7 +2,7 @@ This file documents the revision history for the Open Monitoring Distribution (L
 
 next:
           - thruk:
-            - lmd update to 2.8.1
+            - lmd update to 2.8.2
           - plugins:
             - check_nwc_health update to 12.12.2.5
             - check_pdu_health update to 3.4.1.1
