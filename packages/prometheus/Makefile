@@ -27,8 +27,10 @@ LDFLAGS    = "\
 build:
 	tar xfJ $(SRC)
 	mkdir -p $(DIR)/build
+	export GOMAXPROCS=2; \
 	cd $(DIR) && \
 		$(GOROOT)/bin/go build -a -tags netgo,builtinassets -trimpath -ldflags $(LDFLAGS) -o build/prometheus -mod=vendor github.com/prometheus/prometheus/cmd/prometheus
+	export GOMAXPROCS=2; \
 	cd $(DIR) && \
 		$(GOROOT)/bin/go build -a -tags netgo -trimpath -ldflags $(LDFLAGS) -o build/promtool -mod=vendor github.com/prometheus/prometheus/cmd/promtool
 	mkdir -p ./dest/bin/
