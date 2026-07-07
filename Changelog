@@ -20,7 +20,7 @@ next:
           - coshsh update to 13.0.0.1
           - golang builds updated to 1.26.4
           - monitoring-plugins3 update to 9bf8c49
-          - nagflux update to 0.5.9
+          - nagflux update to 0.6.0
           - victoriametrics update to 1.146.0
 
 5.70     Apr 16 2026

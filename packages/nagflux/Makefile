@@ -13,7 +13,7 @@ CONFIG_FILE = $(DESTDIR)$(OMD_ROOT)/etc/nagflux/config.gcfg
 GITBASE     = github.com/ConSol-Monitoring
 GITURL      = $(GITBASE)/$(NAME)
 # GIT TAG is set automatically by "make upstream" or "make package"
-GIT_TAG     = v0.5.9
+GIT_TAG     = v0.6.0
 
 .PHONY: skel
 
