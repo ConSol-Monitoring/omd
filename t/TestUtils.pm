@@ -108,8 +108,8 @@ sub get_omd_bin {
     errlike => (list of) regular expressions which have to match stderr, default: empty
     unlike  => (list of) regular expressions which must not match stdout
     sleep   => time to wait after executing the command
-    waitfor => wait till regex occurs (max 30sec)
-    maxwait => how long should be waited (default 30sec)
+    waitfor => wait till regex occurs (max. maxwait seconds)
+    maxwait => how long should be waited (default 60sec)
   }
 
 =cut
@@ -130,7 +130,7 @@ sub test_command {
         my $start   = time();
         my $now     = time();
         my $waitfor = $test->{'waitfor'};
-        my $maxwait = defined $test->{'maxwait'} ? $test->{'maxwait'} : 30;
+        my $maxwait = defined $test->{'maxwait'} ? $test->{'maxwait'} : 60;
         my $found   = 0;
         local $test->{'exit'}    = undef;
         local $test->{'like'}    = '/.*/';
@@ -513,7 +513,7 @@ sub remove_test_site {
     unlike           => (list of) regular expressions which must not match content
     skip_html_lint   => flag to disable the html lint checking
     skip_link_check  => (list of) regular expressions to skip the link checks for
-    waitfor          => wait till regex occurs (max 120sec)
+    waitfor          => wait till regex occurs (max maxwait seconds)
     maxwait          => how long should be waited (default 120sec)
     redirect         => request should redirect
     location         => redirect location
