@@ -29,10 +29,10 @@ build:
 	mkdir -p $(DIR)/build
 	export GOMAXPROCS=2; \
 	cd $(DIR) && \
-		$(GOROOT)/bin/go build -a -tags netgo,builtinassets -trimpath -ldflags $(LDFLAGS) -o build/prometheus -mod=vendor github.com/prometheus/prometheus/cmd/prometheus
+		$(GOROOT)/bin/go build -p=1 -a -tags netgo,builtinassets -trimpath -ldflags $(LDFLAGS) -o build/prometheus -mod=vendor github.com/prometheus/prometheus/cmd/prometheus
 	export GOMAXPROCS=2; \
 	cd $(DIR) && \
-		$(GOROOT)/bin/go build -a -tags netgo -trimpath -ldflags $(LDFLAGS) -o build/promtool -mod=vendor github.com/prometheus/prometheus/cmd/promtool
+		$(GOROOT)/bin/go build -p=1 -a -tags netgo -trimpath -ldflags $(LDFLAGS) -o build/promtool -mod=vendor github.com/prometheus/prometheus/cmd/promtool
 	mkdir -p ./dest/bin/
 	install -m 755 $(DIR)/build/prometheus ./dest/bin/
 	install -m 755 $(DIR)/build/promtool   ./dest/bin/
