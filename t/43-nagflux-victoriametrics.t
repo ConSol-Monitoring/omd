@@ -62,7 +62,7 @@ TestUtils::test_command({ cmd => "/bin/su - $site -c 'lib/monitoring-plugins/che
 #Mock Nagios and write spoolfiles
 TestUtils::test_command({ cmd => "/bin/su - $site -c 'cat > var/pnp4nagios/spool/ranges $ranges'"});
 
-# wait untill all data is inserted: 20
+# wait until all data is inserted: 20
 TestUtils::test_url({
     url            => "http://127.0.0.1:8428/api/v1/query?query=count(max_over_time(\{host=~\"xx.*\"\}[10m]))",
     like           => [ "/.*metrics.*/" ],
