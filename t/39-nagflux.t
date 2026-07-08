@@ -30,7 +30,6 @@ for my $i (0..99) {
 my $term = Term::ReadLine->new('Test Script');
 
 # Set up OMD, enable services to use
-
 TestUtils::test_command({ cmd => $omd_bin." config $site set INFLUXDB on" });
 TestUtils::test_command({ cmd => $omd_bin." config $site set PNP4NAGIOS off" });
 TestUtils::test_command({ cmd => $omd_bin." config $site set NAGFLUX on" });
@@ -54,8 +53,6 @@ END
 
 # Mock Nagios and write spoolfiles
 TestUtils::test_command({ cmd => "/bin/su - $site -c 'cat > var/pnp4nagios/spool/ranges $ranges'"});
-
-# OMD[testsite@jelinek]:~$ lib/monitoring-plugins/check_http -t 60 -H 127.0.0.1 -p 8086 -u "/query" -P "q=SHOW%20DATABASES" -a "omdadmin:omd" -s "nagflux"
 
 # Test if database is up
 TestUtils::test_command({ cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_http -t 60 -H 127.0.0.1 -p 8086 -u \"/query\" -P \"q=SHOW%20DATABASES\" -a \"omdadmin:omd\" -s \"nagflux\" '", like => '/HTTP OK:/' });
@@ -192,8 +189,6 @@ TestUtils::test_url({
     waitfor        => "test3",
     maxwait        => "120",
 });
-
-#Test curl instead of check_http
 
 TestUtils::test_command({
     cmd => q(/bin/su - ) . $site . q( -c "influx -host 127.0.0.1 -port 8086 -username omdadmin -password omd -database nagflux -execute \"SELECT * FROM metrics WHERE host='shouldpass'\" | wc -l | awk '{if (\$1 == 0) print \"NO_ENTRIES\"; else print \"ENTRIES_PRESENT\"}'"),

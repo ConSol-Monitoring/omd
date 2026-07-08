@@ -21,9 +21,6 @@ my $omd_bin   = TestUtils::get_omd_bin();
 my $site      = TestUtils::create_test_site() or TestUtils::bail_out_clean("no further testing without site");
 my $startTime = time-9;
 
-
-#my $site = 'testsite';
-
 # remove victoriametrics auth via empty config file:
 TestUtils::test_command({ cmd => qq{/bin/su - $site -c "echo '# dummy config' > ~$site/etc/victoriametrics/conf.d/auto_auth.conf" }, errlike => '/^$/'});
 
@@ -33,6 +30,7 @@ TestUtils::test_command({ cmd => $omd_bin." config $site set VICTORIAMETRICS on"
 TestUtils::test_command({ cmd => $omd_bin." config $site set PNP4NAGIOS off" });
 TestUtils::test_command({ cmd => $omd_bin." config $site set NAGFLUX on" });
 TestUtils::test_command({ cmd => $omd_bin." config $site set CORE naemon" });
+
 # switch target to victoriametrics
 TestUtils::test_command({ cmd => "/usr/bin/env sed -e '/^\\[InfluxDB .nagflux.\\]/,/^\\[/{s%^\\(\\s*Enabled\\).*%\\1 = false %}' -i ~$site/etc/nagflux/config.gcfg"});
 TestUtils::test_command({ cmd => "/usr/bin/env sed -e '/^\\[InfluxDB .victoriametrics.\\]/,/^\\[/{s%^\\(\\s*Enabled\\).*%\\1 = true %}' -i ~$site/etc/nagflux/config.gcfg"});
@@ -64,7 +62,7 @@ TestUtils::test_command({ cmd => "/bin/su - $site -c 'lib/monitoring-plugins/che
 #Mock Nagios and write spoolfiles
 TestUtils::test_command({ cmd => "/bin/su - $site -c 'cat > var/pnp4nagios/spool/ranges $ranges'"});
 
-# wait untill all data is inserted: 20 
+# wait untill all data is inserted: 20
 TestUtils::test_url({
     url            => "http://127.0.0.1:8428/api/v1/query?query=count(max_over_time(\{host=~\"xx.*\"\}[10m]))",
     like           => [ "/.*metrics.*/" ],
