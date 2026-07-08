@@ -48,7 +48,7 @@ TestUtils::test_command({ cmd => "/bin/su - $site -c 'kill -s SIGSEGV $naemonpid
 
 my $corefilepattern;
 if($core_pattern =~ m/\|.*systemd\-coredump/mx) {
-  TestUtils::test_command({ cmd => "/usr/bin/coredumpctl -1 list | grep -v missing", like => '/naemon/', waitfor => 'naemon', maxwait => 90 });
+  TestUtils::test_command({ cmd => "/usr/bin/coredumpctl list | grep -v missing", like => '/naemon/', waitfor => 'naemon', maxwait => 90 });
   `/usr/bin/coredumpctl -1 dump naemon.dbg > /tmp/core.naemon 2>/dev/null`;
   $corefilepattern = "/tmp/core.naemon";
 }
