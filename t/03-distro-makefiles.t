@@ -31,6 +31,8 @@ for my $file (keys %{$all_confs}) {
         next if $key eq 'ARCH'; # arch is debian specific
         next if $key eq 'UPX';            # optional
         next if $key eq 'SKIP_PACKAGES';  # optional
+        next if $key =~ m/^ifeq/mx;
+        next if $key =~ m/^endif/mx;
         ok(exists($all_confs->{$file}->{$key}), "$file: $key");
     }
 }

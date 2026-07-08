@@ -148,6 +148,10 @@ OS_PACKAGES          += readline
 OS_PACKAGES          += rsync
 OS_PACKAGES          += uuid
 OS_PACKAGES          += which
+ifeq ($(shell uname -m),aarch64)
+BUILD_PACKAGES       += chromium
+OS_PACKAGES          += chromium
+endif
 USERADD_OPTIONS       = -M
 ADD_USER_TO_GROUP     = gpasswd -a %(user)s %(group)s
 PACKAGE_INSTALL       = yum -y makecache ; yum -y install --nobest

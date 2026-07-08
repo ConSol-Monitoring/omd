@@ -2654,6 +2654,10 @@ def read_info():
                     # Skip comment and empty lines
                     if line.startswith('#') or line == '':
                         continue
+                    if line.startswith('ifeq'):
+                        continue
+                    if line.startswith('endif'):
+                        continue
                     # Remove everything after the first comment sign
                     if '#' in line:
                         line = line[:line.index('#')].strip()

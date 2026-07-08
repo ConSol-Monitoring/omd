@@ -136,6 +136,10 @@ OS_PACKAGES          += snmp
 OS_PACKAGES          += ssl-cert                       # apache ssl certificate
 OS_PACKAGES          += unzip
 OS_PACKAGES          += xinetd
+ifeq ($(shell uname -m),aarch64)
+BUILD_PACKAGES       += chromium
+OS_PACKAGES          += chromium
+endif
 USERADD_OPTIONS       =
 ADD_USER_TO_GROUP     = gpasswd -a %(user)s %(group)s
 PACKAGE_INSTALL       = apt-get -y update ; apt-get -y install --no-install-recommends

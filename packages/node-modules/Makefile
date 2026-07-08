@@ -19,31 +19,17 @@ NPX=NODE_PATH=$(NODE_PATH) PATH=$(shell realpath $$(ls -d1 ../node/node-v*/bin))
 # prevents hanging npm install
 export UV_USE_IO_URING := 0
 
-# use local chromium if enabled in distro file (by adding chrome dependency)
-#ifneq (,$(findstring chromium,$(OS_PACKAGES)))
-#  export PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
-#  export PUPPETEER_EXECUTABLE_PATH=$(shell which chromium-browser chromium 2>/dev/null | head -n 1)
-#else
-#  export PUPPETEER_DOWNLOAD_PATH=$(shell pwd)/.local-chromium
-#  # newer puppeteer versions use this folder
-#  export PUPPETEER_CACHE_DIR=$(shell pwd)/.local-chromium
-#endif
-
-## puppeteer is currently broken on rhel9 with chromium 134, but only on x86
-#ifeq ($(DISTRO_CODE),el9)
-#ifeq ($(shell uname -m),x86_64)
-#  export PUPPETEER_EXECUTABLE_PATH=
-#  unexport PUPPETEER_SKIP_CHROMIUM_DOWNLOAD
-#  unexport PUPPETEER_EXECUTABLE_PATH
-#  export PUPPETEER_DOWNLOAD_PATH=$(shell pwd)/.local-chromium
-#  export PUPPETEER_CACHE_DIR=$(shell pwd)/.local-chromium
-#endif
-#endif
-
 # skip generic download, we want a specific chrome version
 export PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
 export PUPPETEER_CACHE_DIR=$(shell pwd)/.local-chromium
 export PUPPETEER_DOWNLOAD_PATH=$(shell pwd)/.local-chromium
+
+# puppeteer downloads an unusable x86 binary on arm, so on arm we must use the system chrome
+ifeq ($(shell uname -m),aarch64)
+  unexport PUPPETEER_CACHE_DIR
+  unexport PUPPETEER_DOWNLOAD_PATH
+  export PUPPETEER_EXECUTABLE_PATH=$(shell which chromium-browser chromium 2>/dev/null | head -n 1)
+endif
 
 .PHONY: skel
 
@@ -53,20 +39,16 @@ build:
 	$(NPM) i progress
 	$(NPM) i fix-esm
 	$(NPM) i puppeteer$(PUPPETEER)
-	rm -rf node_modules/puppeteer/.local-chromium
-	rm -rf $(PUPPETEER_DOWNLOAD_PATH)
-	$(NPX) @puppeteer/browsers install chrome@$(CHROMIUM_VERSION)
-	mkdir -p node_modules/puppeteer/.local-chromium
-	mv chrome node_modules/puppeteer/.local-chromium/
-	#	cp -rp $(PUPPETEER_DOWNLOAD_PATH) node_modules/puppeteer/.local-chromium; \
-	#if [ "x$(PUPPETEER_DOWNLOAD_PATH)" != "x" ]; then \
-	#	echo "downloaded chromium along with puppeteer"; \
-	#	rm -rf node_modules/puppeteer/.local-chromium; \
-	#	cp -rp $(PUPPETEER_DOWNLOAD_PATH) node_modules/puppeteer/.local-chromium; \
-	#	rm -rf $(PUPPETEER_DOWNLOAD_PATH); \
-	#else \
-	#	echo "using system chromium from $(PUPPETEER_EXECUTABLE_PATH)"; \
-	#fi
+	if [ "x$(PUPPETEER_EXECUTABLE_PATH)" != "x" ]; then \
+		echo "using system chromium from $(PUPPETEER_EXECUTABLE_PATH)"; \
+	else \
+		echo "installing chromium v$(CHROMIUM_VERSION)"; \
+		rm -rf node_modules/puppeteer/.local-chromium; \
+		rm -rf $(PUPPETEER_DOWNLOAD_PATH); \
+		$(NPX) @puppeteer/browsers install chrome@$(CHROMIUM_VERSION); \
+		mkdir -p node_modules/puppeteer/.local-chromium; \
+		mv chrome node_modules/puppeteer/.local-chromium/; \
+	fi
 
 install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/node_modules

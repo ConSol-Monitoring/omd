@@ -719,6 +719,8 @@ sub read_config {
         my $line = $_;
         chomp($line);
         next if $line =~ m/^\s*(#|$)/;
+        next if $line =~ m/^ifeq/;
+        next if $line =~ m/^endif/;
         $line =~ s/\s*#.*$//;
         my $append = 0;
         my($key,$value) = split/\s+\+=\s*/,$line,2;
