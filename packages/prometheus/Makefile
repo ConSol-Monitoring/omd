@@ -4,7 +4,7 @@ include ../../Makefile.omd
 
 NAME       = prometheus
 CHANGELOG  = https://github.com/prometheus/prometheus/blob/main/CHANGELOG.md
-VERSION    = 3.13.0
+VERSION    = 3.13.1
 BRANCH     = non-git
 DIR        = $(NAME)-$(VERSION)
 SRC        = $(DIR).tar.xz
