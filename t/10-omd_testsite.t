@@ -173,7 +173,7 @@ my $tests = [
   { cmd => $omd_bin." rm $site2",        like => '/Restarting Apache...\s*OK/', stdin => "yes\n" },
 
   # --backup
-  { cmd => $omd_bin." backup $site /tmp/omd.backup.tgz", like => $is_docker ? '/^$/' : '/Unmounting temporary filesystem/' },
+  { cmd => $omd_bin." backup $site /tmp/omd.backup.tgz", like => $is_docker ? '/^$/' : '/Unmounting temporary filesystem/', errlike => 'OK backup /tmp/omd.backup.tgz written' },
   { cmd => $omd_bin." rm $site", like => '/Restarting Apache...\s*OK/', stdin => "yes\n" },
 
   # --restore

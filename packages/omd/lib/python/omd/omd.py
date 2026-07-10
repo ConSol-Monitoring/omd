@@ -4326,10 +4326,12 @@ def backup_site_files_to_taropen(tar, options):
     exclude = get_exclude_patterns(options)
 
     def check_files(tarinfo):
-        filename = tarinfo.name
         real_path = os.path.join("/omd/sites/", tarinfo.name)
-        if not os.access(real_path, os.R_OK, follow_symlinks=False):
-            sys.stdout.write((tty_yellow + 'WARNING: skipping %s (permission denied)' + tty_normal + '\n') % real_path)
+        required_mode = os.R_OK
+        if tarinfo.isdir():
+            required_mode |= os.X_OK
+        if not os.access(real_path, required_mode, follow_symlinks=False):
+            sys.stderr.write((tty_yellow + 'WARNING: skipping %s (permission denied)' + tty_normal + '\n') % real_path)
             return None # skip this entry
         return print_files(tarinfo)
 
@@ -4376,6 +4378,8 @@ def backup_site_to_taropen(fh, options):
 def main_backup(args, options={}):
     if len(args) == 0:
         bail_out(tty_error + ": You need to provide a path to the destination file.")
+    if len(args) > 1:
+        bail_out(tty_error + ": Too many options. Expected one option (which is the target file name)")
 
     if site_needs_update(g_sitename):
         bail_out(tty_error + ": This site needs to be updated with: omd update")
@@ -4396,8 +4400,7 @@ def main_backup(args, options={}):
         fh = open(dest, 'wb')
 
     backup_site_to_taropen(fh, options)
-    if options.verbose:
-        sys.stderr.write("backup %s written\n" % dest)
+    sys.stderr.write(tty_ok + " backup %s written\n" % dest)
 
 
 def main_restore(args, options={}):
