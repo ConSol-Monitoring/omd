@@ -67,7 +67,7 @@ else {
 ok($corefilepattern, "got core file pattern: ".($corefilepattern//"none"));
 # might take a few seconds...
 my $corefile;
-for (1..300) {
+for (1..600) {
     my @corefile = glob($corefilepattern);
     # clean core files not from naemon
     my @filtered;
@@ -80,7 +80,7 @@ for (1..300) {
     last if $corefile;
     sleep 0.1;
 }
-ok($corefile, "got corefile: ".($corefile // "none")." for pattern: ".($corefilepattern//"none")) or BAIL_OUT("cannot test without core file");
+ok($corefile, "got corefile: ".($corefile // "none")." for pattern: ".($corefilepattern//"none")) or BAIL_OUT("cannot test without core file: ".`file $corefilepattern 2>&1`);
 TestUtils::test_command({ cmd => "/bin/su - $site -c 'DEBUGINFOD_URLS= gdb /omd/sites/".$site."/bin/naemon.dbg -c $corefile -ex \"set pagination off\" -ex bt -ex quit'", like => ['/event_execution_loop/', '/naemon.c:/' ], errlike => undef });
 TestUtils::test_command({ cmd => "/bin/rm -f $corefile" });
 
