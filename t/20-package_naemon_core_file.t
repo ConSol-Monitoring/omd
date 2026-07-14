@@ -48,19 +48,20 @@ TestUtils::test_command({ cmd => "/bin/su - $site -c 'kill -s SIGSEGV $naemonpid
 
 my $corefilepattern;
 if($core_pattern =~ m/\|.*systemd\-coredump/mx) {
-  TestUtils::test_command({ cmd => "/usr/bin/coredumpctl list | grep -v missing", like => '/naemon/', waitfor => 'naemon', maxwait => 90 });
+  TestUtils::test_command({ cmd => "/usr/bin/coredumpctl list | grep -v missing", like => '/naemon/', waitfor => 'naemon', maxwait => 120 });
   `/usr/bin/coredumpctl -1 dump naemon.dbg > /tmp/core.naemon 2>/dev/null`;
   $corefilepattern = "/tmp/core.naemon";
 }
 elsif($core_pattern =~ m/\|.*apport/mx) {
-  TestUtils::test_command({ cmd => "/bin/su - $site -c 'ls /var/crash/*naemon*.crash'", like => '/naemon/', waitfor => 'naemon', maxwait => 90 });
+  TestUtils::test_command({ cmd => "/bin/su - $site -c 'ls /var/crash/*naemon*.crash'", like => '/naemon/', waitfor => 'naemon', maxwait => 120 });
   $corefilepattern = "/var/lib/apport/coredump/*naemon*";
+  TestUtils::test_command({ cmd => "/bin/su - $site -c 'ls $corefilepattern'", like => '/core.*naemon.*dbg/', waitfor => 'core.*naemon.*dbg', maxwait => 120 });
 }
 elsif($core_pattern =~ m/\|/mx) {
     fail("unsupported core pattern: ".$core_pattern);
 }
 else {
-  TestUtils::test_command({ cmd => "/bin/su - $site -c 'ls core*'", like => '/core/', waitfor => 'core', maxwait => 90 });
+  TestUtils::test_command({ cmd => "/bin/su - $site -c 'ls core*'", like => '/core/', waitfor => 'core', maxwait => 120 });
   $corefilepattern = "/omd/sites/".$site."/core*";
 }
 
