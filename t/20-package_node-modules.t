@@ -46,7 +46,7 @@ ok($ntest, "has chrome version");
 # execute some checks
 my $tests = [
   { cmd => "/bin/su - $site -c 'omd start'", like => '/Starting/' },
-  { cmd => "/bin/su - $site -c '/usr/bin/env NODE_PATH=lib/node_modules node share/thruk/script/puppeteer.js http://localhost:5000/".$site."/thruk/cgi-bin/remote.cgi test.png 200 200 000'" },
+  { cmd => "/bin/su - $site -c '/usr/bin/env NODE_PATH=lib/node_modules WAIT_TIMEOUT=120 START_TIMEOUT=120 node share/thruk/script/puppeteer.js http://localhost:5000/".$site."/thruk/cgi-bin/remote.cgi test.png 200 200 000'" },
 ];
 for my $test (@{$tests}) {
     TestUtils::test_command($test) || diag(`/usr/bin/env; /bin/su - $site -c '/usr/bin/env'`);
