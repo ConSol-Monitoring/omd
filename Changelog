@@ -22,7 +22,7 @@ next:
           - golang builds updated to 1.26.4
           - monitoring-plugins3 update to 9bf8c49
           - nagflux update to 0.6.0
-          - victoriametrics update to 1.146.0
+          - victoriametrics update to 1.147.0
 
 5.70     Apr 16 2026
           - omd:
