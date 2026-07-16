@@ -24,7 +24,7 @@ LIBXML = Path-Tiny-0.150.tar.gz \
          Alien-Build-Plugin-Download-GitLab-0.01.tar.gz \
          Alien-Libxml2-0.20.tar.gz \
          XML-LibXML-2.0213.tar.gz
-CRYPTX = CryptX-0.088.tar.gz
+CRYPTX = CryptX-0.090.tar.gz
 ifeq ($(DISTRO_CODE),el7)
 CRYPTX = CryptX-0.087.tar.gz
 LIBXML = XML-LibXML-2.0134.tar.gz
