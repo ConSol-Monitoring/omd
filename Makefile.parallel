@@ -27,6 +27,7 @@ PACKAGES += nrpe
 PACKAGES += nsca
 PACKAGES += omd
 PACKAGES += monitoring-plugins
+PACKAGES += monitoring-plugins3
 PACKAGES += check_plugins
 PACKAGES += pnp4nagios
 PACKAGES += pnp4nagios4
@@ -296,8 +297,6 @@ pack:
 	    exit 1; \
 	fi
 
-	find $(DESTDIR)$(OMD_ROOT)/ -type f -name \*.pyc -delete
-	find $(DESTDIR)$(OMD_ROOT)/ -type d -name __pycache__ -print0 | xargs -0 -n 500 rm -rf
 	-find \
     	$(DESTDIR)$(OMD_ROOT)/bin/ \
     	$(DESTDIR)$(OMD_ROOT)/lib/ \
@@ -347,7 +346,16 @@ install-global:
 
 	# Information about distribution and OMD
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/omd
-	install -m 644 distros/Makefile.$(DISTRO_NAME)_$(DISTRO_VERSION) $(DESTDIR)$(OMD_ROOT)/share/omd/distro.info
+	# create clean Makefile variable without ifeq conditions...
+	make -pn -f distros/Makefile.$(DISTRO_NAME)_$(DISTRO_VERSION) 2>/dev/null \
+		| grep -A 1 "distros/Makefile" \
+		| grep -v '^#' \
+		| grep -v '^--' \
+		| grep -v 'distros/Makefile' \
+		| sed 's/\ \+/ /g' \
+		| sort \
+		> $(DESTDIR)$(OMD_ROOT)/share/omd/distro.info
+	chmod 644 $(DESTDIR)$(OMD_ROOT)/share/omd/distro.info
 	echo -e "OMD_VERSION = $(OMD_VERSION)\nOMD_PHYSICAL_BASE = $(OMD_PHYSICAL_BASE)" > $(DESTDIR)$(OMD_ROOT)/share/omd/omd.info
 
 	# README files and license information
@@ -360,6 +368,15 @@ install-global:
 # repository.
 $(SOURCE_TGZ) dist:
 	git -c tar.umask=0022 archive --prefix=$(SOURCE_NAME)/ --format=tar.gz --output=$(SOURCE_TGZ) HEAD
+	@DUPS=$$(tar tvfz $(SOURCE_TGZ) | grep '/skel/' | cut -d '/' -f 4- | sort | uniq -d | grep -v '/$$' | grep -v '^\s*$$'); \
+	if [ "$$DUPS" != "" ]; then \
+		echo "******************"; \
+		echo "ERROR: found duplicate skel files:"; \
+		echo "$$DUPS"; \
+		echo "******************"; \
+		exit 1; \
+	fi;
+
 
 # Build RPM from source code.
 # When called from a git repository this uses 'make dist' and thus 'git archive'

@@ -221,7 +221,16 @@ install-global:
 
 	# Information about distribution and OMD
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/omd
-	install -m 644 distros/Makefile.$(DISTRO_NAME)_$(DISTRO_VERSION) $(DESTDIR)$(OMD_ROOT)/share/omd/distro.info
+	# create clean Makefile variable without ifeq conditions...
+	make -pn -f distros/Makefile.$(DISTRO_NAME)_$(DISTRO_VERSION) 2>/dev/null \
+		| grep -A 1 "distros/Makefile" \
+		| grep -v '^#' \
+		| grep -v '^--' \
+		| grep -v 'distros/Makefile' \
+		| sed 's/\ \+/ /g' \
+		| sort \
+		> $(DESTDIR)$(OMD_ROOT)/share/omd/distro.info
+	chmod 644 $(DESTDIR)$(OMD_ROOT)/share/omd/distro.info
 	echo -e "OMD_VERSION = $(OMD_VERSION)\nOMD_PHYSICAL_BASE = $(OMD_PHYSICAL_BASE)" > $(DESTDIR)$(OMD_ROOT)/share/omd/omd.info
 
 	# README files and license information
