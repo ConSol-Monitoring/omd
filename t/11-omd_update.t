@@ -14,7 +14,7 @@ BEGIN {
 
 plan skip_all => 'Author test. Set $ENV{TEST_AUTHOR} to a true value to run.' unless $ENV{TEST_AUTHOR};
 plan skip_all => 'Root permissions required' unless $> == 0;
-plan( tests => 215 );
+plan( tests => 223 );
 
 my $omd_bin  = TestUtils::get_omd_bin();
 my $site     = TestUtils::create_test_site() or TestUtils::bail_out_clean("no further testing without site");
@@ -84,6 +84,7 @@ TestUtils::test_command({ cmd => "/usr/bin/find /omd/sites/$site/ -user root -ls
 
 # run update
 TestUtils::test_command({ cmd => $omd_bin." stop $site",       like => '/Stopping naemon/' });
+TestUtils::test_command({ cmd => $omd_bin." status $site",     like => '/Overall state:\s*stopped/', exit => 1 });
 TestUtils::test_command({
             cmd  => $omd_bin." -V $omd_update -f update $site",
             like => ['/Updated\s+.gitignore/',
@@ -150,6 +151,7 @@ TestUtils::test_command({ cmd => $omd_bin." cleanup -n 5", like => ["/DRY RUN/",
 ##################################################
 # update from non-existing version
 TestUtils::test_command({ cmd => "/bin/su - $site -c 'omd stop'", like => '/Stopping naemon.*OK/' });
+TestUtils::test_command({ cmd => $omd_bin." status $site",        like => '/Overall state:\s*stopped/', exit => 1 });
 TestUtils::test_command({ cmd => "/bin/su - $site -c 'rm -f version'", like => '/^$/' });
 TestUtils::test_command({ cmd => "/bin/su - $site -c 'ln -s ../../versions/5.xxx version'", like => '/^$/' });
 TestUtils::test_command({ cmd => "/bin/su - $site -c 'omd update -n'", like => "/DRY RUN.*Updating site.*from version 5.xxx to \Q$omd_version\E/" });
