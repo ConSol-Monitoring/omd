@@ -68,7 +68,7 @@ MODULES = \
           Crypt-DES-2.07.tar.gz \
           Crypt-RC4-2.02.tar.gz \
           Crypt-Rijndael-1.14.tar.gz \
-          DBI-1.648.tgz \
+          DBI-1.651.tgz \
           DBD-Sybase-1.24.tar.gz \
           DBD-SQLite-1.76.tar.gz \
           Data-Dumper-2.161.tar.gz \
@@ -104,7 +104,7 @@ MODULES = \
           GD-2.83.tar.gz \
           Getopt-Long-2.50.tar.gz \
           HTML-Tagset-3.20.tar.gz \
-          HTTP-Date-6.02.tar.gz \
+          HTTP-Date-6.08.tar.gz \
           HTTP-MultiPartParser-0.02.tar.gz \
           Hash-MultiValue-0.16.tar.gz \
           IO-Compress-2.074.tar.gz \
