@@ -216,7 +216,7 @@ MODULES = \
           Parse-RecDescent-1.967015.tar.gz \
           Path-Class-0.37.tar.gz \
           Readonly-2.05.tar.gz \
-          Socket-2.027.tar.gz \
+          Socket-2.041.tar.gz \
           Spreadsheet-WriteExcel-2.40.tar.gz \
           Tie-IxHash-1.23.tar.gz \
           WWW-Form-UrlEncoded-0.24.tar.gz \
