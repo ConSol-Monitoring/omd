@@ -19,7 +19,7 @@ next:
           - livestatus:
             - install lq from lmd
           - coshsh update to 13.0.0.1
-          - golang builds updated to 1.26.4
+          - golang builds updated to 1.26.5
           - monitoring-plugins3 update to 9bf8c49
           - nagflux update to 0.6.0
           - victoriametrics update to 1.147.0
