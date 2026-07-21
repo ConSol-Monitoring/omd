@@ -29,10 +29,10 @@ build-skip:
 build-plugins: uriparser-$(URIPARSER)
 	rm -rf $(DIR)
 	tar xzf $(DIR).tar.gz --no-same-owner
-	#set -e ; for p in patches/*.patch $(EXTRA_PATCHES); do \
-	#    echo "applying $$p..." ; \
-	#    ( cd $(DIR) ; patch -p1 -b ) < $$p ; \
-	#done
+	set -e ; for p in patches/*.patch $(EXTRA_PATCHES); do \
+	    echo "applying $$p..." ; \
+	    ( cd $(DIR) ; patch -p1 -b ) < $$p ; \
+	done
 	sed -e 's/\.git/_$(shell date +%F)_$(GIT_TAG)/g' -i $(DIR)/NP-VERSION-GEN
 	rm -f $(DIR)/release
 	cd $(DIR) && \

@@ -1,0 +1,16 @@
+--- a/configure
++++ b/configure
+@@ -21776,2 +21776,2 @@
+-		FPING_MAJOR_VERSION="$($PATH_TO_FPING --version | sed 's/.*fping: Version //' | sed 's/\..*//')"
+-		FPING_MINOR_VERSION="$($PATH_TO_FPING --version | sed 's/.*fping: Version //' | sed 's/.*\.//')"
++		FPING_MAJOR_VERSION="$($PATH_TO_FPING --version | head -1 | sed 's/.*fping: Version //' | sed 's/\..*//')"
++		FPING_MINOR_VERSION="$($PATH_TO_FPING --version | head -1 | sed 's/.*fping: Version //' | sed 's/.*\.//')"
+@@ -21802 +21802 @@
+-		elif $FPING_MAJOR_VERSION > 5 ; then
++		elif test $FPING_MAJOR_VERSION -gt 5 ; then
+@@ -21815 +21815 @@
+-		if test "`fping --version | sed 's/.*fping: Version //'`" =  "5.2" ; then
++		if test "`fping --version | head -1 | sed 's/.*fping: Version //'`" =  "5.2" ; then
+@@ -21821 +21821 @@
+-		elif test "`fping --version | sed 's/.*fping: Version //'`" =  "5.3"; then
++		elif test "`fping --version | head -1 | sed 's/.*fping: Version //'`" =  "5.3"; then
