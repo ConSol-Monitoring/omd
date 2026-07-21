@@ -101,7 +101,7 @@ MODULES = \
           File-Slurp-9999.27.tar.gz \
           File-Which-1.27.tar.gz \
           ExtUtils-PkgConfig-1.16.tar.gz \
-          GD-2.83.tar.gz \
+          GD-2.86.tar.gz \
           Getopt-Long-2.50.tar.gz \
           HTML-Tagset-3.20.tar.gz \
           HTTP-Date-6.08.tar.gz \
