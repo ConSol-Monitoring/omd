@@ -141,7 +141,7 @@ OVERRIDES += requests-2.33.0-py3-none-any.whl
 OVERRIDES += urllib3-2.7.0-py3-none-any.whl
 OVERRIDES += mysql_connector_python-9.5.0-py2.py3-none-any.whl
 OVERRIDES += idna-3.18-py3-none-any.whl
-OVERRIDES += pyasn1-0.6.3-py3-none-any.whl
+OVERRIDES += pyasn1-0.6.4-py3-none-any.whl
 OVERRIDES += pyparsing-3.3.2-py3-none-any.whl
 OVERRIDES += flit_core-3.12.0-py3-none-any.whl
 endif
