@@ -4,6 +4,7 @@ next:
           - thruk:
             - lmd update to 2.8.2
           - plugins:
+            - check_mssql_health update to 2.9
             - check_nwc_health update to 12.13.1
             - check_pdu_health update to 3.4.1.1
             - check_prometheus update to 0.0.7
