@@ -17,7 +17,7 @@ next:
           - grafana:
             - update to 12.4.3+security-02
           - prometheus:
-            - update to 3.13.1
+            - update to 3.13.2
             - node_exporter update to 1.12.1
           - livestatus:
             - install lq from lmd
