@@ -115,6 +115,7 @@ OS_PACKAGES          += libxml2
 OS_PACKAGES          += libxrandr2                     # chrome
 OS_PACKAGES          += logrotate
 OS_PACKAGES          += mariadb-server|mysql-server|virtual-mysql-server
+OS_PACKAGES          += openssl
 OS_PACKAGES          += patch
 OS_PACKAGES          += perl-base
 OS_PACKAGES          += php

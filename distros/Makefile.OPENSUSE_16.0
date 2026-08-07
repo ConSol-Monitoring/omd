@@ -123,6 +123,7 @@ OS_PACKAGES          += libXrender1                    # chrome
 OS_PACKAGES          += mozilla-nss                    # chrome
 OS_PACKAGES          += mysql
 OS_PACKAGES          += net-snmp
+OS_PACKAGES          += openssl
 OS_PACKAGES          += pango
 OS_PACKAGES          += patch
 OS_PACKAGES          += perl-IO-Socket-SSL

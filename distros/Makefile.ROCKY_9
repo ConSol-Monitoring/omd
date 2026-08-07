@@ -122,6 +122,7 @@ OS_PACKAGES          += net-snmp-perl
 OS_PACKAGES          += net-snmp-utils
 OS_PACKAGES          += net-tools
 OS_PACKAGES          += nss                            # chrome
+OS_PACKAGES          += openssl
 OS_PACKAGES          += pango
 OS_PACKAGES          += patch
 OS_PACKAGES          += perl-core
