@@ -902,6 +902,7 @@ sub _diag_lint_errors_and_remove_some_exceptions {
             "Unknown\ attribute\ \"placeholder\"\ for\ tag\ <textarea>",
             "Unknown\ attribute\ \"autocomplete\"\ for\ tag\ <form>",
             "Unknown\ attribute\ \"autocomplete\"\ for\ tag\ <input>",
+            "Unknown\ attribute\ \"oninput\"\ for\ tag\ <input>",
             "Unknown\ attribute\ \"height\"\ for\ tag\ <tr>",
             "should be written as &uuml",
             "should be written as &ldquo",
