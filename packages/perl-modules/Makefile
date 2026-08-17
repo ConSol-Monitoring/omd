@@ -68,7 +68,7 @@ MODULES = \
           Crypt-DES-2.07.tar.gz \
           Crypt-RC4-2.02.tar.gz \
           Crypt-Rijndael-1.14.tar.gz \
-          DBI-1.651.tgz \
+          DBI-1.652.tgz \
           DBD-Sybase-1.24.tar.gz \
           DBD-SQLite-1.76.tar.gz \
           Data-Dumper-2.161.tar.gz \
