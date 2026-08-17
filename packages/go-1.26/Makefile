@@ -1,7 +1,7 @@
 include ../../Makefile.omd
 
 NAME         = go
-VERSION      = 1.26.5
+VERSION      = 1.26.6
 PACKAGE_ROOT = $(shell cd .. && pwd)
 DIR          = $(NAME)-$(VERSION)
 
