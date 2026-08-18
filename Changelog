@@ -5,7 +5,7 @@ next:
             - lmd update to 2.8.2
           - plugins:
             - check_mssql_health update to 2.9
-            - check_nwc_health update to 12.13.2.1
+            - check_nwc_health update to 12.13.2.2
             - check_pdu_health update to 3.4.1.1
             - check_prometheus update to 0.0.7
             - check_rittal_health update to 4.1.2.1
@@ -22,7 +22,7 @@ next:
           - livestatus:
             - install lq from lmd
           - coshsh update to 13.0.0.1
-          - golang builds updated to 1.26.5
+          - golang builds updated to 1.26.6
           - monitoring-plugins3 update to 9bf8c49
           - nagflux update to 0.6.2
           - victoriametrics update to 1.149.0
