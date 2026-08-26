@@ -14,6 +14,7 @@ next:
             - omdnotificationforwarder update to 4.4
           - gearman:
             - mod-gearman update to 5.2.4
+            - mod-gearman-worker-go update to 1.7.2
           - grafana:
             - update to 12.4.3+security-02
           - prometheus:

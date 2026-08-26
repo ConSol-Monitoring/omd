@@ -14,7 +14,7 @@ PWD         = $(shell pwd)
 GITBASE     = github.com/consol-monitoring
 GITURL      = $(GITBASE)/$(NAME)
 # GIT TAG is set automatically by "make upstream" or "make package"
-GIT_TAG     = v1.7.0
+GIT_TAG     = v1.7.2
 
 .PHONY: skel
 
@@ -27,11 +27,11 @@ build:
 		export GOROOT=$(PWD)/../go-$(GOPKG)/go-$(GOVERSION)/ && \
 		export GOPATH=$(PWD)/$(GOPATH)/ && \
 		export PATH=$$GOROOT/bin:$$PATH && \
-		go install -ldflags "-s -w -X main.Build=$(OMD_VERSION)-$(GIT_TAG)" $(GITURL)/cmd/mod_gearman_worker
+		( cd $(GOPATH)/src/$(GITURL)/cmd/mod_gearman_worker && go build -ldflags "-s -w -X main.Build=$(OMD_VERSION)-$(GIT_TAG)" -o $(PWD)/mod_gearman_worker )
 
 install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/bin
-	install -m 0755 $(PWD)/$(GOPATH)/bin/mod_gearman_worker                  $(DESTDIR)$(OMD_ROOT)/bin/
+	install -m 0755 $(PWD)/mod_gearman_worker                                $(DESTDIR)$(OMD_ROOT)/bin/
 	install -m 0755 $(PWD)/$(GOPATH)/src/$(GITURL)/mod_gearman_worker_epn.pl $(DESTDIR)$(OMD_ROOT)/bin/
 
 skel:
@@ -45,6 +45,7 @@ skel:
 clean:
 	[ ! -e $(GOPATH) ] || chmod -R 777 $(GOPATH)
 	rm -rf $(GOPATH)
+	rm -rf mod_gearman_worker
 
 deps: clean
 	mkdir -p $(GOPATH)

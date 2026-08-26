@@ -1,2 +1,3 @@
 go/
 skel/etc/mod-gearman/worker.cfg
+mod_gearman_worker
