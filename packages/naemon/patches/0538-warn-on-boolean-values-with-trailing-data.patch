@@ -1,0 +1,216 @@
+From 7f83f12d5830a7a87665c987645e1ef97b390f2c Mon Sep 17 00:00:00 2001
+From: Gerhard Lausser <gerhard.lausser@consol.de>
+Date: Mon, 17 Aug 2026 17:33:03 +0200
+Subject: [PATCH 1/3] Reject boolean object directives with excess characters
+
+xod_parse_bool() examined only the first character of a directive's
+value, so everything after it was silently discarded. "register 0v"
+and "register 0nono" were read as 0, and "register 10" as 1.
+
+The 0-prefixed case is the damaging one. The object is treated as an
+unregistered template, so a single stray character removes a host from
+monitoring while naemon starts up cleanly and reports nothing at all.
+
+The value is now compared in full and only "0" and "1" are accepted,
+as the documentation has always specified. Anything else is a config
+error, so the object config is rejected, the pre-flight check does not
+run and naemon does not start.
+
+The error also names the directive as written in the config file and
+quotes the offending value:
+
+    Error: invalid value '0v' for 'register', expected 0 or 1.
+
+It previously printed the struct member name, which for "register" is
+"register_object" - a directive that appears in no config file. The
+name now comes from the parsed token rather than the member, so
+aliases are reported as written too: "checks_enabled" is not reported
+as "active_checks_enabled", nor "obsess_over_host" as "obsess".
+
+This is a breaking change. Configurations accepted before will now be
+rejected, so run naemon -v before upgrading and before reloading a
+running instance.
+
+Affected directives:
+- register
+- active_checks_enabled (alias checks_enabled)
+- passive_checks_enabled
+- event_handler_enabled
+- flap_detection_enabled
+- check_freshness
+- process_perf_data
+- obsess (aliases obsess_over_host, obsess_over_service)
+- is_volatile
+- notifications_enabled
+- host_notifications_enabled, service_notifications_enabled
+- retain_status_information, retain_nonstatus_information
+- inherits_parent
+- can_submit_commands
+---
+ NEWS                                |  17 ++
+ src/naemon/xodtemplate.c            |  35 ++-
+ 5 files changed, 484 insertions(+), 13 deletions(-)
+
+diff --git a/NEWS b/NEWS
+index 21b6270d..674305d1 100644
+--- a/NEWS
++++ b/NEWS
+@@ -1,3 +1,20 @@
++Next:
++Breaking changes:
++* boolean object directives now accept only the exact values 0 and 1. Values carrying excess
++  characters, such as `register 0v` or `register 10`, were previously accepted silently: only the
++  first character was examined, so `0v` was read as 0 and the object was quietly left unregistered
++  and unmonitored. Such values are now a configuration error and Naemon will refuse to start.
++  This affects `register`, `notifications_enabled`, `active_checks_enabled` (alias `checks_enabled`),
++  `passive_checks_enabled`, `event_handler_enabled`, `flap_detection_enabled`, `check_freshness`,
++  `process_perf_data`, `obsess` (aliases `obsess_over_host`, `obsess_over_service`), `is_volatile`,
++  `retain_status_information`, `retain_nonstatus_information`, `inherits_parent`,
++  `can_submit_commands`, `host_notifications_enabled` and `service_notifications_enabled`.
++  Offending lines can be found before upgrading with:
++      grep -rnE '^[[:space:]]*(register|is_volatile|inherits_parent|can_submit_commands|checks_enabled|active_checks_enabled|passive_checks_enabled|event_handler_enabled|flap_detection_enabled|check_freshness|process_perf_data|obsess|obsess_over_host|obsess_over_service|notifications_enabled|host_notifications_enabled|service_notifications_enabled|retain_status_information|retain_nonstatus_information)[[:space:]]' /etc/naemon/ \
++        | grep -vE '[[:space:]][01][[:space:]]*(;.*)?$'
++  Verify with `naemon -v` before upgrading, and also before reloading a running instance: an
++  invalid value aborts a reload just as it aborts a start.
++
+ 1.5.2 - May 18 2026
+ ===================
+ Bugfixes:
+diff --git a/src/naemon/xodtemplate.c b/src/naemon/xodtemplate.c
+index 9e9a62c1..359219ac 100644
+--- a/src/naemon/xodtemplate.c
++++ b/src/naemon/xodtemplate.c
+@@ -144,20 +144,31 @@ static bitmap *service_map = NULL, *parent_map = NULL;
+ 		} \
+ 	} while(0)
+ 
+-/* parse boolean 0/1 value */
++/* parse boolean 0/1 value
++ *
++ * The value is compared in full: only "0" and "1" are accepted. A value that
++ * merely starts with 0 or 1 (e.g. "0v", "10") is a configuration error.
++ *
++ * NOTE: 'v' arrives already whitespace-trimmed from
++ * xodtemplate_add_object_property(), so the comparison below is exact and
++ * performs no trimming of its own.
++ *
++ * NOTE: this macro reads 'variable' from the enclosing scope - the directive
++ * name exactly as written in the config file. All call sites are inside
++ * xodtemplate_add_object_property(). Using the stringified member name #t
++ * instead would report internal names ('register_object') and canonicalise
++ * aliases ('checks_enabled' -> 'active_checks_enabled'), naming directives
++ * that never appear in the user's config file.
++ */
+ #define xod_parse_bool(o, t, v) ({ \
+ 	int result = OK; \
+-	switch(*v) { \
+-		case '0':  \
+-			o->t = FALSE; \
+-			break; \
+-		case '1':  \
+-			o->t = TRUE; \
+-			break; \
+-		default: \
+-			nm_log(NSLOG_CONFIG_ERROR, "Error: invalid value for '"#t"', expected 0/1.\n"); \
+-			result = ERROR; \
+-			break; \
++	if (strcmp(v, "0") == 0) { \
++		o->t = FALSE; \
++	} else if (strcmp(v, "1") == 0) { \
++		o->t = TRUE; \
++	} else { \
++		nm_log(NSLOG_CONFIG_ERROR, "Error: invalid value '%s' for '%s', expected 0 or 1.\n", v, variable); \
++		result = ERROR; \
+ 	} \
+ 	result; \
+ })
+From 736d0b35c28922f22535e7cf6dcb9824bd6cfbcb Mon Sep 17 00:00:00 2001
+From: Sven Nierlein <sven@consol.de>
+Date: Wed, 26 Aug 2026 13:38:24 +0200
+Subject: [PATCH 3/3] Warn on malformed boolean directive values
+
+Preserve first-character parsing for compatibility, but warn when trailing
+characters are ignored. Keep rejecting values that do not start with 0 or 1.
+
+Update tests, feature scenarios, NEWS, and tighten related comments.
+---
+ NEWS                                |  18 +---
+ src/naemon/xodtemplate.c            |  36 +++----
+ 5 files changed, 103 insertions(+), 160 deletions(-)
+
+diff --git a/NEWS b/NEWS
+index 674305d1..be838f04 100644
+--- a/NEWS
++++ b/NEWS
+@@ -1,19 +1,7 @@
+ Next:
+-Breaking changes:
+-* boolean object directives now accept only the exact values 0 and 1. Values carrying excess
+-  characters, such as `register 0v` or `register 10`, were previously accepted silently: only the
+-  first character was examined, so `0v` was read as 0 and the object was quietly left unregistered
+-  and unmonitored. Such values are now a configuration error and Naemon will refuse to start.
+-  This affects `register`, `notifications_enabled`, `active_checks_enabled` (alias `checks_enabled`),
+-  `passive_checks_enabled`, `event_handler_enabled`, `flap_detection_enabled`, `check_freshness`,
+-  `process_perf_data`, `obsess` (aliases `obsess_over_host`, `obsess_over_service`), `is_volatile`,
+-  `retain_status_information`, `retain_nonstatus_information`, `inherits_parent`,
+-  `can_submit_commands`, `host_notifications_enabled` and `service_notifications_enabled`.
+-  Offending lines can be found before upgrading with:
+-      grep -rnE '^[[:space:]]*(register|is_volatile|inherits_parent|can_submit_commands|checks_enabled|active_checks_enabled|passive_checks_enabled|event_handler_enabled|flap_detection_enabled|check_freshness|process_perf_data|obsess|obsess_over_host|obsess_over_service|notifications_enabled|host_notifications_enabled|service_notifications_enabled|retain_status_information|retain_nonstatus_information)[[:space:]]' /etc/naemon/ \
+-        | grep -vE '[[:space:]][01][[:space:]]*(;.*)?$'
+-  Verify with `naemon -v` before upgrading, and also before reloading a running instance: an
+-  invalid value aborts a reload just as it aborts a start.
++Bugfixes:
++* Warn when trailing characters in boolean object directives are ignored. The
++  leading 0 or 1 remains authoritative for compatibility.
+ 
+ 1.5.2 - May 18 2026
+ ===================
+diff --git a/src/naemon/xodtemplate.c b/src/naemon/xodtemplate.c
+index 359219ac..16008b06 100644
+--- a/src/naemon/xodtemplate.c
++++ b/src/naemon/xodtemplate.c
+@@ -144,31 +144,21 @@ static bitmap *service_map = NULL, *parent_map = NULL;
+ 		} \
+ 	} while(0)
+ 
+-/* parse boolean 0/1 value
+- *
+- * The value is compared in full: only "0" and "1" are accepted. A value that
+- * merely starts with 0 or 1 (e.g. "0v", "10") is a configuration error.
+- *
+- * NOTE: 'v' arrives already whitespace-trimmed from
+- * xodtemplate_add_object_property(), so the comparison below is exact and
+- * performs no trimming of its own.
+- *
+- * NOTE: this macro reads 'variable' from the enclosing scope - the directive
+- * name exactly as written in the config file. All call sites are inside
+- * xodtemplate_add_object_property(). Using the stringified member name #t
+- * instead would report internal names ('register_object') and canonicalise
+- * aliases ('checks_enabled' -> 'active_checks_enabled'), naming directives
+- * that never appear in the user's config file.
+- */
++/* Parse 0/1, warning when trailing characters are ignored.
++ * 'variable' is the directive name as written, including aliases. */
+ #define xod_parse_bool(o, t, v) ({ \
+ 	int result = OK; \
+-	if (strcmp(v, "0") == 0) { \
+-		o->t = FALSE; \
+-	} else if (strcmp(v, "1") == 0) { \
+-		o->t = TRUE; \
+-	} else { \
+-		nm_log(NSLOG_CONFIG_ERROR, "Error: invalid value '%s' for '%s', expected 0 or 1.\n", v, variable); \
+-		result = ERROR; \
++	switch (*v) { \
++		case '0': \
++		case '1': \
++			o->t = *v == '1'; \
++			if (v[1] != '\0') \
++				nm_log(NSLOG_CONFIG_WARNING, "Warning: value '%s' for '%s' has trailing characters; using %c.\n", v, variable, *v); \
++			break; \
++		default: \
++			nm_log(NSLOG_CONFIG_ERROR, "Error: invalid value '%s' for '%s', expected 0 or 1.\n", v, variable); \
++			result = ERROR; \
++			break; \
+ 	} \
+ 	result; \
+ })
