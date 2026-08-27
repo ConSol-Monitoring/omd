@@ -11,7 +11,6 @@ build:
 	tar xzf template-arctictut.tgz -C $(DIR)/lib/tpl/
 	ln -sf ../../../images/fileicons/pdf.png $(DIR)/lib/tpl/arctictut/images/tool-pdf.png
 	tar xzf template-vector.tgz -C $(DIR)/lib/tpl/
-
 	for p in plugins/*.tgz ; do \
 		echo "add plugin $$p..." ; \
 		tar xfz $$p -C $(DIR)/lib/plugins ; \
@@ -20,11 +19,11 @@ build:
 		echo "add plugin $$p..." ; \
 		tar xfJ $$p -C $(DIR)/lib/plugins ; \
 	done
-
 	for p in patches/*.patch ; do \
 		echo "applying $$p..." ; \
 		( cd $(DIR) ; patch -p1 ) < $$p || exit 1; \
 	done
+	find $(DIR) -name \*.orig -exec rm {} \;
 
 install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/dokuwiki
