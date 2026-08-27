@@ -1,6 +1,7 @@
 include ../../Makefile.omd
 
 NAME     = node
+# adjust t/52-node-modules-audit when bumping this version
 VERSION  = 20.6.1
 SHELL    = /bin/bash
 
@@ -37,4 +38,3 @@ clean:
 package:
 	wget "https://nodejs.org/dist/v$(VERSION)/$(NAME)-v$(VERSION)-linux-x64.tar.xz"
 	wget "https://nodejs.org/dist/v$(VERSION)/$(NAME)-v$(VERSION)-linux-arm64.tar.xz"
-

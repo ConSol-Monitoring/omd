@@ -17,7 +17,8 @@ my $site    = TestUtils::create_test_site() or TestUtils::bail_out_clean("no fur
 ##################################################
 # install npm audit
 TestUtils::test_command({
-    cmd     => "/bin/su - $site -c 'npm i npm'",
+    # pin to npm v10, since npm v11+ dropped support for our bundled node v20.6.1
+    cmd     => "/bin/su - $site -c 'npm i npm\@10'",
     errlike => '/.*/',
     like    => '/added \d+ package in/',
 });
