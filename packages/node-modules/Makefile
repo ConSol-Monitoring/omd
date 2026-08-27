@@ -49,6 +49,7 @@ build:
 		mkdir -p node_modules/puppeteer/.local-chromium; \
 		mv chrome node_modules/puppeteer/.local-chromium/; \
 	fi
+	-$(NPM) audit fix
 
 install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/node_modules
