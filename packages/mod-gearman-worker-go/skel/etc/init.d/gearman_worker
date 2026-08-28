@@ -20,13 +20,17 @@ NAME=gearman_worker
 DAEMON=$OMD_ROOT/bin/mod_gearman_worker
 LOG_FILE=$OMD_ROOT/var/log/mod_gearman/worker.log
 PID_FILE=$OMD_ROOT/tmp/run/gearman_worker.pid
-OPTS="-d --config=$OMD_ROOT/etc/mod-gearman/worker.cfg --config=$OMD_ROOT/etc/mod-gearman/worker.cfg.d/ --pidfile=$PID_FILE"
+NOHUP=1
+STORE_PID=1
+OPTS=""
+OPTS+=" --config=$OMD_ROOT/etc/mod-gearman/worker.cfg"
+OPTS+=" --config=$OMD_ROOT/etc/mod-gearman/worker.cfg.d/"
 
+# clean up old log file location
 rm -f $OMD_ROOT/var/log/mod-gearman/gearman
+mkdir -p $OMD_ROOT/var/log/gearman
 
 # worker opens lot of connections, so increase default ulimit to our hard limit
 ulimit -n $(ulimit -Hn) >/dev/null 2>&1
-
-mkdir -p $OMD_ROOT/var/log/gearman
 
 __generic_init "$*"

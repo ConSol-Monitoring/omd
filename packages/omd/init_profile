@@ -169,6 +169,13 @@ __generic_init() {
 __generic_init_pid() {
   if [ -n "$PID_FILE" ]; then
     PID=; read 2>/dev/null PID < $PID_FILE
+    if [ -n "$PID" ]; then
+      if ! kill -0 ${PID} > /dev/null 2>&1; then
+        echo "(removing stale pid file $PID_FILE)"
+        rm -f $PID_FILE
+        PID=
+      fi
+    fi
   fi
   if [ -z "$PID" ]; then
     PID=$(pgrep -u $OMD_SITE -o -P 1 -f "$PSPATTERN")
@@ -256,7 +263,7 @@ __generic_init_wait_start() {
       return 1
     fi
     if [ -n "$PID" ]; then
-      printf '%d' $PID > $PID_FILE
+      printf '%d\n' $PID > $PID_FILE
       echo "OK"
       return 0
     fi
@@ -317,7 +324,7 @@ __generic_init_wait_stop() {
     return 0
   fi
 
-  # wait for pid to disapear
+  # wait for pid to disappear
   COUNTER=100
   if [ -n "$STOP_TIMEOUT" ]; then COUNTER=$(( STOP_TIMEOUT * 10 )); fi
   while (( COUNTER-- )) ; do
