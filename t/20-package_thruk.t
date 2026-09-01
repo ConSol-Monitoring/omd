@@ -13,7 +13,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 1081 );
+plan( tests => 1087 );
 
 ##################################################
 # create our test site
@@ -36,6 +36,10 @@ TestUtils::test_command({ cmd => "/bin/su - $site -c 'echo \"slow_page_log_thres
 # set thruk as default
 TestUtils::test_command({ cmd => $omd_bin." config $site set DEFAULT_GUI thruk" });
 TestUtils::test_command({ cmd => $omd_bin." start $site" });
+
+# increase wait time for puppeteer related commands
+TestUtils::test_command({ cmd => "/bin/su - $site -c 'echo \"WAIT_TIMEOUT=120\" >> etc/environment'" });
+TestUtils::test_command({ cmd => "/bin/su - $site -c 'echo \"START_TIMEOUT=120\" >> etc/environment'" });
 
 # set token for post requests
 push @INC, '/omd/sites/'.$site.'/share/thruk/lib';
