@@ -1,0 +1,57 @@
+From 29ff5647f9e17425dac7839b70f9873dc7c59f68 Mon Sep 17 00:00:00 2001
+From: Sven Nierlein <Sven.Nierlein@consol.de>
+Date: Fri, 18 Sep 2026 12:07:30 +0200
+Subject: [PATCH] keep neb modules mapped until process exit on final shutdown
+
+Unloading the modules (dlclose) on NEBMODULE_NEB_SHUTDOWN unmapped
+them and their dependencies (e.g. libicuuc via livestatus) before
+exit-time memory checks ran, so allocations from those libraries
+could neither be attributed (all frames resolved to <unknown module>)
+nor tracked as still-reachable, producing bogus leak reports and a
+use-after-unload hazard for threads still finishing up. The process
+is about to exit anyway, so keep the mappings until then; the
+NEBMODULE_NEB_RESTART path (in-place reload) still unloads.
+---
+ src/naemon/nebmods.c | 22 +++++++++++++++-------
+ 1 file changed, 15 insertions(+), 7 deletions(-)
+
+diff --git a/src/naemon/nebmods.c b/src/naemon/nebmods.c
+index 4958ce1f..e05b5806 100644
+--- a/src/naemon/nebmods.c
++++ b/src/naemon/nebmods.c
+@@ -297,20 +297,28 @@ int neb_unload_module(nebmodule *mod, int flags, int reason)
+ 	neb_deregister_module_callbacks(mod);
+ 
+ 	if (mod->core_module == FALSE) {
++		if (reason != NEBMODULE_NEB_SHUTDOWN) {
++			/* unload the module */
++			result = dlclose(mod->module_handle);
+ 
+-		/* unload the module */
+-		result = dlclose(mod->module_handle);
+-
+-		if (result != 0) {
+-			nm_log(NSLOG_RUNTIME_ERROR, "Error: Could not unload module '%s' -> %s\n", mod->filename, dlerror());
+-			return ERROR;
++			if (result != 0) {
++				nm_log(NSLOG_RUNTIME_ERROR, "Error: Could not unload module '%s' -> %s\n", mod->filename, dlerror());
++				return ERROR;
++			}
++		} else {
++			/* on final shutdown the process is about to exit anyway, so
++			 * keep the module (and its dependencies) mapped: unloading
++			 * them here makes memory reports at exit impossible to
++			 * attribute (their code is unmapped already) and is a
++			 * use-after-unload hazard for threads still finishing up */
++			log_debug_info(DEBUGL_EVENTBROKER, 0, "Keeping module '%s' mapped until process exit.\n", mod->filename);
+ 		}
+ 	}
+ 
+ 	/* mark the module as being unloaded */
+ 	mod->is_currently_loaded = FALSE;
+ 
+-	log_debug_info(DEBUGL_EVENTBROKER, 0, "Module '%s' unloaded successfully.\n", mod->filename);
++	log_debug_info(DEBUGL_EVENTBROKER, 0, "Module '%s' deinitialized successfully.\n", mod->filename);
+ 
+ 	nm_log(NSLOG_INFO_MESSAGE, "Event broker module '%s' deinitialized successfully.\n", mod->filename);
+ 

@@ -1,0 +1,766 @@
+From d140fdf7d974988838932018431b6348101932c8 Mon Sep 17 00:00:00 2001
+From: Sven Nierlein <Sven.Nierlein@consol.de>
+Date: Thu, 10 Sep 2026 13:30:42 +0200
+Subject: [PATCH 01/28] fix odr-violation in naemonstats
+
+this fixes the findings from using "-fsanitize=address" cflags.
+
+    %> ./src/naemonstats/naemonstats -h
+    =================================================================
+    ==41276==ERROR: AddressSanitizer: odr-violation (0x00000041b080):
+      [1] size=4 'nagios_pid' src/naemonstats/naemonstats.c:35:5
+      [2] size=4 'nagios_pid' src/naemon/shared.c:36:5
+    These globals were registered at these points:
+      [1]:
+        #0 0x7fc1c4184a68 in __asan_register_globals.part.0 (/lib64/libasan.so.6+0x37a68)
+        #1 0x408d34 in _sub_I_00099_1 (/src/naemon-core/src/naemonstats/.libs/lt-naemonstats+0x408d34)
+        #2 0x7fc1c3ae673a in __libc_start_main_alias_2 (/lib64/libc.so.6+0x2a73a)
+
+      [2]:
+        #0 0x7fc1c4184a68 in __asan_register_globals.part.0 (/lib64/libasan.so.6+0x37a68)
+        #1 0x7fc1c3f0ac13 in _sub_I_00099_1 (/src/naemon-core/.libs/libnaemon.so.0+0x10ac13)
+        #2 0x7fc1c4b4955d in call_init /usr/src/debug/glibc-2.34-275.el9_8.x86_64/elf/dl-init.c:70
+        #3 0x7fc1c4b4955d in call_init /usr/src/debug/glibc-2.34-275.el9_8.x86_64/elf/dl-init.c:26
+
+    ==41276==HINT: if you don't care about these errors you may set ASAN_OPTIONS=detect_odr_violation=0
+    SUMMARY: AddressSanitizer: odr-violation: global 'nagios_pid' at src/naemonstats/naemonstats.c:35:5
+    ==41276==ABORTING
+
+simply remove the global definitions since they are in libnaemon already.
+
+Signed-off-by: Sven Nierlein <Sven.Nierlein@consol.de>
+---
+ src/naemonstats/naemonstats.c | 3 ---
+ 1 file changed, 3 deletions(-)
+
+diff --git a/src/naemonstats/naemonstats.c b/src/naemonstats/naemonstats.c
+index e33265f4..17e3056a 100644
+--- a/src/naemonstats/naemonstats.c
++++ b/src/naemonstats/naemonstats.c
+@@ -20,7 +20,6 @@
+ 
+ 
+ static char *main_config_file = NULL;
+-char *status_file = NULL;
+ static char *mrtg_variables = NULL;
+ static const char *mrtg_delimiter = "\n";
+ char *mrtg_delimiter_save = NULL;
+@@ -29,10 +28,8 @@ static int mrtg_mode = FALSE;
+ 
+ static time_t status_creation_date = 0L;
+ static char *status_version = NULL;
+-time_t program_start = 0L;
+ static int status_service_entries = 0;
+ static int status_host_entries = 0;
+-int nagios_pid = 0;
+ 
+ static double min_service_state_change = 0.0;
+ static int have_min_service_state_change = FALSE;
+
+From 802b734bd1ffa94d10495465871d6d3d66c51970 Mon Sep 17 00:00:00 2001
+From: Sven Nierlein <Sven.Nierlein@consol.de>
+Date: Thu, 10 Sep 2026 14:58:25 +0200
+Subject: [PATCH 02/28] fix memory leak in contacts on configuration check
+
+    ==43609==ERROR: LeakSanitizer: detected memory leaks
+
+    Direct leak of 15 byte(s) in 3 object(s) allocated from:
+        #0 0x7f62106faaf7 in strdup (/lib64/libasan.so.6+0x5baf7)
+        #1 0x7f62104d46e2 in nm_strdup src/naemon/nm_alloc.c:46
+        #2 0x7f62104e85fe in setup_contact_variables src/naemon/objects_contact.c:75
+        #3 0x7f621054eba5 in xodtemplate_register_contact src/naemon/xodtemplate.c:5608
+        #4 0x7f621051ae55 in xod_tree_traverse_visit src/naemon/xodtemplate.c:201
+        #5 0x7f6210348b9c in g_tree_foreach (/lib64/libglib-2.0.so.0+0x82b9c)
+
+    Direct leak of 15 byte(s) in 3 object(s) allocated from:
+        #0 0x7f62106faaf7 in strdup (/lib64/libasan.so.6+0x5baf7)
+        #1 0x7f62104d46e2 in nm_strdup src/naemon/nm_alloc.c:46
+        #2 0x7f62104e858e in setup_contact_variables src/naemon/objects_contact.c:74
+        #3 0x7f621054eba5 in xodtemplate_register_contact src/naemon/xodtemplate.c:5608
+        #4 0x7f621051ae55 in xod_tree_traverse_visit src/naemon/xodtemplate.c:201
+        #5 0x7f6210348b9c in g_tree_foreach (/lib64/libglib-2.0.so.0+0x82b9c)
+
+    SUMMARY: AddressSanitizer: 30 byte(s) leaked in 6 allocation(s).'
+
+Signed-off-by: Sven Nierlein <Sven.Nierlein@consol.de>
+---
+ src/naemon/objects_contact.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/src/naemon/objects_contact.c b/src/naemon/objects_contact.c
+index b33b8d6a..b3725e93 100644
+--- a/src/naemon/objects_contact.c
++++ b/src/naemon/objects_contact.c
+@@ -164,6 +164,8 @@ void destroy_contact(contact *this_contact)
+ 	nm_free(this_contact->pager);
+ 	for (j = 0; j < MAX_CONTACT_ADDRESSES; j++)
+ 		nm_free(this_contact->address[j]);
++	nm_free(this_contact->host_notification_period);
++	nm_free(this_contact->service_notification_period);
+ 
+ 	free_objectlist(&this_contact->contactgroups_ptr);
+ 	nm_free(this_contact);
+
+From 532db686d56f5204f5f6e1900a10a5fba7a5dcd9 Mon Sep 17 00:00:00 2001
+From: Sven Nierlein <Sven.Nierlein@consol.de>
+Date: Thu, 10 Sep 2026 15:12:50 +0200
+Subject: [PATCH 03/28] fix memory leak in macro processing reported by
+ t-tap/test_macros
+
+The t-tap/test_macros test failed under LeakSanitizer. Fix the
+underlying leaks:
+
+- test: free the process_macros_r() output buffer between calls and
+  drop the redundant init_macros() (reset_variables() already calls it)
+---
+ t-tap/test_macros.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+From 02ff13834bb67d870d049f7ee67991557ec29a14 Mon Sep 17 00:00:00 2001
+From: Sven Nierlein <sven@consol.de>
+Date: Thu, 10 Sep 2026 15:14:51 +0200
+Subject: [PATCH 04/28] fix macro buffer leak in hostgroup/service/servicegroup
+ grabbers
+
+Mark freshly allocated notes/notes URL/action URL buffers and the
+on-demand host-with-hostgroup-delimiter result with free_macro=TRUE so
+process_macros_r() frees them. Add the missing free_macro parameter to
+the hostgroup and servicegroup grabbers to match the host grabber.
+---
+ src/naemon/macros.c | 19 +++++++++++++------
+ 1 file changed, 13 insertions(+), 6 deletions(-)
+
+diff --git a/src/naemon/macros.c b/src/naemon/macros.c
+index abcd5ece..3d7edc34 100644
+--- a/src/naemon/macros.c
++++ b/src/naemon/macros.c
+@@ -893,11 +893,11 @@ static int grab_standard_host_macro_r(nagios_macros *mac, int macro_type, host *
+ 
+ 
+ /* computes a hostgroup macro */
+-static int grab_standard_hostgroup_macro_r(nagios_macros *mac, int macro_type, hostgroup *temp_hostgroup, char **output)
++static int grab_standard_hostgroup_macro_r(nagios_macros *mac, int macro_type, hostgroup *temp_hostgroup, char **output, int *free_macro)
+ {
+ 	char *temp_buffer = NULL;
+ 
+-	if (temp_hostgroup == NULL || output == NULL)
++	if (temp_hostgroup == NULL || output == NULL || free_macro == NULL)
+ 		return ERROR;
+ 
+ 	/* get the macro value */
+@@ -936,10 +936,12 @@ static int grab_standard_hostgroup_macro_r(nagios_macros *mac, int macro_type, h
+ 	switch (macro_type) {
+ 	case MACRO_HOSTGROUPACTIONURL:
+ 	case MACRO_HOSTGROUPNOTESURL:
++		*free_macro = TRUE;
+ 		process_macros_r(mac, *output, &temp_buffer, URL_ENCODE_MACRO_CHARS);
+ 		*output = temp_buffer;
+ 		break;
+ 	case MACRO_HOSTGROUPNOTES:
++		*free_macro = TRUE;
+ 		process_macros_r(mac, *output, &temp_buffer, 0);
+ 		*output = temp_buffer;
+ 		break;
+@@ -1147,10 +1149,12 @@ static int grab_standard_service_macro_r(nagios_macros *mac, int macro_type, ser
+ 	switch (macro_type) {
+ 	case MACRO_SERVICEACTIONURL:
+ 	case MACRO_SERVICENOTESURL:
++		*free_macro = TRUE;
+ 		process_macros_r(mac, *output, &temp_buffer, URL_ENCODE_MACRO_CHARS);
+ 		*output = temp_buffer;
+ 		break;
+ 	case MACRO_SERVICENOTES:
++		*free_macro = TRUE;
+ 		process_macros_r(mac, *output, &temp_buffer, 0);
+ 		*output = temp_buffer;
+ 		break;
+@@ -1163,14 +1167,14 @@ static int grab_standard_service_macro_r(nagios_macros *mac, int macro_type, ser
+ 
+ 
+ /* computes a servicegroup macro */
+-static int grab_standard_servicegroup_macro_r(nagios_macros *mac, int macro_type, servicegroup *temp_servicegroup, char **output)
++static int grab_standard_servicegroup_macro_r(nagios_macros *mac, int macro_type, servicegroup *temp_servicegroup, char **output, int *free_macro)
+ {
+ 	servicesmember *temp_servicesmember = NULL;
+ 	char *temp_buffer = NULL;
+ 	unsigned int temp_len = 0;
+ 	unsigned int init_len = 0;
+ 
+-	if (temp_servicegroup == NULL || output == NULL)
++	if (temp_servicegroup == NULL || output == NULL || free_macro == NULL)
+ 		return ERROR;
+ 
+ 	/* get the macro value */
+@@ -1240,10 +1244,12 @@ static int grab_standard_servicegroup_macro_r(nagios_macros *mac, int macro_type
+ 	switch (macro_type) {
+ 	case MACRO_SERVICEGROUPACTIONURL:
+ 	case MACRO_SERVICEGROUPNOTESURL:
++		*free_macro = TRUE;
+ 		process_macros_r(mac, *output, &temp_buffer, URL_ENCODE_MACRO_CHARS);
+ 		*output = temp_buffer;
+ 		break;
+ 	case MACRO_SERVICEGROUPNOTES:
++		*free_macro = TRUE;
+ 		process_macros_r(mac, *output, &temp_buffer, 0);
+ 		*output = temp_buffer;
+ 		break;
+@@ -1625,6 +1631,7 @@ static int grab_macrox_value_r(nagios_macros *mac, int macro_type, char *arg1, c
+ 
+ 			g_tree_foreach(temp_hostgroup->members, concat_macrox_value, &params);
+ 			*output = nm_malloc(params.buffer->len + 1);
++			*free_macro = TRUE;
+ 			strncpy(*output, params.buffer->str, params.buffer->len);
+ 			(*output)[params.buffer->len] = 0;
+ 			g_string_free(params.buffer, TRUE);
+@@ -1657,7 +1664,7 @@ static int grab_macrox_value_r(nagios_macros *mac, int macro_type, char *arg1, c
+ 		}
+ 
+ 		/* get the hostgroup macro value */
+-		result = grab_standard_hostgroup_macro_r(mac, macro_type, temp_hostgroup, output);
++		result = grab_standard_hostgroup_macro_r(mac, macro_type, temp_hostgroup, output, free_macro);
+ 		break;
+ 
+ 	/******************/
+@@ -1804,7 +1811,7 @@ static int grab_macrox_value_r(nagios_macros *mac, int macro_type, char *arg1, c
+ 		}
+ 
+ 		/* get the servicegroup macro value */
+-		result = grab_standard_servicegroup_macro_r(mac, macro_type, temp_servicegroup, output);
++		result = grab_standard_servicegroup_macro_r(mac, macro_type, temp_servicegroup, output, free_macro);
+ 		break;
+ 
+ 	/******************/
+
+From 333d8ffc5f8154846ee934828adc066de7075e73 Mon Sep 17 00:00:00 2001
+From: Sven Nierlein <sven@consol.de>
+Date: Thu, 10 Sep 2026 15:57:16 +0200
+Subject: [PATCH 09/28] fix odr-violation in tests/test-query-handler
+
+make qh_max_running static to avoid duplicate global registration
+between the test binary and libnaemon when running under ASan.
+
+        %> ./tests/test-query-handler
+        =================================================================
+        ==75569==ERROR: AddressSanitizer: odr-violation (0x00000040af40):
+          [1] size=4 'qh_max_running' /src/naemon-core/src/naemon/query-handler.c:29:14
+          [2] size=4 'qh_max_running' src/naemon/query-handler.c:29:14
+        SUMMARY: AddressSanitizer: odr-violation: global 'qh_max_running'
+        ==75569==ABORTING
+---
+ src/naemon/query-handler.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/naemon/query-handler.c b/src/naemon/query-handler.c
+index 2d1b75fd..25105641 100644
+--- a/src/naemon/query-handler.c
++++ b/src/naemon/query-handler.c
+@@ -26,7 +26,7 @@ struct query_handler {
+ static struct query_handler *qhandlers;
+ static int qh_listen_sock = -1; /* the listening socket */
+ static unsigned int qh_running;
+-unsigned int qh_max_running = 0; /* defaults to unlimited */
++static unsigned int qh_max_running = 0; /* defaults to unlimited */
+ static GHashTable *qh_table;
+ 
+ /* the echo service. stupid, but useful for testing */
+
+From 78116f3d0c17ed4d708c84a644fb810ddb53a677 Mon Sep 17 00:00:00 2001
+From: Sven Nierlein <sven@consol.de>
+Date: Thu, 10 Sep 2026 16:20:07 +0200
+Subject: [PATCH 10/28] fix odr-violation in tests/test-log
+
+---
+ src/naemon/logging.c | 2 +-
+ src/naemon/logging.h | 1 +
+ tests/test-log.c     | 7 +++++--
+ 3 files changed, 7 insertions(+), 3 deletions(-)
+
+diff --git a/src/naemon/logging.c b/src/naemon/logging.c
+index b22005eb..dc17e865 100644
+--- a/src/naemon/logging.c
++++ b/src/naemon/logging.c
+@@ -95,7 +95,7 @@ static int write_to_syslog(char *buffer, unsigned long data_type)
+ }
+ 
+ /* write something to the naemon log file */
+-static int write_to_log(char *buffer, unsigned long data_type, time_t *timestamp)
++int write_to_log(char *buffer, unsigned long data_type, time_t *timestamp)
+ {
+ 	FILE *fp;
+ 	time_t log_time = 0L;
+diff --git a/src/naemon/logging.h b/src/naemon/logging.h
+index e0280da7..950da2cf 100644
+--- a/src/naemon/logging.h
++++ b/src/naemon/logging.h
+@@ -87,6 +87,7 @@ int log_debug_info(int, int, const char *, ...)
+ __attribute__((__format__(__printf__, 3, 4)));
+ 
+ int rotate_log_file(time_t);            /* rotates the main log file */
++int write_to_log(char *, unsigned long, time_t *); /* writes a line to the main log file */
+ int write_log_file_info(time_t *);      /* records log file/version info */
+ int open_debug_log(void);
+ int close_debug_log(void);
+diff --git a/tests/test-log.c b/tests/test-log.c
+index 7ca42e0b..1c783826 100644
+--- a/tests/test-log.c
++++ b/tests/test-log.c
+@@ -4,7 +4,8 @@
+ #include <unistd.h>
+ 
+ #include <check.h>
+-#include "naemon/logging.c"
++#include "naemon/logging.h"
++#include "naemon/globals.h"
+ 
+ 
+ START_TEST(common_case)
+@@ -20,7 +21,7 @@ START_TEST(common_case)
+ 	workdir = getcwd(NULL, 0);
+ 	ret = asprintf(&rotated_file, "%s/old.log", workdir);
+ 	ret = asprintf(&log_file, "%s/active.log", workdir);
+-	free(workdir);
++	nm_free(workdir);
+ 
+ 	// please fail if the files already exist:
+ 	ck_assert_msg(access(log_file, F_OK) == -1,
+@@ -51,6 +52,8 @@ START_TEST(common_case)
+ 	ck_assert_str_eq("[5678] Log information\n", rotated_contents);
+ 	unlink(rotated_file);
+ 	unlink(log_file);
++	nm_free(rotated_file);
++	nm_free(log_file);
+ }
+ END_TEST
+ 
+
+From 1924086baec2a5ad54e9b52e29f955bd78e13a8a Mon Sep 17 00:00:00 2001
+From: Sven Nierlein <sven@consol.de>
+Date: Thu, 10 Sep 2026 16:33:39 +0200
+Subject: [PATCH 12/28] fix odr-violation in tests/test-event-heap
+
+Make event_queue static and move the nagios_iobs definition from
+events.c to utils.c so that including events.c in the test binary does not
+re-define globals that libnaemon also provides when running under ASan.
+---
+ src/naemon/events.c | 3 +--
+ src/naemon/utils.c  | 2 ++
+ 2 files changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/src/naemon/events.c b/src/naemon/events.c
+index 60c47351..60cda51f 100644
+--- a/src/naemon/events.c
++++ b/src/naemon/events.c
+@@ -23,8 +23,7 @@ struct timed_event_queue {
+ 	size_t size;
+ };
+ 
+-struct timed_event_queue *event_queue = NULL; /* our scheduling queue */
+-iobroker_set *nagios_iobs = NULL;
++static struct timed_event_queue *event_queue = NULL; /* our scheduling queue */
+ 
+ /******************************************************************/
+ /************************** TIME HELPERS *************************/
+diff --git a/src/naemon/utils.c b/src/naemon/utils.c
+index 9db76f5a..b31a5da2 100644
+--- a/src/naemon/utils.c
++++ b/src/naemon/utils.c
+@@ -47,6 +47,8 @@ objectlist *objcfg_files = NULL;
+ objectlist *objcfg_dirs = NULL;
+ int upipe_fd[2];
+ 
++iobroker_set *nagios_iobs = NULL;
++
+ int num_check_workers = 0; /* auto-decide */
+ char *qh_socket_path = NULL; /* disabled */
+ 
+
+From 7ebbad7840abd85594f06d9585034018813f0e99 Mon Sep 17 00:00:00 2001
+From: Sven Nierlein <sven@consol.de>
+Date: Thu, 10 Sep 2026 17:35:27 +0200
+Subject: [PATCH 19/28] fix memory leak in xodtemplate service host_name
+
+Service objects did not own their host_name string. During parsing the
+value was strdup'ed (xodtemplate_add_object_property) and only freed
+later in xodtemplate_duplicate_services() once the host list had been
+expanded. When duplicate_services() bailed out early (e.g. a service
+with a missing description) that owned copy was never freed, leaking it.
+
+Make each service own its host_name copy (nm_strdup in the
+use-existing-entry branch and in xodtemplate_duplicate_service), clear
+the pointer after the early free, and free it in
+xodtemplate_free_memory so it is released on the error path too.
+
+This resolves the LeakSanitizer report in t/900-configparsing.t
+("Direct leak of 12 byte(s) in 2 object(s)" from
+xodtemplate_add_object_property).
+---
+ src/naemon/xodtemplate.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/src/naemon/xodtemplate.c b/src/naemon/xodtemplate.c
+index 16008b06..8e58e61a 100644
+--- a/src/naemon/xodtemplate.c
++++ b/src/naemon/xodtemplate.c
+@@ -435,6 +435,7 @@ static void xodtemplate_free_memory(void)
+ 		nm_free(this_service->contact_groups);
+ 		nm_free(this_service->contacts);
+ 		nm_free(this_service->service_groups);
++		nm_free(this_service->host_name);
+ 
+ 		if (this_service->is_copy == FALSE) {
+ 			/* free custom variables */
+@@ -2352,7 +2353,7 @@ static int xodtemplate_duplicate_service(xodtemplate_service *temp_service, char
+ 	memcpy(new_service, temp_service, sizeof(*new_service));
+ 	new_service->is_copy = TRUE;
+ 	new_service->id = xodcount.services++;
+-	new_service->host_name = host_name;
++	new_service->host_name = nm_strdup(host_name);
+ 
+ 	/* tag service apply on host group */
+ 	new_service->is_from_hostgroup = from_hg;
+@@ -2435,6 +2436,7 @@ static int xodtemplate_duplicate_services(void)
+ 			}
+ 			/* we don't need this anymore now that we have the hlist */
+ 			nm_free(temp_service->host_name);
++			temp_service->host_name = NULL;
+ 		}
+ 
+ 		/*
+@@ -2474,7 +2476,7 @@ static int xodtemplate_duplicate_services(void)
+ 				/* if this is the last duplication, use the existing entry */
+ 				if (!next && !hlist->next) {
+ 					temp_service->id = xodcount.services++;
+-					temp_service->host_name = h->host_name;
++					temp_service->host_name = nm_strdup(h->host_name);
+ 					temp_service->is_from_hostgroup = (hg != &fake_hg);
+ 				} else {
+ 					/* duplicate service definition */
+
+From be43ea397cc379750b1343f12ae5eb50a8b0b51f Mon Sep 17 00:00:00 2001
+From: Sven Nierlein <sven@consol.de>
+Date: Thu, 10 Sep 2026 17:38:30 +0200
+Subject: [PATCH 20/28] fix memory leak in escalation_period of duplicated
+ escalations
+
+Duplicated service/host escalation definitions (created when an
+escalation applies to multiple hosts/services via a '*' or hostgroup
+spec) did not own their escalation_period string. The copy was made by
+memcpy (sharing the original's pointer) and escalation_period is only
+strdup'ed per-object later during xodtemplate_inherit_object_properties(),
+so each copy ended up owning its own allocation.
+
+xodtemplate_register_and_destroy_*() only freed escalation_period when
+is_copy == FALSE, so the owned copies were leaked.
+
+Make each duplicated escalation own its own escalation_period copy
+(mirror how contact_groups/contacts are already duplicated) and free it
+unconditionally at register/destroy time.
+
+This resolves the LeakSanitizer report in t/900-configparsing.t
+("Direct leak of 15 byte(s) in 3 object(s)" from
+xodtemplate_inherit_object_properties).
+---
+ src/naemon/xodtemplate.c | 14 ++++++++------
+ 1 file changed, 8 insertions(+), 6 deletions(-)
+
+diff --git a/src/naemon/xodtemplate.c b/src/naemon/xodtemplate.c
+index 8e58e61a..f6c470d4 100644
+--- a/src/naemon/xodtemplate.c
++++ b/src/naemon/xodtemplate.c
+@@ -2565,6 +2565,9 @@ static int xodtemplate_duplicate_hostescalation(xodtemplate_hostescalation *temp
+ 
+ 	new_hostescalation->host_name = host_name;
+ 
++	if (temp_hostescalation->escalation_period != NULL)
++		new_hostescalation->escalation_period = nm_strdup(temp_hostescalation->escalation_period);
++
+ 	if (temp_hostescalation->contact_groups != NULL)
+ 		new_hostescalation->contact_groups = nm_strdup(temp_hostescalation->contact_groups);
+ 
+@@ -2592,6 +2595,9 @@ static int xodtemplate_duplicate_serviceescalation(xodtemplate_serviceescalation
+ 	new_serviceescalation->host_name = host_name;
+ 	new_serviceescalation->service_description = svc_description;
+ 
++	if (temp_serviceescalation->escalation_period != NULL)
++		new_serviceescalation->escalation_period = nm_strdup(temp_serviceescalation->escalation_period);
++
+ 	if (temp_serviceescalation->contact_groups != NULL)
+ 		new_serviceescalation->contact_groups = nm_strdup(temp_serviceescalation->contact_groups);
+ 
+@@ -6016,9 +6022,7 @@ static int xodtemplate_register_and_destroy_hostescalation(void *he_)
+ 	int result;
+ 
+ 	result = xodtemplate_register_hostescalation(he);
+-	if (he->is_copy == FALSE) {
+-		nm_free(he->escalation_period);
+-	}
++	nm_free(he->escalation_period);
+ 	nm_free(he->contact_groups);
+ 	nm_free(he->contacts);
+ 	nm_free(he);
+@@ -6487,9 +6491,7 @@ static int xodtemplate_register_and_destroy_serviceescalation(void *se_)
+ 	int result;
+ 	result = xodtemplate_register_serviceescalation(se);
+ 
+-	if (se->is_copy == FALSE)
+-		nm_free(se->escalation_period);
+-
++	nm_free(se->escalation_period);
+ 	nm_free(se->contact_groups);
+ 	nm_free(se->contacts);
+ 	nm_free(se);
+
+From f3b4cd72920952deceb1274c8414e10a08308fb9 Mon Sep 17 00:00:00 2001
+From: Sven Nierlein <sven@consol.de>
+Date: Thu, 10 Sep 2026 17:55:13 +0200
+Subject: [PATCH 21/28] fix asan ODR violation in t-tap/test_timeperiods
+
+The test compiled src/naemon/objects_timeperiod.c into the binary while
+also linking libnaemon, so globals like timeperiod_list existed in both
+the executable and the shared library, aborting under libasan's ODR
+check. Export the two internal helpers the test needs
+(_get_matching_timerange, _get_next_valid_time) and include the header
+instead of the .c file. All 121 tests pass with ASan enabled.
+---
+ src/naemon/objects_timeperiod.c | 7 ++-----
+ src/naemon/objects_timeperiod.h | 3 +++
+ t-tap/test_timeperiods.c        | 2 +-
+ 3 files changed, 6 insertions(+), 6 deletions(-)
+
+diff --git a/src/naemon/objects_timeperiod.c b/src/naemon/objects_timeperiod.c
+index be642dd7..099903db 100644
+--- a/src/naemon/objects_timeperiod.c
++++ b/src/naemon/objects_timeperiod.c
+@@ -411,7 +411,7 @@ static int get_dst_shift(time_t *start, time_t *end)
+ 
+ 
+ /*#define TEST_TIMEPERIODS_A 1*/
+-static timerange *_get_matching_timerange(time_t test_time, const timeperiod *tperiod)
++timerange *_get_matching_timerange(time_t test_time, const timeperiod *tperiod)
+ {
+ 	daterange *temp_daterange = NULL;
+ 	time_t start_time = (time_t)0L;
+@@ -677,9 +677,6 @@ int check_time_against_period(time_t test_time, const timeperiod *tperiod)
+ }
+ 
+ 
+-/*#define TEST_TIMEPERIODS_B 1*/
+-static void _get_next_valid_time(time_t pref_time, time_t *valid_time, const timeperiod *tperiod);
+-
+ /* calculate the next time this period ends */
+ void get_next_invalid_time(time_t pref_time, time_t *invalid_time, const timeperiod *tperiod)
+ {
+@@ -796,7 +793,7 @@ void get_next_invalid_time(time_t pref_time, time_t *invalid_time, const timeper
+ 
+ 
+ /* Separate this out from public get_next_valid_time for testing */
+-static void _get_next_valid_time(time_t pref_time, time_t *valid_time, const timeperiod *tperiod)
++void _get_next_valid_time(time_t pref_time, time_t *valid_time, const timeperiod *tperiod)
+ {
+ 	timeperiodexclusion *temp_timeperiodexclusion = NULL;
+ 	int depth = 0;
+diff --git a/src/naemon/objects_timeperiod.h b/src/naemon/objects_timeperiod.h
+index b1dceb6f..11e14f01 100644
+--- a/src/naemon/objects_timeperiod.h
++++ b/src/naemon/objects_timeperiod.h
+@@ -91,5 +91,8 @@ int check_time_against_period(time_t, const timeperiod *);	/* check to see if a
+ void get_next_valid_time(time_t, time_t *, const timeperiod *);	/* get the next valid time in a time period */
+ void get_next_invalid_time(time_t, time_t *, const timeperiod *);	/* get the next invalid time in a time period (aka end of the period) */
+ 
++timerange *_get_matching_timerange(time_t, const timeperiod *);	/* internal, exported for testing */
++void _get_next_valid_time(time_t, time_t *, const timeperiod *);	/* internal, exported for testing */
++
+ NAGIOS_END_DECL
+ #endif
+diff --git a/t-tap/test_timeperiods.c b/t-tap/test_timeperiods.c
+index 8566eea4..6cfd9b19 100644
+--- a/t-tap/test_timeperiods.c
++++ b/t-tap/test_timeperiods.c
+@@ -27,7 +27,7 @@
+  *****************************************************************************/
+ #include <string.h>
+ 
+-#include "naemon/objects_timeperiod.c"
++#include "naemon/objects_timeperiod.h"
+ #include "naemon/utils.h"
+ #include "naemon/configuration.h"
+ #include "naemon/defaults.h"
+
+From 137ce8c2b969742bed3e92bdf465c16575f17fbe Mon Sep 17 00:00:00 2001
+From: Sven Nierlein <sven@consol.de>
+Date: Thu, 10 Sep 2026 22:07:10 +0200
+Subject: [PATCH 23/28] fix memory leak in read_config_file error path
+
+---
+ src/naemon/configuration.c | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/src/naemon/configuration.c b/src/naemon/configuration.c
+index ac168e2c..769de866 100644
+--- a/src/naemon/configuration.c
++++ b/src/naemon/configuration.c
+@@ -1132,6 +1132,11 @@ read_config_file(const char *main_config_file, nagios_macros *mac)
+ 	/* handle errors */
+ 	if (error == TRUE) {
+ 		nm_log(NSLOG_CONFIG_ERROR, "Error in configuration file '%s' - Line %d (%s)", main_config_file, current_line, (error_message == NULL) ? "NULL" : error_message);
++		mmap_fclose(thefile);
++		nm_free(input);
++		nm_free(variable);
++		nm_free(value);
++		nm_free(error_message);
+ 		return ERROR;
+ 	}
+ 
+
+From 05428324b08863016a252e9ae15feeacdbf714fc Mon Sep 17 00:00:00 2001
+From: Sven Nierlein <sven@consol.de>
+Date: Thu, 10 Sep 2026 22:10:24 +0200
+Subject: [PATCH 24/28] fix memory leak of check_result when sending check to
+ worker fails
+
+---
+ src/naemon/checks_host.c    | 2 ++
+ src/naemon/checks_service.c | 2 ++
+ 2 files changed, 4 insertions(+)
+
+diff --git a/src/naemon/checks_host.c b/src/naemon/checks_host.c
+index 7fdfba57..63c67ece 100644
+--- a/src/naemon/checks_host.c
++++ b/src/naemon/checks_host.c
+@@ -359,6 +359,8 @@ static int run_async_host_check(host *hst, int check_options, double latency)
+ 	if (runchk_result == ERROR) {
+ 		nm_log(NSLOG_RUNTIME_ERROR,
+ 		       "Unable to send check for host '%s' to worker (ret=%d)\n", hst->name, runchk_result);
++		free_check_result(cr);
++		nm_free(cr);
+ 	} else {
+ 		/* do the book-keeping */
+ 		currently_running_host_checks++;
+diff --git a/src/naemon/checks_service.c b/src/naemon/checks_service.c
+index 2e535fc5..813e9b39 100644
+--- a/src/naemon/checks_service.c
++++ b/src/naemon/checks_service.c
+@@ -426,6 +426,8 @@ static int run_scheduled_service_check(service *svc, int check_options, double l
+ 	if (runchk_result == ERROR) {
+ 		nm_log(NSLOG_RUNTIME_ERROR,
+ 		       "Unable to send check for service '%s' on host '%s' to worker (ret=%d)\n", svc->description, svc->host_name, runchk_result);
++		free_check_result(cr);
++		nm_free(cr);
+ 	} else {
+ 		/* do the book-keeping */
+ 		currently_running_service_checks++;
+
+From 0980e6fae0bdf054856181632cd4b6a8f0a10b87 Mon Sep 17 00:00:00 2001
+From: Sven Nierlein <sven@consol.de>
+Date: Thu, 10 Sep 2026 22:25:03 +0200
+Subject: [PATCH 25/28] fix memory leak of nebcallback nodes in
+ neb_deregister_callback
+
+---
+ src/naemon/nebmods.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/src/naemon/nebmods.c b/src/naemon/nebmods.c
+index 4958ce1f..c8d2a42e 100644
+--- a/src/naemon/nebmods.c
++++ b/src/naemon/nebmods.c
+@@ -583,9 +583,9 @@ int neb_deregister_callback(enum NEBCallbackType callback_type, void *callback_f
+ 		return NEBERROR_CALLBACKNOTFOUND;
+ 
+ 	else {
+-		/* only one item in the list */
++		/* unlink the callback from the list */
+ 		if (temp_callback != last_callback->next)
+-			neb_callback_list[callback_type] = NULL;
++			neb_callback_list[callback_type] = next_callback;
+ 		else
+ 			last_callback->next = next_callback;
+ 		nm_free(temp_callback);
+@@ -722,6 +722,7 @@ int neb_free_callback_list(void)
+ 	}
+ 
+ 	nm_free(neb_callback_list);
++	neb_callback_list = NULL;
+ 
+ 	return OK;
+ }
+
+From a05d0383a9391a6ad26d188373aa8878dd65d664 Mon Sep 17 00:00:00 2001
+From: Sven Nierlein <Sven.Nierlein@consol.de>
+Date: Fri, 11 Sep 2026 11:47:57 +0200
+Subject: [PATCH 26/28] nm_free already NULLs the entry
+
+---
+ src/naemon/xodtemplate.c | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/src/naemon/xodtemplate.c b/src/naemon/xodtemplate.c
+index f6c470d4..905399be 100644
+--- a/src/naemon/xodtemplate.c
++++ b/src/naemon/xodtemplate.c
+@@ -2436,7 +2436,6 @@ static int xodtemplate_duplicate_services(void)
+ 			}
+ 			/* we don't need this anymore now that we have the hlist */
+ 			nm_free(temp_service->host_name);
+-			temp_service->host_name = NULL;
+ 		}
+ 
+ 		/*
+
+From d4a9e2adf6e2e3d0096c58b18927fd11b852e1f8 Mon Sep 17 00:00:00 2001
+From: Sven Nierlein <Sven.Nierlein@consol.de>
+Date: Thu, 17 Sep 2026 22:39:41 +0200
+Subject: [PATCH 28/28] command worker clean memory on shutdown
+
+nothing dramatic, but it shows up when using libasan:
+
+    ==3048744==ERROR: LeakSanitizer: detected memory leaks
+
+    Direct leak of 24 byte(s) in 1 object(s) allocated from:
+        #0 0x7f558d65bbd7 in calloc (/lib64/libasan.so.6+0xb4bd7)
+        #1 0x7f558d38ff98 in nm_bufferqueue_create lib/bufferqueue.c:42
+        #2 0x7f558d28724a in command_file_worker src/naemon/commands.c:275
+        #3 0x7f558d287ba2 in launch_command_file_worker src/naemon/commands.c:402
+        #4 0x4059cb in main src/naemon/naemon.c:573
+        #5 0x7f558cf4360f in __libc_start_call_main (/lib64/libc.so.6+0x2a60f)
+
+    SUMMARY: AddressSanitizer: 24 byte(s) leaked in 1 allocation(s).
+---
+ src/naemon/commands.c | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/src/naemon/commands.c b/src/naemon/commands.c
+index 54dcce30..cfa5da3e 100644
+--- a/src/naemon/commands.c
++++ b/src/naemon/commands.c
+@@ -288,6 +288,7 @@ static int command_file_worker(int sd)
+ 			 * which breaks livestatus. So make this a debug log entry only.
+ 			 */
+ 			log_debug_info(DEBUGL_IPC, 1, "Command file worker: Naemon main process is dead (%m)\n");
++			nm_bufferqueue_destroy(bq);
+ 			return EXIT_SUCCESS;
+ 		}
+ 
+@@ -311,6 +312,7 @@ static int command_file_worker(int sd)
+ 				continue;
+ 
+ 			nm_log(NSLOG_RUNTIME_ERROR, "Command file worker: Failed to poll (%m)");
++			nm_bufferqueue_destroy(bq);
+ 			return EXIT_FAILURE;
+ 		}
+ 
+@@ -320,12 +322,14 @@ static int command_file_worker(int sd)
+ 			if (errno == EINTR)
+ 				continue;
+ 			nm_log(NSLOG_RUNTIME_ERROR, "Command file worker: Failed to read from bufferqueue (%m)");
++			nm_bufferqueue_destroy(bq);
+ 			return EXIT_FAILURE;
+ 		}
+ 
+ 		ret = nm_bufferqueue_write(bq, sd);
+ 		if (ret < 0 && ret != EAGAIN && ret != EWOULDBLOCK) {
+ 			nm_log(NSLOG_RUNTIME_ERROR, "Command file worker: Failed to write to bufferqueue (%m)");
++			nm_bufferqueue_destroy(bq);
+ 			return EXIT_FAILURE;
+ 		}
+ 	} /* while(1) */
