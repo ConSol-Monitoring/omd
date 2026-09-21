@@ -10,6 +10,7 @@ SRC         = $(NAME)-$(VERSION).tar.xz
 GOPKG       = 1.26
 GOVERSION   = $(shell grep ^VERSION ../go-${GOPKG}/Makefile | awk '{ print $$3 }')
 GOPATH      = go
+GOFLAGS     = -trimpath
 PWD         = $(shell pwd)
 GITBASE     = github.com/consol-monitoring
 GITURL      = $(GITBASE)/$(NAME)

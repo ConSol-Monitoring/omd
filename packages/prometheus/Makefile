@@ -10,6 +10,7 @@ DIR        = $(NAME)-$(VERSION)
 SRC        = $(DIR).tar.xz
 GOPKG      = 1.26
 GOVERSION  = $(shell grep ^VERSION ../go-${GOPKG}/Makefile | awk '{ print $$3 }')
+GOFLAGS     = -trimpath
 PWD        = $(shell pwd)
 GOFOLDER   = go
 GOPATH     = /dev/null # should not be used on vendor build

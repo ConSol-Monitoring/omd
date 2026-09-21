@@ -6,12 +6,13 @@ PACKAGE_ROOT = $(shell cd .. && pwd)
 DIR          = $(NAME)-$(VERSION)
 
 export GOROOT_BOOTSTRAP=$(shell ls -d1 $(PACKAGE_ROOT)/go-bootstrap/go/ 2>/dev/null)
+export GOFLAGS=-trimpath -buildvcs=false
 
 build:
 	mkdir -p $(DIR)
 	tar xfJ go$(VERSION).src.tar.xz -C $(DIR)
 	mv $(DIR)/go/* $(DIR) && rm -rf $(DIR)/go
-	export GOFLAGS="-buildvcs=false" && cd $(DIR)/src/ && ./make.bash
+	cd $(DIR)/src/ && ./make.bash
 	export GOBIN="$(shell pwd)/." && export PATH=$(shell pwd)/$(DIR)/bin:$$PATH && $(shell pwd)/$(DIR)/bin/go install golang.org/x/vuln/cmd/govulncheck@latest
 
 install:

@@ -7,8 +7,9 @@ SRC        = $(NAME)-$(VERSION).tar.xz
 GOPATH     = go
 GOPKG      = 1.26
 GOVERSION  = $(shell grep ^VERSION ../go-${GOPKG}/Makefile | awk '{ print $$3 }')
+GOFLAGS     = -trimpath
 PWD        = $(shell pwd)
-GO         = export GOROOT=$(PWD)/../go-$(GOPKG)/go-$(GOVERSION) && export GOPATH=$(PWD)/$(GOPATH)/ && export PATH=$(PWD)/build_bin:$$GOROOT/bin:$$PATH && export GOFLAGS=-buildvcs=false && go
+GO         = export GOROOT=$(PWD)/../go-$(GOPKG)/go-$(GOVERSION) && export GOPATH=$(PWD)/$(GOPATH)/ && export PATH=$(PWD)/build_bin:$$GOROOT/bin:$$PATH && go
 ifeq ($(shell uname -m),x86_64)
 MACHINE=amd64
 else ifeq ($(shell uname -m),aarch64)
@@ -19,6 +20,8 @@ endif
 
 # there is usually more space here, and /tmp is a tmpfs on most machines nowadays
 export TMPDIR=/var/tmp
+
+export GOFLAGS=-trimpath -buildvcs=false
 
 .PHONY: skel
 

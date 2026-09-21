@@ -10,6 +10,7 @@ SRC         = $(NAME)-$(VERSION).tar.gz
 GOPKG       = 1.27
 GOVERSION   = $(shell grep ^VERSION ../go-${GOPKG}/Makefile | awk '{ print $$3 }')
 GOPATH      = go
+GOFLAGS     = -trimpath
 PWD         = $(shell pwd)
 GITBASE     = github.com/sni
 GITURL      = $(GITBASE)/$(NAME)
