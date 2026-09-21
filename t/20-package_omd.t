@@ -12,7 +12,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 128 );
+plan( tests => 132 );
 
 ##################################################
 # create our test site
@@ -36,6 +36,7 @@ my $tests = [
   { cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_http -H localhost -a omdadmin:omd -u /$site/omd/ -e 302'", like => '/HTTP OK:/' },
   { cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_http -H localhost -a omdadmin:omd -u /$site/omd/vierhundertvier -e 404'", like => '/HTTP OK:/' },
   { cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_http -H localhost -u /$site/omd/vierhunderteins -e 401'", like => '/HTTP OK:/' },
+  { cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_http -H localhost -a omdadmin:omd -u /$site/500.html -B'", like => '/HTTP 500/' },
 ];
 for my $test (@{$tests}) {
     TestUtils::test_command($test);
