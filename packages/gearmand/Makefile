@@ -37,7 +37,6 @@ build: clean
 install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)
 	rsync -a $(TMPDEST)/. $(DESTDIR)$(OMD_ROOT)/.
-	#cp $(DESTDIR)$(OMD_ROOT)/bin/gearmand $(DESTDIR)$(OMD_ROOT)/bin/gearmand.dbg
 
 skel:
 

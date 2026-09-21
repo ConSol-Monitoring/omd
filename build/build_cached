@@ -116,6 +116,22 @@ if [ "x$CACHED_FILE" != "x" ] && test -s "$CACHED_FILE"; then
           fi
         done
 
+        # strip binary to make them smaller -> faster replacement
+        find \
+            ./$SRC/ \
+            -type f \
+            \( \
+              -not -name "*.dbg" \
+              -not -name "waitmax" \
+              -not -name "agent_modbus" \
+              -not -path "*/go-*/*" \
+              -not -path "*/testdata/*" \
+              -not -path "*/.local-chromium/*" \
+          \) \
+          -print0 \
+        | xargs -0 -r -n 500 strip 2>&1 \
+        | grep -ivP 'File format not recognized|Unable to recognise the format|File truncated|has no sections|Permission denied'
+
         # replace strings in ascii files
         grep -rlI "$OLD_VERSION" "$SRC/" | \
             while read FILE; do
@@ -158,6 +174,22 @@ unset ELF_PACKAGE_METADATA
 set -e
 $MAKE -C "$SRC" build
 set +e
+
+# strip binary to make them smaller -> faster replacement
+find \
+    ./$SRC/ \
+    -type f \
+    \( \
+      -not -name "*.dbg" \
+      -not -name "waitmax" \
+      -not -name "agent_modbus" \
+      -not -path "*/go-*/*" \
+      -not -path "*/testdata/*" \
+      -not -path "*/.local-chromium/*" \
+    \) \
+    -print0 \
+  | xargs -0 -r -n 500 strip 2>&1 \
+  | grep -ivP 'File format not recognized|Unable to recognise the format|File truncated|has no sections|Permission denied'
 
 # create cache file
 TARBALL_TMP=$(mktemp)

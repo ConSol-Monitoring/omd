@@ -25,6 +25,7 @@ build:
 	tar zxf $(PROXYDIR).tar.gz
 	cd $(PROXYDIR) && PERL5LIB=$$(pwd) perl Makefile.PL
 	make -C $(PROXYDIR) gearman_proxy.pl
+	cp $(DIR)/mod_gearman_naemon.o $(DIR)/mod_gearman_naemon.o.dbg
 
 install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/bin
@@ -36,7 +37,7 @@ install:
 	install -m 0755 $(DIR)/check_gearman                $(DESTDIR)$(OMD_ROOT)/lib/monitoring-plugins/
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/mod_gearman
 	install -m 0644 $(DIR)/mod_gearman_naemon.o         $(DESTDIR)$(OMD_ROOT)/lib/mod_gearman/mod_gearman_naemon.o
-	install -m 0644 $(DIR)/mod_gearman_naemon.o         $(DESTDIR)$(OMD_ROOT)/lib/mod_gearman/mod_gearman_naemon.o.dbg
+	install -m 0644 $(DIR)/mod_gearman_naemon.o.dbg     $(DESTDIR)$(OMD_ROOT)/lib/mod_gearman/mod_gearman_naemon.o.dbg
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/mod_gearman
 	install -m 0755 $(PROXYDIR)/gearman_proxy.pl        $(DESTDIR)$(OMD_ROOT)/share/mod_gearman/
 

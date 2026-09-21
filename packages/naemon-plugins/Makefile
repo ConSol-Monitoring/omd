@@ -23,11 +23,12 @@ build:
 	cd $(DIR) && src=`ls -d1 ../../naemon/naemon-*/src/naemon` && ln -s $$src naemon
 	cd $(DIR) && lib=`ls -d1 ../../naemon/naemon-*/lib` && ln -s $$lib lib
 	$(MAKE) -C $(DIR) all
+	cp $(DIR)/.libs/naemon_vimvault.so $(DIR)/.libs/naemon_vimvault.so.dbg
 
 install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/naemon
-	install -m 755 $(DIR)/.libs/naemon_vimvault.so $(DESTDIR)$(OMD_ROOT)/lib/naemon/vimvault.o.dbg
-	install -sm 755 $(DIR)/.libs/naemon_vimvault.so $(DESTDIR)$(OMD_ROOT)/lib/naemon/vimvault.o
+	install -m 755 $(DIR)/.libs/naemon_vimvault.so.dbg $(DESTDIR)$(OMD_ROOT)/lib/naemon/vimvault.o.dbg
+	install -sm 755 $(DIR)/.libs/naemon_vimvault.so    $(DESTDIR)$(OMD_ROOT)/lib/naemon/vimvault.o
 	install -m 755 cat_naemonvault $(DESTDIR)$(OMD_ROOT)/bin
 
 skel:
