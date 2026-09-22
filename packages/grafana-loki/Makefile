@@ -5,7 +5,7 @@ CHANGELOG  = https://github.com/grafana/loki/blob/main/CHANGELOG.md
 VERSION    = 3.6.7
 DIR        = loki-$(VERSION)
 SRC        = $(DIR).tar.xz
-GOPKG      = 1.26
+GOPKG      = 1.27
 GOVERSION  = $(shell grep ^VERSION ../go-${GOPKG}/Makefile | awk '{ print $$3 }')
 PWD        = $(shell pwd)
 GOENV      = export GOROOT=$(PWD)/../go-$(GOPKG)/go-$(GOVERSION) && export PATH=$$GOROOT/bin:$$PATH
