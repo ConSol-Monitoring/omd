@@ -30,14 +30,18 @@ build:
 	cd $(DIR)/src && src=`ls -d1 ../../../naemon/naemon-*/src/naemon` && ln -s $$src naemon
 	cd $(DIR)/src && lib=`ls -d1 ../../../naemon/naemon-*/lib` && ln -s $$lib lib
 	$(MAKE) -C $(DIR) all
-	cp $(DIR)/src/.libs/livestatus.so $(DIR)/src/.libs/livestatus.so.dbg
+	rm -rf dest
+	mkdir -p dest
+	cp $(DIR)/src/.libs/livestatus.so ./dest/livestatus.so.dbg
+	install -m 755 $(DIR)/src/unixcat ./dest/unixcat
+	rm -rf $(DIR)
 
 install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/naemon
-	install -m 755 $(DIR)/src/.libs/livestatus.so.dbg $(DESTDIR)$(OMD_ROOT)/lib/naemon/livestatus.o.dbg
-	install -sm 755 $(DIR)/src/.libs/livestatus.so    $(DESTDIR)$(OMD_ROOT)/lib/naemon/livestatus.o
+	install  -m 755 ./dest/livestatus.so.dbg $(DESTDIR)$(OMD_ROOT)/lib/naemon/livestatus.o.dbg
+	install -sm 755 ./dest/livestatus.so.dbg $(DESTDIR)$(OMD_ROOT)/lib/naemon/livestatus.o
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/bin
-	install -m 755 $(DIR)/src/unixcat $(DESTDIR)$(OMD_ROOT)/bin/unixcat
+	install -m 755 ./dest/unixcat $(DESTDIR)$(OMD_ROOT)/bin/unixcat
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/python
 	install -m 644 livestatus.py $(DESTDIR)$(OMD_ROOT)/lib/python
 
@@ -45,6 +49,7 @@ skel:
 
 clean:
 	rm -rf $(DIR)
+	rm -rf ./dest
 
 upstream:
 	rm -f *.gz
