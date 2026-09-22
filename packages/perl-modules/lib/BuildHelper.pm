@@ -438,8 +438,8 @@ sub install_module {
     local $ENV{'PERL5LIB'} = $ENV{'PERL5LIB'}.":." if -e 'Configure.pm';
 
     # apply patches
-    my($patchglob) = ($file =~ m/^(.*)\-[0-9_\.]+.(tar.gz|tgz)/gmx);
-    my @patches = glob('../patches/'.$patchglob.'.*.patch');
+    my($patchglob) = ($file =~ m/^(.*)\-v?[0-9_\.]+.(tar.gz|tgz)/gmx);
+    my @patches = glob('../patches/'.($patchglob // $file).'.*.patch');
     for my $patch (@patches) {
         print "applying patch ".$patch;
         `patch -p1 < $patch >> $LOG 2>&1`;
