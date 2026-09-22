@@ -167,7 +167,7 @@ MODULES = \
           base-2.23.tar.gz \
           constant-1.33.tar.gz \
           libnet-3.11.tar.gz \
-          podlators-4.10.tar.gz \
+          podlators-v6.1.1.tar.gz \
           threads-shared-1.58.tar.gz \
           Archive-Tar-3.12.tar.gz \
           Archive-Zip-1.68.tar.gz \
@@ -187,7 +187,7 @@ MODULES = \
           Module-ScanDeps-1.37.tar.gz \
           Term-Clui-1.71.tar.gz \
           Time-Local-1.25.tar.gz \
-          URI-1.73.tar.gz \
+          URI-5.37.tar.gz \
           WWW-RobotRules-6.02.tar.gz \
           XML-SAX-0.99.tar.gz \
           XML-Simple-2.25.tar.gz \
