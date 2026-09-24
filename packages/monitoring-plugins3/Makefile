@@ -40,16 +40,25 @@ build-plugins: uriparser-$(URIPARSER)
 		URIPARSER_CPPFLAGS="-I$(shell pwd)/uriparser-$(URIPARSER)/include" \
 		CFLAGS="$(CFLAGS)" ./configure $(CONFIGUREOPTS)
 	CFLAGS="$(CFLAGS)" $(MAKE) -C $(DIR) all
+	rm -rf ./dest
+	mkdir -p ./dest
+	$(MAKE) DESTDIR=$(shell pwd)/dest -C $(DIR) install
+	# FIXME: pack these with SUID root
+	install -m 755 $(DIR)/plugins-root/check_icmp ./dest/$(OMD_ROOT)/lib/monitoring-plugins/v3
+	install -m 755 $(DIR)/plugins-root/check_dhcp ./dest/$(OMD_ROOT)/lib/monitoring-plugins/v3
+	ln -s check_icmp ./dest/$(OMD_ROOT)/lib/monitoring-plugins/v3/check_host
+	-strip ./dest/$(OMD_ROOT)/lib/monitoring-plugins/v3/* 2>&1 | grep -v "file format not recognized"
+	rm -rf $(DIR)
+	rm -rf uriparser-$(URIPARSER)
+
+
 
 install: $(INSTALL)
 
 install-skip:
 
 install-plugins:
-	$(MAKE) DESTDIR=$(DESTDIR) -C $(DIR) install
-	install -m 755 $(DIR)/plugins-root/check_icmp $(DESTDIR)$(OMD_ROOT)/lib/monitoring-plugins/v3
-	install -m 755 $(DIR)/plugins-root/check_dhcp $(DESTDIR)$(OMD_ROOT)/lib/monitoring-plugins/v3
-	ln -s check_icmp $(DESTDIR)$(OMD_ROOT)/lib/monitoring-plugins/v3/check_host
+	rsync -a ./dest/$(OMD_ROOT)/. $(DESTDIR)/$(OMD_ROOT)/.
 
 uriparser-$(URIPARSER):
 	tar jxf uriparser-$(URIPARSER).tar.bz2 --no-same-owner
@@ -58,6 +67,7 @@ uriparser-$(URIPARSER):
 skel:
 
 clean:
+	rm -rf ./dest
 	rm -rf $(DIR)
 	rm -rf uriparser-$(URIPARSER)
 

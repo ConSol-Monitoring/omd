@@ -17,6 +17,8 @@ CONFIGUREOPTS = \
     --prefix=$(OMD_ROOT) \
     --libexecdir=$(OMD_ROOT)/lib/monitoring-plugins
 
+CFLAGS += -fpie
+
 build: uriparser-$(URIPARSER)
 	rm -rf $(DIR)
 	tar xzf $(DIR).tar.gz --no-same-owner
@@ -29,25 +31,24 @@ build: uriparser-$(URIPARSER)
 	cd $(DIR) && \
 		URIPARSER="$(shell pwd)/uriparser-$(URIPARSER)/.libs/liburiparser.a" \
 		URIPARSER_CPPFLAGS="-I$(shell pwd)/uriparser-$(URIPARSER)/include" \
-		./configure $(CONFIGUREOPTS)
-	$(MAKE) -C $(DIR) all
+		CFLAGS="$(CFLAGS)" ./configure $(CONFIGUREOPTS)
+	CFLAGS="$(CFLAGS)" $(MAKE) -C $(DIR) all
+	rm -rf ./dest
+	mkdir -p ./dest
+	$(MAKE) DESTDIR=$(shell pwd)/dest -C $(DIR) install
+	# FIXME: pack these with SUID root
+	install -m 755 $(DIR)/plugins-root/check_icmp ./dest/$(OMD_ROOT)/lib/monitoring-plugins
+	install -m 755 $(DIR)/plugins-root/check_dhcp ./dest/$(OMD_ROOT)/lib/monitoring-plugins
+	ln -s check_icmp ./dest/$(OMD_ROOT)/lib/monitoring-plugins/check_host
+	# link lib/monitoring-plugins to lib/nagios/plugins
+	mkdir -p ./dest/$(OMD_ROOT)/lib/nagios
+	cd ./dest/$(OMD_ROOT)/lib/nagios && ln -s ../monitoring-plugins plugins
+	-strip ./dest/$(OMD_ROOT)/lib/monitoring-plugins/* 2>&1 | grep -v "file format not recognized"
+	rm -rf $(DIR)
+	rm -rf uriparser-$(URIPARSER)
 
 install:
-	$(MAKE) DESTDIR=$(DESTDIR) -C $(DIR) install
-	# FIXME: pack these with SUID root
-	install -m 755 $(DIR)/plugins-root/check_icmp $(DESTDIR)$(OMD_ROOT)/lib/monitoring-plugins
-	install -m 755 $(DIR)/plugins-root/check_dhcp $(DESTDIR)$(OMD_ROOT)/lib/monitoring-plugins
-	ln -s check_icmp $(DESTDIR)$(OMD_ROOT)/lib/monitoring-plugins/check_host
-
-	# Copy package documentations to have these information in the binary packages
-	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/doc/$(NAME)
-	set -e; for file in ACKNOWLEDGEMENTS AUTHORS CODING COPYING FAQ NEWS README REQUIREMENTS SUPPORT; do \
-	   install -m 644 $(DIR)/$$file $(DESTDIR)$(OMD_ROOT)/share/doc/$(NAME); \
-	done
-
-	# link lib/monitoring-plugins to lib/nagios/plugins
-	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/nagios
-	cd $(DESTDIR)$(OMD_ROOT)/lib/nagios && ln -s ../monitoring-plugins plugins
+	rsync -a ./dest/$(OMD_ROOT)/. $(DESTDIR)/$(OMD_ROOT)/.
 
 uriparser-$(URIPARSER):
 	tar jxf uriparser-$(URIPARSER).tar.bz2 --no-same-owner
@@ -56,6 +57,7 @@ uriparser-$(URIPARSER):
 skel:
 
 clean:
+	rm -rf ./dest
 	rm -rf $(DIR)
 	rm -rf uriparser-$(URIPARSER)
 
