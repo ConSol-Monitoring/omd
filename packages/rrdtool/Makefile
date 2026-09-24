@@ -32,36 +32,36 @@ build:
 	
 	# Python binding
 	cd $(DIR)/bindings/python && python3 setup.py build
-
-install:
+	
+	rm -rf ./dest
+	mkdir -p ./dest
 	export PERL5LIB=$(P5TMPDIST)/dest/lib/perl5; \
-	$(MAKE) DESTDIR=$(DESTDIR) -C $(DIR) install
-	find $(DESTDIR)$(OMD_ROOT)/lib/perl5/ -type f -exec chmod u+rw  {} \; # strip fails otherwise
-	find $(DESTDIR)$(OMD_ROOT)/lib/perl5/ -type d -exec chmod u+rwx {} \; # strip fails otherwise
-	
+	$(MAKE) DESTDIR=$(shell pwd)/dest -C $(DIR) install
+	find ./dest/$(OMD_ROOT)/lib/perl5/ -type f -exec chmod u+rw  {} \; # strip fails otherwise
+	find ./dest/$(OMD_ROOT)/lib/perl5/ -type d -exec chmod u+rwx {} \; # strip fails otherwise
 	# clean up perl man pages which end up in wrong location
-	rm -fr $(DESTDIR)/usr/share/man
-	rm -fr $(DESTDIR)/usr/local
+	rm -fr ./dest/usr/share/man
+	rm -fr ./dest/usr/local
 	# clean up systemd init files
-	rm -fr $(DESTDIR)/lib
-	
-	mkdir $(DESTDIR)$(OMD_ROOT)/share/doc/rrdtool
-	install -m 644 $(DIR)/COPYRIGHT $(DESTDIR)$(OMD_ROOT)/share/doc/rrdtool
-	install -m 644 $(DIR)/CONTRIBUTORS $(DESTDIR)$(OMD_ROOT)/share/doc/rrdtool
+	rm -fr ./dest/lib
 	
 	# Python binding
-	cd $(DIR)/bindings/python && python3 setup.py install --root=$(DESTDIR)$(OMD_ROOT) --home ""
-	if [ -n "$(DESTDIR)$(OMD_ROOT)" -a -d "$(DESTDIR)$(OMD_ROOT)/lib64" ] ; then \
-	    rsync -avh $(DESTDIR)$(OMD_ROOT)/lib64/* $(DESTDIR)$(OMD_ROOT)/lib/ ; \
-	    rm -rf $(DESTDIR)$(OMD_ROOT)/lib64 ; \
+	cd $(DIR)/bindings/python && python3 setup.py install --root=$(shell pwd)/dest/$(OMD_ROOT) --home ""
+	if [ -n "./dest/$(OMD_ROOT)" -a -d "./dest/$(OMD_ROOT)/lib64" ] ; then \
+	    rsync -ah ./dest/$(OMD_ROOT)/lib64/* ./dest/$(OMD_ROOT)/lib/ ; \
+	    rm -rf ./dest/$(OMD_ROOT)/lib64 ; \
 	fi
-	# Cleanup files below lib/python2*. The real stuff is in lib/python
-	if ls $(DESTDIR)$(OMD_ROOT)/lib/python3* >/dev/null 2>&1; then \
-	    rm -rf $(DESTDIR)$(OMD_ROOT)/lib/python3* ; \
+	# Cleanup files below lib/python3*. The real stuff is in lib/python
+	if ls ./dest/$(OMD_ROOT)/lib/python3* >/dev/null 2>&1; then \
+	    rm -rf ./dest/$(OMD_ROOT)/lib/python3* ; \
 	fi
+
+install:
+	rsync -a ./dest/$(OMD_ROOT)/. $(DESTDIR)/$(OMD_ROOT)/.
 
 skel:
 
 clean:
+	rm -rf ./dest
 	rm -rf $(DIR)
 	rm -rf .modulebuildrc
