@@ -105,6 +105,11 @@ build: $(EXTRA_BUILD_DEPS)
 	rm -rf $(BOOSTDEST)
 	rm -rf $(CMAKEDIR)
 	rm -rf $(CMAKEDEST)
+	sed   -e "s#/lib/icinga2/sbin/icinga2#/lib/sbin/icinga2#g" -i ./dest/bin/icinga2
+	sed -e "s#/lib64/icinga2/sbin/icinga2#/lib/sbin/icinga2#g" -i ./dest/bin/icinga2
+	strip ./dest/lib/monitoring-plugins/check_nscp_api
+	find ./dest/lib/ -name icinga2 -type f -exec strip {} \;
+	rm -rf ./dest/share/doc/icinga2
 
 build_cmake: $(CMAKEDEST)
 
@@ -126,11 +131,6 @@ $(BOOSTDEST): $(CMAKEDEST)
 
 install:
 	rsync -a ./dest/. $(DESTDIR)$(OMD_ROOT)/.
-	sed   -e "s#/lib/icinga2/sbin/icinga2#/lib/sbin/icinga2#g" -i $(DESTDIR)$(OMD_ROOT)/bin/icinga2
-	sed -e "s#/lib64/icinga2/sbin/icinga2#/lib/sbin/icinga2#g" -i $(DESTDIR)$(OMD_ROOT)/bin/icinga2
-	strip $(DESTDIR)$(OMD_ROOT)/lib/monitoring-plugins/check_nscp_api
-	find $(DESTDIR)$(OMD_ROOT)/lib/ -name icinga2 -type f -exec strip {} \;
-	rm -rf $(DESTDIR)$(OMD_ROOT)/share/doc/icinga2
 
 skel:
 	mkdir -p $(SKEL)/etc/icinga2
