@@ -43,7 +43,7 @@ build: uriparser-$(URIPARSER)
 	# link lib/monitoring-plugins to lib/nagios/plugins
 	mkdir -p ./dest/$(OMD_ROOT)/lib/nagios
 	cd ./dest/$(OMD_ROOT)/lib/nagios && ln -s ../monitoring-plugins plugins
-	-strip ./dest/$(OMD_ROOT)/lib/monitoring-plugins/* 2>&1 | grep -v "file format not recognized"
+	-strip ./dest/$(OMD_ROOT)/lib/monitoring-plugins/* 2>&1 | grep -vi "file format not recognized"
 	rm -rf $(DIR)
 	rm -rf uriparser-$(URIPARSER)
 

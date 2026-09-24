@@ -6,7 +6,7 @@ VERSION = master
 DIR = $(NAME)-$(VERSION)
 URIPARSER=0.8.6
 # GIT TAG is set automatically by "make upstream"
-GIT_TAG     = 9bf8c49
+GIT_TAG     = fe166a0
 
 BUILD=build-plugins
 INSTALL=install-plugins
@@ -47,7 +47,7 @@ build-plugins: uriparser-$(URIPARSER)
 	install -m 755 $(DIR)/plugins-root/check_icmp ./dest/$(OMD_ROOT)/lib/monitoring-plugins/v3
 	install -m 755 $(DIR)/plugins-root/check_dhcp ./dest/$(OMD_ROOT)/lib/monitoring-plugins/v3
 	ln -s check_icmp ./dest/$(OMD_ROOT)/lib/monitoring-plugins/v3/check_host
-	-strip ./dest/$(OMD_ROOT)/lib/monitoring-plugins/v3/* 2>&1 | grep -v "file format not recognized"
+	-strip ./dest/$(OMD_ROOT)/lib/monitoring-plugins/v3/* 2>&1 | grep -vi "file format not recognized"
 	rm -rf $(DIR)
 	rm -rf uriparser-$(URIPARSER)
 
