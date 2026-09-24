@@ -71,6 +71,10 @@ rm -rf $RPM_BUILD_ROOT/usr/lib/systemd
 /opt/omd
 %caps(cap_net_raw,cap_net_bind_service+ep) /opt/omd/versions/%{version}/lib/monitoring-plugins/check_dhcp
 %caps(cap_net_raw+ep) /opt/omd/versions/%{version}/lib/monitoring-plugins/check_icmp
+%if 0%{?rhel} != 7
+%caps(cap_net_raw,cap_net_bind_service+ep) /opt/omd/versions/%{version}/lib/monitoring-plugins/v3/check_dhcp
+%caps(cap_net_raw+ep) /opt/omd/versions/%{version}/lib/monitoring-plugins/v3/check_icmp
+%endif
 %caps(cap_net_raw+ep) /opt/omd/versions/%{version}/bin/blackbox_exporter
 #%exclude /opt/omd/versions/%{version}/bin/*.dbg
 #%exclude /opt/omd/versions/%{version}/lib/*.dbg

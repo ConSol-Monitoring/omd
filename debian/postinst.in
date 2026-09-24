@@ -98,6 +98,9 @@ case "$1" in
       PLUGIN=${PLUGIN%;*}
       setcapabilities root omd 0754 "$cap" "$MONITORING_PLUGIN_PATH/$PLUGIN" ||
       setperm root omd $PLUGPERM "$MONITORING_PLUGIN_PATH/$PLUGIN"
+      # same for v3
+      setcapabilities root omd 0754 "$cap" "$MONITORING_PLUGIN_PATH/v3/$PLUGIN" ||
+      setperm root omd $PLUGPERM "$MONITORING_PLUGIN_PATH/v3/$PLUGIN"
     done
 
     BLACKBOX_EXPORTER="$OMD_ROOT/bin/blackbox_exporter"
