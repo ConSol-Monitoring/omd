@@ -25,13 +25,16 @@ build:
 	install $(DIR)/clients/cmd/promtail/promtail     ./dest/promtail
 	install $(DIR)/cmd/logcli/logcli                 ./dest/logcli
 	install $(DIR)/cmd/chunks-inspect/chunks-inspect ./dest/chunks-inspect
+	strip ./dest/*
 	$(UPX) ./dest/*
 	rm -rf $(DIR)
 
 install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/bin
 	install -m 755 ./dest/*          $(DESTDIR)$(OMD_ROOT)/bin/
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/omd/scripts/pre-update
 	install -m 755 loki.pre-update   $(DESTDIR)$(OMD_ROOT)/lib/omd/scripts/pre-update/loki
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/omd/scripts/post-update
 	install -m 755 loki.post-update  $(DESTDIR)$(OMD_ROOT)/lib/omd/scripts/post-update/loki
 
 skel:
