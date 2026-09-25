@@ -151,6 +151,8 @@ pack:
 	# Make sure, all permissions in skel are set to 0755, 0644
 	./build/check_skel_permissions $(DESTDIR)$(OMD_ROOT)/skel $(DESTDIR)$(OMD_ROOT)/share/omd/skel.permissions*
 
+	# remove empty folder
+	-rmdir $(DESTDIR)$(OMD_ROOT)/lib64 >/dev/null 2>&1
 	@failed=$$(find $(DESTDIR)$(OMD_ROOT)/lib64 2>/dev/null) ; \
 	if [ -n "$$failed" ] ; then \
 	    echo "ERROR: Invalid lib installpath. Library files must be installed in prefix/lib" ; \
