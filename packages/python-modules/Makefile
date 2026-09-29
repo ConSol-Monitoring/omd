@@ -233,6 +233,8 @@ build:
 		WHEEL=$$(ls $(WHEELSDIR)/$${MBASE}-* 2>/dev/null | head -1) ; \
 		$(PIP) install --no-cache-dir --no-index --no-deps --find-links=$(WHEELSDIR) --target=$(BUILDDEST) --upgrade $$WHEEL ; \
 	done
+	# remove .exe files (ex.: gui.exe from setuptools)
+	find $(BUILDDEST)/ -name \*.exe -delete
 
 install:
 	mkdir -p $(LOCALPYTHONDIR)
