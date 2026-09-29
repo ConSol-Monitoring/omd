@@ -1,7 +1,7 @@
 include ../../../Makefile.omd
 
-NAME        = check_nsc_web
-CHANGELOG   = https://github.com/ConSol-Monitoring/check_nsc_web/blob/master/Changes
+NAME        = check_snclient
+CHANGELOG   = https://github.com/ConSol-Monitoring/check_snclient/blob/master/Changes
 BRANCH      = master
 VERSION     = master
 SRC         = $(NAME)-$(VERSION).tar.gz
@@ -13,7 +13,7 @@ GITBASE     = github.com/consol-monitoring
 GITURL      = $(GITBASE)/$(NAME)
 DEPS_SRC    = deps.tar.gz
 # GIT TAG is set automatically by "make upstream" or "make package"
-GIT_TAG     = v0.7.6
+GIT_TAG     = 359ac04
 
 .PHONY: skel
 
@@ -32,6 +32,7 @@ build:
 install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/monitoring-plugins
 	install -m 755 ./$(NAME) $(DESTDIR)$(OMD_ROOT)/lib/monitoring-plugins
+	ln -sf $(NAME) $(DESTDIR)$(OMD_ROOT)/lib/monitoring-plugins/check_nsc_web
 
 skel:
 
