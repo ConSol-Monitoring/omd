@@ -31,6 +31,7 @@ BUILD_PACKAGES       += glibc-devel-static
 BUILD_PACKAGES       += gperf
 BUILD_PACKAGES       += groff                          # needed for building rrdtool
 BUILD_PACKAGES       += help2man                       # required by naemon
+BUILD_PACKAGES       += jq                             # required by grafana download-catalog-plugins.sh
 BUILD_PACKAGES       += libboost_chrono1_66_0-devel
 BUILD_PACKAGES       += libboost_context1_66_0-devel
 BUILD_PACKAGES       += libboost_coroutine1_66_0-devel

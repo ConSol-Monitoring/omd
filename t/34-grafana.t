@@ -5,6 +5,8 @@ use strict;
 use Test::More;
 use Sys::Hostname;
 use HTTP::Request::Common 6.12 qw/GET POST/;
+use LWP::UserAgent;
+use JSON::PP qw(decode_json);
 
 BEGIN {
     use lib('t');
@@ -68,7 +70,54 @@ TestUtils::test_command({ cmd => $omd_bin." config $site set THRUK_COOKIE_AUTH o
 TestUtils::test_command({ cmd => $omd_bin." start $site", like => '/Starting grafana/' });
 TestUtils::test_command({ cmd => "/bin/su - $site -c 'cat var/log/grafana/grafana.log'", like => '/HTTP Server Listen/', waitfor => 'HTTP\ Server\ Listen', maxwait => 180 });
 TestUtils::test_command({ cmd => "/omd/sites/$site/lib/monitoring-plugins/check_http -t 60 -H localhost -S -k 'Cookie: thruk_auth=$sessionid' -u '/$site/grafana/' -s '\"login\":\"omdadmin\"'", like => '/HTTP OK:/', waitfor => 'HTTP\ OK:', maxwait => 180 });
-TestUtils::test_command({ cmd => "/omd/sites/$site/lib/monitoring-plugins/check_http -t 60 -H localhost -S -k 'Cookie: thruk_auth=$sessionid' -u '/$site/grafana/api/datasources/proxy/1/index.php/api/hosts' -vv -s '[{\"name\":\"omd-testsite\"}]'", like => '/HTTP OK:/' });
+
+# get datasource uid
+my $ua = LWP::UserAgent->new(timeout => 60);
+
+my $req = HTTP::Request->new(
+    GET => "https://localhost/$site/grafana/api/datasources"
+);
+$req->header('Cookie' => "thruk_auth=$sessionid");
+
+my $res = $ua->request($req);
+
+unless($res->is_success) {
+    TestUtils::bail_out_clean(
+        "failed to fetch Grafana datasources: ".$res->status_line
+    );
+}
+
+my $datasources;
+eval {
+    $datasources = decode_json($res->decoded_content);
+};
+
+if($@ || ref($datasources) ne 'ARRAY') {
+    TestUtils::bail_out_clean(
+        "failed to decode Grafana datasources response: ".$res->decoded_content
+    );
+}
+
+my @pnp_datasources = grep {
+    ($_->{'type'} // '') eq 'sni-pnp-datasource'
+} @{$datasources};
+
+unless(scalar @pnp_datasources == 1) {
+    TestUtils::bail_out_clean(
+        "expected exactly one PNP Grafana datasource, found ".
+        scalar(@pnp_datasources)
+    );
+}
+
+my $pnp_uid = $pnp_datasources[0]->{'uid'};
+
+unless($pnp_uid) {
+    TestUtils::bail_out_clean(
+        "PNP Grafana datasource does not have a UID"
+    );
+}
+
+TestUtils::test_command({ cmd => "/omd/sites/$site/lib/monitoring-plugins/check_http -t 60 -H localhost -S -k 'Cookie: thruk_auth=$sessionid' -u '/$site/grafana/api/datasources/proxy/uid/$pnp_uid/index.php/api/hosts' -vv -s '[{\"name\":\"omd-testsite\"}]'", like => '/HTTP OK:/' });
 
 #grafana interface with http and thruk cookie auth
 TestUtils::test_command({ cmd => $omd_bin." stop $site" });

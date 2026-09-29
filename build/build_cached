@@ -127,13 +127,15 @@ if [ "x$CACHED_FILE" != "x" ] && test -s "$CACHED_FILE"; then
               -not -path "*/go-*/*" \
               -not -path "*/testdata/*" \
               -not -path "*/.local-chromium/*" \
+              -not -path "*/plugins-bundled/*" \
           \) \
           -print0 \
         | xargs -0 -r -n 500 strip 2>&1 \
         | grep -ivP 'File format not recognized|Unable to recognise the format|File truncated|has no sections|Permission denied'
 
         # replace strings in ascii files
-        grep -rlI "$OLD_VERSION" "$SRC/" | \
+        grep -rlI "$OLD_VERSION" "$SRC/" \
+            --exclude-dir=plugins-bundled | \
             while read FILE; do
                 replace_strings_in_ascii_file "$FILE" "$OLD_VERSION" "$OMD_VERSION"
             done
@@ -186,6 +188,7 @@ find \
       -not -path "*/go-*/*" \
       -not -path "*/testdata/*" \
       -not -path "*/.local-chromium/*" \
+      -not -path "*/plugins-bundled/*" \
     \) \
     -print0 \
   | xargs -0 -r -n 500 strip 2>&1 \

@@ -17,6 +17,7 @@ BUILD_PACKAGES       += gettext                        # needed for german l10n
 BUILD_PACKAGES       += git-buildpackage
 BUILD_PACKAGES       += gperf
 BUILD_PACKAGES       += help2man                       # required by naemon
+BUILD_PACKAGES       += jq                             # required by grafana download-catalog-plugins.sh
 BUILD_PACKAGES       += libboost-all-dev
 BUILD_PACKAGES       += libc6-dev
 BUILD_PACKAGES       += libcurl4-openssl-dev           # needed by perl modules / thruk

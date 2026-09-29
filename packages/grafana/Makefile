@@ -2,7 +2,7 @@ include ../../Makefile.omd
 
 NAME       = grafana
 CHANGELOG  = https://github.com/grafana/grafana/blob/main/CHANGELOG.md
-VERSION    = 12.4.3+security-02
+VERSION    = 13.2.3
 SRC        = $(NAME)-$(VERSION).tar.xz
 GOPATH     = go
 GOPKG      = 1.27
@@ -18,6 +18,14 @@ else
 $(error arch $(shell uname -m ) not supported)
 endif
 
+GRAFANA_BUNDLED_PLUGINS = \
+	prometheus:13.2.2,\
+	influxdb:13.1.6,\
+	grafana-postgresql-datasource:13.0.4,\
+	loki:13.2.1,\
+	mssql:13.0.6,\
+	mysql:13.1.3
+
 # there is usually more space here, and /tmp is a tmpfs on most machines nowadays
 export TMPDIR=/var/tmp
 
@@ -28,10 +36,18 @@ export GOFLAGS=-trimpath -buildvcs=false
 build:
 	tar xfJ $(SRC)
 	cd $(GOPATH)/src/github.com/grafana/grafana && tar xfJ $(PWD)/public.tar.xz
-	cd $(GOPATH)/src/github.com/grafana/grafana && $(GO) run build.go build
+	cd $(GOPATH)/src/github.com/grafana/grafana && $(GO) build -trimpath -ldflags "-X main.version=$(VERSION)" -o ./bin/linux-$(MACHINE)/grafana ./pkg/cmd/grafana
 	mkdir -p ./dest/
-	install -m 755 $(GOPATH)/src/github.com/grafana/grafana/bin/linux-$(MACHINE)/grafana     ./dest/grafana
-	install -m 755 $(GOPATH)/src/github.com/grafana/grafana/bin/linux-$(MACHINE)/grafana-cli ./dest/grafana-cli
+	cd $(GOPATH)/src/github.com/grafana/grafana && \
+	    ./scripts/download-catalog-plugins.sh \
+	        --out $(PWD)/dest/plugins-bundled \
+	        --grafana-version "$(VERSION)" \
+	        --os linux \
+	        --arch "$(MACHINE)" \
+	        --no-default-catalog-plugins \
+	        --plugins "$(GRAFANA_BUNDLED_PLUGINS)"
+	install -m 755 $(GOPATH)/src/github.com/grafana/grafana/bin/linux-$(MACHINE)/grafana ./dest/grafana
+	printf '#!/bin/sh\nexec "`dirname "$$0"`"/grafana cli "$$@"\n' > ./dest/grafana-cli && chmod 755 ./dest/grafana-cli
 	chmod -R 777 $(GOPATH)
 	rm -rf $(GOPATH)
 	strip ./dest/grafana
@@ -51,6 +67,10 @@ install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/python
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/var/tmp
 	install -m 755 grafanactl $(DESTDIR)$(OMD_ROOT)/bin/
+	# Install bundled plugins
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/grafana/data
+	cp -a ./dest/plugins-bundled \
+	    $(DESTDIR)$(OMD_ROOT)/share/grafana/data/
 	# Take care of path and format of plugin zip/tgz files
 	# Download from https://grafana.com/grafana/plugins
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/grafana/plugins-available
@@ -84,12 +104,9 @@ package:
 		make gen-go
 	# clean up to reduce dependencies
 	find $(GOPATH)/src/github.com/grafana/grafana -type f | grep _test.go | xargs -r rm -f
-	rm $(GOPATH)/src/github.com/grafana/grafana/pkg/build/cmd/e2e*
+	rm -f $(GOPATH)/src/github.com/grafana/grafana/pkg/build/cmd/e2e*
 	cd $(GOPATH)/src/github.com/grafana/grafana && \
 		$(GO) mod tidy
-	echo "build app"
-	cd $(GOPATH)/src/github.com/grafana/grafana && \
-		$(GO) run build.go setup
 	rm -rf $(GOPATH)/src/github.com/grafana/grafana/scripts/go/bin
 	rm -f $(GOPATH)/src/github.com/grafana/grafana/yarn.lock
 	rm -rf $(GOPATH)/src/github.com/grafana/grafana/.yarn

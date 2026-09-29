@@ -4,6 +4,9 @@ use warnings;
 use strict;
 use Test::More;
 use Sys::Hostname;
+use JSON::PP qw(decode_json);
+use LWP::UserAgent;
+use HTTP::Request;
 
 BEGIN {
     use lib('t');
@@ -49,11 +52,57 @@ SKIP: {
     };
 }
 
-# wait untill grafana is up & running
+# wait until grafana is up & running
 TestUtils::test_command({ cmd => "/bin/su - $site -c 'cat var/log/grafana/grafana.log'", like => '/HTTP Server Listen/', waitfor => 'HTTP\ Server\ Listen', maxwait => 180 });
 TestUtils::test_url({ url => 'http://localhost/'.$site.'/grafana/', waitfor => '<title>Grafana<\/title>', auth => $auth, maxwait => 180 });
 
-TestUtils::test_command({ cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_http -t 60 -H 127.0.0.1 --onredirect=follow -a omdadmin:omd -u \"/$site/grafana/api/datasources/proxy/2/api/v1/query_range?query=go_goroutines&start=1535520675&end=1535542290&step=15\" -s \"success\"'", like => '/HTTP OK:/', waitfor => 'OK:', maxwait => 180 });
+# Get the generated UID of the Prometheus datasource.
+my $ua = LWP::UserAgent->new(timeout => 60);
+
+my $req = HTTP::Request->new(
+    GET => "http://127.0.0.1/$site/grafana/api/datasources"
+);
+$req->authorization_basic('omdadmin', 'omd');
+
+my $res = $ua->request($req);
+
+unless($res->is_success) {
+    TestUtils::bail_out_clean(
+        "failed to fetch Grafana datasources: ".$res->status_line
+    );
+}
+
+my $datasources;
+eval {
+    $datasources = decode_json($res->decoded_content);
+};
+
+if($@ || ref($datasources) ne 'ARRAY') {
+    TestUtils::bail_out_clean(
+        "failed to decode Grafana datasources response: ".$res->decoded_content
+    );
+}
+
+my @prometheus_datasources = grep {
+    ($_->{'type'} // '') eq 'prometheus'
+} @{$datasources};
+
+unless(scalar @prometheus_datasources == 1) {
+    TestUtils::bail_out_clean(
+        "expected exactly one Prometheus Grafana datasource, found ".
+        scalar(@prometheus_datasources)
+    );
+}
+
+my $prometheus_uid = $prometheus_datasources[0]->{'uid'};
+
+unless($prometheus_uid) {
+    TestUtils::bail_out_clean(
+        "Prometheus Grafana datasource does not have a UID"
+    );
+}
+
+TestUtils::test_command({ cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_http -t 60 -H 127.0.0.1 --onredirect=follow -a omdadmin:omd -u \"/$site/grafana/api/datasources/proxy/uid/$prometheus_uid/api/v1/query_range?query=go_goroutines&start=1535520675&end=1535542290&step=15\" -s \"success\"'", like => '/HTTP OK:/', waitfor => 'OK:', maxwait => 180 });
 
 # test reload
 TestUtils::test_command({ cmd => "/bin/su - $site -c 'omd reload prometheus'" });
