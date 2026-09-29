@@ -16,7 +16,7 @@ next:
             - mod-gearman update to 5.2.6
             - mod-gearman-worker-go update to 1.7.2
           - grafana:
-            - update to 12.4.3+security-02
+            - update to 13.2.3
           - prometheus:
             - update to 3.13.3
             - node_exporter update to 1.12.1
