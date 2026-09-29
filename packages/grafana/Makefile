@@ -7,15 +7,16 @@ SRC        = $(NAME)-$(VERSION).tar.xz
 GOPATH     = go
 GOPKG      = 1.27
 GOVERSION  = $(shell grep ^VERSION ../go-${GOPKG}/Makefile | awk '{ print $$3 }')
-GOFLAGS     = -trimpath
+GOFLAGS    = -trimpath
 PWD        = $(shell pwd)
 GO         = export GOROOT=$(PWD)/../go-$(GOPKG)/go-$(GOVERSION) && export GOPATH=$(PWD)/$(GOPATH)/ && export PATH=$(PWD)/build_bin:$$GOROOT/bin:$$PATH && go
+
 ifeq ($(shell uname -m),x86_64)
 MACHINE=amd64
 else ifeq ($(shell uname -m),aarch64)
 MACHINE=arm64
 else
-$(error arch $(shell uname -m ) not supported)
+$(error arch $(shell uname -m) not supported)
 endif
 
 GRAFANA_BUNDLED_PLUGINS = \
@@ -25,6 +26,10 @@ GRAFANA_BUNDLED_PLUGINS = \
 	loki:13.2.1,\
 	mssql:13.0.6,\
 	mysql:13.1.3
+
+GRAFANA_PLUGINS = \
+	grafana-clock-panel:3.2.4 \
+	heywesty-trafficlight-panel:1.1.0
 
 # there is usually more space here, and /tmp is a tmpfs on most machines nowadays
 export TMPDIR=/var/tmp
@@ -67,15 +72,20 @@ install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/python
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/var/tmp
 	install -m 755 grafanactl $(DESTDIR)$(OMD_ROOT)/bin/
+
 	# Install bundled plugins
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/grafana/data
 	cp -a ./dest/plugins-bundled \
 	    $(DESTDIR)$(OMD_ROOT)/share/grafana/data/
-	# Take care of path and format of plugin zip/tgz files
-	# Download from https://grafana.com/grafana/plugins
+
+	# Install external Grafana plugins
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/grafana/plugins-available
-	unzip grafana-clock-panel-3.2.2.zip -d $(DESTDIR)$(OMD_ROOT)/share/grafana/plugins-available
-	unzip heywesty-trafficlight-panel-1.0.0.zip -d $(DESTDIR)$(OMD_ROOT)/share/grafana/plugins-available
+	for PLUGIN in $(GRAFANA_PLUGINS); do \
+		NAME=$${PLUGIN%%:*}; \
+		VERSION=$${PLUGIN##*:}; \
+		unzip -q "$${NAME}-$${VERSION}.zip" \
+		    -d $(DESTDIR)$(OMD_ROOT)/share/grafana/plugins-available; \
+	done
 
 skel:
 	sed -i -e 's|###APACHE_MODULE_DIR###|$(APACHE_MODULE_DIR)|g' \
@@ -90,7 +100,7 @@ clean:
 	rm -rf $(GOPATH)
 	rm -rf dest
 
-upstream: public package
+upstream: public package plugins
 
 package:
 	mkdir -p $(GOPATH)/src/github.com/grafana/
@@ -131,4 +141,18 @@ public:
 	rm grafana-$(VERSION).linux-amd64.tar.gz
 	rm -rf grafana-*/
 	wget "https://raw.githubusercontent.com/grafana/grafana/v$(VERSION)/conf/defaults.ini" -O defaults.ini
+
+plugins:
+	for PLUGIN in $(GRAFANA_PLUGINS); do \
+		NAME=$${PLUGIN%%:*}; \
+		VERSION=$${PLUGIN##*:}; \
+		FILE="$${NAME}-$${VERSION}.zip"; \
+		if [ ! -f "$$FILE" ]; then \
+			rm -f "$$FILE.tmp"; \
+			wget -O "$$FILE.tmp" \
+			    "https://grafana.com/api/plugins/$${NAME}/versions/$${VERSION}/download" && \
+			mv "$$FILE.tmp" "$$FILE"; \
+		fi; \
+	done
+
 # DO NOT TOUCH defaults.ini, update grafana.ini in skel instead
