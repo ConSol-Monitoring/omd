@@ -138,7 +138,7 @@ OVERRIDES += pymssql-2.3.1.tar.gz
 OVERRIDES += paramiko-3.5.0.tar.gz
 
 OVERRIDES += requests-2.33.0-py3-none-any.whl
-OVERRIDES += urllib3-2.7.0-py3-none-any.whl
+OVERRIDES += urllib3-2.8.0-py3-none-any.whl
 OVERRIDES += mysql_connector_python-9.5.0-py2.py3-none-any.whl
 OVERRIDES += idna-3.18-py3-none-any.whl
 OVERRIDES += pyasn1-0.6.4-py3-none-any.whl
