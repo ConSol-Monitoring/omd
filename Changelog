@@ -69,7 +69,7 @@ next:
           - prometheus:
             - update to 3.5.2
             - alertmanager update to 0.30.1
-            - all assets (css/js/templates) for prometheus console where removed from upstream
+            - all assets (css/js/templates) for prometheus console were removed from upstream
             - as a result the SNMP console was also removed
             - blackbox_exporter update to 0.27.0
             - node_exporter update to 1.10.2
