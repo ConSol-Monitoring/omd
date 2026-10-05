@@ -12,7 +12,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 128 );
+plan( tests => 129 );
 
 # create our test site
 my $omd_bin = TestUtils::get_omd_bin();
@@ -135,6 +135,7 @@ for my $core (qw/naemon/) {
 	);
 
 	TestUtils::wait_for_file("/omd/sites/$site/var/pnp4nagios/perfdata/omd-$site/Dummy_Service_omd-dummy.rrd");
+	TestUtils::wait_for_file("/omd/sites/$site/var/pnp4nagios/perfdata/omd-check_multi/proc_syslogd_procs.rrd");
 	TestUtils::wait_for_file("/omd/sites/$site/tmp/run/live") or TestUtils::bail_out_clean("No need to test $package without livestatus connection");
 
 	for my $url ( @{$urls} ) {
