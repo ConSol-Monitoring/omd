@@ -1,6 +1,7 @@
 ###ROOT###/var/log/gearman/*.log {
 	missingok
 	rotate 52
+	copytruncate
 	compress
 	delaycompress
 	notifempty

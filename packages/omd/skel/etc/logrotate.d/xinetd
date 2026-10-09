@@ -1,5 +1,6 @@
 ###ROOT###/var/log/xinetd.log {
         missingok
+        copytruncate
         rotate 7
         compress
         delaycompress
