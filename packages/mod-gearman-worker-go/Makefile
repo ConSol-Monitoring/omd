@@ -2,8 +2,6 @@ include ../../Makefile.omd
 
 NAME        = mod-gearman-worker-go
 CHANGELOG   = https://github.com/ConSol-Monitoring/mod-gearman-worker-go/blob/master/Changes
-#VERSION     = 1.2.0
-#BRANCH      = v$(VERSION)
 VERSION     = master
 BRANCH      = master
 SRC         = $(NAME)-$(VERSION).tar.xz
@@ -29,14 +27,18 @@ build:
 		export GOPATH=$(PWD)/$(GOPATH)/ && \
 		export PATH=$$GOROOT/bin:$$PATH && \
 		( cd $(GOPATH)/src/$(GITURL)/cmd/mod_gearman_worker && go build -ldflags "-s -w -X main.Build=$(OMD_VERSION)-$(GIT_TAG)" -o $(PWD)/mod_gearman_worker )
+	cp $(GOPATH)/src/$(GITURL)/mod_gearman_worker_epn.pl .
+	cp $(GOPATH)/src/$(GITURL)/worker.cfg .
+	chmod -R 777 $(GOPATH)
+	rm -rf $(GOPATH)
 
 install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/bin
-	install -m 0755 $(PWD)/mod_gearman_worker                                $(DESTDIR)$(OMD_ROOT)/bin/
-	install -m 0755 $(PWD)/$(GOPATH)/src/$(GITURL)/mod_gearman_worker_epn.pl $(DESTDIR)$(OMD_ROOT)/bin/
+	install -m 0755 $(PWD)/mod_gearman_worker        $(DESTDIR)$(OMD_ROOT)/bin/
+	install -m 0755 $(PWD)/mod_gearman_worker_epn.pl $(DESTDIR)$(OMD_ROOT)/bin/
 
 skel:
-	cp $(GOPATH)/src/$(GITURL)/worker.cfg $(SKEL)/etc/mod-gearman/worker.cfg
+	cp worker.cfg $(SKEL)/etc/mod-gearman/worker.cfg
 	for p in patches/*.skel_patch ; do \
 	    echo "applying $$p..." ; \
 	    ( cd $(SKEL) ; patch -p1 ) < $$p || exit 1; \
@@ -47,6 +49,8 @@ clean:
 	[ ! -e $(GOPATH) ] || chmod -R 777 $(GOPATH)
 	rm -rf $(GOPATH)
 	rm -rf mod_gearman_worker
+	rm -rf worker.cfg
+	rm -rf mod_gearman_worker_epn.pl
 
 deps: clean
 	mkdir -p $(GOPATH)

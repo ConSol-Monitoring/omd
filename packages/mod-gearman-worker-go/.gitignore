@@ -1,3 +1,5 @@
 go/
 skel/etc/mod-gearman/worker.cfg
 mod_gearman_worker
+mod_gearman_worker_epn.pl
+worker.cfg
