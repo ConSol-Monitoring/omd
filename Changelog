@@ -21,6 +21,9 @@ next:
             - update to 3.13.3
             - node_exporter update to 1.12.1
             - pushgateway update to 1.11.3
+          - jmx4perl:
+            - update to 1.13
+            - remove jolokia-agents from omd
           - livestatus:
             - install lq from lmd
           - coshsh update to 13.0.0.1
