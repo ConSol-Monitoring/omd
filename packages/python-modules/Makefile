@@ -142,6 +142,10 @@ OVERRIDES += urllib3-2.8.0-py3-none-any.whl
 OVERRIDES += mysql_connector_python-9.5.0-py2.py3-none-any.whl
 OVERRIDES += idna-3.18-py3-none-any.whl
 OVERRIDES += pyasn1-0.6.4-py3-none-any.whl
+# pysnmp 4.4.12 does "import imp" (gone in 3.12) and needs pyasn1<0.6.
+# 7.1.29 works with the OS python3-cryptography.
+# (7.1.30+ would require cryptography>=47 for AES, the distros ship 41-46)
+OVERRIDES += pysnmp-7.1.29-py3-none-any.whl
 OVERRIDES += pyparsing-3.3.2-py3-none-any.whl
 OVERRIDES += flit_core-3.12.0-py3-none-any.whl
 endif
