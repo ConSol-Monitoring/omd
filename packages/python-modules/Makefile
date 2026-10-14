@@ -33,115 +33,119 @@ HAS_PYTHON_312_OR_NEWER := $(shell \
 
 # install toolchain required to build wheels
 BASE =
-BASE += packaging-21.3.tar.gz
-BASE += setuptools-59.6.0.tar.gz
-BASE += wheel-0.37.1.tar.gz
-BASE += pip-21.3.1.tar.gz
+BASE += packaging-21.3-py3-none-any.whl
+BASE += setuptools-59.6.0-py3-none-any.whl
+BASE += wheel-0.37.1-py2.py3-none-any.whl
+BASE += pip-21.3.1-py3-none-any.whl
 
 MODULES =
-MODULES += semantic_version-2.10.0.tar.gz            # setuptools-rust-1.5.2
-MODULES += tomli-1.2.3.tar.gz                        # setuptools_scm-7.0.5 (last version that works with python 3.6)
-MODULES += flit_core-3.5.1.tar.gz                    #  typing_extensions-4.4.0
-MODULES += typing_extensions-3.10.0.2.tar.gz         # setuptools-rust-1.5.2 (last version that works with python 3.6)
-MODULES += pyparsing-3.0.8.tar.gz                    # setuptools_scm-7.0.5 (last version that works with python 3.6)
-MODULES += setuptools_scm-6.4.2.tar.gz               # pymssql-2.2.7(<7.0,>=5.0)
-MODULES += setuptools-rust-1.1.2.tar.gz              # paramiko-2.12.0 deps (last version that works with python 3.6)
-MODULES += setuptools-git-1.2.tar.gz                 # pymssql-2.2.7
-MODULES += Cython-0.29.32.tar.gz                     # pymssql-2.2.7
-MODULES += ply-3.11.tar.gz                           # jsonpath-ng-1.5.3, pysmi-0.3.4, pywbem-1.5.0
-MODULES += charset-normalizer-2.1.1.tar.gz           #  requests-2.28.1
-MODULES += idna-3.4.tar.gz                           #  requests-2.28.1
-MODULES += urllib3-1.26.13.tar.gz                    #  requests-2.28.1(<1.27,>=1.21.1)
-MODULES += certifi-2025.1.31.tar.gz                  #  requests-2.28.1
-MODULES += chardet-3.0.4.tar.gz                      #  requests-2.28.1
-MODULES += requests-2.27.1.tar.gz                    # pywbem-1.5.0
+MODULES += semantic_version-2.10.0-py2.py3-none-any.whl            # setuptools-rust-1.5.2
+MODULES += tomli-1.2.3-py3-none-any.whl                        # setuptools_scm-7.0.5 (last version that works with python 3.6)
+MODULES += flit_core-3.5.1-py3-none-any.whl                    #  typing_extensions-4.4.0
+MODULES += typing_extensions-3.10.0.2-py3-none-any.whl         # setuptools-rust-1.5.2 (last version that works with python 3.6)
+MODULES += pyparsing-3.0.8-py3-none-any.whl                    # setuptools_scm-7.0.5 (last version that works with python 3.6)
+MODULES += setuptools_scm-6.4.2-py3-none-any.whl               # pymssql-2.2.7(<7.0,>=5.0)
+MODULES += setuptools_rust-1.1.2-py3-none-any.whl              # paramiko-2.12.0 deps (last version that works with python 3.6)
+MODULES += setuptools_git-1.2-py2.py3-none-any.whl                 # pymssql-2.2.7
+MODULES += Cython-0.29.32-py2.py3-none-any.whl                     # pymssql-2.2.7
+MODULES += ply-3.11-py2.py3-none-any.whl                           # jsonpath-ng-1.5.3, pysmi-0.3.4, pywbem-1.5.0
+MODULES += charset_normalizer-2.1.1-py3-none-any.whl           #  requests-2.28.1
+MODULES += idna-3.4-py3-none-any.whl                           #  requests-2.28.1
+MODULES += urllib3-1.26.13-py2.py3-none-any.whl                    #  requests-2.28.1(<1.27,>=1.21.1)
+MODULES += certifi-2025.1.31-py3-none-any.whl                  #  requests-2.28.1
+MODULES += chardet-3.0.4-py2.py3-none-any.whl                      #  requests-2.28.1
+MODULES += requests-2.27.1-py2.py3-none-any.whl                    # pywbem-1.5.0
 
 # Coshsh
 MODULES += MarkupSafe-2.0.1.tar.gz                   # Jinja2-3.1.2
-MODULES += Jinja2-3.0.3.tar.gz
+MODULES += Jinja2-3.0.3-py3-none-any.whl
 
 # Coshsh - datasources
 MODULES += mysqlclient-2.1.1.tar.gz
 MODULES += pymssql-2.2.7.tar.gz
 MODULES += mysql_connector_python-8.3.0-py2.py3-none-any.whl
-MODULES += lml-0.1.0.tar.gz                          # pyexcel-0.7.0.tar.gz
-MODULES += pyexcel-io-0.6.6.tar.gz                   # pyexcel-0.7.0.tar.gz
-MODULES += texttable-1.6.7.tar.gz                    # pyexcel-0.7.0.tar.gz
-MODULES += pyexcel-0.7.0.tar.gz
-MODULES += defusedxml-0.7.1.tar.gz                   # odfpy-1.4.1.tar.gz
-MODULES += odfpy-1.4.1.tar.gz                        # pyexcel-ods-0.6.0.tar.gz
-MODULES += pyexcel-ods-0.6.0.tar.gz
-MODULES += et_xmlfile-1.1.0.tar.gz                   # openpyxl-3.0.10.tar.gz
-MODULES += openpyxl-3.0.10.tar.gz                    # pyexcel-xlsx-0.6.0.tar.gz
-MODULES += pyexcel-xlsx-0.6.0.tar.gz
+MODULES += lml-0.1.0-py2.py3-none-any.whl                          # pyexcel-0.7.0
+MODULES += pyexcel_io-0.6.6-py2.py3-none-any.whl                   # pyexcel-0.7.0
+MODULES += texttable-1.6.7-py2.py3-none-any.whl                    # pyexcel-0.7.0
+MODULES += pyexcel-0.7.0-py2.py3-none-any.whl
+MODULES += defusedxml-0.7.1-py2.py3-none-any.whl                   # odfpy-1.4.1.tar.gz
+MODULES += odfpy-1.4.1.tar.gz                        # pyexcel-ods-0.6.0
+MODULES += pyexcel_ods-0.6.0-py2.py3-none-any.whl
+MODULES += et_xmlfile-1.1.0-py3-none-any.whl                   # openpyxl-3.0.10
+MODULES += openpyxl-3.0.10-py2.py3-none-any.whl                    # pyexcel-xlsx-0.6.0
+MODULES += pyexcel_xlsx-0.6.0-py2.py3-none-any.whl
 
 # for Ansible
-MODULES += six-1.16.0.tar.gz                         # paramiko-2.12.0, pyvmomi
-MODULES += paramiko-1.18.5.tar.gz
+MODULES += six-1.16.0-py2.py3-none-any.whl                         # paramiko-2.12.0, pyvmomi
+MODULES += paramiko-1.18.5-py2.py3-none-any.whl
 MODULES += PyYAML-6.0.tar.gz
 
 # for snmp simulator and coshsh snmp inventory
-MODULES += pysmi-0.3.4.tar.gz                        # pysnmp-4.4.12
+MODULES += pysmi-0.3.4-py2.py3-none-any.whl                        # pysnmp-4.4.12
 MODULES += pycryptodomex-3.16.0.tar.gz               # pysnmp-4.4.12
-MODULES += pyasn1-0.4.8.tar.gz                       # pysnmp-4.4.12
-MODULES += pysnmp-4.4.12.tar.gz
+MODULES += pyasn1-0.4.8-py2.py3-none-any.whl                       # pysnmp-4.4.12
+MODULES += pysnmp-4.4.12-py2.py3-none-any.whl
 
 # Exporter
-MODULES += prometheus_client-0.15.0.tar.gz
+MODULES += prometheus_client-0.15.0-py3-none-any.whl
 
 # Plugins
 MODULES += simplejson-3.18.0.tar.gz                  # ansible
-MODULES += resolvelib-0.8.1.tar.gz                   # ansible
+MODULES += resolvelib-0.8.1-py2.py3-none-any.whl                   # ansible
 # for check_json_health
-MODULES += decorator-4.4.0.tar.gz                    # jsonpath-ng-1.5.3
-MODULES += jsonpath-ng-1.5.3.tar.gz
+MODULES += decorator-4.4.0-py2.py3-none-any.whl                    # jsonpath-ng-1.5.3
+MODULES += jsonpath_ng-1.5.3-py3-none-any.whl
 # for check_smb_copy
 MODULES += pysmbc-1.0.25.1.tar.gz
 # for check_vcenter
 MODULES += pyvmomi-8.0.3.0.1.tar.gz                  # check_vsphere
 # for check_redfish
-MODULES += redfish-3.1.8.tar.gz
+MODULES += redfish-3.1.8-py3-none-any.whl
 # for check_omd
 MODULES += psutil-5.9.4.tar.gz
 
 MODULES += gearman3-0.2.1.tar.gz
-MODULES += nagiosplugin-1.3.3.tar.gz
+MODULES += nagiosplugin-1.3.3-py3-none-any.whl
 # There is also an omdnotificationforwarder...whl (see $SWHEEL below)
 # because "pip wheel ..." would require the hatch build system.
 MODULES += omdnotificationforwarder-4.4-py3-none-any.whl
 MODULES += omdeventhandler-2.2-py3-none-any.whl
 
 # check_vsphere
-MODULES += monplugin-0.6.3.tar.gz                    # check_vsphere
-MODULES += checkvsphere-0.3.30.tar.gz
+MODULES += monplugin-0.6.3-py3-none-any.whl                    # check_vsphere
+MODULES += checkvsphere-0.3.30-py3-none-any.whl
 
 # override some module for python 3.07, list could be reevaluated once rhel7-rhel8 support got removed
 OVERRIDES=""
 ifeq ($(HAS_PYTHON_307_OR_NEWER),true)
-OVERRIDES += certifi-2026.4.22.tar.gz
+OVERRIDES += certifi-2026.4.22-py3-none-any.whl
 OVERRIDES += jinja2-3.1.6-py3-none-any.whl
 OVERRIDES += pycryptodomex-3.23.0.tar.gz
 endif
 
 # override some module for python 3.12, list could be reevaluated once rhel7 support got removed
 ifeq ($(HAS_PYTHON_312_OR_NEWER),true)
-OVERRIDES += setuptools-83.0.0.tar.gz
-OVERRIDES += wheel-0.46.3.tar.gz
+OVERRIDES += setuptools-83.0.0-py3-none-any.whl
+OVERRIDES += wheel-0.46.3-py3-none-any.whl
 OVERRIDES += pip-26.2.1-py3-none-any.whl
 OVERRIDES += packaging-25.0-py3-none-any.whl
 
-OVERRIDES += setuptools_scm-8.1.0.tar.gz
-OVERRIDES += setuptools_rust-1.10.2.tar.gz
-OVERRIDES += cython-3.0.11.tar.gz
+OVERRIDES += setuptools_scm-8.1.0-py3-none-any.whl
+OVERRIDES += setuptools_rust-1.10.2-py3-none-any.whl
+OVERRIDES += Cython-3.0.11-py2.py3-none-any.whl
 OVERRIDES += pyyaml-6.0.2.tar.gz
 OVERRIDES += pymssql-2.3.1.tar.gz
-OVERRIDES += paramiko-3.5.0.tar.gz
+OVERRIDES += paramiko-3.5.0-py3-none-any.whl
 
 OVERRIDES += requests-2.33.0-py3-none-any.whl
 OVERRIDES += urllib3-2.8.0-py3-none-any.whl
 OVERRIDES += mysql_connector_python-9.5.0-py2.py3-none-any.whl
 OVERRIDES += idna-3.18-py3-none-any.whl
 OVERRIDES += pyasn1-0.6.4-py3-none-any.whl
+# pysnmp 4.4.12 does "import imp" (gone in 3.12) and needs pyasn1<0.6.
+# 7.1.29 works with the OS python3-cryptography.
+# (7.1.30+ would require cryptography>=47 for AES, the distros ship 41-46)
+OVERRIDES += pysnmp-7.1.29-py3-none-any.whl
 OVERRIDES += pyparsing-3.3.2-py3-none-any.whl
 OVERRIDES += flit_core-3.12.0-py3-none-any.whl
 endif
@@ -157,7 +161,7 @@ build:
 	export ftp_proxy=http://external_dependencies_must_be_included_in_omd; \
 	export CFLAGS="${CFLAGS} -std=c99"; \
 	set -e ; \
-	shopt -s nocaseglob; \
+	shopt -s nocaseglob nocasematch; \
 	for M in $(BASE); do \
 		MBASE=$$(echo $$M | sed -E -e 's/.tar.gz//g' -e 's/.zip//g' -e 's/-(py2\.)*py3-.*whl//g' -e 's/[-_]/\*/g') ; \
 		for O in $(OVERRIDES); do \
@@ -216,15 +220,6 @@ build:
 			else \
 				$(PIP) wheel --no-cache-dir --no-index --no-deps --wheel-dir=$(WHEELSDIR) --find-links=$(WHEELSDIR) ./src/$$M ; \
 			fi ; \
-		elif [[ $$M =~ .*tomli.* ]]; then \
-			( \
-				cd src && \
-				( tar zxf $$M  --no-same-owner || : ) && \
-				cd ./tomli-*/ && \
-				python3 -c 'from setuptools import setup; setup(name="tomli", packages=["tomli"], package_data={"": ["*"]}, version="1.2.3")' bdist_wheel; \
-			); \
-			mv  ./src/tomli-*/dist/*.whl $(WHEELSDIR); \
-			rm -rf ./src/tomli-*/; \
 		elif [[ -n "$$SWHEEL" ]]; then \
 			cp src/$$SWHEEL $(WHEELSDIR) ; \
 		else \

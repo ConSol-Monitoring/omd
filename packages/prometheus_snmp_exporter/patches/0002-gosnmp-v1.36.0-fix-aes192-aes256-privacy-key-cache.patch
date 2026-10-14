@@ -1,0 +1,32 @@
+diff -Naur a/go.mod b/go.mod
+--- a/go.mod
++++ b/go.mod
+@@ -4,7 +4,7 @@
+ 
+ require (
+ 	github.com/go-kit/log v0.2.1
+-	github.com/gosnmp/gosnmp v1.35.0
++	github.com/gosnmp/gosnmp v1.36.0
+ 	github.com/prometheus/client_golang v1.14.0
+ 	github.com/prometheus/client_model v0.3.0
+ 	github.com/prometheus/common v0.37.0
+diff -Naur a/go.sum b/go.sum
+--- a/go.sum
++++ b/go.sum
+@@ -203,6 +203,8 @@
+ github.com/googleapis/go-type-adapters v1.0.0/go.mod h1:zHW75FOG2aur7gAO2B+MLby+cLsWGBF62rFAi7WjWO4=
+ github.com/gosnmp/gosnmp v1.35.0 h1:EuWWNPxTCdAUx2/NbQcSa3WdNxjzpy4Phv57b4MWpJM=
+ github.com/gosnmp/gosnmp v1.35.0/go.mod h1:2AvKZ3n9aEl5TJEo/fFmf/FGO4Nj4cVeEc5yuk88CYc=
++github.com/gosnmp/gosnmp v1.36.0 h1:1Si+MImHcKIqFc3/kJEs2LOULP1nlFKlzPFyrMOk5Qk=
++github.com/gosnmp/gosnmp v1.36.0/go.mod h1:iLcZxN2MxKhH0jPQDVMZaSNypw1ykqVi27O79koQj6w=
+ github.com/grpc-ecosystem/grpc-gateway v1.16.0/go.mod h1:BDjrQk3hbvj6Nolgz8mAMFbcEtjT1g+wF4CSlocrBnw=
+ github.com/hashicorp/golang-lru v0.5.0/go.mod h1:/m3WP610KZHVQ1SGc6re/UDhFvYD7pJ4Ao+sR/qLZy8=
+ github.com/hashicorp/golang-lru v0.5.1/go.mod h1:/m3WP610KZHVQ1SGc6re/UDhFvYD7pJ4Ao+sR/qLZy8=
+@@ -289,6 +291,7 @@
+ github.com/stretchr/testify v1.7.1/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/h/Wwjteg=
+ github.com/stretchr/testify v1.8.0 h1:pSgiaMZlXftHpm5L7V1+rVB+AZJydKsMxsQBIJw4PKk=
+ github.com/stretchr/testify v1.8.0/go.mod h1:yNjHg4UonilssWZ8iaSj1OCr/vHnekPRkoO+kdMU+MU=
++github.com/stretchr/testify v1.8.4 h1:CcVxjf3Q8PM0mHUKJCdn+eZZtm5yQwehR5yeSVQQcUk=
+ github.com/yuin/goldmark v1.1.25/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
+ github.com/yuin/goldmark v1.1.27/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
+ github.com/yuin/goldmark v1.1.32/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
