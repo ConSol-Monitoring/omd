@@ -3,14 +3,14 @@ include ../../Makefile.omd
 .PHONY: skel
 
 NAME       = snmp_exporter
-VERSION    = consol
-BRANCH     = master
-SRC        = $(NAME)-$(VERSION).tar.gz
+VERSION    = 0.21.0
+BRANCH     = HEAD
+SRC        = v$(VERSION).tar.gz
 GOPKG      = 1.27
 GOVERSION  = $(shell grep ^VERSION ../go-${GOPKG}/Makefile | awk '{ print $$3 }')
 PWD        = $(shell pwd)
 GOFOLDER   = go
-GOPATH     = /dev/null
+GOPATH     = $(PWD)/go
 GOROOT     = $(PWD)/../go-$(GOPKG)/go-$(GOVERSION)
 DATE       = $(shell date -u '+%FT%TZ')
 LDFLAGS    = "\
@@ -22,6 +22,10 @@ LDFLAGS    = "\
 -s -w \
 "
 
+export GOPATH
+export GOFLAGS = -modcacherw
+export GOTOOLCHAIN = local
+
 build:
 	tar zxf $(SRC)
 	mkdir -p $(NAME)-$(VERSION)/build
@@ -30,9 +34,9 @@ build:
 		( cd $(NAME)-$(VERSION) ; patch ) < $$p ; \
 	done
 	cd $(NAME)-$(VERSION) && \
-	    $(GOROOT)/bin/go build -mod=vendor -trimpath -ldflags $(LDFLAGS) -o build/$(NAME) github.com/prometheus/$(NAME)
+	    $(GOROOT)/bin/go build -trimpath -ldflags $(LDFLAGS) -o build/$(NAME) github.com/prometheus/$(NAME)
 	cd $(NAME)-$(VERSION) && \
-	    $(GOROOT)/bin/go build -mod=vendor -trimpath -ldflags $(LDFLAGS) -o build/generator github.com/prometheus/$(NAME)/generator
+	    $(GOROOT)/bin/go build -trimpath -ldflags $(LDFLAGS) -o build/generator github.com/prometheus/$(NAME)/generator
 	mkdir -p ./dest/bin
 	install -m 755 $(NAME)-$(VERSION)/build/$(NAME)   ./dest/bin/
 	install -m 755 $(NAME)-$(VERSION)/build/generator ./dest/bin/snmp_exporter_generator
@@ -41,6 +45,7 @@ build:
 	cp $(NAME)-$(VERSION)/snmp.yml                ./dest/
 	cp $(NAME)-$(VERSION)/generator/generator.yml ./dest/
 	rm -rf $(NAME)-$(VERSION)
+	rm -rf $(GOPATH)
 
 
 install:
@@ -57,10 +62,7 @@ skel:
 clean:
 	rm -rf ./dest
 	rm -rf $(NAME)-$(VERSION)
+	rm -rf $(GOPATH)
 
-package: clean
-	curl -fLo $(NAME)-$(VERSION).tar.gz https://github.com/prometheus/$(NAME)/archive/v$(VERSION).tar.gz
-	tar xf $(NAME)-$(VERSION).tar.gz
-	cd $(NAME)-$(VERSION) && env PATH=$(GOROOT)/bin:$(PATH) go mod vendor
-	tar czf $(NAME)-$(VERSION).tar.gz $(NAME)-$(VERSION)
-	rm -r $(NAME)-$(VERSION)
+package:
+	curl -fLo v$(VERSION).tar.gz https://github.com/prometheus/$(NAME)/archive/v$(VERSION).tar.gz
