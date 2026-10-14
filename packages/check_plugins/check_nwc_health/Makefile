@@ -2,7 +2,7 @@ include ../../../Makefile.omd
 
 NAME = check_nwc_health
 CHANGELOG   = https://github.com/lausser/check_nwc_health/blob/master/ChangeLog
-VERSION = 12.15
+VERSION = 12.16
 DIR = $(NAME)-$(VERSION)
 
 .PHONY: skel
