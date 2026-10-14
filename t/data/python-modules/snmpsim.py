@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""Minimal SNMP agent (simulator) for the OMD pysnmp test (t/45-pysnmp.t).
+"""Minimal SNMP agent (simulator) for the OMD tests t/45-pysnmp.t and
+t/46-prometheus_snmp_exporter.t.
 
 Runs on pysnmp 4.4 (Python < 3.12, AES from pycryptodomex) and on pysnmp 7.x
 (Python >= 3.12, AES from the OS python3-cryptography).
@@ -8,8 +9,9 @@ Serves pysnmp's built-in SNMPv2-MIB on 127.0.0.1:<port>, its sysDescr.0 is
 
 usage: snmpsim.py <port> [community]
 
-SNMPv3 users are named "<auth>-<priv>" (net-snmp protocol names in lower case),
-the passwords are "auth-<user>" and "priv-<user>".
+SNMPv3 users are named "<auth>-<priv>" (net-snmp protocol names in lower case,
+"c" marks the Reeder key extension), the users "aes256-*" and "aes192-*" use SHA.
+The passwords are "auth-<user>" and "priv-<user>".
 The simulator terminates itself after 10 minutes.
 """
 import signal
@@ -39,6 +41,16 @@ USERS = {
     'sha-256-aes-192': (config.usmHMAC192SHA256AuthProtocol, config.usmAesBlumenthalCfb192Protocol),
     'sha-384-aes-256': (config.usmHMAC256SHA384AuthProtocol, config.usmAesBlumenthalCfb256Protocol),
     'sha-512-aes-256': (config.usmHMAC384SHA512AuthProtocol, config.usmAesBlumenthalCfb256Protocol),
+    # snmp_exporter (t/46): same protocols, different priv passwords (gosnmp key cache bug)
+    'aes256-a':       (config.usmHMACSHAAuthProtocol,       config.usmAesBlumenthalCfb256Protocol),
+    'aes256-b':       (config.usmHMACSHAAuthProtocol,       config.usmAesBlumenthalCfb256Protocol),
+    'aes256-c':       (config.usmHMACSHAAuthProtocol,       config.usmAesBlumenthalCfb256Protocol),
+    'aes192-a':       (config.usmHMACSHAAuthProtocol,       config.usmAesBlumenthalCfb192Protocol),
+    'aes192-b':       (config.usmHMACSHAAuthProtocol,       config.usmAesBlumenthalCfb192Protocol),
+    'aes192-c':       (config.usmHMACSHAAuthProtocol,       config.usmAesBlumenthalCfb192Protocol),
+    # snmp_exporter (t/46): Reeder key extension ("Cisco" AES192C/AES256C, unknown to net-snmp)
+    'sha-256-aes-192c': (config.usmHMAC192SHA256AuthProtocol, config.usmAesCfb192Protocol),
+    'sha-512-aes-256c': (config.usmHMAC384SHA512AuthProtocol, config.usmAesCfb256Protocol),
 }
 SUBTREE = (1, 3, 6, 1, 2, 1)
 
