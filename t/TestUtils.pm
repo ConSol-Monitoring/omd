@@ -898,6 +898,7 @@ sub _diag_lint_errors_and_remove_some_exceptions {
             "Unknown attribute \"crossorigin\" for tag",
             "Unknown attribute \"fetchpriority\" for tag",
             "Unknown attribute \"as\" for tag",
+            "Unknown attribute \"defer\" for tag",
             qr(Unknown attribute \"data[\w\-]+\" for tag),
             "for tag <meta>",
             "Unknown element <(header|main|footer|nav)>",
