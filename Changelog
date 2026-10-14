@@ -17,6 +17,7 @@ next:
             - mod-gearman-worker-go update to 1.7.3
           - grafana:
             - update to 13.2.4
+            - thruk-datasource update to 2.3.1
           - prometheus:
             - update to 3.13.3
             - node_exporter update to 1.12.1
