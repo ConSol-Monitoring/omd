@@ -5,8 +5,8 @@ next:
             - lmd update to 2.9.0
           - plugins:
             - check_mssql_health update to 2.9
-            - check_nwc_health update to 12.14
-            - check_pdu_health update to 3.4.1.1
+            - check_nwc_health update to 12.16
+            - check_pdu_health update to 3.4.1.2
             - check_prometheus update to 0.0.8
             - check_rittal_health update to 4.1.2.1
             - check_ups_health update to 4.4.1
@@ -22,15 +22,16 @@ next:
             - update to 3.13.3
             - node_exporter update to 1.12.1
             - pushgateway update to 1.11.3
+            - snmp_exporter update to 0.21.0
           - jmx4perl:
             - update to 1.13
             - remove jolokia-agents from omd
           - livestatus:
             - install lq from lmd
-          - coshsh update to 13.0.0.1
+          - coshsh update to 13.1
           - golang builds updated to 1.27.1
           - histou update to 0.6.3
-          - monitoring-plugins3 update to 9bf8c49
+          - monitoring-plugins3 update to fe166a0
           - nagflux update to 0.6.3
           - victoriametrics update to 1.152.0
 
