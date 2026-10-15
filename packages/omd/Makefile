@@ -34,7 +34,8 @@ install:
 		sed -i $(DESTDIR)$(OMD_ROOT)/share/omd/omd.service -e 's/^#OOMPolicy=/OOMPolicy=/g'; \
 	fi
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/doc/$(NAME)
-	install -m 644 COPYING AUTHORS $(DESTDIR)$(OMD_ROOT)/share/doc/$(NAME)
+	install -m 644 ../../LICENSE $(DESTDIR)$(OMD_ROOT)/share/doc/$(NAME)
+	install -m 644 ../../TEAM    $(DESTDIR)$(OMD_ROOT)/share/doc/$(NAME)
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/omd
 	install -m 644 init_profile $(DESTDIR)$(OMD_ROOT)/lib/omd/
 	install -m 755 port_is_used $(DESTDIR)$(OMD_ROOT)/lib/omd/

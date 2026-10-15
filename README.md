@@ -28,7 +28,7 @@ The full list of included packages can be found [here](https://omd.consol.de/doc
 
 ## Licensing
 
-OMD-Labs is available under the terms of the GNU General Public License of version 2. You find those terms in the file COPYING.
+OMD-Labs is available under the terms of the GNU General Public License of version 2. You find those terms in the file LICENSE.
 
 Please note, that that license only applies to OMD itself (its scripts, patches, configuration files, etc.). The licenses of the included packages may differ. Please checkout those packages for details on their licensing.
 
