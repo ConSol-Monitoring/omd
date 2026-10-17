@@ -25,6 +25,19 @@ install:
 	cp samplicate_watch.service $(DESTDIR)$(OMD_ROOT)/share/samplicate
 	-test -d /run/. && sed -i -e 's/\/var\/run\//\/run\//g' $(DESTDIR)$(OMD_ROOT)/share/samplicate/*.service
 	cp README.systemd $(DESTDIR)$(OMD_ROOT)/share/samplicate
+	# SNMPTRAPD mirror (001-snmptrapd-mirror)
+	cp trap_targets snmptrapd_mirror_watch snmptrapd_mirror_start \
+	    $(DESTDIR)$(OMD_ROOT)/bin
+	chmod 755 $(DESTDIR)$(OMD_ROOT)/bin/trap_targets \
+	    $(DESTDIR)$(OMD_ROOT)/bin/snmptrapd_mirror_watch \
+	    $(DESTDIR)$(OMD_ROOT)/bin/snmptrapd_mirror_start
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/snmptrapd_mirror
+	cp share/snmptrapd_mirror/snmptrapd_mirror.service \
+	    share/snmptrapd_mirror/snmptrapd_mirror_watch.service \
+	    share/snmptrapd_mirror/README.snmptrapd \
+	    share/snmptrapd_mirror/snmptrapd.conf.example \
+	    $(DESTDIR)$(OMD_ROOT)/share/snmptrapd_mirror
+	-test -d /run/. && sed -i -e 's/\/var\/run\//\/run\//g' $(DESTDIR)$(OMD_ROOT)/share/snmptrapd_mirror/*.service
 
 skel:
 

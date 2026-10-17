@@ -32,15 +32,35 @@ DATE=$(printf '%(%a %b %d %I:%M:%S %p %Z %Y)T')
 read -r HOST
 read -r IP
 
-# Initialize ALLINONE with the host and IP, separated by "____"
-ALLINONE="____${HOST}____${IP}"
+# Accumulated varbinds ("____OID VAL" per entry). ALLINONE (the summary
+# line) is composed after the loop so a captured provenance marker can
+# replace the sender.
+VARS=""
 LOG_CONTENT=""
+
+# Provenance marker (mirror method): the central mirror appends
+# snmpTrapAddress varbinds (.1.3.6.1.6.3.18.1.3.<index> = original sender)
+# when forwarding a trap (addForwarderInfo). The index is the lowest one not
+# already present in the payload, so detect by prefix, not by exact .0;
+# the first marker line wins. A captured value replaces the sender (IP)
+# below; the marker is never written as a per-field line and never
+# included in the summary.
+SENDER=""
 
 # Read key-value pairs from the subsequent lines of the trap
 while read -r OID VAL; do
   # Trim any leading/trailing whitespace characters (tabs, carriage returns, newlines)
   NVAL=${VAL//[$'\t\r\n']}
   NOID=${OID//[$'\t\r\n']}
+
+  # Provenance marker (mirror method): consume it (first marker line wins)
+  # and skip — never a per-field line, never in the summary
+  case $NOID in
+    .1.3.6.1.6.3.18.1.3.*)
+      [ -n "$SENDER" ] || SENDER=$NVAL
+      continue
+      ;;
+  esac
 
   # .1.3.6.1.6.3.1.1.4.1.0 is followed by the actual trap oid
   if [ "$NOID" = ".1.3.6.1.6.3.1.1.4.1.0" ]; then
@@ -59,8 +79,17 @@ while read -r OID VAL; do
   LOG_CONTENT+="[$DATE] $NOID: $NVAL\n"
 
   # Accumulate all the entries into one string with "____" as the separator
-  ALLINONE="${ALLINONE}____$NOID $NVAL"
+  VARS="${VARS}____$NOID $NVAL"
 done
+
+# A captured marker replaces the sender: the sender line and the summary's
+# sender field show the original sender (bare value) instead of the
+# [UDP: ...] string
+[ -n "$SENDER" ] && IP=$SENDER
+
+# Initialize ALLINONE with the host and (possibly replaced) sender,
+# separated by "____"
+ALLINONE="____${HOST}____${IP}${VARS}"
 
 # Add a summary line to the log content
 LOG_CONTENT+="[$DATE] summary: $ALLINONE\n"

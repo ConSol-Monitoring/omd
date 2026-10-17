@@ -1,0 +1,15 @@
+[Unit]
+Description=Central SNMP trap mirror (snmptrapd, UDP/162)
+After=snmptrapd_mirror_watch.service network.target
+Requires=snmptrapd_mirror_watch.service
+
+[Service]
+Type=simple
+ExecStart=/opt/omd/versions/default/bin/snmptrapd_mirror_start
+ExecReload=/bin/kill -HUP $MAINPID
+Restart=on-failure
+RestartSec=5
+TimeoutStartSec=30
+
+[Install]
+WantedBy=multi-user.target

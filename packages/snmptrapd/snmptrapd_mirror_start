@@ -1,0 +1,98 @@
+#!/bin/bash
+#
+# snmptrapd_mirror_start — guarded start wrapper for the central SNMP trap
+# mirror (snmptrapd on UDP/162). Started by snmptrapd_mirror.service
+# (Type=simple); the guards run before the daemon is exec'd, so a refused
+# start never leaves the unit in a failed/crash-looping state (all refusals
+# log a stable greppable line and exit 0; guard 6 exits 1).
+#
+# Guards (in order, research R10 / contracts/systemd-services.md):
+#   1. legacy samplicate forwarder active  -> CONFLICT
+#   2. no enabled trap-receiving sites     -> NO-DESTINATIONS
+#   3. UDP/162 already bound (e.g. the distro snmptrapd.socket/service)
+#                                           -> PORT-TAKEN
+#   4. /etc/snmp/snmptrapd.conf absent     -> CONFIG-MISSING
+#   5. required directives missing         -> REJECTED
+#   6. /usr/sbin/snmptrapd missing         -> log prerequisite, exit 1
+#
+# Then: exec /usr/sbin/snmptrapd -C -c /etc/snmp/snmptrapd.conf udp:162
+#   No -L destination on purpose (user directive 2026-10-17): snmptrapd
+#         registers a per-trap logging handler only when a -L destination
+#         is active. Without -L the only per-trap handler is the default
+#         syslog one, and the managed section's 'doNotLogTraps 1' gates it
+#         — journald never sees per-trap lines, at any trap volume. The
+#         site traps.log files are the record of traps.
+#         Operational state (startup line, MIB noise, reload/stop markers,
+#         forward errors) still reaches journald twice: via syslog (tag
+#         snmptrapd, facility daemon; query with 'journalctl -t snmptrapd')
+#         and via stderr (captured by systemd; query with
+#         'journalctl -u snmptrapd_mirror'). Note: the 'logOption' config
+#         directive is ignored by net-snmp 5.9 snmptrapd (deviation D1) —
+#         logging is command-line driven, and we deliberately pass none.
+#   -C    mandatory: the standard path is also the default configuration
+#         path; without -C it would be read twice and every forward
+#         registered twice (research R4)
+#   doNotFork yes (managed section) keeps the daemon in the foreground so
+#         systemd Type=simple tracks the real process (research R3)
+
+BIN_DIR=$(dirname "$(readlink -f "$0")")
+TT="$BIN_DIR/trap_targets"
+MIRROR_CONF=/etc/snmp/snmptrapd.conf
+MIRROR_UNIT=snmptrapd_mirror
+SNMPTD=/usr/sbin/snmptrapd
+LOG_TAG=snmptrapd_mirror_start
+
+log() {
+    logger -t "$LOG_TAG" "$1" 2>/dev/null || true
+}
+
+# guard 1: legacy conflict (R10 — the mirror never preempts a running legacy
+# forwarder; the operator must stop the legacy method first)
+if [ "$("$TT" method 2>/dev/null)" = "samplicate" ]; then
+    log "CONFLICT: legacy samplicate forwarder active on UDP/162; mirror not started"
+    exit 0
+fi
+
+# guard 2: nothing to forward to
+if [ -z "$("$TT" targets 2>/dev/null)" ]; then
+    log "NO-DESTINATIONS: no OMD site has trap receiving enabled; not starting"
+    exit 0
+fi
+
+# guard 3: UDP/162 already bound by another process (e.g. a mis-enabled
+# distro snmptrapd.socket / snmptrapd.service from the net-snmp package)
+holder=$(ss -ulnp 2>/dev/null | awk '/:162[[:space:]]/ { print; exit }')
+if [ -n "$holder" ]; then
+    hp=$(printf '%s\n' "$holder" | sed -n 's/.*pid=\([0-9]*\).*/\1/p')
+    hc=$(printf '%s\n' "$holder" | sed -n 's/.*users:(("\([^"]*\)",pid=.*/\1/p')
+    [ -n "$hp" ] || hp=unknown
+    [ -n "$hc" ] || hc=unknown
+    log "PORT-TAKEN: UDP/162 already bound by $hp $hc; not starting"
+    exit 0
+fi
+
+# guard 4: configuration missing (the watcher recreates it from the package
+# template within one cycle)
+if [ ! -f "$MIRROR_CONF" ]; then
+    log "CONFIG-MISSING: /etc/snmp/snmptrapd.conf absent — will be recreated by the watcher from share/snmptrapd_mirror/snmptrapd.conf.example; not starting"
+    exit 0
+fi
+
+# guard 5: required mechanical directives (trap_targets validate; one log
+# line per problem)
+if ! problems=$("$TT" validate "$MIRROR_CONF" 2>&1 >/dev/null); then
+    while IFS= read -r line; do
+        log "REJECTED: $MIRROR_CONF $line; not starting"
+    done <<< "$problems"
+    exit 0
+fi
+
+# guard 6: daemon binary missing (prerequisite)
+if [ ! -x "$SNMPTD" ]; then
+    log "DAEMON-MISSING: /usr/sbin/snmptrapd not found — install the prerequisite: apt-get update && apt-get install -y snmptrapd"
+    exit 1
+fi
+
+# fall through: start the daemon (exec — the daemon becomes the unit
+# process; deliberately no -L destination — see the header comment)
+exec "$SNMPTD" -C -c "$MIRROR_CONF" udp:162

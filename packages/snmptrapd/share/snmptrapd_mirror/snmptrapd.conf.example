@@ -1,0 +1,43 @@
+# /etc/snmp/snmptrapd.conf — central SNMP trap mirror
+# Seeded from share/snmptrapd_mirror/snmptrapd.conf.example (OMD package).
+#
+# Ownership: this file is yours — add any directive you need OUTSIDE the
+# managed section below. The watcher (snmptrapd_mirror_watch) rewrites ONLY
+# the marked section whenever the set of trap-receiving OMD sites changes
+# (the pass-all directives + per-site forward lines), then reloads the
+# mirror so the change takes effect without a delivery gap (the daemon
+# re-reads its configuration on SIGHUP; the listening socket stays bound).
+# Manual edits INSIDE the section are reset within one watch cycle.
+#
+# Communities: the managed section contains NO authCommunity lines. The
+# mirror forwards EVERY trap regardless of its community
+# (disableAuthorization yes). Which communities are accepted is decided at
+# each site, in that site's own file /omd/sites/<site>/etc/snmp/snmptrapd.conf
+# (operator-owned, never touched by the watcher — add e.g. an extra
+# 'authCommunity log,execute,net <community>' line there for a site that
+# uses a custom community, then 'omd reload <site>'). You may add
+# authCommunity lines OUTSIDE the managed section to restrict the mirror
+# itself, but that is normally unnecessary.
+#
+# Logging: the mirror unit runs snmptrapd WITHOUT a -L destination.
+# Operational state reaches journald twice — via syslog (tag snmptrapd,
+# facility daemon; inspect with 'journalctl -t snmptrapd': startup line,
+# MIB-parse noise, reload marker, stop, forward errors) and via the unit
+# journal (stderr; 'journalctl -u snmptrapd_mirror'). Per-trap lines are
+# NOT written anywhere: without a -L destination the daemon registers no
+# -L logging handler, and the managed section's 'doNotLogTraps 1' gates
+# the remaining default syslog handler (the value MUST be the number 1 —
+# net-snmp 5.9 parses this token with atoi(), 'yes' would be a silent
+# no-op). At production trap volumes (thousands of traps) the journal is
+# therefore never flooded. The record of the traps themselves is the
+# per-site trap log (var/log/snmp/traps.log of each enabled site).
+#
+# The 'logOption' directive is NOT supported by net-snmp 5.9 snmptrapd
+# (it logs 'Unknown token: logOption' and has no effect) — do not add it.
+#
+# Your own directives go here (above or below the section):
+# e.g. extra authCommunity lines (see above), traphandle lines, filters,
+# extra targets
+
+### BEGIN snmptrapd_mirror (managed by snmptrapd_mirror_watch — do not edit) ###
+### END snmptrapd_mirror ###

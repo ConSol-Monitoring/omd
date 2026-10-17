@@ -1,0 +1,362 @@
+#!/bin/bash
+#
+# snmptrapd_mirror_watch — watcher for the central SNMP trap mirror.
+#
+# Long-running loop (hosted by snmptrapd_mirror_watch.service, Type=simple):
+# one cycle immediately at start, then every 60 s. Each cycle:
+#   D1  legacy samplicate forwarder active  -> CONFLICT, mirror kept stopped
+#   D2  desired set empty                   -> section shrinks to the constant
+#                                              lines, mirror stopped
+#   D3  desired non-empty, config missing   -> recreate from the package
+#                                              template + generated section
+#   D4  managed section differs (membership
+#       change or manual edit inside)       -> atomic section rewrite +
+#                                              validate + reload/start
+#   D5  operator-owned part changed since
+#       the last successfully applied       -> reload (gap-free SIGHUP)
+#       fingerprint
+#   D6  file fails trap_targets validate    -> NOT applied; REJECTED logged
+#                                              every cycle
+#   D7  reload failed                       -> restart fallback
+#   D8  nothing changed                     -> no-op
+#
+# The watcher owns ONLY the managed section of /etc/snmp/snmptrapd.conf
+# (atomic whole-file rewrite: read -> replace section -> temp + mv; the
+# operator-owned part is preserved verbatim). It keeps no state files: the
+# applied-configuration fingerprint and the last generated section are
+# in-memory (reset on every watcher start).
+#
+# Logging: syslog tag snmptrapd_mirror_watch — stable, greppable lines
+# (contracts/mirror-runtime-files.md section 3).
+
+set -u
+BIN_DIR=$(dirname "$(readlink -f "$0")")
+VERSION_DIR=$(dirname "$BIN_DIR")
+TT="$BIN_DIR/trap_targets"
+TEMPLATE="$VERSION_DIR/share/snmptrapd_mirror/snmptrapd.conf.example"
+MIRROR_CONF=/etc/snmp/snmptrapd.conf
+MIRROR_UNIT=snmptrapd_mirror
+PIDFILE=/run/snmptrapd_mirror_watch.pid
+LOG_TAG=snmptrapd_mirror_watch
+CYCLE_SECS=${CYCLE_SECS:-60}    # overridable for tests; production: 60
+SECTION_BEGIN="### BEGIN snmptrapd_mirror (managed by snmptrapd_mirror_watch — do not edit) ###"
+SECTION_END="### END snmptrapd_mirror ###"
+
+# in-memory state (no state files — contracts/mirror-runtime-files.md section 2)
+LAST_APPLIED_FP=""   # sha256 of the last successfully applied complete file
+LAST_SITES=""        # comma-separated site names of the last cycle
+
+log() {
+    logger -t "$LOG_TAG" "$1" 2>/dev/null || true
+}
+
+mirror_active() {
+    [ "$(systemctl is-active "$MIRROR_UNIT" 2>/dev/null)" = "active" ]
+}
+
+file_fp() {
+    sha256sum "$1" 2>/dev/null | awk '{ print $1 }'
+}
+
+# generate_managed_section <pairs("name\tport" lines)> -> stdout
+# exact deterministic layout (contracts/mirror-runtime-files.md section 1):
+# disableAuthorization yes, doNotLogTraps 1, addForwarderInfo yes,
+# doNotFork yes, then per-site '# site <name>' + forward lines in
+# site-name order. Empty set -> only the constant lines.
+# The section carries NO authCommunity lines (user directive 2026-10-17):
+# the mirror forwards every trap regardless of community
+# (disableAuthorization yes) and each site's own snmptrapd.conf — owned by
+# the site operator, never touched by the watcher — decides which
+# communities are accepted. Per-trap logging is disabled daemon-wide
+# (doNotLogTraps): the daemon is started without a -L destination, so the
+# only registered per-trap handler is syslog_handler, which doNotLogTraps
+# gates — no per-trap journal lines at production trap volumes; the site
+# trap logs (traps.log) are the record of traps. The value MUST be the
+# number 1: net-snmp 5.9 parses this token with atoi(), so "yes" is a
+# silent no-op. The '# site' comments carry the site names for the
+# UPDATE journal line (only ports are in the forward lines).
+# THIS GENERATOR'S OUTPUT MUST STAY BYTE-IDENTICAL TO THE COPY IN
+# trap_targets (T012) — contracts/mirror-runtime-files.md section 1.
+generate_managed_section() {
+    pairs=$1
+    fwd=""
+    while IFS=$'\t' read -r name port; do
+        [ -n "$name" ] || continue
+        if [ -n "$fwd" ]; then
+            fwd="${fwd}
+# site ${name}
+forward default udp:127.0.0.1:${port}"
+        else
+            fwd="# site ${name}
+forward default udp:127.0.0.1:${port}"
+        fi
+    done <<< "$pairs"
+    printf '%s\n' "disableAuthorization yes
+doNotLogTraps 1
+addForwarderInfo yes
+doNotFork yes"
+    [ -n "$fwd" ] && printf '%s\n' "$fwd"
+}
+
+# extract_section <file> -> section content between the markers on stdout
+# (empty when the markers are absent)
+extract_section() {
+    awk -v b="$SECTION_BEGIN" -v e="$SECTION_END" '
+        $0 == b { insec = 1; next }
+        insec && $0 == e { insec = 0 }
+        insec { print }
+    ' "$1"
+}
+
+# sites_csv <pairs> -> "site1,site2" (site-name order = glob order)
+sites_csv() {
+    printf '%s\n' "$1" | awk -F'\t' '$1 != "" { print $1 }' | paste -sd, -
+}
+
+# ports_csv <pairs> -> "9163,9162"
+ports_csv() {
+    printf '%s\n' "$1" | awk -F'\t' '$2 != "" { print $2 }' | paste -sd, -
+}
+
+# sites_from_section <section> -> comma-separated site names
+# current layout: the '# site <name>' lines; the pre-2026-10-17
+# authCommunity layout is still parsed (public excluded) so that the
+# first UPDATE after an upgrade reports the previous membership
+# correctly.
+sites_from_section() {
+    printf '%s\n' "$1" \
+        | sed -n -e 's/^# site //p' -e 's/^authCommunity execute,net //p' \
+        | grep -v '^public$' \
+        | paste -sd, -
+}
+
+# rewrite_section_atomic <file> <newsection>
+# replaces the managed section of the file (or appends the marker block when
+# the markers are absent) via temp file + mv in the same directory; the
+# operator-owned part is preserved verbatim; 0644 root:root.
+rewrite_section_atomic() {
+    file=$1
+    section=$2
+    tmp=$(mktemp "$(dirname "$file")/.snmptrapd.conf.XXXXXX") || return 1
+    if grep -qxF "$SECTION_BEGIN" "$file" 2>/dev/null; then
+        awk -v b="$SECTION_BEGIN" -v e="$SECTION_END" -v sec="$section" '
+            !insec && $0 == b { print; printf "%s\n", sec; insec = 1; next }
+            insec && $0 == e  { print; insec = 0; next }
+            insec             { next }
+            { print }
+        ' "$file" > "$tmp" || { rm -f "$tmp"; return 1; }
+    else
+        cat "$file" > "$tmp"
+        [ -s "$tmp" ] && echo >> "$tmp"
+        printf '%s\n%s\n%s\n' "$SECTION_BEGIN" "$section" "$SECTION_END" >> "$tmp" \
+            || { rm -f "$tmp"; return 1; }
+    fi
+    chmod 644 "$tmp"
+    chown root:root "$tmp" 2>/dev/null || true
+    mv -f "$tmp" "$file" || { rm -f "$tmp"; return 1; }
+}
+
+# apply_reload — reload the mirror (gap-free SIGHUP), restart fallback (D7)
+apply_reload() {
+    if systemctl reload "$MIRROR_UNIT" 2>/dev/null; then
+        LAST_APPLIED_FP=$(file_fp "$MIRROR_CONF")
+    else
+        log "RESTART-FALLBACK: systemctl reload snmptrapd_mirror failed; restarting"
+        systemctl restart "$MIRROR_UNIT" 2>/dev/null || true
+        sleep 1
+        mirror_active && LAST_APPLIED_FP=$(file_fp "$MIRROR_CONF")
+    fi
+}
+
+# reject <file> — one REJECTED line per validation problem
+reject() {
+    file=$1
+    "$TT" validate "$file" 2>&1 >/dev/null | while IFS= read -r line; do
+        [ -n "$line" ] || continue
+        log "REJECTED: $file invalid — $line; keeping previous configuration until the file is fixed"
+    done
+}
+
+try_start_mirror() {
+    # start the mirror unit (the starter re-runs all its guards); log START
+    # only when the daemon actually came up from a stopped state
+    new_ports=$1
+    was_active=0
+    mirror_active && was_active=1
+    systemctl start "$MIRROR_UNIT" 2>/dev/null || true
+    sleep 1
+    if mirror_active; then
+        [ "$was_active" = 0 ] && log "START: snmptrapd_mirror started (targets: $new_ports)"
+        LAST_APPLIED_FP=$(file_fp "$MIRROR_CONF")
+    else
+        log "NOTE: snmptrapd_mirror not started after section update (see tag snmptrapd_mirror_start)"
+    fi
+}
+
+cycle() {
+    # ---- discovery (shared helper — single source of truth, R7) ----------
+    if ! pairs=$("$TT" sites 2>/dev/null); then
+        log "ERROR: trap_targets sites failed; skipping cycle"
+        return
+    fi
+    method=$("$TT" method 2>/dev/null) || method=none
+
+    # ---- D1: legacy conflict — the mirror never preempts the legacy ------
+    if [ "$method" = "samplicate" ]; then
+        log "CONFLICT: legacy samplicate forwarder active on UDP/162; mirror not started"
+        if mirror_active; then
+            systemctl stop "$MIRROR_UNIT" 2>/dev/null || true
+            LAST_APPLIED_FP=""   # nothing applied anymore — the next cycle
+                                 # re-starts the mirror once the conflict is
+                                 # gone (the applied fingerprint must not
+                                 # claim a configuration the daemon is not
+                                 # running)
+        fi
+        return
+    fi
+
+    generated=$(generate_managed_section "$pairs")
+    new_sites=$(sites_csv "$pairs")
+    new_ports=$(ports_csv "$pairs")
+
+    # ---- D2: no enabled sites --------------------------------------------
+    if [ -z "$pairs" ]; then
+        if [ -f "$MIRROR_CONF" ]; then
+            [ "$(extract_section "$MIRROR_CONF")" = "$generated" ] \
+                || { rewrite_section_atomic "$MIRROR_CONF" "$generated" \
+                          || { log "ERROR: failed to rewrite $MIRROR_CONF"; return; }; }
+        fi
+        if mirror_active; then
+            systemctl stop "$MIRROR_UNIT" 2>/dev/null || true
+            log "STOP: snmptrapd_mirror stopped (no enabled sites)"
+        fi
+        LAST_SITES=""
+        return
+    fi
+
+    # ---- D3: configuration missing — recreate from the template ----------
+    if [ ! -f "$MIRROR_CONF" ]; then
+        mkdir -p /etc/snmp 2>/dev/null || true
+        tmp=$(mktemp /etc/snmp/.snmptrapd.conf.XXXXXX) \
+            || { log "ERROR: cannot create temp file in /etc/snmp"; return; }
+        if [ -r "$TEMPLATE" ]; then
+            base="$TEMPLATE"
+        else
+            # package template missing — minimal header so the file still
+            # documents its ownership
+            base=$(mktemp /tmp/.mirror-tpl.XXXXXX)
+            {
+                echo "# /etc/snmp/snmptrapd.conf — central SNMP trap mirror"
+                echo "# Recreated by snmptrapd_mirror_watch (package template missing)."
+                echo
+                printf '%s\n' "$SECTION_BEGIN"
+                printf '%s\n' "$SECTION_END"
+            } > "$base"
+        fi
+        awk -v b="$SECTION_BEGIN" -v e="$SECTION_END" -v sec="$generated" '
+            !insec && $0 == b { print; printf "%s\n", sec; insec = 1; next }
+            insec && $0 == e  { print; insec = 0; next }
+            insec             { next }
+            { print }
+        ' "$base" > "$tmp" \
+            && chmod 644 "$tmp" && chown root:root "$tmp" 2>/dev/null && mv -f "$tmp" "$MIRROR_CONF" \
+            || { rm -f "$tmp"; log "ERROR: failed to write $MIRROR_CONF"; return; }
+        [ "$base" = "$TEMPLATE" ] || rm -f "$base"
+        log "CONFIG-CREATED: /etc/snmp/snmptrapd.conf absent — recreated from share/snmptrapd_mirror/snmptrapd.conf.example + managed section; starting snmptrapd_mirror"
+        if "$TT" validate "$MIRROR_CONF" 2>/dev/null; then
+            try_start_mirror "$new_ports"
+        else
+            reject "$MIRROR_CONF"
+        fi
+        LAST_SITES=$new_sites
+        return
+    fi
+
+    # ---- D4: managed section differs (membership change or manual edit) --
+    current=$(extract_section "$MIRROR_CONF")
+    if [ "$current" != "$generated" ]; then
+        old_sites=$(sites_from_section "$current")
+        if [ "${old_sites:-}" = "${new_sites:-}" ]; then
+            # same site set, different content -> someone edited the section
+            log "SECTION-RESET: managed section of $MIRROR_CONF was modified manually; reset to generated content (enabled sites: ${new_sites:-none})"
+        else
+            added=$(comm -13 <(printf '%s\n' "${old_sites:-}" | tr ',' '\n' | sort) \
+                              <(printf '%s\n' "${new_sites:-}"  | tr ',' '\n' | sort) \
+                       | grep -v '^$' | paste -sd, -)
+            removed=$(comm -23 <(printf '%s\n' "${old_sites:-}" | tr ',' '\n' | sort) \
+                               <(printf '%s\n' "${new_sites:-}"  | tr ',' '\n' | sort) \
+                        | grep -v '^$' | paste -sd, -)
+            log "UPDATE: managed section of $MIRROR_CONF changed — added site(s) ${added:-none}, removed site(s) ${removed:-none}; reloading snmptrapd_mirror"
+        fi
+        rewrite_section_atomic "$MIRROR_CONF" "$generated" \
+            || { log "ERROR: failed to rewrite $MIRROR_CONF"; return; }
+        if "$TT" validate "$MIRROR_CONF" 2>/dev/null; then
+            if mirror_active; then
+                apply_reload
+            else
+                try_start_mirror "$new_ports"
+            fi
+        else
+            reject "$MIRROR_CONF"    # D6: do not apply an invalid file
+        fi
+        LAST_SITES=$new_sites
+        return
+    fi
+
+    # ---- section in sync: D5 (operator edit outside), D6 (invalid), D8 ---
+    fp=$(file_fp "$MIRROR_CONF")
+    if [ -n "$LAST_APPLIED_FP" ] && [ "$fp" = "$LAST_APPLIED_FP" ]; then
+        LAST_SITES=$new_sites       # D8: nothing changed
+        return
+    fi
+    if "$TT" validate "$MIRROR_CONF" 2>/dev/null; then
+        if mirror_active; then
+            log "APPLY: $MIRROR_CONF differs from last applied configuration; reloading snmptrapd_mirror"
+            apply_reload
+        else
+            # valid file, enabled sites, mirror not running (e.g. the
+            # conflict was just resolved, or the mirror unit was stopped
+            # manually) — bring it up; the boot contract guarantees the
+            # mirror runs within one cycle
+            try_start_mirror "$new_ports"
+        fi
+    else
+        reject "$MIRROR_CONF"       # D6: REJECTED every cycle until fixed
+    fi
+    LAST_SITES=$new_sites
+}
+
+shutdown() {
+    rm -f "$PIDFILE"
+    log "STOP: snmptrapd_mirror_watch stopped"
+    exit 0
+}
+
+case "${1:-start}" in
+    start)
+        if [ -f "$PIDFILE" ] && kill -0 "$(cat "$PIDFILE" 2>/dev/null)" 2>/dev/null; then
+            exit 0          # one loop instance — starting a running watch is a no-op
+        fi
+        echo $$ > "$PIDFILE"
+        trap shutdown TERM INT
+        cycle
+        while :; do
+            sleep "$CYCLE_SECS" &
+            wait $! || true
+            cycle
+        done
+        ;;
+    stop)
+        # best-effort (systemd also sends SIGTERM to the foreground loop)
+        if [ -f "$PIDFILE" ]; then
+            pid=$(cat "$PIDFILE" 2>/dev/null)
+            [ -n "$pid" ] && kill -TERM "$pid" 2>/dev/null || true
+            rm -f "$PIDFILE"
+        fi
+        exit 0
+        ;;
+    *)
+        echo "usage: $0 {start|stop}" >&2
+        exit 1
+        ;;
+esac
