@@ -1,0 +1,302 @@
+#!/bin/bash
+#
+# trap_targets — shared helper for the two central trap methods
+# (legacy samplicate and snmptrapd mirror).
+#
+# Single source of truth for site-discovery and managed-section
+# generation (consumed by snmptrapd_mirror_watch, samplicate_watch and
+# operators — see contracts/trap-targets-helper.md).
+#
+# Subcommands:
+#   targets              emit the desired delivery target set, one line per
+#                        enabled site: 127.0.0.1:<port> (colon grammar)
+#   section              read enabled-site pairs ("<name><TAB><port>", one
+#                        per line) from stdin and print the managed-section
+#                        content (the single generator — the watcher calls
+#                        this instead of keeping its own copy)
+#   method               print the active central forwarder:
+#                        samplicate | snmptrapd_mirror | none
+#   validate [file]      machine-check a mirror configuration for the
+#                        required directives (default: /etc/snmp/snmptrapd.conf)
+#   check                one-shot operator diagnostic (read-only)
+#
+# Exit codes: 0 success (empty output is a valid answer, not an error);
+#             1 usage error; 2 unexpected internal error;
+#             3 (validate) invalid file.
+
+SITES_GLOB="/omd/sites/*/etc/omd/site.conf"
+MIRROR_CONF="/etc/snmp/snmptrapd.conf"
+# the OS-packaged snmptrapd unit (snmptrapd OS package); we ship no unit
+# of our own — the daemon is socket-activated from snmptrapd.socket,
+# which must stay enabled+active (distro postinst default)
+MIRROR_UNIT="snmptrapd"
+SECTION_BEGIN="### BEGIN snmptrapd_mirror (managed by snmptrapd_mirror_watch — do not edit) ###"
+SECTION_END="### END snmptrapd_mirror ###"
+
+usage() {
+    echo "usage: $0 <targets|sites|section|method|validate [file]|check>" >&2
+    exit 1
+}
+
+# ---------------------------------------------------------------------------
+# scan_enabled_sites: internal discovery. Prints one line per enabled site:
+# "<site_name><TAB><port>" in site-directory glob order. Same semantics as
+# the incumbent samplicate_watch discovery: exact quoted
+# CONFIG_SNMPTRAPD='on' plus a numeric CONFIG_SNMPTRAPD_UDP_PORT.
+# Out-of-range ports and duplicate endpoints are skipped with a warning
+# (defensive; OMD validates at config time). The watcher has no scan of
+# its own — it consumes the sites subcommand (R7).
+# ---------------------------------------------------------------------------
+scan_enabled_sites() {
+    local siteconf conf p site port endpoint
+    local -A SEEN=()
+    if [ -e /omd/sites ] && [ ! -d /omd/sites ]; then
+        echo "trap_targets: internal error: /omd/sites is not a directory" >&2
+        return 2
+    fi
+    for siteconf in $SITES_GLOB; do
+        [ -f "$siteconf" ] || continue
+        conf=$(<"$siteconf") || continue
+        if [[ "$conf" =~ CONFIG_SNMPTRAPD=\'on\' ]]; then
+            if [[ "$conf" =~ CONFIG_SNMPTRAPD_UDP_PORT=\'([0-9]+)\' ]]; then
+                port=${BASH_REMATCH[1]}
+                if [ "$port" -lt 1024 ] || [ "$port" -gt 65535 ]; then
+                    logger -t trap_targets "warning: $siteconf has out-of-range CONFIG_SNMPTRAPD_UDP_PORT='$port'; site skipped" 2>/dev/null
+                    continue
+                fi
+                p=${siteconf#/omd/sites/}
+                site=${p%%/*}
+                endpoint="127.0.0.1:${port}"
+                if [ -n "${SEEN[$endpoint]:-}" ]; then
+                    logger -t trap_targets "warning: duplicate endpoint $endpoint (sites '${SEEN[$endpoint]}' and '$site'); keeping first occurrence" 2>/dev/null
+                    continue
+                fi
+                SEEN[$endpoint]=$site
+                printf '%s\t%s\n' "$site" "$port"
+            else
+                logger -t trap_targets "warning: $(site_name_of "$siteconf") has trap receiving enabled but no valid CONFIG_SNMPTRAPD_UDP_PORT; skipped" 2>/dev/null
+            fi
+        fi
+    done
+    return 0
+}
+
+site_name_of() {
+    local p=${1#/omd/sites/}
+    printf '%s' "${p%%/*}"
+}
+
+# targets: emit 127.0.0.1:<port> per enabled site (colon grammar, one line
+# each, site-directory glob order). Empty output + exit 0 when no site is
+# enabled — an empty answer is valid, not an error.
+targets() {
+    local pairs
+    if ! pairs=$(scan_enabled_sites); then
+        return 2
+    fi
+    if [ -n "$pairs" ]; then
+        printf '%s\n' "$pairs" | cut -f2 | sed 's/^/127.0.0.1:/'
+    fi
+    return 0
+}
+
+# sites: the enabled-site pairs "<name><TAB><port>", one line per enabled
+# site, site-directory glob order (the raw discovery output; same
+# semantics as targets — the watcher's managed-section generation needs
+# the site names, which targets' endpoint grammar does not carry).
+# Empty output + exit 0 when no site is enabled.
+sites() {
+    scan_enabled_sites
+}
+
+# method: report which central trap forwarder is active right now
+# (research R6). Process-based, deterministic:
+#  - a running samplicate process (pidfile argument, as in the incumbent
+#    "ps -ef | grep .../samplicate | grep samplicate.pid" technique)
+#    -> samplicate
+#  - else a running /usr/sbin/snmptrapd process that does not belong to
+#    an OMD site -> snmptrapd_mirror (per-site snmptrapd processes
+#    reference their own site-tree etc/snmptrapd.conf BELOW /omd/sites/
+#    and are excluded; this matches the OS-packaged central daemon too,
+#    whose command line carries NO explicit configuration path —
+#    e.g. "/usr/sbin/snmptrapd -LOw -f udp:162 udp6:162" — because it
+#    reads /etc/snmp/snmptrapd.conf via the default search path)
+#  - else none.
+# Exactly one word on stdout; exit 0 in all three cases.
+method() {
+    local psout
+    if ! psout=$(ps -eo args= 2>/dev/null); then
+        echo "trap_targets: internal error: ps failed" >&2
+        return 2
+    fi
+    if printf '%s\n' "$psout" | grep -F '/bin/samplicate' | grep -F 'samplicate.pid' >/dev/null 2>&1; then
+        echo "samplicate"
+    elif printf '%s\n' "$psout" | grep -F '/usr/sbin/snmptrapd' | grep -v -F '/omd/sites/' >/dev/null 2>&1; then
+        echo "snmptrapd_mirror"
+    else
+        echo "none"
+    fi
+    return 0
+}
+
+# last_directive_value <file> <directive>: the value token of the LAST
+# occurrence of "<directive> <value>" in the file (empty if none).
+last_directive_value() {
+    sed -n -E "s/^[[:space:]]*$2[[:space:]]+([[:alnum:]_-]+).*$/\1/p" "$1" | tail -n 1
+}
+
+# validate [file]: machine gate for the required mechanical directives
+# (research R10). Each required directive's last occurrence must carry
+# the expected value: the booleans "yes", doNotLogTraps the number "1"
+# (net-snmp 5.9 parses it with atoi(), so "yes"/"true" would be a silent
+# no-op — a file containing only "doNotLogTraps yes" is invalid).
+# Exit 0 valid; 3 invalid with one stderr line per problem
+# ("missing required directive '<directive>'" / "file absent: <file>");
+# 1 usage error; 2 internal error. Strictly read-only.
+validate() {
+    local file=${1:-$MIRROR_CONF} spec directive want rc=0
+    if [ -n "${2:-}" ]; then
+        usage
+    fi
+    if [ ! -f "$file" ]; then
+        echo "file absent: $file" >&2
+        return 3
+    fi
+    if [ ! -r "$file" ]; then
+        echo "file unreadable: $file" >&2
+        return 2
+    fi
+    for spec in disableAuthorization:yes doNotLogTraps:1 addForwarderInfo:yes doNotFork:yes; do
+        directive=${spec%%:*}
+        want=${spec##*:}
+        if [ "$(last_directive_value "$file" "$directive")" != "$want" ]; then
+            echo "missing required directive '$directive'" >&2
+            rc=3
+        fi
+    done
+    return $rc
+}
+
+# generate_managed_section <pairs>: the deterministic managed-section
+# content for an enabled-site list (lines "<name><TAB><port>", site-name
+# order):
+#   disableAuthorization yes
+#   doNotLogTraps 1
+#   addForwarderInfo yes
+#   doNotFork yes
+#   # site <site>                               (one per enabled site)
+#   forward default udp:127.0.0.1:<port>       (one per enabled site)
+# Empty set -> the constant lines only.
+# The section carries NO authCommunity lines (user directive 2026-10-17):
+# the mirror forwards every trap regardless of community
+# (disableAuthorization yes) and each site's own snmptrapd.conf — owned by
+# the site operator, never touched by the watcher — decides which
+# communities are accepted. Per-trap logging is disabled daemon-wide
+# (doNotLogTraps): the daemon is started without a -L destination, so the
+# only registered per-trap handler is syslog_handler, which doNotLogTraps
+# gates — no per-trap journal lines at production trap volumes; the site
+# trap logs (traps.log) are the record of traps. The value MUST be the
+# number 1: net-snmp 5.9 parses this token with atoi(), so "yes" is a
+# silent no-op. The '# site' comments carry the site names for the
+# watcher's UPDATE journal line (only ports are in the forward lines).
+# This is THE managed-section generator (T012): the watcher consumes the
+# section subcommand instead of keeping a copy —
+# contracts/mirror-runtime-files.md §1 "Section layout".
+generate_managed_section() {
+    local pairs=${1-} name port fwd=""
+    while IFS=$'\t' read -r name port; do
+        [ -n "$name" ] || continue
+        fwd+="${fwd:+$'\n'}# site ${name}"$'\n'"forward default udp:127.0.0.1:${port}"
+    done <<< "$pairs"
+    local out="disableAuthorization yes
+doNotLogTraps 1
+addForwarderInfo yes
+doNotFork yes"
+    [ -n "$fwd" ] && out+=$'\n'"$fwd"
+    printf '%s\n' "$out"
+}
+
+# section: the public generator subcommand. Reads enabled-site pairs
+# ("<name><TAB><port>", one per line) from stdin and prints the managed
+# section (generate_managed_section above).
+section() {
+    local pairs
+    pairs=$(cat)
+    generate_managed_section "$pairs"
+}
+
+# extract_section <file>: the lines between the managed-section markers
+# (marker lines excluded). Empty when the file has no (complete) section.
+extract_section() {
+    awk -v b="$SECTION_BEGIN" -v e="$SECTION_END" '
+        $0 == b { insec = 1; next }
+        insec && $0 == e { insec = 0 }
+        insec { print }
+    ' "$1"
+}
+
+section_markers_present() {
+    grep -qxF "$SECTION_BEGIN" "$1" 2>/dev/null && grep -qxF "$SECTION_END" "$1" 2>/dev/null
+}
+
+# join_or_none: join lines with commas (single "none" for empty input).
+join_or_none() {
+    awk '{ printf "%s%s", (n++ ? "," : ""), $0 } END { if (!n) print "none" }'
+}
+
+# check: one-shot health snapshot for the README troubleshooting section.
+# Strictly read-only; no mutations, ever.
+check() {
+    local pairs desired mirror_state conflict applied m
+    pairs=$(scan_enabled_sites) || return 2
+    desired=$(targets | join_or_none)
+    m=$(method) || m="unknown"
+    printf 'method: %s\n' "$m"
+    if [ -f "$MIRROR_CONF" ]; then
+        printf 'config: %s present\n' "$MIRROR_CONF"
+        if validate "$MIRROR_CONF" >/dev/null 2>&1; then
+            printf 'config valid: yes\n'
+        else
+            printf 'config valid: no\n'
+        fi
+        if section_markers_present "$MIRROR_CONF"; then
+            if [ "$(extract_section "$MIRROR_CONF")" = "$(generate_managed_section "$pairs")" ]; then
+                printf 'section: in sync\n'
+            else
+                printf 'section: out of sync\n'
+            fi
+        else
+            printf 'section: missing markers\n'
+        fi
+        printf 'targets desired: %s\n' "$desired"
+        applied=$(extract_section "$MIRROR_CONF" | sed -n 's/^forward default udp:127\.0\.0\.1:\([0-9][0-9]*\)$/\1/p' | awk '{ printf "%s%s", (n++ ? "," : ""), "127.0.0.1:" $0 } END { if (!n) print "none" }')
+        printf 'targets applied: %s\n' "$applied"
+    else
+        printf 'config: %s missing\n' "$MIRROR_CONF"
+        printf 'config valid: n/a\n'
+        printf 'section: missing markers\n'
+        printf 'targets desired: %s\n' "$desired"
+        printf 'targets applied: n/a\n'
+    fi
+    mirror_state=$(systemctl is-active "$MIRROR_UNIT" 2>/dev/null) || true
+    printf 'mirror unit: %s\n' "${mirror_state:-unknown}"
+    conflict=no
+    if [ "$m" = "samplicate" ]; then
+        if [ "${mirror_state:-}" = "active" ] || [ "$(systemctl is-enabled "$MIRROR_UNIT" 2>/dev/null)" = "enabled" ]; then
+            conflict=yes
+        fi
+    fi
+    printf 'conflict: %s\n' "$conflict"
+    return 0
+}
+
+case ${1-} in
+    targets)   shift; [ $# -eq 0 ] || usage; targets; rc=$? ;;
+    sites)     shift; [ $# -eq 0 ] || usage; sites; rc=$? ;;
+    section)   shift; [ $# -eq 0 ] || usage; section; rc=$? ;;
+    method)    shift; [ $# -eq 0 ] || usage; method; rc=$? ;;
+    validate)  shift; validate "$@"; rc=$? ;;
+    check)     shift; [ $# -eq 0 ] || usage; check; rc=$? ;;
+    *)         usage; rc=$? ;;
+esac
+exit $rc
