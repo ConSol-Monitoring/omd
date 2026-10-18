@@ -1,0 +1,11 @@
+[Unit]
+Description=snmptrapd mirror watcher (tracks OMD sites with trap receiving enabled)
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/opt/omd/versions/default/bin/snmptrapd_mirror_watch start
+ExecStop=/opt/omd/versions/default/bin/snmptrapd_mirror_watch stop
+
+[Install]
+WantedBy=multi-user.target
