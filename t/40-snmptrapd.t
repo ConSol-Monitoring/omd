@@ -19,8 +19,10 @@ plan( skip_all => "this test does not run inside docker" ) if TestUtils::is_dock
 plan( skip_all => "this distribution does not run with systemd" ) if ! -x "/bin/systemctl";
 my $snmptrap = -x "/bin/snmptrap" ? "/bin/snmptrap" : -x "/usr/bin/snmptrap" ? "/usr/bin/snmptrap" : undef;
 plan( skip_all => "this server cannot send traps" ) if ! defined $snmptrap;
-my $snmptrapd = -x "/usr/sbin/snmptrapd" ? "/usr/sbin/snmptrapd" : -x "/usr/bin/snmptrapd" ? "/usr/bin/snmptrapd" : undef;
-plan( skip_all => "this server cannot receive traps" ) if ! defined $snmptrapd;
+# the site snmptrapd (skel/etc/init.d/snmptrapd) and the mirror drop-in
+# (omd-mirror.conf) both run /usr/sbin/snmptrapd. Debian/Ubuntu ship it in
+# the separate package "snmptrapd", which is no OMD dependency
+plan( skip_all => "this server cannot receive traps (no /usr/sbin/snmptrapd)" ) if ! -x "/usr/sbin/snmptrapd";
 
 my $systemctl = "/bin/systemctl";
 my $omd_bin = TestUtils::get_omd_bin();
