@@ -212,7 +212,9 @@ if($have_mirror) {
     # spaces must be escaped or they are ignored by the regex
     TestUtils::test_command({ cmd => "/bin/grep forward /etc/snmp/snmptrapd.conf", like => '/forward default udp:127\.0\.0\.1:'. $site3port .'/', waitfor => 'forward\ default\ udp:127\.0\.0\.1:'.$site3port });
     # the mirror is up and owns UDP/162
-    TestUtils::test_command({ cmd => "$systemctl status snmptrapd", like => '/running/', waitfor => 'running' });
+    # wait for the state, a single check can hit a reload in progress
+    # (watcher rewrites the conf, then reloads: ~100ms 'reloading')
+    TestUtils::test_command({ cmd => "$systemctl is-active snmptrapd", like => '/^active$/', waitfor => '^active$' });
     TestUtils::test_command({ cmd => '/bin/ps -ef | grep snmptrapd', like => '/snmptrapd -f -C -c \/etc\/snmp\/snmptrapd.conf/' });
     # the helper agrees: the method is the mirror and the section is in sync
     TestUtils::test_command({ cmd => $tt." method", like => '/snmptrapd_mirror/' });
@@ -231,7 +233,7 @@ if($have_mirror) {
     $site4port = $site4port->{stdout};
     chomp $site4port;
     TestUtils::test_command({ cmd => "/bin/grep forward /etc/snmp/snmptrapd.conf", like => '/forward default udp:127\.0\.0\.1:'. $site4port .'/', waitfor => 'forward\ default\ udp:127\.0\.0\.1:'.$site4port });
-    TestUtils::test_command({ cmd => "$systemctl status snmptrapd", like => '/running/' });
+    TestUtils::test_command({ cmd => "$systemctl is-active snmptrapd", like => '/^active$/', waitfor => '^active$' });
     my $mirrorpid2 = { cmd => "$systemctl show -p MainPID snmptrapd", like => '/\d+/' };
     TestUtils::test_command($mirrorpid2);
     $mirrorpid2 = $mirrorpid2->{stdout};
@@ -291,7 +293,7 @@ if($have_mirror) {
     TestUtils::test_command({ cmd => $omd_bin." config $site4 set SNMPTRAPD off" });
     TestUtils::test_command({ cmd => $omd_bin." start $site4", unlike => '/Starting dedicated SNMPTrapd for site.+OK/' });
     TestUtils::test_command({ cmd => "/bin/grep forward /etc/snmp/snmptrapd.conf", unlike => '/forward default udp:127\.0\.0\.1:'. $site4port .'/', waitfor => '!forward\ default\ udp:127\.0\.0\.1:'.$site4port });
-    TestUtils::test_command({ cmd => "$systemctl status snmptrapd", like => '/running/' });
+    TestUtils::test_command({ cmd => "$systemctl is-active snmptrapd", like => '/^active$/', waitfor => '^active$' });
 
     # drop site3 as well: no targets left - the watcher stops the mirror (D2)
     TestUtils::test_command({ cmd => $omd_bin." stop $site3" });
