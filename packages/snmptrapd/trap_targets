@@ -27,8 +27,9 @@
 SITES_GLOB="/omd/sites/*/etc/omd/site.conf"
 MIRROR_CONF="/etc/snmp/snmptrapd.conf"
 # the OS-packaged snmptrapd unit (snmptrapd OS package); we ship no unit
-# of our own — the daemon is socket-activated from snmptrapd.socket,
-# which must stay enabled+active (distro postinst default)
+# of our own, only the drop-in omd-mirror.conf which sets a uniform
+# command line. Where the distro ships snmptrapd.socket, it must stay
+# enabled+active (distro postinst default)
 MIRROR_UNIT="snmptrapd"
 SECTION_BEGIN="### BEGIN snmptrapd_mirror (managed by snmptrapd_mirror_watch — do not edit) ###"
 SECTION_END="### END snmptrapd_mirror ###"

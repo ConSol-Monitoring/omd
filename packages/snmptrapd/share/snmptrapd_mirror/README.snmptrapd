@@ -11,40 +11,17 @@ section of /etc/snmp/snmptrapd.conf and keeps the mirror running.
 Enabling trap receiving in a site (omd config set SNMPTRAPD on) is the
 only operator action needed — the mirror converges within ~60 s.
 
-1) prerequisite (once)
-apt-get update && apt-get install -y snmptrapd
-   # /usr/sbin/snmptrapd (package "snmptrapd"; "snmp" adds the client tools
-   # used to send test traps). Net-SNMP 5.9+ required (addForwarderInfo).
-   # If the distribution enabled the stock snmptrapd socket unit, it binds
-   # UDP/162 as well — remove it so only the mirror owns the port:
-   systemctl disable --now snmptrapd.socket 2>/dev/null || true
-
-2) as root (installation; the OMD package already placed the files)
-   /opt/omd/versions/default/bin/:            trap_targets, snmptrapd_mirror_watch
-                                              (updated: snmptrap_logger.sh,
-                                               samplicate_watch)
-   /opt/omd/versions/default/share/snmptrapd_mirror/:
-                                                snmptrapd_mirror.service,
-                                                snmptrapd_mirror_watch.service,
-                                                snmptrapd.conf.example, README.snmptrapd
-/bin/cp /opt/omd/versions/default/share/snmptrapd_mirror/*.service /etc/systemd/system
-systemctl daemon-reload
-systemctl enable snmptrapd_mirror_watch
-systemctl start snmptrapd_mirror_watch
-   # the mirror (snmptrapd_mirror) is started/stopped by the watcher
-   # automatically; enabling it is optional (boot ordering is covered by
-   # Requires=snmptrapd_mirror_watch.service). The mirror unit runs
-   # /usr/sbin/snmptrapd directly under systemd — before the watcher's
-   # first cycle it may run with an absent/empty configuration for a few
-   # seconds; that is harmless and converges within one cycle.
-   # Note: install EITHER this mirror method OR the legacy samplicate
-   # method. Running both (or leaving any other owner on UDP/162) is not
-   # reconciled automatically — the second bind fails in the unit journal
-   # (journalctl -u snmptrapd_mirror); clean up your own setup.
-
-3) as site-user (enable trap receiving where wanted)
-omd config set SNMPTRAPD on
-omd restart snmptrapd
+Installation
+   Step by step in /opt/omd/versions/default/share/samplicate/README.systemd
+   (section 2B). The mirror daemon is the distribution's snmptrapd.service
+   with the drop-in omd-mirror.conf (/etc/systemd/system/snmptrapd.service.d/),
+   which sets the same command line on every distribution:
+       /usr/sbin/snmptrapd -f -C -c /etc/snmp/snmptrapd.conf
+   On Debian/Ubuntu snmptrapd.socket must stay enabled (package default);
+   it owns UDP/162 and hands the socket to the daemon.
+   Install EITHER this mirror method OR the samplicate method. Running both
+   (or leaving any other owner on UDP/162) is not reconciled automatically —
+   the second bind fails in the unit journal (journalctl -u snmptrapd).
 
 Configuration ownership
    /etc/snmp/snmptrapd.conf — the watcher recreates it from
@@ -67,7 +44,7 @@ Configuration ownership
    'omd reload <site>'). Journald carries OPERATIONAL STATE ONLY — via
    syslog (tag snmptrapd, facility daemon: startup line, MIB-parse noise,
    reload marker, stop, forward errors; journalctl -t snmptrapd) and via
-   the mirror unit's stderr (journalctl -u snmptrapd_mirror). It
+   the mirror unit's stderr (journalctl -u snmptrapd). It
    deliberately does NOT contain one line per trap: the daemon runs without
    a -L destination and the generated 'doNotLogTraps 1' gates the remaining
    default syslog handler, so thousands of traps cannot flood the journal.
@@ -82,7 +59,7 @@ Operations
                                                     # log (syslog, facility
                                                     # daemon — NOT one line
                                                     # per trap)
-   journalctl -u snmptrapd_mirror                  # same operational state via
+   journalctl -u snmptrapd                  # same operational state via
                                                     # the daemon's stderr
    ss -ulnp | grep ':162 '                     # who owns UDP/162
 
@@ -91,13 +68,13 @@ Troubleshooting (watcher log lines and what they mean)
    REJECTED: /etc/snmp/snmptrapd.conf invalid — ...
        the file failed validation; the previous configuration stays
        effective until the file is fixed (fix or delete the file).
-   NOTE: snmptrapd_mirror did not come up after section update (see: journalctl -u snmptrapd_mirror)
+   NOTE: snmptrapd did not come up after section update (see: journalctl -u snmptrapd)
        systemd could not start the mirror — the usual cause is another
        process owning UDP/162 (a leftover legacy samplicate, a mis-enabled
-       distro snmptrapd.socket, or a second listener). This is not
+       snmptrapd.socket next to samplicate, or a second listener). This is not
        reconciled automatically: stop/remove the other owner; the watcher
        starts the mirror within one cycle. Also check that the prerequisite
-       daemon is installed (apt-get install -y snmptrapd).
+       daemon is installed (README.systemd, step 0).
    "Did the mirror see this trap?"
        journald does NOT log individual traps by design (journal volume at
        production trap rates). Check the per-site trap log
@@ -110,9 +87,4 @@ Troubleshooting (watcher log lines and what they mean)
        (omd reload <site>) after changing it.
 
 Rollback
-systemctl stop snmptrapd_mirror_watch snmptrapd_mirror
-rm /etc/systemd/system/snmptrapd_mirror_watch.service /etc/systemd/system/snmptrapd_mirror.service
-systemctl daemon-reload
-rm /etc/snmp/snmptrapd.conf
-# restore .pre-feature/ snmptrap_logger.sh and samplicate_watch if the
-# legacy behavior is required
+   See README.systemd, section 2B.
