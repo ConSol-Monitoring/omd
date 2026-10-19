@@ -1,9 +1,65 @@
-1) as site-user
+Receiving SNMP traps in OMD sites
+=================================
+
+Every site with SNMPTRAPD=on runs its own snmptrapd on a site-specific
+UDP port. A central component receives the traps on UDP/162 and copies
+them to all these sites. There are two methods for the central
+component. Install EITHER method A OR method B, never both (both want
+to own UDP/162).
+
+A) samplicate (available on all distributions)
+B) snmptrapd mirror (only available if the directory
+   /opt/omd/versions/default/share/snmptrapd_mirror exists. It requires
+   a net-snmp version which knows addForwarderInfo, i.e. 5.9 or newer.)
+
+
+0) prerequisite (as root, both methods)
+   The site snmptrapd is the one from the distribution: /usr/sbin/snmptrapd
+   Debian/Ubuntu:   apt-get install snmptrapd
+   RHEL family:     dnf install net-snmp    (usually already installed with OMD)
+   SLES/openSUSE:   zypper install net-snmp (usually already installed with OMD)
+
+
+1) as site-user (in every site which shall receive traps)
 omd config set SNMPTRAPD on
 omd start snmptrapd
 
-2) as root
+
+2A) samplicate, as root
 /bin/cp /opt/omd/versions/default/share/samplicate/*.service /etc/systemd/system
+systemctl stop snmptrapd.socket snmptrapd 2>/dev/null
+systemctl disable snmptrapd.socket snmptrapd 2>/dev/null
 systemctl enable samplicate
 systemctl enable samplicate_watch
 systemctl restart samplicate_watch
+
+   Rollback:
+systemctl stop samplicate_watch samplicate
+systemctl disable samplicate_watch samplicate
+rm /etc/systemd/system/samplicate_watch.service /etc/systemd/system/samplicate.service
+systemctl daemon-reload
+
+
+2B) snmptrapd mirror, as root
+   The mirror is the distribution's snmptrapd.service. A drop-in gives it
+   the same command line on all distributions (without a -L logging
+   destination, so the journal does not get one entry per trap).
+   On Debian/Ubuntu, snmptrapd.socket must stay enabled (package default).
+/bin/cp /opt/omd/versions/default/share/snmptrapd_mirror/snmptrapd_mirror_watch.service /etc/systemd/system
+mkdir -p /etc/systemd/system/snmptrapd.service.d
+/bin/cp /opt/omd/versions/default/share/snmptrapd_mirror/omd-mirror.conf /etc/systemd/system/snmptrapd.service.d
+systemctl daemon-reload
+systemctl enable snmptrapd_mirror_watch
+systemctl start snmptrapd_mirror_watch
+   # the watcher writes the managed section of /etc/snmp/snmptrapd.conf
+   # and starts/reloads/stops snmptrapd.service within ~60s. Do not enable
+   # snmptrapd.service yourself.
+   # Details: /opt/omd/versions/default/share/snmptrapd_mirror/README.snmptrapd
+
+   Rollback:
+systemctl stop snmptrapd_mirror_watch snmptrapd
+systemctl disable snmptrapd_mirror_watch
+rm /etc/systemd/system/snmptrapd_mirror_watch.service
+rm /etc/systemd/system/snmptrapd.service.d/omd-mirror.conf
+systemctl daemon-reload
+rm /etc/snmp/snmptrapd.conf

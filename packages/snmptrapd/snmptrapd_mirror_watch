@@ -53,13 +53,16 @@ TT="$BIN_DIR/trap_targets"
 TEMPLATE="$VERSION_DIR/share/snmptrapd_mirror/snmptrapd.conf.example"
 MIRROR_CONF=/etc/snmp/snmptrapd.conf
 # The mirror daemon is the OS-packaged snmptrapd.service (delivered by
-# the snmptrapd OS package; we ship NO unit of our own). The OS unit is
+# the snmptrapd OS package; we ship NO unit of our own, only the drop-in
+# omd-mirror.conf which replaces the distro's ExecStart with a uniform
+# command line without -L destination). On Debian/Ubuntu the OS unit is
 # socket-activated: snmptrapd.socket (enabled+active by the distro
 # postinst) binds udp:162/1620v6 as root and passes the fds to the
 # daemon — the service CANNOT bind the privileged port alone ("errno 13
 # Permission denied" when the socket was disabled, measured on
 # Ubuntu 24.04 / net-snmp 5.9.4). So the socket must stay at the OS
-# default: enabled.
+# default: enabled. Without a socket unit (not observed on RHEL family
+# and SUSE) the daemon runs as root and binds udp:162 itself.
 MIRROR_UNIT=snmptrapd
 PIDFILE=/run/snmptrapd_mirror_watch.pid
 LOG_TAG=snmptrapd_mirror_watch
