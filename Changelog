@@ -18,7 +18,7 @@ next:
           - grafana:
             - update to 13.2.4
             - thruk-datasource update to 2.3.1
-            - pnp-datasource update to 2.3.0
+            - pnp-datasource update to 2.3.1
           - prometheus:
             - update to 3.13.3
             - node_exporter update to 1.12.1
