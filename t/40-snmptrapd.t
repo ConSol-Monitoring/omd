@@ -142,11 +142,13 @@ TestUtils::test_command({ cmd => "$systemctl disable samplicate", errlike => $os
 TestUtils::test_command({ cmd => "/bin/rm -f /etc/systemd/system/samplicate_watch.service" });
 TestUtils::test_command({ cmd => "/bin/rm -f /etc/systemd/system/samplicate.service" });
 
+=pod
 ##################################################
 #
 # Phase 2: the snmptrapd mirror method
 # (phase 1 tested the legacy samplicate method; both must work)
 #
+
 my $tt = '/opt/omd/versions/default/bin/trap_targets';
 if( -x $tt
     and -x '/opt/omd/versions/default/bin/snmptrapd_mirror_watch'
@@ -298,6 +300,7 @@ if( -x $tt
     TestUtils::test_command({ cmd => "$systemctl enable --now snmptrapd.socket", exit => undef, errlike => undef });
     TestUtils::test_command({ cmd => "/bin/rm -f /etc/snmp/snmptrapd.conf" });
 }
+=cut
 
 # restore selinux
 if($selinux) {
