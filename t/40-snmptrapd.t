@@ -261,10 +261,10 @@ if($have_mirror) {
 
     # provenance: the mirror appended the addForwarderInfo marker and the
     # (patched) site logger consumed it - the marker OID must not appear in
-    # the site's log, and the summary's sender field is the bare IP
-    # (not the 'UDP: [...]' string the receiver sees)
-    TestUtils::test_command({ cmd => "/bin/grep 77777 /omd/sites/$site3/var/log/snmp/traps.log", like => '/summary: ____.*____127\.0\.0\.1____/', unlike => '/UDP:/', exit => undef });
-    TestUtils::test_command({ cmd => "/bin/grep 77777 /omd/sites/$site4/var/log/snmp/traps.log", like => '/summary: ____.*____127\.0\.0\.1____/', unlike => '/UDP:/', exit => undef });
+    # the site's log, and the summary's sender field shows the original
+    # sender in "UDP: [ip]" format, identical to directly received traps
+    TestUtils::test_command({ cmd => "/bin/grep 77777 /omd/sites/$site3/var/log/snmp/traps.log", like => '/summary: ____.*____UDP: \[127\.0\.0\.1\]____/', exit => undef });
+    TestUtils::test_command({ cmd => "/bin/grep 77777 /omd/sites/$site4/var/log/snmp/traps.log", like => '/summary: ____.*____UDP: \[127\.0\.0\.1\]____/', exit => undef });
 
     # the managed section carries NO authCommunity lines (community policy
     # lives in each site's own snmptrapd.conf) and the mirror runs without
