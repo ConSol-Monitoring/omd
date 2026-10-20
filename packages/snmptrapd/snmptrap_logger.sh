@@ -83,9 +83,11 @@ while read -r OID VAL; do
 done
 
 # A captured marker replaces the sender: the sender line and the summary's
-# sender field show the original sender (bare value) instead of the
-# [UDP: ...] string
-[ -n "$SENDER" ] && IP=$SENDER
+# sender field show the original sender in the same "UDP: [ip]" format the
+# site snmptrapd writes for directly received traps (samplicate method), so
+# check_logfiles sees one unique format no matter which method delivered
+# the trap.
+[ -n "$SENDER" ] && IP="UDP: [$SENDER]"
 
 # Initialize ALLINONE with the host and (possibly replaced) sender,
 # separated by "____"
