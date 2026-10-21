@@ -49,7 +49,7 @@ sub find_ip_oid_combi {
   my ($ip, $oid) = @_;
   my $combi = sprintf("%d%03d%03d%03d", split /\./, $ip).$oid;
   $combi =~ tr/.//d;
-  my $num_combi = int($combi);
+  my $num_combi = Math::BigInt->new($combi); # int() on the long digit string yields a float even under bigint
   my $found = 0;
   my ($left, $right) = (0, scalar(@combinations) - 1);
   my $idx;
