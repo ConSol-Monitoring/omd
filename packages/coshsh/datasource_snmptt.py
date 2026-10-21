@@ -34,6 +34,22 @@ def __ds_ident__(params={}):
         return SNMPTTRagpickify
 
 
+def normalize_ipv4(ip):
+    # "010.0.0.1" -> "10.0.0.1", the way snmptrapd writes sender addresses
+    try:
+        return ".".join([str(int(n)) for n in ip.strip().split(".")])
+    except ValueError:
+        return ip
+
+
+def ipv4_sort_key(ip):
+    # numeric order for addresses, anything else (e.g. a host name) after them
+    try:
+        return (0, [int(n) for n in ip.split(".")], "")
+    except ValueError:
+        return (1, [], ip)
+
+
 def create_matches_nodes(nodes=[]):
     # Clean and process nodes at the time of factory creation
     nodes = [node.strip() for string in nodes for node in string.split()]
@@ -76,26 +92,20 @@ class MIB(coshsh.item.Item):
         self.events = kwargs["events"]
         self.extcmd = kwargs.get("extcmd", "nagios.cmd")
         self.agents = {}
+        # regex for check_logfiles' prefilter, set once the events are known
+        self.trap_oid_filter = None
 
     def fingerprint(self):
         return self.mib
 
     def add_agent(self, agent):
         if "." in agent[0]:
-            self.agents["%03d%03d%03d%03d" % tuple([int(n) for n in agent[0].split(".")])] = [agent[1], agent[2], agent[3]]
+            self.agents[normalize_ipv4(agent[0])] = [agent[1], agent[2], agent[3]]
 
     def sort_agents(self):
-        self.agent_ips = []
-        self.service_pointers = []
-        sortme = [(
-            # ohne fuehrende 0, damit's richtig numerisch zugeht hier
-            int("%d%03d%03d%03d" % tuple([int(n) for n in textwrap.wrap(str_ip, 3)])),
-            str_ip
-        ) for str_ip in list(self.agents.keys())]
-        sortme.sort(key=lambda x: x[0])
-        for num_ip, str_ip in sortme:
-            self.agent_ips.append(num_ip)
-            self.service_pointers.append(self.agents[str_ip])
+        # (ip, [host_name, service prefix, mib]) in numeric ip order,
+        # so the rendered check_logfiles config is stable between cooks
+        self.sorted_agents = sorted(self.agents.items(), key=lambda item: ipv4_sort_key(item[0]))
 
 class RagpickerMIB(MIB):
     id = 101
@@ -108,32 +118,14 @@ class RagpickerMIB(MIB):
 
     def __init__(self, *args, **kwargs):
         super(self.__class__, self).__init__(**kwargs)
-        self.ip_oid_combinations = []
+        # "<ip> <trap oid>" of every trap a ragpicked host is supposed to send
+        self.expected_traps = set()
 
     def add_ip_oid_combi(self, ip, oid):
-        self.ip_oid_combinations.append(
-            int(("%d%03d%03d%03d" % tuple([int(n) for n in ip.split(".")])) + oid.replace(".", ""))
-        )
+        self.expected_traps.add("%s %s" % (normalize_ipv4(ip), oid))
 
     def sort_ip_oid_combis(self):
-        self.ip_oid_combinations.sort()
-
-    def add_agent(self, agent):
-        if "." in agent[0]:
-            self.agents["%03d%03d%03d%03d" % tuple([int(n) for n in agent[0].split(".")])] = [agent[1], agent[2], agent[3]]
-
-    def sort_agents(self):
-        self.agent_ips = []
-        self.service_pointers = []
-        sortme = [(
-            # ohne fuehrende 0, damit's richtig numerisch zugeht hier
-            int("%d%03d%03d%03d" % tuple([int(n) for n in textwrap.wrap(str_ip, 3)])),
-            str_ip
-        ) for str_ip in list(self.agents.keys())]
-        sortme.sort(key=lambda x: x[0])
-        for num_ip, str_ip in sortme:
-            self.agent_ips.append(num_ip)
-            self.service_pointers.append(self.agents[str_ip])
+        self.expected_traps = sorted(self.expected_traps)
 
 
 class SNMPTT(coshsh.datasource.Datasource):
@@ -186,7 +178,9 @@ class SNMPTT(coshsh.datasource.Datasource):
             logger.info("process snmptt file " + ttfile)
             last_eventname = None
             last_name = None
-            last_matchmode = 'and'
+            # snmptt: one MATCH MODE per EVENT, the last MATCH MODE= line counts,
+            # without one it is "or"
+            last_matchmode = 'or'
             last_recovers = None
             last_nodes = []
             #
@@ -205,6 +199,7 @@ class SNMPTT(coshsh.datasource.Datasource):
                         if last_eventname:
                             # save the last event if there is one
                             if last_match:
+                                last_match[1] = last_matchmode
                                 last_match.append(last_eventtext) # add the format of this match
                             if last_nagios != -1 and "MODE=IGNORE" not in last_nodes:
                                 # if not HIDDEN
@@ -262,6 +257,7 @@ class SNMPTT(coshsh.datasource.Datasource):
                             last_nagios = 2
                         last_eventtext = None
                         last_match = None
+                        last_matchmode = 'or'
                         last_recovers = None
                         last_nodes = []
                     elif eventtext_m:
@@ -272,14 +268,15 @@ class SNMPTT(coshsh.datasource.Datasource):
                         else:
                             last_match = [last_nagios, last_matchmode, match_m.group(1)]
                     elif matchmode_m:
-
-                        last_matchmode = matchmode_m.group(1)
+                        last_matchmode = matchmode_m.group(1).strip().lower()
                     elif recovers_m:
                         last_recovers = recovers_m.group(1)
                     elif nodes_m:
                         last_nodes.append(nodes_m.group(1))
                 if last_eventname:
                     # save the last event if there is one
+                    if last_match:
+                        last_match[1] = last_matchmode
                     if last_nagios != -1 and "MODE=IGNORE" not in last_nodes:
                         try:
                             mib_traps[mib].append({
@@ -362,6 +359,10 @@ class SNMPTT(coshsh.datasource.Datasource):
                 m.common_prefix = os.path.commonprefix([event['oid'].replace('.', r'\.').replace('*', '.*?') for event in m.events])
             except Exception as e:
                 m.common_prefix = '.*'
+            # check_logfiles only looks closer at lines where one of this
+            # MIB's trap oids is the value of snmpTrapOID.0 (.1.3.6.1.6.3.1.1.4.1.0)
+            m.trap_oid_filter = r'\.1\.3\.6\.1\.6\.3\.1\.1\.4\.1\.0\s+(?:%s)(?:____|$)' % '|'.join(
+                sorted(set([event['oid'].replace('.', r'\.') for event in m.events])))
             self.add('mibconfigs', m)
 
         # Eine Fake-MIB dient dazu, unbekannte Traps (welche nicht ueber

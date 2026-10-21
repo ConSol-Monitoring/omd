@@ -1,76 +1,34 @@
 # {{ mib.mib }} {{ mib.miblabel }}
 # common prefix {{ mib.common_prefix }}
-{% if mib.mib == "RAGPICKER-MIB" %}
-use bigint;
-{% endif %}
 my $VERBOSE = 0;
 our @commands = ();
-my @ips = (
-{% for ip in mib.agent_ips %}
-{{ ip }},
+# sender address => [host_name, service prefix, mib (or its alias)]
+my %agents = (
+{% for ip, pointer in mib.sorted_agents %}
+  '{{ ip }}' => ["{{ pointer[0] }}", "{{ pointer[1] }}", "{{ pointer[2] }}"],
 {% endfor %}
 );
-my @pointers = (
-{% for pointer in mib.service_pointers %}
-["{{ pointer[0] }}", "{{ pointer[1] }}", "{{ pointer[2] }}"],
+{% if mib.mib == "RAGPICKER-MIB" %}
+# "<sender address> <trap oid>" of all the traps which are handled elsewhere
+my %expected_traps = (
+{% for ip_oid in mib.expected_traps %}
+  '{{ ip_oid }}' => 1,
 {% endfor %}
 );
-my @combinations = (
-{% for combi in mib.ip_oid_combinations %}
-{{ combi }},
-{% endfor %}
-);
+{% endif %}
 
 sub get_host_from_ip {
   my ($ip) = @_;
-  my $num_ip = int(sprintf "%d%03d%03d%03d", split /\./, $ip);
-  my $found = 0;
-  my ($left, $right) = (0, scalar(@ips) - 1);
-  my $idx;
-  while ($left <= $right) {
-    $idx = int(($left + $right)/2);
-    if ($ips[$idx] < $num_ip) {
-      $left = $idx + 1;
-    } elsif ($ips[$idx] > $num_ip) {
-      $right = $idx - 1;
-    } else {
-      $found = 1;
-      last;
-    }
-  }
-  if ($found) {
-    return $pointers[$idx];
-  } else {
-    return undef;
-  }
+  return $agents{$ip};
 }
 
+{% if mib.mib == "RAGPICKER-MIB" %}
 sub find_ip_oid_combi {
   my ($ip, $oid) = @_;
-  my $combi = sprintf("%d%03d%03d%03d", split /\./, $ip).$oid;
-  $combi =~ tr/.//d;
-  my $num_combi = Math::BigInt->new($combi); # int() on the long digit string yields a float even under bigint
-  my $found = 0;
-  my ($left, $right) = (0, scalar(@combinations) - 1);
-  my $idx;
-  while ($left <= $right) {
-    $idx = int(($left + $right)/2);
-    if ($combinations[$idx] < $num_combi) {
-      $left = $idx + 1;
-    } elsif ($combinations[$idx] > $num_combi) {
-      $right = $idx - 1;
-    } else {
-      $found = 1;
-      last;
-    }
-  }
-  if ($found) {
-    return 1;
-  } else {
-    return 0;
-  }
+  return exists $expected_traps{$ip.' '.$oid};
 }
 
+{% endif %}
 sub prepare_submit_command {
   my ($address, $trap, $recovers, $severity, $text) = @_;
   $text =~ s/[^[:ascii:]]//g;
@@ -114,80 +72,121 @@ sub prepare_submit_command {
   return $text;
 }
 
+sub parse_varbinds {
+  # ".1.3.6.1.2.1.1.5.0 nagiosnode01____.1.3.6.1.4.1.43420.9999.1.0 "Test"____...
+  # becomes ('nagiosnode01', '"Test"', ...)
+  my ($subtraps) = @_;
+  return map { /^[\d\.]+\s+(.*)$/ ? $1 : '' } split(/____/, $subtraps);
+}
+
 sub snmptt_resolve {
-  my ($sys, $text, $subtraps) = @_;
-  #my @subtraps = map { /^[\d\.]+\s+"*(.*?)"*$/; $1; } split(/____/, $subtraps);
-  my @subtraps = map { /^[\d\.]+\s+(.*)$/; $1; } split(/____/, $subtraps);
-  my $subtraps = join(", ", @subtraps);
-  foreach my $index (reverse 1..scalar(@subtraps)) {
-    $text =~ s/\$$index/$subtraps[$index-1]/g;
-  }
-  $text =~ s/\$\*/$subtraps/g;
+  my ($text, $varbinds) = @_;
+  my $all = join(", ", @{$varbinds});
+  # $n is the n-th varbind value, $* all of them
+  $text =~ s/\$(\d+|\*)/
+    $1 eq '*' ? $all :
+    ($1 >= 1 && $1 <= scalar(@{$varbinds})) ? $varbinds->[$1-1] : '$'.$1
+  /ge;
   return $text;
 }
 
-sub match_matches {
-  my ($mode, $rules, $subtraps) = @_;
-  my @rules = split("____", $rules);
-  #my @subtraps = map { /^[\d\.]+\s+"*(.*?)"*$/; $1; } split(/____/, $subtraps);
-  my @subtraps = map {
-    # .... "____.1.3.6.1.4.1.1139.102.0.1.2 "Info"____.1.3.6....
-    # uebrig bleibt Info ohne Anfuehrungszeichen
-    if (/^"(.*)"$/) {
-      $1;
-    } else {
-      $_;
-    }
-  } map {
-      /^[\d\.]+\s+(.*)$/; $1;
-  } split(/____/, $subtraps);
-  my $rulehits = 0;
-  foreach my $rule (@rules) {
-    if ($rule =~ /^\$(\d+):\s*!\s*(\w+)/) {
-      # MATCH $x: ! n
-      $rulehits +=1 if $subtraps[$1-1] ne $2;
-    } elsif ($rule =~ /^\$(\d+):\s*(\w+)/) {
-      # MATCH $x: n
-      $rulehits +=1 if $subtraps[$1-1] eq $2;
-    } elsif ($rule =~ /^\$(\d+):\s*!\s*\((.*)\)\s*i\*$/) {
-      # MATCH $x: ! (reg) i
-      $rulehits += 1 if $subtraps[$1-1] !~ /$2/i;
-    } elsif ($rule =~ /^\$(\d+):\s*!ş*\((.*)\)\s*$/) {
-      # MATCH $x: ! (reg)
-      $rulehits += 1 if $subtraps[$1-1] !~ /$2/;
-    } elsif ($rule =~ /^\$(\d+):\s*\((.*)\)\s*i\s*$/) {
-      # MATCH $x: (reg) i
-      $rulehits += 1 if $subtraps[$1-1] =~ /$2/i;
-    } elsif ($rule =~ /^\$(\d+):\s*\((.*)\)\s*$/) {
-      # MATCH $x: (reg)
-      $rulehits += 1 if $subtraps[$1-1] =~ /$2/;
-    } elsif ($rule =~ /^\$(\d+):\s*!\s*<\s*(\d+)\s*$/) {
-      # MATCH $x: ! < n
-      $rulehits += 1 if $subtraps[$1-1] >= $2;
-    } elsif ($rule =~ /^\$(\d+):\s*<\s*(\d+)\s*$/) {
-      # MATCH $x: < n
-      $rulehits += 1 if $subtraps[$1-1] < $2;
-    } elsif ($rule =~ /^\$(\d+):\s*!\s*>\s*(\d+)\s*$/) {
-      # MATCH $x: ! > n
-      $rulehits += 1 if $subtraps[$1-1] <= $2;
-    } elsif ($rule =~ /^\$(\d+):\s*>\s*(\d+)\s*$/) {
-      # MATCH $x: > n
-      $rulehits += 1 if $subtraps[$1-1] > $2;
-    } elsif ($rule =~ /^\$(\d+):\s*!\s*(\d+)-(\d+)\s*$/) {
-      # MATCH $x: ! n-n
-      $rulehits += 1 if $subtraps[$1-1] < $2 || $subtraps[$1-1] > $3;
-    } elsif ($rule =~ /^\$(\d+):\s*(\d+)-(\d+)\s*$/) {
-      # MATCH $x: n-n
-      $rulehits += 1 if $subtraps[$1-1] >= $2 && $subtraps[$1-1] <= $3;
-    } else {
-      printf STDERR "unknown rule __%s__\n", $rule;
-    }
+sub compile_rule {
+  # turns a MATCH rule into a sub which gets the varbind values.
+  # called once per rule when the config is loaded, not per trap.
+  my ($rule) = @_;
+  if ($rule =~ /^\$(\d+):\s*!\s*(\w+)\s*$/) {
+    # MATCH $x: ! n
+    my ($idx, $value) = ($1-1, $2);
+    return sub { $_[0]->[$idx] ne $value };
+  } elsif ($rule =~ /^\$(\d+):\s*(\w+)\s*$/) {
+    # MATCH $x: n
+    my ($idx, $value) = ($1-1, $2);
+    return sub { $_[0]->[$idx] eq $value };
+  } elsif ($rule =~ /^\$(\d+):\s*!\s*\((.*)\)\s*i\s*$/) {
+    # MATCH $x: ! (reg) i
+    my ($idx, $regex) = ($1-1, qr/$2/i);
+    return sub { $_[0]->[$idx] !~ $regex };
+  } elsif ($rule =~ /^\$(\d+):\s*!\s*\((.*)\)\s*$/) {
+    # MATCH $x: ! (reg)
+    my ($idx, $regex) = ($1-1, qr/$2/);
+    return sub { $_[0]->[$idx] !~ $regex };
+  } elsif ($rule =~ /^\$(\d+):\s*\((.*)\)\s*i\s*$/) {
+    # MATCH $x: (reg) i
+    my ($idx, $regex) = ($1-1, qr/$2/i);
+    return sub { $_[0]->[$idx] =~ $regex };
+  } elsif ($rule =~ /^\$(\d+):\s*\((.*)\)\s*$/) {
+    # MATCH $x: (reg)
+    my ($idx, $regex) = ($1-1, qr/$2/);
+    return sub { $_[0]->[$idx] =~ $regex };
+  } elsif ($rule =~ /^\$(\d+):\s*!\s*<\s*(\d+)\s*$/) {
+    # MATCH $x: ! < n
+    my ($idx, $value) = ($1-1, $2);
+    return sub { $_[0]->[$idx] >= $value };
+  } elsif ($rule =~ /^\$(\d+):\s*<\s*(\d+)\s*$/) {
+    # MATCH $x: < n
+    my ($idx, $value) = ($1-1, $2);
+    return sub { $_[0]->[$idx] < $value };
+  } elsif ($rule =~ /^\$(\d+):\s*!\s*>\s*(\d+)\s*$/) {
+    # MATCH $x: ! > n
+    my ($idx, $value) = ($1-1, $2);
+    return sub { $_[0]->[$idx] <= $value };
+  } elsif ($rule =~ /^\$(\d+):\s*>\s*(\d+)\s*$/) {
+    # MATCH $x: > n
+    my ($idx, $value) = ($1-1, $2);
+    return sub { $_[0]->[$idx] > $value };
+  } elsif ($rule =~ /^\$(\d+):\s*!\s*(\d+)-(\d+)\s*$/) {
+    # MATCH $x: ! n-n
+    my ($idx, $low, $high) = ($1-1, $2, $3);
+    return sub { $_[0]->[$idx] < $low || $_[0]->[$idx] > $high };
+  } elsif ($rule =~ /^\$(\d+):\s*(\d+)-(\d+)\s*$/) {
+    # MATCH $x: n-n
+    my ($idx, $low, $high) = ($1-1, $2, $3);
+    return sub { $_[0]->[$idx] >= $low && $_[0]->[$idx] <= $high };
+  } else {
+    printf STDERR "unknown rule __%s__\n", $rule;
+    return sub { 0 };
   }
-  return 1 if $mode eq 'and' && $rulehits == scalar(@rules); # all of them
+}
+
+sub compile_rules {
+  my ($rules) = @_;
+  return [ map { compile_rule($_) } split("____", $rules) ];
+}
+
+sub match_matches {
+  my ($mode, $rules, $values) = @_;
+  my $rulehits = grep { $_->($values) } @{$rules};
+  return 1 if $mode eq 'and' && $rulehits == scalar(@{$rules}); # all of them
   return 1 if $mode eq 'or' && $rulehits; # any of them
   return 0;
 }
 
+{% if mib.mib != "RAGPICKER-MIB" %}
+# Events of this MIB. An event with MATCH entries in the snmptt file has
+# them in "matches": [nagios level, mode, rules, FORMAT], first hit wins.
+my @event_list = (
+{% for event in mib.events %}
+  {
+    oid => '{{ event.oid }}',
+    name => '{{ event.name }}',
+    text => '{{ event.text }}',
+    recovers => '{{ event.recovers or "" }}',
+    nagioslevel => {{ event.nagioslevel }},
+    matches => [
+{%   for match in event.matches or [] %}
+      [{{ match[0] }}, '{{ match[1] }}', compile_rules('{{ match[2] }}'), '{{ match[3] }}'],
+{%   endfor %}
+    ],
+  },
+{% endfor %}
+);
+# trap oid => event. If several events have the same oid, the first one counts.
+my %events = ();
+foreach my $event (@event_list) {
+  $events{$event->{oid}} = $event unless exists $events{$event->{oid}};
+}
+
+{% endif %}
 $options = 'report=short,supersmartpostscript';
 
 @searches = (
@@ -195,76 +194,40 @@ $options = 'report=short,supersmartpostscript';
   tag => '{{ mib.mib }}',
   logfile => $ENV{OMD_ROOT}.'/var/log/snmp/traps.log',
   rotation => '^%s\.((1)|([2-9]+\.gz))$',
-{% if mib.common_prefix %}
-  prefilter => '{{ mib.common_prefix }}',
+{% if mib.trap_oid_filter %}
+  prefilter => '{{ mib.trap_oid_filter }}',
 {% endif %}
-  criticalpatterns => '^\[(.*?)\] summary: .*UDP: \[([\.\d]+)\].*?____([\.\d]+ .*?)____\.1\.3\.6\.1\.6\.3\.1\.1\.4\.1\.0\s+([\.\d]+)____(.*?)$',
+  criticalpatterns => '^\[(.*?)\] summary: .*?UDP: \[([\.\d]+)\].*?____([\.\d]+ .*?)____\.1\.3\.6\.1\.6\.3\.1\.1\.4\.1\.0\s+([\.\d]+)____(.*)$',
   script => sub {
     my $address = $ENV{CHECK_LOGFILES_CAPTURE_GROUP2};
     my $trap_oid = $ENV{CHECK_LOGFILES_CAPTURE_GROUP4};
     my $flat_trap = $ENV{CHECK_LOGFILES_CAPTURE_GROUP.$ENV{CHECK_LOGFILES_CAPTURE_GROUPS}};
-    my $severity = undef;
-    my $resolved_text = undef;
-    my $known_event = 0;
-    my $event_name = undef;
-    my $event_text = undef;
-    my $event_recovers = undef;
-    my $nagioslevel = undef;
 {% if mib.mib == "RAGPICKER-MIB" %}
-    if (! find_ip_oid_combi($address, $trap_oid)) {
-      $known_event = 1; # means here: i know how to submit the info
-      $severity = {{ mib.unexpected_level }};
-      $event_name = "unexpectedTrap";
-      $event_recovers = "";
-      $resolved_text = "received unexpected oid: ".$trap_oid;
-    } else {
-      $known_event = 0; # means here: ignore, because this trap is wanted
-    }
+    return 0 if find_ip_oid_combi($address, $trap_oid); # this trap is wanted, ignore it here
+    my $sub = prepare_submit_command($address, 'unexpectedTrap', '',
+        {{ mib.unexpected_level }}, 'received unexpected oid: '.$trap_oid);
 {% else %}
-{% for event in mib.events %}
-{%   if loop.first %}
-    if ("{{ event.oid }}" eq $trap_oid) {
-{%   else %}
-    } elsif ("{{ event.oid }}" eq $trap_oid) {
-{%   endif %}
-      $known_event = 1;
-      $event_name = '{{ event.name }}';
-      $event_text = '{{ event.text }}';
-      $event_recovers = '{{ event.recovers or "" }}';
-      $nagioslevel = {{ event.nagioslevel }};
-{%   if event.matches %}
-{%     for match in event.matches %}
-{%       if loop.first %}
-      if (match_matches('{{ match[1] }}', '{{ match[2] }}', $flat_trap)) {
-        $resolved_text = snmptt_resolve($address, '{{ match[3] }}', $flat_trap);
-        $severity = {{ match[0] }};
-{%       else %}
-      } elsif (match_matches('{{ match[1] }}', '{{ match[2] }}', $flat_trap)) {
-        $resolved_text = snmptt_resolve($address, '{{ match[3] }}', $flat_trap);
-        $severity = {{ match[0] }};
-{%       endif %}
-{%       if loop.last %}
+    my $event = $events{$trap_oid};
+    return 0 if ! $event;
+    my @varbinds = parse_varbinds($flat_trap);
+    my $severity = $event->{nagioslevel};
+    my $text = $event->{text};
+    if (@{$event->{matches}}) {
+      # MATCH rules compare the values without surrounding quotes
+      my @values = map { /^"(.*)"$/ ? $1 : $_ } @varbinds;
+      foreach my $match (@{$event->{matches}}) {
+        my ($level, $mode, $rules, $format) = @{$match};
+        if (match_matches($mode, $rules, \@values)) {
+          ($severity, $text) = ($level, $format);
+          last;
+        }
       }
-{%       endif %}
-{%     endfor %}
-{%   endif %}
-{%   if loop.last %}
     }
-{%   endif %}
-{% endfor %}
+    my $sub = prepare_submit_command($address, $event->{name}, $event->{recovers},
+        $severity, snmptt_resolve($text, \@varbinds));
 {% endif %}
-    if (! defined $severity && $known_event) {
-      # there are no sub-events at all or none of them matched
-      $resolved_text = snmptt_resolve($address, $event_text, $flat_trap);
-      $severity = $nagioslevel;
-    }
-    if ($known_event) {
-      my $sub =  prepare_submit_command($address, $event_name, $event_recovers, $severity, $resolved_text);
-      printf "sub %s\n", $sub;
-      return 2;
-    } else {
-      return 0;
-    }
+    printf "sub %s\n", $sub;
+    return 2;
   },
   options => 'supersmartscript,capturegroups,noprotocol,noperfdata',
 },
