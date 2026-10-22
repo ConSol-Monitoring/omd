@@ -30,7 +30,7 @@ next:
           - livestatus:
             - install lq from lmd
           - coshsh update to 13.1
-          - golang builds updated to 1.27.1
+          - golang builds updated to 1.27.3
           - histou update to 0.6.3
           - monitoring-plugins3 update to fe166a0
           - nagflux update to 0.6.3
