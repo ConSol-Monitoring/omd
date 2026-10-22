@@ -38,7 +38,6 @@ PACKAGES += thruk-consol-theme
 PACKAGES += grafana
 PACKAGES += grafana-loki
 PACKAGES += histou
-PACKAGES += perfgraph
 PACKAGES += maintenance
 PACKAGES += gearmand
 PACKAGES += mod-gearman
