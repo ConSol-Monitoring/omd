@@ -118,7 +118,7 @@ MODULES += checkvsphere-0.3.30-py3-none-any.whl
 # override some module for python 3.07, list could be reevaluated once rhel7-rhel8 support got removed
 OVERRIDES=""
 ifeq ($(HAS_PYTHON_307_OR_NEWER),true)
-OVERRIDES += certifi-2026.10.18-py3-none-any.whl
+OVERRIDES += certifi-2026.10.19-py3-none-any.whl
 OVERRIDES += jinja2-3.1.6-py3-none-any.whl
 OVERRIDES += pycryptodomex-3.23.0.tar.gz
 endif
@@ -127,7 +127,7 @@ endif
 ifeq ($(HAS_PYTHON_312_OR_NEWER),true)
 OVERRIDES += setuptools-83.0.0-py3-none-any.whl
 OVERRIDES += wheel-0.46.3-py3-none-any.whl
-OVERRIDES += pip-26.2.1-py3-none-any.whl
+OVERRIDES += pip-26.2.2-py3-none-any.whl
 OVERRIDES += packaging-25.0-py3-none-any.whl
 
 OVERRIDES += setuptools_scm-8.1.0-py3-none-any.whl
