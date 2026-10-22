@@ -2,12 +2,12 @@ include ../../Makefile.omd
 
 NAME        = histou
 CHANGELOG   = https://github.com/ConSol-Monitoring/histou/blob/master/CHANGELOG.md
-VERSION     = 0.6.3
+VERSION     = 0.6.4
 SRC         = $(NAME)-$(VERSION).tar.gz
 PWD         = $(shell pwd)
 DIR         = $(NAME)
 # GIT TAG is set automatically by "make upstream" or "make package"
-GIT_TAG     = v0.6.3
+GIT_TAG     = v0.6.4
 
 .PHONY: skel
 
