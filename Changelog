@@ -1,5 +1,11 @@
 This file documents the revision history for the Open Monitoring Distribution (Labs Edition)
 
+next:
+          - prometheus:
+            - update to 3.13.5
+            - alertmanager update to 0.34.1
+            - blackbox_exporter update to 0.29.1
+
 5.80     Oct 23 2026
           - thruk:
             - update to 3.30
