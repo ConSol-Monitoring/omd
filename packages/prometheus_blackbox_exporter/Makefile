@@ -3,8 +3,7 @@ include ../../Makefile.omd
 .PHONY: skel
 
 NAME       = blackbox_exporter
-# do not upgrade to 0.28.0, wait for next release
-VERSION    = 0.27.0
+VERSION    = 0.29.1
 BRANCH     = master
 SRC        = $(NAME)-$(VERSION).tar.gz
 GOPKG      = 1.27
