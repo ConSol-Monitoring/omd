@@ -3,9 +3,10 @@ include ../../Makefile.omd
 .PHONY: skel
 
 NAME       = alertmanager
-VERSION    = 0.30.1
+VERSION    = 0.34.1
 BRANCH     = master
 SRC        = $(NAME)-$(VERSION).tar.gz
+WEBSRC     = $(NAME)-web-ui-$(VERSION).tar.gz
 GOPKG      = 1.27
 GOVERSION  = $(shell grep ^VERSION ../go-${GOPKG}/Makefile | awk '{ print $$3 }')
 PWD        = $(shell pwd)
@@ -24,6 +25,8 @@ LDFLAGS    = "\
 
 build:
 	tar zxf $(SRC)
+	cd $(NAME)-$(VERSION) && \
+		tar -C ui/app -xvzf ../$(WEBSRC)
 	cd $(NAME)-$(VERSION) && \
 	    $(GOROOT)/bin/go build -trimpath -ldflags $(LDFLAGS) -mod=vendor -o build/alertmanager github.com/prometheus/$(NAME)/cmd/alertmanager
 	cd $(NAME)-$(VERSION) && \
@@ -73,6 +76,7 @@ clean:
 
 package: clean
 	curl -fLo $(NAME)-$(VERSION).tar.gz https://github.com/prometheus/$(NAME)/archive/v$(VERSION).tar.gz
+	curl -fLo $(WEBSRC) https://github.com/prometheus/$(NAME)/releases/download/v$(VERSION)/$(NAME)-web-ui-$(VERSION).tar.gz
 	tar xf $(NAME)-$(VERSION).tar.gz
 	cd $(NAME)-$(VERSION) && env PATH=$(GOROOT)/bin:$(PATH) go mod vendor
 	tar czf $(NAME)-$(VERSION).tar.gz $(NAME)-$(VERSION)
