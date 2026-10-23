@@ -682,6 +682,13 @@ def set_admin_password(pw):
     return 0 == os.waitpid(p.pid, 0)[1], response
 
 
+def set_admin_password_or_warn(pw):
+    ok, err = set_admin_password(pw)
+    if not ok:
+        sys.stderr.write("WARNING: failed to set admin password: %s\n" % err.decode(errors="replace").strip())
+    return ok
+
+
 def file_owner_verify(path, user_id, group_id):
     try:
         s = os.stat(path)
@@ -3168,12 +3175,15 @@ def init_site(config_settings = None, options={}):
     # Create skeleton files of non-tmp directories
     create_skeleton_files(g_sitename, '.')
 
-    # Set the initial password of the default admin user
     admin_password = calculate_admin_password(options)
-    set_admin_password(admin_password)
-
     # Change ownership of all files and dirs to site user
     chown_tree(g_sitedir, g_sitename)
+
+    # Set the initial password of the default admin user (as site user, so ~ is the site directory)
+    if am_root():
+        call_as_forked_site_user(set_admin_password_or_warn, [admin_password], {})
+    else:
+        set_admin_password_or_warn(admin_password)
 
     if am_root():
         call_as_forked_site_user(load_site_conf, [], {})
