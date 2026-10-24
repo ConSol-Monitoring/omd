@@ -15,6 +15,10 @@ cd || exit 1
 
 NAME=naemon
 DAEMON=$OMD_ROOT/bin/naemon
+# NAEMON_JEMALLOC=yes uses the naemon variant linked with the jemalloc allocator
+if [ "$NAEMON_JEMALLOC" = "yes" ]; then
+  DAEMON=$OMD_ROOT/bin/naemon-jemalloc
+fi
 CFG_FILE=$OMD_ROOT/tmp/naemon/naemon.cfg
 CMD_FILE=$OMD_ROOT/tmp/run/naemon.cmd
 PID_FILE=$OMD_ROOT/tmp/run/naemon.pid
@@ -62,6 +66,9 @@ case "$1" in start|restart|reload|checkconfig|check)
         # enable .dbg variant of core and addons
         export LD_PRELOAD=$OMD_ROOT/lib/libnaemon.so.0.0.0.dbg
         DAEMON=$OMD_ROOT/bin/naemon.dbg
+        if [ "$NAEMON_JEMALLOC" = "yes" ]; then
+          DAEMON=$OMD_ROOT/bin/naemon-jemalloc.dbg
+        fi
         sed -i $CFG_FILE \
             -e 's%/livestatus\.o %/livestatus.o.dbg %g' \
             -e 's%mod_gearman_naemon\.o %mod_gearman_naemon.o.dbg %g'

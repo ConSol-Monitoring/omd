@@ -19,6 +19,7 @@ PACKAGES += example
 PACKAGES += jmx4perl
 PACKAGES += mysql-omd
 PACKAGES += icinga2
+PACKAGES += jemalloc
 PACKAGES += naemon
 PACKAGES += naemon-livestatus
 PACKAGES += naemon-plugins

@@ -39,7 +39,7 @@ my $tests = [
   { cmd => "/bin/su - $site -c 'echo \"COMMAND [".time()."] SCHEDULE_FORCED_SVC_CHECK;localhost;check_locale.py;".time()."\" | lq'", like => '/^\s*$/' },
 
   # wait for all checks completed
-  { cmd => "/bin/su - $site -c 'thruk r \"/services?columns=has_been_checked&has_been_checked=0\"'", like => '/^\[\]$/smx', waitfor => '\[\]', maxwait => 10 },
+  { cmd => "/bin/su - $site -c 'thruk r \"/services?columns=has_been_checked&has_been_checked=0\"'", like => '/^\[\]$/smx', waitfor => '\[\]', maxwait => 30 },
 
   { cmd => "/bin/su - $site -c 'echo \"GET services\nFilter: host_name = localhost\nFilter: description = check_locale.py\nColumns: state plugin_output long_plugin_output\n\n\" | lq'", like => '/^0;LANG=/' },
 

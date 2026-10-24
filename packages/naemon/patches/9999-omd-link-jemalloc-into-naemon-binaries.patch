@@ -1,0 +1,11 @@
+--- a/Makefile.in	2026-10-24 11:32:05.052548517 +0200
++++ b/Makefile.in	2026-10-24 11:32:05.052548517 +0200
+@@ -1203,7 +1203,7 @@
+ src_naemon_naemon_CPPFLAGS = $(AM_CPPFLAGS) -DPREFIX='"$(prefix)"'
+ src_naemon_naemon_LDFLAGS = -rdynamic
+ src_naemonstats_naemonstats_SOURCES = src/naemonstats/naemonstats.c src/naemon/buildopts.h src/naemon/common.h
+-LDADD = libnaemon.la $(GLIB_LIBS) -lm -ldl
++LDADD = libnaemon.la $(GLIB_LIBS) -lm -ldl $(JEMALLOC_LIBS)
+ lib_LTLIBRARIES = libnaemon.la
+ 
+ # details on library version numbers https://www.sourceware.org/autobook/autobook/autobook_91.html
