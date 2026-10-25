@@ -1,0 +1,31 @@
+--- a/scripts/process_perfdata.pl.in	2023-02-20 11:06:45.000000000 +0000
++++ b/scripts/process_perfdata.pl.in	09:00:52.329168164 +0000
+@@ -101,7 +101,16 @@
+ parse_config($opt_c);
+ $conf{'GLOBAL_RRD_STORAGE_TYPE'} = uc($conf{'RRD_STORAGE_TYPE'}); # store the initial value for later use
+
+-my %stats = init_stats();
++my %stats = (
++    timet       => 0,
++    error       => 0,
++    invalid     => 0,
++    skipped     => 0,
++    runtime     => 0,
++    rows        => 0,
++    create      => 0,
++    update      => 0,
++);
+ my $cypher;
+
+ #
+@@ -187,7 +196,9 @@
+         $stats{runtime} += $rt;
+         $stats{rows}++;
+         if( ( int $stats{timet} / 60 ) < ( int time / 60 )){
+-            store_internals();
++            if($stats{timet} > 0) {
++                store_internals();
++            }
+             init_stats();
+         }
+         print_log( "Gearman job end (runtime ${rt}s) ...", 1 );
