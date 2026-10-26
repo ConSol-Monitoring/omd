@@ -2,7 +2,7 @@ include ../../../Makefile.omd
 
 NAME = check_storage_health
 CHANGELOG   = https://github.com/lausser/check_storage_health/blob/master/ChangeLog
-VERSION = 2.3.1
+VERSION = 2.3.1.2
 DIR = $(NAME)-$(VERSION)
 
 .PHONY: skel
