@@ -1,0 +1,32 @@
+#!/bin/bash
+# usage: ./update_module <file-in-src/>
+# downloads the latest version of the module from pypi.org into src/,
+# removes the old file and updates the filename in the Makefile
+set -e
+
+FILE="${1#./src/}"
+FILE="${FILE#src/}"
+[[ -n "$FILE" && -f "src/$FILE" ]] || { echo "usage: $0 <file-in-src>" >&2; exit 1; }
+
+BASE="${FILE%.whl}"
+BASE="${BASE%.tar.gz}"
+BASE="$(echo "$BASE" | sed -E 's/-(py[0-9.]+)+-none-any$//')"
+NAME="$(echo "$BASE" | sed -E 's/-[0-9][0-9A-Za-z.]*$//')"
+NAME="$(echo "$NAME" | tr 'A-Z_' 'a-z-')"
+
+read -r NEWFILE NEWURL < <(curl -fsSL "https://pypi.org/pypi/$NAME/json" | python3 -c '
+import json, sys
+d = json.load(sys.stdin)
+old = sys.argv[1]
+want = "bdist_wheel" if old.endswith(".whl") else "sdist"
+fs = [f for f in d["urls"] if f["packagetype"] == want]
+fs = [f for f in fs if want == "sdist" or "none-any" in f["filename"]] or fs
+print(fs[0]["filename"], fs[0]["url"])' "$FILE")
+
+[[ "$NEWFILE" != "$FILE" ]] || { echo "already at latest version: $FILE"; exit 0; }
+
+echo "$FILE -> $NEWFILE"
+curl -fsSL -o "src/$NEWFILE" "$NEWURL"
+rm "src/$FILE"
+sed -i "s/$(echo "$FILE" | sed 's/\./\\./g')/$NEWFILE/g" Makefile
+grep -q "$NEWFILE" Makefile || { echo "$NEWFILE not found in Makefile" >&2; exit 1; }
