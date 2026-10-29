@@ -14,7 +14,41 @@ BEGIN {
 
 plan skip_all => 'Author test. Set $ENV{TEST_AUTHOR} to a true value to run.' unless $ENV{TEST_AUTHOR};
 plan skip_all => 'Root permissions required' unless $> == 0;
-plan( tests => 223 );
+plan( tests => 260 );
+
+# regression test for updating a site whose etc/thruk and var/thruk are symlinks
+# pointing outside the site directory (e.g. shared on a separate mount). the
+# dry-run rsync must descend the symlinked dirs instead of dying with
+# "Too many levels of symbolic links"
+sub do_omd_update_symlinked_dirs {
+    my($omd_update) = @_;
+    my $omd_bin = TestUtils::get_omd_bin();
+    my $site2   = TestUtils::create_test_site("testsym") or TestUtils::bail_out_clean("no further testing without symlink site");
+    my $shared  = "/omd/.shared/$site2";
+
+    # move the two folders outside the site and symlink them back. also add a
+    # "share" link in the shared dir pointing back to the site so that relative
+    # symlinks inside the moved folders keep resolving, like /src/.shared/dev/
+    TestUtils::test_command({ cmd => "/bin/mkdir -p $shared/etc $shared/var" });
+    TestUtils::test_command({ cmd => "/bin/ln -s /omd/sites/$site2/share $shared/share" });
+    TestUtils::test_command({ cmd => "/bin/mv /omd/sites/$site2/etc/thruk $shared/etc/thruk" });
+    TestUtils::test_command({ cmd => "/bin/ln -s $shared/etc/thruk /omd/sites/$site2/etc/thruk" });
+    TestUtils::test_command({ cmd => "/bin/mv /omd/sites/$site2/var/thruk $shared/var/thruk" });
+    TestUtils::test_command({ cmd => "/bin/ln -s $shared/var/thruk /omd/sites/$site2/var/thruk" });
+
+    TestUtils::test_command({
+        cmd  => $omd_bin." -V $omd_update -n update $site2",
+        like => [
+                  '/DRY RUN/',
+                  '/0 conflicts/',
+                  '/Updated\s+etc/thruk/thruk.conf/',
+                ],
+    });
+
+    TestUtils::remove_test_site($site2);
+    `rm -rf /omd/.shared`;
+    return;
+}
 
 my $omd_bin  = TestUtils::get_omd_bin();
 my $site     = TestUtils::create_test_site() or TestUtils::bail_out_clean("no further testing without site");
@@ -44,6 +78,7 @@ TestUtils::test_command({ cmd => "/usr/bin/find /omd/versions/$omd_update/skel/ 
 # prepare updates in new skel
 TestUtils::test_command({ cmd => "/bin/sh -c \"echo '# test newline in bashrc' >> /omd/versions/$omd_update/skel/.bashrc\""});
 TestUtils::test_command({ cmd => "/bin/sed -i /omd/versions/$omd_update/skel/.gitignore -e 's%bash_history%test_history%g'"});
+TestUtils::test_command({ cmd => "/bin/sh -c \"echo '# test newline in thruk.conf' >> /omd/versions/$omd_update/skel/etc/thruk/thruk.conf\""});
 
 # prepare updates in new skel with changes in current site
 TestUtils::test_command({ cmd => "/bin/sh -c \"echo '# test newline in profile' >> /omd/sites/$site/.profile\""});
@@ -66,6 +101,7 @@ TestUtils::test_command({
             like => ['/Updated\s+.gitignore/',
                      '/Updated\s+.bashrc/',
                      '/Merged\s+.profile/',
+                     '/Updated\s+etc/thruk/thruk.conf/',
                      '/Permissions\s+0644\s+\->\s+0755\s+.modulebuildrc/',
                      '/Vanished\s+.my.cnf/',
                      '/Installed file\s+.new_file/',
@@ -81,6 +117,9 @@ TestUtils::test_command({
 
 # make sure all files still belong to site user
 TestUtils::test_command({ cmd => "/usr/bin/find /omd/sites/$site/ -user root -ls", like => '/^$/' });
+
+# updating a site with symlinked etc/thruk and var/thruk must not fail
+do_omd_update_symlinked_dirs($omd_update);
 
 # run update
 TestUtils::test_command({ cmd => $omd_bin." stop $site",       like => '/Stopping naemon/' });

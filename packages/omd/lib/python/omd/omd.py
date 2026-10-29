@@ -4041,7 +4041,7 @@ def main_update(args, options={}):
 def save_site_skel_backup(sitedir, siteuser):
     # save skel to .omd as backup to make updates possible without having the old omd version
     os.system("/bin/rm -rf %s/.omd/skel ; /bin/mkdir -p %s/.omd/skel" % (sitedir, sitedir))
-    os.system("/usr/bin/rsync -a %s/version/skel/. %s/.omd/skel/."    % (sitedir, sitedir))
+    os.system("/usr/bin/rsync -ax %s/version/skel/. %s/.omd/skel/."   % (sitedir, sitedir))
     os.system("/bin/cp %s/share/omd/skel.permissions %s/.omd/skel.permissions" % (sitedir, sitedir))
     os.system("/bin/chown -R %s: %s/.omd/skel 2>/dev/null"             % (siteuser, sitedir))
     os.system("/bin/chown    %s: %s/.omd/skel.permissions 2>/dev/null" % (siteuser, sitedir))
@@ -4069,10 +4069,22 @@ def prepare_dry_run_update_path(dry_run_path, from_version, to_version):
         shutil.rmtree(dry_run_path)
     os.mkdir(dry_run_path)
 
-    sync_files_path = os.path.join(dry_run_path, '.sync_files')
-    open(sync_files_path, "w").write("\n".join(sync_files))
+    # replace symlinks to folders outside the site with real folders in the dry-run path
+    site_root = os.path.realpath(g_sitedir)
+    dry_run_files = []
+    for file in sync_files:
+        path = os.path.join(g_sitedir, file)
+        if os.path.islink(path):
+            real = os.path.realpath(path)
+            if real != site_root and not real.startswith(site_root + os.sep):
+                os.makedirs(os.path.join(dry_run_path, file))
+                continue
+        dry_run_files.append(file)
 
-    if 0 != os.system("rsync -ax --files-from=%s '%s/.' '%s/.'" % (sync_files_path, site_dir(g_sitename), dry_run_path)):
+    sync_files_path = os.path.join(dry_run_path, '.sync_files')
+    open(sync_files_path, "w").write("\n".join(dry_run_files))
+
+    if 0 != os.system("rsync -ax --copy-unsafe-links --files-from=%s '%s/.' '%s/.'" % (sync_files_path, site_dir(g_sitename), dry_run_path)):
         bail_out(tty_error + ": Cannot create tmp directory for dry-run update.")
 
     # create empty files for all files which exist in the current site to simulate ex.: non empty obsolete folders
