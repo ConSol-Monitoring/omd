@@ -3,7 +3,7 @@ include ../../Makefile.omd
 .PHONY: skel
 
 NAME       = alertmanager
-VERSION    = 0.34.1
+VERSION    = 0.34.2
 BRANCH     = master
 SRC        = $(NAME)-$(VERSION).tar.gz
 WEBSRC     = $(NAME)-web-ui-$(VERSION).tar.gz
