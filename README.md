@@ -1,5 +1,17 @@
-# OMD-Labs - the Open Monitoring Distribution (Labs Edition)
-### https://omd.consol.de/docs/omd
+<p align="center">
+  <a href="https://omd.consol.de/docs/omd/#gh-light-mode-only"><img alt="OMD Labs logo: a capybara with a science flask" src=".github/assets/omd-labs-logo-light.svg#gh-light-mode-only" width="280"></a>
+  <a href="https://omd.consol.de/docs/omd/#gh-dark-mode-only"><img alt="OMD Labs logo: a capybara with a science flask" src=".github/assets/omd-labs-logo-dark.svg#gh-dark-mode-only" width="280"></a>
+</p>
+
+<h1 align="center">OMD-Labs</h1>
+
+<p align="center"><strong>The Open Monitoring Distribution (Labs Edition)</strong></p>
+
+<p align="center">
+  <a href="https://omd.consol.de/docs/omd/">Documentation</a> ·
+  <a href="https://omd.consol.de/docs/omd/getting_started/">Getting started</a> ·
+  <a href="https://omd.consol.de/docs/omd/packages/">Packages</a>
+</p>
 
 OMD-Labs is based on OMD with some additional software packages
 and best practices applied.
