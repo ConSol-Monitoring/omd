@@ -1,11 +1,6 @@
 <p align="center">
-  <a href="https://omd.consol.de/docs/omd/">
-    <picture>
-      <source media="(prefers-color-scheme: dark)" srcset=".github/assets/omd-labs-logo-dark.svg">
-      <source media="(prefers-color-scheme: light)" srcset=".github/assets/omd-labs-logo-light.svg">
-      <img alt="OMD Labs logo: a capybara with a science flask" src=".github/assets/omd-labs-logo-light.svg" width="280">
-    </picture>
-  </a>
+  <a href="https://omd.consol.de/docs/omd/#gh-light-mode-only"><img alt="OMD Labs logo: a capybara with a science flask" src=".github/assets/omd-labs-logo-light.svg#gh-light-mode-only" width="280"></a>
+  <a href="https://omd.consol.de/docs/omd/#gh-dark-mode-only"><img alt="OMD Labs logo: a capybara with a science flask" src=".github/assets/omd-labs-logo-dark.svg#gh-dark-mode-only" width="280"></a>
 </p>
 
 <h1 align="center">OMD-Labs</h1>
