@@ -8,7 +8,9 @@
   </a>
 </p>
 
-<h1 align="center">OMD-Labs - the Open Monitoring Distribution (Labs Edition)</h1>
+<h1 align="center">OMD-Labs</h1>
+
+<p align="center"><strong>The Open Monitoring Distribution (Labs Edition)</strong></p>
 
 <p align="center">
   <a href="https://omd.consol.de/docs/omd/">Documentation</a> ·
