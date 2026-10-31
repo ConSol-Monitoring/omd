@@ -114,10 +114,10 @@ for my $report (@{$reports}) {
 
 my $urls = [
 # static html pages
-  { url => "",                       like => '/<title>Thruk Monitoring Webinterface<\/title>/' },
-  { url => "/thruk/index.html",      like => '/<title>Thruk Monitoring Webinterface<\/title>/' },
+  { url => "",                       like => '/<title>Thruk Monitoring WebUI<\/title>/' },
+  { url => "/thruk/index.html",      like => '/<title>Thruk Monitoring WebUI<\/title>/' },
   { url => "/thruk/docs/index.html", like => '/<title>Documentation<\/title>/' },
-  { url => "/thruk/main.html",       like => '/<title>Thruk Monitoring Webinterface<\/title>/' },
+  { url => "/thruk/main.html",       like => '/<title>Thruk Monitoring WebUI<\/title>/' },
 
 # availability
   { url => '/thruk/cgi-bin/avail.cgi', 'like' => '/Availability Report/' },

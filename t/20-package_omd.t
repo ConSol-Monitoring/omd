@@ -58,7 +58,7 @@ TestUtils::test_command({ cmd => $omd_bin." stop $site" });
 TestUtils::test_command({ cmd => "/bin/su - $site -c 'omd config set APACHE_MODE ssl'",  like => '/^$/' });
 TestUtils::restart_system_apache();
 TestUtils::test_command({ cmd => "/bin/su - $site -c 'omd start'",  like => '/Starting apache.*?OK/' });
-TestUtils::test_command({ cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_http -H localhost -S -a omdadmin:omd -u /$site/thruk/index.html -e 200 -vvv'", like => ['/HTTP OK:/', '/Thruk Monitoring Webinterface/'] });
+TestUtils::test_command({ cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_http -H localhost -S -a omdadmin:omd -u /$site/thruk/index.html -e 200 -vvv'", like => ['/HTTP OK:/', '/Thruk Monitoring WebUI/'] });
 
 ##################################################
 # test redirects with APACHE_MODE=ssl
