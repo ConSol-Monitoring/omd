@@ -134,7 +134,8 @@ public:
 	# clean up
 	rm -rf grafana-*/public/test
 	rm -rf grafana-*/public/sass
-	find grafana-*/public/ -type f | grep '.ts$$' | xargs -r rm -f
+	find grafana-*/public/ -type f | grep -E '\.(ts|tsx)$$' | xargs -r rm -f
+	rm -rf grafana-*/public/build-swagger
 	find grafana-*/public/ -type f | grep '.map$$' | xargs -r rm -f
 	find grafana-*/public/ -type d -name demo | xargs -r rm -rf
 	cd grafana-*/. && XZ_OPT=-8 tar cfJ ../public.tar.xz public
