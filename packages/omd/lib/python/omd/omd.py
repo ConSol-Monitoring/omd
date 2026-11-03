@@ -551,6 +551,12 @@ def site_dir(sitename):
 def tmp_dir(sitename):
     return "/omd/sites/%s/tmp" % sitename
 
+def tmp_dir_real(sitename):
+    # Restricted (non-root) mount(8) refuses symlinks in the mount point
+    # path, so /etc/fstab and the mount/umount calls must use the
+    # canonical path (the real target of /omd) instead of /omd itself.
+    return os.path.realpath(tmp_dir(sitename))
+
 def site_name():
         return pwd.getpwuid(os.getuid()).pw_name
 
@@ -1741,7 +1747,7 @@ def tmpfs_mounted(sitename):
     return False
 
 def prepare_and_populate_tmpfs(sitename):
-    tmp = tmp_dir(sitename)
+    tmp = tmp_dir_real(sitename)
 
     # Only try to mount the tmpfs if it is enabled for this site
     # When not using the tmpfs the tmp/ hierarchy needs to be
@@ -1779,7 +1785,7 @@ def unmount_tmpfs(sitename, output = True, kill = False):
     # that the hook is enabled by default.
     # If kill is True, then we do an fuser -k on the tmp
     # directory first.
-    tmp = tmp_dir(sitename)
+    tmp = tmp_dir_real(sitename)
     if not tmpfs_mounted(sitename):
         if os.path.exists(tmp):
             if output:
@@ -1817,7 +1823,7 @@ def unmount_tmpfs(sitename, output = True, kill = False):
 
 def add_to_fstab(sitename, tmpfs_size = None):
     # tmpfs                   /opt/omd/sites/b01/tmp  tmpfs   user,uid=b01,gid=b01 0 0
-    mountpoint = tmp_dir(sitename)
+    mountpoint = tmp_dir_real(sitename)
 
     # No size option: using up to 50% of the RAM
     sizespec = ''
@@ -1828,8 +1834,18 @@ def add_to_fstab(sitename, tmpfs_size = None):
 
     # skip adding if already there
     if os.path.exists("/etc/fstab"):
-        for line in open("/etc/fstab"):
+        lines = open("/etc/fstab").readlines()
+        for line in lines:
             if line.find(entry) != -1:
+                return
+        # Migrate an entry still using the /omd symlink to the canonical path
+        for i, line in enumerate(lines):
+            if "uid=%s," % sitename in line and ("/sites/%s/tmp" % sitename) in line:
+                sys.stdout.write("Updating %s in /etc/fstab..." % mountpoint)
+                lines[i] = entry
+                open("/etc/fstab", "w").writelines(lines)
+                os.system("systemctl daemon-reload >/dev/null 2>&1")
+                ok()
                 return
 
     sys.stdout.write("Adding %s to /etc/fstab..." % mountpoint)
@@ -1843,11 +1859,11 @@ def add_to_fstab(sitename, tmpfs_size = None):
     ok()
 
 def remove_from_fstab(sitename):
-    mountpoint = tmp_dir(sitename)
+    mountpoint = tmp_dir_real(sitename)
     sys.stdout.write("Removing %s from /etc/fstab..." % mountpoint)
     newtab = open("/etc/fstab.new", "w")
     for line in open("/etc/fstab"):
-        if "uid=%s," % sitename in line and mountpoint in line:
+        if "uid=%s," % sitename in line and ("/sites/%s/tmp" % sitename) in line:
             continue
         newtab.write(line)
     os.rename("/etc/fstab.new", "/etc/fstab")
@@ -2679,9 +2695,9 @@ def read_info():
                     bail_out(tty_error + ': Unable to parse line "%s" in file "%s"' % (line, info_dir + "/" + f))
 
 def fstab_verify(name):
-    mountpoint = tmp_dir(name)
+    mountpoint = tmp_dir_real(name)
     for line in open("/etc/fstab"):
-        if "uid=%s," % name in line and mountpoint in line:
+        if "uid=%s," % name in line and (mountpoint in line or tmp_dir(name) in line):
             return True
     bail_out(tty_error + ": fstab entry for %s does not exist" % mountpoint )
 
