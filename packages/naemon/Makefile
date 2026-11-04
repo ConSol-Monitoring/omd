@@ -8,7 +8,7 @@ DEPENDS = jemalloc
 
 # JEMALLOC_LIBS is consumed by the LDADD line in 9999-omd-link-jemalloc-into-naemon-binaries.patch.
 # libnaemon.so.0 stays shared (used by both variants); only the naemon binaries get jemalloc.
-JEMALLOC_LIB = $(shell ls -d ../jemalloc/jemalloc-*/lib/libjemalloc.a 2>/dev/null)
+JEMALLOC_LIB = $(firstword $(shell ls -d ../jemalloc/jemalloc-*/lib/libjemalloc.a 2>/dev/null))
 
 # Configure options for Naemon. Since we want to compile
 # as non-root, we use our own user and group for compiling.
