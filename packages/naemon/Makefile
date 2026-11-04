@@ -40,20 +40,36 @@ build:
 	cd $(DIR) && CFLAGS="$(CFLAGS)" ./configure $(CONFIGUREOPTS)
 	echo '#define OMD_VERSION "$(OMD_VERSION)"' >> $(DIR)/config.h
 	$(MAKE) -C $(DIR) all
+
+	# compilation with jemalloc: 9999-omd-link-jemalloc-into-naemon-binaries.patch modifies the Makefile.in of the version tarball
+	# the patch only appends $(JEMALLOC_LIBS) to LDADD; upstream already links the naemon binary with -rdynamic
+
 	# save the system-allocator naemon; the relink overwrites .libs/naemon
 	cp $(DIR)/src/naemon/.libs/naemon $(DIR)/src/naemon/.libs/naemon-default
+
 	@test -f "$(JEMALLOC_LIB)" || { echo "ERROR: jemalloc static library not found - build the 'jemalloc' package first"; exit 1; }
 	ranlib $(JEMALLOC_LIB)
+
 	# relink the naemon binary against static jemalloc -> naemon-jemalloc;
-	# removing the libtool wrapper forces the relink
+	# src/naemon/naemon is a libtool wrapper, a shell script that locates and runs the real binary in .libs/
+	# it is a target of the make rule, removing it forces make to relink it with jemalloc in the next step
 	rm -f $(DIR)/src/naemon/naemon
-	# Force the heap API to resolve from libjemalloc.a. libtool moves
-	# -Wl,--whole-archive to the front (wrapping nothing) and leaves the .a as a
-	# bare trailing archive, so jemalloc can be dropped entirely -- newer linkers
-	# (Rocky 10) do exactly that, since the exe only refs free() and newer ld
-	# resolves it from libc. -Wl,-u marks malloc/calloc/realloc/free as required
-	# undefined symbols, so the linker pulls jemalloc.o from the archive; the
-	# symbols are then defined+exported (-rdynamic) so libnaemon.so interposes.
+
+	# Force the heap API to resolve from libjemalloc.a.
+	# To import objects from an archive, one normally starts and ends a --whole-archive import section:
+	# -Wl,--whole-archive  archive1.a archive2.a  -Wl,--no-whole-archive
+	# libtool moves "-Wl,--whole-archive" to the front (wrapping nothing) and leaves the archive at the end,
+	# trailing and outside any whole-archive region.
+	# This can effectively cause no objects from jemalloc being used, as the objects providing
+	# malloc/free are alternatives to libc's.
+
+	# On some toolchains/link orders (observed on Rocky 10) the bare trailing archive ends up unused:
+	# the exe's only undefined heap symbol is free(), which libc also provides, so jemalloc.o is never pulled in.
+	# Reproducible whenever libc is resolved before the archive.
+
+	# -Wl,-u <function> marks malloc/calloc/realloc/free as required undefined symbols, so the linker pulls jemalloc.o from the archive.
+	# Unlike --whole-archive this only pulls the objects that are actually needed, so jemalloc_cpp.o (which needs libstdc++) stays out.
+	# The symbols are then defined+exported (-rdynamic) so libnaemon.so and dlopen'd NEB modules (e.g. livestatus.o) interpose on jemalloc.
 	JEMALLOC_LIBS="-Wl,-u,malloc -Wl,-u,calloc -Wl,-u,realloc -Wl,-u,free $(abspath $(JEMALLOC_LIB)) -lpthread" $(MAKE) -C $(DIR) src/naemon/naemon
 	mv $(DIR)/src/naemon/.libs/naemon $(DIR)/src/naemon/.libs/naemon-jemalloc
 	strings $(DIR)/src/naemon/.libs/naemon-jemalloc | grep -q jemalloc || { echo "ERROR: naemon-jemalloc was linked without jemalloc"; exit 1; }
