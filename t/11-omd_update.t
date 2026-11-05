@@ -14,7 +14,7 @@ BEGIN {
 
 plan skip_all => 'Author test. Set $ENV{TEST_AUTHOR} to a true value to run.' unless $ENV{TEST_AUTHOR};
 plan skip_all => 'Root permissions required' unless $> == 0;
-plan( tests => 260 );
+plan( tests => 278 );
 
 # regression test for updating a site whose etc/thruk and var/thruk are symlinks
 # pointing outside the site directory (e.g. shared on a separate mount). the
@@ -121,6 +121,13 @@ TestUtils::test_command({ cmd => "/usr/bin/find /omd/sites/$site/ -user root -ls
 # updating a site with symlinked etc/thruk and var/thruk must not fail
 do_omd_update_symlinked_dirs($omd_update);
 
+# regression test: migrating an old /omd fstab entry to the canonical path
+# must not drop custom options such as a tmpfs size
+my $real_omd = `readlink -f /omd`;
+chomp($real_omd);
+TestUtils::test_command({ cmd => "/bin/sed -i -e 's#$real_omd/sites/$site/tmp#/omd/sites/$site/tmp#' -e 's#\\(uid=$site,gid=$site\\)#\\1,size=64M#' /etc/fstab" });
+TestUtils::test_command({ cmd => "/bin/grep -c '^tmpfs  /omd/sites/$site/tmp tmpfs .*size=64M' /etc/fstab", like => '/^1$/' });
+
 # run update
 TestUtils::test_command({ cmd => $omd_bin." stop $site",       like => '/Stopping naemon/' });
 TestUtils::test_command({ cmd => $omd_bin." status $site",     like => '/Overall state:\s*stopped/', exit => 1 });
@@ -134,6 +141,11 @@ TestUtils::test_command({
                      '/Installed file\s+.new_file/',
                     ],
             });
+
+# the old /omd fstab entry must have been migrated to the canonical path and
+# must have kept the custom size option
+TestUtils::test_command({ cmd => "/bin/grep -c '^tmpfs  $real_omd/sites/$site/tmp tmpfs .*size=64M' /etc/fstab", like => '/^1$/' });
+TestUtils::test_command({ cmd => "/bin/grep -c '^tmpfs  /omd/sites/$site/tmp ' /etc/fstab", like => '/^0$/', exit => 1 });
 
 # make sure all files still belong to site user
 TestUtils::test_command({ cmd => "/usr/bin/find /omd/sites/$site/ -user root -ls", like => '/^$/' });
