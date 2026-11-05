@@ -1821,7 +1821,7 @@ def unmount_tmpfs(sitename, output = True, kill = False):
     else:
         return False
 
-def add_to_fstab(sitename, tmpfs_size = None):
+def add_to_fstab(sitename, tmpfs_size = None, add_if_missing = True):
     # tmpfs                   /opt/omd/sites/b01/tmp  tmpfs   user,uid=b01,gid=b01 0 0
     mountpoint = tmp_dir_real(sitename)
 
@@ -1838,15 +1838,33 @@ def add_to_fstab(sitename, tmpfs_size = None):
         for line in lines:
             if line.find(entry) != -1:
                 return
-        # Migrate an entry still using the /omd symlink to the canonical path
-        for i, line in enumerate(lines):
-            if "uid=%s," % sitename in line and ("/sites/%s/tmp" % sitename) in line:
-                sys.stdout.write("Updating %s in /etc/fstab..." % mountpoint)
-                lines[i] = entry
-                open("/etc/fstab", "w").writelines(lines)
-                os.system("systemctl daemon-reload >/dev/null 2>&1")
-                ok()
-                return
+        # Migrate an entry still using the /omd symlink to the canonical path.
+        # Only replace the mount point and keep user customizations such as
+        # a custom tmpfs size or additional mount options.
+        old_mountpoint = tmp_dir(sitename)
+        if old_mountpoint != mountpoint:
+            for i, line in enumerate(lines):
+                if line.lstrip().startswith("#"):
+                    continue
+                if "uid=%s," % sitename in line:
+                    # Replace only the mount point field, not a substring of
+                    # an already canonical path (e.g. /omd is a suffix of
+                    # /opt/omd).
+                    newline = re.sub(r'(?<!\S)%s(?!\S)' % re.escape(old_mountpoint), mountpoint, line, count=1)
+                    if newline == line:
+                        continue
+                    sys.stdout.write("Updating %s in /etc/fstab..." % mountpoint)
+                    lines[i] = newline
+                    newtab = open("/etc/fstab.new", "w")
+                    newtab.writelines(lines)
+                    newtab.close()
+                    os.rename("/etc/fstab.new", "/etc/fstab")
+                    os.system("systemctl daemon-reload >/dev/null 2>&1")
+                    ok()
+                    return
+
+    if not add_if_missing:
+        return
 
     sys.stdout.write("Adding %s to /etc/fstab..." % mountpoint)
 
@@ -5566,6 +5584,12 @@ def run(version):
 
     if g_sitename:
         set_site_globals()
+
+    # The update runs as the site user, but /etc/fstab is only writable by
+    # root. Migrate a tmpfs entry still using the /omd symlink to the
+    # canonical path before dropping privileges.
+    if command == "update" and g_sitename and am_root() and not getattr(args, "dry_run", 0):
+        add_to_fstab(g_sitename, add_if_missing = False)
 
     # Commands which affect a site and can be called as root *or* as
     # site user should always run with site user priviledges. That way
