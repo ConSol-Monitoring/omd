@@ -14,7 +14,6 @@ BEGIN {
 
 plan skip_all => 'Author test. Set $ENV{TEST_AUTHOR} to a true value to run.' unless $ENV{TEST_AUTHOR};
 plan skip_all => 'Root permissions required' unless $> == 0;
-plan( tests => 278 );
 
 # regression test for updating a site whose etc/thruk and var/thruk are symlinks
 # pointing outside the site directory (e.g. shared on a separate mount). the
@@ -219,3 +218,5 @@ TestUtils::test_command({ cmd => $omd_bin." cleanup -n 5",       like => ["/DRY 
 TestUtils::test_command({ cmd => $omd_bin." cleanup 2",          like => ["/\Q$omd_version\E.*Default/"] });
 TestUtils::test_command({ cmd => $omd_bin." cleanup",            like => ["/\Q$omd_version\E.*Default/"] });
 TestUtils::test_command({ cmd => $omd_bin." cleanup -n --force", like => ["/DRY RUN.*Uninstalling/"] });
+
+done_testing();
