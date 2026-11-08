@@ -197,7 +197,7 @@ my $urls = [
 
 my $own_urls = [
 # business process
-  { url => '/thruk/cgi-bin/bp.cgi?action=new&bp_label=New Test Business Process', like => '/New Test Business Process/', skip_link_check => ['.cgi'] },
+  { url => '/thruk/cgi-bin/bp.cgi', post => { 'action' => 'new', 'bp_label' => 'New Test Business Process' }, like => '/New Test Business Process/', skip_link_check => ['.cgi'] },
   { url => '/thruk/cgi-bin/bp.cgi', post => { 'action' => 'commit', 'bp' => 1 }, like => '/New Test Business Process/', skip_link_check => ['.cgi'] },
   { url => '/thruk/cgi-bin/status.cgi',             waitfor => 'New\ Test\ Business\ Process' },
   { url => '/thruk/cgi-bin/bp.cgi', post => { 'action' => 'remove', 'bp' => 1 }, skip_link_check => ['.cgi'] },
