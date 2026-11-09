@@ -91,7 +91,6 @@ install:
 	ln -s libnaemon.so.0.0.0                                   $(DESTDIR)$(OMD_ROOT)/lib/libnaemon.so.0
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/doc/naemon
 	install -m 644 example.cfg                                $(DESTDIR)$(OMD_ROOT)/share/doc/naemon
-	install -m 755 purge_naemon                               $(DESTDIR)$(OMD_ROOT)/bin
 	install -m 755 nq                                         $(DESTDIR)$(OMD_ROOT)/bin
 
 skel:
