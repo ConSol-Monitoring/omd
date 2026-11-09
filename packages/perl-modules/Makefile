@@ -68,7 +68,7 @@ MODULES = \
           Crypt-DES-2.07.tar.gz \
           Crypt-RC4-2.02.tar.gz \
           Crypt-Rijndael-1.14.tar.gz \
-          DBI-1.655.tgz \
+          DBI-1.656.tgz \
           DBD-Sybase-1.24.tar.gz \
           DBD-SQLite-1.76.tar.gz \
           Data-Dumper-2.161.tar.gz \
@@ -202,7 +202,7 @@ MODULES = \
           Module-Build-0.4007.tar.gz \
           Module-Build-Tiny-0.052.tar.gz \
           Module-Install-1.19.tar.gz \
-          HTTP-Body-1.23.tar.gz \
+          HTTP-Body-1.25.tar.gz \
           HTTP-Cookies-6.04.tar.gz \
           HTTP-Daemon-6.17.tar.gz \
           IPC-Cmd-0.98.tar.gz \
