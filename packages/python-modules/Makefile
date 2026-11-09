@@ -135,7 +135,7 @@ OVERRIDES += setuptools_rust-1.10.2-py3-none-any.whl
 OVERRIDES += Cython-3.0.11-py2.py3-none-any.whl
 OVERRIDES += pyyaml-6.0.2.tar.gz
 OVERRIDES += pymssql-2.3.1.tar.gz
-OVERRIDES += paramiko-3.5.0-py3-none-any.whl
+OVERRIDES += paramiko-5.1.0-py3-none-any.whl
 
 OVERRIDES += requests-2.33.0-py3-none-any.whl
 OVERRIDES += urllib3-2.8.0-py3-none-any.whl
