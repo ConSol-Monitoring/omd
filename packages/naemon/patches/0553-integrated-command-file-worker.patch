@@ -1,0 +1,562 @@
+From 4d63dfbddcf4dc3e67513c3b8ecfc88908bec8a3 Mon Sep 17 00:00:00 2001
+From: Sven Nierlein <Sven.Nierlein@consol.de>
+Date: Wed, 28 Oct 2026 17:19:08 +0100
+Subject: [PATCH 1/2] Run the command file worker in the main event loop
+
+The external command file was previously polled by a forked worker
+process that shipped the commands over a socketpair to the main
+process. That created a second naemon process indistinguishable from
+the daemon in ps output.
+
+Instead, register the command FIFO fd directly with the main process
+I/O broker and process the commands there, the same way the query
+handler socket is handled. The dedicated worker process, its
+socketpair plumbing; the FIFO is kept open and re-registered across restarts.
+
+tests/test-worker: rewrite the command worker lifecycle test to
+check I/O broker registration instead of process state.
+---
+ NEWS                  |   5 +
+ src/naemon/commands.c | 285 ++++++++++--------------------------------
+ src/naemon/commands.h |   3 +-
+ tests/test-worker.c   |  69 ++++++++--
+ 4 files changed, 128 insertions(+), 234 deletions(-)
+
+diff --git a/NEWS b/NEWS
+index be838f04..c5b13d6a 100644
+--- a/NEWS
++++ b/NEWS
+@@ -1,4 +1,9 @@
+ Next:
++Changed:
++* The command file worker no longer runs as a separate process. The external
++  command file is now polled directly by the main process event loop, so there
++  is only one Naemon daemon process instead of an extra command worker.
++
+ Bugfixes:
+ * Warn when trailing characters in boolean object directives are ignored. The
+   leading 0 or 1 remains authoritative for compatibility.
+diff --git a/src/naemon/commands.c b/src/naemon/commands.c
+index cfa5da3e..1b4ac212 100644
+--- a/src/naemon/commands.c
++++ b/src/naemon/commands.c
+@@ -32,18 +32,10 @@
+ #include <glib.h>
+ 
+ static int command_file_fd;
+-static FILE *command_file_fp;
+ static int command_file_created = FALSE;
+ 
+-/* The command file worker process */
+-static struct {
+-	/* these must come first for check source detection */
+-	const char *type;
+-	const char *source_name;
+-	int pid;
+-	int sd;
+-	nm_bufferqueue *bq;
+-} command_worker = { "command file", "command file worker", 0, 0, NULL };
++/* Source tag for check results coming in through the command file */
++static const char command_worker_source_name[] = "command file worker";
+ 
+ struct propagation_parameters {
+ 	int level;
+@@ -124,6 +116,12 @@ static void disable_contact_service_notifications(contact *);  /* disables servi
+ /******************************************************************/
+ 
+ 
++/* returns the fd the command file is opened with, or -1 if not open */
++int command_file_fd_get(void)
++{
++	return command_file_created == TRUE ? command_file_fd : -1;
++}
++
+ /* creates external command file as a named pipe (FIFO) and opens it for reading (non-blocked mode) */
+ int open_command_file(void)
+ {
+@@ -168,85 +166,23 @@ int open_command_file(void)
+ }
+ 
+ 
+-/* closes the external command file FIFO and deletes it */
+-int close_command_file(void)
+-{
+-
+-	/* if we're not checking external commands, don't do anything */
+-	if (check_external_commands == FALSE)
+-		return OK;
+-
+-	/* the command file wasn't created or was already cleaned up */
+-	if (command_file_created == FALSE)
+-		return OK;
+-
+-	/* reset our flag */
+-	command_file_created = FALSE;
+-
+-	/* close the command file */
+-	if (command_file_fp != NULL)
+-		fclose(command_file_fp);
+-
+-	return OK;
+-}
+-
+-pid_t command_worker_get_pid(void)
+-{
+-	return command_worker.pid;
+-}
+-
+-int disconnect_command_file_worker(void)
+-{
+-	iobroker_unregister(nagios_iobs, command_worker.sd);
+-	return 0;
+-}
+-
+-/* shutdown command file worker thread */
+-int shutdown_command_file_worker(void)
+-{
+-	int ret = 0;
+-	if (!command_worker_get_pid())
+-		return 0;
+-
+-
+-	nm_bufferqueue_destroy(command_worker.bq);
+-	command_worker.bq = NULL;
+-	iobroker_close(nagios_iobs, command_worker.sd);
+-	command_worker.sd = -1;
+-	if (kill(command_worker_get_pid(), SIGTERM) < 0) {
+-		nm_log(NSLOG_RUNTIME_ERROR, "Failed to kill command worker (PID = %d): %s", command_worker_get_pid(), strerror(errno));
+-	}
+-	while ((ret = waitpid(command_worker_get_pid(), NULL, 0)) == -1 && errno == EINTR)
+-		;
+-
+-
+-	if (ret == -1) {
+-		nm_log(NSLOG_RUNTIME_ERROR, "Failed to waitpid() for command worker (PID = %d): %s", command_worker_get_pid(), strerror(errno));
+-	} else {
+-		g_warn_if_fail(ret == command_worker_get_pid());
+-		nm_log(NSLOG_INFO_MESSAGE, "Successfully reaped command worker (PID = %d)", command_worker_get_pid());
+-	}
+-	command_worker.pid = 0;
+-	return 0;
+-}
+-
+-
+-
+ static int command_input_handler(int sd, int events, void *discard)
+ {
++	nm_bufferqueue *bq = (nm_bufferqueue *)discard;
+ 	int ret, cmd_ret;
+ 	char *buf;
+ 	size_t size;
+ 
+-	ret = nm_bufferqueue_read(command_worker.bq, sd);
+-	log_debug_info(DEBUGL_COMMANDS, 2, "Read %d bytes from command worker\n", ret);
+-	if (ret == 0) {
+-		nm_log(NSLOG_RUNTIME_WARNING, "Command file worker seems to have died. Respawning\n");
+-		shutdown_command_file_worker();
+-		launch_command_file_worker();
++	ret = nm_bufferqueue_read(bq, sd);
++	if (ret < 0) {
++		if (errno == EINTR || errno == EAGAIN || errno == EWOULDBLOCK)
++			return 0;
++		nm_log(NSLOG_RUNTIME_ERROR, "Command file worker: Failed to read from command file: %s", strerror(errno));
+ 		return 0;
+ 	}
+-	while (!nm_bufferqueue_unshift_to_delim(command_worker.bq, "\n", 1, &size, (void **)&buf)) {
++	log_debug_info(DEBUGL_COMMANDS, 2, "Read %d bytes from command file\n", ret);
++
++	while (!nm_bufferqueue_unshift_to_delim(bq, "\n", 1, &size, (void **)&buf)) {
+ 		GError *error = NULL;
+ 		buf[size - 1] = 0;
+ 		if (buf[0] == '[') {
+@@ -262,156 +198,67 @@ static int command_input_handler(int sd, int events, void *discard)
+ }
+ 
+ 
+-/* main controller of command file helper process */
+-static int command_file_worker(int sd)
+-{
+-	nm_bufferqueue *bq;
+-
+-	if (open_command_file() == ERROR) {
+-		nm_log(NSLOG_RUNTIME_ERROR, "Command file worker: failed to open command file (%m)");
+-		return EXIT_FAILURE;
+-	}
+-
+-	bq = nm_bufferqueue_create();
+-	if (!bq) {
+-		nm_log(NSLOG_RUNTIME_ERROR, "Command file worker: failed to create bufferqueue (%m)");
+-		return EXIT_FAILURE;
+-	}
+-	while (1) {
+-		struct pollfd pfd;
+-		int pollval, ret;
+-
+-		/* if our master has gone away, we need to die */
+-		if (kill(nagios_pid, 0) < 0 && errno == ESRCH) {
+-			/* leads to abandoned worker writing into a already rotated logfile, which
+-			 * a bad thing because rotated logfiles then have overlapping timestamps
+-			 * which breaks livestatus. So make this a debug log entry only.
+-			 */
+-			log_debug_info(DEBUGL_IPC, 1, "Command file worker: Naemon main process is dead (%m)\n");
+-			nm_bufferqueue_destroy(bq);
+-			return EXIT_SUCCESS;
+-		}
+-
+-		errno = 0;
+-		/* wait for data to arrive */
+-		/* select seems to not work, so we have to use poll instead */
+-		/* 10-15-08 EG check into implementing William's patch @ http://blog.netways.de/2008/08/15/nagios-unter-mac-os-x-installieren/ */
+-		/* 10-15-08 EG poll() seems broken on OSX - see Jonathan's patch a few lines down */
+-		pfd.fd = command_file_fd;
+-		pfd.events = POLLIN;
+-		pollval = poll(&pfd, 1, 500);
+-
+-		/* loop if no data */
+-		if (pollval == 0)
+-			continue;
+-
+-		/* check for errors */
+-		if (pollval == -1) {
+-			/* @todo printf("Failed to poll() command file pipe: %m\n"); */
+-			if (errno == EINTR)
+-				continue;
+-
+-			nm_log(NSLOG_RUNTIME_ERROR, "Command file worker: Failed to poll (%m)");
+-			nm_bufferqueue_destroy(bq);
+-			return EXIT_FAILURE;
+-		}
+-
+-		errno = 0;
+-		ret = nm_bufferqueue_read(bq, command_file_fd);
+-		if (ret < 1) {
+-			if (errno == EINTR)
+-				continue;
+-			nm_log(NSLOG_RUNTIME_ERROR, "Command file worker: Failed to read from bufferqueue (%m)");
+-			nm_bufferqueue_destroy(bq);
+-			return EXIT_FAILURE;
+-		}
+-
+-		ret = nm_bufferqueue_write(bq, sd);
+-		if (ret < 0 && ret != EAGAIN && ret != EWOULDBLOCK) {
+-			nm_log(NSLOG_RUNTIME_ERROR, "Command file worker: Failed to write to bufferqueue (%m)");
+-			nm_bufferqueue_destroy(bq);
+-			return EXIT_FAILURE;
+-		}
+-	} /* while(1) */
+-}
+-
++/* I/O cache for the command file */
++static nm_bufferqueue *command_file_bq;
+ 
+ int launch_command_file_worker(void)
+ {
+-	int ret, sv[2];
+-	char *str;
++	int ret;
+ 
+-	/*
+-	 * if we're restarting, we may well already have a command
+-	 * file worker process running, but disconnected. Reconnect if so.
+-	 */
+-	if (command_worker_get_pid() && kill(command_worker_get_pid(), 0) == 0) {
+-		if (!iobroker_is_registered(nagios_iobs, command_worker.sd)) {
+-			iobroker_register(nagios_iobs, command_worker.sd, NULL, command_input_handler);
+-		}
+-		return 0;
+-	}
+-
+-	if (socketpair(AF_UNIX, SOCK_STREAM, 0, sv) < 0) {
+-		nm_log(NSLOG_RUNTIME_ERROR, "Failed to create socketpair for command file worker: %m\n");
+-		return ERROR;
+-	}
++	/* the command file is already open and registered */
++	if (command_file_created == TRUE &&
++	    iobroker_is_registered(nagios_iobs, command_file_fd))
++		return OK;
+ 
+-	command_worker.pid = fork();
+-	if (command_worker.pid < 0) {
+-		nm_log(NSLOG_RUNTIME_ERROR, "Failed to fork() command file worker: %m\n");
+-		goto err_close;
+-	}
++	/* not checking external commands: nothing to do */
++	if (check_external_commands == FALSE)
++		return OK;
+ 
+-	if (command_worker.pid) {
+-		command_worker.bq = nm_bufferqueue_create();
+-		if (!command_worker.bq) {
+-			nm_log(NSLOG_RUNTIME_ERROR, "Failed to create I/O cache for command file worker: %m\n");
+-			goto err_close;
+-		}
++	if (open_command_file() == ERROR)
++		return ERROR;
+ 
+-		command_worker.sd = sv[0];
+-		ret = iobroker_register(nagios_iobs, command_worker.sd, NULL, command_input_handler);
+-		if (ret < 0) {
+-			nm_log(NSLOG_RUNTIME_ERROR, "Failed to register command file worker socket %d with io broker %p: %s; errno=%d: %s\n",
+-			       command_worker.sd, nagios_iobs, iobroker_strerror(ret), errno, strerror(errno));
+-			nm_bufferqueue_destroy(command_worker.bq);
+-			goto err_close;
++	if (!command_file_bq) {
++		command_file_bq = nm_bufferqueue_create();
++		if (!command_file_bq) {
++			nm_log(NSLOG_RUNTIME_ERROR, "Failed to create I/O cache for command file: %m\n");
++			return ERROR;
+ 		}
+-		nm_log(NSLOG_INFO_MESSAGE, "Successfully launched command file worker with pid %d\n",
+-		       command_worker_get_pid());
+-		return OK;
+ 	}
+ 
+-	/* child goes here */
+-	if (SIG_ERR == signal(SIGTERM, SIG_DFL)) {
+-		nm_log(NSLOG_RUNTIME_ERROR, "Failed to reset signal handler for SIGTERM: %s", strerror(errno));
++	ret = iobroker_register(nagios_iobs, command_file_fd, command_file_bq, command_input_handler);
++	if (ret < 0) {
++		nm_log(NSLOG_RUNTIME_ERROR, "Failed to register command file %d with I/O broker: %s\n",
++		       command_file_fd, iobroker_strerror(ret));
++		return ERROR;
+ 	}
+ 
+-	close(sv[0]);
+-
+-	/* make our own process-group so we can be traced into and stuff */
+-	setpgid(0, 0);
+-
+-
+-	// close inherited file handles
+-	close_log_file();
+-	close_standard_fds();
+-	qh_close_socket();
+-	close_lockfile_fd();
++	nm_log(NSLOG_INFO_MESSAGE, "Started command file worker for '%s'\n", command_file);
++	return OK;
++}
+ 
+-	str = nm_strdup(command_file);
+-	free_memory(get_global_macros());
+-	command_file = str;
+-	exit(command_file_worker(sv[1]));
++int shutdown_command_file_worker(void)
++{
++	if (command_file_bq) {
++		nm_bufferqueue_destroy(command_file_bq);
++		command_file_bq = NULL;
++	}
++	/* iobroker_destroy() with IOBROKER_CLOSE_SOCKETS already unregisters
++	 * and closes the file descriptor, so only do it if it's still there */
++	if (command_file_created == TRUE &&
++	    nagios_iobs != NULL &&
++	    iobroker_is_registered(nagios_iobs, command_file_fd))
++		iobroker_close(nagios_iobs, command_file_fd);
++	command_file_created = FALSE;
++	return 0;
++}
+ 
+-	/* error conditions for parent */
+-err_close:
+-	close(sv[0]);
+-	close(sv[1]);
+-	command_worker.pid = 0;
+-	command_worker.sd = -1;
+-	return ERROR;
++int disconnect_command_file_worker(void)
++{
++	if (command_file_created == TRUE &&
++	    nagios_iobs != NULL &&
++	    iobroker_is_registered(nagios_iobs, command_file_fd))
++		iobroker_unregister(nagios_iobs, command_file_fd);
++	return 0;
+ }
+ 
+ GQuark nm_command_error_quark(void)
+@@ -3524,7 +3371,7 @@ int process_passive_service_check(time_t check_time, char *host_name, char *svc_
+ 	cr.service_description = temp_service->description;
+ 	cr.output = output;
+ 	cr.start_time.tv_sec = cr.finish_time.tv_sec = check_time;
+-	cr.source = (void *)command_worker.source_name;
++	cr.source = (void *)command_worker_source_name;
+ 
+ 	/* save the return code and make sure it's sane */
+ 	cr.return_code = return_code;
+@@ -3578,7 +3425,7 @@ int process_passive_host_check(time_t check_time, char *host_name, int return_co
+ 	cr.host_name = temp_host->name;
+ 	cr.output = output;
+ 	cr.start_time.tv_sec = cr.finish_time.tv_sec = check_time;
+-	cr.source = (void *)command_worker.source_name;
++	cr.source = (void *)command_worker_source_name;
+ 	cr.return_code = return_code;
+ 
+ 	/* calculate latency */
+diff --git a/src/naemon/commands.h b/src/naemon/commands.h
+index 21db023c..4121b684 100644
+--- a/src/naemon/commands.h
++++ b/src/naemon/commands.h
+@@ -206,7 +206,7 @@ const char *command_name(const struct external_command * command);
+ 
+ 
+ int open_command_file(void);					/* creates the external command file as a named pipe (FIFO) and opens it for reading */
+-int close_command_file(void);					/* closes and deletes the external command file (FIFO) */
++int command_file_fd_get(void);					/* returns the fd the command file is opened with, or -1 if not open */
+ 
+ int process_external_command(char *cmd, int mode, GError **error); /* processes an external command given mode flags */
+ int process_external_command1(char *cmd); /* DEPRECATED: top-level external old style command processor */
+@@ -219,7 +219,6 @@ int process_passive_host_check(time_t, char *, int, char *);
+ int launch_command_file_worker(void);
+ int shutdown_command_file_worker(void);
+ int disconnect_command_file_worker(void);
+-int command_worker_get_pid(void);
+ 
+ void handle_host_acknowledgement_expire_event(struct nm_event_execution_properties *evprop); /* removes an expired host acknowledgement */
+ void handle_service_acknowledgement_expire_event(struct nm_event_execution_properties *evprop); /* removes an expired service acknowledgement */
+diff --git a/tests/test-worker.c b/tests/test-worker.c
+index 68ebca64..0382fcc2 100644
+--- a/tests/test-worker.c
++++ b/tests/test-worker.c
+@@ -9,6 +9,7 @@
+ #include <check.h>
+ #include <string.h>
+ #include <unistd.h>
++#include <sys/stat.h>
+ 
+ /*
+  * A note about worker tests:
+@@ -233,22 +234,64 @@ END_TEST
+ 
+ 
+ /*
+- * Make sure that the lifecycle of the command worker is deterministic w.r.t
+- * its controlling functions:
+- * E.g the command worker should be terminated on return of shutdown_command_file_worker()
+- * and a PID should be available on return of launch_command_file_worker()
++ * Make sure that the lifecycle of the command file handler is
++ * deterministic w.r.t its controlling functions:
++ * The command file FIFO should be registered with the I/O broker on
++ * return of launch_command_file_worker() and unregistered again on
++ * return of shutdown_command_file_worker().
+  */
++static char *cmdfile_test_path = NULL;
++
++static void cmdfile_test_setup(void)
++{
++	int fd;
++
++	ck_assert(NULL != (nagios_iobs = iobroker_create()));
++	cmdfile_test_path = strdup("/tmp/naemon-cmdfile-test-XXXXXX");
++	close(mkstemp(cmdfile_test_path));
++	unlink(cmdfile_test_path);
++	fd = mkfifo(cmdfile_test_path, S_IRUSR | S_IWUSR);
++	ck_assert_int_ge(fd, 0);
++	close(fd);
++	command_file = cmdfile_test_path;
++	check_external_commands = TRUE;
++}
++
++static void cmdfile_test_teardown(void)
++{
++	unlink(cmdfile_test_path);
++	nm_free(cmdfile_test_path);
++	cmdfile_test_path = NULL;
++	command_file = NULL;
++	iobroker_destroy(nagios_iobs, IOBROKER_CLOSE_SOCKETS);
++	nagios_iobs = NULL;
++}
++
+ START_TEST(command_worker_launch_shutdown_test)
+ {
+-	pid_t worker_pid;
+-	ck_assert_int_eq(0, command_worker_get_pid());
+-	ck_assert_int_eq(0, launch_command_file_worker());
+-	worker_pid = command_worker_get_pid();
+-	ck_assert_int_ne(0, worker_pid);
+-	sleep(1); /* results in race condition on slow boxes otherwise */
++	int fd;
++
++	/* launch opens the FIFO and registers it with the I/O broker */
++	ck_assert_int_eq(OK, launch_command_file_worker());
++	fd = command_file_fd_get();
++	ck_assert_int_ge(fd, 3);
++	ck_assert_int_eq(1, iobroker_is_registered(nagios_iobs, fd));
++
++	/* launch is a no-op when already registered */
++	ck_assert_int_eq(OK, launch_command_file_worker());
++	ck_assert_int_eq(1, iobroker_is_registered(nagios_iobs, fd));
++
++	/* shutdown unregisters (and closes) the FIFO */
++	ck_assert_int_eq(0, shutdown_command_file_worker());
++	ck_assert_int_eq(0, iobroker_is_registered(nagios_iobs, fd));
++
++	/* a fresh launch re-opens and re-registers */
++	ck_assert_int_eq(OK, launch_command_file_worker());
++	fd = command_file_fd_get();
++	ck_assert_int_ge(fd, 3);
++	ck_assert_int_eq(1, iobroker_is_registered(nagios_iobs, fd));
+ 	ck_assert_int_eq(0, shutdown_command_file_worker());
+-	ck_assert_int_eq(-1, kill(worker_pid, 0));
+-	ck_assert_int_eq(0, command_worker_get_pid());
++	ck_assert_int_eq(0, iobroker_is_registered(nagios_iobs, fd));
+ }
+ END_TEST
+ 
+@@ -338,7 +381,7 @@ Suite *worker_suite(void)
+ 	suite_add_tcase(s, tc_worker_output);
+ 
+ 	tc_command_worker = tcase_create("command worker tests");
+-	tcase_add_checked_fixture(tc_command_worker, init_iobroker, deinit_iobroker);
++	tcase_add_checked_fixture(tc_command_worker, cmdfile_test_setup, cmdfile_test_teardown);
+ 	tcase_add_test(tc_command_worker, command_worker_launch_shutdown_test);
+ 	suite_add_tcase(s, tc_command_worker);
+ 
+
+From 3b889fc82a0fbdabc8839e7a49f8afcac7acb540 Mon Sep 17 00:00:00 2001
+From: Sven Nierlein <Sven.Nierlein@consol.de>
+Date: Mon, 9 Nov 2026 14:56:46 +0100
+Subject: [PATCH 2/2] Start command file worker after reading object data
+
+Start the command file worker only after read_all_object_data() has
+finished, so external commands processed during startup cannot race
+with the retention data and have their acknowledgements overwritten
+(review comment on #553).
+---
+ src/naemon/naemon.c | 17 ++++++++++-------
+ 1 file changed, 10 insertions(+), 7 deletions(-)
+
+diff --git a/src/naemon/naemon.c b/src/naemon/naemon.c
+index 60f60b9f..a59f9c21 100644
+--- a/src/naemon/naemon.c
++++ b/src/naemon/naemon.c
+@@ -568,14 +568,7 @@ int main(int argc, char **argv)
+ 
+ 		registered_commands_init(200);
+ 		register_core_commands();
+-		/* fire up command file worker */
+-		timing_point("Launching command file worker\n");
+-		launch_command_file_worker();
+-		timing_point("Launched command file worker\n");
+ 
+-		/* read in all object config data after launching the command worker
+-		 * to keep the memory footprint of the command worker smaller
+-		 */
+ 		if (result == OK) {
+ 			nm_log(NSLOG_INFO_MESSAGE, "Reading all config object data\n");
+ 			timing_point("Reading all object data\n");
+@@ -583,6 +576,16 @@ int main(int argc, char **argv)
+ 			timing_point("Read all object data\n");
+ 		}
+ 
++		/* only start processing external commands after the objects have
++		 * been read, so commands arriving during startup cannot be
++		 * overwritten by the retention data
++		 */
++		if (result == OK) {
++			timing_point("Launching command file worker\n");
++			launch_command_file_worker();
++			timing_point("Launched command file worker\n");
++		}
++
+ 		/* initialize check workers */
+ 		timing_point("Spawning %u workers\n", wproc_num_workers_spawned);
+ 		if (init_workers(num_check_workers) < 0) {
