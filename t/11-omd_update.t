@@ -22,7 +22,7 @@ plan skip_all => 'Root permissions required' unless $> == 0;
 sub do_omd_update_symlinked_dirs {
     my($omd_update) = @_;
     my $omd_bin = TestUtils::get_omd_bin();
-    my $site2   = TestUtils::create_test_site("testsym") or TestUtils::bail_out_clean("no further testing without symlink site");
+    my $site2   = TestUtils::create_test_site("testsym") or TestUtils::bail_out("no further testing without symlink site");
     my $shared  = "/omd/.shared/$site2";
 
     # move the two folders outside the site and symlink them back. also add a
@@ -50,7 +50,7 @@ sub do_omd_update_symlinked_dirs {
 }
 
 my $omd_bin  = TestUtils::get_omd_bin();
-my $site     = TestUtils::create_test_site() or TestUtils::bail_out_clean("no further testing without site");
+my $site     = TestUtils::create_test_site() or TestUtils::bail_out("no further testing without site");
 my $versions_test = { cmd => $omd_bin." versions"};
 TestUtils::test_command($versions_test);
 my @versions = $versions_test->{'stdout'} =~ m/(^[0-9\.]+)$/mxg;

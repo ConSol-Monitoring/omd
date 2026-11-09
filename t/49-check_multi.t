@@ -33,8 +33,8 @@ TestUtils::test_command({ cmd => "/bin/cp t/packages/check_multi/test/* /omd/sit
 # decrease pnp interval
 TestUtils::test_command({ cmd => "/usr/bin/env sed -i -e 's/^perfdata_file_processing_interval = 15/perfdata_file_processing_interval = 2/g' -e 's/^sleep_time = 15/sleep_time = 2/g' /opt/omd/sites/$site/etc/pnp4nagios/npcd.cfg" });
 
-TestUtils::test_command({ cmd => $omd_bin." start $site" })   or TestUtils::bail_out_clean("No need to test $package without proper startup");
-TestUtils::wait_for_file("/omd/sites/$site/tmp/run/live") or TestUtils::bail_out_clean("No need to test $package without livestatus connection");
+TestUtils::test_command({ cmd => $omd_bin." start $site" })   or TestUtils::bail_out("No need to test $package without proper startup");
+TestUtils::wait_for_file("/omd/sites/$site/tmp/run/live") or TestUtils::bail_out("No need to test $package without livestatus connection");
 
 # check_multi's own tests
 #TestUtils::test_command({ cmd => "/bin/sh -c '(cd packages/check_multi/check_multi/plugins/t; make OMD_SITE=test OMD_ROOT=/tmp test-all test-extreme)'" });
@@ -111,8 +111,8 @@ for my $core (qw/naemon/) {
 	#--- perform proper initialization
 	TestUtils::test_command({ cmd => $omd_bin." stop $site" });
 	TestUtils::test_command({ cmd => $omd_bin." config $site set CORE $core" });
-	TestUtils::test_command({ cmd => $omd_bin." start $site" })         or TestUtils::bail_out_clean("No need to test $package without proper startup");
-    TestUtils::wait_for_file("/omd/sites/$site/tmp/run/naemon.cmd") or TestUtils::bail_out_clean("No need to test $package without proper startup");;
+	TestUtils::test_command({ cmd => $omd_bin." start $site" })         or TestUtils::bail_out("No need to test $package without proper startup");
+    TestUtils::wait_for_file("/omd/sites/$site/tmp/run/naemon.cmd") or TestUtils::bail_out("No need to test $package without proper startup");;
 
 	#--- reschedule all checks and wait for result
 	TestUtils::test_command({ cmd => "/bin/su - $site -c './lib/monitoring-plugins/check_http -t 30 -H localhost -a omdadmin:omd -u /$site/thruk/cgi-bin/cmd.cgi -e 200 -P \"cmd_typ=7&cmd_mod=2&host=$host&service=naemon&start_time=2010-11-06+09%3A46%3A02&force_check=on&btnSubmit=Commit\" -r \"Your command request was successfully submitted\"'", like => '/HTTP OK:/' });
@@ -136,7 +136,7 @@ for my $core (qw/naemon/) {
 
 	TestUtils::wait_for_file("/omd/sites/$site/var/pnp4nagios/perfdata/omd-$site/Dummy_Service_omd-dummy.rrd");
 	TestUtils::wait_for_file("/omd/sites/$site/var/pnp4nagios/perfdata/omd-check_multi/proc_syslogd_procs.rrd");
-	TestUtils::wait_for_file("/omd/sites/$site/tmp/run/live") or TestUtils::bail_out_clean("No need to test $package without livestatus connection");
+	TestUtils::wait_for_file("/omd/sites/$site/tmp/run/live") or TestUtils::bail_out("No need to test $package without livestatus connection");
 
 	for my $url ( @{$urls} ) {
 		TestUtils::test_url($url);

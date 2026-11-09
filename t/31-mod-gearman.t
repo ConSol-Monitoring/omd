@@ -26,7 +26,7 @@ isnt($libgearman_version, '', "got libgearman_version") or BAIL_OUT("need lib-ge
 # create our test site
 my $omd_bin  = TestUtils::get_omd_bin();
 my $core     = 'naemon';
-my $site     = TestUtils::create_test_site() or TestUtils::bail_out_clean("no further testing without site");
+my $site     = TestUtils::create_test_site() or TestUtils::bail_out("no further testing without site");
 my $host     = "omd-".$site;
 my $service  = "Dummy Service";
 my $module   = 'mod_gearman_naemon.o';
@@ -57,7 +57,7 @@ TestUtils::test_command({ cmd => "/bin/su - $site -c 'echo \"p test\" > etc/test
 TestUtils::test_command({ cmd => "/usr/bin/env sed -i -e 's/^status_update_interval=30/status_update_interval=3/g' /opt/omd/sites/$site/etc/$core/$core.d/tuning.cfg" });
 
 ##################################################
-TestUtils::test_command({ cmd => "/bin/su - $site -c 'omd check naemon'", like => '/Running naemon configuration check.*?done/', errlike => '/Things look okay/'}) or TestUtils::bail_out_clean("no further testing without site");
+TestUtils::test_command({ cmd => "/bin/su - $site -c 'omd check naemon'", like => '/Running naemon configuration check.*?done/', errlike => '/Things look okay/'}) or TestUtils::bail_out("no further testing without site");
 
 ##################################################
 # prepare site

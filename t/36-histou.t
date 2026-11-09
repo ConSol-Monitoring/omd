@@ -22,7 +22,7 @@ plan( tests => 79 );
 ##################################################
 # create our test site
 my $omd_bin = TestUtils::get_omd_bin();
-my $site    = TestUtils::create_test_site() or TestUtils::bail_out_clean("no further testing without site");
+my $site    = TestUtils::create_test_site() or TestUtils::bail_out("no further testing without site");
 my $auth    = 'OMD Monitoring Site '.$site.':omdadmin:omd';
 my $host    = `hostname --fqdn`;
 chomp($host);
@@ -51,7 +51,7 @@ my $test = {
 my $page = TestUtils::test_url($test);
 if($page->{'content'} !~ m/$host-$service/mx) {
     TestUtils::_diag_request($test, $page);
-    TestUtils::bail_out_clean("histou did not work");
+    TestUtils::bail_out("histou did not work");
 }
 
 # wait until grafana is up & running

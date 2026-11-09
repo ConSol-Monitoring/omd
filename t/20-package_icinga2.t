@@ -18,7 +18,7 @@ plan( tests => 71 );
 ##################################################
 # create our test site
 my $omd_bin = TestUtils::get_omd_bin();
-my $site    = TestUtils::create_test_site() or TestUtils::bail_out_clean("no further testing without site");
+my $site    = TestUtils::create_test_site() or TestUtils::bail_out("no further testing without site");
 
 ##################################################
 # prepare site
@@ -34,7 +34,7 @@ for my $p (@{$prepares}) {
     TestUtils::test_command($p);
 }
 
-TestUtils::wait_for_file("/omd/sites/$site/tmp/run/live") or TestUtils::bail_out_clean("No need to test icinga2 without existing livestatus socket");
+TestUtils::wait_for_file("/omd/sites/$site/tmp/run/live") or TestUtils::bail_out("No need to test icinga2 without existing livestatus socket");
 
 
 ##################################################

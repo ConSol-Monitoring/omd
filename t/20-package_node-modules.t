@@ -13,31 +13,31 @@ BEGIN {
 ##################################################
 # create our test site
 my $omd_bin = TestUtils::get_omd_bin();
-my $site    = TestUtils::create_test_site() or TestUtils::bail_out_clean("no further testing without site");
+my $site    = TestUtils::create_test_site() or TestUtils::bail_out("no further testing without site");
 
 ########################################
 # print node version
 my $ntest = { cmd => "/bin/su - $site -c 'node -v'", like => '/^v/' };
-TestUtils::test_command($ntest) or TestUtils::bail_out_clean("no further testing without working node");
+TestUtils::test_command($ntest) or TestUtils::bail_out("no further testing without working node");
 diag("Node: ".$ntest->{'stdout'});
 ok($ntest, "has node version");
 
 ########################################
 # print npm version
 $ntest = { cmd => "/bin/su - $site -c 'npm -v'", like => '/^\d/' };
-TestUtils::test_command($ntest) or TestUtils::bail_out_clean("no further testing without working npm");
+TestUtils::test_command($ntest) or TestUtils::bail_out("no further testing without working npm");
 diag("NPM: ".$ntest->{'stdout'});
 ok($ntest, "has npm version");
 
 ########################################
 # print chrome version
 my $ctest = { cmd => "/bin/su - $site -c 'echo ".'$PUPPETEER_EXECUTABLE_PATH'."'" };
-TestUtils::test_command($ctest) or TestUtils::bail_out_clean("no further testing without working chrome");
+TestUtils::test_command($ctest) or TestUtils::bail_out("no further testing without working chrome");
 chomp($ctest->{'stdout'});
 #diag("Chrome: ".$ctest->{'stdout'});
 ok($ntest, "has chrome executable path");
 my $vtest = { cmd => "/bin/su - $site -c '".$ctest->{'stdout'}." --version'" };
-TestUtils::test_command($vtest) or TestUtils::bail_out_clean("no further testing without working chrome");
+TestUtils::test_command($vtest) or TestUtils::bail_out("no further testing without working chrome");
 chomp($vtest->{'stdout'});
 diag($vtest->{'stdout'}." (".$ctest->{'stdout'}.")");
 ok($ntest, "has chrome version");

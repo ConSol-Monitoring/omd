@@ -18,7 +18,7 @@ plan( tests => 1087 );
 ##################################################
 # create our test site
 my $omd_bin = TestUtils::get_omd_bin();
-my $site    = TestUtils::create_test_site() or TestUtils::bail_out_clean("no further testing without site");
+my $site    = TestUtils::create_test_site() or TestUtils::bail_out("no further testing without site");
 my $auth    = 'OMD Monitoring Site '.$site.':omdadmin:omd';
 my $host    = "omd-".$site;
 my $service = "Dummy+Service";
@@ -230,15 +230,15 @@ for my $core (qw/naemon/) {
     TestUtils::test_command({ cmd => $omd_bin." config $site set APACHE_MODE own" });
     TestUtils::restart_system_apache();
     unlink("/omd/sites/$site/tmp/run/live");
-    TestUtils::test_command({ cmd => $omd_bin." start $site" }) or TestUtils::bail_out_clean("No need to test Thruk without proper startup");
-    TestUtils::wait_for_file("/omd/sites/$site/tmp/run/live")   or TestUtils::bail_out_clean("No need to test Thruk without livestatus connection");
+    TestUtils::test_command({ cmd => $omd_bin." start $site" }) or TestUtils::bail_out("No need to test Thruk without proper startup");
+    TestUtils::wait_for_file("/omd/sites/$site/tmp/run/live")   or TestUtils::bail_out("No need to test Thruk without livestatus connection");
     unlink("/omd/sites/$site/tmp/thruk/thruk.cache");
     unlink("/omd/sites/$site/var/thruk/obj_retention.dat");
 
     TestUtils::test_command({ cmd => "/bin/su - $site -c './bin/thruk -A omdadmin \"cmd.cgi?cmd_typ=7&cmd_mod=2&host=omd-$site&service=Dummy+Service&start_time=now&force_check=on\" --local'", like => '/command request was successfully submitted/', errlike => '/cmd: COMMAND/' });
     TestUtils::test_command({ cmd => "/bin/su - $site -c 'thruk r \"/csv/services?columns=has_been_checked&has_been_checked=1&host_name=omd-$site&description=Dummy Service\"'", like => '/^1$/smx', waitfor => '^1$' });
     TestUtils::test_command({ cmd => "/bin/su - $site -c './etc/init.d/rrdcached flush'", like => '/flush.*OK/' });
-    TestUtils::wait_for_file("/omd/sites/$site/var/pnp4nagios/perfdata/omd-$site/Dummy_Service_omd-dummy.rrd", 240) or TestUtils::bail_out_clean("No need to test Thruk without working pnp");;
+    TestUtils::wait_for_file("/omd/sites/$site/var/pnp4nagios/perfdata/omd-$site/Dummy_Service_omd-dummy.rrd", 240) or TestUtils::bail_out("No need to test Thruk without working pnp");;
 
     for my $test (@{$tests}) {
         TestUtils::test_command($test);
@@ -313,7 +313,7 @@ TestUtils::test_command({ cmd => $omd_bin." config $site set APACHE_MODE own" })
 TestUtils::test_command({ cmd => $omd_bin." config $site set THRUK_COOKIE_AUTH on" });
 unlink("/omd/sites/$site/tmp/run/live");
 TestUtils::test_command({ cmd => $omd_bin." start $site", like => '/OK/' });
-TestUtils::wait_for_file("/omd/sites/$site/tmp/run/live")   or TestUtils::bail_out_clean("No need to test Thruk without livestatus connection");
+TestUtils::wait_for_file("/omd/sites/$site/tmp/run/live")   or TestUtils::bail_out("No need to test Thruk without livestatus connection");
 TestUtils::restart_system_apache();
 TestUtils::test_command({ cmd => $omd_bin." start $site thruk", like => '/OK/' });
 TestUtils::test_command({ cmd => $omd_bin." status $site apache", like => '/running/' });
@@ -349,6 +349,6 @@ sub set_test_user_token {
     $tokens->{'omdadmin'} = { token => 'test', time => time() };
     $store->set('token', $tokens);
     `chown $site:$site $file`;
-    ok(-s $file, $file." exists") or TestUtils::bail_out_clean("no further testing without token");
+    ok(-s $file, $file." exists") or TestUtils::bail_out("no further testing without token");
     return;
 }

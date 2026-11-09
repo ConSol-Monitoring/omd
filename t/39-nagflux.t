@@ -19,7 +19,7 @@ plan( tests => 94 );
 ##################################################
 # create our test site
 my $omd_bin   = TestUtils::get_omd_bin();
-my $site      = TestUtils::create_test_site() or TestUtils::bail_out_clean("no further testing without site");
+my $site      = TestUtils::create_test_site() or TestUtils::bail_out("no further testing without site");
 my $curl      = '/usr/bin/curl --user root:root';
 # Pre-filled array of 100 timestamps
 my @timestamps = ();

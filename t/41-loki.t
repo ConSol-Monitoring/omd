@@ -18,7 +18,7 @@ plan( tests => 81 );
 ##################################################
 # create our test site
 my $omd_bin = TestUtils::get_omd_bin();
-my $site    = TestUtils::create_test_site() or TestUtils::bail_out_clean("no further testing without site");
+my $site    = TestUtils::create_test_site() or TestUtils::bail_out("no further testing without site");
 
 TestUtils::test_command({ cmd => "/usr/bin/env sed -i -e 's/^#use_lmd_core=1/use_lmd_core=1/g' /opt/omd/sites/$site/etc/thruk/thruk_local.d/lmd.conf" });
 TestUtils::test_command({ cmd => "/usr/bin/env sed -i -e 's/# LogLevel = \"Warn\"/LogLevel = \"Debug\"/g' /opt/omd/sites/$site/etc/thruk/lmd.ini" });

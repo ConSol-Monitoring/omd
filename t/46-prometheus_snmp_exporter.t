@@ -22,7 +22,7 @@ my $export  = 19116;
 ##################################################
 # create our test site
 my $omd_bin = TestUtils::get_omd_bin();
-my $site    = TestUtils::create_test_site() or TestUtils::bail_out_clean("no further testing without site");
+my $site    = TestUtils::create_test_site() or TestUtils::bail_out("no further testing without site");
 my $simdir  = "/omd/sites/$site/var/snmpsim";
 my $explog  = "$simdir/snmp_exporter.log";
 my $exppid  = "$simdir/snmp_exporter.pid";

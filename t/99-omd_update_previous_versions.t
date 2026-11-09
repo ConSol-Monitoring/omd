@@ -46,7 +46,7 @@ for my $old_version (@old_versions) {
         next;
     }
 
-    my $site = TestUtils::create_test_site(undef, $old_version) or TestUtils::bail_out_clean("no further testing without site");
+    my $site = TestUtils::create_test_site(undef, $old_version) or TestUtils::bail_out("no further testing without site");
 
     TestUtils::test_command({ cmd => $omd_bin." start $site", like => '/Starting naemon\.+OK/' });
     TestUtils::test_command({ cmd => "/bin/su - $site -c 'omd stop'", like => '/Stopping naemon.*OK/' });

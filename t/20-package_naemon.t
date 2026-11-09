@@ -16,7 +16,7 @@ plan( tests => 195 );
 ##################################################
 # create our test site
 my $omd_bin = TestUtils::get_omd_bin();
-my $site    = TestUtils::create_test_site() or TestUtils::bail_out_clean("no further testing without site");
+my $site    = TestUtils::create_test_site() or TestUtils::bail_out("no further testing without site");
 
 TestUtils::install_test_checks($site);
 
@@ -71,7 +71,7 @@ my $tests = [
 ];
 for my $test (@{$tests}) {
     my $rc = TestUtils::test_command($test);
-    TestUtils::bail_out_clean("no further testing without site") if(!$rc && $test->{'fatal'});
+    TestUtils::bail_out("no further testing without site") if(!$rc && $test->{'fatal'});
 }
 
 do './t/lib/plugin_outputs.pl';

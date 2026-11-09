@@ -53,8 +53,8 @@ if(`getenforce 2>/dev/null` =~ m/Enforcing/) {
 #
 if($have_samplicate) {
     # create our test sites
-    my $site1    = TestUtils::create_test_site('testsnmp1') or TestUtils::bail_out_clean("no further testing without site");
-    my $site2    = TestUtils::create_test_site('testsnmp2') or TestUtils::bail_out_clean("no further testing without site");
+    my $site1    = TestUtils::create_test_site('testsnmp1') or TestUtils::bail_out("no further testing without site");
+    my $site2    = TestUtils::create_test_site('testsnmp2') or TestUtils::bail_out("no further testing without site");
 
     # according to /opt/omd/versions/default/share/samplicate/README.systemd...
     TestUtils::test_command({ cmd => "/bin/cp /opt/omd/versions/default/share/samplicate/*.service /etc/systemd/system" });
@@ -194,8 +194,8 @@ if($have_mirror) {
     TestUtils::test_command({ cmd => "/bin/sed -ri 's/CYCLE_SECS:-60/CYCLE_SECS:-3/g' /opt/omd/versions/default/bin/snmptrapd_mirror_watch" });
 
     # the phase 1 sites are gone - create fresh ones
-    my $site3 = TestUtils::create_test_site('testsnmp1') or TestUtils::bail_out_clean("no further testing without site");
-    my $site4 = TestUtils::create_test_site('testsnmp2') or TestUtils::bail_out_clean("no further testing without site");
+    my $site3 = TestUtils::create_test_site('testsnmp1') or TestUtils::bail_out("no further testing without site");
+    my $site4 = TestUtils::create_test_site('testsnmp2') or TestUtils::bail_out("no further testing without site");
 
     # start site3 with a local snmptrapd. find out the listener port
     TestUtils::test_command({ cmd => $omd_bin." config $site3 set SNMPTRAPD on" });

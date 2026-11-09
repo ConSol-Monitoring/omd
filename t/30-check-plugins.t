@@ -15,7 +15,7 @@ BEGIN {
 ##################################################
 # create our test site
 our $omd_bin = TestUtils::get_omd_bin();
-our $site    = TestUtils::create_test_site() or TestUtils::bail_out_clean("no further testing without site");
+our $site    = TestUtils::create_test_site() or TestUtils::bail_out("no further testing without site");
 
 TestUtils::test_command({ cmd => $omd_bin." start $site", like => '/Starting/' });
 

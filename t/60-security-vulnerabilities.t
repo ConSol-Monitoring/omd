@@ -36,7 +36,7 @@ for my $s ($site, $site_cp, "vulnrestore", "vulnmoved") {
 }
 
 TestUtils::test_command({ cmd => "$omd_bin create $createoptions $site", errlike => '/^.*$/' })
-    or TestUtils::bail_out_clean("Cannot create test site $site");
+    or TestUtils::bail_out("Cannot create test site $site");
 
 my $sitedir = "/omd/sites/$site";
 TestUtils::test_command({ cmd => "$omd_bin stop $site 2>/dev/null", exit => undef, errlike => undef });

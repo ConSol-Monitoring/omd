@@ -21,7 +21,7 @@ plan( tests => 169 );
 ##################################################
 # create our test site
 my $omd_bin = TestUtils::get_omd_bin();
-my $site    = TestUtils::create_test_site() or TestUtils::bail_out_clean("no further testing without site");
+my $site    = TestUtils::create_test_site() or TestUtils::bail_out("no further testing without site");
 my $auth    = 'OMD Monitoring Site '.$site.':omdadmin:omd';
 my $curl    = '/usr/bin/curl -v --user omdadmin:omd --noproxy \* ';
 my $ip      = TestUtils::get_external_ip();
@@ -82,7 +82,7 @@ $req->header('Cookie' => "thruk_auth=$sessionid");
 my $res = $ua->request($req);
 
 unless($res->is_success) {
-    TestUtils::bail_out_clean(
+    TestUtils::bail_out(
         "failed to fetch Grafana datasources: ".$res->status_line
     );
 }
@@ -93,7 +93,7 @@ eval {
 };
 
 if($@ || ref($datasources) ne 'ARRAY') {
-    TestUtils::bail_out_clean(
+    TestUtils::bail_out(
         "failed to decode Grafana datasources response: ".$res->decoded_content
     );
 }
@@ -103,7 +103,7 @@ my @pnp_datasources = grep {
 } @{$datasources};
 
 unless(scalar @pnp_datasources == 1) {
-    TestUtils::bail_out_clean(
+    TestUtils::bail_out(
         "expected exactly one PNP Grafana datasource, found ".
         scalar(@pnp_datasources)
     );
@@ -112,7 +112,7 @@ unless(scalar @pnp_datasources == 1) {
 my $pnp_uid = $pnp_datasources[0]->{'uid'};
 
 unless($pnp_uid) {
-    TestUtils::bail_out_clean(
+    TestUtils::bail_out(
         "PNP Grafana datasource does not have a UID"
     );
 }

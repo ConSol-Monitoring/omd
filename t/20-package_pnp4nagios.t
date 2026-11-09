@@ -18,7 +18,7 @@ plan( tests => 218 );
 ##################################################
 # create our test site
 my $omd_bin = TestUtils::get_omd_bin();
-my $site    = TestUtils::create_test_site() or TestUtils::bail_out_clean("no further testing without site");
+my $site    = TestUtils::create_test_site() or TestUtils::bail_out("no further testing without site");
 my $ip      = TestUtils::get_external_ip();
 my $auth    = 'OMD Monitoring Site '.$site.':omdadmin:omd';
 
@@ -35,7 +35,7 @@ TestUtils::test_command({ cmd => $omd_bin." start $site" });
 TestUtils::test_command({ cmd => "/bin/su - $site -c './lib/monitoring-plugins/check_http -H localhost -a omdadmin:omd -u /$site/thruk/cgi-bin/cmd.cgi -e 200 -P \"cmd_typ=7&cmd_mod=2&host=omd-$site&service=Dummy+Service&start_time=now&force_check=on\" -r \"Your command request was successfully submitted\"'", like => '/HTTP OK:/' });
 TestUtils::test_command({ cmd => "/bin/su - $site -c 'thruk r \"/csv/services?columns=has_been_checked&has_been_checked=1&host_name=omd-$site&description=Dummy Service\"'", like => '/^1$/smx', waitfor => '^1$' });
 TestUtils::test_command({ cmd => "/bin/su - $site -c './etc/init.d/rrdcached flush'", like => '/flush.*OK/' });
-TestUtils::wait_for_file("/omd/sites/$site/var/pnp4nagios/perfdata/omd-$site/Dummy_Service_omd-dummy.rrd") or TestUtils::bail_out_clean("No need to test pnp without existing rrd");;
+TestUtils::wait_for_file("/omd/sites/$site/var/pnp4nagios/perfdata/omd-$site/Dummy_Service_omd-dummy.rrd") or TestUtils::bail_out("No need to test pnp without existing rrd");;
 
 # copy page test config
 for my $cfg (qw/pages-static-ok.cfg pages-static-err.cfg pages-regex-ok.cfg pages-regex-err.cfg/) {
@@ -81,7 +81,7 @@ TestUtils::remove_test_site($site);
 ##################################################
 # Create test Site for npcd test
 
-$site = TestUtils::create_test_site() or TestUtils::bail_out_clean("no further testing without site");
+$site = TestUtils::create_test_site() or TestUtils::bail_out("no further testing without site");
 
 # create test host/service
 TestUtils::prepare_obj_config('t/data/omd/testconf1', '/omd/sites/'.$site.'/etc/naemon/conf.d', $site);
@@ -98,8 +98,8 @@ TestUtils::test_command({ cmd => "/bin/su - $site -c './lib/monitoring-plugins/c
 TestUtils::test_command({ cmd => "/bin/su - $site -c './lib/monitoring-plugins/check_http -H localhost -a omdadmin:omd -u /$site/thruk/cgi-bin/cmd.cgi -e 200 -P \"cmd_typ=7&cmd_mod=2&host=omd-$site&service=Dummy+Service&start_time=2010-11-06+09%3A46%3A02&force_check=on\" -r \"Your command request was successfully submitted\"'", like => '/HTTP OK:/' });
 TestUtils::test_command({ cmd => "/bin/su - $site -c 'thruk r \"/csv/services?columns=has_been_checked&has_been_checked=1&host_name=omd-$site&description=Dummy Service\"'", like => '/^1$/smx', waitfor => '^1$' });
 TestUtils::test_command({ cmd => "/bin/su - $site -c './etc/init.d/rrdcached flush'", like => '/flush.*OK/' });
-TestUtils::wait_for_file("/omd/sites/$site/var/pnp4nagios/perfdata/omd-$site/Dummy_Service_omd-dummy.rrd") or TestUtils::bail_out_clean("No need to test pnp without existing rrd");;
-TestUtils::wait_for_file("/omd/sites/$site/var/pnp4nagios/perfdata/omd-$site/_HOST__omd-dummy.rrd") or TestUtils::bail_out_clean("No need to test pnp without existing rrd");;
+TestUtils::wait_for_file("/omd/sites/$site/var/pnp4nagios/perfdata/omd-$site/Dummy_Service_omd-dummy.rrd") or TestUtils::bail_out("No need to test pnp without existing rrd");;
+TestUtils::wait_for_file("/omd/sites/$site/var/pnp4nagios/perfdata/omd-$site/_HOST__omd-dummy.rrd") or TestUtils::bail_out("No need to test pnp without existing rrd");;
 
 
 ##################################################

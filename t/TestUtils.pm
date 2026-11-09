@@ -169,7 +169,7 @@ sub test_command {
             my $msg = "content ".$expr." did not occur within ".$maxwait." seconds";
             fail($msg);
             _diag_cmd($test);
-            bail_out_clean($msg);
+            bail_out($msg);
         }
     } else {
         alarm(300);
@@ -493,7 +493,8 @@ sub remove_test_site {
     `if [ \$(ps -fu $site | wc -l) -gt 0 ]; then /usr/bin/pkill -2 -U $site; sleep 1; fi`;
     `if [ \$(ps -fu $site | wc -l) -gt 0 ]; then /usr/bin/pkill -9 -U $site; sleep 1; fi`;
     my $errlike = is_docker() ? '/(^\s*$|^AH00558: apache2: Could not reliably determine the server\'s fully qualified domain name, using.*$)/' : '/^\s*$/';
-    test_command({ cmd => TestUtils::get_omd_bin()." rm $site", stdin => "yes\n", errlike => $errlike  });
+    test_command({ cmd => TestUtils::get_omd_bin()." rm $site", stdin => "yes\n", errlike => $errlike  })
+        or bail_out("failed to remove test site $site, further tests would see a broken state");;
     return;
 }
 
@@ -547,7 +548,7 @@ sub test_url {
             my $msg = "content (".$waitfor.") did not occur within ".$maxwait." seconds";
             carp($msg);
             fail($msg);
-            bail_out_clean($msg);
+            bail_out($msg);
         }
         return $page;
     }
@@ -676,7 +677,7 @@ sub test_url {
                 diag(Dumper($req));
                 my $tmp_test = { 'url' => $test_url };
                 _diag_request($tmp_test, $req);
-                bail_out_clean("error in url '$test_url' linked from '".$test->{'url'}."'");
+                bail_out("error in url '$test_url' linked from '".$test->{'url'}."'");
             }
         }
         is( $errors, 0, 'All stylesheets, images and javascript exist' );
@@ -849,24 +850,21 @@ sub prepare_obj_config {
 
 ##################################################
 
-=head2 bail_out_clean
+=head2 bail_out
 
-  bail out from testing but some minor cleanup before
+  bail out from testing with some diag information printed
 
 =cut
-sub bail_out_clean {
+sub bail_out {
     my($msg, $test) = @_;
 
     _diag_cmd($test) if $test;
 
-    carp("cleaning up before bailout");
-
     my $omd_bin = get_omd_bin();
     for my $site (qw/testsite testsite2 testsite3/) {
         next unless -d "/omd/sites/$site/.";
-        #diag("%> ps -fu $site");
-        #diag(`ps -fu $site 2>&1`);
-        #test_command({ cmd => $omd_bin." rm $site", stdin => "yes\n", 'exit' => undef, errlike => undef });
+        diag("%> ps -fu $site");
+        diag(`ps -fu $site 2>&1`);
     }
 
     diag(Carp::longmess("started here"));
@@ -1047,7 +1045,7 @@ sub _get_url {
         }
     }
     else {
-        bail_out_clean("unknown url scheme in _get_url: '".$url."'");
+        bail_out("unknown url scheme in _get_url: '".$url."'");
     }
 
     return $newurl;

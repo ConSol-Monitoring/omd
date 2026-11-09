@@ -19,7 +19,7 @@ plan( tests => 33 );
 ##################################################
 # create our test site
 my $omd_bin = TestUtils::get_omd_bin();
-my $site     = TestUtils::create_test_site() or TestUtils::bail_out_clean("no further testing without site");
+my $site     = TestUtils::create_test_site() or TestUtils::bail_out("no further testing without site");
 TestUtils::test_command({ cmd => "/bin/cp t/data/coshsh/test.conf /omd/sites/$site/etc/coshsh/conf.d", like => '/^$/' });
 TestUtils::test_command({ cmd => "/bin/cp t/data/coshsh/*.csv /omd/sites/$site/etc/coshsh/data", like => '/^$/' });
 TestUtils::test_command({ cmd => "/bin/chown -R $site: /omd/sites/$site/etc/coshsh", like => '/^$/' });

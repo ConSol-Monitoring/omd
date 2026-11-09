@@ -20,7 +20,7 @@ plan( tests => 110 );
 ##################################################
 # create our test site
 my $omd_bin = TestUtils::get_omd_bin();
-my $site    = TestUtils::create_test_site() or TestUtils::bail_out_clean("no further testing without site");
+my $site    = TestUtils::create_test_site() or TestUtils::bail_out("no further testing without site");
 
 ##################################################
 
@@ -47,7 +47,7 @@ my $tests = [
 for my $test (@{$tests}) {
     TestUtils::test_command($test);
 }
-TestUtils::wait_for_file("/omd/sites/$site/tmp/run/live") or TestUtils::bail_out_clean("No need to test downtimes without livestatus connection");
+TestUtils::wait_for_file("/omd/sites/$site/tmp/run/live") or TestUtils::bail_out("No need to test downtimes without livestatus connection");
 my $ml = Monitoring::Livestatus->new(
   socket => "/omd/sites/$site/tmp/run/live"
 );
