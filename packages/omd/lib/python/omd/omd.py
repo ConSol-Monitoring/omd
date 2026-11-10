@@ -3224,12 +3224,9 @@ def init_site(config_settings = None, options={}):
     else:
         load_site_conf() # load default values from all hooks
 
-    if config_settings: # add specific settings
-        for hook_name, value in list(config_settings.items()):
-            g_site_conf[hook_name] = value
     create_config_environment()
 
-    finalize_site("create", apache_reload)
+    finalize_site("create", apache_reload, config_settings)
 
     return admin_password
 
@@ -3237,7 +3234,7 @@ def init_site(config_settings = None, options={}):
 # Is being called at the end of create, cp and mv.
 # What is "create", "mv" or "cp". It is used for
 # running the appropriate hooks.
-def finalize_site(what, apache_reload):
+def finalize_site(what, apache_reload, config_settings=None):
 
     # Now we need to do a few things as site user. Note:
     # - We cannot use setuid() here, since we need to get back to root.
@@ -3252,6 +3249,12 @@ def finalize_site(what, apache_reload):
             # From now on we run as normal site user!
             if am_root():
                 switch_to_site_user()
+
+            # Switching users reloads site.conf, so apply creation overrides
+            # afterwards, before saving the configuration or preparing tmp.
+            if config_settings:
+                g_site_conf.update(config_settings)
+                create_config_environment()
 
             # Mount and create contents of tmpfs. This must be done as normal
             # user. We also could do this at 'omd start', but this might confuse
