@@ -2,7 +2,7 @@ include ../../Makefile.omd
 
 NAME     = node
 # adjust t/52-node-modules-audit when bumping this version
-VERSION  = 20.6.1
+VERSION  = 26.13.0
 SHELL    = /bin/bash
 
 ifeq ($(DISTRO_CODE),el7)
