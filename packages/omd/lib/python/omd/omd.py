@@ -2488,7 +2488,7 @@ def config_set_value(hook_name, value, save = True):
     # be our new value (i.e. hook disagrees with the new setting!)
     exitcode, answer = call_hook(hook_name, ["set", value])
     if exitcode:
-        return
+        bail_out(tty_error + ": Failed to set config variable '%s' (rc: %d)." % (hook_name, exitcode))
 
     if len(answer) > 0:
         value = answer.strip()
@@ -2621,9 +2621,6 @@ def config_configure_hook(hook_name):
         dialog_function(title, descr, choices, value, "Change", "Cancel")
     if change:
         config_set_value(hook["name"], new_value)
-        g_site_conf[hook_name] = new_value
-        save_site_conf()
-        config_set_all()
         load_hook_dependencies()
 
 def call_init_hook(command, when):
