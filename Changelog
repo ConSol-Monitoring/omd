@@ -4,6 +4,8 @@ next:
           - plugins:
             - check_nwc_health update to 12.17.2
             - check_storage_health update to 2.3.1.2
+          - grafana:
+            - update to 13.3.1
           - prometheus:
             - update to 3.13.5
             - alertmanager update to 0.34.2

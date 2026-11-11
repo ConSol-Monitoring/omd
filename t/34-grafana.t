@@ -162,7 +162,7 @@ TestUtils::test_url({ url => 'http://localhost/'.$site.'/grafana/api/dashboards/
 {
     my $request = GET('http://localhost/'.$site.'/grafana/api/dashboards/home');
     $request->header('Authorization' => "Bearer ".$bearer_token);
-    my $tst = TestUtils::test_url({ request => $request, like => '/gettingstarted/' }, code => 201 );
+    my $tst = TestUtils::test_url({ request => $request, like => '/No custom home dashboard configured/', code => 404 });
 };
 
 
