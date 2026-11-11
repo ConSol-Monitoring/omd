@@ -17,6 +17,10 @@ MERGECRONTABS="$OMD_ROOT/bin/merge-crontabs"
 CROND="$OMD_ROOT/etc/cron.d/*[^~]"
 CRONTAB=`which crontab`
 CRONTAB_OPTS=""
+# The site crontab is generated; newer Cronie versions can skip backups.
+if LC_ALL=C $CRONTAB --help 2>&1 | grep -q -- ' -b '; then
+    CRONTAB_OPTS="-b"
+fi
 
 mkdir -p $OMD_ROOT/.cache/crontab
 
