@@ -1937,9 +1937,9 @@ def call_init_scripts(sitename, command, daemon = None):
     # but first do stop all, then start all again! This
     # preserves the order.
     if command == "restart" and daemon == None:
-        call_init_scripts(sitename, "stop", daemon)
-        call_init_scripts(sitename, "start", daemon)
-        return
+        stop_status = call_init_scripts(sitename, "stop", daemon)
+        start_status = call_init_scripts(sitename, "start", daemon)
+        return max(stop_status, start_status)
 
     # OMD guarantees OMD_ROOT to be the current directory
     os.chdir(site_dir(sitename))
@@ -1964,9 +1964,9 @@ def call_init_scripts(sitename, command, daemon = None):
                 ok = False
 
     if ok:
-         return 0
+        return 0
     else:
-         return 2
+        return 2
 
 def check_status(sitename, display=True, daemon=None, bare=False):
     import psutil
