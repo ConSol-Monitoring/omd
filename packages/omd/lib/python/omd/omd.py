@@ -171,12 +171,12 @@ def stop_logging():
     g_stdout_log = None
     g_stderr_log = None
 
-def show_success(exit_code):
-    if exit_code == True or exit_code == 0:
+def show_success(success):
+    if success:
         ok()
     else:
         sys.stdout.write(tty_error + "\n")
-    return exit_code
+    return success
 
 
 #   .--Dialog--------------------------------------------------------------.
@@ -2857,13 +2857,13 @@ def init_cmd(name, action):
 def reload_apache():
     sys.stdout.write("Reloading Apache...")
     sys.stdout.flush()
-    show_success(os.system("%s graceful" % g_info["APACHE_CTL"]) >> 8)
+    show_success(os.system("%s graceful" % g_info["APACHE_CTL"]) == 0)
 
 def restart_apache():
     if os.system(init_cmd(g_info['APACHE_INIT_NAME'], 'status') + ' >/dev/null 2>&1') >> 8 == 0:
         sys.stdout.write("Restarting Apache...")
         sys.stdout.flush()
-        show_success(os.system(init_cmd(g_info['APACHE_INIT_NAME'], 'restart') + ' >/dev/null') >> 8)
+        show_success(os.system(init_cmd(g_info['APACHE_INIT_NAME'], 'restart') + ' >/dev/null') == 0)
     else:
         print("restart apache failed")
         print(init_cmd(g_info['APACHE_INIT_NAME'], 'status'))
@@ -4190,7 +4190,7 @@ def main_mount(args, options = {}):
                 stderr=stderr
             )
 
-            if not p.wait():
+            if p.wait() != 0:
                 exit_status = 1
     else:
         # Skip the site even when it is partly running
