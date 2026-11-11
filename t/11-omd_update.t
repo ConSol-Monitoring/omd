@@ -50,6 +50,44 @@ sub do_omd_update_symlinked_dirs {
     return;
 }
 
+# omd create must always write the tmpfs entry to /etc/fstab, using the
+# canonical path (real target of /omd) and never the /omd symlink, even with
+# --no-tmpfs: a site user without root privileges may later run
+# "omd config set TMPFS on" and cannot add the entry himself.
+sub do_omd_create_no_tmpfs {
+    my $omd_bin = TestUtils::get_omd_bin();
+    my $site2   = "tmpfsnt";
+    my $real    = `readlink -f /omd`;
+    chomp($real);
+    my $mnt     = "$real/sites/$site2/tmp";
+    my $errlike = scalar @{[glob('/omd/sites/*/.')]} >= 1 ? '/is in use/' : '/^\s*$/';
+
+    TestUtils::test_command({ cmd => $omd_bin." create --no-tmpfs $site2", like => '/Created new site '.$site2.'/', errlike => $errlike })
+        or TestUtils::bail_out("no further testing without --no-tmpfs site");
+
+    # the fstab entry exists with the canonical path, the /omd form is absent
+    TestUtils::test_command({ cmd => "/bin/grep -c '^tmpfs  $mnt tmpfs .*uid=$site2,' /etc/fstab", like => '/^1$/' });
+    TestUtils::test_command({ cmd => "/bin/grep -c '^tmpfs  /omd/sites/$site2/tmp ' /etc/fstab", like => '/^0$/', exit => 1 });
+
+  SKIP: {
+        skip "mounting a tmpfs as site user is not possible in containers", 8 if TestUtils::is_docker();
+
+        # TMPFS is off: starting the site must not mount the tmpfs
+        TestUtils::test_command({ cmd => "/bin/su - $site2 -c 'omd start'", like => '/Starting naemon.*OK/' });
+        TestUtils::test_command({ cmd => "/bin/grep -c ' $mnt tmpfs ' /proc/mounts", like => '/^0$/', exit => 1 });
+
+        # the site user switches TMPFS on without root privileges: the tmpfs gets mounted
+        TestUtils::test_command({ cmd => "/bin/su - $site2 -c 'omd stop'", like => '/Stopping naemon.*OK/' });
+        TestUtils::test_command({ cmd => "/bin/su - $site2 -c 'omd config set TMPFS on'" });
+        TestUtils::test_command({ cmd => "/bin/su - $site2 -c 'omd start'", like => '/Starting naemon.*OK/' });
+        TestUtils::test_command({ cmd => "/bin/grep -c ' $mnt tmpfs ' /proc/mounts", like => '/^1$/' });
+    }
+
+    TestUtils::test_command({ cmd => "/bin/su - $site2 -c 'omd stop'", like => '/Stopping naemon.*OK/' });
+    TestUtils::remove_test_site($site2);
+    return;
+}
+
 my $omd_bin  = TestUtils::get_omd_bin();
 my $site     = TestUtils::create_test_site() or TestUtils::bail_out("no further testing without site");
 my $versions_test = { cmd => $omd_bin." versions"};
@@ -121,12 +159,12 @@ TestUtils::test_command({ cmd => "/usr/bin/find /omd/sites/$site/ -user root -ls
 # updating a site with symlinked etc/thruk and var/thruk must not fail
 do_omd_update_symlinked_dirs($omd_update);
 
-# omd create must write the site tmpfs entry with the canonical path (real
-# target of /omd), never through the /omd symlink. A site created with
-# --no-tmpfs has no entry at all, which is fine too.
-# The migration of old entries lives in the package post-install scripts.
+# omd create --no-tmpfs: fstab entry present, not mounted until the site user enables TMPFS
+do_omd_create_no_tmpfs();
+
+# the migration of old entries lives in the package post-install scripts, so
+# omd update must leave /etc/fstab alone
 my $fstab_before = `md5sum /etc/fstab`;
-TestUtils::test_command({ cmd => "/bin/grep -c '^tmpfs  /omd/sites/$site/tmp ' /etc/fstab", like => '/^0$/', exit => 1 });
 
 # The package post-install scripts (rpm %post, debian postinst) migrate old
 # /omd/sites/<site>/tmp fstab entries with a sed call. Run the very sed line
