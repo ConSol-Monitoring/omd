@@ -4314,10 +4314,12 @@ def main_init_action(command, args, options={}):
     while parallel and processes:
         for site_id, p in processes[:]:
             buf = site_buf.get(site_id, b"")
+            eof = False
             try:
                 while True:
                     b = p.stdout.read(1024)
                     if not b:
+                        eof = b == b""
                         break
                     buf += b
             except IOError as e:
@@ -4335,7 +4337,10 @@ def main_init_action(command, args, options={}):
 
             site_buf[site_id] = buf
 
-            if not buf and p.poll() is not None:
+            if eof and p.poll() is not None:
+                if buf:
+                    parallel_output(site_id, buf + b"\n")
+                del site_buf[site_id]
                 exit_states.append(p.returncode)
                 processes.remove((site_id, p))
         time.sleep(0.01)
