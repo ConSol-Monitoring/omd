@@ -3,6 +3,7 @@
 use warnings;
 use strict;
 use Test::More;
+use File::Temp;
 
 BEGIN {
     use lib('t');
@@ -120,12 +121,45 @@ TestUtils::test_command({ cmd => "/usr/bin/find /omd/sites/$site/ -user root -ls
 # updating a site with symlinked etc/thruk and var/thruk must not fail
 do_omd_update_symlinked_dirs($omd_update);
 
-# regression test: migrating an old /omd fstab entry to the canonical path
-# must not drop custom options such as a tmpfs size
-my $real_omd = `readlink -f /omd`;
-chomp($real_omd);
-TestUtils::test_command({ cmd => "/bin/sed -i -e 's#$real_omd/sites/$site/tmp#/omd/sites/$site/tmp#' -e 's#\\(uid=$site,gid=$site\\)#\\1,size=64M#' /etc/fstab" });
-TestUtils::test_command({ cmd => "/bin/grep -c '^tmpfs  /omd/sites/$site/tmp tmpfs .*size=64M' /etc/fstab", like => '/^1$/' });
+# omd create must write the site tmpfs entry with the canonical path (real
+# target of /omd), never through the /omd symlink. A site created with
+# --no-tmpfs has no entry at all, which is fine too.
+# The migration of old entries lives in the package post-install scripts.
+my $fstab_before = `md5sum /etc/fstab`;
+TestUtils::test_command({ cmd => "/bin/grep -c '^tmpfs  /omd/sites/$site/tmp ' /etc/fstab", like => '/^0$/', exit => 1 });
+
+# The package post-install scripts (rpm %post, debian postinst) migrate old
+# /omd/sites/<site>/tmp fstab entries with a sed call. Run the very sed line
+# of both scripts against a dummy fstab holding old-format entries.
+for my $script ("omd.spec.in", "debian/postinst.in") {
+    open(my $fh, '<', "$FindBin::Bin/../$script") or die "cannot read $script: $!";
+    my($sedcmd) = grep { /^\s*sed -i -E / } <$fh>;
+    close($fh);
+    ok($sedcmd, "$script contains the fstab migration sed") or next;
+    my $dummy = File::Temp->new();
+    print $dummy join("", map { "$_\n" } (
+        "tmpfs  /omd/sites/sitexy/tmp tmpfs noauto,user,mode=755,uid=sitexy,gid=sitexy,size=64M 0 0",
+        "#tmpfs  /omd/sites/sitez/tmp tmpfs noauto,user,mode=755,uid=sitez,gid=sitez 0 0",
+        "tmpfs  /opt/omd/sites/sitecanon/tmp tmpfs noauto,user,mode=755,uid=sitecanon,gid=sitecanon 0 0",
+        "/dev/sda1 /omd/other ext4 defaults 0 0",
+    ));
+    close($dummy);
+    my $expected = join("", map { "$_\n" } (
+        "tmpfs  /opt/omd/sites/sitexy/tmp tmpfs noauto,user,mode=755,uid=sitexy,gid=sitexy,size=64M 0 0",
+        "#tmpfs  /opt/omd/sites/sitez/tmp tmpfs noauto,user,mode=755,uid=sitez,gid=sitez 0 0",
+        "tmpfs  /opt/omd/sites/sitecanon/tmp tmpfs noauto,user,mode=755,uid=sitecanon,gid=sitecanon 0 0",
+        "/dev/sda1 /omd/other ext4 defaults 0 0",
+    ));
+    my $fname = $dummy->filename;
+    $sedcmd =~ s|/etc/fstab|$fname|;
+    for my $run (1, 2) {   # second run: idempotent
+        is(system("real=/opt/omd; $sedcmd"), 0, "$script: sed run $run succeeded");
+        open(my $in, '<', $fname) or die;
+        my $got = do { local $/; <$in> };
+        close($in);
+        is($got, $expected, "$script: old mountpoints migrated, rest untouched (run $run)");
+    }
+}
 
 # run update
 TestUtils::test_command({ cmd => $omd_bin." stop $site",       like => '/Stopping naemon/' });
@@ -141,10 +175,8 @@ TestUtils::test_command({
                     ],
             });
 
-# the old /omd fstab entry must have been migrated to the canonical path and
-# must have kept the custom size option
-TestUtils::test_command({ cmd => "/bin/grep -c '^tmpfs  $real_omd/sites/$site/tmp tmpfs .*size=64M' /etc/fstab", like => '/^1$/' });
-TestUtils::test_command({ cmd => "/bin/grep -c '^tmpfs  /omd/sites/$site/tmp ' /etc/fstab", like => '/^0$/', exit => 1 });
+# omd update must not touch /etc/fstab
+is(`md5sum /etc/fstab`, $fstab_before, 'omd update left /etc/fstab untouched');
 
 # make sure all files still belong to site user
 TestUtils::test_command({ cmd => "/usr/bin/find /omd/sites/$site/ -user root -ls", like => '/^$/' });
