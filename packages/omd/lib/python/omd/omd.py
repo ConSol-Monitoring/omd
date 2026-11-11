@@ -1103,6 +1103,7 @@ def merge_update_file(relpath, userdir, old_version, new_version, skel_path, dry
                         print_conflict(p, ("skeleton file of version %s not readable" % (version)))
                         if opt_verbose:
                             print("%s\n" % e)
+                        return None
                     elif opt_conflict in [ "abort", "install" ]:
                         bail_out(tty_error + ": Skeleton file '%s' of version %s not readable." % (p, version))
                     elif opt_conflict == "keepold" or not user_confirms("Skeleton file of version %s not readable" % version,
@@ -1117,7 +1118,7 @@ def merge_update_file(relpath, userdir, old_version, new_version, skel_path, dry
                         relpath,
                         "retry", "Retry reading the file (after you've fixed it)",
                         "ignore", "Assume the file to be empty"):
-                        skel_content = ""
+                        skel_content = b""
                         break
             open("%s-%s" % (user_path, version), "wb").write(replace_tags(skel_content, replacements))
         version_patch = os.popen("diff -u %s-%s %s-%s" % (user_path, old_version, user_path, new_version)).read()
@@ -1143,6 +1144,9 @@ def merge_update_file(relpath, userdir, old_version, new_version, skel_path, dry
                 pass
 
     merge_res = try_merge()
+    if merge_res is None:
+        clean_local_temp_files()
+        return
     if merge_res[0] == 0:
         clean_local_temp_files()
         sys.stdout.write(good + " Merged         %s\n" % fn)
