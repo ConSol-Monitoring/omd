@@ -3372,7 +3372,7 @@ def main_disable(args, options):
     if not site_is_stopped(g_sitename):
         os.system('/usr/bin/omd stop %s' % g_sitename)
 
-    unmount_tmpfs(g_sitename, options.kill)
+    unmount_tmpfs(g_sitename, kill=options.kill)
     sys.stdout.write("Disabling Apache configuration for this site...")
     delete_apache_hook(g_sitename)
     ok()
