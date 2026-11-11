@@ -97,6 +97,16 @@ then
 fi
 
 %post
+# Non-root mount(8) refuses symlinks in the mount point, so fstab entries of
+# site tmpfs must use the canonical path instead of the /omd symlink.
+real=$(readlink -f /omd)
+old='[[:space:]]/omd/(sites/[^/[:space:]]+/tmp)[[:space:]].*uid='
+if [ "$real" != /omd ] && [ -w /etc/fstab ]; then
+    grep -E "$old" /etc/fstab | sed -E "s,.*/omd/(sites/[^/[:space:]]+/tmp)[[:space:]].*,migrating /omd/\1 -> $real/\1," || :
+    sed -i -E "s,([[:space:]])/omd/(sites/[^/[:space:]]+/tmp[[:space:]].*uid=),\1$real/\2," /etc/fstab || :
+    grep -E "$old" /etc/fstab | sed -E "s,.*/omd/(sites/[^/[:space:]]+/tmp)[[:space:]].*,WARNING: NOT migrated /omd/\1 -> $real/\1," >&2 || :
+fi
+
 # Activate init script for OMD, but only the first
 # time an OMD package is being installed. The admin
 # might have deactivated the script himself and does
