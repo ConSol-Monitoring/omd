@@ -28,12 +28,21 @@ my $tests = [
   { cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_mysql'",exit => undef, like => '/Can\'t connect to local|Access denied for user|Open_tables/' },
   { cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_logfiles'", exit => 3, like => '/Usage: check_logfiles/' },
   { cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_http -S -H 127.0.0.1 -p 9999'", exit => 2, like => '/HTTP CRITICAL - Unable to open TCP socket/' },
-  { cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_curl -S -H 127.0.0.1 -p 9999'", exit => 2, like => '/HTTP CRITICAL - Invalid HTTP response received/' },
+  { cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_curl -S -H 127.0.0.1 -p 9999'", exit => 2, like => '/HTTP CRITICAL - Invalid HTTP response received|Could not connect to server/' },
   { cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_by_ssh -V'", exit => 3, like => '/monitoring\-plugins\ \d\.\d/' }, # plugins should contain release version when build without patches
   { cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_radius -h'", exit => 3, like => '/^check_radius.*/'},
   { cmd => "/bin/su - $site -c 'lib/monitoring-plugins/check_procs -vvv'", exit => 0, like => '/CMD:.*\s+etime/'},
 ];
 for my $test (@{$tests}) {
+    # rhel10 libradcli does not work for v2 plugins and it will be removed in v3 anyway.
+    next if($test->{'cmd'} =~ m/check_radius/mx and (TestUtils::config('DISTRO_CODE') eq 'el10'));
+
+    TestUtils::test_command($test);
+
+    # test v3 plugins
+    next if $test->{'cmd'} =~ m/check_radius/mx;   # omd does not ship check_radius in v3
+    next if $test->{'cmd'} =~ m/check_logfiles/mx; # this is not a v3 plugin either
+    $test->{'cmd'} =~ s%lib/monitoring-plugins/%lib/monitoring-plugins/v3/%gmx;
     TestUtils::test_command($test);
 }
 
