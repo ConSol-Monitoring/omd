@@ -684,8 +684,8 @@ def calculate_admin_password(options):
 
 def set_admin_password(pw):
     p = subprocess.Popen(["%s/bin/set_admin_password" % g_sitedir, pw], stderr = subprocess.PIPE, stdout = subprocess.PIPE)
-    response = p.stderr.read()
-    return 0 == os.waitpid(p.pid, 0)[1], response
+    _, response = p.communicate()
+    return p.returncode == 0, response
 
 
 def set_admin_password_or_warn(pw):
@@ -3476,8 +3476,8 @@ def main_diag(args, options={}):
 def call_diag_script(script):
     errors = 0
     p = subprocess.Popen([script], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    exitcode = p.wait()
     output = p.communicate()
+    exitcode = p.returncode
     for line in output[0].decode("UTF-8").splitlines():
         if line.startswith("OK"):
             sys.stdout.write("  " + tty_ok + " %s\n" % line[3:])
