@@ -2148,14 +2148,14 @@ def get_init_script_meta(script, site_config, processlist=None):
     if meta["pidfile"] != None:
         try:
             with open(meta["pidfile"], 'r') as fd:
-                pid = fd.read().strip()
+                pid = int(fd.read().strip())
                 if check_pid(pid):
                     meta["pid"] = pid
                 else:
                     # remove stale pid file
                     sys.stderr.write("removing stale pid file: %s\n" % meta["pidfile"])
                     os.remove(meta["pidfile"])
-        except Exception:
+        except (OSError, ValueError, OverflowError):
             pass
 
     if meta["pid"] == None and meta["binary"] != None and processlist != None:
@@ -2171,12 +2171,15 @@ def get_init_script_meta(script, site_config, processlist=None):
 
 
 def check_pid(pid):
+    if pid <= 0:
+        return False
     try:
         os.kill(pid, 0)
-    except OSError:
+    except ProcessLookupError:
         return False
-    else:
+    except PermissionError:
         return True
+    return True
 
 #.
 #   .--Config & Hooks------------------------------------------------------.
