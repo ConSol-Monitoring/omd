@@ -778,19 +778,19 @@ def create_skeleton_file(skelbase, userbase, relpath, replacements):
         os.chmod(user_path, mode)
 
 
-def chown_tree_fd(dirpath, user, uid, gid):
+def chown_tree_fd(dirpath, user, uid, gid, parent_fd=None):
     try:
-        dir_fd = os.open(dirpath, os.O_RDONLY | os.O_NOFOLLOW | os.O_DIRECTORY)
+        dir_fd = os.open(dirpath, os.O_RDONLY | os.O_NOFOLLOW | os.O_DIRECTORY, dir_fd=parent_fd)
     except Exception as e:
         sys.stderr.write("Cannot chown %s to %s: %s\n" % (dirpath, user, e))
         return
     try:
         os.fchown(dir_fd, uid, gid)
-        for entry in os.scandir(dirpath):
-            if entry.is_dir(follow_symlinks=False):
-                chown_tree_fd(entry.path, user, uid, gid)
+        for entry in os.listdir(dir_fd):
+            if stat.S_ISDIR(os.stat(entry, dir_fd=dir_fd, follow_symlinks=False).st_mode):
+                chown_tree_fd(entry, user, uid, gid, parent_fd=dir_fd)
             else:
-                os.lchown(entry.path, uid, gid)
+                os.chown(entry, uid, gid, dir_fd=dir_fd, follow_symlinks=False)
     except Exception as e:
         sys.stderr.write("Cannot chown %s to %s: %s\n" % (dirpath, user, e))
         return
