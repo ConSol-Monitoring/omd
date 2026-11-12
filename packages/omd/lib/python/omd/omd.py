@@ -675,7 +675,7 @@ def create_version_symlink(sitename, version):
     linkname = site_dir(sitename) + "/version"
     if os.path.lexists(linkname):
         os.remove(linkname)
-    os.symlink("../../versions/%s" % OMD_VERSION, linkname)
+    os.symlink("../../versions/%s" % version, linkname)
 
 
 def calculate_admin_password(options):
