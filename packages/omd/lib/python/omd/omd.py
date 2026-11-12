@@ -3811,8 +3811,8 @@ def diff_list(from_skelroot, g_sitedir, from_version, orig_path, diff_binary = N
 
     changed = 0
     def print_diff_and_count(rel_path, source_path, target_path, source_version, source_perms, diff_binary = None):
-        if print_diff(rel_path, source_path, target_path, source_version, source_perms, diff_binary = None):
-            nonlocal changed
+        nonlocal changed
+        if print_diff(rel_path, source_path, target_path, source_version, source_perms, diff_binary=diff_binary):
             changed += 1
 
     if not os.path.isdir(abs_path):
@@ -3821,7 +3821,7 @@ def diff_list(from_skelroot, g_sitedir, from_version, orig_path, diff_binary = N
         if not rel_path:
             rel_path = "."
         walk_skel(from_skelroot, print_diff_and_count, (from_skelroot, g_sitedir,
-                  from_version, old_perms), {}, depth_first=False, relbase = rel_path)
+                  from_version, old_perms, diff_binary), {}, depth_first=False, relbase = rel_path)
     return changed
 
 
@@ -3837,7 +3837,7 @@ def print_diff(rel_path, source_path, target_path, source_version, source_perms,
 
     changed_type, changed_content, changed = file_status(source_file, target_file)
 
-    if not changed:
+    if not changed and source_perm == target_perm:
         return False
 
     fn = tty_bold + rel_path + tty_normal
