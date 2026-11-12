@@ -752,6 +752,26 @@ def delete_directory_contents(d):
     if os.path.islink(d):
         sys.stderr.write("WARNING: %s is a symlink — refusing to clean its contents as root.\n" % d)
         return
+    if am_root():
+        # Anchor deletion to opened directories instead of following entry paths.
+        flags = os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW
+        parent_fd = os.open(os.path.dirname(d) or ".", flags)
+        try:
+            dir_fd = os.open(os.path.basename(d), flags, dir_fd=parent_fd)
+        finally:
+            os.close(parent_fd)
+        try:
+            for _, dirs, files, root_fd in os.fwalk(
+                    ".", topdown=False, follow_symlinks=False, dir_fd=dir_fd):
+                for name in files + dirs:
+                    mode = os.stat(name, dir_fd=root_fd, follow_symlinks=False).st_mode
+                    if stat.S_ISDIR(mode):
+                        os.rmdir(name, dir_fd=root_fd)
+                    else:
+                        os.unlink(name, dir_fd=root_fd)
+        finally:
+            os.close(dir_fd)
+        return
     for f in os.listdir(d):
         delete_user_file(d + '/' + f)
 
@@ -1798,12 +1818,13 @@ def unmount_tmpfs(sitename, output = True, kill = False):
     # If kill is True, then we do an fuser -k on the tmp
     # directory first.
     tmp = tmp_dir_real(sitename)
+    cleanup_dir = tmp_dir(sitename) if am_root() else tmp
     if not tmpfs_mounted(sitename):
         if os.path.exists(tmp):
             if output:
                 sys.stdout.write("Cleaning up temp filesystem...")
                 sys.stdout.flush()
-            delete_directory_contents(tmp)
+            delete_directory_contents(cleanup_dir)
             if output:
                 ok()
         return True
@@ -1815,7 +1836,7 @@ def unmount_tmpfs(sitename, output = True, kill = False):
         if 0 == os.system("umount '%s'" % tmp):
             if output:
                 ok()
-            delete_directory_contents(tmp)
+            delete_directory_contents(cleanup_dir)
             return True
 
         if kill:
