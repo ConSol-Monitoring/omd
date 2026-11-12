@@ -146,10 +146,10 @@ class Log(object):
 
         self.color_replace = re.compile(r"\033\[\d{1,2}m", re.UNICODE)
 
-    def __del__(self):
-        if self.fd == 1:
+    def close(self):
+        if self.fd == 1 and sys.stdout is self:
             sys.stdout = self.orig
-        else:
+        elif self.fd != 1 and sys.stderr is self:
             sys.stderr = self.orig
         self.log.close()
 
@@ -168,8 +168,15 @@ def start_logging(logfile):
 
 def stop_logging():
     global g_stdout_log, g_stderr_log
+    stdout_log, stderr_log = g_stdout_log, g_stderr_log
     g_stdout_log = None
     g_stderr_log = None
+    try:
+        if stdout_log is not None:
+            stdout_log.close()
+    finally:
+        if stderr_log is not None:
+            stderr_log.close()
 
 def show_success(success):
     if success:
