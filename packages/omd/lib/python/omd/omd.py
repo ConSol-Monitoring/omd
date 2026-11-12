@@ -4469,6 +4469,39 @@ def main_backup(args, options={}):
     sys.stderr.write(tty_ok + " backup %s written\n" % dest)
 
 
+def extract_backup_file(tar, tarinfo, sitedir):
+    import tarfile
+    root = os.path.realpath(sitedir)
+
+    def checked_path(name, follow_symlinks=True):
+        if os.path.isabs(name) or ".." in name.split("/"):
+            bail_out(tty_error + ": Invalid path in backup: %s" % name)
+        path = os.path.join(root, name)
+        resolved = os.path.realpath(path if follow_symlinks else os.path.dirname(path))
+        if os.path.commonpath([root, resolved]) != root:
+            bail_out(tty_error + ": Backup path escapes site directory: %s" % name)
+        return path
+
+    if os.path.normpath(tarinfo.name) == "." and not tarinfo.isdir():
+        bail_out(tty_error + ": Invalid site directory entry in backup.")
+
+    # Symlink targets may point outside the site (e.g. version), but their
+    # parent directories and all destinations written through links may not.
+    targetpath = checked_path(tarinfo.name, follow_symlinks=not tarinfo.issym())
+    if tarinfo.islnk():
+        checked_path(tarinfo.linkname)
+
+    # workaround https://bugs.python.org/issue40049
+    if tarinfo.issym() and os.path.lexists(targetpath):
+        os.unlink(targetpath)
+
+    # workaround: https://peps.python.org/pep-0706/#backporting-forward-compatibility
+    if hasattr(tarfile, 'data_filter'):
+        tar.extract(tarinfo, path=sitedir, filter='tar')
+    else:
+        tar.extract(tarinfo, path=sitedir)
+
+
 def main_restore(args, options={}):
     import tarfile
     global g_sitename
@@ -4591,6 +4624,8 @@ def main_restore(args, options={}):
     # Now extract all files
     for tarinfo in tar:
         # remove leading site name from paths
+        if tarinfo.name.split("/", 1)[0] != sitename:
+            bail_out(tty_error + ": Unexpected site path in backup: %s" % tarinfo.name)
         tarinfo.name = '/'.join(tarinfo.name.split('/')[1:])
         tarinfo.name = re.sub("^version/skel", ".backup_meta/skel", tarinfo.name)
         tarinfo.name = re.sub("^share/omd/skel.permissions", ".backup_meta/skel.permissions", tarinfo.name)
@@ -4604,17 +4639,7 @@ def main_restore(args, options={}):
                 parts = parts[1:]
             tarinfo.linkname = '/'.join(parts)
 
-        # workaround https://bugs.python.org/issue40049
-        if tarinfo.issym():
-            targetpath = os.path.join(g_sitedir, tarinfo.name)
-            if os.path.lexists(targetpath):
-                os.unlink(targetpath)
-
-        # workaround: https://peps.python.org/pep-0706/#backporting-forward-compatibility
-        if hasattr(tarfile, 'data_filter'):
-            tar.extract(tarinfo, path=g_sitedir, filter='tar')
-        else:
-            tar.extract(tarinfo, path=g_sitedir)
+        extract_backup_file(tar, tarinfo, g_sitedir)
     tar.close()
 
     # give new user all files
