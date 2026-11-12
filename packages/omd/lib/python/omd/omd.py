@@ -3601,15 +3601,18 @@ def main_mv_or_cp(what, args, options={}):
         if not reuse:
             os.mkdir(site_dir(new))
 
-        addopts = ""
+        rsync_args = ["/usr/bin/rsync", "-ax"]
         for p in get_exclude_patterns(options):
-            addopts += " --exclude '/%s'" % p
+            rsync_args.extend(["--exclude", "/" + p])
 
         if opt_verbose:
-            addopts += " -v"
+            rsync_args.append("-v")
 
-        os.system("/usr/bin/rsync -ax %s '%s/' '%s/'" %
-                (addopts, site_dir(g_sitename), site_dir(new)))
+        rsync_args.extend([site_dir(old) + "/", site_dir(new) + "/"])
+        try:
+            subprocess.check_call(rsync_args)
+        except (OSError, subprocess.CalledProcessError) as e:
+            bail_out(tty_error + ": Cannot %s site '%s' to '%s': %s" % (action, old, new, e))
 
     # give new user all files
     chown_tree(site_dir(new), new)
