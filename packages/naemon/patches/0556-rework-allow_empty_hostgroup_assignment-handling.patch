@@ -1,0 +1,81 @@
+From b85c4dc4f8ee9424402c71b418ffa385f36212e4 Mon Sep 17 00:00:00 2001
+From: Sven Nierlein <Sven.Nierlein@consol.de>
+Date: Fri, 13 Nov 2026 23:29:00 +0100
+Subject: [PATCH] rework allow_empty_hostgroup_assignment handling
+
+this change fixes an inconsistency in allow_empty_hostgroup_assignment.
+The default value in the code was 2 while the default value in the sample config was 0. Also
+it was not possible to set the value to 2 except by not setting the value at all.
+
+New behaviour is:
+
+- default is now 2 (allow empty hostgroups but show a warning)
+- use the same default in code and sample config
+- allow setting the value to 2 in the config as well
+- documenation updates
+- bail out on invalid values
+- add a hint in the error message
+
+Signed-off-by: Sven Nierlein <Sven.Nierlein@consol.de>
+---
+ sample-config/naemon.cfg.in | 9 ++++++---
+ src/naemon/configuration.c  | 7 ++++++-
+ src/naemon/xodtemplate.c    | 4 ++--
+ 3 files changed, 14 insertions(+), 6 deletions(-)
+
+diff --git a/sample-config/naemon.cfg.in b/sample-config/naemon.cfg.in
+index 1c24541c..51e494e7 100644
+--- a/sample-config/naemon.cfg.in
++++ b/sample-config/naemon.cfg.in
+@@ -1053,10 +1053,13 @@ max_debug_file_size=1000000
+ 
+ 
+ 
+-# Should we allow hostgroups to have no hosts, we default this to off since
+-# that was the old behavior
++# Should we allow hostgroups to have no hosts. Default is to warn about empty groups.
++# Valid values are:
++#      0     Bail out with an error
++#      1     Ignore silently
++#      2     Ignore with a warning
+ 
+-allow_empty_hostgroup_assignment=0
++allow_empty_hostgroup_assignment=2
+ 
+ 
+ 
+diff --git a/src/naemon/configuration.c b/src/naemon/configuration.c
+index f515b45b..ec73fb70 100644
+--- a/src/naemon/configuration.c
++++ b/src/naemon/configuration.c
+@@ -1104,7 +1104,12 @@ read_config_file(const char *main_config_file, nagios_macros *mac)
+ 			nm_free(object_precache_file);
+ 			object_precache_file = nspath_absolute(value, config_rel_path);
+ 		} else if (!strcmp(variable, "allow_empty_hostgroup_assignment")) {
+-			allow_empty_hostgroup_assignment = (atoi(value) > 0) ? TRUE : FALSE;
++			allow_empty_hostgroup_assignment = atoi(value);
++			if (allow_empty_hostgroup_assignment < 0 || allow_empty_hostgroup_assignment > 2) {
++				nm_asprintf(&error_message, "Illegal value for allow_empty_hostgroup_assignment, valid from 0-2.");
++				error = TRUE;
++				break;
++			}
+ 		} else if (!strcmp(variable, "allow_circular_dependencies")) {
+ 			allow_circular_dependencies = atoi(value);
+ 		} else if (!strcmp(variable, "host_down_disable_service_checks")) {
+diff --git a/src/naemon/xodtemplate.c b/src/naemon/xodtemplate.c
+index d104626f..aef44012 100644
+--- a/src/naemon/xodtemplate.c
++++ b/src/naemon/xodtemplate.c
+@@ -2417,10 +2417,10 @@ static int xodtemplate_duplicate_services(void)
+ 			/* empty result is only bad if allow_empty_hostgroup_assignment is off */
+ 			if (!glist && !bitmap_count_set_bits(host_map)) {
+ 				if (!allow_empty_hostgroup_assignment) {
+-					nm_log(NSLOG_CONFIG_ERROR, "Error: Could not expand hostgroups and/or hosts specified in service (config file '%s', starting on line %d)\n", xodtemplate_config_file_name(temp_service->_config_file), temp_service->_start_line);
++					nm_log(NSLOG_CONFIG_ERROR, "Error: Could not expand hostgroups and/or hosts specified in service (config file '%s', starting on line %d) (hint: ignore this with allow_empty_hostgroup_assignment)\n", xodtemplate_config_file_name(temp_service->_config_file), temp_service->_start_line);
+ 					return ERROR;
+ 				} else if (allow_empty_hostgroup_assignment == 2) {
+-					nm_log(NSLOG_CONFIG_WARNING, "Warning: Could not expand hostgroups and/or hosts specified in service (config file '%s', starting on line %d)\n", xodtemplate_config_file_name(temp_service->_config_file), temp_service->_start_line);
++					nm_log(NSLOG_CONFIG_WARNING, "Warning: Could not expand hostgroups and/or hosts specified in service (config file '%s', starting on line %d) (hint: hide this warning with allow_empty_hostgroup_assignment)\n", xodtemplate_config_file_name(temp_service->_config_file), temp_service->_start_line);
+ 				}
+ 			}
+ 		}
