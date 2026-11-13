@@ -814,11 +814,15 @@ def chown_tree_fd(dirpath, user, uid, gid, parent_fd=None):
         return
     try:
         os.fchown(dir_fd, uid, gid)
-        for entry in os.scandir(dirpath):
-            if entry.is_dir(follow_symlinks=False):
-                chown_tree_fd(entry.path, user, uid, gid, parent_fd=dir_fd)
+        # List through the held descriptor and operate on single-component
+        # names only.  This avoids a fresh path lookup (and thus a symlink
+        # race) for every entry in the tree.
+        for name in os.listdir(dir_fd):
+            mode = os.stat(name, dir_fd=dir_fd, follow_symlinks=False).st_mode
+            if stat.S_ISDIR(mode):
+                chown_tree_fd(name, user, uid, gid, parent_fd=dir_fd)
             else:
-                os.chown(entry.name, uid, gid, dir_fd=dir_fd, follow_symlinks=False)
+                os.chown(name, uid, gid, dir_fd=dir_fd, follow_symlinks=False)
     except Exception as e:
         sys.stderr.write("Cannot chown %s to %s: %s\n" % (dirpath, user, e))
         return
