@@ -4476,9 +4476,28 @@ def main_backup(args, options={}):
     sys.stderr.write(tty_ok + " backup %s written\n" % dest)
 
 
-def extract_backup_file(tar, tarinfo, sitedir):
-    import tarfile
+def prepare_backup_member(tarinfo, sitename):
+    # Tar archives use the archived site name as their top-level directory.
+    # Strip it and map the special update metadata paths before validating or
+    # extracting the member.
+    if tarinfo.name.split("/", 1)[0] != sitename:
+        bail_out(tty_error + ": Unexpected site path in backup: %s" % tarinfo.name)
 
+    tarinfo.name = '/'.join(tarinfo.name.split('/')[1:])
+    tarinfo.name = re.sub("^version/skel", ".backup_meta/skel", tarinfo.name)
+    tarinfo.name = re.sub("^share/omd/skel.permissions", ".backup_meta/skel.permissions", tarinfo.name)
+
+    if tarinfo.issym() or tarinfo.islnk():
+        parts = tarinfo.linkname.split('/')
+        if tarinfo.name == 'version' and tarinfo.linkname == sitename+'/version':
+            return False
+        if parts[0] == sitename:
+            parts = parts[1:]
+        tarinfo.linkname = '/'.join(parts)
+    return True
+
+
+def validate_backup_file(tarinfo, sitedir):
     # The tar format can represent character/block devices, FIFOs and other
     # special files.  A site never contains those, but the tar filter used
     # below does not reject them, and extracting them as root would create
@@ -4506,6 +4525,13 @@ def extract_backup_file(tar, tarinfo, sitedir):
     targetpath = checked_path(tarinfo.name, follow_symlinks=not tarinfo.issym())
     if tarinfo.islnk():
         checked_path(tarinfo.linkname)
+    return targetpath
+
+
+def extract_backup_file(tar, tarinfo, sitedir):
+    import tarfile
+
+    targetpath = validate_backup_file(tarinfo, sitedir)
 
     # workaround https://bugs.python.org/issue40049
     if tarinfo.issym() and os.path.lexists(targetpath):
@@ -4516,6 +4542,32 @@ def extract_backup_file(tar, tarinfo, sitedir):
         tar.extract(tarinfo, path=sitedir, filter='tar')
     else:
         tar.extract(tarinfo, path=sitedir)
+
+
+def preflight_backup(tar, sitename, sitedir):
+    import tarfile
+
+    seen_member = False
+    try:
+        for tarinfo in tar:
+            if not prepare_backup_member(tarinfo, sitename):
+                continue
+            validate_backup_file(tarinfo, sitedir)
+            seen_member = True
+    except (tarfile.TarError, EOFError, OSError) as e:
+        bail_out(tty_error + ": Failed to read backup: %s" % e)
+
+    if not seen_member:
+        bail_out(tty_error + ": The backup does not contain any site files.")
+
+
+def extract_backup_archive(tar, sitename, sitedir):
+    for tarinfo in tar:
+        if not prepare_backup_member(tarinfo, sitename):
+            continue
+        if opt_verbose:
+            sys.stdout.write("Restoring %s...\n" % tarinfo.name)
+        extract_backup_file(tar, tarinfo, sitedir)
 
 
 def main_restore(args, options={}):
@@ -4538,7 +4590,7 @@ def main_restore(args, options={}):
 
     try:
         tar = tarfile.open(fileobj=fh, mode=tar_mode)
-    except tarfile.ReadError as e:
+    except (tarfile.ReadError, EOFError, OSError) as e:
         bail_out(tty_error + ": Failed to open the backup: %s" % e)
 
     # Get the first file of the tar archive. Expecting <site>/version symlink
@@ -4555,7 +4607,8 @@ def main_restore(args, options={}):
     else:
         bail_out(tty_error + ": Failed to detect version of backed up site.")
 
-    if not version_exists(version):
+    version_installed = version_exists(version)
+    if not version_installed:
         backup_skel_tarinfo = tar.next()
         if backup_skel_tarinfo.name.find("/version/skel") == -1 and backup_skel_tarinfo.name.find("/.backup_meta/skel") == -1:
             bail_out(tty_error + ": This is an old incomplete backup and its version is not installed.\n"
@@ -4594,7 +4647,7 @@ def main_restore(args, options={}):
 
     if reuse:
         version_hint = ""
-        if not version_exists(version):
+        if not version_installed:
             version_hint = (
                 "Since the version %s used in the backup is not installed, an "
                 "automatic update to version %s will be done. "
@@ -4609,54 +4662,126 @@ def main_restore(args, options={}):
             "Restore!", "Abort"):
             bail_out("Aborted.")
 
+    import tempfile
+
+    # Validate the complete archive before stopping or changing the site.
+    preflight_dir = tempfile.mkdtemp(prefix=".restore-check-", dir="/tmp")
+    try:
+        preflight_backup(tar, sitename, preflight_dir)
+    finally:
+        shutil.rmtree(preflight_dir, ignore_errors=True)
+
+    # Reopen the archive for the extraction pass.
+    tar.close()
+    fh.seek(0)
+    try:
+        tar = tarfile.open(fileobj=fh, mode=tar_mode)
+    except (tarfile.ReadError, EOFError, OSError) as e:
+        bail_out(tty_error + ": Failed to open the backup: %s" % e)
+    tar.next()
+    if not version_installed:
+        tar.next()
+
     if reuse:
         if not site_is_stopped(g_sitename):
             if not options.kill:
                 bail_out(tty_error + ": Cannot restore '%s' while it is running." % (g_sitename))
+            if am_root():
+                os.system('/usr/bin/omd stop %s' % g_sitename)
             else:
-                if am_root():
-                    os.system('/usr/bin/omd stop %s' % g_sitename)
-                else:
-                    os.system('/usr/bin/omd stop')
+                os.system('/usr/bin/omd stop')
+            if not site_is_stopped(g_sitename):
+                bail_out(tty_error + ": Cannot stop '%s' for restore." % g_sitename)
         unmount_tmpfs(g_sitename, kill = options.kill)
 
     sys.stdout.write("Restoring site %s from %s...\n" %
                     (g_sitename, source == '-' and 'stdin' or source))
     sys.stdout.flush()
 
-    if not reuse:
-        uid = options.uid
-        gid = options.gid
-        useradd(g_sitename, uid, gid) # None for uid/gid means: let Linux decide
-    else:
-        sys.stdout.write("Deleting existing site data...")
-        # remove site folder (when doing this as user, skip only on errors below the sitefolder itself)
-        shutil.rmtree(g_sitedir, onerror=lambda f,p,e: p != g_sitedir and not am_root() and bail_out(tty_error + ": %s" % e[1]))
-        ok()
+    staging_dir = None
+    old_backup = None
+    created_user = False
+    site_replaced = False
+    try:
+        # Restore into a sibling directory first, then swap it into place.
+        # This keeps the old site intact if extraction fails.
+        try:
+            staging_dir = tempfile.mkdtemp(prefix=".restore-%s-" % g_sitename,
+                                           dir=os.path.dirname(g_sitedir))
+        except OSError as e:
+            if am_root():
+                bail_out(tty_error + ": Cannot create temporary restore directory: %s" % e)
+            # Non-root users may not be able to write to /omd/sites. Fall
+            # back to the old in-place behavior after the preflight check.
+            staging_dir = None
 
-    if not os.path.exists(g_sitedir):
-        os.mkdir(g_sitedir)
+        if staging_dir is None:
+            # Non-root fallback: extraction still happens in place.
+            if reuse:
+                sys.stdout.write("Deleting existing site data...")
+                # remove site folder (when doing this as user, skip only on errors below the sitefolder itself)
+                shutil.rmtree(g_sitedir, onerror=lambda f,p,e: p != g_sitedir and not am_root() and bail_out(tty_error + ": %s" % e[1]))
+                ok()
+                site_replaced = True
+            else:
+                uid = options.uid
+                gid = options.gid
+                useradd(g_sitename, uid, gid) # None for uid/gid means: let Linux decide
+                created_user = True
 
-    # Now extract all files
-    for tarinfo in tar:
-        # remove leading site name from paths
-        if tarinfo.name.split("/", 1)[0] != sitename:
-            bail_out(tty_error + ": Unexpected site path in backup: %s" % tarinfo.name)
-        tarinfo.name = '/'.join(tarinfo.name.split('/')[1:])
-        tarinfo.name = re.sub("^version/skel", ".backup_meta/skel", tarinfo.name)
-        tarinfo.name = re.sub("^share/omd/skel.permissions", ".backup_meta/skel.permissions", tarinfo.name)
-        if opt_verbose:
-            sys.stdout.write("Restoring %s...\n" % tarinfo.name)
-        if tarinfo.issym() or tarinfo.islnk():
-            parts = tarinfo.linkname.split('/')
-            if tarinfo.name == 'version' and tarinfo.linkname == sitename+'/version':
-                continue
-            if parts[0] == sitename:
-                parts = parts[1:]
-            tarinfo.linkname = '/'.join(parts)
+            if not os.path.exists(g_sitedir):
+                os.mkdir(g_sitedir)
+            site_replaced = True
 
-        extract_backup_file(tar, tarinfo, g_sitedir)
-    tar.close()
+            extract_backup_archive(tar, sitename, g_sitedir)
+            tar.close()
+        else:
+            extract_backup_archive(tar, sitename, staging_dir)
+            tar.close()
+
+            if not reuse:
+                uid = options.uid
+                gid = options.gid
+                useradd(g_sitename, uid, gid) # None for uid/gid means: let Linux decide
+                created_user = True
+                # Some useradd implementations create the home directory.
+                # It must not stand in the way of moving the restored tree in.
+                if os.path.exists(g_sitedir):
+                    shutil.rmtree(g_sitedir)
+
+            if reuse:
+                sys.stdout.write("Deleting existing site data...")
+                old_backup = staging_dir + ".old"
+                if os.path.exists(g_sitedir):
+                    os.rename(g_sitedir, old_backup)
+                    site_replaced = True
+                ok()
+
+            os.rename(staging_dir, g_sitedir)
+            site_replaced = True
+            staging_dir = None
+    except BaseException:
+        # The extraction was not committed. Remove the staging directory and
+        # put the previous site back if it was already moved out of the way.
+        if staging_dir is not None:
+            shutil.rmtree(staging_dir, ignore_errors=True)
+        if old_backup is not None:
+            if site_replaced and os.path.exists(g_sitedir):
+                shutil.rmtree(g_sitedir, ignore_errors=True)
+            if os.path.exists(old_backup):
+                try:
+                    os.rename(old_backup, g_sitedir)
+                except OSError as e:
+                    sys.stderr.write("WARNING: cannot restore old site data from %s: %s\n"
+                                     % (old_backup, e))
+        elif site_replaced and not reuse:
+            shutil.rmtree(g_sitedir, ignore_errors=True)
+        if created_user:
+            try:
+                userdel(g_sitename)
+            except Exception as e:
+                sys.stderr.write("WARNING: cannot remove user %s: %s\n" % (g_sitename, e))
+        raise
 
     # give new user all files
     if am_root():
@@ -4680,7 +4805,7 @@ def main_restore(args, options={}):
     if os.path.exists(backup_skel_path):
         from_version = version
         to_version = version
-        if not version_exists(version):
+        if not version_installed:
             to_version = OMD_VERSION
             sys.stdout.write("\nUpdating site %s from %s to version %s...\n" % (g_sitename, from_version, to_version))
 
@@ -4740,6 +4865,12 @@ def main_restore(args, options={}):
         chown_tree(g_sitedir, g_sitename)
 
     finalize_site("restore", options.apache_reload)
+
+    if old_backup is not None and os.path.exists(old_backup):
+        try:
+            shutil.rmtree(old_backup)
+        except OSError as e:
+            sys.stderr.write("WARNING: cannot remove old site data at %s: %s\n" % (old_backup, e))
 
     if not am_root():
         sys.stdout.write("Restore completed as site user. "
