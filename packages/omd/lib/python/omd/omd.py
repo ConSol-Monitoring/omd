@@ -978,7 +978,27 @@ def patch_skeleton_files(old, new, skelroot=None):
                     sys.stderr.write("Error patching template file '%s': %s\n" %
                             (dst, e))
 
+
+def write_file_no_follow(path, content):
+    # This runs as root during restore.  Never let a symlink in the site
+    # redirect the write to a file outside the site.
+    if os.path.islink(path):
+        bail_out(tty_error + ": Refusing to write through symbolic link: %s" % path)
+
+    try:
+        fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC | os.O_NOFOLLOW, 0o600)
+    except OSError as e:
+        bail_out(tty_error + ": Cannot write temporary file %s: %s" % (path, e))
+
+    with os.fdopen(fd, "wb") as fh:
+        fh.write(content)
+
+
 def patch_template_file(src, dst, old, new):
+    # Do not let a site-controlled symlink redirect the patch operation.
+    if os.path.islink(dst):
+        bail_out(tty_error + ": Refusing to patch symbolic link: %s" % dst)
+
     # Create patch from old instantiated skeleton file to new one
     content = open(src, "rb").read()
     for site in [ old, new ]:
@@ -989,7 +1009,7 @@ def patch_template_file(src, dst, old, new):
         for hook_name in g_site_conf:
             replacements["###CONFIG_%s###" % hook_name] = g_site_conf[hook_name]
         filename = "%s.skel.%s" % (dst, site)
-        open(filename, "wb").write(replace_tags(content, replacements))
+        write_file_no_follow(filename, replace_tags(content, replacements))
         try_chown(filename, new)
 
     # If old and new skeleton file are identical, then do nothing
@@ -999,6 +1019,10 @@ def patch_template_file(src, dst, old, new):
         os.remove(old_orig_path)
         os.remove(new_orig_path)
         return
+
+    for patched_path in (dst + ".orig", dst + ".rej"):
+        if os.path.islink(patched_path):
+            bail_out(tty_error + ": Refusing to patch symbolic link: %s" % patched_path)
 
     # Now create a patch from old to new and immediately apply on
     # existing - possibly user modified - file.
@@ -4497,7 +4521,29 @@ def prepare_backup_member(tarinfo, sitename):
     return True
 
 
-def validate_backup_file(tarinfo, sitedir):
+def validate_backup_symlink(tarinfo, linkroot, oldroot=None):
+    # Resolve a symlink target as it will exist in the restored site.  Tar
+    # symlinks are allowed to point to the site itself or to the (root-owned)
+    # OMD version tree, but not to arbitrary paths outside those trees.
+    link_path = os.path.join(os.path.realpath(linkroot), tarinfo.name)
+    target = tarinfo.linkname
+    if not os.path.isabs(target):
+        target = os.path.join(os.path.dirname(link_path), target)
+    resolved = os.path.realpath(target)
+
+    allowed_roots = [os.path.realpath(linkroot), os.path.realpath("/omd/versions")]
+    if oldroot is not None:
+        allowed_roots.append(os.path.realpath(oldroot))
+
+    for allowed in allowed_roots:
+        if os.path.commonpath([allowed, resolved]) == allowed:
+            return
+
+    bail_out(tty_error + ": Backup symlink target escapes site directory: %s -> %s"
+             % (tarinfo.name, tarinfo.linkname))
+
+
+def validate_backup_file(tarinfo, sitedir, linkroot=None, oldroot=None):
     # The tar format can represent character/block devices, FIFOs and other
     # special files.  A site never contains those, but the tar filter used
     # below does not reject them, and extracting them as root would create
@@ -4506,6 +4552,8 @@ def validate_backup_file(tarinfo, sitedir):
     if not (tarinfo.isreg() or tarinfo.isdir() or tarinfo.issym() or tarinfo.islnk()):
         bail_out(tty_error + ": Unsupported special file in backup: %s" % tarinfo.name)
 
+    if linkroot is None:
+        linkroot = sitedir
     root = os.path.realpath(sitedir)
 
     def checked_path(name, follow_symlinks=True):
@@ -4525,13 +4573,15 @@ def validate_backup_file(tarinfo, sitedir):
     targetpath = checked_path(tarinfo.name, follow_symlinks=not tarinfo.issym())
     if tarinfo.islnk():
         checked_path(tarinfo.linkname)
+    if tarinfo.issym():
+        validate_backup_symlink(tarinfo, linkroot, oldroot)
     return targetpath
 
 
-def extract_backup_file(tar, tarinfo, sitedir):
+def extract_backup_file(tar, tarinfo, sitedir, linkroot=None, oldroot=None):
     import tarfile
 
-    targetpath = validate_backup_file(tarinfo, sitedir)
+    targetpath = validate_backup_file(tarinfo, sitedir, linkroot, oldroot)
 
     # workaround https://bugs.python.org/issue40049
     if tarinfo.issym() and os.path.lexists(targetpath):
@@ -4544,7 +4594,7 @@ def extract_backup_file(tar, tarinfo, sitedir):
         tar.extract(tarinfo, path=sitedir)
 
 
-def preflight_backup(tar, sitename, sitedir):
+def preflight_backup(tar, sitename, sitedir, linkroot=None, oldroot=None):
     import tarfile
 
     seen_member = False
@@ -4552,7 +4602,7 @@ def preflight_backup(tar, sitename, sitedir):
         for tarinfo in tar:
             if not prepare_backup_member(tarinfo, sitename):
                 continue
-            validate_backup_file(tarinfo, sitedir)
+            validate_backup_file(tarinfo, sitedir, linkroot, oldroot)
             seen_member = True
     except (tarfile.TarError, EOFError, OSError) as e:
         bail_out(tty_error + ": Failed to read backup: %s" % e)
@@ -4561,13 +4611,13 @@ def preflight_backup(tar, sitename, sitedir):
         bail_out(tty_error + ": The backup does not contain any site files.")
 
 
-def extract_backup_archive(tar, sitename, sitedir):
+def extract_backup_archive(tar, sitename, sitedir, linkroot=None, oldroot=None):
     for tarinfo in tar:
         if not prepare_backup_member(tarinfo, sitename):
             continue
         if opt_verbose:
             sys.stdout.write("Restoring %s...\n" % tarinfo.name)
-        extract_backup_file(tar, tarinfo, sitedir)
+        extract_backup_file(tar, tarinfo, sitedir, linkroot, oldroot)
 
 
 def main_restore(args, options={}):
@@ -4667,7 +4717,7 @@ def main_restore(args, options={}):
     # Validate the complete archive before stopping or changing the site.
     preflight_dir = tempfile.mkdtemp(prefix=".restore-check-", dir="/tmp")
     try:
-        preflight_backup(tar, sitename, preflight_dir)
+        preflight_backup(tar, sitename, preflight_dir, g_sitedir, site_dir(sitename))
     finally:
         shutil.rmtree(preflight_dir, ignore_errors=True)
 
@@ -4733,10 +4783,10 @@ def main_restore(args, options={}):
                 os.mkdir(g_sitedir)
             site_replaced = True
 
-            extract_backup_archive(tar, sitename, g_sitedir)
+            extract_backup_archive(tar, sitename, g_sitedir, g_sitedir, site_dir(sitename))
             tar.close()
         else:
-            extract_backup_archive(tar, sitename, staging_dir)
+            extract_backup_archive(tar, sitename, staging_dir, g_sitedir, site_dir(sitename))
             tar.close()
 
             if not reuse:
