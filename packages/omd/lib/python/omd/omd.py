@@ -4478,6 +4478,15 @@ def main_backup(args, options={}):
 
 def extract_backup_file(tar, tarinfo, sitedir):
     import tarfile
+
+    # The tar format can represent character/block devices, FIFOs and other
+    # special files.  A site never contains those, but the tar filter used
+    # below does not reject them, and extracting them as root would create
+    # device nodes owned by the site user after chown_tree().  Only restore
+    # the member types a real site can contain.
+    if not (tarinfo.isreg() or tarinfo.isdir() or tarinfo.issym() or tarinfo.islnk()):
+        bail_out(tty_error + ": Unsupported special file in backup: %s" % tarinfo.name)
+
     root = os.path.realpath(sitedir)
 
     def checked_path(name, follow_symlinks=True):
