@@ -146,10 +146,10 @@ class Log(object):
 
         self.color_replace = re.compile(r"\033\[\d{1,2}m", re.UNICODE)
 
-    def __del__(self):
-        if self.fd == 1:
+    def close(self):
+        if self.fd == 1 and sys.stdout is self:
             sys.stdout = self.orig
-        else:
+        elif self.fd != 1 and sys.stderr is self:
             sys.stderr = self.orig
         self.log.close()
 
@@ -168,15 +168,22 @@ def start_logging(logfile):
 
 def stop_logging():
     global g_stdout_log, g_stderr_log
+    stdout_log, stderr_log = g_stdout_log, g_stderr_log
     g_stdout_log = None
     g_stderr_log = None
+    try:
+        if stdout_log is not None:
+            stdout_log.close()
+    finally:
+        if stderr_log is not None:
+            stderr_log.close()
 
-def show_success(exit_code):
-    if exit_code == True or exit_code == 0:
+def show_success(success):
+    if success:
         ok()
     else:
         sys.stdout.write(tty_error + "\n")
-    return exit_code
+    return success
 
 
 #   .--Dialog--------------------------------------------------------------.
@@ -675,7 +682,7 @@ def create_version_symlink(sitename, version):
     linkname = site_dir(sitename) + "/version"
     if os.path.lexists(linkname):
         os.remove(linkname)
-    os.symlink("../../versions/%s" % OMD_VERSION, linkname)
+    os.symlink("../../versions/%s" % version, linkname)
 
 
 def calculate_admin_password(options):
@@ -684,8 +691,8 @@ def calculate_admin_password(options):
 
 def set_admin_password(pw):
     p = subprocess.Popen(["%s/bin/set_admin_password" % g_sitedir, pw], stderr = subprocess.PIPE, stdout = subprocess.PIPE)
-    response = p.stderr.read()
-    return 0 == os.waitpid(p.pid, 0)[1], response
+    _, response = p.communicate()
+    return p.returncode == 0, response
 
 
 def set_admin_password_or_warn(pw):
@@ -745,6 +752,26 @@ def delete_directory_contents(d):
     if os.path.islink(d):
         sys.stderr.write("WARNING: %s is a symlink — refusing to clean its contents as root.\n" % d)
         return
+    if am_root():
+        # Anchor deletion to opened directories instead of following entry paths.
+        flags = os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW
+        parent_fd = os.open(os.path.dirname(d) or ".", flags)
+        try:
+            dir_fd = os.open(os.path.basename(d), flags, dir_fd=parent_fd)
+        finally:
+            os.close(parent_fd)
+        try:
+            for _, dirs, files, root_fd in os.fwalk(
+                    ".", topdown=False, follow_symlinks=False, dir_fd=dir_fd):
+                for name in files + dirs:
+                    mode = os.stat(name, dir_fd=root_fd, follow_symlinks=False).st_mode
+                    if stat.S_ISDIR(mode):
+                        os.rmdir(name, dir_fd=root_fd)
+                    else:
+                        os.unlink(name, dir_fd=root_fd)
+        finally:
+            os.close(dir_fd)
+        return
     for f in os.listdir(d):
         delete_user_file(d + '/' + f)
 
@@ -778,9 +805,10 @@ def create_skeleton_file(skelbase, userbase, relpath, replacements):
         os.chmod(user_path, mode)
 
 
-def chown_tree_fd(dirpath, user, uid, gid):
+def chown_tree_fd(dirpath, user, uid, gid, parent_fd=None):
     try:
-        dir_fd = os.open(dirpath, os.O_RDONLY | os.O_NOFOLLOW | os.O_DIRECTORY)
+        name = os.path.basename(dirpath) if parent_fd is not None else dirpath
+        dir_fd = os.open(name, os.O_RDONLY | os.O_NOFOLLOW | os.O_DIRECTORY, dir_fd=parent_fd)
     except Exception as e:
         sys.stderr.write("Cannot chown %s to %s: %s\n" % (dirpath, user, e))
         return
@@ -788,9 +816,9 @@ def chown_tree_fd(dirpath, user, uid, gid):
         os.fchown(dir_fd, uid, gid)
         for entry in os.scandir(dirpath):
             if entry.is_dir(follow_symlinks=False):
-                chown_tree_fd(entry.path, user, uid, gid)
+                chown_tree_fd(entry.path, user, uid, gid, parent_fd=dir_fd)
             else:
-                os.lchown(entry.path, uid, gid)
+                os.chown(entry.name, uid, gid, dir_fd=dir_fd, follow_symlinks=False)
     except Exception as e:
         sys.stderr.write("Cannot chown %s to %s: %s\n" % (dirpath, user, e))
         return
@@ -1103,6 +1131,7 @@ def merge_update_file(relpath, userdir, old_version, new_version, skel_path, dry
                         print_conflict(p, ("skeleton file of version %s not readable" % (version)))
                         if opt_verbose:
                             print("%s\n" % e)
+                        return None
                     elif opt_conflict in [ "abort", "install" ]:
                         bail_out(tty_error + ": Skeleton file '%s' of version %s not readable." % (p, version))
                     elif opt_conflict == "keepold" or not user_confirms("Skeleton file of version %s not readable" % version,
@@ -1117,7 +1146,7 @@ def merge_update_file(relpath, userdir, old_version, new_version, skel_path, dry
                         relpath,
                         "retry", "Retry reading the file (after you've fixed it)",
                         "ignore", "Assume the file to be empty"):
-                        skel_content = ""
+                        skel_content = b""
                         break
             open("%s-%s" % (user_path, version), "wb").write(replace_tags(skel_content, replacements))
         version_patch = os.popen("diff -u %s-%s %s-%s" % (user_path, old_version, user_path, new_version)).read()
@@ -1143,6 +1172,9 @@ def merge_update_file(relpath, userdir, old_version, new_version, skel_path, dry
                 pass
 
     merge_res = try_merge()
+    if merge_res is None:
+        clean_local_temp_files()
+        return
     if merge_res[0] == 0:
         clean_local_temp_files()
         sys.stdout.write(good + " Merged         %s\n" % fn)
@@ -1786,12 +1818,13 @@ def unmount_tmpfs(sitename, output = True, kill = False):
     # If kill is True, then we do an fuser -k on the tmp
     # directory first.
     tmp = tmp_dir_real(sitename)
+    cleanup_dir = tmp_dir(sitename) if am_root() else tmp
     if not tmpfs_mounted(sitename):
         if os.path.exists(tmp):
             if output:
                 sys.stdout.write("Cleaning up temp filesystem...")
                 sys.stdout.flush()
-            delete_directory_contents(tmp)
+            delete_directory_contents(cleanup_dir)
             if output:
                 ok()
         return True
@@ -1803,7 +1836,7 @@ def unmount_tmpfs(sitename, output = True, kill = False):
         if 0 == os.system("umount '%s'" % tmp):
             if output:
                 ok()
-            delete_directory_contents(tmp)
+            delete_directory_contents(cleanup_dir)
             return True
 
         if kill:
@@ -1906,9 +1939,9 @@ def call_init_scripts(sitename, command, daemon = None):
     # but first do stop all, then start all again! This
     # preserves the order.
     if command == "restart" and daemon == None:
-        call_init_scripts(sitename, "stop", daemon)
-        call_init_scripts(sitename, "start", daemon)
-        return
+        stop_status = call_init_scripts(sitename, "stop", daemon)
+        start_status = call_init_scripts(sitename, "start", daemon)
+        return max(stop_status, start_status)
 
     # OMD guarantees OMD_ROOT to be the current directory
     os.chdir(site_dir(sitename))
@@ -1933,9 +1966,9 @@ def call_init_scripts(sitename, command, daemon = None):
                 ok = False
 
     if ok:
-         return 0
+        return 0
     else:
-         return 2
+        return 2
 
 def check_status(sitename, display=True, daemon=None, bare=False):
     import psutil
@@ -2116,14 +2149,14 @@ def get_init_script_meta(script, site_config, processlist=None):
     if meta["pidfile"] != None:
         try:
             with open(meta["pidfile"], 'r') as fd:
-                pid = fd.read().strip()
+                pid = int(fd.read().strip())
                 if check_pid(pid):
                     meta["pid"] = pid
                 else:
                     # remove stale pid file
                     sys.stderr.write("removing stale pid file: %s\n" % meta["pidfile"])
                     os.remove(meta["pidfile"])
-        except Exception:
+        except (OSError, ValueError, OverflowError):
             pass
 
     if meta["pid"] == None and meta["binary"] != None and processlist != None:
@@ -2139,12 +2172,15 @@ def get_init_script_meta(script, site_config, processlist=None):
 
 
 def check_pid(pid):
+    if pid <= 0:
+        return False
     try:
         os.kill(pid, 0)
-    except OSError:
+    except ProcessLookupError:
         return False
-    else:
+    except PermissionError:
         return True
+    return True
 
 #.
 #   .--Config & Hooks------------------------------------------------------.
@@ -2457,7 +2493,7 @@ def config_set_value(hook_name, value, save = True):
     # be our new value (i.e. hook disagrees with the new setting!)
     exitcode, answer = call_hook(hook_name, ["set", value])
     if exitcode:
-        return
+        bail_out(tty_error + ": Failed to set config variable '%s' (rc: %d)." % (hook_name, exitcode))
 
     if len(answer) > 0:
         value = answer.strip()
@@ -2590,9 +2626,6 @@ def config_configure_hook(hook_name):
         dialog_function(title, descr, choices, value, "Change", "Cancel")
     if change:
         config_set_value(hook["name"], new_value)
-        g_site_conf[hook_name] = new_value
-        save_site_conf()
-        config_set_all()
         load_hook_dependencies()
 
 def call_init_hook(command, when):
@@ -2826,13 +2859,13 @@ def init_cmd(name, action):
 def reload_apache():
     sys.stdout.write("Reloading Apache...")
     sys.stdout.flush()
-    show_success(os.system("%s graceful" % g_info["APACHE_CTL"]) >> 8)
+    show_success(os.system("%s graceful" % g_info["APACHE_CTL"]) == 0)
 
 def restart_apache():
     if os.system(init_cmd(g_info['APACHE_INIT_NAME'], 'status') + ' >/dev/null 2>&1') >> 8 == 0:
         sys.stdout.write("Restarting Apache...")
         sys.stdout.flush()
-        show_success(os.system(init_cmd(g_info['APACHE_INIT_NAME'], 'restart') + ' >/dev/null') >> 8)
+        show_success(os.system(init_cmd(g_info['APACHE_INIT_NAME'], 'restart') + ' >/dev/null') == 0)
     else:
         print("restart apache failed")
         print(init_cmd(g_info['APACHE_INIT_NAME'], 'status'))
@@ -3345,7 +3378,7 @@ def main_disable(args, options):
     if not site_is_stopped(g_sitename):
         os.system('/usr/bin/omd stop %s' % g_sitename)
 
-    unmount_tmpfs(g_sitename, options.kill)
+    unmount_tmpfs(g_sitename, kill=options.kill)
     sys.stdout.write("Disabling Apache configuration for this site...")
     delete_apache_hook(g_sitename)
     ok()
@@ -3444,8 +3477,8 @@ def main_diag(args, options={}):
 def call_diag_script(script):
     errors = 0
     p = subprocess.Popen([script], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    exitcode = p.wait()
     output = p.communicate()
+    exitcode = p.returncode
     for line in output[0].decode("UTF-8").splitlines():
         if line.startswith("OK"):
             sys.stdout.write("  " + tty_ok + " %s\n" % line[3:])
@@ -3569,15 +3602,18 @@ def main_mv_or_cp(what, args, options={}):
         if not reuse:
             os.mkdir(site_dir(new))
 
-        addopts = ""
+        rsync_args = ["/usr/bin/rsync", "-ax"]
         for p in get_exclude_patterns(options):
-            addopts += " --exclude '/%s'" % p
+            rsync_args.extend(["--exclude", "/" + p])
 
         if opt_verbose:
-            addopts += " -v"
+            rsync_args.append("-v")
 
-        os.system("/usr/bin/rsync -ax %s '%s/' '%s/'" %
-                (addopts, site_dir(g_sitename), site_dir(new)))
+        rsync_args.extend([site_dir(old) + "/", site_dir(new) + "/"])
+        try:
+            subprocess.check_call(rsync_args)
+        except (OSError, subprocess.CalledProcessError) as e:
+            bail_out(tty_error + ": Cannot %s site '%s' to '%s': %s" % (action, old, new, e))
 
     # give new user all files
     chown_tree(site_dir(new), new)
@@ -3776,8 +3812,8 @@ def diff_list(from_skelroot, g_sitedir, from_version, orig_path, diff_binary = N
 
     changed = 0
     def print_diff_and_count(rel_path, source_path, target_path, source_version, source_perms, diff_binary = None):
-        if print_diff(rel_path, source_path, target_path, source_version, source_perms, diff_binary = None):
-            nonlocal changed
+        nonlocal changed
+        if print_diff(rel_path, source_path, target_path, source_version, source_perms, diff_binary=diff_binary):
             changed += 1
 
     if not os.path.isdir(abs_path):
@@ -3786,7 +3822,7 @@ def diff_list(from_skelroot, g_sitedir, from_version, orig_path, diff_binary = N
         if not rel_path:
             rel_path = "."
         walk_skel(from_skelroot, print_diff_and_count, (from_skelroot, g_sitedir,
-                  from_version, old_perms), {}, depth_first=False, relbase = rel_path)
+                  from_version, old_perms, diff_binary), {}, depth_first=False, relbase = rel_path)
     return changed
 
 
@@ -3802,7 +3838,7 @@ def print_diff(rel_path, source_path, target_path, source_version, source_perms,
 
     changed_type, changed_content, changed = file_status(source_file, target_file)
 
-    if not changed:
+    if not changed and source_perm == target_perm:
         return False
 
     fn = tty_bold + rel_path + tty_normal
@@ -4159,7 +4195,7 @@ def main_mount(args, options = {}):
                 stderr=stderr
             )
 
-            if not p.wait():
+            if p.wait() != 0:
                 exit_status = 1
     else:
         # Skip the site even when it is partly running
@@ -4287,10 +4323,12 @@ def main_init_action(command, args, options={}):
     while parallel and processes:
         for site_id, p in processes[:]:
             buf = site_buf.get(site_id, b"")
+            eof = False
             try:
                 while True:
                     b = p.stdout.read(1024)
                     if not b:
+                        eof = b == b""
                         break
                     buf += b
             except IOError as e:
@@ -4308,7 +4346,10 @@ def main_init_action(command, args, options={}):
 
             site_buf[site_id] = buf
 
-            if not buf and p.poll() is not None:
+            if eof and p.poll() is not None:
+                if buf:
+                    parallel_output(site_id, buf + b"\n")
+                del site_buf[site_id]
                 exit_states.append(p.returncode)
                 processes.remove((site_id, p))
         time.sleep(0.01)
@@ -4435,6 +4476,39 @@ def main_backup(args, options={}):
     sys.stderr.write(tty_ok + " backup %s written\n" % dest)
 
 
+def extract_backup_file(tar, tarinfo, sitedir):
+    import tarfile
+    root = os.path.realpath(sitedir)
+
+    def checked_path(name, follow_symlinks=True):
+        if os.path.isabs(name) or ".." in name.split("/"):
+            bail_out(tty_error + ": Invalid path in backup: %s" % name)
+        path = os.path.join(root, name)
+        resolved = os.path.realpath(path if follow_symlinks else os.path.dirname(path))
+        if os.path.commonpath([root, resolved]) != root:
+            bail_out(tty_error + ": Backup path escapes site directory: %s" % name)
+        return path
+
+    if os.path.normpath(tarinfo.name) == "." and not tarinfo.isdir():
+        bail_out(tty_error + ": Invalid site directory entry in backup.")
+
+    # Symlink targets may point outside the site (e.g. version), but their
+    # parent directories and all destinations written through links may not.
+    targetpath = checked_path(tarinfo.name, follow_symlinks=not tarinfo.issym())
+    if tarinfo.islnk():
+        checked_path(tarinfo.linkname)
+
+    # workaround https://bugs.python.org/issue40049
+    if tarinfo.issym() and os.path.lexists(targetpath):
+        os.unlink(targetpath)
+
+    # workaround: https://peps.python.org/pep-0706/#backporting-forward-compatibility
+    if hasattr(tarfile, 'data_filter'):
+        tar.extract(tarinfo, path=sitedir, filter='tar')
+    else:
+        tar.extract(tarinfo, path=sitedir)
+
+
 def main_restore(args, options={}):
     import tarfile
     global g_sitename
@@ -4557,6 +4631,8 @@ def main_restore(args, options={}):
     # Now extract all files
     for tarinfo in tar:
         # remove leading site name from paths
+        if tarinfo.name.split("/", 1)[0] != sitename:
+            bail_out(tty_error + ": Unexpected site path in backup: %s" % tarinfo.name)
         tarinfo.name = '/'.join(tarinfo.name.split('/')[1:])
         tarinfo.name = re.sub("^version/skel", ".backup_meta/skel", tarinfo.name)
         tarinfo.name = re.sub("^share/omd/skel.permissions", ".backup_meta/skel.permissions", tarinfo.name)
@@ -4570,17 +4646,7 @@ def main_restore(args, options={}):
                 parts = parts[1:]
             tarinfo.linkname = '/'.join(parts)
 
-        # workaround https://bugs.python.org/issue40049
-        if tarinfo.issym():
-            targetpath = os.path.join(g_sitedir, tarinfo.name)
-            if os.path.lexists(targetpath):
-                os.unlink(targetpath)
-
-        # workaround: https://peps.python.org/pep-0706/#backporting-forward-compatibility
-        if hasattr(tarfile, 'data_filter'):
-            tar.extract(tarinfo, path=g_sitedir, filter='tar')
-        else:
-            tar.extract(tarinfo, path=g_sitedir)
+        extract_backup_file(tar, tarinfo, g_sitedir)
     tar.close()
 
     # give new user all files
