@@ -3858,15 +3858,21 @@ def print_diff(rel_path, source_path, target_path, source_version, source_perms,
     source_file = source_path + '/' + rel_path
     target_file = target_path + '/' + rel_path
 
-    source_perm = get_skel_permissions(source_version, source_perms, rel_path)
-    target_perm = get_file_permissions(target_file)
-
     source_type = filetype(source_file)
     target_type = filetype(target_file)
 
+    # Permission bits on symlinks are irrelevant on Linux and get_file_permissions()
+    # would follow the link and compare the target's permissions.
+    if source_type == "link" or target_type == "link":
+        source_perm = None
+        target_perm = None
+    else:
+        source_perm = get_skel_permissions(source_version, source_perms, rel_path)
+        target_perm = get_file_permissions(target_file)
+
     changed_type, changed_content, changed = file_status(source_file, target_file)
 
-    if not changed and source_perm == target_perm:
+    if not changed and (source_perm is None or source_perm == target_perm):
         return False
 
     fn = tty_bold + rel_path + tty_normal
@@ -3922,7 +3928,7 @@ def print_diff(rel_path, source_path, target_path, source_version, source_perms,
     elif changed_content and not changed_type:
         print_status(good, fn, 'c', 'Changed content')
 
-    if source_perm != target_perm:
+    if source_perm is not None and target_perm is not None and source_perm != target_perm:
         print_status(warn, fn, 'p', 'Changed permissions')
 
     return True
@@ -4596,6 +4602,14 @@ def extract_backup_file(tar, tarinfo, sitedir, linkroot=None, oldroot=None):
         tar.extract(tarinfo, path=sitedir, filter='tar')
     else:
         tar.extract(tarinfo, path=sitedir)
+
+    # The tar filter clears group/other write bits.  Restore the archived
+    # permissions after extraction; symlink modes are irrelevant.
+    if not tarinfo.issym() and not tarinfo.islnk() and tarinfo.mode is not None:
+        try:
+            os.chmod(targetpath, tarinfo.mode & 0o7777)
+        except OSError as e:
+            bail_out(tty_error + ": Cannot restore permissions of %s: %s" % (tarinfo.name, e))
 
 
 def preflight_backup(tar, sitename, sitedir, linkroot=None, oldroot=None):
