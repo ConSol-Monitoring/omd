@@ -1,0 +1,6 @@
+#!/bin/sh
+set -eu
+
+: "${NAEMON_VIM_MASTER_PASSWORD:?Set NAEMON_VIM_MASTER_PASSWORD first}"
+exec vim --cmd 'set cryptmethod=blowfish2' \
+    --cmd 'let &key = $NAEMON_VIM_MASTER_PASSWORD' "$@"
