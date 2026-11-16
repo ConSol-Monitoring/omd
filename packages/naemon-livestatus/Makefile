@@ -2,7 +2,7 @@ include ../../Makefile.omd
 
 NAME    = naemon-livestatus
 CHANGELOG = https://github.com/naemon/naemon-livestatus/releases
-VERSION = 1.5.1
+VERSION = 1.6.0
 DIR     = $(NAME)-$(VERSION)
 DEPENDS = naemon
 
@@ -14,7 +14,7 @@ CFLAGS += -g3
 CFLAGS += -fsigned-char
 
 build:
-	tar xzf $(NAME)-$(VERSION).tar.gz
+	tar xfJ naemon-livestatus-$(VERSION).tar.xz
 	#set -e ; for p in patches/*.patch ; do \
 	#    echo "applying $$p..." ; \
 	#    ( cd $(DIR) ; patch -p1 -b ) < $$p ; \
@@ -51,19 +51,26 @@ clean:
 	rm -rf $(DIR)
 	rm -rf ./dest
 
-upstream:
-	rm -f *.gz
+# update naemon-livestatus to master (HEAD) and repack as xz
+upstream: clean
+	rm -f naemon-livestatus-master.tar.xz
 	wget https://github.com/naemon/naemon-livestatus/tarball/master -O tmp.tar.gz
 	tar zxf tmp.tar.gz
 	mv naemon-naemon-livestatus-??????? naemon-livestatus-master
-	#set -e ; for p in patches/*.patch ; do \
-	#    echo "applying $$p..." ; \
-	#    ( cd naemon-livestatus-master && patch -p1 -b ) < $$p ; \
-	#done
-	cd naemon-livestatus-master && touch .naemon.official && autoreconf -i && ./configure && make dist && mv *.gz ..
-	rm -rf tmp.tar.gz naemon-livestatus-master
-	tar zxf naemon-livestatus-*.tar.gz
-	rm naemon-livestatus-*.tar.gz
-	mv naemon-livestatus-* naemon-livestatus-master
-	tar cfz naemon-livestatus-master.tar.gz naemon-livestatus-master
-	rm -rf naemon-livestatus-master
+	cd naemon-livestatus-master && touch .naemon.official && autoreconf -i && rm -rf autom4te.cache
+	XZ_OPT=-8 tar cfJ naemon-livestatus-master.tar.xz naemon-livestatus-master
+	git add naemon-livestatus-master.tar.xz
+	rm -rf naemon-livestatus-master tmp.tar.gz
+
+# update naemon-livestatus to a release tag, repack as xz and bump VERSION in this Makefile:
+#   make upstream-release VERSION=1.5.2
+upstream-release:
+	@test -n "$(VERSION)" || { echo "usage: make upstream-release VERSION=x.y.z"; exit 1; }
+	rm -f naemon-livestatus-$(VERSION).tar.xz
+	wget "https://github.com/naemon/naemon-livestatus/archive/refs/tags/v$(VERSION).tar.gz" -O tmp.tar.gz
+	tar zxf tmp.tar.gz
+	cd $(DIR) && touch .naemon.official && autoreconf -i && rm -rf autom4te.cache
+	XZ_OPT=-8 tar cfJ naemon-livestatus-$(VERSION).tar.xz $(DIR)
+	sed -i "s/^VERSION = .*/VERSION = $(VERSION)/" Makefile
+	git add Makefile naemon-livestatus-$(VERSION).tar.xz
+	rm -rf $(DIR) tmp.tar.gz
