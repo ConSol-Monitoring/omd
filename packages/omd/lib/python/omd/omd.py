@@ -2182,7 +2182,8 @@ def get_init_script_meta(script, site_config, processlist=None):
                     meta["pid"] = pid
                 else:
                     # remove stale pid file
-                    sys.stderr.write("removing stale pid file: %s\n" % meta["pidfile"])
+                    if opt_verbose:
+                        sys.stderr.write("removing stale pid file: %s\n" % meta["pidfile"])
                     os.remove(meta["pidfile"])
         except (OSError, ValueError, OverflowError):
             pass
