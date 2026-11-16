@@ -2,7 +2,7 @@ include ../../Makefile.omd
 
 NAME    = naemon-vimvault
 CHANGELOG = https://github.com/naemon/naemon-vimcrypt-vault-broker/blob/master/ChangeLog
-VERSION = 1.5.0
+VERSION = 1.6.0
 DIR     = $(NAME)-$(VERSION)
 DEPENDS = naemon
 
@@ -11,7 +11,7 @@ CONFIGUREOPTS = \
     --prefix=$(OMD_ROOT)
 
 build:
-	tar xzf $(NAME)-$(VERSION).tar.gz
+	tar xfJ $(NAME)-$(VERSION).tar.xz
 	cd $(DIR); \
 		export PKG_CONFIG_PATH="$(shell pwd)/$(shell ls -d1 ../naemon/naemon-*/.)"; \
 		autoreconf -s; \
@@ -37,14 +37,29 @@ clean:
 	rm -rf $(DIR)
 
 upstream:
-	rm -f *.gz
+	rm -f *.gz *.tar.xz
 	wget https://github.com/naemon/naemon-vimcrypt-vault-broker/tarball/master -O tmp.tar.gz
 	tar zxf tmp.tar.gz
 	mv naemon-naemon-vimcrypt-vault-broker-??????? naemon-vimcrypt-vault-broker-master
-	cd naemon-vimcrypt-vault-broker-master && autoreconf -i && ./configure && make dist && mv *.gz ..
+	cd naemon-vimcrypt-vault-broker-master && \
+		export PKG_CONFIG_PATH="`ls -d1 $(CURDIR)/../naemon/naemon-*/.`" ; \
+		autoreconf -i && ./configure && make dist && mv *.gz ..
 	rm -rf tmp.tar.gz naemon-vimcrypt-vault-broker-master
-	tar zxf naemon_vimvault_neb-*.tar.gz
-	rm naemon_vimvault_neb-*.tar.gz
-	mv naemon_vimvault_neb-* naemon_vimvault_neb-master
-	tar cfz naemon_vimvault_neb-master.tar.gz naemon_vimvault_neb-master
-	rm -rf naemon_vimvault_neb-master
+	tar zxf $(NAME)-$(VERSION).tar.gz
+	rm $(NAME)-$(VERSION).tar.gz
+	tar cf $(DIR).tar $(DIR)
+	xz -9 $(DIR).tar
+	rm -rf $(DIR)
+
+# Repack a release tag and update VERSION: make upstream-release VERSION=1.5.1
+upstream-release:
+	@test -n "$(VERSION)" || { echo "usage: make upstream-release VERSION=x.y.z"; exit 1; }
+	rm -f $(DIR).tar.xz
+	wget "https://github.com/naemon/naemon-vimcrypt-vault-broker/archive/refs/tags/v$(VERSION).tar.gz" -O tmp.tar.gz
+	tar zxf tmp.tar.gz
+	mv naemon-vimcrypt-vault-broker-$(VERSION) $(DIR)
+	cd $(DIR) && autoreconf -i && rm -rf autom4te.cache
+	XZ_OPT=-8 tar cfJ $(DIR).tar.xz $(DIR)
+	sed -i "s/^VERSION = .*/VERSION = $(VERSION)/" Makefile
+	git add Makefile $(DIR).tar.xz
+	rm -rf $(DIR) tmp.tar.gz
