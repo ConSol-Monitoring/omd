@@ -20,16 +20,16 @@ $(error arch $(shell uname -m) not supported)
 endif
 
 GRAFANA_BUNDLED_PLUGINS = \
-	prometheus:13.2.2,\
-	influxdb:13.1.6,\
-	grafana-postgresql-datasource:13.0.4,\
-	loki:13.2.1,\
+	prometheus:13.2.6,\
+	influxdb:13.1.10,\
+	grafana-postgresql-datasource:13.0.7,\
+	loki:13.2.5,\
 	tempo:13.4.2,\
-	mssql:13.0.6,\
-	mysql:13.1.3
+	mssql:13.0.10,\
+	mysql:13.1.4
 
 GRAFANA_PLUGINS = \
-	grafana-clock-panel:3.2.4 \
+	grafana-clock-panel:3.2.5 \
 	heywesty-trafficlight-panel:1.1.0
 
 # there is usually more space here, and /tmp is a tmpfs on most machines nowadays
@@ -164,16 +164,17 @@ update-plugins:
 	fi
 
 plugins:
-	for PLUGIN in $(GRAFANA_PLUGINS); do \
+	set -e; for PLUGIN in $(GRAFANA_PLUGINS); do \
 		NAME=$${PLUGIN%%:*}; \
 		VERSION=$${PLUGIN##*:}; \
 		FILE="$${NAME}-$${VERSION}.zip"; \
 		if [ ! -f "$$FILE" ]; then \
 			rm -f "$$FILE.tmp"; \
 			wget -O "$$FILE.tmp" \
-			    "https://grafana.com/api/plugins/$${NAME}/versions/$${VERSION}/download" && \
+			    "https://grafana.com/api/plugins/$${NAME}/versions/$${VERSION}/download"; \
 			mv "$$FILE.tmp" "$$FILE"; \
 		fi; \
+		find . -maxdepth 1 -type f -name "$${NAME}-*.zip" ! -name "$$FILE" -delete; \
 	done
 
 # DO NOT TOUCH defaults.ini, update grafana.ini in skel instead
