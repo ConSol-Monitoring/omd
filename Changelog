@@ -8,6 +8,8 @@ next:
             - omdnotificationforwarder update to 4.8
           - grafana:
             - update to 13.3.1
+          - naemon:
+            - core update to 1.6.0
           - prometheus:
             - update to 3.13.5
             - alertmanager update to 0.34.2
