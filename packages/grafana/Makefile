@@ -24,6 +24,7 @@ GRAFANA_BUNDLED_PLUGINS = \
 	influxdb:13.1.6,\
 	grafana-postgresql-datasource:13.0.4,\
 	loki:13.2.1,\
+	tempo:13.4.2,\
 	mssql:13.0.6,\
 	mysql:13.1.3
 
@@ -36,7 +37,7 @@ export TMPDIR=/var/tmp
 
 export GOFLAGS=-trimpath -buildvcs=false
 
-.PHONY: skel
+.PHONY: skel update-plugins
 
 build:
 	tar xfJ $(SRC)
@@ -142,6 +143,25 @@ public:
 	rm grafana-$(VERSION).linux-amd64.tar.gz
 	rm -rf grafana-*/
 	wget "https://raw.githubusercontent.com/grafana/grafana/v$(VERSION)/conf/defaults.ini" -O defaults.ini
+
+update-plugins:
+	@set -eu; \
+	UPDATES=$$(mktemp); \
+	trap 'rm -f "$$UPDATES"' EXIT HUP INT TERM; \
+	for PLUGIN in $(GRAFANA_BUNDLED_PLUGINS) $(GRAFANA_PLUGINS); do \
+		PLUGIN=$${PLUGIN%,}; \
+		NAME=$${PLUGIN%%:*}; \
+		VERSION=$$(wget -qO- "https://grafana.com/api/plugins/$$NAME" | \
+			python3 -c 'import json, re, sys; v = json.load(sys.stdin)["version"]; print(v) if re.fullmatch(r"[0-9][0-9A-Za-z.+-]*", v) else sys.exit("Invalid plugin version")'); \
+		if [ "$${PLUGIN##*:}" != "$$VERSION" ]; then \
+			printf '%s: %s -> %s\n' "$$NAME" "$${PLUGIN##*:}" "$$VERSION"; \
+			printf 's|%s:[^[:space:],]*|%s:%s|g\n' "$$NAME" "$$NAME" "$$VERSION" >> "$$UPDATES"; \
+		fi; \
+	done; \
+	if [ -s "$$UPDATES" ]; then \
+		sed -i -f "$$UPDATES" Makefile; \
+		$(MAKE) plugins; \
+	fi
 
 plugins:
 	for PLUGIN in $(GRAFANA_PLUGINS); do \
