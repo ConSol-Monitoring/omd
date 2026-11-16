@@ -1,0 +1,70 @@
+From 0c33846217db51116b66bdcf51df9db259e560a6 Mon Sep 17 00:00:00 2001
+From: Sven Nierlein <Sven.Nierlein@consol.de>
+Date: Mon, 16 Nov 2026 09:40:55 +0100
+Subject: [PATCH 2/2] fix inverted perfdata file open check
+
+Since commit 83fc1107 ("fix handling performance data", shipped in
+v1.4.4) the condition was inverted: the "could not be opened" warning
+was logged when the file opened successfully (fd > 0) and the buffer
+queue was silently not created on a real open failure. This produced a
+spurious warning on every Naemon start and left perfdata unbuffered
+without a log entry on genuine failures.
+
+Only create the buffer queue and open the file when a perfdata file is
+configured, warn only when the open() actually failed, and include
+strerror(errno) in the warning. errno is still valid at the call site
+because no system call intervenes between the failed open() in
+xpddefault_open_perfdata_file() and this point. Creating the queue
+unconditionally (as before and after 83fc1107) would also let perfdata
+accumulate unboundedly in command-only setups where no file is
+configured, since flush_perfdata() bails on fd < 0 without draining.
+---
+ src/naemon/perfdata.c | 31 ++++++++++++++++++-------------
+ 1 file changed, 18 insertions(+), 13 deletions(-)
+
+diff --git a/src/naemon/perfdata.c b/src/naemon/perfdata.c
+index db5b7c3c..5a12fc11 100644
+--- a/src/naemon/perfdata.c
++++ b/src/naemon/perfdata.c
+@@ -85,23 +85,28 @@ int initialize_performance_data(const char *cfgfile)
+ 	xpddefault_preprocess_file_templates(host_perfdata_file_template);
+ 	xpddefault_preprocess_file_templates(service_perfdata_file_template);
+ 
+-	/* open the performance data caches */
+-	host_perfdata_fd = xpddefault_open_perfdata_file(
+-	                       host_perfdata_file,
+-	                       host_perfdata_file_pipe,
+-	                       host_perfdata_file_append);
+-	if(host_perfdata_fd > 0) {
+-		nm_log(NSLOG_RUNTIME_WARNING, "Warning: host perfdata file %s could not be opened - host performance data will not be processed!\n", host_perfdata_file);
++	/* open the performance data caches only when a file is configured,
++	 * otherwise buffered data would pile up with no fd to flush it to */
++	if (host_perfdata_file != NULL) {
++		host_perfdata_fd = xpddefault_open_perfdata_file(
++			                   host_perfdata_file,
++			                   host_perfdata_file_pipe,
++			                   host_perfdata_file_append);
+ 		host_perfdata_bq = nm_bufferqueue_create();
++		if (host_perfdata_fd <= 0) {
++			nm_log(NSLOG_RUNTIME_WARNING, "Warning: host perfdata file %s could not be opened (%s) - host performance data will not be processed!\n", host_perfdata_file, strerror(errno));
++		}
+ 	}
+ 
+-	service_perfdata_fd = xpddefault_open_perfdata_file(
+-	                          service_perfdata_file,
+-	                          service_perfdata_file_pipe,
+-	                          service_perfdata_file_append);
+-	if (service_perfdata_fd > 0) {
+-		nm_log(NSLOG_RUNTIME_WARNING, "Warning: service perfdata file %s could not be opened - service performance data will not be processed!\n", service_perfdata_file);
++	if (service_perfdata_file != NULL) {
++		service_perfdata_fd = xpddefault_open_perfdata_file(
++		                          service_perfdata_file,
++		                          service_perfdata_file_pipe,
++		                          service_perfdata_file_append);
+ 		service_perfdata_bq = nm_bufferqueue_create();
++		if (service_perfdata_fd <= 0) {
++			nm_log(NSLOG_RUNTIME_WARNING, "Warning: service perfdata file %s could not be opened (%s) - service performance data will not be processed!\n", service_perfdata_file, strerror(errno));
++		}
+ 	}
+ 
+ 	/* verify that performance data commands are valid */
