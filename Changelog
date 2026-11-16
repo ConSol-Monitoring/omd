@@ -10,6 +10,8 @@ next:
             - check_rittal_health update to 4.1.2.2
             - check_storage_health update to 2.3.1.2
             - omdnotificationforwarder update to 4.8
+          - gearman:
+            - mod-gearman update to 5.3.0
           - grafana:
             - update to 13.3.1
           - prometheus:
