@@ -541,6 +541,178 @@ LDAUDIT_C
     system("rmdir $victim_dir 2>/dev/null");
 }
 
+# Helper: create a backup used as the base for crafted malicious archives
+sub make_security_backup {
+    my ($src, $path) = @_;
+    unlink($path);
+    system("$omd_bin stop $src >/dev/null 2>&1");
+    return system("$omd_bin backup $src $path >/dev/null 2>&1") == 0;
+}
+
+# Helper: copy a normal backup and append one malicious tar member.
+# The helper script is in t/data/omd so the tar layout stays out of this file.
+sub craft_security_backup {
+    my ($src, $dst, $kind, $target) = @_;
+    my $helper = "$FindBin::Bin/data/omd/craft-security-backup.py";
+    my @args = ("/usr/bin/python3", $helper, $src, $dst, $site, $kind);
+    push(@args, $target) if defined $target;
+    unlink($dst);
+    return system(@args) == 0;
+}
+
+# Helper: create an existing site with a marker file.  Restore must leave both
+# the site and the marker untouched when the archive fails validation.
+sub create_restore_target {
+    my ($name) = @_;
+    my $dir = "/omd/sites/$name";
+    system("$omd_bin rm --force $name >/dev/null 2>&1");
+    return 0 if system("$omd_bin create $createoptions $name >/dev/null 2>&1") != 0;
+    open(my $fh, ">", "$dir/keep-marker.txt") or return 0;
+    print $fh "keep-me\n";
+    close($fh);
+    system("chown $name:$name $dir/keep-marker.txt");
+    return 1;
+}
+
+# Helper: run a restore which is expected to fail during preflight.
+sub failed_restore {
+    my ($target, $archive) = @_;
+    my $out = `$omd_bin -f restore --reuse $target $archive 2>&1`;
+    my $rc = $? >> 8;
+    return ($rc, $out);
+}
+
+##################################################
+# VULN-9 / Special files in backups
+#
+# A crafted tar can contain a character device or FIFO.  Restoring it as
+# root must be rejected during preflight, before any existing site data is
+# removed.
+##################################################
+{
+    my $base = "/tmp/vuln9_base_$$.tar.gz";
+    my $target = "vulnrestore";
+    my $target_dir = "/omd/sites/$target";
+
+    ok(make_security_backup($site, $base), "VULN-9: created base backup for special-file tests");
+    ok(create_restore_target($target), "VULN-9: created existing restore target");
+
+    for my $kind (qw(char fifo)) {
+        my $bad = "/tmp/vuln9_${kind}_$$.tar.gz";
+        ok(craft_security_backup($base, $bad, $kind), "VULN-9: crafted $kind archive");
+        my ($rc, $out) = failed_restore($target, $bad);
+        ok($rc != 0, "VULN-9: restore of $kind archive is rejected");
+        like($out, qr/Unsupported special file in backup/, "VULN-9: $kind archive reports unsupported special file");
+        ok(-f "$target_dir/keep-marker.txt", "VULN-9: existing site survives rejected $kind restore");
+        ok(!-e "$target_dir/evil-char" && !-e "$target_dir/evil-fifo", "VULN-9: no special file was extracted");
+        unlink($bad);
+    }
+
+    system("$omd_bin rm --force $target >/dev/null 2>&1");
+    unlink($base);
+}
+
+##################################################
+# VULN-10 / Symlinks in backups pointing outside the site
+#
+# A backup symlink must be allowed to point only into the restored site,
+# /omd/versions, or the old site.  In particular a symlink to /tmp must not
+# make root write or chown through it.
+##################################################
+{
+    my $victim = "/tmp/vuln10_victim_$$";
+    my $base = "/tmp/vuln10_base_$$.tar.gz";
+    my $bad = "/tmp/vuln10_symlink_$$.tar.gz";
+    my $target = "vulnrestore";
+    my $target_dir = "/omd/sites/$target";
+
+    system("mkdir -p $victim");
+    open(my $sfh, ">", "$victim/sentinel.txt") or die "cannot write victim sentinel: $!";
+    print $sfh "do-not-touch\n";
+    close($sfh);
+    system("chown root:root $victim/sentinel.txt");
+
+    ok(make_security_backup($site, $base), "VULN-10: created base backup");
+    ok(create_restore_target($target), "VULN-10: created existing restore target");
+    ok(craft_security_backup($base, $bad, "symlink", $victim), "VULN-10: crafted external symlink archive");
+
+    my ($rc, $out) = failed_restore($target, $bad);
+    ok($rc != 0, "VULN-10: restore of external symlink is rejected");
+    like($out, qr/Backup symlink target escapes site directory/, "VULN-10: external symlink error is reported");
+    ok(-f "$victim/sentinel.txt", "VULN-10: symlink target remains untouched");
+    ok(-f "$target_dir/keep-marker.txt", "VULN-10: existing site survives rejected symlink restore");
+    ok(!-e "$target_dir/local/evil-link", "VULN-10: external symlink was not extracted");
+
+    system("$omd_bin rm --force $target >/dev/null 2>&1");
+    unlink($base, $bad);
+    system("rm -rf $victim");
+}
+
+##################################################
+# VULN-11 / Malicious .backup_meta/skel symlink
+#
+# patch_skeleton_files() runs as root and uses .backup_meta/skel as the
+# source for patching a restored site.  A symlink there must not redirect
+# those writes outside the site.
+##################################################
+{
+    my $victim = "/tmp/vuln11_victim_$$";
+    my $base = "/tmp/vuln11_base_$$.tar.gz";
+    my $bad = "/tmp/vuln11_skel_$$.tar.gz";
+    my $target = "vulnrestore";
+    my $target_dir = "/omd/sites/$target";
+
+    system("mkdir -p $victim");
+    open(my $sfh, ">", "$victim/sentinel.txt") or die "cannot write victim sentinel: $!";
+    print $sfh "do-not-touch\n";
+    close($sfh);
+    system("chown root:root $victim/sentinel.txt");
+
+    ok(make_security_backup($site, $base), "VULN-11: created base backup");
+    ok(create_restore_target($target), "VULN-11: created existing restore target");
+    ok(craft_security_backup($base, $bad, "skel-symlink", $victim), "VULN-11: crafted .backup_meta/skel symlink archive");
+
+    my ($rc, $out) = failed_restore($target, $bad);
+    ok($rc != 0, "VULN-11: restore of .backup_meta/skel symlink is rejected");
+    like($out, qr/Backup symlink target escapes site directory/, "VULN-11: malicious skel symlink error is reported");
+    ok(-f "$victim/sentinel.txt", "VULN-11: skel symlink target remains untouched");
+    ok(-f "$target_dir/keep-marker.txt", "VULN-11: existing site survives rejected skel restore");
+    ok(!-l "$target_dir/.backup_meta/skel", "VULN-11: malicious skel symlink was not installed");
+
+    system("$omd_bin rm --force $target >/dev/null 2>&1");
+    unlink($base, $bad);
+    system("rm -rf $victim");
+}
+
+##################################################
+# VULN-12 / Path traversal in a backup member
+#
+# The top-level site directory is stripped before validation, so a member
+# named SITE/../evil-traversal would otherwise resolve outside the restore
+# directory.  It must be rejected during preflight.
+##################################################
+{
+    my $base = "/tmp/vuln12_base_$$.tar.gz";
+    my $bad = "/tmp/vuln12_traversal_$$.tar.gz";
+    my $target = "vulnrestore";
+    my $target_dir = "/omd/sites/$target";
+    my $outside = "/tmp/evil-traversal";
+
+    unlink($outside);
+    ok(make_security_backup($site, $base), "VULN-12: created base backup");
+    ok(create_restore_target($target), "VULN-12: created existing restore target");
+    ok(craft_security_backup($base, $bad, "traversal"), "VULN-12: crafted path traversal archive");
+
+    my ($rc, $out) = failed_restore($target, $bad);
+    ok($rc != 0, "VULN-12: restore of path traversal archive is rejected");
+    like($out, qr/Invalid path in backup/, "VULN-12: path traversal error is reported");
+    ok(-f "$target_dir/keep-marker.txt", "VULN-12: existing site survives rejected path traversal restore");
+    ok(!-e $outside, "VULN-12: no file was written outside the site");
+
+    system("$omd_bin rm --force $target >/dev/null 2>&1");
+    unlink($base, $bad, $outside);
+}
+
 ##################################################
 # HTTP-level tests (VULN-6, VULN-7)
 # Set OMD_SKIP_HTTP_TESTS=1 to skip these
