@@ -20,15 +20,16 @@ $(error arch $(shell uname -m) not supported)
 endif
 
 GRAFANA_BUNDLED_PLUGINS = \
-	prometheus:13.2.2,\
-	influxdb:13.1.6,\
-	grafana-postgresql-datasource:13.0.4,\
-	loki:13.2.1,\
-	mssql:13.0.6,\
-	mysql:13.1.3
+	prometheus:13.2.6,\
+	influxdb:13.1.10,\
+	grafana-postgresql-datasource:13.0.7,\
+	loki:13.2.5,\
+	tempo:13.4.2,\
+	mssql:13.0.10,\
+	mysql:13.1.4
 
 GRAFANA_PLUGINS = \
-	grafana-clock-panel:3.2.4 \
+	grafana-clock-panel:3.2.5 \
 	heywesty-trafficlight-panel:1.1.0
 
 # there is usually more space here, and /tmp is a tmpfs on most machines nowadays
@@ -36,7 +37,7 @@ export TMPDIR=/var/tmp
 
 export GOFLAGS=-trimpath -buildvcs=false
 
-.PHONY: skel
+.PHONY: skel update-plugins
 
 build:
 	tar xfJ $(SRC)
@@ -143,17 +144,37 @@ public:
 	rm -rf grafana-*/
 	wget "https://raw.githubusercontent.com/grafana/grafana/v$(VERSION)/conf/defaults.ini" -O defaults.ini
 
+update-plugins:
+	@set -eu; \
+	UPDATES=$$(mktemp); \
+	trap 'rm -f "$$UPDATES"' EXIT HUP INT TERM; \
+	for PLUGIN in $(GRAFANA_BUNDLED_PLUGINS) $(GRAFANA_PLUGINS); do \
+		PLUGIN=$${PLUGIN%,}; \
+		NAME=$${PLUGIN%%:*}; \
+		VERSION=$$(wget -qO- "https://grafana.com/api/plugins/$$NAME" | \
+			python3 -c 'import json, re, sys; v = json.load(sys.stdin)["version"]; print(v) if re.fullmatch(r"[0-9][0-9A-Za-z.+-]*", v) else sys.exit("Invalid plugin version")'); \
+		if [ "$${PLUGIN##*:}" != "$$VERSION" ]; then \
+			printf '%s: %s -> %s\n' "$$NAME" "$${PLUGIN##*:}" "$$VERSION"; \
+			printf 's|%s:[^[:space:],]*|%s:%s|g\n' "$$NAME" "$$NAME" "$$VERSION" >> "$$UPDATES"; \
+		fi; \
+	done; \
+	if [ -s "$$UPDATES" ]; then \
+		sed -i -f "$$UPDATES" Makefile; \
+		$(MAKE) plugins; \
+	fi
+
 plugins:
-	for PLUGIN in $(GRAFANA_PLUGINS); do \
+	set -e; for PLUGIN in $(GRAFANA_PLUGINS); do \
 		NAME=$${PLUGIN%%:*}; \
 		VERSION=$${PLUGIN##*:}; \
 		FILE="$${NAME}-$${VERSION}.zip"; \
 		if [ ! -f "$$FILE" ]; then \
 			rm -f "$$FILE.tmp"; \
 			wget -O "$$FILE.tmp" \
-			    "https://grafana.com/api/plugins/$${NAME}/versions/$${VERSION}/download" && \
+			    "https://grafana.com/api/plugins/$${NAME}/versions/$${VERSION}/download"; \
 			mv "$$FILE.tmp" "$$FILE"; \
 		fi; \
+		find . -maxdepth 1 -type f -name "$${NAME}-*.zip" ! -name "$$FILE" -delete; \
 	done
 
 # DO NOT TOUCH defaults.ini, update grafana.ini in skel instead

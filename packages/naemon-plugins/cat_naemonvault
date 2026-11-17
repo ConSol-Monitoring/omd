@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 import struct
 import hashlib
+import glob
+import os
 from binascii import b2a_hex
 
 class Blowfish:
@@ -102,6 +104,65 @@ def encrypt(data, pw):
     data = cfb_encrypt(key, iv, bytearray(data))
     return b"VimCrypt~03!" + salt + iv + data
 
+def expand_braces(pattern):
+    start = pattern.find('{')
+    if start != -1:
+        depth, parts, last = 0, [], start + 1
+        for i in range(start + 1, len(pattern)):
+            char = pattern[i]
+            if char == '{':
+                depth += 1
+            elif char == '}' and depth:
+                depth -= 1
+            elif char == ',' and depth == 0:
+                parts.append(pattern[last:i])
+                last = i + 1
+            elif char == '}':
+                if parts:
+                    parts.append(pattern[last:i])
+                    for part in parts:
+                        yield from expand_braces(pattern[:start] + part + pattern[i + 1:])
+                    return
+                break
+    yield pattern
+
+
+def cat_vault(filename, password, recursive=False, loaded=None):
+    if loaded is None:
+        loaded = set()
+    canonical = os.path.realpath(filename)
+    if canonical in loaded:
+        raise ValueError(f"{filename}: duplicate include or loop")
+    if len(loaded) >= 64:
+        raise ValueError(f"{filename}: maximum of 64 vault files reached")
+    loaded.add(canonical)
+    with open(filename, 'rb') as vault:
+        plain = decrypt(vault.read(), password).decode('utf-8')
+    if not recursive:
+        print(plain)
+        return
+    for line in plain.splitlines():
+        directive, sep, value = line.strip().partition('=')
+        if sep and directive in ('include', 'include_dir'):
+            if not value or value[0].isspace():
+                raise ValueError(f"{filename}: invalid {directive}")
+            if directive == 'include_dir':
+                directory = os.path.join(os.path.dirname(os.path.abspath(filename)), value)
+                if not any(char in value for char in '*?[{') and not os.path.isdir(directory):
+                    raise FileNotFoundError(directory)
+                value = os.path.join(value, '*.cfg')
+            base = glob.escape(os.path.dirname(os.path.abspath(filename)))
+            for pattern in expand_braces(value):
+                pattern = os.path.join(base, pattern)
+                matches = sorted(glob.glob(pattern))
+                if not matches and not any(char in value for char in '*?[{'):
+                    raise FileNotFoundError(pattern)
+                for match in matches:
+                    cat_vault(match, password, True, loaded)
+        else:
+            print(line)
+
+
 def main():
     import getpass
     import argparse
@@ -117,6 +178,8 @@ def main():
     """
     parser.add_argument('filename')
     parser.add_argument('password', nargs='?')
+    parser.add_argument('-r', action='store_true',
+                        help='recursively print included vault files')
     args = parser.parse_args()
 
     filename, password = args.filename, args.password
@@ -132,13 +195,12 @@ def main():
             password = getpass.getpass()
 
     try:
-        data = open(filename, 'rb').read()
-        plain = decrypt(data, password)
-        print(plain.decode('utf-8'))
-        assert decrypt(encrypt(plain, password), password) == plain
+        cat_vault(filename, password, args.r)
     except Exception as err:
-        print(err)
+        print(err, file=sys.stderr)
+        sys.exit(1)
 
 
 if __name__ == '__main__':
     main()
+

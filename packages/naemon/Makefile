@@ -2,7 +2,7 @@ include ../../Makefile.omd
 
 NAME = naemon
 CHANGELOG = https://github.com/naemon/naemon-core/blob/master/NEWS
-VERSION = 1.5.1
+VERSION = 1.6.0
 DIR = $(NAME)-$(VERSION)
 DEPENDS = jemalloc
 
@@ -32,7 +32,7 @@ ifeq "$(GCCVERSIONGTEQ7)" "1"
 endif
 
 build:
-	tar xzf naemon-$(VERSION).tar.gz
+	tar xfJ naemon-$(VERSION).tar.xz
 	set -e ; for p in patches/*.patch ; do \
 	    echo "applying $$p..." ; \
 	    ( cd $(DIR) && patch -p1 -b -F 5 ) < $$p ; \
@@ -98,12 +98,28 @@ skel:
 clean:
 	rm -rf $(DIR)
 
+# update naemon-core to master (HEAD) and repack as xz
 upstream: clean
-	rm -f naemon-core-master.tar.gz
+	rm -f naemon-core-master.tar.xz
 	wget https://github.com/naemon/naemon-core/tarball/master -O tmp.tar.gz
 	tar zxf tmp.tar.gz
 	mv naemon-naemon-core-??????? naemon-core-master
-	cd naemon-core-master && autoreconf -i
-	tar cfz naemon-core-master.tar.gz naemon-core-master
-	git add naemon-core-master.tar.gz
+	cd naemon-core-master && autoreconf -i && rm -rf autom4te.cache
+	XZ_OPT=-8 tar cfJ naemon-core-master.tar.xz naemon-core-master
+	git add naemon-core-master.tar.xz
 	rm -rf naemon-core-master tmp.tar.gz
+
+# update naemon-core to a release tag, repack as xz and bump VERSION in this Makefile:
+#   make upstream-release VERSION=1.5.2
+upstream-release:
+	@test -n "$(VERSION)" || { echo "usage: make upstream-release VERSION=x.y.z"; exit 1; }
+	rm -f naemon-$(VERSION).tar.xz
+	# upstream tags carry a 'v' prefix; the tag tarball dir is naemon-core-$(VERSION)
+	wget "https://github.com/naemon/naemon-core/archive/refs/tags/v$(VERSION).tar.gz" -O tmp.tar.gz
+	tar zxf tmp.tar.gz
+	mv naemon-core-$(VERSION) naemon-$(VERSION)
+	cd naemon-$(VERSION) && autoreconf -i && rm -rf autom4te.cache
+	XZ_OPT=-8 tar cfJ naemon-$(VERSION).tar.xz naemon-$(VERSION)
+	sed -i "s/^VERSION = .*/VERSION = $(VERSION)/" Makefile
+	git add Makefile naemon-$(VERSION).tar.xz
+	rm -rf naemon-$(VERSION) tmp.tar.gz

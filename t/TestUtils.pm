@@ -490,8 +490,8 @@ sub remove_test_site {
     # testsite 28609     1 16 07:49 ?        00:00:00 /usr/lib/systemd/systemd --user
     # testsite 28651 28609  0 07:49 ?        00:00:00 (sd-pam)
     # testsite 28669 28609  0 07:49 ?        00:00:00 [systemctl]
-    `if [ \$(ps -fu $site | wc -l) -gt 0 ]; then /usr/bin/pkill -2 -U $site; sleep 1; fi`;
-    `if [ \$(ps -fu $site | wc -l) -gt 0 ]; then /usr/bin/pkill -9 -U $site; sleep 1; fi`;
+    `if [ \$(ps -fu $site | wc -l) -gt 0 ]; then /usr/bin/pkill -2 -U $site >/dev/null 2>&1; sleep 1; fi`;
+    `if [ \$(ps -fu $site | wc -l) -gt 0 ]; then /usr/bin/pkill -9 -U $site >/dev/null 2>&1; sleep 1; fi`;
     my $errlike = is_docker() ? '/(^\s*$|^AH00558: apache2: Could not reliably determine the server\'s fully qualified domain name, using.*$)/' : '/^\s*$/';
     test_command({ cmd => TestUtils::get_omd_bin()." rm $site", stdin => "yes\n", errlike => $errlike  })
         or bail_out("failed to remove test site $site, further tests would see a broken state");;
