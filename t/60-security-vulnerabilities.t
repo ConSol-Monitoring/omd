@@ -551,7 +551,7 @@ sub make_security_backup {
 
 # Helper: copy a normal backup and append one malicious tar member.
 # The helper script is in t/data/omd so the tar layout stays out of this file.
-sub craft_security_backup {
+sub inject_malicious_file_to_backup {
     my ($src, $dst, $kind, $target) = @_;
     my $helper = "$FindBin::Bin/data/omd/craft-security-backup.py";
     my @args = ("/usr/bin/python3", $helper, $src, $dst, $site, $kind);
@@ -597,9 +597,10 @@ sub failed_restore {
     ok(make_security_backup($site, $base), "VULN-9: created base backup for special-file tests");
     ok(create_restore_target($target), "VULN-9: created existing restore target");
 
+    # both character files , and fifo files need to be rejected
     for my $kind (qw(char fifo)) {
         my $bad = "/tmp/vuln9_${kind}_$$.tar.gz";
-        ok(craft_security_backup($base, $bad, $kind), "VULN-9: crafted $kind archive");
+        ok(inject_malicious_file_to_backup($base, $bad, $kind), "VULN-9: crafted $kind archive");
         my ($rc, $out) = failed_restore($target, $bad);
         ok($rc != 0, "VULN-9: restore of $kind archive is rejected");
         like($out, qr/Unsupported special file in backup/, "VULN-9: $kind archive reports unsupported special file");
@@ -634,7 +635,8 @@ sub failed_restore {
 
     ok(make_security_backup($site, $base), "VULN-10: created base backup");
     ok(create_restore_target($target), "VULN-10: created existing restore target");
-    ok(craft_security_backup($base, $bad, "symlink", $victim), "VULN-10: crafted external symlink archive");
+    # symlink to the $victim under /tmp/ , outside of the site.
+    ok(inject_malicious_file_to_backup($base, $bad, "symlink", $victim), "VULN-10: crafted external symlink archive");
 
     my ($rc, $out) = failed_restore($target, $bad);
     ok($rc != 0, "VULN-10: restore of external symlink is rejected");
@@ -670,7 +672,7 @@ sub failed_restore {
 
     ok(make_security_backup($site, $base), "VULN-11: created base backup");
     ok(create_restore_target($target), "VULN-11: created existing restore target");
-    ok(craft_security_backup($base, $bad, "skel-symlink", $victim), "VULN-11: crafted .backup_meta/skel symlink archive");
+    ok(inject_malicious_file_to_backup($base, $bad, "skel-symlink", $victim), "VULN-11: crafted .backup_meta/skel symlink archive");
 
     my ($rc, $out) = failed_restore($target, $bad);
     ok($rc != 0, "VULN-11: restore of .backup_meta/skel symlink is rejected");
@@ -701,7 +703,8 @@ sub failed_restore {
     unlink($outside);
     ok(make_security_backup($site, $base), "VULN-12: created base backup");
     ok(create_restore_target($target), "VULN-12: created existing restore target");
-    ok(craft_security_backup($base, $bad, "traversal"), "VULN-12: crafted path traversal archive");
+    # adds a "../evil-traversal" named regular file
+    ok(inject_malicious_file_to_backup($base, $bad, "traversal"), "VULN-12: crafted path traversal archive");
 
     my ($rc, $out) = failed_restore($target, $bad);
     ok($rc != 0, "VULN-12: restore of path traversal archive is rejected");

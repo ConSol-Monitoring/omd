@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """Copy an OMD backup and append one malicious tar member.
 
+Built to be used in t/60-security.vulnerabilities.t
+
 Usage: craft-security-backup.py SRC DST SITE KIND [TARGET]
 
 KIND is one of: char, fifo, symlink, skel-symlink.
