@@ -1,0 +1,35 @@
+From 36b39b4e688f8074fbcf5045a1a76dca225fe679 Mon Sep 17 00:00:00 2001
+From: Sven Nierlein <Sven.Nierlein@consol.de>
+Date: Wed, 18 Nov 2026 16:34:32 +0100
+Subject: [PATCH] strip illegal chars from notification macros
+
+Add MACRO_NOTIFICATIONAUTHOR, MACRO_NOTIFICATIONAUTHORNAME,
+MACRO_NOTIFICATIONAUTHORALIAS and MACRO_NOTIFICATIONCOMMENT to the
+STRIP_ILLEGAL_MACRO_CHARS | ESCAPE_MACRO_CHARS list in init_macros().
+
+The custom-notification comment was inserted verbatim into notification
+commands even though the caller passes the strip flag, because
+process_macros_r() only strips when the macro's own options intersect
+the caller's. With OMD's shipped email notification commands (which
+pass -o NOTIFICATIONCOMMENT='...'), a user able to submit a comment
+could break out of the single-quoted argument and execute shell
+commands as the naemon user.
+---
+ src/naemon/macros.c | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/src/naemon/macros.c b/src/naemon/macros.c
+index 3d7edc34..374a5d8c 100644
+--- a/src/naemon/macros.c
++++ b/src/naemon/macros.c
+@@ -2541,6 +2541,10 @@ int init_macros(void)
+ 		case MACRO_SERVICENOTES:
+ 		case MACRO_HOSTGROUPNOTES:
+ 		case MACRO_SERVICEGROUPNOTES:
++		case MACRO_NOTIFICATIONAUTHOR:
++		case MACRO_NOTIFICATIONAUTHORNAME:
++		case MACRO_NOTIFICATIONAUTHORALIAS:
++		case MACRO_NOTIFICATIONCOMMENT:
+ 			macro_keys[x].options |= STRIP_ILLEGAL_MACRO_CHARS | ESCAPE_MACRO_CHARS;
+ 			break;
+ 		}

@@ -1,0 +1,32 @@
+From 00cb4e62ea9c85d209d1f7da75d94505f7559335 Mon Sep 17 00:00:00 2001
+From: Sven Nierlein <Sven.Nierlein@consol.de>
+Date: Thu, 19 Nov 2026 09:59:15 +0100
+Subject: [PATCH] Strip illegal macro output characters from custom variables
+
+Custom variable macros (_FOO) never set STRIP_ILLEGAL_MACRO_CHARS in
+clean_options, so their values reached notification and event handler
+commands unstripped of illegal_macro_output_chars. Ported from nagios
+4.5.13 (commit 0b68220, "Custom Variable Injection", thanks Gabriel
+"Texugo" Rodrigues), where the missing sanitization was reported as a
+vulnerability: a check command or plugin can set custom variables, which
+are then interpolated into notification commands.
+---
+ NEWS                | 6 ++++++
+ src/naemon/macros.c | 4 ++++
+ 2 files changed, 10 insertions(+)
+
+diff --git a/src/naemon/macros.c b/src/naemon/macros.c
+index 3d7edc34..2438be79 100644
+--- a/src/naemon/macros.c
++++ b/src/naemon/macros.c
+@@ -2304,6 +2304,10 @@ static int grab_macro_value_r(nagios_macros *mac, char *macro_buffer, char **out
+ 
+ 		/* get the macro value */
+ 		result = grab_custom_macro_value_r(mac, macro_name, arg[0], arg[1], output);
++
++		/* always strip illegal characters from custom macros */
++		if (clean_options)
++			*clean_options |= STRIP_ILLEGAL_MACRO_CHARS;
+ 	}
+ 
+ 	/* no macro matched... */
