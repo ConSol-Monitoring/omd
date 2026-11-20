@@ -1,0 +1,123 @@
+From f5d2196992f4ea6d091dcc3ea3fd699a6d9d4bd6 Mon Sep 17 00:00:00 2001
+From: Sven Nierlein <Sven.Nierlein@consol.de>
+Date: Fri, 20 Nov 2026 18:50:21 +0100
+Subject: [PATCH] flatten line breaks in values written to the status and
+ retention files
+
+A line break in a value would end the line, and a "}" line followed by a
+block header would forge a block on the next read, so CR and LF are written
+as a space. This applies to both state files (status.dat and retention.dat)
+through nm_wb_kv_str() and nm_wb_customvar().
+
+Reported by EZO Labs Security; patch as proposed by the reporter plus a
+regression test for the flattening.
+
+Signed-off-by: EZO Labs Security <tony@ezolabs.net>
+---
+ src/naemon/nm_writebuf.c |  2 +-
+ src/naemon/nm_writebuf.h | 28 +++++++++++++++++++++++++++-
+ tests/test-nm-writebuf.c | 26 ++++++++++++++++++++++++++
+ 3 files changed, 54 insertions(+), 2 deletions(-)
+
+diff --git a/src/naemon/nm_writebuf.c b/src/naemon/nm_writebuf.c
+index c1ce7ed6..80f8845b 100644
+--- a/src/naemon/nm_writebuf.c
++++ b/src/naemon/nm_writebuf.c
+@@ -91,6 +91,6 @@ void nm_wb_customvar(struct nm_writebuf *wb, const char *prefix,
+ 	nm_wb_lit(wb, "=");
+ 	nm_wb_int(wb, cv->has_been_modified);
+ 	nm_wb_lit(wb, ";");
+-	nm_wb_str(wb, cv->variable_value);
++	nm_wb_str_flat(wb, cv->variable_value);
+ 	nm_wb_lit(wb, "\n");
+ }
+diff --git a/src/naemon/nm_writebuf.h b/src/naemon/nm_writebuf.h
+index be0a46d2..c75fea45 100644
+--- a/src/naemon/nm_writebuf.h
++++ b/src/naemon/nm_writebuf.h
+@@ -115,6 +115,32 @@ static inline void nm_wb_str(struct nm_writebuf *wb, const char *s)
+ 		nm_wb_mem(wb, s, strlen(s));
+ }
+ 
++/*
++ * Appends a C string for one of the line-oriented state files. A line break in
++ * a value would end the line, and a "}" line followed by a block header would
++ * forge a block on the next read, so CR and LF are written as a space. The
++ * caller's string is not modified.
++ */
++static inline void nm_wb_str_flat(struct nm_writebuf *wb, const char *s)
++{
++	const char *start;
++
++	if (s == NULL)
++		return;
++	start = s;
++	while (*s != '\0') {
++		if (*s == '\n' || *s == '\r') {
++			if (s > start)
++				nm_wb_mem(wb, start, (size_t)(s - start));
++			nm_wb_mem(wb, " ", 1);
++			start = s + 1;
++		}
++		s++;
++	}
++	if (s > start)
++		nm_wb_mem(wb, start, (size_t)(s - start));
++}
++
+ /*
+  * Appends an unsigned integer in decimal, no padding. Digits come out least
+  * significant first, so they are written backwards into a scratch buffer and
+@@ -166,7 +192,7 @@ __attribute__((format(printf, 2, 3)));
+  * indentation where the file format has any -- status.dat indents its fields
+  * with a tab, retention.dat does not.
+  */
+-#define nm_wb_kv_str(wb, key, val)   do { nm_wb_lit((wb), key "="); nm_wb_str((wb), (val)); nm_wb_lit((wb), "\n"); } while (0)
++#define nm_wb_kv_str(wb, key, val)   do { nm_wb_lit((wb), key "="); nm_wb_str_flat((wb), (val)); nm_wb_lit((wb), "\n"); } while (0)
+ #define nm_wb_kv_int(wb, key, val)   do { nm_wb_lit((wb), key "="); nm_wb_int((wb), (long long)(val)); nm_wb_lit((wb), "\n"); } while (0)
+ #define nm_wb_kv_uint(wb, key, val)  do { nm_wb_lit((wb), key "="); nm_wb_uint((wb), (unsigned long long)(val)); nm_wb_lit((wb), "\n"); } while (0)
+ #define nm_wb_kv_dbl(wb, key, fmt, val) do { nm_wb_lit((wb), key "="); nm_wb_dbl((wb), (fmt), (double)(val)); nm_wb_lit((wb), "\n"); } while (0)
+diff --git a/tests/test-nm-writebuf.c b/tests/test-nm-writebuf.c
+index 46b790e6..179b5fa5 100644
+--- a/tests/test-nm-writebuf.c
++++ b/tests/test-nm-writebuf.c
+@@ -121,6 +121,31 @@ START_TEST(str_accepts_null)
+ }
+ END_TEST
+ 
++/*
++ * A line break inside a value must not become a second line in the state
++ * files: a "}" line forged into retention.dat would terminate the previous
++ * block and the next block header would be read as a new object. CR and LF
++ * come out as single spaces, and the caller's string is untouched.
++ */
++START_TEST(kv_str_flattens_line_breaks)
++{
++	static const char value[] = "begin\n}\nhost {\ncheck_command=evil;id>0\r}";
++
++	wb_reset();
++	nm_wb_kv_str(&wb, "comment_data", value);
++	wb.buf[wb.len] = '\0';
++	ck_assert_str_eq(wb.buf, "comment_data=begin } host { check_command=evil;id>0 }\n");
++	ck_assert_str_eq(value, "begin\n}\nhost {\ncheck_command=evil;id>0\r}");
++
++	/* NULL and the no-break cases must behave like nm_wb_str() */
++	wb_reset();
++	nm_wb_kv_str(&wb, "a", "plain value");
++	nm_wb_kv_str(&wb, "b", NULL);
++	wb.buf[wb.len] = '\0';
++	ck_assert_str_eq(wb.buf, "a=plain value\nb=\n");
++}
++END_TEST
++
+ int main(void)
+ {
+ 	int number_failed;
+@@ -134,6 +159,7 @@ int main(void)
+ 	tcase_add_test(tc, int_writers_match_printf);
+ 	tcase_add_test(tc, kv_macros_produce_key_value_lines);
+ 	tcase_add_test(tc, str_accepts_null);
++	tcase_add_test(tc, kv_str_flattens_line_breaks);
+ 	suite_add_tcase(s, tc);
+ 
+ 	sr = srunner_create(s);
