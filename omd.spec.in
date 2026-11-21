@@ -45,9 +45,19 @@ ln -s omd-%{version} omd
 cd ..
 rm omd
 mv omd-%{version} omd
+# rpm >= 4.20 runs all this inside BUILD/<name>-<version>-build, and our name
+# carries the dated version: the path changes daily and defeats the build caches.
+# Move the tree to the stable BUILD/omd and leave a symlink for rpm to cd through.
+if [ "$(pwd -P)" != "$(cd "%{_topdir}/BUILD" && pwd -P)" ]; then
+  rm -rf "%{_topdir}/BUILD/omd"
+  mv omd "%{_topdir}/BUILD/omd"
+  ln -s "%{_topdir}/BUILD/omd" omd
+fi
 cd omd
 
 %build
+# rpm cd's in through the symlink; continue on the real, stable path
+cd "$(pwd -P)"
 export PATH="/usr/local/bin:$PATH"
 make
 make pack
