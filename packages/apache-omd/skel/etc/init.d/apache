@@ -54,6 +54,47 @@ case "$1" in stop)
   rsync -a --chmod='F0644' "${OMD_ROOT}/var/www/maint.html" "/omd/apache/maint_${OMD_SITE}.html" >/dev/null 2>&1
 esac
 
+# The system Apache reads a root-owned copy of this site's configuration
+# below /omd/apache/$OMD_SITE.d.  Refresh that copy through the sudo rule
+# the package installs, so a change below etc/apache is live at once
+# instead of waiting for the next log rotation.  Without sudo (or without
+# the rule) it needs a root step, and the message says which one.
+refresh_system_apache() {
+  if [ "$(id -u)" = "0" ]; then
+    return 0
+  fi
+  local omd_bin=/usr/bin/omd
+  if [ ! -x "$omd_bin" ]; then
+    omd_bin="$OMD_ROOT/bin/omd"
+  fi
+  if command -v sudo >/dev/null 2>&1 && sudo -n "$omd_bin" update-apache-config "$OMD_SITE" >/dev/null 2>&1; then
+    return 0
+  fi
+  echo "Note: run 'omd update-apache-config $OMD_SITE' as root to activate changes below etc/apache in the system Apache." >&2
+  return 0
+}
+
+# Only when the copy is missing or older than the site's configuration; a
+# start of many sites then does not reload the system Apache for each one.
+system_apache_copy_is_stale() {
+  local staged=/omd/apache/$OMD_SITE.d
+  if [ ! -e "$staged/mode.conf" ]; then
+    return 0
+  fi
+  test -n "$(find "$OMD_ROOT/etc/apache" -newer "$staged/mode.conf" -print -quit 2>/dev/null)"
+}
+
+case "$1" in
+  reload|force-reload)
+    refresh_system_apache
+  ;;
+  start)
+    if system_apache_copy_is_stale; then
+      refresh_system_apache
+    fi
+  ;;
+esac
+
 kill_stale_php_cgis() {
   local COUNTER=$1
   if [ $COUNTER -ne 50 ]; then

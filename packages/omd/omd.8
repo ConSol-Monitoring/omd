@@ -343,6 +343,20 @@ KEY=value pairs via stdin, for example like this:
 The site is restarted automatically once in case it's currently runnig.
 
 .TP
+.B omd update-apache-config SITE
+Rewrites the root-owned copy of the site's configuration that the system
+Apache reads, and reloads the system Apache. The files below the site's
+\fBetc/apache\fP directory are checked first: a file that names a module or
+an include the site user does not own is refused and the last accepted
+configuration stays in place. The command is also run for existing sites
+after an update of OMD.
+
+Site users may run it for their own site through sudo, if the package's
+sudo rule is installed (\fB/etc/sudoers.d/omd\fP). When a site user changes
+\fBWEB_REDIRECT\fP or \fBWEB_ALIAS\fP with \fBomd config set\fP, or starts or
+reloads the site's Apache, omd refreshes the copy itself.
+
+.TP
 .B omd [-v] diff [RELBASE] [-b, --bare]
 Shows the differences of files in the current site compared to the files
 delivered with the omd version used by the current site.

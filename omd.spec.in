@@ -203,6 +203,17 @@ fi
 setsebool -P httpd_can_network_relay on   >/dev/null 2>&1
 setsebool -P httpd_can_network_connect on >/dev/null 2>&1
 
+# install the sudo rule that lets a site user refresh the system Apache
+# configuration of its own site.  Without sudo installed the rule is not
+# needed: that change then needs root, as before.
+OMD_SUDOERS=/omd/versions/%{version}/share/omd/omd.sudoers
+if [ -e "$OMD_SUDOERS" ] && [ -d /etc/sudoers.d ] && command -v visudo >/dev/null 2>&1; then
+    if grep -Eq '^[[:space:]]*(#|@)includedir[[:space:]]+/etc/sudoers\.d' /etc/sudoers 2>/dev/null \
+       && visudo -cf "$OMD_SUDOERS" >/dev/null 2>&1; then
+        install -m 440 -o root -g root "$OMD_SUDOERS" /etc/sudoers.d/omd
+    fi
+fi
+
 exit 0
 
 %preun
@@ -255,6 +266,7 @@ else
     rm -f /usr/share/man/man8/omd.8.gz
     rm -f /etc/init.d/omd
     rm -f /etc/bash_completion.d/omd
+    rm -f /etc/sudoers.d/omd
     rmdir /opt/omd/versions >/dev/null 2>&1
     rm -f @APACHE_CONFDIR@/zzz_omd.conf
     rm -f /etc/apache2/vhosts.d/vhost-ssl-omd.conf

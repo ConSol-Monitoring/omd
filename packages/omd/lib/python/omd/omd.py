@@ -2353,6 +2353,8 @@ def config_change():
 
         save_site_conf()
         config_set_all()
+        if config_refreshes_system_apache(*[key for key, value in settings]):
+            refresh_system_apache_config()
     finally:
         if site_was_stopped:
             start_site(g_sitename)
@@ -2469,6 +2471,8 @@ def config_set_value(hook_name, value, save = True):
     if save:
         save_site_conf()
         config_set_all()
+        if config_refreshes_system_apache(hook_name):
+            refresh_system_apache_config()
 
 def config_usage():
     sys.stdout.write("""Usage of config command:
@@ -2716,7 +2720,7 @@ def getenv(key, default = None):
 
 def clear_environment():
     # first remove *all* current environment variables
-    keep = [ "TERM", "CORE_NOVERIFY", "HOME" ]
+    keep = [ "TERM", "CORE_NOVERIFY", "HOME", "SUDO_USER" ]
     for key in list(os.environ.keys()):
         if key not in keep:
             del os.environ[key]
@@ -2888,6 +2892,14 @@ def install_root_owned_apache_file(sitename, src, dst, replacements=()):
         if os.path.exists(dst):
             os.unlink(dst)
         return True
+    # A site user can replace a configuration file with a symlink to a file
+    # only root may read, so the content that is copied here must come from
+    # the site's own tree.
+    site = os.path.realpath(site_dir(sitename)) + os.sep
+    if not os.path.realpath(src).startswith(site):
+        sys.stderr.write(tty_error + ": %s is not inside the site directory; "
+                         "the global Apache keeps the last configuration root accepted for it.\n" % src)
+        return False
     with open(src, encoding="utf-8", errors="replace") as f:
         text = f.read()
     for old, new in replacements:
@@ -2948,7 +2960,78 @@ def create_apache_hook(sitename):
         .write("Include %s/system/*.conf\n" % hook_dir)
     sync_apache_maint_page(sitename)
 
+# The system Apache reads a root-owned copy of each site's configuration
+# below /omd/apache/<site>.d. A site user cannot write there, so a change
+# below the site's etc/apache becomes live only when that copy is refreshed
+# as root. The package installs a sudo rule for exactly that command, and
+# the config hooks and the site's own apache init script use it. Without
+# sudo, or without the rule, the change waits for a root step - the same
+# behaviour as before the rule existed.
+def sudo_omd_command():
+    """The sudo command line that runs omd, or None when sudo is missing."""
+    sudo = shutil.which("sudo")
+    if not sudo:
+        return None
+    for omd in ("/usr/bin/omd", os.path.abspath(sys.argv[0])):
+        if os.path.exists(omd):
+            return [sudo, "-n", omd]
+    return None
+
+def refresh_system_apache_config():
+    """Refresh the root-owned copy of this site's system Apache configuration.
+
+    Returns True when the copy was refreshed. When it cannot be refreshed,
+    the change stays pending and the caller is told which command to run as
+    root, which is what an operator had to run before the rule existed.
+    """
+    if am_root() or not g_sitename:
+        return True
+    command = "omd update-apache-config %s" % g_sitename
+    sudo = sudo_omd_command()
+    if sudo is None:
+        sys.stderr.write("Note: sudo is not installed; run '%s' as root to activate "
+                         "the change in the system Apache.\n" % command)
+        return False
+    process = subprocess.run(sudo + ["update-apache-config", g_sitename],
+                             stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    if process.returncode != 0:
+        reason = process.stdout.decode("UTF-8", "replace").strip().splitlines()
+        sys.stderr.write("Note: could not refresh the system Apache configuration "
+                         "automatically; run '%s' as root to activate the change%s\n" %
+                         (command, (": " + reason[-1]) if reason else ""))
+        return False
+    return True
+
+def sudo_started_this_process():
+    """True when sudo is the parent of this omd process."""
+    try:
+        with open("/proc/%d/comm" % os.getppid(), encoding="utf-8", errors="replace") as f:
+            return f.read().strip() == "sudo"
+    except OSError:
+        return False
+
+def config_refreshes_system_apache(*hook_names):
+    """True when one of the changed config hooks writes system Apache config."""
+    return any(name in ("WEB_REDIRECT", "WEB_ALIAS") for name in hook_names)
+
 def main_update_apache_config(args, options={}):
+    # The site name comes from the command line and is used in a path below
+    # /omd/apache, so it is checked against the syntax omd itself creates
+    # sites with before anything is written.
+    if len(args) > 0:
+        bail_out(tty_error + ": omd: update-apache-config takes exactly one site name.")
+    if not re.match("^[a-zA-Z_][a-zA-Z_0-9]{0,15}$", g_sitename or ""):
+        bail_out(tty_error + ": omd: invalid site name: %s" % g_sitename)
+    # Through the packaged sudo rule any site user may name any site on the
+    # command line, so a caller that is not root may only update its own.
+    # sudo sets SUDO_USER to the invoking user, but a root shell that was
+    # started with sudo keeps the variable in its environment, so it is only
+    # the caller when sudo is our parent or the name belongs to a site user.
+    sudo_user = getenv("SUDO_USER", "")
+    if sudo_user and sudo_user != "root" and sudo_user != g_sitename \
+       and (sudo_started_this_process() or (user_exists(sudo_user) and site_exists(sudo_user))):
+        bail_out(tty_error + ": omd: %s may only update the Apache configuration "
+                 "of its own site, not %s." % (sudo_user, g_sitename))
     create_apache_hook(g_sitename)
     reload_apache()
 
@@ -2959,6 +3042,13 @@ def sync_apache_maint_page(sitename):
     if not am_root() and not os.path.exists(target_file):
         return
     if os.path.exists(maint_file):
+        # Same as for the configuration files: a symlink must not make root
+        # copy a file from outside the site's tree into a readable place.
+        site = os.path.realpath(site_dir(sitename)) + os.sep
+        if not os.path.realpath(maint_file).startswith(site):
+            sys.stderr.write(tty_error + ": %s is not inside the site directory; "
+                             "the maintenance page was not updated.\n" % maint_file)
+            return
         os.system("/usr/bin/rsync -a --inplace --chmod='F0644' --chown='%s:%s' '%s' '%s'" % (sitename, sitename, maint_file, target_file))
 
 def delete_apache_hook(sitename):
