@@ -132,6 +132,11 @@ TestUtils::test_command({ cmd => "/bin/rm /omd/versions/$omd_update/skel/.my.cnf
 # prepare new files
 TestUtils::test_command({ cmd => "/bin/sh -c \"echo '\\ntest file\\n' >> /omd/versions/$omd_update/skel/.new_file\""});
 
+# test omd su while having multiple omd versions
+TestUtils::test_command({ cmd => $omd_bin." su $site", like => "/$site/", stdin => "id\nexit\n" });
+TestUtils::test_command({ cmd => "/bin/su - $site -c 'omd su $site'", like => "/$site/", stdin => "id\nexit\n" });
+TestUtils::test_command({ cmd => "/bin/su - $site -c 'omd su nobody'", like => '/^$/', errlike => '/root permissions required/', exit => 1 });
+
 # dry-run update
 TestUtils::test_command({ cmd => $omd_bin." start $site",  like => '/Starting naemon/' });
 TestUtils::test_command({

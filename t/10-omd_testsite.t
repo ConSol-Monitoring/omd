@@ -12,7 +12,7 @@ BEGIN {
     use lib "$FindBin::Bin/lib/lib/perl5";
 }
 
-plan( tests => 638 );
+plan( tests => 650 );
 
 my $omd_bin = TestUtils::get_omd_bin();
 
@@ -149,6 +149,9 @@ my $tests = [
   { cmd => "/bin/ls -ld /omd/sites/$site3", like => '/drwxr-x---.*\s+'.$site3.'\s+omd\s+/' }, # check permissions and owner
   { cmd => "/usr/bin/id -u $site3",      like => '/7021/' },
   { cmd => "/usr/bin/id -g $site3",      like => '/7022/' },
+  { cmd => $omd_bin." su $site",         like => '/uid=7017/', stdin => "id\nexit\n" },
+  { cmd => "/bin/su - $site -c 'omd su $site'", like => '/uid=7017/', stdin => "id\nexit\n" },
+  { cmd => "/bin/su - $site -c 'omd su $site2'", like => '/^$/', errlike => '/root permissions required/', exit => 1 },
   { cmd => $omd_bin." rm $site",         like => '/Restarting Apache...\s*OK/', stdin => "yes\n" },
   { cmd => $omd_bin." rm $site3",        like => '/Restarting Apache...\s*OK/', stdin => "yes\n" },
 

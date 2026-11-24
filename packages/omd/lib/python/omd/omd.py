@@ -4369,6 +4369,22 @@ def main_config(args, options={}):
             config_usage()
 
 def main_su(args, options={}):
+    if not am_root() and args and args[0] != g_sitename:
+        bail_out(tty_error + ": omd su: root permissions required")
+    p = pwd.getpwnam(g_sitename)
+    if os.getuid() == p.pw_uid:
+        # already the site user: nothing to switch to, just open the login shell
+        os.chdir(g_sitedir)
+        os.environ["PWD"] = g_sitedir
+        shell = p.pw_shell
+        if not shell:
+            shell = os.environ.get("SHELL", "/bin/sh")
+        try:
+            if opt_verbose:
+                print("already on uid %d, spawing shell: %s (HOME=%s)" % (p.pw_uid, shell, p.pw_dir))
+            os.execv(shell, [shell, "-"])
+        except OSError:
+            bail_out(tty_error + ": Cannot open a shell for user %s" % g_sitename)
     try:
         os.execl("/bin/su", "su", "-", "%s" % g_sitename)
     except OSError:
@@ -5352,7 +5368,9 @@ def exec_other_omd(version):
         args = sys.argv
         if not opt_force:
             # switch early to site user to avoid issues with root permissions
-            if g_sitename and am_root():
+            # root-only commands (e.g. su) must keep running as root when re-execing
+            root_only = any(c.command == command and c.only_root for c in commands)
+            if g_sitename and am_root() and not root_only:
                 switch_to_site_user()
                 # remove site name from args
                 args, found = pop_first_occurrence(args, g_sitename)
@@ -5526,7 +5544,13 @@ def run(version):
         sys.exit(1)
 
     if not am_root() and cmd_spec.only_root:
-        bail_out(tty_error + ": omd: root permissions are needed for this command.")
+        # 'su' only needs root to switch to the site user. A site user
+        # running 'omd su' always targets their own site (g_sitename is
+        # forced to their own username for non-root, see below), so there
+        # is nothing to switch to: let it through and main_su() just
+        # spawns the shell.
+        if command != "su":
+            bail_out(tty_error + ": omd: root permissions are needed for this command.")
 
     # Parse command options. Parse again all options with additional arguments
     for spec in cmd_spec.option_spec:
