@@ -28,6 +28,7 @@ import os
 import sys
 import abc
 import argparse
+import glob
 import grp
 import pwd
 import re
@@ -2779,12 +2780,178 @@ def hostname():
     except Exception:
         return "localhost"
 
+# The global Apache is started by root and includes configuration files that
+# belong to each site user. A LoadModule in one of those files loads a shared
+# object the site user wrote into the root parent process, so everything the
+# global Apache reads is staged below /omd/apache/<site>.d, written and owned
+# by root. A site-owned file keeps working: its redirects, rewrite rules and
+# other directives are copied as they are, and an Include of another file in
+# the site's own tree is inlined so that its directives are checked too.
+def apache_path_is_root_owned(path):
+    """True when an absolute path, or every file of a glob, is owned by root
+    and is not writable by anybody else."""
+    if not path or not path.startswith("/") or "/../" in path:
+        return False
+    matches = glob.glob(path) if glob.has_magic(path) else [path]
+    if not matches:
+        return False
+    for match in matches:
+        try:
+            info = os.stat(match)
+        except OSError:
+            return False
+        if info.st_uid != 0 or info.st_mode & 0o022:
+            return False
+    return True
+
+def apache_site_include_text(sitename, path, depth, optional=False):
+    """The text of a site-owned Include, or None when the path leaves the site
+    tree or a file below it names code the site user owns."""
+    if depth > 10 or not path.startswith("/"):
+        return None
+    site = os.path.realpath(site_dir(sitename)) + os.sep
+    if glob.has_magic(path):
+        parent = os.path.realpath(os.path.dirname(path)) + os.sep
+        if not parent.startswith(site):
+            return None
+        names = sorted(glob.glob(path))
+    elif not os.path.exists(path):
+        return "" if optional else None
+    else:
+        real = os.path.realpath(path)
+        if not real.startswith(site):
+            return None
+        names = sorted(os.path.join(real, name) for name in os.listdir(real)) if os.path.isdir(real) else [real]
+    texts = []
+    for name in names:
+        real = os.path.realpath(name)
+        if not real.startswith(site) or not os.path.isfile(real):
+            return None
+        with open(real, encoding="utf-8", errors="replace") as f:
+            text = apache_conf_text(sitename, f.read(), depth)
+        if text is None:
+            return None
+        texts.append(text.rstrip("\n"))
+    return "\n".join(texts) + "\n" if texts else ""
+
+def apache_conf_text(sitename, text, depth=0):
+    """Return text with site-owned includes inlined, or None when a directive
+    names code the site user owns or an include outside the site tree. Apache
+    reads directive names case-insensitively and joins a line continued with a
+    backslash, so the text is read the same way here before it is checked."""
+    if depth > 10:
+        return None
+    text = re.sub(r"\\\r?\n", "", text)
+    kept = []
+    for line in text.splitlines():
+        words = line.split("#", 1)[0].split()
+        directive = words[0].lower() if words else ""
+        if directive == "loadmodule":
+            if len(words) < 3 or not apache_path_is_root_owned(words[2].strip('"\'')):
+                return None
+        elif directive == "loadfile":
+            if len(words) < 2 or not apache_path_is_root_owned(words[1].strip('"\'')):
+                return None
+        elif directive in ("include", "includeoptional"):
+            if len(words) < 2:
+                return None
+            for arg in words[1:]:
+                arg = arg.strip('"\'')
+                if arg.startswith("/omd/apache/") or apache_path_is_root_owned(arg):
+                    kept.append("%s %s" % (words[0], arg))
+                    continue
+                included = apache_site_include_text(sitename, arg, depth + 1,
+                                                    optional=(directive == "includeoptional"))
+                if included is None:
+                    return None
+                kept.append(included.rstrip("\n"))
+            continue
+        kept.append(line)
+    return "\n".join(kept) + "\n"
+
+def write_root_owned_apache_file(dst, text):
+    """Write one file below /omd/apache/<site>.d atomically, root-owned."""
+    tmp = dst + ".new"
+    with open(tmp, "w") as f:
+        f.write(text)
+    os.chown(tmp, 0, 0)
+    os.chmod(tmp, 0o644)
+    os.replace(tmp, dst)
+
+def install_root_owned_apache_file(sitename, src, dst, replacements=()):
+    """Copy one site-owned Apache file below /omd/apache/<site>.d, root-owned.
+
+    A file that names code or an include the site user does not own is
+    refused and the last root-owned copy stays in place, so a bad edit does
+    not take the site's working configuration down with it."""
+    if not os.path.exists(src):
+        if os.path.exists(dst):
+            os.unlink(dst)
+        return True
+    with open(src, encoding="utf-8", errors="replace") as f:
+        text = f.read()
+    for old, new in replacements:
+        text = text.replace(old, new)
+    staged = apache_conf_text(sitename, text)
+    if staged is None:
+        sys.stderr.write(tty_error + ": %s names code or an include the site user does not own; "
+                         "the global Apache keeps the last configuration root accepted for it.\n" % src)
+        return False
+    write_root_owned_apache_file(dst, staged)
+    return True
+
 def create_apache_hook(sitename):
+    """Write the configuration the global Apache reads for one site.
+
+    Everything the global Apache reads lives in /omd/apache/<site>.d and is
+    written by root; the site directory itself is never read by it."""
+    site = site_dir(sitename)
+    hook_dir = "/omd/apache/%s.d" % sitename
+    os.makedirs(hook_dir, exist_ok=True)
+    os.chown(hook_dir, 0, 0)
+    os.chmod(hook_dir, 0o755)
+    install_root_owned_apache_file(
+        sitename, site + "/etc/apache/mode.conf", hook_dir + "/mode.conf",
+        replacements=[("Include %s/etc/apache/proxy-port.conf" % site,
+                       "Include %s/proxy-port.conf" % hook_dir)])
+    if not os.path.exists(hook_dir + "/mode.conf"):
+        write_root_owned_apache_file(hook_dir + "/mode.conf", "")
+    install_root_owned_apache_file(
+        sitename, site + "/etc/apache/proxy-port.conf", hook_dir + "/proxy-port.conf",
+        replacements=[("IncludeOptional %s/etc/apache/system.d/*.conf" % site,
+                       "IncludeOptional %s/system/*.conf" % hook_dir),
+                      ("Include %s/etc/apache/system.d/*.conf" % site,
+                       "Include %s/system/*.conf" % hook_dir)])
+    if not os.path.exists(hook_dir + "/proxy-port.conf"):
+        write_root_owned_apache_file(hook_dir + "/proxy-port.conf", "")
+    system_src = site + "/etc/apache/system.d"
+    system_dst = hook_dir + "/system"
+    os.makedirs(system_dst, exist_ok=True)
+    os.chown(system_dst, 0, 0)
+    os.chmod(system_dst, 0o755)
+    wanted = set()
+    if os.path.isdir(system_src):
+        for name in sorted(os.listdir(system_src)):
+            if name.endswith(".conf"):
+                wanted.add(name)
+                install_root_owned_apache_file(
+                    sitename, os.path.join(system_src, name),
+                    os.path.join(system_dst, os.path.basename(name)))
+    for name in os.listdir(system_dst):
+        if name not in wanted and os.path.isfile(os.path.join(system_dst, name)):
+            os.unlink(os.path.join(system_dst, name))
+    if not wanted:
+        write_root_owned_apache_file(system_dst + "/empty.conf", "")
     open("/omd/apache/%s.conf" % sitename, "w")\
-        .write("Include %s/etc/apache/mode.conf\n" % site_dir(sitename))
+        .write("Include %s/mode.conf\n" % hook_dir)
     open("/omd/apache/%s.include" % sitename, "w")\
-        .write("Include %s/etc/apache/system.d/*.conf\n" % site_dir(sitename))
+        .write("Include %s/system/*.conf\n" % hook_dir)
     sync_apache_maint_page(sitename)
+
+def main_update_apache_config(args, options={}):
+    create_apache_hook(g_sitename)
+    reload_apache()
+
 
 def sync_apache_maint_page(sitename):
     maint_file  = '%s/var/www/maint.html' % site_dir(sitename)
@@ -2808,6 +2975,13 @@ def delete_apache_hook(sitename):
             os.remove(hook_path)
         except Exception as e:
             sys.stderr.write("Cannot remove apache hook %s: %s\n" % (hook_path, e))
+
+    hook_dir = "/omd/apache/%s.d" % sitename
+    if os.path.isdir(hook_dir):
+        try:
+            shutil.rmtree(hook_dir)
+        except Exception as e:
+            sys.stderr.write("Cannot remove apache hook directory %s: %s\n" % (hook_dir, e))
 
     hook_path = "/omd/apache/maint_%s.html" % sitename
     if os.path.exists(hook_path):
@@ -5182,6 +5356,15 @@ commands = [
     must_exist  = True,
     args        = "...",
     more_help   = config_usage,
+  ),
+
+  Command(
+    command     = "update-apache-config",
+    description = "Rewrite the root-owned system Apache configuration of a site",
+    fn          = main_update_apache_config,
+    only_root   = True,
+    needs_site  = 1,
+    must_exist  = True,
   ),
 
   Command(
