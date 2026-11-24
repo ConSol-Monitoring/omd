@@ -15,19 +15,18 @@ use TestUtils;
 my $omd_bin = TestUtils::get_omd_bin();
 my $site    = TestUtils::create_test_site() or TestUtils::bail_out("no further testing without site");
 
-# they will never be green
-my @skip_files = qw/
-    blackbox_exporter
-    grafana
-    influxd
-    logcli
-    loki
-    promtail
-    promtool
-    victoria-metrics-prod
-    vmagent-prod
-    vmalert-prod
-    vmctl
+# only binaries built from ConSol (and sni) sources are in scope; the rest
+# (prometheus, grafana, influxdb, loki, victoria-metrics, ...) are upstream
+# and only tracked as TODO
+# check_dhcp and check_icmp are C plugins, migrate_pnp_to_nagflux is perl
+my @in_scope = qw/
+    check_influxdb
+    check_prometheus
+    check_snclient
+    lmd
+    lq
+    mod_gearman_worker
+    nagflux
 /;
 
 # ##################################################
@@ -102,20 +101,25 @@ TestUtils::test_command({
 ##################################################
 # check binaries and check plugins
 for my $file (glob("/omd/sites/$site/bin/* /omd/sites/$site/lib/monitoring-plugins/*")) {
+    next if -d $file;
     my $out = `strings $file | grep -E '^go[0-9]+\.[0-9]+(\.[0-9]+)?\$' | head -n1`;
     next unless $out;
 
-    my $skipped = 0;
-    for my $chk (@skip_files) {
-        if($file =~ m%/$chk$%mx) {
-            $skipped = 1;
+    # compare by the target's name for symlinks (e.g. check_nsc_web -> check_snclient)
+    my $basename = readlink($file) || $file;
+    $basename =~ s/.*\///mx;
+
+    my $in_scope = 0;
+    for my $chk (@in_scope) {
+        if($basename eq $chk) {
+            $in_scope = 1;
             last;
         }
     }
 
-    diag("TODO: $file") if $skipped;
+    diag("TODO: $file") if !$in_scope;
     TODO: {
-        local $TODO = "$file " if $skipped;
+        local $TODO = "$file not in scope (upstream project)" if !$in_scope;
 
         ok(1, "checking binary: $file");
         my($return, $rc, $stdout, $stderr) = TestUtils::test_command({
@@ -128,14 +132,12 @@ for my $file (glob("/omd/sites/$site/bin/* /omd/sites/$site/lib/monitoring-plugi
         if($stdout !~ /govulncheck: unrecognized binary format/) {
             if($stdout !~ /\QNo vulnerabilities found\E/mx) {
                 fail("govulncheck issues found in: $file");
-                diag($stdout) if($stdout && !$skipped);
-                diag($stderr) if($stderr && !$skipped);
+                diag($stdout) if($stdout && !$in_scope);
+                diag($stderr) if($stderr && !$in_scope);
             }
             next;
         }
 
-        my $basename = $file;
-        $basename =~ s/.*\///mx;
         `cp $file /var/tmp/ && upx -d /var/tmp/$basename 2>&1 && chmod 644 /var/tmp/$basename`;
         ok(-f "/var/tmp/".$basename, "unpacked with upx $file");
 
@@ -147,8 +149,8 @@ for my $file (glob("/omd/sites/$site/bin/* /omd/sites/$site/lib/monitoring-plugi
         });
         if($stdout !~ /\QNo vulnerabilities found\E/mx) {
             fail("govulncheck issues found in: $file");
-            diag($stdout) if($stdout && !$skipped);
-            diag($stderr) if($stderr && !$skipped);
+            diag($stdout) if($stdout && !$in_scope);
+            diag($stderr) if($stderr && !$in_scope);
         }
 
         unlink("/var/tmp/".$basename);
