@@ -57,56 +57,76 @@ g_dir_mode      = 0o755
 g_file_mode     = 0o644
 os.umask(0o022)
 
-# colored output, if stdout is a tty
-on_tty = sys.stdout.isatty()
+# colored output: default on when stdout is a tty, forced on with --color
+# or OMD_COLOR=1 (e.g. under `watch -c` where stdout is piped), always off
+# when NO_COLOR is set (no-color.org, its mere presence is enough).
+# opt_color is filled in by run() after the global options are parsed, so
+# set_colors() must be called again there.
+opt_color = False
 
-if on_tty:
-    tty_black     = '\033[30m'
-    tty_red       = '\033[31m'
-    tty_green     = '\033[32m'
-    tty_yellow    = '\033[33m'
-    tty_blue      = '\033[34m'
-    tty_magenta   = '\033[35m'
-    tty_cyan      = '\033[36m'
-    tty_white     = '\033[37m'
-    tty_bgblack   = '\033[40m'
-    tty_bgred     = '\033[41m'
-    tty_bggreen   = '\033[42m'
-    tty_bgyellow  = '\033[43m'
-    tty_bgblue    = '\033[44m'
-    tty_bgmagenta = '\033[45m'
-    tty_bgcyan    = '\033[46m'
-    tty_bgwhite   = '\033[47m'
-    tty_bold      = '\033[1m'
-    tty_underline = '\033[4m'
-    tty_normal    = '\033[0m'
-    tty_ok        = tty_green + tty_bold + 'OK' + tty_normal
-    tty_error     = tty_red + tty_bold + 'ERROR' + tty_normal
-else:
-    tty_black     = ''
-    tty_red       = ''
-    tty_green     = ''
-    tty_yellow    = ''
-    tty_blue      = ''
-    tty_magenta   = ''
-    tty_cyan      = ''
-    tty_white     = ''
-    tty_bgred     = ''
-    tty_bggreen   = ''
-    tty_bgyellow  = ''
-    tty_bgblue    = ''
-    tty_bgmagenta = ''
-    tty_bgcyan    = ''
-    tty_bold      = ''
-    tty_underline = ''
-    tty_normal    = ''
-    tty_ok        = 'OK'
-    tty_error     = 'ERROR'
+def use_color():
+    if "NO_COLOR" in os.environ:
+        return False
+    if os.environ.get("OMD_COLOR"):
+        return True
+    return sys.stdout.isatty() or bool(opt_color)
 
-# Symbols for update
-good  = " " + tty_green +  tty_bold + "*" + tty_normal
-warn  = " " + tty_bgyellow + tty_black + tty_bold + "!" + tty_normal
-error = " " + tty_bgred +  tty_white +   tty_bold + "!" + tty_normal
+def set_colors():
+    global tty_black, tty_red, tty_green, tty_yellow, tty_blue
+    global tty_magenta, tty_cyan, tty_white
+    global tty_bgblack, tty_bgred, tty_bggreen, tty_bgyellow, tty_bgblue
+    global tty_bgmagenta, tty_bgcyan, tty_bgwhite
+    global tty_bold, tty_underline, tty_normal, tty_ok, tty_error
+    global good, warn, error
+    if use_color():
+        tty_black     = '\033[30m'
+        tty_red       = '\033[31m'
+        tty_green     = '\033[32m'
+        tty_yellow    = '\033[33m'
+        tty_blue      = '\033[34m'
+        tty_magenta   = '\033[35m'
+        tty_cyan      = '\033[36m'
+        tty_white     = '\033[37m'
+        tty_bgblack   = '\033[40m'
+        tty_bgred     = '\033[41m'
+        tty_bggreen   = '\033[42m'
+        tty_bgyellow  = '\033[43m'
+        tty_bgblue    = '\033[44m'
+        tty_bgmagenta = '\033[45m'
+        tty_bgcyan    = '\033[46m'
+        tty_bgwhite   = '\033[47m'
+        tty_bold      = '\033[1m'
+        tty_underline = '\033[4m'
+        tty_normal    = '\033[0m'
+        tty_ok        = tty_green + tty_bold + 'OK' + tty_normal
+        tty_error     = tty_red + tty_bold + 'ERROR' + tty_normal
+    else:
+        tty_black     = ''
+        tty_red       = ''
+        tty_green     = ''
+        tty_yellow    = ''
+        tty_blue      = ''
+        tty_magenta   = ''
+        tty_cyan      = ''
+        tty_white     = ''
+        tty_bgred     = ''
+        tty_bggreen   = ''
+        tty_bgyellow  = ''
+        tty_bgblue    = ''
+        tty_bgmagenta = ''
+        tty_bgcyan    = ''
+        tty_bold      = ''
+        tty_underline = ''
+        tty_normal    = ''
+        tty_ok        = 'OK'
+        tty_error     = 'ERROR'
+    # Symbols for update
+    good  = " " + tty_green +  tty_bold + "*" + tty_normal
+    warn  = " " + tty_bgyellow + tty_black + tty_bold + "!" + tty_normal
+    error = " " + tty_bgred +  tty_white +   tty_bold + "!" + tty_normal
+
+# default colors at import time, re-evaluated in run() after --color is parsed
+set_colors()
 
 g_stdout_log = None
 g_stderr_log = None
@@ -2715,7 +2735,9 @@ def getenv(key, default = None):
 
 def clear_environment():
     # first remove *all* current environment variables
-    keep = [ "TERM", "CORE_NOVERIFY", "HOME" ]
+    # OMD_COLOR/NO_COLOR are kept so that per-site subprocesses inherit the
+    # same color decision as the parent invocation
+    keep = [ "TERM", "CORE_NOVERIFY", "HOME", "OMD_COLOR", "NO_COLOR" ]
     for key in list(os.environ.keys()):
         if key not in keep:
             del os.environ[key]
@@ -3031,7 +3053,7 @@ def version_exists(v):
     return v in omd_versions()
 
 def main_sites(args, options={}):
-    if on_tty and not options.bare:
+    if sys.stdout.isatty() and not options.bare:
         sys.stdout.write("SITE             VERSION          COMMENTS\n")
     for site in all_sites():
         tags = []
@@ -5440,6 +5462,7 @@ def run(version):
     OMD_VERSION = version
 
     global opt_help
+    global opt_color
     global opt_verbose
     global opt_force
     global opt_yes
@@ -5462,11 +5485,14 @@ def run(version):
     argparser.add_argument('-v', '--verbose',     action="count", default=0)
     argparser.add_argument('-f', '--force',       action="count", default=0)
     argparser.add_argument('-y', '--yes',         action="count", default=0)
+    argparser.add_argument('--color',             action="store_true", default=False)
     argparser.add_argument('-h', '--help',        action="count", default=0)
     args, main_args = argparser.parse_known_args(sys.argv[1:])
 
     command     = args.command
+    opt_color   = args.color
     opt_version = args.version
+    set_colors() # re-evaluate colors now that --color is known
     opt_verbose = args.verbose     >= 1
     opt_force   = args.force       >= 1
     opt_yes     = args.yes         >= 1

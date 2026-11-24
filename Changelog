@@ -1,6 +1,8 @@
 This file documents the revision history for the Open Monitoring Distribution (Labs Edition)
 
 next:
+          - omd:
+            - add --color option and support for OMD_COLOR/NO_COLOR env variables
           - naemon:
             - core update to 1.6.0
             - livestatus update to 1.6.0
