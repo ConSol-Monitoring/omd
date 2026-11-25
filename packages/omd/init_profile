@@ -407,7 +407,7 @@ __generic_init_kill_session() {
     # get session id
     sess=$( ps -o sess= -p $pid )
     if [ -n "$sess" ]; then
-      ps -ax -o sess= -o pid= | awk '$1 == v {print $2}' v="$sess" | xargs -r kill
+      ps -ax -o sess= -o pid= | awk '$1 == v {print $2}' v="$sess" | xargs -r kill >/dev/null 2>&1
     fi
 }
 
