@@ -58,56 +58,76 @@ g_dir_mode      = 0o755
 g_file_mode     = 0o644
 os.umask(0o022)
 
-# colored output, if stdout is a tty
-on_tty = sys.stdout.isatty()
+# colored output: default on when stdout is a tty, forced on with --color
+# or OMD_COLOR=1 (e.g. under `watch -c` where stdout is piped), always off
+# when NO_COLOR is set (no-color.org, its mere presence is enough).
+# opt_color is filled in by run() after the global options are parsed, so
+# set_colors() must be called again there.
+opt_color = False
 
-if on_tty:
-    tty_black     = '\033[30m'
-    tty_red       = '\033[31m'
-    tty_green     = '\033[32m'
-    tty_yellow    = '\033[33m'
-    tty_blue      = '\033[34m'
-    tty_magenta   = '\033[35m'
-    tty_cyan      = '\033[36m'
-    tty_white     = '\033[37m'
-    tty_bgblack   = '\033[40m'
-    tty_bgred     = '\033[41m'
-    tty_bggreen   = '\033[42m'
-    tty_bgyellow  = '\033[43m'
-    tty_bgblue    = '\033[44m'
-    tty_bgmagenta = '\033[45m'
-    tty_bgcyan    = '\033[46m'
-    tty_bgwhite   = '\033[47m'
-    tty_bold      = '\033[1m'
-    tty_underline = '\033[4m'
-    tty_normal    = '\033[0m'
-    tty_ok        = tty_green + tty_bold + 'OK' + tty_normal
-    tty_error     = tty_red + tty_bold + 'ERROR' + tty_normal
-else:
-    tty_black     = ''
-    tty_red       = ''
-    tty_green     = ''
-    tty_yellow    = ''
-    tty_blue      = ''
-    tty_magenta   = ''
-    tty_cyan      = ''
-    tty_white     = ''
-    tty_bgred     = ''
-    tty_bggreen   = ''
-    tty_bgyellow  = ''
-    tty_bgblue    = ''
-    tty_bgmagenta = ''
-    tty_bgcyan    = ''
-    tty_bold      = ''
-    tty_underline = ''
-    tty_normal    = ''
-    tty_ok        = 'OK'
-    tty_error     = 'ERROR'
+def use_color():
+    if "NO_COLOR" in os.environ:
+        return False
+    if os.environ.get("OMD_COLOR"):
+        return True
+    return sys.stdout.isatty() or bool(opt_color)
 
-# Symbols for update
-good  = " " + tty_green +  tty_bold + "*" + tty_normal
-warn  = " " + tty_bgyellow + tty_black + tty_bold + "!" + tty_normal
-error = " " + tty_bgred +  tty_white +   tty_bold + "!" + tty_normal
+def set_colors():
+    global tty_black, tty_red, tty_green, tty_yellow, tty_blue
+    global tty_magenta, tty_cyan, tty_white
+    global tty_bgblack, tty_bgred, tty_bggreen, tty_bgyellow, tty_bgblue
+    global tty_bgmagenta, tty_bgcyan, tty_bgwhite
+    global tty_bold, tty_underline, tty_normal, tty_ok, tty_error
+    global good, warn, error
+    if use_color():
+        tty_black     = '\033[30m'
+        tty_red       = '\033[31m'
+        tty_green     = '\033[32m'
+        tty_yellow    = '\033[33m'
+        tty_blue      = '\033[34m'
+        tty_magenta   = '\033[35m'
+        tty_cyan      = '\033[36m'
+        tty_white     = '\033[37m'
+        tty_bgblack   = '\033[40m'
+        tty_bgred     = '\033[41m'
+        tty_bggreen   = '\033[42m'
+        tty_bgyellow  = '\033[43m'
+        tty_bgblue    = '\033[44m'
+        tty_bgmagenta = '\033[45m'
+        tty_bgcyan    = '\033[46m'
+        tty_bgwhite   = '\033[47m'
+        tty_bold      = '\033[1m'
+        tty_underline = '\033[4m'
+        tty_normal    = '\033[0m'
+        tty_ok        = tty_green + tty_bold + 'OK' + tty_normal
+        tty_error     = tty_red + tty_bold + 'ERROR' + tty_normal
+    else:
+        tty_black     = ''
+        tty_red       = ''
+        tty_green     = ''
+        tty_yellow    = ''
+        tty_blue      = ''
+        tty_magenta   = ''
+        tty_cyan      = ''
+        tty_white     = ''
+        tty_bgred     = ''
+        tty_bggreen   = ''
+        tty_bgyellow  = ''
+        tty_bgblue    = ''
+        tty_bgmagenta = ''
+        tty_bgcyan    = ''
+        tty_bold      = ''
+        tty_underline = ''
+        tty_normal    = ''
+        tty_ok        = 'OK'
+        tty_error     = 'ERROR'
+    # Symbols for update
+    good  = " " + tty_green +  tty_bold + "*" + tty_normal
+    warn  = " " + tty_bgyellow + tty_black + tty_bold + "!" + tty_normal
+    error = " " + tty_bgred +  tty_white +   tty_bold + "!" + tty_normal
+
+# default colors at import time, re-evaluated in run() after --color is parsed
+set_colors()
 
 g_stdout_log = None
 g_stderr_log = None
@@ -2720,7 +2740,9 @@ def getenv(key, default = None):
 
 def clear_environment():
     # first remove *all* current environment variables
-    keep = [ "TERM", "CORE_NOVERIFY", "HOME", "SUDO_USER" ]
+    # OMD_COLOR/NO_COLOR are kept so that per-site subprocesses inherit the
+    # same color decision as the parent invocation
+    keep = [ "TERM", "CORE_NOVERIFY", "HOME", "OMD_COLOR", "NO_COLOR", "SUDO_USER" ]
     for key in list(os.environ.keys()):
         if key not in keep:
             del os.environ[key]
@@ -3295,7 +3317,7 @@ def version_exists(v):
     return v in omd_versions()
 
 def main_sites(args, options={}):
-    if on_tty and not options.bare:
+    if sys.stdout.isatty() and not options.bare:
         sys.stdout.write("SITE             VERSION          COMMENTS\n")
     for site in all_sites():
         tags = []
@@ -4611,6 +4633,22 @@ def main_config(args, options={}):
             config_usage()
 
 def main_su(args, options={}):
+    if not am_root() and args and args[0] != g_sitename:
+        bail_out(tty_error + ": omd su: root permissions required")
+    p = pwd.getpwnam(g_sitename)
+    if os.getuid() == p.pw_uid:
+        # already the site user: nothing to switch to, just open the login shell
+        os.chdir(g_sitedir)
+        os.environ["PWD"] = g_sitedir
+        shell = p.pw_shell
+        if not shell:
+            shell = os.environ.get("SHELL", "/bin/sh")
+        try:
+            if opt_verbose:
+                print("already on uid %d, spawing shell: %s (HOME=%s)" % (p.pw_uid, shell, p.pw_dir))
+            os.execv(shell, [shell, "-"])
+        except OSError:
+            bail_out(tty_error + ": Cannot open a shell for user %s" % g_sitename)
     try:
         os.execl("/bin/su", "su", "-", "%s" % g_sitename)
     except OSError:
@@ -5603,7 +5641,9 @@ def exec_other_omd(version):
         args = sys.argv
         if not opt_force:
             # switch early to site user to avoid issues with root permissions
-            if g_sitename and am_root():
+            # root-only commands (e.g. su) must keep running as root when re-execing
+            root_only = any(c.command == command and c.only_root for c in commands)
+            if g_sitename and am_root() and not root_only:
                 switch_to_site_user()
                 # remove site name from args
                 args, found = pop_first_occurrence(args, g_sitename)
@@ -5713,6 +5753,7 @@ def run(version):
     OMD_VERSION = version
 
     global opt_help
+    global opt_color
     global opt_verbose
     global opt_force
     global opt_yes
@@ -5735,11 +5776,14 @@ def run(version):
     argparser.add_argument('-v', '--verbose',     action="count", default=0)
     argparser.add_argument('-f', '--force',       action="count", default=0)
     argparser.add_argument('-y', '--yes',         action="count", default=0)
+    argparser.add_argument('--color',             action="store_true", default=False)
     argparser.add_argument('-h', '--help',        action="count", default=0)
     args, main_args = argparser.parse_known_args(sys.argv[1:])
 
     command     = args.command
+    opt_color   = args.color
     opt_version = args.version
+    set_colors() # re-evaluate colors now that --color is known
     opt_verbose = args.verbose     >= 1
     opt_force   = args.force       >= 1
     opt_yes     = args.yes         >= 1
@@ -5773,7 +5817,13 @@ def run(version):
         sys.exit(1)
 
     if not am_root() and cmd_spec.only_root:
-        bail_out(tty_error + ": omd: root permissions are needed for this command.")
+        # 'su' only needs root to switch to the site user. A site user
+        # running 'omd su' always targets their own site (g_sitename is
+        # forced to their own username for non-root, see below), so there
+        # is nothing to switch to: let it through and main_su() just
+        # spawns the shell.
+        if command != "su":
+            bail_out(tty_error + ": omd: root permissions are needed for this command.")
 
     # Parse command options. Parse again all options with additional arguments
     for spec in cmd_spec.option_spec:

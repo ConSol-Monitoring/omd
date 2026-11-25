@@ -352,9 +352,10 @@ configuration stays in place. The command is also run for existing sites
 after an update of OMD.
 
 Site users may run it for their own site through sudo, if the package's
-sudo rule is installed (\fB/etc/sudoers.d/omd\fP). When a site user changes
-\fBWEB_REDIRECT\fP or \fBWEB_ALIAS\fP with \fBomd config set\fP, or starts or
-reloads the site's Apache, omd refreshes the copy itself.
+sudo rule is installed (\fB/etc/sudoers.d/omd_auto\fP). When a site user
+changes \fBWEB_REDIRECT\fP or \fBWEB_ALIAS\fP with \fBomd config set\fP, or
+starts or reloads the site's Apache while the copy is out of date, omd
+refreshes the copy itself.
 
 .TP
 .B omd [-v] diff [RELBASE] [-b, --bare]

@@ -75,7 +75,8 @@ refresh_system_apache() {
 }
 
 # Only when the copy is missing or older than the site's configuration; a
-# start of many sites then does not reload the system Apache for each one.
+# start or reload of many sites then does not reload the system Apache for
+# each one.
 system_apache_copy_is_stale() {
   local staged=/omd/apache/$OMD_SITE.d
   if [ ! -e "$staged/mode.conf" ]; then
@@ -85,10 +86,7 @@ system_apache_copy_is_stale() {
 }
 
 case "$1" in
-  reload|force-reload)
-    refresh_system_apache
-  ;;
-  start)
+  start|reload|force-reload)
     if system_apache_copy_is_stale; then
       refresh_system_apache
     fi

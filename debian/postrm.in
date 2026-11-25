@@ -51,7 +51,7 @@ case "$1" in
             ! test -x /usr/sbin/a2disconf || a2disconf zzz_omd || /bin/true
             rm -f "$APACHE_OMD_CONF"
             rm -f "$SYSCTL_OMD_CONF"
-            rm -f /etc/sudoers.d/omd
+            rm -f /etc/sudoers.d/omd_auto
             ls -1 /etc/apache2/sites-available/*default*.conf 2>/dev/null | \
               while read file; do
                 if grep /omd/apache/ $file >/dev/null 2>&1; then

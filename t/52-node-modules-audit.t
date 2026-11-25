@@ -3,6 +3,7 @@
 use warnings;
 use strict;
 use Test::More;
+use JSON::PP;
 
 plan skip_all => 'you need to specify TEST_AUDIT to run this test' unless defined $ENV{'TEST_AUDIT'};
 
@@ -14,21 +15,43 @@ use TestUtils;
 my $omd_bin = TestUtils::get_omd_bin();
 my $site    = TestUtils::create_test_site() or TestUtils::bail_out("no further testing without site");
 
-##################################################
-# install npm audit
+# npm audit needs a lockfile and ignores the paths given to it, so build one for
+# the packages OMD ships (packages/node-modules installs them into its build dir
+# via npm i) and audit that tree
+my $libdir   = "/omd/sites/$site/lib/node_modules";
+my %versions;
+for my $pj (glob("$libdir/*/package.json"), glob("$libdir/@*/*/package.json")) {
+    my $name = $pj;
+    $name =~ s{^\Q$libdir\E/}{};
+    $name =~ s{/package\.json$}{};
+    next if $name eq 'npm'; # bundled with the node distribution, not a dependency OMD chose
+    my $json = do { local $/; open(my $fh, '<', $pj) or next; <$fh> };
+    my $data = eval { JSON::PP->new->decode($json) };
+    $versions{$name} = $data->{version} if $data && $data->{version};
+}
+ok((keys %versions) > 0, "found ".(keys %versions)." packages in lib/node_modules");
+
+my $audit_dir = "/omd/sites/$site/var/tmp/npm-audit";
 TestUtils::test_command({
-    # pin to npm v10, since npm v11+ dropped support for our bundled node v20.6.1
-    cmd     => "/bin/su - $site -c 'npm i npm\@10'",
+    cmd     => "/bin/su - $site -c 'mkdir -p $audit_dir'",
+});
+# package names and versions contain no shell metacharacters, so no quoting needed
+my $spec = join(' ', map { "$_\@$versions{$_}" } sort keys %versions);
+ok($spec, "package spec: $spec");
+TestUtils::test_command({
+    cmd     => "/bin/su - $site -c 'cd $audit_dir && npm init -y >/dev/null && npm i --package-lock-only $spec'",
     errlike => '/.*/',
-    like    => '/added \d+ package in/',
 });
 
 ##################################################
+# audit the OMD-shipped node packages
 TestUtils::test_command({
-    cmd     => "/bin/su - $site -c './node_modules/.bin/npm audit --audit-level=info ./lib/node_modules/'",
+    cmd     => "/bin/su - $site -c 'cd $audit_dir && npm audit --audit-level=info'",
     errlike => '/.*/',
     like    => '/found 0 vulnerabilities/',
 });
+
+`rm -rf $audit_dir`;
 
 ##################################################
 # cleanup test site

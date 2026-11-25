@@ -1,4 +1,4 @@
-# Installed by the omd package as /etc/sudoers.d/omd.
+# Installed by the omd package as /etc/sudoers.d/omd_auto.
 #
 # Members of the omd group are the OMD site users.  This rule lets a site
 # user refresh the root-owned copy of its own site's configuration in the
