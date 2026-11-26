@@ -1,0 +1,555 @@
+From 9d67e5c1820afd7b510d2aaf0772b8b14b93edee Mon Sep 17 00:00:00 2001
+From: Sven Nierlein <Sven.Nierlein@consol.de>
+Date: Thu, 26 Nov 2026 11:31:28 +0100
+Subject: [PATCH 1/3] Fix illegal_macro_output_chars handling
+
+Index the filter with unsigned bytes to avoid out-of-bounds writes. Accept an empty value so reloads can clear configured characters while retaining the ASCII control-byte filter.
+---
+ sample-config/naemon.cfg.in |  3 ++-
+ src/naemon/configuration.c  | 14 +++++++++-----
+ src/naemon/macros.c         |  2 ++
+ t-tap/test_config.c         | 14 +++++++++++++-
+ t/900-configparsing.t       | 30 +++++++++++++++++++++++++++++-
+ 5 files changed, 55 insertions(+), 8 deletions(-)
+
+diff --git a/sample-config/naemon.cfg.in b/sample-config/naemon.cfg.in
+index 51e494e7f..8026af2f4 100644
+--- a/sample-config/naemon.cfg.in
++++ b/sample-config/naemon.cfg.in
+@@ -950,7 +950,8 @@ illegal_object_name_chars=`~!$%^&*|'"<>?,()=
+ # This option allows you to specify illegal characters that are
+ # stripped from macros before being used in notifications, event
+ # handlers, etc.  This DOES NOT affect macros used in service or
+-# host check commands.
++# host check commands. Set an empty value to specify no additional
++# characters; ASCII control characters are always stripped.
+ # The following macros are stripped of the characters you specify:
+ #    $HOSTOUTPUT$
+ #    $HOSTPERFDATA$
+diff --git a/src/naemon/configuration.c b/src/naemon/configuration.c
+index ec73fb70b..cebe03be1 100644
+--- a/src/naemon/configuration.c
++++ b/src/naemon/configuration.c
+@@ -93,15 +93,19 @@ read_config_file(const char *main_config_file, nagios_macros *mac)
+ 			break;
+ 		}
+ 		variable = nm_strdup(temp_ptr);
++		strip(variable);
+ 
+ 		/* get the value */
+ 		if ((temp_ptr = my_strtok(NULL, "\n")) == NULL) {
+-			nm_asprintf(&error_message, "NULL value");
+-			error = TRUE;
+-			break;
++			if (!strcmp(variable, "illegal_macro_output_chars") && strchr(input, '='))
++				temp_ptr = "";
++			else {
++				nm_asprintf(&error_message, "NULL value");
++				error = TRUE;
++				break;
++			}
+ 		}
+ 		value = (char *)nm_strdup(temp_ptr);
+-		strip(variable);
+ 		strip(value);
+ 
+ 		/* process the variable/value */
+@@ -1483,7 +1487,7 @@ int pre_flight_check(void)
+ 	} else {
+ 		char *p;
+ 		for (p = illegal_output_chars; *p; p++) {
+-			illegal_output_char_map[(int)*p] = 1;
++			illegal_output_char_map[(unsigned char)*p] = 1;
+ 		}
+ 	}
+ 
+diff --git a/src/naemon/macros.c b/src/naemon/macros.c
+index 2fe8ffb49..0f9ca4695 100644
+--- a/src/naemon/macros.c
++++ b/src/naemon/macros.c
+@@ -2498,6 +2498,8 @@ int init_macros(void)
+ 	int x;
+ 	init_macrox_names();
+ 
++	/* Clear the previous configuration, then mark ASCII control bytes (0–31 and DEL) for stripping. */
++	memset(illegal_output_char_map, 0, sizeof(illegal_output_char_map));
+ 	for (x = 0; x < 32; x++)
+ 		illegal_output_char_map[x] = 1;
+ 	illegal_output_char_map[127] = 1;
+diff --git a/t-tap/test_config.c b/t-tap/test_config.c
+index 5ed1a7743..1e47144e0 100644
+--- a/t-tap/test_config.c
++++ b/t-tap/test_config.c
+@@ -39,12 +39,18 @@ int main(int argc, char **argv)
+ 	int result;
+ 	int c = 0;
+ 	struct host *host1, *host2;
++	struct host macro_host = { .plugin_output = "A\x80\xff" "B" };
++	nagios_macros mac = { .host_ptr = &macro_host };
++	char *output = NULL;
+ 	hostgroup *temp_hostgroup = NULL;
+ 
+-	plan_tests(19);
++	plan_tests(23);
+ 
+ 	/* reset program variables */
++	illegal_output_char_map[0xff] = 1;
+ 	reset_variables();
++	ok(!illegal_output_char_map[0xff], "Reload clears configured illegal characters");
++	ok(illegal_output_char_map[1] && illegal_output_char_map[127], "Reload keeps control characters illegal");
+ 
+ 	/*
+ 	 * avoid updating the checked-in retention data
+@@ -64,8 +70,14 @@ int main(int argc, char **argv)
+ 	result = read_all_object_data(config_file);
+ 	ok(result == OK, "Read all object config files");
+ 
++	nm_free(illegal_output_chars);
++	illegal_output_chars = nm_strdup("\x80\xff");
+ 	result = pre_flight_check();
+ 	ok(result == OK, "Preflight check okay");
++	ok(illegal_output_char_map[0x80] && illegal_output_char_map[0xff], "High bytes are marked illegal");
++	result = process_macros_r(&mac, "$HOSTOUTPUT$", &output, STRIP_ILLEGAL_MACRO_CHARS);
++	ok(result == OK && output && !strcmp(output, "AB"), "High bytes are stripped from macro output");
++	nm_free(output);
+ 
+ 	for (temp_hostgroup = hostgroup_list; temp_hostgroup != NULL; temp_hostgroup = temp_hostgroup->next) {
+ 		c++;
+diff --git a/t/900-configparsing.t b/t/900-configparsing.t
+index 369a32843..e73288c3c 100755
+--- a/t/900-configparsing.t
++++ b/t/900-configparsing.t
+@@ -5,6 +5,7 @@
+ use warnings;
+ use strict;
+ use Test::More;
++use File::Temp qw(tempfile);
+ 
+ my $buildroot=".";
+ if (defined $ENV{builddir}) {
+@@ -16,7 +17,7 @@ my $etc = "$buildroot/t/etc";
+ my $precache = "$buildroot/t/var/objects.precache";
+ 
+ my $options = $> == 0 ? '--allow-root' : '';
+-plan tests => 12;
++plan tests => 17;
+ 
+ my $output = `$naemon $options -v "$etc/naemon.cfg"`;
+ if ($? == 0) {
+@@ -72,3 +73,30 @@ like($out, "/Service has no hosts and/or service_description/", "output contains
+ 
+ $out = `$naemon $options -v "$etc/no-objects.cfg"`;
+ is($?, 0, "Naemon does not need any objects to start");
++
++open(my $original, '<', "$etc/naemon.cfg") or die $!;
++my $config = do { local $/; <$original> };
++close($original);
++my ($tmp, $tmpname) = tempfile('macro-config-XXXXXX', DIR => $etc, UNLINK => 1);
++for my $case (
++	['empty', 'illegal_macro_output_chars='],
++	['whitespace', "illegal_macro_output_chars=  \t"],
++	['high bytes', "illegal_macro_output_chars=\x80\xff"],
++	['missing equals', 'illegal_macro_output_chars'],
++	['other empty option', 'use_syslog='],
++) {
++	my ($name, $line) = @$case;
++	my $test_config = $config;
++	$test_config =~ s/^illegal_macro_output_chars=.*$/$line/m;
++	seek($tmp, 0, 0) or die $!;
++	truncate($tmp, 0) or die $!;
++	print $tmp $test_config;
++	$tmp->flush;
++	my $output = `$naemon $options -v "$tmpname" 2>&1`;
++	if ($name eq 'missing equals' || $name eq 'other empty option') {
++		isnt($?, 0, "$name is rejected");
++	} else {
++		ok($? == 0 && $output !~ /Nothing specified for illegal_macro_output_chars/,
++		   "$name is accepted without a missing-value warning");
++	}
++}
+
+From 6f1f76b83b9b89bfd01dff3cbf8d7ea03db1b480 Mon Sep 17 00:00:00 2001
+From: Sven Nierlein <Sven.Nierlein@consol.de>
+Date: Thu, 26 Nov 2026 14:42:45 +0100
+Subject: [PATCH 2/3] Preserve configured custom variables during macro
+ expansion
+
+Strip illegal macro output characters when an external command sets a custom
+variable. Filtering during expansion also removed intentional characters such
+as pipes from configured values.  Fixes an issue introduced in
+0cb3a0be169d3e4922385ca1d5f19c629c9eaaa3 where some characters were stripped
+off custom variables defined in the config file.
+---
+ src/naemon/commands.c         |  1 +
+ src/naemon/macros.c           | 67 +++++++----------------------------
+ src/naemon/macros.h           |  1 +
+ 6 files changed, 25 insertions(+), 58 deletions(-)
+
+diff --git a/src/naemon/commands.c b/src/naemon/commands.c
+index be04996c0..276554adf 100644
+--- a/src/naemon/commands.c
++++ b/src/naemon/commands.c
+@@ -2446,6 +2446,7 @@ static int change_custom_var_handler(const struct external_command *ext_command,
+ 			if (customvariablesmember_p->variable_value)
+ 				nm_free(customvariablesmember_p->variable_value);
+ 			customvariablesmember_p->variable_value = nm_strdup(GV("varvalue"));
++			strip_illegal_macro_chars(customvariablesmember_p->variable_value);
+ 
+ 			/* mark the variable value as having been changed */
+ 			customvariablesmember_p->has_been_modified = TRUE;
+diff --git a/src/naemon/macros.c b/src/naemon/macros.c
+index 0f9ca4695..56279f4bf 100644
+--- a/src/naemon/macros.c
++++ b/src/naemon/macros.c
+@@ -1374,34 +1374,17 @@ static int grab_standard_contactgroup_macro(int macro_type, contactgroup *temp_c
+ /******************************************************************/
+ 
+ /* cleans illegal characters in macros before output */
+-static char *clean_macro_chars(char *macro, int options)
++void strip_illegal_macro_chars(char *value)
+ {
+-	register int x = 0;
+-	register int y = 0;
+-	register int ch = 0;
+-	register int len = 0;
+-	char *ret = NULL;
+-
+-	if (macro == NULL || !*macro)
+-		return "";
+-
+-	len = (int)strlen(macro);
+-	ret = nm_strdup(macro);
+-
+-	/* strip illegal characters out of macro */
+-	if (options & STRIP_ILLEGAL_MACRO_CHARS) {
+-		for (y = 0, x = 0; x < len; x++) {
+-			ch = macro[x] & 0xff;
++	char *dst = value;
++	if (value == NULL)
++		return;
+ 
+-			/* illegal chars are skipped */
+-			if (!illegal_output_char_map[ch])
+-				ret[y++] = ret[x];
+-		}
+-
+-		ret[y++] = '\x0';
++	for (; *value; value++) {
++		if (!illegal_output_char_map[(unsigned char)*value])
++			*dst++ = *value;
+ 	}
+-
+-	return ret;
++	*dst = '\0';
+ }
+ 
+ 
+@@ -2304,10 +2287,6 @@ static int grab_macro_value_r(nagios_macros *mac, char *macro_buffer, char **out
+ 
+ 		/* get the macro value */
+ 		result = grab_custom_macro_value_r(mac, macro_name, arg[0], arg[1], output);
+-
+-		/* always strip illegal characters from custom macros */
+-		if (clean_options)
+-			*clean_options |= STRIP_ILLEGAL_MACRO_CHARS;
+ 	}
+ 
+ 	/* no macro matched... */
+@@ -2417,6 +2396,7 @@ int process_macros_r(nagios_macros *mac, char *input_buffer, char **output_buffe
+ 
+ 		/* insert macro */
+ 		if (selected_macro != NULL) {
++			size_t offset = strlen(*output_buffer);
+ 			log_debug_info(DEBUGL_MACROS, 2, "  Processed '%s', Free: %d,  Cleaning options: %d\n", temp_buffer, free_macro, options);
+ 
+ 			/* URL encode the macro if requested - this allocates new memory */
+@@ -2429,31 +2409,10 @@ int process_macros_r(nagios_macros *mac, char *input_buffer, char **output_buffe
+ 				free_macro = TRUE;
+ 			}
+ 
+-			/* some macros should sometimes be cleaned */
+-			if (macro_options & options & (STRIP_ILLEGAL_MACRO_CHARS | ESCAPE_MACRO_CHARS)) {
+-				char *cleaned_macro = NULL;
+-
+-				/* add the (cleaned) processed macro to the end of the already processed buffer */
+-				if (selected_macro != NULL && (cleaned_macro = clean_macro_chars(selected_macro, options)) != NULL) {
+-					*output_buffer = nm_realloc(*output_buffer, strlen(*output_buffer) + strlen(cleaned_macro) + 1);
+-					strcat(*output_buffer, cleaned_macro);
+-					if (*cleaned_macro)
+-						free(cleaned_macro);
+-
+-					log_debug_info(DEBUGL_MACROS, 2, "  Cleaned macro.  Running output (%lu): '%s'\n", (unsigned long)strlen(*output_buffer), *output_buffer);
+-				}
+-			}
+-
+-			/* others are not cleaned */
+-			else {
+-				/* add the processed macro to the end of the already processed buffer */
+-				if (selected_macro != NULL) {
+-					*output_buffer = nm_realloc(*output_buffer, strlen(*output_buffer) + strlen(selected_macro) + 1);
+-					strcat(*output_buffer, selected_macro);
+-
+-					log_debug_info(DEBUGL_MACROS, 2, "  Uncleaned macro.  Running output (%lu): '%s'\n", (unsigned long)strlen(*output_buffer), *output_buffer);
+-				}
+-			}
++			*output_buffer = nm_realloc(*output_buffer, offset + strlen(selected_macro) + 1);
++			strcpy(*output_buffer + offset, selected_macro);
++			if (macro_options & options & STRIP_ILLEGAL_MACRO_CHARS)
++				strip_illegal_macro_chars(*output_buffer + offset);
+ 
+ 			/* free memory if necessary (if we URL encoded the macro or we were told to do so by grab_macro_value()) */
+ 			if (free_macro == TRUE)
+diff --git a/src/naemon/macros.h b/src/naemon/macros.h
+index a8621f075..aae595a03 100644
+--- a/src/naemon/macros.h
++++ b/src/naemon/macros.h
+@@ -229,6 +229,7 @@ nagios_macros *get_global_macros(void);
+ int process_macros(char *, char **, int);
+ 
+ /* thread-safe version of the above */
++void strip_illegal_macro_chars(char *value);
+ int process_macros_r(nagios_macros *mac, char *, char **, int);
+ 
+ /* given a raw command line, determine the actual command to run */
+
+From addd3b330b05c4d5d8799a5f37f7f624376ca8e0 Mon Sep 17 00:00:00 2001
+From: Sven Nierlein <Sven.Nierlein@consol.de>
+Date: Thu, 26 Nov 2026 14:55:37 +0100
+Subject: [PATCH 3/3] Remove unused ESCAPE_MACRO_CHARS flag
+
+ESCAPE_MACRO_CHARS never had any standalone effect: it was only ever set
+paired with STRIP_ILLEGAL_MACRO_CHARS, and process_macros_r() only ever
+checked for the STRIP bit. Drop it from all call sites and from the
+macro_keys options, and from the tests that exercised it.
+
+The define itself is kept in macros.h (marked deprecated) so existing
+modules compiled against the old header keep working.
+---
+ src/naemon/checks_host.c    |  2 +-
+ src/naemon/checks_service.c |  2 +-
+ src/naemon/macros.c         |  2 +-
+ src/naemon/macros.h         |  3 +++
+ src/naemon/notifications.c  |  8 ++++----
+ src/naemon/perfdata.c       |  8 ++++----
+ src/naemon/sehandlers.c     | 12 ++++++------
+ t-tap/test_macros.c         |  9 +--------
+ 8 files changed, 21 insertions(+), 25 deletions(-)
+
+diff --git a/src/naemon/checks_host.c b/src/naemon/checks_host.c
+index fe53a7b71..2c013ccb9 100644
+--- a/src/naemon/checks_host.c
++++ b/src/naemon/checks_host.c
+@@ -228,7 +228,7 @@ static int run_async_host_check(host *hst, int check_options, double latency)
+ 	struct timeval start_time, end_time;
+ 	check_result *cr;
+ 	int runchk_result = OK;
+-	int macro_options = STRIP_ILLEGAL_MACRO_CHARS | ESCAPE_MACRO_CHARS;
++	int macro_options = STRIP_ILLEGAL_MACRO_CHARS;
+ 	int neb_result = OK;
+ 	struct timeval now;
+ 	tv_set(&now);
+diff --git a/src/naemon/checks_service.c b/src/naemon/checks_service.c
+index c8644f85d..5afd1a6d8 100644
+--- a/src/naemon/checks_service.c
++++ b/src/naemon/checks_service.c
+@@ -349,7 +349,7 @@ static int run_scheduled_service_check(service *svc, int check_options, double l
+ 	host *temp_host = NULL;
+ 	check_result *cr;
+ 	int runchk_result = OK;
+-	int macro_options = STRIP_ILLEGAL_MACRO_CHARS | ESCAPE_MACRO_CHARS;
++	int macro_options = STRIP_ILLEGAL_MACRO_CHARS;
+ 	int neb_result = OK;
+ 
+ 	/* latency is how long the event lagged behind the event queue */
+diff --git a/src/naemon/macros.c b/src/naemon/macros.c
+index 56279f4bf..91924347b 100644
+--- a/src/naemon/macros.c
++++ b/src/naemon/macros.c
+@@ -2510,7 +2510,7 @@ int init_macros(void)
+ 		case MACRO_NOTIFICATIONAUTHORNAME:
+ 		case MACRO_NOTIFICATIONAUTHORALIAS:
+ 		case MACRO_NOTIFICATIONCOMMENT:
+-			macro_keys[x].options |= STRIP_ILLEGAL_MACRO_CHARS | ESCAPE_MACRO_CHARS;
++			macro_keys[x].options |= STRIP_ILLEGAL_MACRO_CHARS;
+ 			break;
+ 		}
+ 	}
+diff --git a/src/naemon/macros.h b/src/naemon/macros.h
+index aae595a03..a27be4be8 100644
+--- a/src/naemon/macros.h
++++ b/src/naemon/macros.h
+@@ -213,6 +213,9 @@ typedef struct nagios_macros nagios_macros;
+ 
+ /************* MACRO CLEANING OPTIONS *****************/
+ #define STRIP_ILLEGAL_MACRO_CHARS       1
++/* Deprecated: ESCAPE_MACRO_CHARS never did anything on its own, it was
++ * always paired with STRIP_ILLEGAL_MACRO_CHARS. Kept only for API compat
++ * with old modules. */
+ #define ESCAPE_MACRO_CHARS              2
+ #define URL_ENCODE_MACRO_CHARS		4
+ 
+diff --git a/src/naemon/notifications.c b/src/naemon/notifications.c
+index 13b21e66e..f084a86eb 100644
+--- a/src/naemon/notifications.c
++++ b/src/naemon/notifications.c
+@@ -952,7 +952,7 @@ int notify_contact_of_service(nagios_macros *mac, contact *cntct, service *svc,
+ 	char *processed_buffer = NULL;
+ 	struct timeval start_time, end_time;
+ 	struct timeval method_start_time, method_end_time;
+-	int macro_options = STRIP_ILLEGAL_MACRO_CHARS | ESCAPE_MACRO_CHARS;
++	int macro_options = STRIP_ILLEGAL_MACRO_CHARS;
+ 	int neb_result;
+ 	struct notification_job *nj;
+ 
+@@ -1796,7 +1796,7 @@ int notify_contact_of_host(nagios_macros *mac, contact *cntct, host *hst, int ty
+ 	struct timeval end_time;
+ 	struct timeval method_start_time;
+ 	struct timeval method_end_time;
+-	int macro_options = STRIP_ILLEGAL_MACRO_CHARS | ESCAPE_MACRO_CHARS;
++	int macro_options = STRIP_ILLEGAL_MACRO_CHARS;
+ 	int neb_result;
+ 	struct notification_job *nj;
+ 
+@@ -2257,7 +2257,7 @@ int run_global_service_notification_handler(nagios_macros *mac, service *svc, in
+ 	char *temp_buffer = NULL;
+ 	char *processed_buffer = NULL;
+ 	struct timeval start_time, end_time;
+-	int macro_options = STRIP_ILLEGAL_MACRO_CHARS | ESCAPE_MACRO_CHARS;
++	int macro_options = STRIP_ILLEGAL_MACRO_CHARS;
+ 	int neb_result;
+ 	struct notification_job *nj;
+ 
+@@ -2349,7 +2349,7 @@ int run_global_host_notification_handler(nagios_macros *mac, host *hst, int type
+ 	char *processed_command = NULL;
+ 	struct timeval start_time;
+ 	struct timeval end_time;
+-	int macro_options = STRIP_ILLEGAL_MACRO_CHARS | ESCAPE_MACRO_CHARS;
++	int macro_options = STRIP_ILLEGAL_MACRO_CHARS;
+ 	int neb_result;
+ 	struct notification_job *nj;
+ 
+diff --git a/src/naemon/perfdata.c b/src/naemon/perfdata.c
+index 5a12fc11d..a09f7202a 100644
+--- a/src/naemon/perfdata.c
++++ b/src/naemon/perfdata.c
+@@ -341,7 +341,7 @@ static int xpddefault_run_service_performance_data_command(nagios_macros *mac, s
+ 	char *raw_command_line = NULL;
+ 	char *processed_command_line = NULL;
+ 	int result = OK;
+-	int macro_options = STRIP_ILLEGAL_MACRO_CHARS | ESCAPE_MACRO_CHARS;
++	int macro_options = STRIP_ILLEGAL_MACRO_CHARS;
+ 
+ 	if (svc == NULL)
+ 		return ERROR;
+@@ -377,7 +377,7 @@ static int xpddefault_run_host_performance_data_command(nagios_macros *mac, host
+ 	char *raw_command_line = NULL;
+ 	char *processed_command_line = NULL;
+ 	int result = OK;
+-	int macro_options = STRIP_ILLEGAL_MACRO_CHARS | ESCAPE_MACRO_CHARS;
++	int macro_options = STRIP_ILLEGAL_MACRO_CHARS;
+ 
+ 	if (hst == NULL)
+ 		return ERROR;
+@@ -583,7 +583,7 @@ static void xpddefault_process_host_perfdata_file(struct nm_event_execution_prop
+ {
+ 	char *raw_command_line = NULL;
+ 	char *processed_command_line = NULL;
+-	int macro_options = STRIP_ILLEGAL_MACRO_CHARS | ESCAPE_MACRO_CHARS;
++	int macro_options = STRIP_ILLEGAL_MACRO_CHARS;
+ 	nagios_macros mac;
+ 
+ 	if (evprop->execution_type == EVENT_EXEC_NORMAL) {
+@@ -652,7 +652,7 @@ static void xpddefault_process_service_perfdata_file(struct nm_event_execution_p
+ {
+ 	char *raw_command_line = NULL;
+ 	char *processed_command_line = NULL;
+-	int macro_options = STRIP_ILLEGAL_MACRO_CHARS | ESCAPE_MACRO_CHARS;
++	int macro_options = STRIP_ILLEGAL_MACRO_CHARS;
+ 	nagios_macros mac;
+ 
+ 	if (evprop->execution_type == EVENT_EXEC_NORMAL) {
+diff --git a/src/naemon/sehandlers.c b/src/naemon/sehandlers.c
+index 8a67ace23..cc4345e4a 100644
+--- a/src/naemon/sehandlers.c
++++ b/src/naemon/sehandlers.c
+@@ -53,7 +53,7 @@ int obsessive_compulsive_service_check_processor(service *svc)
+ {
+ 	char *raw_command = NULL;
+ 	char *processed_command = NULL;
+-	int macro_options = STRIP_ILLEGAL_MACRO_CHARS | ESCAPE_MACRO_CHARS;
++	int macro_options = STRIP_ILLEGAL_MACRO_CHARS;
+ 	nagios_macros mac;
+ 	struct obsessive_compulsive_job *ocj;
+ 
+@@ -111,7 +111,7 @@ int obsessive_compulsive_host_check_processor(host *hst)
+ {
+ 	char *raw_command = NULL;
+ 	char *processed_command = NULL;
+-	int macro_options = STRIP_ILLEGAL_MACRO_CHARS | ESCAPE_MACRO_CHARS;
++	int macro_options = STRIP_ILLEGAL_MACRO_CHARS;
+ 	nagios_macros mac;
+ 	struct obsessive_compulsive_job *ocj;
+ 
+@@ -226,7 +226,7 @@ static int run_global_service_event_handler(nagios_macros *mac, service *svc)
+ 	struct timeval start_time;
+ 	struct timeval end_time;
+ 	int neb_result = OK;
+-	int macro_options = STRIP_ILLEGAL_MACRO_CHARS | ESCAPE_MACRO_CHARS;
++	int macro_options = STRIP_ILLEGAL_MACRO_CHARS;
+ 
+ 	if (svc == NULL)
+ 		return ERROR;
+@@ -312,7 +312,7 @@ static int run_service_event_handler(nagios_macros *mac, service *svc)
+ 	struct timeval start_time;
+ 	struct timeval end_time;
+ 	int neb_result = OK;
+-	int macro_options = STRIP_ILLEGAL_MACRO_CHARS | ESCAPE_MACRO_CHARS;
++	int macro_options = STRIP_ILLEGAL_MACRO_CHARS;
+ 
+ 	if (svc == NULL)
+ 		return ERROR;
+@@ -428,7 +428,7 @@ static int run_global_host_event_handler(nagios_macros *mac, const host *const h
+ 	struct timeval start_time;
+ 	struct timeval end_time;
+ 	int neb_result = OK;
+-	int macro_options = STRIP_ILLEGAL_MACRO_CHARS | ESCAPE_MACRO_CHARS;
++	int macro_options = STRIP_ILLEGAL_MACRO_CHARS;
+ 
+ 	if (hst == NULL)
+ 		return ERROR;
+@@ -513,7 +513,7 @@ static int run_host_event_handler(nagios_macros *mac, const host *const hst)
+ 	struct timeval start_time;
+ 	struct timeval end_time;
+ 	int neb_result = OK;
+-	int macro_options = STRIP_ILLEGAL_MACRO_CHARS | ESCAPE_MACRO_CHARS;
++	int macro_options = STRIP_ILLEGAL_MACRO_CHARS;
+ 
+ 	if (hst == NULL)
+ 		return ERROR;
+diff --git a/t-tap/test_macros.c b/t-tap/test_macros.c
+index 13b985c32..d55606a58 100644
+--- a/t-tap/test_macros.c
++++ b/t-tap/test_macros.c
+@@ -158,13 +158,6 @@ void test_escaping(nagios_macros *mac)
+ 	 */
+ 	RUN_MACRO_TEST("$HOSTOUTPUT$ '&%", "name% '&%", STRIP_ILLEGAL_MACRO_CHARS);
+ 
+-	/* ESCAPE_MACRO_CHARS doesn't seem to do anything... exist always in pair
+-	 * with STRIP_ILLEGAL_MACRO_CHARS
+-	 */
+-	RUN_MACRO_TEST("$HOSTOUTPUT$ '&%", "name'&% '&%", ESCAPE_MACRO_CHARS);
+-	RUN_MACRO_TEST("$HOSTOUTPUT$ '&%", "name% '&%",
+-	               STRIP_ILLEGAL_MACRO_CHARS | ESCAPE_MACRO_CHARS);
+-
+ 	/* $HOSTNAME$ should be url-encoded, but not the tailing chars */
+ 	RUN_MACRO_TEST("$HOSTNAME$ '&%", "name%27%26%25 '&%",
+ 	               URL_ENCODE_MACRO_CHARS);
+@@ -225,7 +218,7 @@ int main(void)
+ {
+ 	nagios_macros *mac;
+ 
+-	plan_tests(26);
++	plan_tests(24);
+ 
+ 	reset_variables();
+ 	init_environment();
