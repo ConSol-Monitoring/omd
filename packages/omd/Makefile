@@ -25,6 +25,7 @@ install:
 	install -m 644 omd.8 $(DESTDIR)$(OMD_ROOT)/share/man/man8
 	gzip $(DESTDIR)$(OMD_ROOT)/share/man/man8/omd.8
 	install -m 644 omd.service $(DESTDIR)$(OMD_ROOT)/share/omd/omd.service
+	install -m 644 omd_auto.sudoers $(DESTDIR)$(OMD_ROOT)/share/omd/omd_auto.sudoers
 	# TasksMax has been introduced with systemd 226
 	if test -x /usr/bin/systemctl && [ $$(systemctl --version | head -n1 | awk {'print $$2'}) -ge 226 ]; then \
 		sed -i $(DESTDIR)$(OMD_ROOT)/share/omd/omd.service -e 's/^#TasksMax=/TasksMax=/g'; \

@@ -1,0 +1,11 @@
+# Installed by the omd package as /etc/sudoers.d/omd_auto.
+#
+# Members of the omd group are the OMD site users.  This rule lets a site
+# user refresh the root-owned copy of its own site's configuration in the
+# system Apache, so a change below the site's etc/apache directory takes
+# effect without a root step.  The regular expression is matched against the
+# whole argument string, so it admits exactly one subcommand and exactly one
+# site name, nothing else.  The omd command refuses any site but the
+# caller's own.  Do not edit: this file is installed by the package.
+Cmnd_Alias OMD_UPDATE_APACHE_CONFIG = /usr/bin/omd ^update-apache-config [a-zA-Z_][a-zA-Z_0-9]*$
+%omd ALL = (root) NOPASSWD: OMD_UPDATE_APACHE_CONFIG

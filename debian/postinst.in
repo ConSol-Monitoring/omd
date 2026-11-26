@@ -176,6 +176,17 @@ case "$1" in
         systemctl enable omd.service || :
     fi
 
+    # -- install the sudo rule that lets a site user refresh the system
+    #    Apache configuration of its own site.  Without sudo installed the
+    #    rule is not needed: that change then needs root, as before.
+    OMD_SUDOERS="$OMD_ROOT/share/omd/omd_auto.sudoers"
+    if [ -e "$OMD_SUDOERS" ] && [ -d /etc/sudoers.d ] && command -v visudo >/dev/null 2>&1; then
+      if grep -Eq '^[[:space:]]*(#|@)includedir[[:space:]]+/etc/sudoers\.d' /etc/sudoers 2>/dev/null \
+         && visudo -cf "$OMD_SUDOERS" >/dev/null 2>&1; then
+        install -m 440 -o root -g root "$OMD_SUDOERS" /etc/sudoers.d/omd_auto
+      fi
+    fi
+
     # extend mariadb apparmor rules so a user daemon can be started
     if [ -f /etc/apparmor.d/local/mariadbd  ]; then
         sed '/^\/opt\/omd\//d' -i /etc/apparmor.d/local/mariadbd
