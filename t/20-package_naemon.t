@@ -11,7 +11,7 @@ BEGIN {
     import TestUtils;
 }
 
-plan( tests => 195 );
+plan( tests => 204 );
 
 ##################################################
 # create our test site
@@ -26,6 +26,7 @@ my $tests = [
   { cmd => $omd_bin." config $site set CORE naemon" },
 
   { cmd => "/bin/su - $site -c 'cp share/doc/naemon/example.cfg etc/naemon/conf.d/'", like => '/^$/' },
+  { cmd => "/bin/cp t/data/naemon/check_dummy_custom_var.cfg /omd/sites/$site/etc/naemon/conf.d/", like => '/^$/' },
   { cmd => "/bin/su - $site -c 'omd check naemon'", like => '/Running naemon configuration check\.+\s*done/', errlike => '/Things look okay/', fatal => 1 },
   { cmd => $omd_bin." start $site" },
 
@@ -42,6 +43,9 @@ my $tests = [
   { cmd => "/bin/su - $site -c 'thruk r \"/services?columns=has_been_checked&has_been_checked=0\"'", like => '/^\[\]$/smx', waitfor => '\[\]', maxwait => 30 },
 
   { cmd => "/bin/su - $site -c 'echo \"GET services\nFilter: host_name = localhost\nFilter: description = check_locale.py\nColumns: state plugin_output long_plugin_output\n\n\" | lq'", like => '/^0;LANG=/' },
+
+  # check_dummy with a custom variable whose value contains illegal macro output chars: nothing must be stripped, | separates perf data
+  { cmd => "/bin/su - $site -c 'echo \"GET services\nFilter: host_name = localhost\nFilter: description = check_dummy_custom_var\nColumns: plugin_output perf_data\n\n\" | lq'", like => ['/^OK: \^\xc3\x9f\xc2\xb0#;<>\$/'], waitfor => '^OK:', maxwait => 30 },
 
   { cmd => "/bin/su - $site -c 'file bin/naemon.dbg'", like => '/not stripped/' },
   { cmd => "/bin/su - $site -c 'file lib/naemon/livestatus.o.dbg'", like => '/not stripped/' },
