@@ -16,6 +16,7 @@ fi
 NAME="lmd"
 DAEMON="$OMD_ROOT/bin/thruk"
 OPTS="lmd start"
+export THRUK_LOG_TIMESTAMPS=1
 PID_FILE=$OMD_ROOT/tmp/thruk/lmd/pid
 LOG_FILE=$OMD_ROOT/var/log/lmd.log
 STOP_TIMEOUT=30
