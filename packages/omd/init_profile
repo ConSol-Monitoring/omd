@@ -206,6 +206,7 @@ __generic_init_wait_start() {
   fi
   if __generic_init_pid >/dev/null 2>&1; then
     if [ "$SILENT_ALREADY_RUNNING" = "1" ]; then
+      echo "OK"
       return 0
     fi
     echo "(already running with pid ${PID})...ERROR"
