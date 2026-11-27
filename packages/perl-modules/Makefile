@@ -103,7 +103,6 @@ MODULES = \
           ExtUtils-PkgConfig-1.16.tar.gz \
           GD-2.86.tar.gz \
           Getopt-Long-2.50.tar.gz \
-          HTML-Tagset-3.20.tar.gz \
           HTTP-Date-6.08.tar.gz \
           HTTP-MultiPartParser-0.02.tar.gz \
           Hash-MultiValue-0.16.tar.gz \
@@ -192,7 +191,6 @@ MODULES = \
           XML-SAX-0.99.tar.gz \
           XML-Simple-2.25.tar.gz \
           autodie-2.29.tar.gz \
-          HTML-Lint-2.30.tar.gz \
           HTTP-Message-6.14.tar.gz \
           HTTP-Negotiate-6.01.tar.gz \
           Module-Load-Conditional-0.68.tar.gz \

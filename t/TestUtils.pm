@@ -29,12 +29,20 @@ if($> != 0) {
 our $omd_symlink_created = 0;
 
 ##################################################
-# HTML::Lint installed?
-my $use_html_lint = 0;
-eval {
-    require HTML::Lint;
-    $use_html_lint = 1;
-};
+sub has_util {
+    my($util) = @_;
+    our $utils_cache;
+    $utils_cache ||= {};
+    return $utils_cache->{$util} if exists $utils_cache->{$util};
+    for my $path (split/:/mx, $ENV{'PATH'}) {
+        if(-x $path.'/'.$util) {
+            $utils_cache->{$util} = 1;
+            return(1);
+        }
+    }
+    $utils_cache->{$util} = 0;
+    return(0);
+}
 
 ##################################################
 # dont test over a proxy
@@ -513,6 +521,7 @@ sub remove_test_site {
     like             => (list of) regular expressions which have to match content
     unlike           => (list of) regular expressions which must not match content
     skip_html_lint   => flag to disable the html lint checking
+    skip_doctype     => flag to skip the doctype requirements in the html lint
     skip_link_check  => (list of) regular expressions to skip the link checks for
     waitfor          => wait till regex occurs (max maxwait seconds)
     maxwait          => how long should be waited (default 120sec)
@@ -591,28 +600,32 @@ sub test_url {
         }
     }
 
-    # html valitidy
+    # html validity
     SKIP: {
         if($page->{'content_type'} =~ 'text\/html') {
             unless(defined $test->{'skip_html_lint'} && $test->{'skip_html_lint'} == 1) {
-                if($use_html_lint == 0) {
-                    skip "no HTML::Lint installed", 2;
-                }
                 if($page->{'content'} =~ /^\[.*\]$/mx || $page->{'content'} =~ /^\{.*\}$/mx) {
                     skip "no lint check for json data", 2;
                 }
                 if($ENV{LINTSKIPPATTERN} && $test->{'url'} =~ m|/$ENV{LINTSKIPPATTERN}/|mx) {
                     skip "lint check skipped by LINTSKIPPATTERN: ".$ENV{LINTSKIPPATTERN}, 2;
                 }
-                my $lint = new HTML::Lint;
-                isa_ok( $lint, "HTML::Lint" );
-
-                $lint->parse($page->{'content'});
-                $lint->eof();
-                my @errors = $lint->errors;
-                @errors = _diag_lint_errors_and_remove_some_exceptions($lint);
-                is( scalar @errors, 0, "No errors found in HTML (".$test->{'url'}.")" );
-                $lint->clear_errors();
+                if($test->{'url'} =~ m%check_multi|pnp4nagios%mx) {
+                    skip "lint check skipped for legacy pages", 2;
+                }
+                if(!has_util('tidy')) {
+                    skip "no tidy installed", 2;
+                }
+                # HTML::Lint is HTML4-only, so the HTML5 pages always produced
+                # "unknown attribute" noise. tidy knows HTML5.
+                my $content = $page->{'content'};
+                utf8::decode($content) if defined $content;
+                if($content && $content =~ m%multi_table%mx) {
+                    skip "lint check skipped for check_multi embedded pages", 2;
+                }
+                my ($errors, $warnings) = tidy_lint($content, $test->{'url'}, $test->{'skip_doctype'});
+                is(scalar @{$errors}, 0, "No errors found in HTML (".$test->{'url'}.")");
+                is(scalar @{$warnings}, 0, "No warnings found in HTML (".$test->{'url'}.")");
             }
         }
     }
@@ -876,53 +889,109 @@ sub bail_out {
 
 ##################################################
 
-=head2 _diag_lint_errors_and_remove_some_exceptions
+=head2 tidy_lint
 
-  removes some lint errors we want to ignore
+  lint html with the tidy tool
 
 =cut
-sub _diag_lint_errors_and_remove_some_exceptions {
-    my $lint = shift;
-    my @return;
-    LINT_ERROR: for my $error ( $lint->errors ) {
-        my $err_str = $error->as_string;
-        for my $exclude_pattern (
-            "<IMG SRC=[^>]*>\ tag\ has\ no\ HEIGHT\ and\ WIDTH\ attributes",
-            "<IMG SRC=[^>]*>\ does\ not\ have\ ALT\ text\ defined",
-            "<input>\ is\ not\ a\ container\ \-\-\ <\/input>\ is\ not\ allowed",
-            "Unknown attribute \"start\" for tag <div>",
-            "Unknown attribute \"hidden\" for tag <option>",
-            "Unknown attribute \"end\" for tag <div>",
-            "Unknown attribute \"oncontextmenu\" for tag <div>",
-            "Unknown attribute \"crossorigin\" for tag",
-            "Unknown attribute \"fetchpriority\" for tag",
-            "Unknown attribute \"as\" for tag",
-            "Unknown attribute \"defer\" for tag",
-            qr(Unknown attribute \"data[\w\-]+\" for tag),
-            "for tag <meta>",
-            "Unknown element <(header|main|footer|nav)>",
-            "Unknown\ attribute\ \"placeholder\"\ for\ tag\ <input>",
-            "Unknown\ attribute\ \"placeholder\"\ for\ tag\ <textarea>",
-            "Unknown\ attribute\ \"autocomplete\"\ for\ tag\ <form>",
-            "Unknown\ attribute\ \"autocomplete\"\ for\ tag\ <input>",
-            "Unknown\ attribute\ \"oninput\"\ for\ tag\ <input>",
-            "Unknown\ attribute\ \"height\"\ for\ tag\ <tr>",
-            "should be written as &uuml",
-            "should be written as &ldquo",
-            "should be written as &rdquo",
-            "Unknown\ attribute\ \"data\-",
-            "Unknown\ attribute\ \"sizes\"\ for\ tag\ <link>",
-            "Unknown\ attribute\ \"required\"\ for\ tag\ <input>",
-            "Entity\ .*\ is\ unknown",
-        ) {
-            next LINT_ERROR if($err_str =~ m/$exclude_pattern/i);
-        }
-        diag($error->as_string."\n");
-        push @return, $error;
+sub tidy_lint {
+    my($content, $url, $skip_doc_type) = @_;
+    my ($fh, $name) = tempfile(UNLINK => 1);
+    print $fh encode_utf8($content);
+    close $fh;
+    # tidy auto-detects the doctype from the page content. it is HTML5-aware:
+    # rc 0 = clean, rc 1 = warnings or errors, rc >= 2 = fatal. it reports
+    # nearly everything as "Warning:" severity and reserves "- Error:" for
+    # genuinely broken/malformed markup.
+    my $out = `tidy -q -utf8 \Q$name\E 2>&1`;
+    my @lines = split /\n/, $out;
+    # note: /m only, not /mx -- /x strips the space from "- Warning"/"- Error"
+    my @tolerated = (
+        '<a> attribute "target" lacks value',
+        '<button> attribute "name" lacks value',
+        '<form> attribute "target" lacks value',
+        '<img> attribute "border" not allowed for HTML5',
+        '<img> proprietary attribute "fetchpriority"',
+        '<td> attribute "abbr" not allowed for HTML5',
+        '<td> attribute "align" not allowed for HTML5',
+        '<td> attribute "valign" not allowed for HTML5',
+        '<td> attribute "width" not allowed for HTML5',
+        '<th> attribute "abbr" not allowed for HTML5',
+        '<th> attribute "nowrap" not allowed for HTML5',
+        'moved <style> tag to <head>',
+        'trimming empty <button>',
+        'trimming empty <div>',
+        'trimming empty <i>',
+        'trimming empty <span>',
+        'trimming empty <tbody>',
+        'trimming empty <label>',
+        "blank 'title' element",
+    );
+    if($skip_doc_type) {
+        push @tolerated,
+            'inserting implicit <body>',
+            "inserting missing 'title' element",
+            'missing <!DOCTYPE> declaration';
     }
-    return @return;
+    my @warnings = grep {
+        my $w = $_;
+        !grep { $w =~ m/\Q$_\E/ } @tolerated
+    } grep /^line .* - Warning/m, @lines;
+    my @errors = grep /^line .* - Error/m, @lines;
+    if(scalar @errors or scalar @warnings) {
+        chomp(my $tidy_version = `tidy -V 2>&1`);
+        diag(sprintf("tidy: %s: %d errors, %d warnings (%s)\n", $url, scalar @errors, scalar @warnings, $tidy_version));
+        # group by line number
+        my $grouped = {};
+        for my $issue (sort (@errors, @warnings)) {
+            my $line_nr = 0;
+            if($issue =~ m/^\s*line\s+(\d+)\s+column/gmx) {
+                $line_nr = $1;
+            }
+            $grouped->{$line_nr} = [] unless defined $grouped->{$line_nr};
+            push @{$grouped->{$line_nr}}, $issue;
+        }
+        for my $line_nr (sort { $a <=> $b } keys %{$grouped}) {
+            my $cols = [];
+            for my $issue (@{$grouped->{$line_nr}}) {
+                if($issue =~ m/^\s*line\s+\d+\s+column\s+(\d+)\s+/gmx) {
+                    push @{$cols}, $1;
+                }
+                diag($issue.":\n");
+            }
+            _diag_context($content, $line_nr, $cols) if $line_nr > 0;
+        }
+    }
+    return \@errors, \@warnings;
 }
 
+##################################################
+
+=head2 _diag_context
+
+  print context around a lint error line
+
+=cut
+sub _diag_context {
+    my($content, $nr, $cols) = @_;
+    my $linenr = 0;
+    for my $line (split(/\n/, $content)) {
+        $linenr++;
+        if($linenr >= $nr-2 && $linenr <= $nr+2) {
+            diag(sprintf("% 5d: %s", $linenr, substr($line, 0, 250)));
+            if($linenr == $nr && $cols && scalar @{$cols} > 0) {
+                @{$cols} = sort @{$cols};
+                my $marker = "";
+                for my $col (@{$cols}) {
+                    next if length($marker) >= $col;
+                    $marker .= ($col > (length($marker)+1) ? (" " x ($col - 1 - length($marker))) : "") . "^";
+                }
+                diag((" "x7).$marker);
+            }
+        }
+    }
+    return;
+}
 
 ##################################################
 
