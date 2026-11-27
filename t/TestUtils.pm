@@ -633,6 +633,7 @@ sub test_url {
             next if $match =~ m/^http/;
             next if $match =~ m/^\/\//;
             next if $match =~ m/^mailto:/;
+            next if $match =~ m/^data:/;
             next if $match =~ m/^#/;
             next if $match =~ m/^javascript:/;
             next if $match =~ m/internal&srv=runtime/;
